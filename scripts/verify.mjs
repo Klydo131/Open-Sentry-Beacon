@@ -195,6 +195,11 @@ const staticChecks = [
   // by, so a silence was delivered on somebody's behalf; and 33 meetings that
   // actually happened were invisible to the two people they happened between.
   ['an appointment is remembered', 'tests/an-appointment-is-remembered.mjs'],
+  // read_at has been written since this app had messages and nothing ever drew
+  // it. Built on the owner's decision, against a stated product rule -- so the
+  // SHAPE is what is checked: one receipt, under the last thing you sent, never
+  // a column of Seen down the thread and never on the other person's messages.
+  ['you can tell whether it was read', 'tests/you-can-tell-whether-it-was-read.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

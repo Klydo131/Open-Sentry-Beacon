@@ -226,6 +226,44 @@ export function Conversation({
     }
   };
 
+  // WHETHER THE LAST THING YOU SAID HAS BEEN READ.
+  //
+  // `read_at` has been written since the app had messages: opening a thread
+  // marks the OTHER person's messages read, all three screens call it, and it
+  // arrives in the browser on every load. Nothing has ever drawn it. Until now
+  // the only thing it fed was the unread count on the bubble.
+  //
+  // THE OWNER ASKED FOR THIS DELIBERATELY, after it was raised as a decision
+  // rather than built. The concern was real and is recorded here so nobody
+  // wonders later: a receipt puts pressure on the person who has not replied,
+  // and an Explorer bringing something hard to their Guide is exactly the
+  // person least able to carry that. TalkDock's note about presence features is
+  // amended, not ignored.
+  //
+  // WHAT MAKES IT WORTH THE COST HERE. Forty-two of this church's Explorers
+  // have not opened the app in a week. A Guide writing into that silence cannot
+  // tell "they read it and had nothing to say" from "they have not been back
+  // since August" -- and those call for completely different responses, one
+  // patient and one a phone call. `Sent` on a message from four days ago is the
+  // most useful sentence on the screen.
+  //
+  // ONE RECEIPT IN THE WHOLE THREAD, UNDER THE LAST THING YOU SENT. Not one per
+  // message and not one per run: a column of `Seen` down the side of everything
+  // you have ever written is surveillance-shaped, and it is the version of this
+  // feature people actually dislike. The question is only ever about the most
+  // recent thing you said.
+  //
+  // YOUR OWN MESSAGES ONLY. A receipt on THEIRS would tell them you had read it,
+  // which is the same fact from the other side and is not yours to announce.
+  const lastMine = (() => {
+    for (let i = timeline.length - 1; i >= 0; i -= 1) {
+      const e = timeline[i];
+      // A taken-back message is not something to report a reading of.
+      if (e.kind === 'message' && e.who === myId && !e.message.deleted_at) return e;
+    }
+    return undefined;
+  })();
+
   const newest = timeline[timeline.length - 1];
   const newestKey = newest ? `${newest.kind}-${newest.id}` : '';
   const newestIsMine = newest?.who === myId;
@@ -528,6 +566,26 @@ export function Conversation({
                 {endsRun && (
                   <p className="mt-0.5 text-right text-[11px] text-slate-400">
                     {new Date(entry.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                  </p>
+                )}
+
+                {/* SEEN, OR NOT YET. Only under the last thing you sent -- see
+                    the note beside `lastMine` for why one receipt and not one
+                    per message.
+
+                    `Sent` IS THE HALF THAT DOES THE WORK. A receipt that only
+                    ever says "Seen" tells you nothing on the days it matters;
+                    the useful sentence is the one on a message from four days
+                    ago that still says Sent. */}
+                {entry.kind === 'message' && lastMine
+                  && entry.id === lastMine.id && entry.kind === lastMine.kind && (
+                  <p className="mt-0.5 text-right text-[11px] font-semibold text-slate-400">
+                    {entry.message.read_at
+                      ? `Seen ${sameDay(entry.message.read_at)
+                          ? new Date(entry.message.read_at)
+                              .toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                          : dayLabel(entry.message.read_at).toLowerCase()}`
+                      : 'Sent'}
                   </p>
                 )}
               </div>

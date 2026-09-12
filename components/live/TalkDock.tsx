@@ -36,8 +36,25 @@
 //
 // NOT A COPY OF ANYBODY'S MESSENGER. A collapsed bar that expands, and a count
 // on the way in, are older than any product that ships them today. There is no
-// presence, no typing indicator, no read receipts beyond the one this app
-// already had, and no conversation that is not a pairing the church arranged.
+// presence, no typing indicator, and no conversation that is not a pairing the
+// church arranged.
+//
+// READ RECEIPTS: THIS RULE CHANGED, BY THE OWNER'S DECISION, AND SAYING SO IS
+// THE POINT OF THIS PARAGRAPH. It used to read "no read receipts beyond the one
+// this app already had". `read_at` was raised as a decision rather than built,
+// with the concern stated plainly -- a receipt puts pressure on the person who
+// has not replied, and an Explorer bringing something hard to their Guide is
+// the person least able to carry it. The owner asked for it anyway, knowing
+// that.
+//
+// What makes it defensible here is the church's own numbers: forty-two
+// Explorers have not opened the app in a week, and a Guide writing into that
+// silence could not tell "they read it and had nothing to say" from "they have
+// not been back since August". Those call for different responses.
+//
+// The shape keeps the concern in view: ONE receipt, under the last thing YOU
+// sent, never a column of `Seen` down everything you have ever written, and
+// never on the other person's messages. See components/live/shared.tsx.
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
