@@ -51,6 +51,14 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   const [startsAt, setStartsAt] = useState('');
   const [mode, setMode] = useState<live.MeetingMode>('online');
   const [location, setLocation] = useState('');
+  // WHAT TO BRING, OR WHAT IT IS FOR. `meetings.notes` has existed since
+  // migration 0009, `scheduleMeeting` has accepted one since it was written,
+  // `listMeetings` selects it and the Meeting type carries it. This screen
+  // never passed one and never drew one, so all thirty-six appointments this
+  // church has arranged carry an empty note -- not because nobody had anything
+  // to say, but because there was nowhere to say it. The same fault, found the
+  // same way, as the share note in the library a day earlier.
+  const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -79,9 +87,36 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   // around this needs to know it was called off, and that is what the message
   // in the conversation is for. A permanent list of things that are not
   // happening is not a diary.
-  const upcoming = (rows ?? [])
-    .filter((m) => m.status !== 'cancelled'
-      && new Date(m.starts_at).getTime() > Date.now() - 60 * 60 * 1000);
+  const STILL_ON = 60 * 60 * 1000;   // an hour's grace, so a meeting in progress stays put
+  const all = rows ?? [];
+  const past = (m: live.Meeting) => new Date(m.starts_at).getTime() <= Date.now() - STILL_ON;
+
+  const upcoming = all.filter((m) => m.status !== 'cancelled' && !past(m));
+
+  // A TIME THAT CAME AND WENT WITHOUT AN ANSWER.
+  //
+  // Three of this church's appointments are in this state and NOBODY WAS EVER
+  // TOLD. A proposal sat unanswered, its date passed, and the filter above
+  // simply stopped drawing it -- so the person who suggested it saw their
+  // appointment disappear and had no way to tell "they said no" from "they
+  // never saw it". Silence is the one answer a discipleship app should never
+  // deliver on somebody's behalf.
+  const missed = all.filter((m) => m.status === 'proposed' && past(m));
+
+  // WHAT ACTUALLY HAPPENED, WHICH WAS BEING THROWN AWAY.
+  //
+  // Thirty-three of this church's thirty-six appointments are in the past, and
+  // not one of them was visible to the two people it happened between. For an
+  // app about walking with somebody over months, "when did we last meet, and
+  // how often" is close to the only question a Guide needs answered, and the
+  // card answered it for exactly one hour and then forgot.
+  //
+  // Confirmed only. A cancelled meeting is not a meeting that happened, and a
+  // list of things that did not happen is not a history -- the same reason the
+  // filter above has always left them out.
+  const met = all
+    .filter((m) => m.status === 'confirmed' && past(m))
+    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
 
   return (
     <Card className="overflow-hidden p-0">
@@ -196,15 +231,34 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
             </p>
           </div>
         )}
+        {/* OPTIONAL, AND ASKED FOR ANYWAY. The rule the library's add form
+            already states: making it required would stop somebody arranging a
+            time they are in a hurry about, and a time with no note still beats
+            no time. The placeholder teaches by showing the shape of a useful
+            answer rather than describing one. */}
+        <label className="sr-only" htmlFor="meeting-notes">
+          Anything to bring or know beforehand
+        </label>
+        <textarea
+          id="meeting-notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          /* The column's own limit, so a long note is stopped by the box rather
+             than by an error after the button. */
+          maxLength={2000}
+          placeholder="Anything to bring or know first? (optional)"
+          className="tap w-full rounded-xl bg-white px-4 py-2 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
+        />
         <div>
           <Button
             variant="gold"
             disabled={busy || !startsAt || (mode === 'in_person' && !location.trim())}
             onClick={() => act(async () => {
               await live.scheduleMeeting(pairingId, {
-                title, startsAt: new Date(startsAt).toISOString(), mode, location,
+                title, startsAt: new Date(startsAt).toISOString(), mode, location, notes,
               });
-              setTitle(''); setStartsAt(''); setLocation('');
+              setTitle(''); setStartsAt(''); setLocation(''); setNotes('');
             })}
           >
             {busy ? 'Saving…' : 'Propose this time'}
@@ -349,10 +403,93 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                   Cancel
                 </button>
               </div>
+
+              {/* WHAT THEY WROTE, UNDER THE ARRANGEMENT. Below the controls
+                  rather than above them: the time and the place are what
+                  somebody opens this row for, and a paragraph between the title
+                  and the Yes button would push the decision off a phone. */}
+              {m.notes && (
+                <p className="mt-2 whitespace-pre-wrap break-words border-t border-navy/5 pt-2 text-sm text-gray-600">
+                  {m.notes}
+                </p>
+              )}
             </div>
           );
         })}
         </div>
+
+        {/* ---------------------------------------------------------------
+            A TIME THAT PASSED WITHOUT AN ANSWER
+            ---------------------------------------------------------------
+            These used to vanish. The person who suggested the time watched
+            their appointment disappear and could not tell "they said no" from
+            "they never saw it". Saying so is not a feature so much as the
+            removal of a silence.
+
+            NO BLAME IN THE WORDING, and that is deliberate. It says the time
+            passed, not that somebody ignored you -- because the commonest
+            reason by far is that they never opened the app, which is exactly
+            what this church's numbers show. */}
+        {missed.length > 0 && (
+          <div className="mt-5">
+            <p className="text-sm font-bold text-navy">Waiting on an answer, and the time has passed</p>
+            <div className="mt-2 grid gap-2">
+              {missed.map((m) => (
+                <div key={m.id} className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+                  <p className="font-bold text-navy">{m.title || 'A time together'}</p>
+                  <p className="mt-0.5 text-sm text-amber-900">
+                    {when(m.starts_at)} · nobody answered before it came round
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Suggest another time above, or tidy this away.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => act(() => live.cancelMeeting(m.id))}
+                    className="mt-2 text-sm text-gray-500 underline underline-offset-2 disabled:opacity-40"
+                  >
+                    Tidy this away
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ---------------------------------------------------------------
+            WHAT ALREADY HAPPENED
+            ---------------------------------------------------------------
+            THE COUNT IS THE POINT, not the list. "You have met four times" is
+            the one number a Guide actually wants, and it is what the hour-long
+            filter was throwing away every time.
+
+            FOLDED SHUT, because a diary is about what is next. It opens when
+            somebody asks the question it answers. */}
+        {met.length > 0 && (
+          <details className="mt-5 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
+            <summary className="cursor-pointer text-sm font-bold text-navy">
+              {met.length === 1
+                ? 'You have met once before'
+                : `You have met ${met.length} times before`}
+            </summary>
+            <ul className="mt-3 grid gap-2">
+              {met.map((m) => (
+                <li key={m.id} className="border-t border-navy/5 pt-2 first:border-0 first:pt-0">
+                  <p className="text-sm font-semibold text-navy">{m.title || 'A time together'}</p>
+                  <p className="text-sm text-gray-500">
+                    {when(m.starts_at)} · {m.mode === 'online' ? 'Online call' : 'In person'}
+                  </p>
+                  {m.notes && (
+                    <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-gray-600">
+                      {m.notes}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
       </div>
     </Card>

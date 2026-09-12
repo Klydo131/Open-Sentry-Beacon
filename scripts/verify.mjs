@@ -190,6 +190,11 @@ const staticChecks = [
   // thread list must survive: auto-opening the first would strand a Guide in
   // one conversation with no way to the other four, and nothing would error.
   ['the chat is the bubble and it moves', 'tests/the-chat-is-the-bubble-and-it-moves.mjs'],
+  // The appointments card kept nothing. 36 of 36 notes empty because there was
+  // no box; a proposal nobody answered stopped being drawn once its date went
+  // by, so a silence was delivered on somebody's behalf; and 33 meetings that
+  // actually happened were invisible to the two people they happened between.
+  ['an appointment is remembered', 'tests/an-appointment-is-remembered.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.
