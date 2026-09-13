@@ -51,12 +51,13 @@
 // ONE PANEL LIVES IN EXACTLY ONE SUBROOM. A panel that appears in two is a
 // panel somebody will look for in the third.
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { LiveAppShell } from '@/components/LiveAppShell';
 import { useLiveSession } from '@/lib/live/session';
 import { useIsLive } from '@/lib/tutorial';
 import * as live from '@/lib/live/data';
+import { useKeepUp, KEEP_UP_PEOPLE } from '@/lib/live/keep-up';
 import { Card } from '@/components/ui';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { LiveAnalytics } from '@/components/LiveAnalytics';
@@ -90,6 +91,12 @@ function LiveOffice() {
   const [pairings, setPairings] = useState<{ id: string; ds_name: string }[]>([]);
   const [waitingAsks, setWaitingAsks] = useState(0);
 
+  // A request that arrives while this tab is open has to move the badge below.
+  // Without this the count is only ever as fresh as the last full page load,
+  // which is the refresh-your-browser complaint the keep-up hook exists to end.
+  const [tick, setTick] = useState(0);
+  useKeepUp(KEEP_UP_PEOPLE, useCallback(() => setTick((t) => t + 1), []));
+
   useEffect(() => {
     live.myChurch().then((c) => setChurchName(c?.name ?? undefined)).catch(() => {});
   }, []);
@@ -108,7 +115,7 @@ function LiveOffice() {
       // must not take the whole room down.
       .catch(() => {});
     return () => { alive = false; };
-  }, [isGuide]);
+  }, [isGuide, tick]);
 
   // THE BADGE IS THE REASON THE TAB IS WORTH READING. Without a count, a
   // Director has to open Pairing requests to find out whether anybody is
@@ -123,7 +130,7 @@ function LiveOffice() {
       })
       .catch(() => {});
     return () => { alive = false; };
-  }, [leads]);
+  }, [leads, tick]);
 
   // The subrooms, in the order each role actually needs them. A Guide opens
   // this room to write; leadership opens it to read the numbers.

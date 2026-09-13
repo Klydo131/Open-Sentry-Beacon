@@ -117,6 +117,63 @@ const STAYS_ON_A_RELOAD = new Set([
 }
 
 // ---------------------------------------------------------------------------
+// 1b. AND A SCREEN CANNOT ESCAPE BLOCK 1 BY SPELLING ITS LOADER DIFFERENTLY
+// ---------------------------------------------------------------------------
+//
+// Block 1 only sees `const <name with load> = useCallback(async`. The Office
+// room read three tables straight inside its useEffect, named nothing `load`,
+// and sailed through 143 checks while its pairing-requests badge -- the thing
+// its own comment calls the reason the tab is worth reading -- could only ever
+// be as fresh as the last full page load. Block 1 was matching an IDIOM; this
+// one matches the BEHAVIOUR, which is what actually makes a room deaf: it reads
+// live data on mount, to put on the screen, and never listens for a change.
+//
+// Reads in an event handler are not mount reads and are not counted, so a
+// component that only writes, or that fetches fresh on a click, needs nothing.
+const READS_ONCE_ON_PURPOSE = new Set([
+  // The door: sign in, claim an invitation, fetch the profile just created.
+  // A one-shot flow, not a room somebody sits in while others change data.
+  'components/live/DoorPages.tsx',
+  // Resolves one signed URL for one attachment. A URL builder, not a feed.
+  'components/live/shared.tsx',
+]);
+
+{
+  /** The full text of every useEffect in a file, by matching its parens. */
+  const effectBodies = (src) => {
+    const out = [];
+    for (const m of src.matchAll(/useEffect\(/g)) {
+      let i = m.index + m[0].length;
+      let depth = 1;
+      while (i < src.length && depth > 0) {
+        const ch = src[i];
+        if (ch === '(') depth += 1;
+        else if (ch === ')') depth -= 1;
+        i += 1;
+      }
+      out.push(src.slice(m.index, i));
+    }
+    return out;
+  };
+
+  const deafOnMount = [];
+  for (const file of [...screens('components'), ...screens('app')]) {
+    if (READS_ONCE_ON_PURPOSE.has(file) || STAYS_ON_A_RELOAD.has(file)) continue;
+    const src = strip(read(file));
+    if (!/@\/lib\/live\/data/.test(src)) continue;
+    const mountReads = effectBodies(src).filter((b) => /\blive\.\w+\s*\(/.test(b));
+    if (!mountReads.length) continue;
+    if ((src.match(/useKeepUp\(/g) ?? []).length > 0) continue;
+    const names = [...new Set(mountReads.flatMap(
+      (b) => [...b.matchAll(/\blive\.(\w+)\s*\(/g)].map((x) => x[1]),
+    ))];
+    deafOnMount.push(`${file}  reads on mount: ${names.join(', ')}`);
+  }
+  ok(deafOnMount.length === 0,
+     `no live screen reads on mount without listening${deafOnMount.length ? `\n        deaf: ${deafOnMount.join('\n              ')}` : ''}`);
+}
+
+// ---------------------------------------------------------------------------
 // 2. EVERY TABLE A SCREEN WATCHES IS ACTUALLY PUBLISHED
 // ---------------------------------------------------------------------------
 //
