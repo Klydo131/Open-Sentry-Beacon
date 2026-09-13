@@ -80,6 +80,12 @@ const SECTIONS = (role: Role) => [
     : []),
   { href: '/publish',  icon: '✍️', label: 'Publish' },
   { href: '/library',  icon: '📚', label: 'Library' },
+  // THE APPS A CHURCH ALREADY USES, beside the library rather than inside it.
+  // The library holds things somebody in the church chose to share with
+  // somebody else; this holds the Bible and the hymnal the whole congregation
+  // opens. Different question, different room -- and everybody gets it,
+  // Explorers included, because a hymnal is not leadership's tool.
+  { href: '/apps',     icon: '📱', label: 'Apps' },
   { href: '/cases',    icon: '⚖️', label: 'Cases' },
   ...(role === 'admin' || role === 'executive'
     ? [{ href: '/mail', icon: '✉️', label: 'Mail' }]

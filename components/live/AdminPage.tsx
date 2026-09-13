@@ -162,6 +162,12 @@ export function LiveAdminPage() {
   const pending = manageable.filter((member) => !member.is_approved);
   const approved = manageable.filter((member) => member.is_approved);
 
+  // The proposal, and what could not be made. `null` means nobody has asked
+  // yet; an empty array means asked and nobody is waiting, which is a different
+  // screen and a different sentence.
+  const [proposal, setProposal] = useState<live.SuggestedPairing[] | null>(null);
+  const [pairResults, setPairResults] = useState<string[]>([]);
+
   /**
    * The name of whoever approved somebody, from the list already loaded.
    *
@@ -1052,6 +1058,148 @@ export function LiveAdminPage() {
               <Button type="submit" disabled={busy === 'pair' || !dmId || !dsId}>Create pairing</Button>
             </div>
           </form>
+
+          {/* ---------------------------------------------------------------
+              PAIR EVERYBODY WHO IS WAITING
+              ---------------------------------------------------------------
+              Asked for: "if there are too many candidates and the ED or
+              Director have to input alot of Guides and Explorers inside the
+              system of the app, there must be a button for auto pair." Right,
+              and the form above is the reason -- one pairing at a time is two
+              fields and a button, forty times.
+
+              IT PROPOSES. IT DOES NOT PAIR. That is the whole design and it is
+              not timidity: a pairing is two named people being told they will
+              walk together for months, and forty of them created by one tap
+              with no list shown first is not something a Director can
+              supervise. The list appears, the Director reads it, and only then
+              does anything happen.
+
+              AND THEN THEY ARE MADE ONE AT A TIME, through the same
+              `createPairing` the form above uses, so every trigger and policy
+              applies to each -- the cap, the one-Guide-per-Explorer rule, the
+              church scope. A refusal names who and why instead of taking the
+              whole batch down with it, the same shape as the bulk approval
+              controls further down this screen. */}
+          <div className="mt-4 rounded-2xl bg-slate-50 p-3 ring-1 ring-navy/5 sm:p-4">
+            {proposal === null ? (
+              <>
+                <p className="text-sm font-bold text-navy">Everybody who is waiting</p>
+                <p className="mt-0.5 text-sm text-gray-600">
+                  Suggests a Guide for each Explorer who has none, giving each Guide the
+                  fewest people first. You see the list before anything happens.
+                </p>
+                <div className="mt-3">
+                  <Button
+                    disabled={busy === 'suggest'}
+                    onClick={() => void (async () => {
+                      setBusy('suggest'); setError(''); setPairResults([]);
+                      try { setProposal(await live.suggestPairings()); }
+                      catch (cause) { setError(errorText(cause)); }
+                      finally { setBusy(''); }
+                    })()}
+                  >
+                    {busy === 'suggest' ? 'Working…' : 'Suggest pairings'}
+                  </Button>
+                </div>
+              </>
+            ) : proposal.length === 0 ? (
+              <>
+                <p className="text-sm font-bold text-navy">Nobody is waiting</p>
+                {/* THE TWO REASONS A PROPOSAL CAN BE EMPTY, said apart. A
+                    Director who reads "nobody is waiting" when in fact every
+                    Guide is full would go looking for a bug. */}
+                <p className="mt-0.5 text-sm text-gray-600">
+                  Every Explorer already has a Guide, or every Guide is at the limit for
+                  this church, in which case the people still waiting need another Guide
+                  rather than another pairing. Anyone under eighteen is left out on
+                  purpose and is paired by hand.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setProposal(null)}
+                  className="mt-2 text-sm font-semibold text-navy underline underline-offset-2"
+                >
+                  Close
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-bold text-navy">
+                  {proposal.length === 1
+                    ? 'One pairing to make'
+                    : `${proposal.length} pairings to make`}
+                </p>
+                <p className="mt-0.5 text-sm text-gray-600">
+                  Nothing has happened yet. Read the list, then confirm.
+                </p>
+                <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
+                  {proposal.map((row) => (
+                    <div key={row.ds_id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-navy/5">
+                      <span className="font-semibold text-navy">{row.dm_name}</span>
+                      <span className="text-gray-400">with</span>
+                      <span className="font-semibold text-navy">{row.ds_name}</span>
+                      <span className="ml-auto text-xs text-gray-500">
+                        {row.dm_load_now === 0
+                          ? 'their first'
+                          : `already has ${row.dm_load_now}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    variant="gold"
+                    disabled={busy === 'autopair'}
+                    onClick={() => void (async () => {
+                      setBusy('autopair'); setError('');
+                      const failed: string[] = [];
+                      let made = 0;
+                      for (const row of proposal) {
+                        try {
+                          // THE ORDINARY PATH, one at a time. 'traditional' is
+                          // the default track the form uses; a Director changes
+                          // it per pairing afterwards if somebody is digital.
+                          await live.createPairing(row.dm_id, row.ds_id, 'traditional');
+                          made += 1;
+                        } catch (cause) {
+                          failed.push(`${row.dm_name} with ${row.ds_name}: ${errorText(cause)}`);
+                        }
+                      }
+                      setPairResults(failed);
+                      setNotice(made === 1
+                        ? 'One pairing made.'
+                        : `${made} pairings made.`);
+                      setProposal(null);
+                      await load();
+                      setBusy('');
+                    })()}
+                  >
+                    {busy === 'autopair' ? 'Pairing…' : `Yes, make these ${proposal.length}`}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setProposal(null)}>Cancel</Button>
+                </div>
+              </>
+            )}
+
+            {/* PER PAIRING, NOT PER BATCH. A refusal names who and why so a
+                Director can act on it, rather than re-running the whole thing. */}
+            {pairResults.length > 0 && (
+              <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+                <p className="font-bold">Not every pairing could be made:</p>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                  {pairResults.map((line) => <li key={line}>{line}</li>)}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setPairResults([])}
+                  className="mt-2 text-xs font-semibold underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className="mt-5 space-y-2">
             {pairings.filter((pairing) => pairing.status === 'active').map((pairing) => (

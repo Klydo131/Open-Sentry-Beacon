@@ -519,6 +519,33 @@ export async function listMembers(): Promise<Profile[]> {
   return (data ?? []) as Profile[];
 }
 
+/**
+ * Who the app would put with whom, for everybody still waiting.
+ *
+ * A PROPOSAL. IT WRITES NOTHING. The screen shows the list and the Director
+ * confirms, and only then are the pairings created -- one at a time, through
+ * `createPairing`, so every trigger and policy applies to each and a failure on
+ * one cannot take the others with it.
+ *
+ * Minors are deliberately absent: see the migration. An Explorer under eighteen
+ * being assigned to an adult by an algorithm is the one pairing in this app
+ * that should never happen without a person deciding.
+ */
+export interface SuggestedPairing {
+  dm_id: string;
+  dm_name: string;
+  ds_id: string;
+  ds_name: string;
+  /** How many that Guide is already carrying, before this one. */
+  dm_load_now: number;
+}
+
+export async function suggestPairings(): Promise<SuggestedPairing[]> {
+  const { data, error } = await db().rpc('suggest_pairings');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SuggestedPairing[];
+}
+
 /** Approve somebody, and give them the role they were approved as. */
 export async function approveMember(userId: string, role: Role): Promise<void> {
   if (userId === (await uid())) throw new Error('Somebody else has to approve you.');
@@ -2042,6 +2069,81 @@ export async function shareMaterial(materialId: string, pairingId: string, note?
 /** Unshare. Only whoever shared it may take it back. */
 export async function unshareMaterial(shareId: string): Promise<void> {
   const { error } = await db().from('material_shares').delete().eq('id', shareId);
+  if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// The apps a church already uses.
+// ---------------------------------------------------------------------------
+//
+// A room of links to things that live outside this app: a Bible, a hymnal, the
+// study guide. Leadership curates it; everybody in the church opens it.
+//
+// PLAIN HTTPS, AND THAT IS THE WHOLE TRICK. An https link to an app's own
+// domain is opened by the installed app on both iOS and Android -- Universal
+// Links and App Links -- and by the browser when the app is not installed. A
+// custom scheme like `myapp://` does the opposite: it fails with an error page
+// for everybody who has not installed it. Nothing here needs to know what a
+// phone is.
+
+export interface ChurchApp {
+  id: string;
+  church_id: string;
+  name: string;
+  blurb: string | null;
+  url: string;
+  icon: string | null;
+  sort_order: number;
+  added_by: string;
+}
+
+/** Everything in the room, in the order leadership put it. */
+export async function listChurchApps(): Promise<ChurchApp[]> {
+  const { data, error } = await db()
+    .from('church_apps')
+    .select('id, church_id, name, blurb, url, icon, sort_order, added_by')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ChurchApp[];
+}
+
+/**
+ * Add one. Leadership only -- the policy decides, this is just the call.
+ *
+ * THE ADDRESS IS CHECKED HERE AS WELL AS IN THE COLUMN, so somebody pasting a
+ * `http://` or a bare domain is told what is wrong while the form is still open
+ * rather than by a constraint violation after they press the button.
+ */
+export async function addChurchApp(app: {
+  name: string; url: string; blurb?: string; icon?: string; sortOrder?: number;
+}): Promise<void> {
+  const me = await uid();
+  const { data: profile } = await db()
+    .from('profiles').select('church_id').eq('id', me).maybeSingle();
+  const church = (profile as { church_id?: string } | null)?.church_id;
+  if (!church) throw new Error('You are not in a church yet.');
+
+  const url = app.url.trim();
+  if (!/^https:\/\//i.test(url)) {
+    throw new Error('The address has to start with https:// so it opens safely on a phone.');
+  }
+
+  const { error } = await db().from('church_apps').insert({
+    church_id: church,
+    name: app.name.trim(),
+    blurb: app.blurb?.trim() || null,
+    url,
+    icon: app.icon?.trim() || null,
+    sort_order: app.sortOrder ?? 0,
+    added_by: me,
+  });
+  if (error) throw new Error(error.message);
+}
+
+/** Take one out of the room. */
+export async function removeChurchApp(id: string): Promise<void> {
+  const { error } = await db().from('church_apps').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 

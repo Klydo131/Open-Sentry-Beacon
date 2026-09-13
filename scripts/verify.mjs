@@ -205,6 +205,12 @@ const staticChecks = [
   // END date was never recorded at all. updated_at is NOT it -- it moves on
   // stage changes -- and substituting it would look complete and be wrong.
   ['a pairing has a track record', 'tests/a-pairing-has-a-track-record.mjs'],
+  // An Apps room whose addresses are the CHURCH'S -- this environment could not
+  // reach those domains, so anything hard-coded would have been written from
+  // memory and shipped untested. And an auto-pair button that PROPOSES: forty
+  // pairings by one tap is not something a Director can supervise, and a minor
+  // assigned to an adult by an algorithm must never happen at all.
+  ['a room for the apps a church uses', 'tests/a-room-for-the-apps-a-church-uses.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

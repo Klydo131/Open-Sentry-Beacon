@@ -264,6 +264,16 @@ export const KEEP_UP_FEEDBACK = ['feedback'] as const;
  */
 export const KEEP_UP_LIBRARY_RECORD = ['materials', 'material_shares'] as const;
 
+/**
+ * The apps a church offers.
+ *
+ * Leadership adds one and every phone in the congregation should have it
+ * without anybody being told to reload. The table is small and changes rarely,
+ * which is exactly why a stale one is easy to miss: somebody adds the hymnal on
+ * Sabbath morning and nobody sees it until they next open the app cold.
+ */
+export const KEEP_UP_APPS = ['church_apps'] as const;
+
 /** Somebody's own account: their name, their photograph, their church. */
 export const KEEP_UP_ACCOUNT = ['profiles', 'churches', 'profile_changes'] as const;
 
