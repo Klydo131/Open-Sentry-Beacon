@@ -200,6 +200,11 @@ const staticChecks = [
   // SHAPE is what is checked: one receipt, under the last thing you sent, never
   // a column of Seen down the thread and never on the other person's messages.
   ['you can tell whether it was read', 'tests/you-can-tell-whether-it-was-read.mjs'],
+  // The roster showed two names and a stage and no date, and an ended pairing
+  // stopped existing on the screen. created_at was already in the browser; the
+  // END date was never recorded at all. updated_at is NOT it -- it moves on
+  // stage changes -- and substituting it would look complete and be wrong.
+  ['a pairing has a track record', 'tests/a-pairing-has-a-track-record.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

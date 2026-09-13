@@ -8,6 +8,20 @@ import { useKeepUp, KEEP_UP_ROSTER } from '@/lib/live/keep-up';
 import { roleNoun, stageInfo, APP_SHORT_NAME } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
 import * as live from '@/lib/live/data';
+
+/**
+ * A day, for the pairing record. Short, and it carries the year only when it is
+ * not this one -- a roster stamped 2026 on every line reads as noise.
+ */
+function onDay(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const thisYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString([], {
+    day: 'numeric', month: 'short', ...(thisYear ? {} : { year: 'numeric' }),
+  });
+}
 import { LiveReportsForDirector } from '@/components/LiveSafeguarding';
 import { LiveTrialRoom, LiveCourt } from '@/components/LiveTrialRoom';
 import { LiveGuilds, LiveChurchPulse } from '@/components/LiveGuilds';
@@ -1017,6 +1031,13 @@ export function LiveAdminPage() {
                   {pairing.ds_name}
                 </button>
                 <MinorBadge person={{ birthday: pairing.ds_birthday, guardian_consent_at: pairing.ds_guardian_consent_at }} />
+                {/* WHEN THEY WERE CONNECTED. `created_at` has been on every one
+                    of these rows since the table existed and was never drawn,
+                    so the roster answered "who" and never "since when" -- and a
+                    Director deciding whether a pairing is working needs the
+                    second at least as much as the first. Three weeks and three
+                    months are different questions about the same two names. */}
+                <span className="text-xs text-gray-500">since {onDay(pairing.created_at)}</span>
                 {/* THIS IS A STATUS, NOT A BUTTON, and it was read as one.
                     It shows where the Explorer is on the journey, and the
                     second stage is called "Connect" — so a grey pill reading
@@ -1068,6 +1089,79 @@ export function LiveAdminPage() {
               </div>
             ))}
           </div>
+
+          {/* -----------------------------------------------------------------
+              THE PAIRINGS THAT HAVE ENDED
+              -----------------------------------------------------------------
+              WHAT A DIRECTOR COULD NOT SEE AT ALL. The list above filters to
+              `status === 'active'`, so a pairing that ended simply stopped
+              existing on this screen. Fifty-three of this church's pairings are
+              archived and not one of them was visible to anybody -- which means
+              a Director could not answer "has this Explorer had a Guide
+              before?", or "how long did that last?", or "who was walking with
+              them in August?".
+
+              That is the question this whole change came from: "EDs and
+              Directors should know when did the Guide and Explorer connected so
+              we there would be a track record." A record that only holds the
+              present is not a record.
+
+              FOLDED SHUT, because the roster is about who is walking together
+              now. It opens when somebody asks the question it answers -- the
+              same shape as the appointments history.
+
+              NEWEST FIRST, because the question is almost always about the most
+              recent arrangement rather than the oldest. */}
+          {(() => {
+            const ended = pairings
+              .filter((p) => p.status !== 'active')
+              .sort((a, b) => (b.ended_at ?? b.created_at).localeCompare(a.ended_at ?? a.created_at));
+            if (ended.length === 0) return null;
+            return (
+              <details className="mt-5 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
+                <summary className="cursor-pointer text-sm font-bold text-navy">
+                  {ended.length === 1
+                    ? 'One pairing that has ended'
+                    : `${ended.length} pairings that have ended`}
+                </summary>
+                <div className="mt-3 space-y-2">
+                  {ended.map((p) => (
+                    <div key={p.id} className="flex flex-wrap items-center gap-2 border-t border-navy/5 pt-2 text-sm first:border-0 first:pt-0">
+                      <button
+                        type="button"
+                        onClick={() => setOpenId(p.dm_id)}
+                        className="font-semibold text-navy underline underline-offset-2"
+                      >
+                        {p.dm_name}
+                      </button>
+                      <span className="text-gray-400">walked with</span>
+                      <button
+                        type="button"
+                        onClick={() => setOpenId(p.ds_id)}
+                        className="font-semibold text-navy underline underline-offset-2"
+                      >
+                        {p.ds_name}
+                      </button>
+                      {/* TWO DIFFERENT KINDS OF NULL, AND THE SCREEN SAYS WHICH.
+                          A pairing archived before migration 20260913100000 has
+                          an end date that was NEVER CAPTURED, and there is no
+                          honest way to recover it -- `updated_at` moves on stage
+                          changes, so reading it as an ending would put a
+                          confident wrong day in front of a pastoral judgement.
+                          Saying the date is not recorded is the truth, and it
+                          stops being said for every pairing that ends from now
+                          on. */}
+                      <span className="ml-auto text-xs text-gray-500">
+                        {onDay(p.created_at)}
+                        {' \u2013 '}
+                        {p.ended_at ? onDay(p.ended_at) : 'end date not recorded'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            );
+          })()}
         </Card>
         )}
 

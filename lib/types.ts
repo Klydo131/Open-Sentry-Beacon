@@ -231,7 +231,21 @@ export interface Pairing {
   track: Track;
   journey_stage: Stage;
   status: PairingStatus;
+  /** When these two were connected. The start of the track record. */
   created_at: string;
+  /**
+   * When the pairing was archived, set by a database trigger.
+   *
+   * NULL FOR TWO DIFFERENT REASONS, and a screen has to tell them apart: an
+   * ACTIVE pairing has not ended, and a pairing archived before migration
+   * 20260913100000 has an end date that was never captured and cannot be
+   * recovered. Status says which.
+   *
+   * NEVER SUBSTITUTE `updated_at` FOR THIS. That column is written by stage
+   * changes only, so it would put a confident wrong day in front of somebody
+   * making a pastoral judgement.
+   */
+  ended_at?: string | null;
 }
 
 export interface Message {
