@@ -129,22 +129,101 @@ const KEYS = ['hope-beacon.feedback.local', 'hope-beacon:library-favorites'];
 }
 
 // ---------------------------------------------------------------------------
-// 2b. AND THE APP SAYS ITS OWN NAME
+// 2b. AND THE APP HAS A NAME OF ITS OWN -- WHATEVER THAT NAME IS
 // ---------------------------------------------------------------------------
 //
-// The half that would have caught this from the other direction. Checking only
-// that the wrong name is absent passes just as happily if the right one never
-// arrives -- a sign-in screen reading "Sign in to" and nothing else.
+// THIS CHECK USED TO PIN THE LITERAL STRING `'Hope Beacon'`, AND THAT WAS
+// BACKWARDS FOR THIS PROJECT.
+//
+// The half it was written for is right: checking only that the WRONG name is
+// absent passes just as happily if no name arrives at all -- a sign-in screen
+// reading "Sign in to" and nothing else. That is still checked below.
+//
+// What it got wrong is treating one deployment's name as the rule. The naming
+// has three layers, and only two of them are fixed:
+//
+//     THE PROJECT      Open Sentry Beacon   what a developer clones. Fixed.
+//     THE DEPLOYMENT   Hope Beacon          what THIS church calls it. An
+//                                           EXAMPLE, and the first thing a fork
+//                                           is expected to change.
+//     A FORK           anything             whatever that church is called.
+//
+// Pinning the example made the gate go red the moment somebody did the thing
+// this project exists for. `docs/START-HERE.md` tells a church to open
+// lib/brand.ts and put their own name in; this check would then have failed
+// their build and told them their app was called the wrong thing. An open
+// source project whose test suite refuses the rename it advertises is worse
+// than one with no test at all.
+//
+// So the invariant is the one that survives a fork: the name is SET, it is not
+// blank, and it is not the project's name leaking through. What it actually
+// says is the church's business.
 {
   const brand = read('lib/brand.ts');
-  ok(/export const APP_SHORT_NAME = 'Hope Beacon'/.test(brand),
-     'the app calls itself Hope Beacon');
+  const short = brand.match(/export const APP_SHORT_NAME = '([^']*)'/)?.[1];
+  const full  = brand.match(/export const APP_NAME = '([^']*)'/)?.[1];
+
+  ok(!!short && short.trim().length >= 2,
+     `the app has a short name of its own (${short || 'MISSING'})`);
+  ok(!!full && full.trim().length >= 2,
+     `and a full one (${full || 'MISSING'})`);
+
+  // THE ONE NAME IT MAY NOT BE. Check 2 above already hunts the project's name
+  // through every tracked file; this says it plainly about the constant itself,
+  // because that is the specific mistake that put a congregation in front of a
+  // sign-in screen wearing a name nobody had given them.
+  ok(!/sentry beacon/i.test(short ?? ''),
+     'and it is not the project\u2019s own name, which no church should ever read');
 
   // AND THE SCREEN THE OWNER SCREENSHOTTED reads it from there rather than
   // carrying its own copy, which is how it came to disagree in the first place.
   const door = read('components/live/DoorPages.tsx');
   ok(/Sign in to \$\{APP_SHORT_NAME\}/.test(door),
      'and the sign-in screen takes the name from the one place that defines it');
+}
+
+// ---------------------------------------------------------------------------
+// 2c. A FORK CAN ACTUALLY RENAME IT
+// ---------------------------------------------------------------------------
+//
+// THE CHECK THAT WOULD HAVE CAUGHT MY OWN MISTAKE, so it is written as the
+// thing itself rather than as a promise about it.
+//
+// docs/START-HERE.md and README.md both tell a church to open lib/brand.ts and
+// put their own name in. Section 2b used to pin the literal `'Hope Beacon'`,
+// which means the FIRST THING the documentation asks somebody to do would have
+// turned their build red and told them their app was called the wrong thing.
+// Nobody here would have seen it, because nobody here renames it.
+//
+// So: take the real file, rename it the way a fork would, and run the same
+// rules over the result. If the gate refuses a perfectly ordinary church name,
+// this goes red at home instead of in a stranger's terminal.
+{
+  const brand = read('lib/brand.ts');
+  const renamed = brand
+    .replace(/export const APP_NAME = '[^']*'/, "export const APP_NAME = 'Sampaguita Fellowship'")
+    .replace(/export const APP_SHORT_NAME = '[^']*'/, "export const APP_SHORT_NAME = 'Sampaguita'");
+
+  const short = renamed.match(/export const APP_SHORT_NAME = '([^']*)'/)?.[1];
+  const full  = renamed.match(/export const APP_NAME = '([^']*)'/)?.[1];
+
+  ok(short === 'Sampaguita' && full === 'Sampaguita Fellowship',
+     'the two constants are the only edit a rename needs');
+
+  // EVERY RULE THIS FILE ENFORCES, RE-RUN AGAINST THE RENAMED COPY.
+  ok(!!short && short.trim().length >= 2 && !!full && full.trim().length >= 2,
+     'and a renamed fork still satisfies the name-is-set rule');
+  ok(!/sentry beacon/i.test(short) && !/sentry beacon/i.test(full),
+     'and still satisfies the not-the-project rule');
+
+  // THE STORAGE KEYS MUST SURVIVE THE RENAME TOO, which is the one thing a
+  // find-and-replace across this file would genuinely destroy. Checked here on
+  // the renamed copy rather than only on ours, because a fork runs the same
+  // find-and-replace we did and loses the same drawers if it sweeps them up.
+  for (const key of KEYS) {
+    ok(renamed.includes(key),
+       `and ${key} is still named as an address a rename must not touch`);
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -4,7 +4,9 @@ import type { Stage, Track } from './types';
 // Your church's name for this app. Start here, and read the next paragraph.
 //
 // This is the first thing most forks want to change, so it is deliberately the
-// first thing in the first file. The browser tab, the installed app's name on a
+// first thing in the first file. The name shipped below is an EXAMPLE -- one
+// church's -- and replacing it is expected, supported, and checked for in the
+// sense that the gate refuses a BLANK name rather than a different one. The browser tab, the installed app's name on a
 // phone home screen, and the link preview all come from these constants.
 //
 // CHANGE THESE TWO LINES AND NOTHING ELSE. That is true now, and it is worth
@@ -34,17 +36,35 @@ import type { Stage, Track } from './types';
 // tests/the-brand-is-one-name.mjs goes red if either is swept up by the next
 // find-and-replace.
 
-// THE APP IS CALLED HOPE BEACON. THE REPOSITORY IS CALLED OPEN SENTRY BEACON.
+// THREE LAYERS OF NAME, AND ONLY TWO OF THEM ARE FIXED.
 //
-// Those are two different names for two different things and conflating them
-// cost a rename in each direction. A sweep once replaced the app's name with
-// the repository's, so a congregation signed in under the REPOSITORY'S name -- one
-// nobody had given them, on the screen where they type their password, which is
-// the worst possible place to look unfamiliar.
+//     THE PROJECT      Open Sentry Beacon   what a developer clones. Fixed. It
+//                                           is the name of the software.
+//     THIS DEPLOYMENT  Hope Beacon          what this particular church calls
+//                                           it. An EXAMPLE. See below.
+//     YOUR FORK        whatever you like    your church's name for it.
 //
-// A church never sees the repository. It sees this file. Anything the
-// repository is called belongs in README.md, AGENTS.md and a clone URL, and
+// HOPE BEACON IS AN EXAMPLE, NOT THE PRODUCT'S NAME. It is what the demo and
+// the first real congregation run under, and it is here so that everything
+// downstream -- the manifest, the invitation e-mails, the sign-in screen -- has
+// a real name to show rather than a placeholder nobody would notice was still a
+// placeholder. Change it. That is what it is for.
+//
+// CONFLATING THE FIRST TWO COST A RENAME IN EACH DIRECTION, which is why they
+// are spelled out. A sweep once replaced the app's name with the PROJECT'S, so
+// a congregation signed in under a name nobody had given them, on the screen
+// where they type their password -- the worst possible place to look
+// unfamiliar. It was caught from a screenshot by the owner, not by a test.
+//
+// A church never sees the project's name. It sees this file. Anything the
+// project is called belongs in README.md, AGENTS.md and a clone URL, and
 // nowhere a member can read.
+//
+// WHAT THE GATE ENFORCES, so that a fork knows what it is free to do: that a
+// name is SET and is not the project's own name leaking through. Not what the
+// name is. tests/the-brand-is-one-name.mjs used to pin the literal string
+// below, which would have failed the build of the first church that did what
+// docs/START-HERE.md tells them to do.
 
 /** The full name. Browser tab, installed app, the "about" line. */
 export const APP_NAME = 'Hope Beacon';

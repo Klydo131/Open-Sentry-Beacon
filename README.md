@@ -324,6 +324,26 @@ npm run test:all  # the above, plus real-browser suites
 
 ---
 
+## What it is called, and what you should call yours
+
+**Open Sentry Beacon** is the name of the software. That is what you clone, and
+it does not change.
+
+**Hope Beacon** is the name one church runs it under. It is the example that
+ships in the box — the demo and the first live congregation both use it — so
+that every screen, e-mail and phone icon has a real name on it rather than a
+placeholder nobody notices is still a placeholder.
+
+**Your church's name is what you should put there.** Open
+[`lib/brand.ts`](lib/brand.ts), change two lines, and the browser tab, the
+installed app on a phone, the invitation e-mails and the sign-in screen all
+follow. Nothing else needs touching.
+
+The build refuses a name that is **blank**, and refuses the project's own name
+leaking onto a screen a member reads. It does not care what you choose. An open
+source project whose tests reject the rename it advertises would be worse than
+one with no tests, and this one used to pin the example by mistake.
+
 ## Where this came from
 
 Open Sentry Beacon is the open-source release of Hope Beacon, an app built for a
