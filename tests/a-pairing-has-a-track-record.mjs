@@ -1,4 +1,5 @@
-// A Director can see when two people were connected, and when they stopped.
+// A Director can see when two people connected, when they stopped, and when
+// somebody was approved.
 //
 // ---------------------------------------------------------------------------
 // WHY THIS EXISTS. Asked for from the roster screen: "EDs and Directors should
@@ -132,6 +133,82 @@ const sql = migration ? read(`supabase/migrations/${migration}`) : '';
 
   ok(!/update .*pairings.*set ended_at/i.test(sql.replace(/--[^\n]*/g, '')),
      'and nothing was backfilled, because there was no honest source');
+}
+
+// ---------------------------------------------------------------------------
+// 5. AND AN APPROVAL IS A DATED DECISION TOO
+// ---------------------------------------------------------------------------
+//
+// Asked for in the same breath as the pairing dates: "approvals should have a
+// date too please, make sure the connection of Guide and Explorer pairing and
+// approval must have a live date record."
+//
+// `is_approved` was a BARE BOOLEAN. Every other consequential thing on a
+// profile already carried a timestamp and the two heaviest carried an actor as
+// well -- `suspended_at` with `suspended_by`, guardian consent with the person
+// who gave it. So the app could say exactly when access was TAKEN AWAY from
+// somebody and by whom, and could not say when it was GRANTED or by whom. That
+// is the wrong way round: approval is what lets a stranger into a church's
+// private conversations.
+//
+// AND IT WAS NOT AUDITED EITHER, which is why nothing could be backfilled.
+// `record_profile_change` watches eight fields -- full_name, preferred_contact,
+// preferred_language, birthday, gender, life_status, city_of_residence,
+// work_industry -- and `is_approved` is not among them. Checked from the
+// function definition rather than by reading anybody's change history.
+{
+  const approval = fs.readdirSync(path.join(root, 'supabase/migrations'))
+    .find((f) => f.includes('an_approval_is_a_dated_decision'));
+  ok(!!approval, 'a migration gives approval a date');
+  const asql = approval ? read(`supabase/migrations/${approval}`) : '';
+
+  ok(/add column if not exists approved_at timestamptz/.test(asql),
+     'as a column of its own');
+  ok(/add column if not exists approved_by uuid references public\.profiles/.test(asql),
+     'and records who made the decision, the way suspension already did');
+
+  ok(/create trigger stamp_approval/.test(asql)
+     && /before update of is_approved on public\.profiles/.test(asql),
+     'stamped by the database on the change itself, not by a browser clock');
+
+  ok(/old\.is_approved is distinct from true/.test(asql),
+     'only the transition into approved stamps it, so re-saving cannot move the date');
+
+  ok(/if not new\.is_approved then[\s\S]{0,120}approved_at := null/.test(asql),
+     'and taking approval away clears it, so the roster cannot contradict itself');
+
+  // ON DELETE SET NULL, because an approver can leave the church. The date is
+  // still true when the person who made it is gone.
+  ok(/on delete set null/.test(asql),
+     'and an approver leaving does not erase the date they set');
+
+  ok(/approved_at\?: string \| null;/.test(types),
+     'the profile carries it into the browser');
+
+  ok(/approved \$\{onDay\(member\.approved_at\)\}/.test(admin),
+     'and the approved list finally shows when');
+
+  // THE HONEST NULL AGAIN. Everybody in that list IS approved, so a missing
+  // date is never "not yet decided" -- it is a decision made before the column
+  // existed. Showing created_at or updated_at instead would be a confident
+  // guess about somebody's access.
+  // THE WHOLE PHRASE, NOT A SUBSTRING OF SOMEBODY ELSE'S. This asked for
+  // `/date not recorded/` and stayed green when the approval line was stripped
+  // of it -- because the PAIRING section a few hundred lines up says "end date
+  // not recorded", and that contains the shorter phrase. A check satisfied by a
+  // different feature's wording is not checking this feature at all, and it is
+  // the seventh time this project has caught that shape.
+  ok(/access approved · date not recorded/.test(adminSrc),
+     'and says so when the date was never captured, rather than guessing');
+
+  // BOUNDED, BECAUSE `admin` IS ONE LINE. The first version of this used `.*`
+  // between the two names -- and with whitespace collapsed the whole file is a
+  // single line, so `.*` ran the length of it and matched an `approved_at` here
+  // against a `created_at` four hundred lines away. An unbounded wildcard on
+  // collapsed source is not a proximity test at all; it asks whether two
+  // strings both exist in the file.
+  ok(!/approved_at[^;]{0,40}(\?\?|\|\|)[^;]{0,40}(created_at|updated_at)/.test(admin),
+     'with no fallback to another column standing in for it');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

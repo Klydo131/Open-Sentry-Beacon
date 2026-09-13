@@ -78,6 +78,21 @@ export interface Profile {
    */
   photo_path?: string | null;
   is_approved: boolean;
+  /**
+   * When this person was approved, and by whom. Stamped by a database trigger
+   * on the transition into approved, and cleared if approval is taken away.
+   *
+   * NULL FOR TWO REASONS A SCREEN MUST TELL APART: somebody not yet approved
+   * has no date because there was no decision, and somebody approved before
+   * migration 20260913140000 has one that was never captured. `is_approved`
+   * says which.
+   *
+   * NOT RECOVERABLE FOR THE SECOND GROUP. `record_profile_change` watches eight
+   * fields and `is_approved` is not one of them, so there is no audit row to
+   * read a historical date out of either.
+   */
+  approved_at?: string | null;
+  approved_by?: string | null;
   // A missionary who vouched for this sign-up to the admin. It is a note on the
   // approval card, not a gate: the admin decides alone. (This used to be
   // endorsed_by, a Church Board member, and it was step 1 of a two-step gate.

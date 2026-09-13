@@ -161,6 +161,25 @@ export function LiveAdminPage() {
   );
   const pending = manageable.filter((member) => !member.is_approved);
   const approved = manageable.filter((member) => member.is_approved);
+
+  /**
+   * The name of whoever approved somebody, from the list already loaded.
+   *
+   * FIRST NAME ONLY, because the line it sits on is already carrying a role and
+   * a date and this is the least important of the three.
+   *
+   * AND IT RETURNS EMPTY RATHER THAN GUESSING. `approved_by` is null when the
+   * approval happened outside a request -- a migration or a script has no
+   * auth.uid() -- and it can also point at somebody who has since been deleted,
+   * because the column is ON DELETE SET NULL. Either way the date is still
+   * true and is worth showing on its own; inventing "by Someone" would put a
+   * person in a record who may never have been there.
+   */
+  const approverName = (id: string | null | undefined): string => {
+    if (!id) return '';
+    const who = members.find((m) => m.id === id);
+    return who?.full_name ? who.full_name.split(' ')[0] : '';
+  };
   // Matching is on the name a Director reads on the row. Case and surrounding
   // spaces are ignored, because a name copied out of an email carries both.
   const approvedNeedle = findApproved.trim().toLowerCase();
@@ -905,7 +924,32 @@ export function LiveAdminPage() {
                       <p className="truncate font-semibold text-navy">{member.full_name || 'Member'}</p>
                       <NewBadge person={member} />
                     </div>
-                    <p className="text-sm text-gray-500">{roleNoun(member.role)} · access approved</p>
+                    {/* WHEN, AND BY WHOM. This line read "access approved" and
+                        nothing else -- a permanent present tense for the single
+                        decision a Director is most likely to be asked to account
+                        for afterwards. Every other consequential thing on a
+                        profile already carried a date, and two of them carried
+                        an actor: suspended_at with suspended_by, guardian
+                        consent with the person who gave it. Taking access AWAY
+                        was fully recorded; granting it was not recorded at all.
+
+                        NULL MEANS TWO DIFFERENT THINGS AND THE LINE SAYS WHICH.
+                        Everybody in this list is approved, so a missing date is
+                        never "not yet decided" -- it is a decision made before
+                        the column existed, never captured, and not in
+                        profile_changes either, because that trigger watches
+                        eight fields and is_approved is not one of them. Saying
+                        so is the truth; showing created_at or updated_at in its
+                        place would be a confident guess about somebody's access.
+                        That stops being said for everyone approved from now
+                        on. */}
+                    <p className="text-sm text-gray-500">
+                      {roleNoun(member.role)}
+                      {member.approved_at
+                        ? ` · approved ${onDay(member.approved_at)}${
+                            approverName(member.approved_by) ? ` by ${approverName(member.approved_by)}` : ''}`
+                        : ' · access approved · date not recorded'}
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button
