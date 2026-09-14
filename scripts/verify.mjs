@@ -348,6 +348,9 @@ const staticChecks = [
   // attribute, and Tailwind settles duplicates by stylesheet order. Both delete
   // confirmations rendered white text on a white ground: invisible controls.
   ['a button cannot hide its own label', 'tests/a-button-cannot-hide-its-own-label.mjs'],
+  // "Invite them" used to write a status and stop: nothing sent, and the card
+  // -- with the only copy of the address on it -- gone from every screen.
+  ['invite them actually invites them', 'tests/invite-them-actually-invites.mjs'],
   ['the diary sits with the conversation', 'tests/the-diary-sits-with-the-conversation.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],

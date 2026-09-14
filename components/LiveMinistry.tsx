@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useKeepUp, KEEP_UP_FOLLOW_UPS } from '@/lib/live/keep-up';
 import * as live from '@/lib/live/data';
+import { copyText } from '@/lib/share';
 import { Button, Card } from '@/components/ui';
 import { Linked } from '@/components/Linked';
 import { humanError } from '@/lib/live/errors';
@@ -94,6 +95,7 @@ export function LiveRecommend() {
 export function LiveRecommendationsForDirector({ alone = false }: { alone?: boolean }) {
   const [rows, setRows] = useState<live.Recommendation[] | null>(null);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState('');
   const load = useCallback(async () => {
     try { setRows(await live.listRecommendations()); setError(''); }
     catch (cause) { setRows([]); setError(message(cause)); }
@@ -102,13 +104,25 @@ export function LiveRecommendationsForDirector({ alone = false }: { alone?: bool
   // The screen keeps up when somebody else changes something.
   useKeepUp(KEEP_UP_FOLLOW_UPS, load);
 
-  const decide = async (id: string, status: 'invited' | 'declined') => {
+  const decide = async (id: string, status: 'invited' | 'declined', row?: live.Recommendation) => {
     setError('');
-    try { await live.decideRecommendation(id, status); await load(); }
+    try { await live.decideRecommendation(id, status, row); await load(); }
     catch (cause) { setError(message(cause)); }
   };
 
   const pending = rows?.filter((r) => r.status === 'pending') ?? [];
+  const decided = rows?.filter((r) => r.status !== 'pending') ?? [];
+
+  // copyText, not navigator.clipboard directly. The clipboard API throws over
+  // plain http and fails silently on Safari, and lib/share.ts already carries
+  // the fallback that works everywhere -- a guardrail forbids the direct call
+  // precisely so a second, weaker copy of that fallback cannot appear.
+  const copy = async (r: live.Recommendation) => {
+    if (await copyText(r.email)) {
+      setCopied(r.id);
+      window.setTimeout(() => setCopied(''), 1500);
+    }
+  };
   // Vanishing is right for a panel among panels and wrong when this is the
   // whole room: a tab somebody opened on purpose must say why it is empty.
   if (rows !== null && pending.length === 0 && !error && !alone) return null;
@@ -131,13 +145,51 @@ export function LiveRecommendationsForDirector({ alone = false }: { alone?: bool
             <p className="font-semibold text-navy">{r.full_name}</p>
             <p className="text-xs text-gray-500">{r.email}</p>
             {r.note && <p className="mt-1 text-sm italic text-gray-600">&ldquo;{r.note}&rdquo;</p>}
-            <div className="mt-2 flex gap-2">
-              <Button onClick={() => decide(r.id, 'invited')}>Invite them</Button>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button onClick={() => decide(r.id, 'invited', r)}>Invite them</Button>
               <Button variant="ghost" onClick={() => decide(r.id, 'declined')}>Not now</Button>
+              {/* THE ADDRESS HAS TO BE TAKEABLE, not just readable. Asked for
+                  after deciding a recommendation twice made the card vanish and
+                  took the only copy of the address with it, leaving no way to
+                  invite the person by hand. */}
+              <Button variant="ghost" onClick={() => void copy(r)}>
+                {copied === r.id ? 'Copied' : 'Copy address'}
+              </Button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* DECIDED ONES ARE KEPT, NOT ERASED.
+          A decision used to remove the row from every screen in the app, so a
+          Guide's recommendation and the address on it were gone the moment
+          anybody pressed a button -- including by accident. Asked for directly:
+          "if they accidentally delete it, the info can saved at some point".
+          Folded away, because the pending ones are the work. */}
+      {decided.length > 0 && (
+        <details className="mt-4">
+          <summary className="cursor-pointer text-sm font-semibold text-gray-600">
+            Already decided ({decided.length})
+          </summary>
+          <div className="mt-2 space-y-2">
+            {decided.map((r) => (
+              <div key={r.id} className="rounded-xl bg-gray-50 p-3">
+                <p className="font-semibold text-navy">{r.full_name}</p>
+                <p className="text-xs text-gray-500">{r.email}</p>
+                {r.note && <p className="mt-1 text-sm italic text-gray-600">&ldquo;{r.note}&rdquo;</p>}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-gray-600 ring-1 ring-gray-200">
+                    {r.status === 'invited' ? 'Invited' : 'Not now'}
+                  </span>
+                  <Button variant="ghost" onClick={() => void copy(r)}>
+                    {copied === r.id ? 'Copied' : 'Copy address'}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </Card>
   );
 }

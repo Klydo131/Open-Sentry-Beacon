@@ -2539,9 +2539,44 @@ export async function recommendSomeone(m: { full_name: string; email: string; no
   if (error) throw new Error(error.message);
 }
 
-export async function decideRecommendation(id: string, status: 'invited' | 'declined'): Promise<void> {
+export async function decideRecommendation(
+  id: string,
+  status: 'invited' | 'declined',
+  /** The row being decided. Required to invite; a decline needs only the id. */
+  row?: Recommendation,
+): Promise<void> {
   const supabase = db();
   const me_id = await uid();
+
+  // "INVITE THEM" HAS TO ACTUALLY INVITE THEM.
+  //
+  // It used to set this column and stop. The row then read INVITED, the Guide
+  // who put the name forward saw INVITED, and NOTHING HAD BEEN SENT: no
+  // invitation row, no account, no email. Reported as "does it automatically
+  // send a letter? How come there was no confirm in my mailbox" -- and the
+  // answer was that there was nothing to confirm. Checked against the live
+  // database: the only invitation on file for that address had been created
+  // sixteen days earlier and had expired two days before the button was
+  // pressed.
+  //
+  // The invitation is sent FIRST and the status written only if it succeeded,
+  // so a refusal -- the hourly email allowance is the common one -- leaves the
+  // row pending and the Director able to try again. Writing the status first
+  // would strand the person permanently behind a label saying they had been
+  // dealt with.
+  //
+  // recommended_by carries the Guide who put the name forward, which is what
+  // pairs the two of them automatically once the person is approved.
+  if (status === 'invited') {
+    if (!row) throw new Error('Nothing to invite.');
+    await inviteMember({
+      email: row.email,
+      role: 'ds',
+      fullName: row.full_name,
+      recommendedBy: row.dm_id,
+    });
+  }
+
   const { error } = await supabase.from('recommendations')
     .update({ status, decided_by: me_id, decided_at: new Date().toISOString() })
     .eq('id', id);
