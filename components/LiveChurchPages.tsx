@@ -210,7 +210,25 @@ export function LiveMailPage() {
 
   // Somebody who has an account but never finished. `joined_at` is
   // signup_completed_at, which is stamped once, after a password is chosen.
-  const unfinished = (invites ?? []).filter((i) => !i.joined_at);
+
+  // AN INVITATION WHOSE ACCOUNT WAS REMOVED IS NOT A PENDING INVITATION.
+  //
+  // Sending one creates the account (supabase/functions/invite: "the account is
+  // created here, with a password already on it"). So Re-send on a row whose
+  // person has been removed does not resend anything -- it REBUILDS the account
+  // of somebody a leader deleted, from a row that said "never sent", as though
+  // nothing had ever happened. On the reported screen 78 of 81 rows were this,
+  // and none of them was genuinely unsent.
+  //
+  // redeemed_at alone must never be read as "they joined" -- see OpenInvite,
+  // where doing so was wrong twice. Paired with the absence of an account it is
+  // exact: the invitation was spent, so an account existed, and it is gone now.
+  const isRemoved = (i: live.OpenInvite) =>
+    !i.joined_at && i.redeemed_at !== null && !i.has_account;
+  const removed = (invites ?? []).filter(isRemoved);
+  // Everything that sends -- the row buttons and the bulk send alike -- works
+  // from this list, so neither can reach a removed person.
+  const unfinished = (invites ?? []).filter((i) => !i.joined_at && !isRemoved(i));
 
   const resendAllUnfinished = async () => {
     const queue = unfinished;
@@ -288,7 +306,7 @@ export function LiveMailPage() {
   // Director does on their own device to check it works. Both filed people
   // under Accepted who had never touched anything — and left them with no
   // Re-send button, because the screen believed there was nothing left to do.
-  const waiting = (invites ?? []).filter((i) => !i.joined_at);
+  const waiting = (invites ?? []).filter((i) => !i.joined_at && !isRemoved(i));
   const joined = (invites ?? []).filter((i) => i.joined_at);
 
   return (
@@ -572,6 +590,50 @@ export function LiveMailPage() {
           </ul>
         )}
       </Card>
+
+      {removed.length > 0 && (
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">
+            Account since removed <span className="text-gray-400">· {removed.length}</span>
+          </h2>
+          <p className="mt-1 text-sm text-gray-600">
+            These invitations were used and the account was later deleted. They are
+            kept as a record. There is no Re-send here, because sending an
+            invitation creates the account and would put the person back.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {removed.map((i) => (
+              <li key={i.id} className="rounded-xl bg-gray-50 p-4">
+                <p className="font-semibold text-navy">{i.full_name || i.email}</p>
+                <p className="truncate text-sm text-gray-600">{i.email}</p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {roleNoun(i.role)} &middot; invited {ago(i.created_at)}
+                  <span className="ml-1 font-semibold text-gray-600">
+                    &middot; account removed
+                  </span>
+                </p>
+                {/* Cancel only. It takes the row out of the record and frees
+                    the address to be invited again, which is the deliberate
+                    way back for somebody who should return -- a decision a
+                    leader makes, not a retry button they press by accident. */}
+                <span className="mt-2 flex w-full flex-wrap gap-2 sm:w-auto">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setConfirmCancel(confirmCancel === i.id ? '' : i.id)}
+                  >
+                    {confirmCancel === i.id ? 'Keep it' : 'Remove this record'}
+                  </Button>
+                  {confirmCancel === i.id && (
+                    <Button variant="danger" disabled={busy === i.id} onClick={() => cancel(i)}>
+                      {busy === i.id ? 'Removing…' : 'Yes, remove it'}
+                    </Button>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Card className="p-5">
         <h2 className="text-xl font-bold text-navy">

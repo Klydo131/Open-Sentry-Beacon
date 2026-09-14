@@ -91,7 +91,7 @@ export function LiveRecommend() {
 }
 
 /** The Director's side of the same table. */
-export function LiveRecommendationsForDirector() {
+export function LiveRecommendationsForDirector({ alone = false }: { alone?: boolean }) {
   const [rows, setRows] = useState<live.Recommendation[] | null>(null);
   const [error, setError] = useState('');
   const load = useCallback(async () => {
@@ -109,13 +109,22 @@ export function LiveRecommendationsForDirector() {
   };
 
   const pending = rows?.filter((r) => r.status === 'pending') ?? [];
-  if (rows !== null && pending.length === 0 && !error) return null;
+  // Vanishing is right for a panel among panels and wrong when this is the
+  // whole room: a tab somebody opened on purpose must say why it is empty.
+  if (rows !== null && pending.length === 0 && !error && !alone) return null;
+  const empty = rows !== null && pending.length === 0 && !error;
 
   return (
     <Card className="p-5">
       <h2 className="text-xl font-bold text-navy">🤝 Recommended by your Guides</h2>
       <p className="mt-1 text-sm text-gray-500">A Guide has met somebody. The decision is yours.</p>
       <Err msg={error} />
+      {empty && (
+        <p className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          No Guide has put a name forward. When one does, the person appears here
+          and you decide whether to invite them.
+        </p>
+      )}
       <div className="mt-3 space-y-2">
         {pending.map((r) => (
           <div key={r.id} className="rounded-xl bg-gray-50 p-3">

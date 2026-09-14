@@ -129,7 +129,37 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   } catch {
     throw new Error('Your account signed in, but the app could not save the session.');
   }
-  return payload.profile as SignInResult;
+  const mine = payload.profile as SignInResult;
+
+  // CLAIM THE INVITATION HERE, NOT ONLY ON THE JOIN LINK.
+  //
+  // Sending an invitation creates the account; the church and the invited role
+  // are attached separately, by claim_my_pending_invitation(). The join flow
+  // calls it. Signing in did not -- so anybody who reached the app through
+  // /login instead of finishing their join link kept a profile with NO CHURCH,
+  // and a church-less profile is invisible to every Director, because every
+  // approval list is scoped by church. They sat on "waiting for a Director to
+  // approve" while the Director's screen read "Nobody is waiting". Neither side
+  // could see the other and neither had anything to act on. Reported from both
+  // ends at once, which is the only reason it was findable.
+  //
+  // Gated on approval so it costs an approved member nothing, and safe when it
+  // does run: the claim only touches a profile that has no church AND is not
+  // approved, and it only ever writes what a still-valid invitation already
+  // says. For anybody else it is a no-op.
+  if (!mine.is_approved) {
+    try {
+      if (await claimMyPendingInvitation()) {
+        const claimed = await getMyProfile();
+        if (claimed) return { role: claimed.role, is_approved: claimed.is_approved };
+      }
+    } catch {
+      // A failed claim must never turn a correct password into a sign-in
+      // error. The person still reaches the waiting room; they are just still
+      // waiting, which is where they already were.
+    }
+  }
+  return mine;
 }
 
 export async function signUp(email: string, password: string, fullName: string): Promise<void> {
@@ -361,6 +391,23 @@ export interface OpenInvite {
    * the only step that cannot happen by accident.
    */
   joined_at: string | null;
+  /**
+   * When the invitation was spent -- stamped as the auth row is created, which
+   * is the moment Send is pressed.
+   *
+   * ON ITS OWN THIS MEANS ALMOST NOTHING, and twice it was read as "they have
+   * joined", which it is not: it is stamped before the person has seen
+   * anything. That is why joined_at above exists and why this must never be
+   * substituted for it.
+   *
+   * PAIRED WITH has_account IT IS EXACT, because the two absences it separates
+   * are otherwise identical on screen:
+   *   null + no account     the send never got as far as making one. Nothing
+   *                         happened; Re-send is the right offer.
+   *   present + no account  an account WAS made and is gone. Somebody removed
+   *                         this person, and Re-send would rebuild them.
+   */
+  redeemed_at: string | null;
 }
 
 /**

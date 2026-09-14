@@ -65,7 +65,7 @@ import { LiveExport } from '@/components/LiveExport';
 import { LiveBoardReport } from '@/components/LiveExecutive';
 import { LiveStudies } from '@/components/LiveStudies';
 import { LiveLibraryForGuide } from '@/components/LiveLibrary';
-import { LiveRecommend } from '@/components/LiveMinistry';
+import { LiveRecommend, LiveRecommendationsForDirector } from '@/components/LiveMinistry';
 import {
   LiveAskToWalkWith, LivePairingRequestsForDirector, LiveGuildRoom,
 } from '@/components/LiveGuildRoom';
@@ -216,7 +216,14 @@ function LiveOffice() {
         <>
           {isGuide && <LiveAskToWalkWith />}
           {isGuide && <LiveRecommend />}
-          {leads && <LivePairingRequestsForDirector />}
+          {/* BOTH HALVES OF "a Guide is asking me about pairing somebody", in
+              the one room a Director opens to answer it. They are different
+              tables and were in different rooms, so a Guide's recommendation
+              appeared to go nowhere: the Guide's own screen said PENDING and
+              this tab was blank. Recommendations still live in Admin as well;
+              this does not move them, it stops this room lying by omission. */}
+          {leads && <LivePairingRequestsForDirector alone />}
+          {leads && <LiveRecommendationsForDirector alone />}
         </>
       )}
 

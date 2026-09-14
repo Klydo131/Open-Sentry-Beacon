@@ -178,7 +178,7 @@ export function LiveAskToWalkWith() {
 // The Director answers
 // ---------------------------------------------------------------------------
 
-export function LivePairingRequestsForDirector() {
+export function LivePairingRequestsForDirector({ alone = false }: { alone?: boolean }) {
   const [rows, setRows] = useState<live.PairingRequest[] | null>(null);
   const [names, setNames] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState('');
@@ -209,9 +209,16 @@ export function LivePairingRequestsForDirector() {
     catch (cause) { setError(message(cause)); } finally { setBusy(''); }
   };
 
-  // Nothing at all when nobody has asked. A permanent empty panel on a
-  // Director's screen is furniture.
-  if (rows !== null && rows.length === 0 && !error) return null;
+  // Nothing at all when nobody has asked -- a permanent empty panel among other
+  // panels is furniture. BUT WHEN THIS IS THE WHOLE ROOM, vanishing is worse
+  // than furniture: the Office tab is labelled and clicked on purpose, and an
+  // empty page reads as a broken feature. Reported exactly that way, by an
+  // Executive Director looking for a request a Guide had just sent -- which was
+  // not here at all, because a Guide putting a NAME forward is a recommendation
+  // and lands in Admin. Two features, similar names, and a blank panel offering
+  // no way to tell them apart.
+  if (rows !== null && rows.length === 0 && !error && !alone) return null;
+  const empty = rows !== null && rows.length === 0 && !error;
 
   return (
     <Card id="pairing-requests" className="p-5">
@@ -221,6 +228,12 @@ export function LivePairingRequestsForDirector() {
         Pairings screen, where the limit of five is checked.
       </p>
       <Err msg={error} />
+      {empty && (
+        <p className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          No Guide is waiting on an answer. A Guide putting a new name forward is
+          a different thing and waits in <strong>Admin, under Approvals</strong>.
+        </p>
+      )}
       <div className="mt-3 space-y-2">
         {rows?.map((a) => (
           <div key={a.id} className="rounded-xl bg-gray-50 px-4 py-3">

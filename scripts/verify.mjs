@@ -333,6 +333,21 @@ const staticChecks = [
   // published. Both halves are checked here, because a set that names an
   // unpublished table looks wired and is deaf.
   ['every room keeps up', 'tests/every-room-keeps-up.mjs'],
+  // The tutorial's steps find their subject by a data-quest string, which no
+  // compiler checks. Rename a tab key or retire a room and the spotlight lands
+  // on nothing, leaving the visitor stuck on a step that cannot be completed.
+  ['the tutorial still points at something', 'tests/the-tutorial-still-points-at-something.mjs'],
+  // Sending an invitation creates the account; the church is attached
+  // separately. A profile with no church is invisible to every Director,
+  // because every approval list is scoped by church.
+  ['a person waiting is visible to somebody', 'tests/a-person-waiting-is-visible-to-somebody.mjs'],
+  // Sending an invitation creates the account, so Re-send on a row whose person
+  // was deleted rebuilds them. Both send paths must exclude those rows.
+  ['re-send cannot rebuild a removed account', 'tests/re-send-cannot-rebuild-a-removed-account.mjs'],
+  // Button composes the variant's colours and the caller's into one class
+  // attribute, and Tailwind settles duplicates by stylesheet order. Both delete
+  // confirmations rendered white text on a white ground: invisible controls.
+  ['a button cannot hide its own label', 'tests/a-button-cannot-hide-its-own-label.mjs'],
   ['the diary sits with the conversation', 'tests/the-diary-sits-with-the-conversation.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],

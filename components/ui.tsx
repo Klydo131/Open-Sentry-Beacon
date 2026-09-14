@@ -120,6 +120,30 @@ export function Button({
     // in the app is red, so the colour means exactly one thing.
     danger: 'bg-white text-red-700 ring-1 ring-red-300 hover:bg-red-50',
   };
+  // A CALLER'S OWN COLOUR REPLACES THE VARIANT'S; IT DOES NOT RACE IT.
+  //
+  // These are composed into one class attribute, and Tailwind settles a
+  // duplicate by where the rules sit in the GENERATED STYLESHEET, not by the
+  // order they appear here. So `ghost` (bg-white text-navy) beside a caller's
+  // `bg-red-600 text-white` was always a coin toss, and it landed on white text
+  // on a white ground: both delete confirmations in the Admin room rendered as
+  // BLANK BUTTONS. Reported as "I still can't see the delete button, I can only
+  // see it if I tap or hover" -- and the hover is the proof, because
+  // `hover:bg-red-700` finally gave the white text something to sit on.
+  //
+  // A TEXT SIZE IS NOT A COLOUR. Several callers pass `text-base` purely to
+  // resize, and stripping the variant's colour for those would silently take
+  // the colour off buttons that never asked to change it.
+  const given = className.split(/\s+/).filter(Boolean);
+  const isTextSize = (t: string) => /^text-(xs|sm|base|lg|[2-9]?xl)$/.test(t);
+  const ownsBg = given.some((t) => t.startsWith('bg-'));
+  const ownsText = given.some((t) => t.startsWith('text-') && !isTextSize(t));
+  const variantClasses = styles[variant]
+    .split(/\s+/)
+    .filter((c) => !(ownsBg && c.startsWith('bg-')))
+    .filter((c) => !(ownsText && c.startsWith('text-')))
+    .join(' ');
+
   const bg =
     variant === 'primary' ? NAVY : variant === 'gold' ? '#E8B84B' : undefined;
   // A destructive button is smaller than an ordinary one: 44px against 56, and
@@ -142,7 +166,7 @@ export function Button({
       // exactly the discouragement `danger` exists to express.
       className={`inline-flex items-center justify-center gap-2 rounded-xl transition active:scale-[0.98] disabled:opacity-40 disabled:shadow-none ${
         variant === 'primary' || variant === 'gold' ? 'lift-1 lift-hover' : ''
-      } ${size} ${styles[variant]} ${className}`}
+      } ${size} ${variantClasses} ${className}`}
     >
       {children}
     </button>

@@ -66,7 +66,16 @@ const sql = strip(
 
 /** The LAST definition of a function wins, since migrations replace. */
 function lastDefinition(name) {
-  const at = sql.lastIndexOf(`function public.${name}(`);
+  // THE LAST DEFINITION, NOT THE LAST MENTION. This used to take the last
+  // occurrence of `function public.<name>(`, which a GRANT line matches just as
+  // well as a CREATE -- and a migration that revokes and re-grants execute puts
+  // that grant after the definition. The helper then returned the tail of the
+  // file from the grant onwards, found no `$$;`, and reported the function as
+  // missing the body it had written correctly two lines earlier.
+  const defs = [...sql.matchAll(
+    new RegExp(`create\\s+(?:or\\s+replace\\s+)?function\\s+public\\.${name}\\(`, 'g'),
+  )];
+  const at = defs.length ? defs[defs.length - 1].index : -1;
   if (at === -1) return '';
   const body = sql.slice(at);
   const end = body.indexOf('$$;');
@@ -123,7 +132,12 @@ function lastDefinition(name) {
      'the badge claiming a signed-in person has no password is gone');
   ok(!/\{i\.opened_at &&/.test(page),
      'and nothing else draws a badge from the sign-in time');
-  ok(/const waiting = \(invites \?\? \[\]\)\.filter\(\(i\) => !i\.joined_at\)/.test(page),
+  // Keyed on joined_at, but NOT pinned to the whole expression. The list may be
+  // narrowed further -- it now also leaves out people whose account was deleted,
+  // because Re-send on one of those rebuilds them -- and a check that pins the
+  // exact filter forbids every future narrowing rather than the one thing it
+  // cares about, which is that "waiting" still means "has not joined".
+  ok(/const waiting = \(invites \?\? \[\]\)\.filter\(\(i\) => !i\.joined_at/.test(page),
      'and the waiting list is still the people who have not joined');
   ok(/const joined = \(invites \?\? \[\]\)\.filter\(\(i\) => i\.joined_at\)/.test(page),
      'with everybody else under Accepted');
