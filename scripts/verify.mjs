@@ -351,6 +351,10 @@ const staticChecks = [
   // "Invite them" used to write a status and stop: nothing sent, and the card
   // -- with the only copy of the address on it -- gone from every screen.
   ['invite them actually invites them', 'tests/invite-them-actually-invites.mjs'],
+  // Leadership the Head Executive Director appoints arrives approved. The rule
+  // grants privilege, so its shape is held: the head only, never any executive,
+  // and never widened to a Guide by accident.
+  ['leadership the head appoints does not queue', 'tests/leadership-the-head-appoints-does-not-queue.mjs'],
   ['the diary sits with the conversation', 'tests/the-diary-sits-with-the-conversation.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],
