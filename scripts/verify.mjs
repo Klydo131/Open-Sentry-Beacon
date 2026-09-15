@@ -181,6 +181,7 @@ const staticChecks = [
   // explained -- 204 CSS pixels against 91 for the one message on screen --
   // and every bubble repeated the speaker's name and its own date.
   ['the thread reads like a conversation', 'tests/the-thread-reads-like-a-conversation.mjs'],
+  ['the live app offers what the tutorial offers', 'tests/the-live-app-offers-what-the-tutorial-offers.mjs'],
   // Emoji suggested from a colon, never from ordinary words: this is the box
   // somebody tells their Guide about a bereavement in. The trigger must also
   // refuse `Luke 4:18`, which is the likeliest false positive in a church.

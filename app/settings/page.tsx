@@ -10,7 +10,8 @@ import { LiveAppShell } from '@/components/LiveAppShell';
 import { LiveSettingsPage } from '@/components/LiveAccountPages';
 import { useIsLive } from '@/lib/tutorial';
 import { Card, Button } from '@/components/ui';
-import { useLocale, LANGUAGES } from '@/lib/i18n';
+import { useLocale } from '@/lib/i18n';
+import { ReadingSettings } from '@/components/ReadingSettings';
 import { useDemo } from '@/lib/demo/store';
 import { useNotificationPrefs } from '@/lib/notification-prefs';
 import { useUpdateState, checkForUpdate, versionLabel, hardRefresh, BUILD_TIME, BUILD_ID } from '@/lib/app-update';
@@ -35,12 +36,6 @@ import type { Role } from '@/lib/types';
 // same reason — there was no executive persona to sign in as until now.
 const ALL: Role[] = ['executive', 'admin', 'dm', 'ds'];
 
-const SIZES: { key: 'small' | 'normal' | 'large' | 'xlarge'; scale: number }[] = [
-  { key: 'small', scale: 0.9 },
-  { key: 'normal', scale: 1 },
-  { key: 'large', scale: 1.15 },
-  { key: 'xlarge', scale: 1.3 },
-];
 
 export default function SettingsPage() {
   // Live settings are their own screen. The tutorial's version manages sample
@@ -524,55 +519,17 @@ function Body() {
 
       {/* Language and text size are how the app READS, so they belong with the
           device rather than with the church or the help. */}
-      {room === 'reading' && <Card className="p-5">
-        <h2 className="mb-1 text-xl font-bold text-navy">🌐 {t('language')}</h2>
-        <p className="mb-4 text-sm text-gray-500">
-          Choose your language. More of the app is translated over time; anything
-          not translated yet stays in English.
-        </p>
-        <select
-          value={lang}
-          onChange={(e) => setLang(e.target.value)}
-          className="tap w-full rounded-xl bg-gray-100 px-4 text-lg outline-none focus:ring-2 focus:ring-gold"
-          aria-label={t('language')}
-        >
-          {LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.native} · {l.name}
-            </option>
-          ))}
-        </select>
-      </Card>}
+      {/* Language and text size are how the app READS, so they belong with the
+          device rather than with the church or the help.
 
-      {/* Text size */}
-      {room === 'reading' && <Card className="p-5">
-        <h2 className="mb-1 text-xl font-bold text-navy">🔠 {t('textSize')}</h2>
-        <p className="mb-4 text-sm text-gray-500">
-          Make everything bigger or smaller. Changes apply right away.
-        </p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {SIZES.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setScale(s.scale)}
-              className="tap rounded-xl px-3 font-semibold"
-              style={
-                Math.abs(scale - s.scale) < 0.001
-                  ? { backgroundColor: '#1E2A4A', color: '#fff' }
-                  : { backgroundColor: '#EEF1F7', color: '#1E2A4A' }
-              }
-            >
-              <span style={{ fontSize: `${0.9 + (s.scale - 0.9) * 1.2}rem` }}>A</span>{' '}
-              {t(s.key)}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-5 rounded-xl bg-gray-50 p-4">
-          <p className="mb-1 text-sm text-gray-400">Preview</p>
-          <p className="text-lg text-navy">{t('appTagline')}</p>
-        </div>
-      </Card>}
+          ONE COMPONENT, NOT A COPY EACH. These two cards used to be written out
+          here in full, and the live settings page simply did not have them --
+          so the app could make its text bigger for somebody practising in the
+          tutorial and not for anybody actually using it. Two renderings of one
+          product drifted because nothing compared them. Now both pages draw
+          this, and tests/the-live-app-offers-what-the-tutorial-offers.mjs fails
+          the build if either grows a folder the other lacks. */}
+      {room === 'reading' && <ReadingSettings />}
     </div>
   );
 }

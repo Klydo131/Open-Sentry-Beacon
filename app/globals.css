@@ -576,6 +576,55 @@ html {
   height: 100%;
 }
 
+/* THE CONVERSATION AND THE INSTALL INVITATION CANNOT BOTH OWN THE BOTTOM OF A
+   SHORT SCREEN, SO THE INVITATION STANDS DOWN.
+
+   REPORTED AS "why is there still error in Safari in github?", and it was not
+   a Safari bug at all. The full WebKit job log says exactly what broke:
+
+       BAD iPhone SE, upright:   and is still worth reading (0px)
+       BAD a phone on its side:  and is still worth reading (0px)
+
+   Zero pixels of messages. The two numbers beside it are worse than the one
+   that went red: the card reported bottom 305 while its own composer reported
+   bottom 363, and the card is `overflow-hidden`. The box you type in was being
+   clipped straight out of the card -- on a phone held sideways, 154px of it,
+   which is all of it. Two assertions stayed green through that, because "the
+   whole card fits" passes when the card SHRINKS, and "the box you type in is on
+   the screen" passes because getBoundingClientRect does not know its ancestor
+   is clipping it. Both measured the wrong rectangle.
+
+   THE ARITHMETIC. The rule above bounds the conversation by what the chrome
+   leaves. The install bar's own ceiling is half the viewport. On a 667px screen
+   showing the iOS Add to Home Screen steps that is ~357px, so the conversation
+   is left 667 - 71 (header) - 357 (bar) - 16 = 223px, and its heading, photo
+   note and composer alone want ~292. The thread is the only part allowed to
+   give way, so it gives way to nothing and the composer overflows.
+
+   WHY ONLY ON WEBKIT. `isIos()` is false in headless Chromium, so the bar there
+   is a title and a button, about 100px, and the sum comes out fine. The bug is
+   arithmetic, not an engine quirk -- reproduced in Chromium by publishing the
+   heights WebKit reports, which is also how this fix was checked without a
+   WebKit to check it against.
+
+   WHY THE INVITATION IS WHAT YIELDS. Squeezing its ceiling was tried first and
+   cannot work: swept across sixteen real device sizes the best ceiling still
+   left three broken, because on a 320px-tall screen a bottom-anchored
+   invitation and a conversation do not both fit at any size. One of them has to
+   go, and only one of them is dismissible. The invitation is an invitation; the
+   conversation is the app.
+
+   NO JAVASCRIPT AND NO NEW STATE. InstallPrompt already publishes its own
+   height through a ResizeObserver, and a hidden element measures zero, so
+   `--install-bar` falls to 0px on its own and the cap above widens by exactly
+   the amount the bar was taking. Verified: 358px before, 0px after.
+
+   The conversation is gone from the DOM when the bubble is closed, so this is
+   precisely "a conversation is on screen" and not "the app has a chat feature". */
+body:has([data-live-conversation]) [data-install-prompt='bar'] {
+  display: none;
+}
+
 /* A strip that scrolls sideways with no visible scrollbar.
    Used by the header's feature icons. A scrollbar under a 44px row of icons
    eats a third of the row's height on desktop and looks like a defect on a

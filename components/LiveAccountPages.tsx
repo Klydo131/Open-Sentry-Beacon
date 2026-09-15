@@ -31,6 +31,7 @@ import { FeedbackButton } from '@/components/Feedback';
 import { humanError } from '@/lib/live/errors';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
+import { ReadingSettings } from '@/components/ReadingSettings';
 
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
@@ -270,6 +271,10 @@ export function LiveSettingsPage() {
     // an instruction should not have to hunt for the folder it named.
     { id: 'account', label: '🔑 Password' },
     { id: 'alerts', label: '🔔 Alerts' },
+    // FOR EVERYBODY, WITH NO ROLE TEST. The demo settings had this folder and
+    // the live one did not, so the only people who could make the text bigger
+    // were the people pretending. Reading the screen is not a rank.
+    { id: 'reading', label: '🔠 Language and size' },
     ...(leads ? [{ id: 'church', label: '⛪ Church' }] : []),
     { id: 'help', label: '❓ Help' },
   ];
@@ -352,6 +357,8 @@ export function LiveSettingsPage() {
       )}
 
       {room === 'alerts' && <NotificationCard />}
+
+      {room === 'reading' && <ReadingSettings />}
 
       {room === 'church' && leads && <ChurchNameCard />}
 

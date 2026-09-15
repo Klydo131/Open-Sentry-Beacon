@@ -34,7 +34,14 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
 // Portrait first, because that is how a phone is held in a pew. The landscape
 // pass is there because a short viewport is the case a height cap gets wrong.
+// THE SMALL ONES ARE THE POINT. Four sizes ran here for weeks while the screen
+// was broken on eight of the sixteen real sizes this was later swept against,
+// because the four included only one small phone and one landscape. A phone
+// held sideways is the tightest case there is -- 412px of height, less a header
+// -- and it is how people read one-handed. 360x640 is still one of the most
+// common Android sizes in the world.
 const SCREENS = [
+  ['a small phone, upright', 360, 640],
   ['iPhone SE, upright', 375, 667],
   ['a common Android, upright', 412, 915],
   ['iPad mini, upright', 744, 1133],
@@ -167,6 +174,24 @@ async function read(page) {
 
     ok(m.cardBottom <= m.vh,
       `${label}: the whole card fits (bottom ${m.cardBottom} of ${m.vh})`);
+
+    // THE ASSERTION THIS FILE WAS MISSING, AND THE REASON IT SHIPPED A BUG IT
+    // WAS WRITTEN TO CATCH. The card is `overflow-hidden`. Its fixed children
+    // cannot shrink. So when the cap is smaller than the heading, note and
+    // composer together, the composer overflows the card and is CLIPPED -- and
+    // every assertion above still passes, because two of them measure the card
+    // (which dutifully shrank) and one measures a rectangle the browser still
+    // reports at full size even while an ancestor is hiding it.
+    //
+    // On WebKit at 915x412 the card ended at 161 and the composer at 315. A
+    // hundred and fifty-four pixels of the only control that sends a message,
+    // invisible, with the suite green on that very screen.
+    //
+    // Being inside the viewport is not the same as being visible. This asks the
+    // second question.
+    ok(m.composerBottom <= m.cardBottom + 1,
+      `${label}: and is inside the card, not clipped out of it `
+      + `(composer ${m.composerBottom}, card ends ${m.cardBottom})`);
 
     // The thread must be the part that gave way, and it must still scroll --
     // a cap that hid the messages instead of the composer is not a fix.
