@@ -359,6 +359,10 @@ const staticChecks = [
   // put an empty duplicate in front of every Explorer, under a different topic,
   // owned by nobody.
   ['a private copy is never published', 'tests/a-private-copy-is-never-published.mjs'],
+  // The place and link fields offer what this person has used before, drawn
+  // from the meetings already on screen. Holds the decision NOT to send a
+  // half-typed meeting address to a search service as somebody types it.
+  ['an appointment offers what you used before', 'tests/an-appointment-offers-what-you-used-before.mjs'],
   ['the diary sits with the conversation', 'tests/the-diary-sits-with-the-conversation.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],

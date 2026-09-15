@@ -18,7 +18,7 @@
 // the policies already allowed. Somebody who can only ever be summoned is not
 // walking alongside anyone.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as live from '@/lib/live/data';
 import { useLiveSession } from '@/lib/live/session';
 import { Button, Card } from '@/components/ui';
@@ -51,6 +51,44 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   const [startsAt, setStartsAt] = useState('');
   const [mode, setMode] = useState<live.MeetingMode>('online');
   const [location, setLocation] = useState('');
+
+  // WHAT THIS PERSON HAS USED BEFORE, OFFERED BACK.
+  //
+  // Asked for as a places dropdown "like Google earth can do", and as saved
+  // links for online calls. The link half is exactly that. The places half is
+  // deliberately NOT a search service: predictions from one would mean every
+  // partial address a Guide types about meeting an Explorer -- sometimes a
+  // minor, sometimes at their home -- leaving for a third party as they type,
+  // a new origin in a CSP built to refuse them, and a fourth name in a privacy
+  // notice that lists three. That is a decision about members' data, not a
+  // detail, so it is not switched on here.
+  //
+  // This costs nothing and covers the cases that actually recur: a church meets
+  // at the hall, that one cafe, somebody's front room, and calls on the same
+  // Zoom room every week. After the first use each is one tap away.
+  //
+  // Drawn from the meetings ALREADY on this screen, so there is no extra read,
+  // nothing new stored, and nobody can be shown a place from a pairing they
+  // cannot already see -- the rows come through the same policy as the list.
+  //
+  // A native <datalist>: the browser does the filtering, the dropdown and the
+  // keyboard handling, and where one is not supported the input is simply an
+  // ordinary input. Nothing to break.
+  const history = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const m of [...(rows ?? [])].sort((x, y) => y.starts_at.localeCompare(x.starts_at))) {
+      if (m.mode !== mode) continue;
+      const value = (m.location ?? '').trim();
+      if (!value) continue;
+      const key = value.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(value);
+      if (out.length === 8) break;
+    }
+    return out;
+  }, [rows, mode]);
   // WHAT TO BRING, OR WHAT IT IS FOR. `meetings.notes` has existed since
   // migration 0009, `scheduleMeeting` has accepted one since it was written,
   // `listMeetings` selects it and the Meeting type carries it. This screen
@@ -194,6 +232,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              list="appointment-history"
               placeholder="Church cafe, 12 Rizal St, Cavite"
               aria-label="Where you are meeting"
               className="tap w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
@@ -202,6 +241,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
               A place and a street, which becomes an Open in Maps button for both
               of you. Or paste a map link and that exact pin is what opens, which
               beats a search when the place is hard to find.
+              {history.length > 0 && ' Somewhere you have met before will be offered as you type.'}
             </p>
           </div>
         )}
@@ -219,6 +259,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              list="appointment-history"
               inputMode="url"
               placeholder="https://zoom.us/j/1234567890"
               aria-label="Link to join the call"
@@ -227,10 +268,19 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
             <p className="mt-1 text-xs text-gray-500">
               {location.trim() && !joinUrl('online', location)
                 ? 'That is not a link, so it will be shown as written rather than as a button. Paste a link starting with https:// to make it one tap.'
-                : 'Paste the Zoom, Meet, Teams or Messenger link. It becomes a Join button for both of you. Leave it empty if you are ringing each other.'}
+                : `Paste the Zoom, Meet, Teams or Messenger link. It becomes a Join button for both of you. Leave it empty if you are ringing each other.${
+                    history.length > 0 ? ' A link you have used before will be offered as you type.' : ''}`}
             </p>
           </div>
         )}
+        {/* ONE LIST, because only one of the two inputs above is ever on the
+            screen, and `history` already follows the mode. */}
+        {history.length > 0 && (
+          <datalist id="appointment-history">
+            {history.map((v) => <option key={v} value={v} />)}
+          </datalist>
+        )}
+
         {/* OPTIONAL, AND ASKED FOR ANYWAY. The rule the library's add form
             already states: making it required would stop somebody arranging a
             time they are in a hurry about, and a time with no note still beats
