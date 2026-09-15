@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as live from '@/lib/live/data';
 import type { Message, Profile } from '@/lib/types';
 import { MessageBox } from '@/components/MessageBox';
@@ -85,6 +85,66 @@ function dayLabel(at: string): string {
 /** Messages this close together, from one person, are one piece of talking. */
 const SAME_BREATH_MS = 5 * 60 * 1000;
 
+/**
+ * A note somebody has read once and can put away for good.
+ *
+ * ASKED FOR WITH A SCREENSHOT, both banners ringed in red: "i always need a
+ * fullscreen for messages please, make an option to exit or x on the red
+ * circles. It takes out the user's experience."
+ *
+ * They are right, and the reason is arithmetic rather than taste. On the phone
+ * in that screenshot the two notes take roughly a fifth of the glass on EVERY
+ * conversation, FOREVER, to say two things that are true once. A promise
+ * repeated past the point of being read stops being a promise and becomes
+ * furniture.
+ *
+ * DISMISSING A NOTE CHANGES NOTHING ABOUT THE THING IT DESCRIBES. The
+ * conversation is private because `messages_read` is `in_pairing(pairing_id)`
+ * and for no other reason; photographs are stripped of their location by the
+ * upload path. Both facts also live in the privacy notice, which is where they
+ * are binding. This only stops saying them out loud.
+ *
+ * Per person and per device, because that is what localStorage is. Read in an
+ * effect rather than inline: localStorage does not exist while this renders on
+ * the server, and reading it during render is how a hydration mismatch starts.
+ * Every access is wrapped, because in a private window the accessor throws and
+ * a banner that cannot be dismissed is better than a conversation that will not
+ * open.
+ */
+function useKeepable(key: string): [boolean, () => void] {
+  const [shown, setShown] = useState(true);
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(key) === 'put-away') setShown(false);
+    } catch {
+      /* A private window refuses. The note simply stays. */
+    }
+  }, [key]);
+  const putAway = useCallback(() => {
+    setShown(false);
+    try {
+      window.localStorage.setItem(key, 'put-away');
+    } catch {
+      /* Dismissed for this sitting rather than for good. Still dismissed. */
+    }
+  }, [key]);
+  return [shown, putAway];
+}
+
+/** The X on a note. 44px, because it is a real target on a real thumb. */
+function PutAway({ onClick, what }: { onClick: () => void; what: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Hide the note about ${what}`}
+      className="-my-2 -mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg leading-none text-gray-400 hover:bg-black/5 hover:text-gray-600"
+    >
+      &times;
+    </button>
+  );
+}
+
 export function Conversation({
   messages,
   files,
@@ -130,6 +190,8 @@ export function Conversation({
   attachError?: string;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [showPrivacy, hidePrivacy] = useKeepable('hb-note-private');
+  const [showPhotoNote, hidePhotoNote] = useKeepable('hb-note-photos');
 
   // THE THREAD OPENS ON THE NEWEST MESSAGE, AND FOLLOWS THE ONE YOU JUST SENT.
   //
@@ -318,6 +380,7 @@ export function Conversation({
           promise is the visible half and the label sits beside it, because
           between "Private conversation" and what private MEANS, the second is
           the one somebody needs. */}
+      {showPrivacy && (
       <div className="flex items-center gap-2.5 border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 px-4 py-2 sm:gap-3 sm:py-3 sm:px-5">
         <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-teal-700 text-sm shadow-sm sm:h-10 sm:w-10 sm:rounded-2xl sm:text-lg">💬</span>
         <div className="min-w-0">
@@ -332,7 +395,9 @@ export function Conversation({
             Only the two people walking together can read this.
           </p>
         </div>
+        <PutAway onClick={hidePrivacy} what="this being private" />
       </div>
+      )}
       {/* NO HEIGHT HERE ANY MORE, ON PURPOSE. This carried `55dvh` and two
           minimums, and every one of those numbers was a guess at how much room
           the rest of the screen had already taken. They guessed wrong on a
@@ -621,11 +686,14 @@ export function Conversation({
           while a file is staged. The location promise is the part that has to
           be read BEFORE choosing a photo rather than after, which is why it
           appears on the tap and not on the upload. */}
-      {onAttach && (attaching || files.length > 0) && (
-        <p className="border-t border-black/5 bg-slate-50 px-4 py-2 text-xs leading-relaxed text-gray-500">
-          Photos are made smaller before they are sent, and the location your camera
-          recorded is removed. Up to 10 MB each. For anything larger, share a link.
-        </p>
+      {onAttach && showPhotoNote && (attaching || files.length > 0) && (
+        <div className="flex items-start gap-2 border-t border-black/5 bg-slate-50 px-4 py-2">
+          <p className="min-w-0 flex-1 text-xs leading-relaxed text-gray-500">
+            Photos are made smaller before they are sent, and the location your camera
+            recorded is removed. Up to 10 MB each. For anything larger, share a link.
+          </p>
+          <PutAway onClick={hidePhotoNote} what="photos" />
+        </div>
       )}
 
       <form

@@ -363,6 +363,10 @@ const staticChecks = [
   // from the meetings already on screen. Holds the decision NOT to send a
   // half-typed meeting address to a search service as somebody types it.
   ['an appointment offers what you used before', 'tests/an-appointment-offers-what-you-used-before.mjs'],
+  // The two notes in a conversation can be put away once read. Holds the line
+  // that dismissing a NOTE is not removing the PROMISE: the privacy page must
+  // still say both things.
+  ['a note read once can be put away', 'tests/a-note-read-once-can-be-put-away.mjs'],
   ['the diary sits with the conversation', 'tests/the-diary-sits-with-the-conversation.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],

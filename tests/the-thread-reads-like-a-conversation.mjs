@@ -114,7 +114,16 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
 // permanently. The comment described the intention and the code did something
 // else, and nothing could tell them apart until somebody photographed it.
 {
-  ok(/\{onAttach && \(attaching \|\| files\.length > 0\) && \(/.test(code),
+  // NARROWING IS ALLOWED, WIDENING IS NOT. This pinned the gate character for
+  // character, so the day the note became dismissible -- a second reason to
+  // keep it off the screen -- the check read the extra condition as a
+  // violation and refused a commit that made the rule STRONGER. That is the
+  // second time in this repository that an exact-expression pin has blocked
+  // its own intention. The rule is "the paperclip opens it", so the paperclip
+  // is what gets asserted; further `&&` conditions may only take the note away
+  // sooner. The alternation stays spelled out, so a condition joined with `||`
+  // -- which could put the note back without the paperclip -- still fails.
+  ok(/\{onAttach && (?:[A-Za-z][\w.]* && )*\(attaching \|\| files\.length > 0\) && \(/.test(code),
      'the photo guidance waits until somebody reaches for the paperclip');
 
   ok(/setAttaching\(true\)/.test(code),
