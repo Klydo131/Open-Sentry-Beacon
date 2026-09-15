@@ -268,11 +268,23 @@ export function TalkSurface({
 
       {error && <div className="px-3 pt-2"><Notice tone="error">{error}</Notice></div>}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* ONE SCROLLPORT WHEN A CONVERSATION IS OPEN, AND IT IS THE MESSAGES.
+          This used to scroll unconditionally, so in the bubble the composer and
+          the photo note travelled up and down with the thread while the thread
+          scrolled inside itself -- two scrollbars on one small panel. A
+          conversation manages its own height (globals.css gives the thread the
+          space left after the heading and composer have theirs), so here it is
+          given a definite height and told not to scroll. The LIST still scrolls,
+          because a list of threads is exactly the thing that should. */}
+      <div className={`min-h-0 flex-1 ${
+        active ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'
+      }`}>
         {!active ? (
           <ThreadList threads={threads} onOpen={openThread} compact={compact} />
         ) : (
-          <div className="space-y-3 p-3">
+          <div className={compact
+            ? 'flex min-h-0 flex-1 flex-col'
+            : 'space-y-3 overflow-y-auto p-3'}>
             <Conversation
               messages={messages}
               files={files}

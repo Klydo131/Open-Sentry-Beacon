@@ -558,6 +558,24 @@ html {
   min-height: 0;
 }
 
+/* INSIDE THE TALK BUBBLE THE CARD IS NOT MEASURED AGAINST THE VIEWPORT.
+   The rule above caps the conversation at the height of the screen less the
+   page chrome, which is right when the conversation IS the page. The bubble is
+   a 32rem panel that already has a height of its own, and a cap far larger than
+   its container does nothing -- so the card grew to its content, the panel
+   scrolled it, and the thread scrolled itself inside that. TWO SCROLLBARS, one
+   of which dragged the composer and the photo note up and down.
+   Reported with a screenshot of both: "this bubble should be the WHOLE chat
+   feature with only one scroll, the scroll should be the messages only right?
+   Like a normal chat feature would be."
+   Here the card simply fills the panel. The rules above still apply unchanged:
+   only the thread gives up space, so the heading and composer keep their height
+   and the messages take whatever is left. One scrollport, on the messages. */
+.talk-sheet [data-live-conversation] {
+  max-height: none;
+  height: 100%;
+}
+
 /* A strip that scrolls sideways with no visible scrollbar.
    Used by the header's feature icons. A scrollbar under a 44px row of icons
    eats a third of the row's height on desktop and looks like a defect on a
