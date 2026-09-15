@@ -10,7 +10,7 @@ import {
 
 type Theme = { panel: string; line: string; ink: string; inkSoft: string };
 
-export function Pocket({ theme }: { theme: Theme }) {
+export function Pocket({ theme, className = '' }: { theme: Theme; className?: string }) {
   const [items, setItems] = useState<Item[]>([]);
   const [url, setUrl] = useState('');
   const [adding, setAdding] = useState(false);
@@ -51,7 +51,7 @@ export function Pocket({ theme }: { theme: Theme }) {
 
   return (
     <div
-      className="rounded-2xl p-4"
+      className={`rounded-2xl p-4 ${className}`}
       style={{ backgroundColor: theme.panel, border: `1px solid ${theme.line}` }}
     >
       <div className="flex items-center justify-between gap-2">

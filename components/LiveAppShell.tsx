@@ -11,6 +11,7 @@ import { BeaconSplash } from '@/components/BeaconLoader';
 import { Avatar, Button, Card } from '@/components/ui';
 import { LeftRail, RightRail, railGroupsFor } from '@/components/RoomRails';
 import { LiveDesk } from '@/components/LiveDesk';
+import { Pocket } from '@/components/Pocket';
 import { useRoom } from '@/lib/room-theme';
 import { LiveBell } from '@/components/LiveBell';
 import { TalkDock } from '@/components/live/TalkDock';
@@ -344,7 +345,28 @@ export function LiveAppShell({
             over the bottom of the screen — the install prompt, the feedback
             nudge — and a page that can scroll a little past its own content is
             what stops them sitting across the last line of a card. */}
-        <main className="page-in mx-auto w-full min-w-0 max-w-5xl pb-28 pt-6">{children}</main>
+        <main className="page-in mx-auto w-full min-w-0 max-w-5xl pb-28 pt-6">
+          {children}
+
+          {/* THE POCKET, ON A PHONE AND A TABLET.
+              Asked for directly: "can we add the pocket app features in pads and
+              mobile too?" -- and the answer was that it had never been on
+              either. It was put in the right rail, which is where it was asked
+              for on a desktop, and that rail is `hidden ... xl:block`: it starts
+              at 1280px. An iPad mini is 744 across and an iPad Pro 1024, so
+              every tablet and every phone was below it, along with any laptop in
+              a split window. The feature shipped invisible to most of the people
+              it was built for.
+              The player does not have this problem because it has a real home in
+              the Library room and the rail is only its shortcut. The pocket had
+              no such home, so it gets one here: the end of the main column, on
+              every room, at exactly the sizes the rail refuses. The two never
+              render at once, and they read the same localStorage, so a tile
+              saved on a phone is there on the desktop. */}
+          {room.prefs.rightRail && (
+            <Pocket theme={room.theme} className="mt-6 xl:hidden" />
+          )}
+        </main>
 
         {/* THE CHAT, WITHIN REACH FROM EVERY ROOM. Drawn once here rather than
             per page, so there is one of it and it cannot be forgotten on a

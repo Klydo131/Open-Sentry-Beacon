@@ -212,6 +212,7 @@ const staticChecks = [
   // pairings by one tap is not something a Director can supervise, and a minor
   // assigned to an adult by an algorithm must never happen at all.
   ['the pocket keeps a web app safely', 'tests/the-pocket-keeps-a-web-app-safely.mjs'],
+  ['the rail is not the only way to reach something', 'tests/the-rail-is-not-the-only-way-to-reach-something.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

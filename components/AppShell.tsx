@@ -12,6 +12,7 @@ import { Avatar } from './ui';
 import { NotificationBell } from './NotificationBell';
 import { RoleSwitcher } from './RoleSwitcher';
 import { LeftRail, RightRail, railGroupsFor } from './RoomRails';
+import { Pocket } from '@/components/Pocket';
 import { useRoom } from '@/lib/room-theme';
 import { emitQuest } from '@/lib/quest';
 import { useLocale } from '@/lib/i18n';
@@ -412,6 +413,14 @@ function DemoAppShell({
             nothing floating ever has the last line to itself. */}
         <main className="page-in mx-auto w-full min-w-0 max-w-5xl pb-28 pt-6">
           {children}
+
+          {/* The same placement the live shell uses, for the same reason: the
+              right rail starts at 1280px, so without this the pocket is missing
+              from every phone and every tablet. Kept in step with the live shell
+              deliberately -- a folder that existed in the tutorial and not in
+              the real app is exactly the defect the settings parity check was
+              written for. */}
+          {prefs.rightRail && <Pocket theme={theme} className="mt-6 xl:hidden" />}
         </main>
 
         {prefs.rightRail && (
