@@ -154,7 +154,31 @@ if (dryRun) {
 }
 
 if (source.length) {
-  execFileSync('git', ['add', '--', ...source], { cwd: root });
+  // A DELETED PATH CANNOT BE `git add`ed, WITH OR WITHOUT -A.
+  //
+  // `git add -- <path>` resolves the pathspec against the working tree, and a
+  // removed file is not there, so git exits "pathspec ... did not match any
+  // files" and the whole ship dies -- after sitting through the entire gate,
+  // because the add only happens once the gate is green. This tool could ship
+  // any change except one that removed something, and nothing had removed
+  // anything until a retired test suite.
+  //
+  // `-A` DOES NOT FIX IT, which was the first attempt: once the deletion is
+  // staged the path is gone from the index as well as the disk, so there is
+  // still nothing for the pathspec to match.
+  //
+  // So the two cases are separated. `git rm` is the command that stages a
+  // removal, and `--ignore-unmatch` makes it a quiet success when the deletion
+  // was already staged -- which it will be whenever somebody ran `git add -A`
+  // by hand before shipping.
+  const gone = source.filter((f) => !fs.existsSync(path.join(root, f)));
+  const present = source.filter((f) => fs.existsSync(path.join(root, f)));
+  if (present.length) {
+    execFileSync('git', ['add', '--', ...present], { cwd: root });
+  }
+  if (gone.length) {
+    execFileSync('git', ['rm', '-q', '--ignore-unmatch', '--', ...gone], { cwd: root });
+  }
   execFileSync('git', ['commit', '-q', '-F', messageFile], { cwd: root });
   say(`committed ${source.length} file(s): ${subject}`);
 }

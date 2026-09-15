@@ -211,7 +211,7 @@ const staticChecks = [
   // memory and shipped untested. And an auto-pair button that PROPOSES: forty
   // pairings by one tap is not something a Director can supervise, and a minor
   // assigned to an adult by an algorithm must never happen at all.
-  ['a room for the apps a church uses', 'tests/a-room-for-the-apps-a-church-uses.mjs'],
+  ['the pocket keeps a web app safely', 'tests/the-pocket-keeps-a-web-app-safely.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.
@@ -408,6 +408,7 @@ const staticChecks = [
   // than one person, and some of that group are children. Whether there is a
   // way out of it, and whether it is still not surveilled.
   ['a way out of the guild room', 'tests/a-way-out-of-the-guild-room.mjs'],
+  ['the guild room is archived, not deleted', 'tests/the-guild-room-is-archived-not-deleted.mjs'],
   // A room is a folder and a subroom is a folder inside it. Whether every
   // panel in the Office is in exactly one subroom, and whether the links that
   // point into it name subrooms that exist.

@@ -70,17 +70,26 @@ ok(/break-words/.test(board) && /break-words/.test(audit),
    'long pasted text or names cannot widen the Guild or audit cards on phones');
 ok(/Security audit/.test(audit) && /private\s+conversations or files/.test(audit),
    'the Admin security audit explains that private content is outside the feed');
-ok(/role === 'dm' \|\| role === 'ds'/.test(shell) && /href: '\/guilds'/.test(shell)
-   && /label: 'Guild Room'/.test(shell) && !/admin\?room=security/.test(shell),
-   'the live header exposes Guild activity without duplicating Admin security');
+// THIS ASSERTION USED TO REQUIRE THE GUILD ROOM IN THE HEADER, and it was
+// carrying two separate rules in one line: that Guild activity had a door, and
+// that leadership's Admin security audit did NOT get a second one beside it.
+// The room is archived now, so the first rule is gone and the second is not --
+// a duplicate security door would be just as wrong today. Splitting them is
+// what keeps the surviving half meaning something; deleting the line would
+// have quietly retired a rule nobody decided to retire.
+// The archive itself is asserted by tests/the-guild-room-is-archived-not-deleted.mjs.
+ok(!/admin\?room=security/.test(shell),
+   'the live header does not duplicate the Admin security audit');
 ok(/const MEMBERS: Role\[\] = \['dm', 'ds'\]/.test(guildPage),
    'the Guild route does not admit leadership accounts');
 ok(/id: 'security'/.test(admin) && /LiveSecurityAudit/.test(admin),
    'the Director and Executive Director admin screen has a Security room');
 const rails = read('components/RoomRails.tsx');
-ok(/title: 'My Rooms'/.test(rails) && /label: 'Guild Room'/.test(rails)
-   && !/label: 'Security Audit Room'/.test(rails),
-   'the sidebar keeps Guild Room and avoids a duplicate Admin security door');
+// Same split as above: 'My Rooms' still exists and must not grow a second
+// door onto the Admin security audit. The Guild Room's absence is the archive's
+// business, not this file's.
+ok(/title: 'My Rooms'/.test(rails) && !/label: 'Security Audit Room'/.test(rails),
+   'the sidebar avoids a duplicate Admin security door');
 
 console.log(failures === 0 ? '\nAll security audit and Guild checks passed.' : `\n${failures} failed.`);
 process.exit(failures === 0 ? 0 : 1);

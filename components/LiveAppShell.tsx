@@ -70,9 +70,19 @@ const SECTIONS = (role: Role) => [
   // 22rem corner panel genuinely is small, and it still works if somebody has
   // it bookmarked. What is gone is the standing invitation to leave the page.
   { href: '/church',   icon: '⛪', label: 'Church' },
-  ...(role === 'dm' || role === 'ds'
-    ? [{ href: '/guilds', icon: '🧩', label: 'Guild Room' }]
-    : []),
+  // THE GUILD ROOM IS ARCHIVED, NOT DELETED. Asked for plainly: "Take out the
+  // Guild Room feature, archive it for now since most users dont like it."
+  //
+  // A door, a rail entry and the room's contents were the three things that
+  // made it a place people went. The first two are gone; the third is not.
+  // Every post, every amen and every guild still exists, `list_guild_activity`
+  // still redacts exactly as it did, and -- the part that would have been an
+  // accident -- LiveSafeguarding can still take down a reported guild post,
+  // because a report about something said in that room outlives the room. The
+  // three guild checks all test the database rather than the doorway, so they
+  // stay green and stay meaningful.
+  //
+  // Putting it back is putting these lines back.
   // Not for Explorers: none of the work in it is theirs to do, and an empty
   // room tells somebody they are missing something. Same rule as the rail.
   ...(role !== 'ds'
@@ -80,12 +90,13 @@ const SECTIONS = (role: Role) => [
     : []),
   { href: '/publish',  icon: '✍️', label: 'Publish' },
   { href: '/library',  icon: '📚', label: 'Library' },
-  // THE APPS A CHURCH ALREADY USES, beside the library rather than inside it.
-  // The library holds things somebody in the church chose to share with
-  // somebody else; this holds the Bible and the hymnal the whole congregation
-  // opens. Different question, different room -- and everybody gets it,
-  // Explorers included, because a hymnal is not leadership's tool.
-  { href: '/apps',     icon: '📱', label: 'Apps' },
+  // THE APPS ROOM IS RETIRED, AND THE POCKET REPLACES IT. "let's remove the
+  // apps room. Instead let's develop a pocket, micro-app."
+  //
+  // The room asked a Director to curate a list for the whole church. The pocket
+  // asks nothing of anybody: each person keeps their own handful of addresses
+  // on their own desk, which is how people actually use Spotify, YouTube and
+  // the office suite. See components/Pocket.tsx.
   { href: '/cases',    icon: '⚖️', label: 'Cases' },
   ...(role === 'admin' || role === 'executive'
     ? [{ href: '/mail', icon: '✉️', label: 'Mail' }]

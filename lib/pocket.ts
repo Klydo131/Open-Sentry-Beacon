@@ -1,0 +1,142 @@
+// The pocket: a person's own shortcuts to the web apps they already use.
+//
+// ASKED FOR LIKE THIS: "First I will copy the URL of the web app like example,
+// spotify, youtube, or facebook, then I will paste it on the URL of the pocket
+// micro-app and I click the save button, then it automatically registers the
+// logo and app URL, Now when I click the logo, it automatically goes in that
+// web app destination... some people use office web app so that can be helpful
+// to ALL users."
+//
+// WHY THE MARK IS DRAWN AND NOT FETCHED. "It automatically registers the logo"
+// is the interesting half. The obvious way is to fetch each site's favicon, and
+// it is the wrong way twice over. The app's CSP allows images from `'self'`,
+// `data:` and `blob:` only, so every real favicon would need img-src widened to
+// arbitrary origins -- and once it is, every tile on a person's desk quietly
+// tells that company the person is here, each time the rail renders. A church
+// member's screen should not report to Facebook that it exists.
+//
+// So the mark is computed from the address instead: the services people
+// actually paste are recognised by hostname and given their own colour and
+// glyph, and anything unrecognised gets its first letter on a colour derived
+// from the name. No request leaves the device, the CSP is untouched, and it
+// still looks like the app it stands for. Swapping in real favicons later is a
+// CSP decision, not a code one.
+//
+// WHY IT IS NOT IN THE DATABASE. These are one person's bookmarks to public
+// websites, not church records. Keeping them in the browser means every role
+// has the feature immediately -- Explorers included, which is the point of
+// "ALL users" -- with no table, no policy and no migration to get wrong.
+
+import { safeExternalUrl } from '@/lib/url';
+
+export type Pocket = { id: string; url: string; label: string };
+
+export const POCKET_KEY = 'beacon-pocket';
+export const POCKET_LIMIT = 12;
+
+/**
+ * Accept only addresses a browser can safely open.
+ *
+ * THE PROTOCOL DECISION IS NOT MADE HERE. lib/url.ts already owns "is this safe
+ * to put in an href", and a second, weaker copy of a safety check is how one of
+ * the two ends up wrong -- which this repository has already had to fix once,
+ * when a component reached for navigator.clipboard instead of the guarded
+ * copyText. `javascript:`, `data:` and anything else that is not http(s) is
+ * refused there. This adds only the courtesy on top: somebody pasting
+ * "spotify.com" means https, and refusing them over a missing prefix is the
+ * kind of pedantry that makes people give up.
+ */
+export function tidyUrl(raw: string): string | null {
+  const text = raw.trim();
+  if (!text) return null;
+  const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(text) ? text : `https://${text}`;
+  const safe = safeExternalUrl(withScheme);
+  if (!safe) return null;
+  // A host with no dot is a typo or an intranet name, not a web app somebody
+  // meant to keep.
+  try {
+    if (!new URL(safe).hostname.includes('.')) return null;
+  } catch {
+    return null;
+  }
+  return safe;
+}
+
+/** The bare name a person recognises: "youtube.com" from a long watch link. */
+export function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+}
+
+/** A readable label: the site's own name, capitalised. */
+export function labelFor(url: string): string {
+  const host = hostOf(url);
+  const name = host.split('.')[0] || host;
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+// The services people actually paste. Recognised by hostname, drawn locally.
+const KNOWN: { match: RegExp; glyph: string; color: string }[] = [
+  { match: /(^|\.)spotify\.com$/,                     glyph: '♪',  color: '#1DB954' },
+  { match: /(^|\.)(youtube\.com|youtu\.be)$/,          glyph: '▶',  color: '#FF0000' },
+  { match: /(^|\.)facebook\.com$/,                     glyph: 'f',  color: '#1877F2' },
+  { match: /(^|\.)messenger\.com$/,                    glyph: '✆',  color: '#0084FF' },
+  { match: /(^|\.)(whatsapp\.com|wa\.me)$/,            glyph: '✆',  color: '#25D366' },
+  { match: /(^|\.)(office\.com|office365\.com|live\.com|microsoft\.com)$/,
+                                                      glyph: '⊞',  color: '#D83B01' },
+  { match: /(^|\.)(google\.com|gmail\.com)$/,          glyph: 'G',  color: '#4285F4' },
+  { match: /(^|\.)(docs\.google\.com|drive\.google\.com)$/, glyph: '▤', color: '#0F9D58' },
+  { match: /(^|\.)zoom\.us$/,                          glyph: '▣',  color: '#2D8CFF' },
+  { match: /(^|\.)canva\.com$/,                        glyph: '✦',  color: '#00C4CC' },
+  { match: /(^|\.)(bible\.com|youversion\.com)$/,      glyph: '✝',  color: '#6B4FBB' },
+  { match: /(^|\.)adventist\.org$/,                    glyph: '✝',  color: '#F5A623' },
+];
+
+// Colours for everything else, chosen to sit against both a light and a dark
+// desk rather than to be bright.
+const FALLBACK = ['#2F80ED', '#7FB03A', '#E2725B', '#6B4FBB', '#0F9D58', '#D97706', '#0E7490'];
+
+export function markFor(url: string): { glyph: string; color: string } {
+  const host = hostOf(url);
+  for (const k of KNOWN) if (k.match.test(host)) return { glyph: k.glyph, color: k.color };
+  // Deterministic, so a tile keeps its colour for ever rather than changing
+  // every time the rail renders.
+  let sum = 0;
+  for (let i = 0; i < host.length; i += 1) sum = (sum + host.charCodeAt(i)) % 9973;
+  return {
+    glyph: (host[0] ?? '?').toUpperCase(),
+    color: FALLBACK[sum % FALLBACK.length],
+  };
+}
+
+/** Everything in the pocket. A private window refuses storage; that is empty, not broken. */
+export function readPocket(): Pocket[] {
+  try {
+    const raw = window.localStorage.getItem(POCKET_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((p): p is Pocket =>
+        !!p && typeof p === 'object'
+        && typeof (p as Pocket).url === 'string'
+        && typeof (p as Pocket).id === 'string')
+      // Re-checked on the way OUT as well as in. Anything already in storage
+      // from an older version, or edited by hand, goes through the same gate.
+      .filter((p) => tidyUrl(p.url) !== null)
+      .slice(0, POCKET_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+export function writePocket(items: Pocket[]): void {
+  try {
+    window.localStorage.setItem(POCKET_KEY, JSON.stringify(items.slice(0, POCKET_LIMIT)));
+  } catch {
+    // Nothing to do and nothing worth saying. The tiles stay for this visit.
+  }
+}

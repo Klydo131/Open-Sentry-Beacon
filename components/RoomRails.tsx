@@ -7,6 +7,7 @@ import type { Role } from '@/lib/types';
 import { roleLabel } from '@/lib/brand';
 import { useRoom, type RoomTheme, type RoomPrefs, inkOn } from '@/lib/room-theme';
 import { PlayerStrip } from '@/components/PlayerBar';
+import { Pocket } from '@/components/Pocket';
 
 // -------------------------------------------------------------------------
 // The room rails — the workspace either side of the page on a wide screen.
@@ -134,10 +135,8 @@ export function railGroupsFor(
   // Director's admin tab, and the announcement composer on top of the church
   // home screen. Publishing is a task, and a task gets a room.
   const publish = { href: '/publish', label: 'Publish', icon: '✍️', beta: true };
-  // Guides and Explorers share Guild activity in its own room. Leadership's
-  // security audit stays inside Admin, so it does not need a duplicate door in
-  // the room list.
-  const guildRoom = { href: '/guilds', label: 'Guild Room', icon: '🧩', beta: true };
+  // The Guild Room is archived. Its rail entries are gone with its nav entry;
+  // see the note in LiveAppShell. Nothing in the database was touched.
 
   if (role === 'ds') {
     return [
@@ -146,7 +145,6 @@ export function railGroupsFor(
         links: [
           home,
           { href: '/ds', label: 'My Journey', icon: '🎯' },
-          guildRoom,
           myFiles,
           publish,
           cases,
@@ -163,7 +161,6 @@ export function railGroupsFor(
         links: [
           home,
           { href: '/dm', label: 'My Explorers', icon: '🤝', badge: counts.seekers },
-          guildRoom,
           office,
           publish,
           myFiles,
@@ -325,6 +322,14 @@ export function RightRail({
           a "waiting for you" panel would invent one. The desk is passed in when
           the caller has a real one; the tutorial keeps the simple list. */}
       {seeker ? <FocusTimer theme={theme} /> : (desk ?? <TodayCard theme={theme} today={today} />)}
+
+      {/* THE POCKET SITS BETWEEN THE DESK AND THE PLAYER, which is exactly
+          where it was asked for, with the gap circled in red. It is a bridge to
+          the web apps somebody already uses -- Spotify, YouTube, the office
+          suite -- so it belongs with the other things that are open while you
+          work, not in a room of its own. Every role gets it: "that can be
+          helpful to ALL users". */}
+      <Pocket theme={theme} />
 
       {/* THE PLAYER LIVES IN THE RAIL, on every room, because that is the
           point of it: something quiet in the background while you work. The
