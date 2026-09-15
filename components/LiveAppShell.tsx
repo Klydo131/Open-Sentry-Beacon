@@ -98,7 +98,26 @@ const SECTIONS = (role: Role) => [
   // asks nothing of anybody: each person keeps their own handful of addresses
   // on their own desk, which is how people actually use Spotify, YouTube and
   // the office suite. See components/Pocket.tsx.
-  { href: '/cases',    icon: '⚖️', label: 'Cases' },
+  // CASES IS LEADERSHIP'S ROOM NOW, AND IT IS CALLED ADMIN REPORTS.
+  //
+  // "Take out the cases in both Guide and Explorer, rebrand it and put it on
+  // settings and make a sub room called 'Admin Reports'."
+  //
+  // A Guide or an Explorer had a scales-of-justice door in their sidebar at all
+  // times, on every screen, when the overwhelming majority of them will never be
+  // party to a proceeding. It reads as an accusation waiting to happen.
+  //
+  // THE HALF THAT CANNOT BE LOST WITH IT. An Explorer summoned to a case is the
+  // person in it with the least standing, and their answer has to be reachable
+  // without anybody telling them where to look -- they can post even while
+  // suspended, because suspending somebody pending a hearing must not take away
+  // their side of it. Deleting the door and stopping there would have quietly
+  // removed that. So Settings carries an Admin Reports folder for EVERY role,
+  // and tests/a-case-is-reachable-by-whoever-is-in-it.mjs fails the build if it
+  // ever stops being reachable for the people a case is about.
+  ...(role === 'admin' || role === 'executive'
+    ? [{ href: '/cases', icon: '⚖️', label: 'Admin Reports' }]
+    : []),
   ...(role === 'admin' || role === 'executive'
     ? [{ href: '/mail', icon: '✉️', label: 'Mail' }]
     : []),

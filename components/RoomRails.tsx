@@ -106,7 +106,9 @@ export function railGroupsFor(
   // comes and goes is one nobody trusts is there, and its absence on a quiet
   // day is indistinguishable from it being broken. The room says plainly that
   // nothing is open.
-  const cases = { href: '/cases', label: 'Cases', icon: '⚖️', beta: true };
+  // Leadership only, and renamed. A Guide or an Explorer reaches a case they
+  // are party to through Settings -> Admin Reports; see LiveAppShell.
+  const cases = { href: '/cases', label: 'Admin Reports', icon: '⚖️', beta: true };
 
   // THE OFFICE, for everybody who has work to do in this app rather than a
   // journey to walk. The tools were scattered through the screens that are
@@ -147,7 +149,6 @@ export function railGroupsFor(
           { href: '/ds', label: 'My Journey', icon: '🎯' },
           myFiles,
           publish,
-          cases,
         ],
       },
       personal,
@@ -164,7 +165,6 @@ export function railGroupsFor(
           office,
           publish,
           myFiles,
-          cases,
         ],
       },
       personal,

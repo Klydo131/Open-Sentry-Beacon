@@ -27,12 +27,17 @@ import { useIsLive } from '@/lib/tutorial';
 import { Card } from '@/components/ui';
 import type { Role } from '@/lib/types';
 
+// STILL EVERY ROLE, EVEN THOUGH ONLY LEADERSHIP HAS A DOOR TO IT.
+// The navigation entry is leadership's; the ROUTE is not. A Guide or an
+// Explorer reaches this through Settings -> Admin Reports, and a notification
+// about a case links straight here. Narrowing this list to leadership would
+// turn both into a refusal for the person the case is actually about.
 const ALL: Role[] = ['executive', 'admin', 'dm', 'ds'];
 
 function Heading() {
   return (
     <div>
-      <h1 className="text-3xl font-extrabold text-room">⚖️ Cases</h1>
+      <h1 className="text-3xl font-extrabold text-room">⚖️ Admin Reports</h1>
       {/* SAID ON THE PAGE AS WELL AS IN THE RAIL. The chip beside the room's
           name is a reminder for somebody choosing where to go; this is for
           somebody already here, deciding whether to rely on what they find.

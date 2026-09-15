@@ -32,6 +32,7 @@ import { humanError } from '@/lib/live/errors';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
 import { ReadingSettings } from '@/components/ReadingSettings';
+import { LiveCourt } from '@/components/LiveTrialRoom';
 
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
@@ -275,6 +276,13 @@ export function LiveSettingsPage() {
     // the live one did not, so the only people who could make the text bigger
     // were the people pretending. Reading the screen is not a rank.
     { id: 'reading', label: '🔠 Language and size' },
+    // ADMIN REPORTS, AND FOR EVERYBODY -- which looks odd beside the name and
+    // is the whole point. The room left the Guide and Explorer sidebars because
+    // a permanent scales-of-justice door reads as an accusation waiting to
+    // happen. But an Explorer summoned to a case is the person in it with the
+    // least standing, and their answer must be reachable without anybody
+    // telling them where to look. So the door is gone and the room is not.
+    { id: 'reports', label: '⚖️ Admin Reports' },
     ...(leads ? [{ id: 'church', label: '⛪ Church' }] : []),
     { id: 'help', label: '❓ Help' },
   ];
@@ -359,6 +367,30 @@ export function LiveSettingsPage() {
       {room === 'alerts' && <NotificationCard />}
 
       {room === 'reading' && <ReadingSettings />}
+
+      {room === 'reports' && (
+        <>
+          <Card className="p-5">
+            <h2 className="mb-1 text-xl font-bold text-navy">⚖️ Admin Reports</h2>
+            <p className="text-sm text-gray-500">
+              Anything you have been called to answer. Say what happened in your
+              own words. Only the people in a case can read it.
+            </p>
+          </Card>
+          <LiveCourt
+            me={profile}
+            emptyState={
+              <Card className="p-6 text-center">
+                <p className="text-lg font-bold text-navy">Nothing open</p>
+                <p className="mt-1 text-sm text-gray-500">
+                  You have not been called to anything. If you are, it appears
+                  here and you will be told.
+                </p>
+              </Card>
+            }
+          />
+        </>
+      )}
 
       {room === 'church' && leads && <ChurchNameCard />}
 
