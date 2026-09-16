@@ -12,7 +12,6 @@ import { Avatar } from './ui';
 import { NotificationBell } from './NotificationBell';
 import { RoleSwitcher } from './RoleSwitcher';
 import { LeftRail, RightRail, railGroupsFor } from './RoomRails';
-import { Pocket } from '@/components/Pocket';
 import { useRoom } from '@/lib/room-theme';
 import { emitQuest } from '@/lib/quest';
 import { useLocale } from '@/lib/i18n';
@@ -400,7 +399,7 @@ function DemoAppShell({
       {/* Three columns from `xl` up; a single column everywhere else. The rails
           never appear on a phone or tablet — there is no room for them, and the
           page they flank is the one that matters. */}
-      <div className="mx-auto flex max-w-[1600px] items-start gap-6 px-4">
+      <div className="mx-auto flex max-w-[1600px] flex-col items-stretch gap-6 px-4 xl:flex-row xl:items-start">
         {prefs.leftRail && <LeftRail groups={groups} theme={theme} />}
 
         {/* The floor is deliberately deep.
@@ -420,7 +419,6 @@ function DemoAppShell({
               deliberately -- a folder that existed in the tutorial and not in
               the real app is exactly the defect the settings parity check was
               written for. */}
-          {prefs.rightRail && <Pocket theme={theme} className="mt-6 xl:hidden" />}
         </main>
 
         {prefs.rightRail && (

@@ -11,7 +11,6 @@ import { BeaconSplash } from '@/components/BeaconLoader';
 import { Avatar, Button, Card } from '@/components/ui';
 import { LeftRail, RightRail, railGroupsFor } from '@/components/RoomRails';
 import { LiveDesk } from '@/components/LiveDesk';
-import { Pocket } from '@/components/Pocket';
 import { useRoom } from '@/lib/room-theme';
 import { LiveBell } from '@/components/LiveBell';
 import { TalkDock } from '@/components/live/TalkDock';
@@ -366,7 +365,7 @@ export function LiveAppShell({
           the sample-data shell uses, so a phone and a tablet get the identical
           layout there and here. The rails hide themselves; nothing about the
           page underneath changes. */}
-      <div className="mx-auto flex max-w-[1600px] items-start gap-6 px-4">
+      <div className="mx-auto flex max-w-[1600px] flex-col items-stretch gap-6 px-4 xl:flex-row xl:items-start">
         {room.prefs.leftRail && <LeftRail groups={groups} theme={room.theme} />}
 
         {/* pb-28 rather than pb-24, matching the demo. Several things float
@@ -376,24 +375,16 @@ export function LiveAppShell({
         <main className="page-in mx-auto w-full min-w-0 max-w-5xl pb-28 pt-6">
           {children}
 
-          {/* THE POCKET, ON A PHONE AND A TABLET.
-              Asked for directly: "can we add the pocket app features in pads and
-              mobile too?" -- and the answer was that it had never been on
-              either. It was put in the right rail, which is where it was asked
-              for on a desktop, and that rail is `hidden ... xl:block`: it starts
-              at 1280px. An iPad mini is 744 across and an iPad Pro 1024, so
-              every tablet and every phone was below it, along with any laptop in
-              a split window. The feature shipped invisible to most of the people
-              it was built for.
-              The player does not have this problem because it has a real home in
-              the Library room and the rail is only its shortcut. The pocket had
-              no such home, so it gets one here: the end of the main column, on
-              every room, at exactly the sizes the rail refuses. The two never
-              render at once, and they read the same localStorage, so a tile
-              saved on a phone is there on the desktop. */}
-          {room.prefs.rightRail && (
-            <Pocket theme={room.theme} className="mt-6 xl:hidden" />
-          )}
+          {/* THE POCKET IS NO LONGER DRAWN TWICE HERE.
+              "can we add the pocket app features in pads and mobile too?" was
+              answered by rendering a second copy of it at this spot, because the
+              rail it lived in was `hidden ... xl:block` and every tablet and
+              phone falls below 1280px. That fixed the pocket and left the rest
+              of the rail where it was.
+              The rail itself now stacks under this column below `xl` instead of
+              hiding, so the pocket arrives with the timer and the theme picker
+              rather than alone -- and as ONE instance rather than two, which the
+              timer beside it requires. */}
         </main>
 
         {/* THE CHAT, WITHIN REACH FROM EVERY ROOM. Drawn once here rather than

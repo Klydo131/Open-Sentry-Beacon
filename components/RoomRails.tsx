@@ -22,8 +22,12 @@ import { Pocket } from '@/components/Pocket';
 // with the work: what is on the desk today, and one tap to each place they go.
 // Same customisation, different furniture.
 //
-// Both rails are DESKTOP ONLY (`xl` and up). Below that the page is exactly
-// what it was — phones get the single column, which is the one that fits.
+// THE LEFT RAIL IS DESKTOP ONLY (`xl` and up); below that the shells draw a
+// horizontal section strip instead, so navigation still reaches everywhere.
+// THE RIGHT RAIL IS NOT. It used to be, and everything personal in it -- the
+// study timer, the theme, the line you write for yourself -- was therefore
+// missing on every phone and tablet. It now stacks under the main column below
+// `xl` rather than hiding, so the room belongs to its owner at any width.
 //
 // Nothing here touches a backend. Counts arrive as props so this file can be
 // used by the demo shell and the live shell without pulling a database client
@@ -302,10 +306,29 @@ export function RightRail({
 }) {
   const seeker = role === 'ds';
 
+  // NOT HIDDEN ANY MORE, AND NOT DUPLICATED EITHER.
+  //
+  // This was `hidden ... xl:block`, so everything in it died below 1280px: an
+  // iPad Pro is 1024 across and a phone is 375, which is every device an
+  // Explorer actually owns. What died with it was the study timer and the whole
+  // "make it mine" surface -- the theme picker and the line you write for
+  // yourself -- neither of which Settings offers, so below 1280px they were not
+  // merely awkward to reach, they were gone.
+  //
+  // The pocket was rescued from this last week by rendering a SECOND copy in
+  // the main column at `xl:hidden`. That works for the pocket, which only reads
+  // rows, and would be wrong for what sits beside it: FocusTimer owns a
+  // setInterval, so two copies is two timers, the hidden one still counting,
+  // and a study that reads 25:00 after somebody rotates their tablet.
+  //
+  // So the rail MOVES instead of being copied. Below xl it is an ordinary
+  // full-width block falling under the main column, because the parent stacks
+  // there; from xl it is the sticky 288px column it always was. One instance,
+  // one timer, every width.
   return (
     <aside
       aria-label={seeker ? 'My room' : 'My office'}
-      className="compact-ui thin-scroll sticky top-[76px] hidden max-h-[calc(100vh-96px)] w-72 shrink-0 space-y-3 overflow-y-auto pb-6 [max-height:calc(100dvh-96px)] xl:block"
+      className="compact-ui thin-scroll w-full space-y-3 pb-6 xl:sticky xl:top-[76px] xl:max-h-[calc(100vh-96px)] xl:w-72 xl:shrink-0 xl:overflow-y-auto xl:[max-height:calc(100dvh-96px)]"
     >
       <RoomCard
         seeker={seeker}
