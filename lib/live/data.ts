@@ -4108,3 +4108,68 @@ export async function disciplineHistory(): Promise<DisciplineEntry[]> {
   if (error) throw new Error(error.message);
   return (data ?? []) as DisciplineEntry[];
 }
+
+// ---------------------------------------------------------------------------
+// Admin Reports
+// ---------------------------------------------------------------------------
+//
+// Every rule that matters here lives in migration
+// 20260915120000_a_report_is_answered_by_one_person.sql, not in this file and
+// not in the component. Who may see a report, who may pick one up, and who may
+// speak in it are decided by the database, so a mistake in the screen cannot
+// widen any of them. In particular: nobody may handle a report they are the
+// subject of, and a report about a Director or an Executive Director is for
+// Executive Directors only.
+
+export type AdminReport = {
+  id: string;
+  reason: string;
+  detail: string | null;
+  status: string;
+  created_at: string;
+  /** I am the person who raised this. */
+  mine: boolean;
+  claimed_by: string | null;
+  claimed_name: string | null;
+  subject_name: string | null;
+  /** I am entitled to pick this up and answer it. */
+  can_handle: boolean;
+  messages: number;
+};
+
+export type ReportMessage = {
+  id: string;
+  author_id: string;
+  author_name: string | null;
+  body: string;
+  created_at: string;
+};
+
+export async function myReports(): Promise<AdminReport[]> {
+  const { data, error } = await db().rpc('my_reports');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AdminReport[];
+}
+
+export async function reportThread(reportId: string): Promise<ReportMessage[]> {
+  const { data, error } = await db().rpc('report_thread', { p_report: reportId });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ReportMessage[];
+}
+
+/** Pick up a report. First one there holds it; nobody else can speak in it. */
+export async function claimReport(reportId: string): Promise<void> {
+  const { error } = await db().rpc('claim_report', { p_report: reportId });
+  if (error) throw new Error(error.message);
+}
+
+/** Hand it back, so a case is never stuck with somebody who should not hold it. */
+export async function releaseReport(reportId: string): Promise<void> {
+  const { error } = await db().rpc('release_report', { p_report: reportId });
+  if (error) throw new Error(error.message);
+}
+
+export async function sayInReport(reportId: string, body: string): Promise<void> {
+  const { error } = await db().rpc('say_in_report', { p_report: reportId, p_body: body });
+  if (error) throw new Error(error.message);
+}

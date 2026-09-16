@@ -33,6 +33,7 @@ import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '
 import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
 import { ReadingSettings } from '@/components/ReadingSettings';
 import { LiveCourt } from '@/components/LiveTrialRoom';
+import { LiveAdminReports } from '@/components/LiveAdminReports';
 
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
@@ -377,6 +378,12 @@ export function LiveSettingsPage() {
               own words. Only the people in a case can read it.
             </p>
           </Card>
+          {/* THE REPORTS THEMSELVES, above the trial room. A report is where
+              almost everything starts and a trial is the rare escalation, so
+              putting the courtroom first would greet everybody with a hearing
+              they are not in. */}
+          <LiveAdminReports me={profile.id} />
+
           <LiveCourt
             me={profile}
             emptyState={

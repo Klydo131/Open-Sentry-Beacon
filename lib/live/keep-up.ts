@@ -200,6 +200,22 @@ export const KEEP_UP_GUILDS = ['guilds', 'guild_members', 'profiles', 'pairings'
 export const KEEP_UP_REPORTS = ['reports', 'report_files', 'profiles'] as const;
 
 /**
+ * Admin Reports: the queue, and the conversation inside a case.
+ *
+ * `reports` moves when somebody picks a case up or hands it back, and
+ * `report_messages` moves on every reply. The second one is the reason this
+ * cannot be left off: a one-to-one conversation that only updates on reload is
+ * not a conversation, and that is precisely what the first version of this
+ * screen shipped until the deaf-room guard refused it.
+ *
+ * Both tables are RLS'd to the people entitled to them -- `may_handle_report`
+ * for the row, `in_report` for the thread -- and realtime evaluates the policy
+ * per subscriber. So this changes when somebody finds out, never who may.
+ */
+export const KEEP_UP_ADMIN_REPORTS =
+  ['reports', 'report_messages', 'profiles'] as const;
+
+/**
  * The Cases room, where several people are in the same hearing at once.
  *
  * The one screen in this app where two people are expected to be typing into
