@@ -96,10 +96,22 @@ const ROOM = 'components/study/StudyRoom.tsx';
 // it never downloads it.
 {
   const room = strip(read(ROOM));
-  ok(/useState\(false\)/.test(room),
-     'the room starts closed, so the chunk is not fetched on arrival');
+
+  // THE RULE CHANGED WHEN THE ROOM BECAME A ROOM, and the change is the point
+  // rather than a loosening. On its own page at /study, walking in IS the
+  // asking, so it opens on arrival: `useState(fullPage)`. Everywhere else --
+  // embedded in somebody else's screen, which is how this started -- it must
+  // still start closed, or three megabytes lands on a page nobody asked it of.
+  //
+  // So what is asserted is that the default is closed and opening is opt-in,
+  // not that the initial value is the literal `false`.
+  ok(/useState\(fullPage\)/.test(room),
+     'the room opens on arrival only on its own page');
+  ok(/fullPage\s*=\s*false/.test(room),
+     'and stays closed by default anywhere it is embedded');
+
   const gated = /\{\s*open\s*\?[\s\S]{0,400}?<StudyRoomEditor/.test(room);
-  ok(gated, 'and the editor is rendered only once it has been opened');
+  ok(gated, 'the editor is rendered only once it has been opened');
 }
 
 // ---------------------------------------------------------------------------

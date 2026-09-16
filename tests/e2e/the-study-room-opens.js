@@ -47,25 +47,28 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
   if (await consent.count()) { await consent.first().click().catch(() => {}); await page.waitForTimeout(600); }
 
+  // 1. IT IS A ROOM, reachable from the navigation rather than buried in a tab.
+  //    This is the part that was wrong first time and is worth asserting: the
+  //    room was a card at the bottom of My Journey's Study tab, which is not
+  //    what a room is here.
+  //    CHECKED AT DESKTOP WIDTH, because that is where the tutorial HAS
+  //    navigation: AppShell draws only the left rail, which is `xl:block`, and
+  //    unlike the live shell it has no horizontal strip below that. A phone
+  //    walking the demo therefore has no room navigation at all -- pre-existing,
+  //    worth its own fix, and not something to assert away here by pretending
+  //    the link is missing when it is the navigation that is.
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${BASE}/ds`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  const doorway = page.getByRole('link', { name: /Study Room/i }).first();
+  ok(await doorway.count() > 0, 'the Study Room is a room in the navigation');
+  await page.setViewportSize({ width: 412, height: 915 });
+
+  // 2. AND IT OPENS ON ARRIVAL, because walking in is the asking.
+  await page.goto(`${BASE}/study`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
-
-  const study = page.getByRole('tab', { name: /Study/i })
-    .or(page.getByRole('button', { name: /Study/i })).first();
-  if (await study.count()) { await study.click(); await page.waitForTimeout(900); }
-
-  // 1. THE ROOM IS THERE, AND CLOSED.
-  const openButton = page.getByRole('button', { name: /Open my study room/i }).first();
-  ok(await openButton.count() > 0, 'the Study tab offers a study room');
-
-  const beforeText = await page.locator('body').innerText();
-  ok(!/affine-paragraph/i.test(await page.content()),
-     'and the editor is not on the page until it is asked for');
-  ok(/nothing you type here is saved/i.test(beforeText),
+  ok(/nothing you type here is saved/i.test(await page.locator('body').innerText()),
      'the walkthrough says plainly that nothing is kept');
-
-  // 2. IT OPENS.
-  await openButton.click();
   // The chunk is several megabytes; on a cold build this is not instant, and a
   // short timeout here would produce a flaky suite rather than a true answer.
   await page.waitForSelector('affine-paragraph', { timeout: 60_000 }).catch(() => {});

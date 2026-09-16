@@ -88,6 +88,8 @@ const SECTIONS = (role: Role) => [
   ...(role !== 'ds'
     ? [{ href: '/office', icon: '🗂️', label: 'Office' }]
     : []),
+  // Explorers only, matching the rail. See railGroupsFor.
+  ...(role === 'ds' ? [{ href: '/study', icon: '📖', label: 'Study' }] : []),
   { href: '/publish',  icon: '✍️', label: 'Publish' },
   { href: '/library',  icon: '📚', label: 'Library' },
   // THE APPS ROOM IS RETIRED, AND THE POCKET REPLACES IT. "let's remove the

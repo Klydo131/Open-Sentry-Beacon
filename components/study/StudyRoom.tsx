@@ -43,14 +43,24 @@ const StudyRoomEditor = dynamic(
   },
 );
 
-export function StudyRoom({ me, demo = false }: { me: Profile; demo?: boolean }) {
-  const [open, setOpen] = useState(false);
+export function StudyRoom({ me, demo = false, fullPage = false }: {
+  me: Profile;
+  demo?: boolean;
+  /** On its own page the editor gets the screen, and opens without being asked. */
+  fullPage?: boolean;
+}) {
+  // ON ITS OWN PAGE, OPENING IT IS THE POINT OF ARRIVING. The button exists so
+  // nobody downloads three megabytes while reading something else; somebody who
+  // has walked into the Study Room has already asked.
+  const [open, setOpen] = useState(fullPage);
 
-  // BUILT ONCE, OR THE EDITOR REMOUNTS ON EVERY RENDER. A new source each time
-  // means a new workspace each time, which means the page somebody is typing
-  // into is thrown away underneath them.
-  const source = useMemo(
-    () => (demo ? new MemoryDocSource() : new SupabaseDocSource(db(), me.id, 'study-room')),
+  // A FACTORY, AND STABLE. Stable because a new function each render remounts
+  // the editor and throws away whatever somebody was typing. A factory because
+  // the live source needs a database client and asking for one during render
+  // throws when the app is not connected -- which does not show an error, it
+  // shows an empty room.
+  const makeSource = useMemo(
+    () => () => (demo ? new MemoryDocSource() : new SupabaseDocSource(db(), me.id, 'study-room')),
     [demo, me.id],
   );
 
@@ -74,7 +84,7 @@ export function StudyRoom({ me, demo = false }: { me: Profile; demo?: boolean })
 
       {open ? (
         <div className="mt-4">
-          <StudyRoomEditor source={source} />
+          <StudyRoomEditor makeSource={makeSource} />
         </div>
       ) : (
         <div className="mt-4 rounded-xl bg-gray-50 p-6 text-center">

@@ -52,7 +52,7 @@ const FIRST_PAGE = 'page-1';
  * returning a client. Taking the source as a prop is what lets both open the
  * same editor instead of the demo meeting the one room that errors.
  */
-export function StudyRoomEditor({ source }: { source: DocSource }) {
+export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource }) {
   const host = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
@@ -63,7 +63,13 @@ export function StudyRoomEditor({ source }: { source: DocSource }) {
 
     (async () => {
       try {
-        workspace = new StudyWorkspace({ id: WORKSPACE, docSource: source });
+        // BUILT HERE, NOT IN THE CALLER'S RENDER. The live source needs a
+        // database client, and asking for one throws when the app is not
+        // connected yet. Thrown during render that is not an error anybody
+        // sees -- it is a component that renders nothing, which is exactly how
+        // this first reached somebody: a heading, a sentence, and a blank space
+        // where the room should have been.
+        workspace = new StudyWorkspace({ id: WORKSPACE, docSource: makeSource() });
 
         const storeManager = new StoreExtensionManager(getInternalStoreExtensions());
         const viewManager = new ViewExtensionManager(getInternalViewExtensions());
@@ -109,7 +115,7 @@ export function StudyRoomEditor({ source }: { source: DocSource }) {
         workspace?.dispose();
       });
     };
-  }, [source]);
+  }, [makeSource]);
 
   return (
     <div className="relative min-h-[60vh] [min-height:60dvh]">

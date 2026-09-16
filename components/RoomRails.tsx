@@ -144,6 +144,13 @@ export function railGroupsFor(
   // The Guild Room is archived. Its rail entries are gone with its nav entry;
   // see the note in LiveAppShell. Nothing in the database was touched.
 
+  // THE STUDY ROOM IS A ROOM, and that was asked for twice. It arrived first as
+  // a card at the bottom of the Study tab inside My Journey, which is not what
+  // a room is in this app and gave a full editor about a third of a screen to
+  // live in. Explorers only: it is a place to write while you read, and nobody
+  // else here has that job.
+  const studyRoom = { href: '/study', label: 'Study Room', icon: '📖' };
+
   if (role === 'ds') {
     return [
       {
@@ -151,6 +158,7 @@ export function railGroupsFor(
         links: [
           home,
           { href: '/ds', label: 'My Journey', icon: '🎯' },
+          studyRoom,
           myFiles,
           publish,
         ],

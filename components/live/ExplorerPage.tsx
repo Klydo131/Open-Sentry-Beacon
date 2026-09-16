@@ -301,12 +301,6 @@ export function LiveExplorerPage() {
             )}
             <LiveSharedWithMe />
             <LiveStudies openSeries={openSeries} />
-            {/* SOMEWHERE TO WRITE, BESIDE WHAT THERE IS TO READ. It sits last
-                because it is the heaviest thing in the app by a wide margin --
-                the editor is 3.25 MB gzipped against 0.54 MB for everything
-                else -- so it arrives only when somebody asks for it, and never
-                on any other screen. See components/study/StudyRoom.tsx. */}
-            {profile && <StudyRoom me={profile} />}
           </>
         )}
 
