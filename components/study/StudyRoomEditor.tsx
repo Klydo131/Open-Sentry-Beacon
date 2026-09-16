@@ -51,6 +51,7 @@ import { StudyWorkspace } from '@/lib/study/workspace';
 import { studyStoreManager, studyViewManager } from '@/lib/study/extensions';
 import type { DocSource } from '@blocksuite/sync';
 import { BeaconSpinner } from '@/components/BeaconLoader';
+import { Button } from '@/components/ui';
 import { humanError } from '@/lib/live/errors';
 
 /** One room per person. The id is stable so the same room reopens every time. */
@@ -69,10 +70,17 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState('');
+  // AN UNREACHED ROOM IS NOT AN EMPTY ONE, and telling them apart is the whole
+  // point of this flag. See where it is set.
+  const [stalled, setStalled] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let workspace: StudyWorkspace | null = null;
     let cancelled = false;
+    setStalled(false);
+    setNotice('');
+    setError('');
 
     (async () => {
       try {
@@ -133,6 +141,21 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
           store.addBlock('affine:paragraph', {}, noteId);
         }
 
+        // THE ONE STATE LEFT THAT LOOKS EXACTLY LIKE BROKEN. The wait timed out
+        // AND there is no page: nothing came back from the database and nothing
+        // may be written, because a fresh page written now would be the one that
+        // gets pushed over whatever is actually stored.
+        //
+        // Rendering the editor anyway puts an empty white box on the screen
+        // under a notice claiming "anything you write now is kept", which is
+        // not true -- there is nothing to write in and nothing being saved. An
+        // honest dead end beats a convincing blank page, so say what happened,
+        // say nothing is lost, and offer the only useful action.
+        if (!store.root) {
+          setStalled(true);
+          return;
+        }
+
         if (cancelled || !host.current) return;
         const std = new BlockStdScope({ store, extensions: viewManager.get('page') });
         render(std.render(), host.current);
@@ -162,8 +185,9 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
           ]);
         });
         if (!synced) {
-          setNotice('Your saved pages are still on their way. Anything you write '
-            + 'now is kept, but give it a moment before you rely on it.');
+          setNotice('Your saved pages are taking a while to arrive. What is here '
+            + 'is yours to read, but give it a moment before you rely on new '
+            + 'writing being kept.');
         }
       } catch (cause) {
         if (!cancelled) setError(humanError(cause, 'The study room could not be opened.'));
@@ -179,7 +203,7 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
         workspace?.dispose();
       });
     };
-  }, [makeSource]);
+  }, [makeSource, attempt]);
 
   return (
     <div className="relative min-h-[60vh] [min-height:60dvh]">
@@ -193,14 +217,27 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
           {error}
         </p>
       )}
-      {!ready && !error && (
+      {stalled && (
+        <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
+          <p className="font-semibold">Your study room did not answer.</p>
+          <p className="mt-1">
+            Nothing has been lost. Your pages are in the church&rsquo;s database and
+            this device simply could not reach them just now. It is usually the
+            connection.
+          </p>
+          <Button className="mt-3" onClick={() => setAttempt((n) => n + 1)}>
+            Try again
+          </Button>
+        </div>
+      )}
+      {!ready && !error && !stalled && (
         <div className="absolute inset-0 grid place-items-center">
           <BeaconSpinner inline label="Opening your study room" />
         </div>
       )}
       {/* The editor measures itself against this element; without the class it
           throws ViewportElementProvider and renders nothing. */}
-      <div ref={host} className="affine-page-viewport" />
+      <div ref={host} className="affine-page-viewport" hidden={stalled} />
     </div>
   );
 }
