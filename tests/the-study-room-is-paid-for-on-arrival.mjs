@@ -149,5 +149,47 @@ const ROOM = 'components/study/StudyRoom.tsx';
      "the editor's blob worker is allowed, without widening default-src");
 }
 
+// ---------------------------------------------------------------------------
+// 5. AND THE ROOM CARRIES ONLY WHAT A ROOM NEEDS
+// ---------------------------------------------------------------------------
+//
+// The first working version called getInternalViewExtensions(), which loads
+// every block BlockSuite has: the infinite canvas, the databases, the embeds,
+// the attachments. Measured, that put 4.61 MB on the one screen an Explorer
+// opens to write, and it was reported as the room being broken before anybody
+// got as far as it being slow.
+{
+  const editor = strip(read(EDITOR));
+  ok(!/getInternal(Store|View)Extensions/.test(editor),
+     'the editor names the blocks it needs rather than loading every block there is');
+
+  const exts = strip(read('lib/study/extensions.ts'));
+
+  // The weight, by name. Each of these is a whole feature area that a page of
+  // handwritten study notes has no use for.
+  for (const gone of ['affine-block-database', 'affine-block-embed',
+                      'affine-block-surface', 'affine-block-data-view',
+                      'affine-block-attachment', 'affine-block-code']) {
+    ok(!exts.includes(gone), `the study room does not carry ${gone}`);
+  }
+
+  // AND THE HALF THAT IS NOT OPTIONAL. DefaultInlineManager declares every one
+  // of these as a dependency. Drop one and the manager does not construct, so
+  // no rich text renders anywhere -- an empty paragraph zero pixels tall, no
+  // error on screen, one line in the console. It is not a feature list; it is
+  // all or nothing.
+  for (const need of ['affine-inline-latex', 'affine-inline-mention',
+                      'affine-inline-reference', 'affine-inline-footnote',
+                      'affine-inline-link', 'affine-inline-preset']) {
+    ok(exts.includes(need),
+       `the inline set is complete (${need}), or no text renders at all`);
+  }
+
+  // The editor arrives with no colours of its own; every BlockSuite rule reads
+  // a --affine-* variable that only this stylesheet defines.
+  ok(/@toeverything\/theme\/style\.css/.test(editor),
+     'and the editor brings the stylesheet that defines its colours');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

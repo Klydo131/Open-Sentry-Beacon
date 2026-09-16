@@ -149,7 +149,12 @@ export function railGroupsFor(
   // a room is in this app and gave a full editor about a third of a screen to
   // live in. Explorers only: it is a place to write while you read, and nobody
   // else here has that job.
-  const studyRoom = { href: '/study', label: 'Study Room', icon: '📖' };
+  // BETA, AND SAID WHERE SOMEBODY DECIDES WHETHER TO OPEN IT. The editor is
+  // borrowed -- AFFiNE's BlockSuite, assembled from internal APIs on a version
+  // whose own presets package is three minors behind -- and it is the heaviest
+  // thing in the app by a wide margin. Somebody should know that before they
+  // trust their study notes to it.
+  const studyRoom = { href: '/study', label: 'Study Room', icon: '📖', beta: true };
 
   if (role === 'ds') {
     return [

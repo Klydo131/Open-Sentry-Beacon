@@ -29,14 +29,26 @@
 
 import '@blocksuite/affine/effects';
 
+// THE EDITOR SHIPS NO COLOURS OF ITS OWN. Every BlockSuite stylesheet is
+// written against `var(--affine-text-primary-color)` and about two hundred
+// siblings, and nothing in the package defines them -- AFFiNE's own app does,
+// in this file. Without it every one of those variables resolves to nothing and
+// each rule silently falls back to whatever it inherits: the placeholder came
+// out as near-black body text rather than a grey hint, and the same was true of
+// every border, divider and selection colour in the room.
+//
+// 12 kB gzipped, in the editor's own chunk, so it reaches only the one screen
+// that has an editor on it. It is scoped to :root, which is safe here because
+// every name in it begins with `--affine-` and this app defines none of those.
+import '@toeverything/theme/style.css';
+import './study-room.css';
+
 import { useEffect, useRef, useState } from 'react';
-import { StoreExtensionManager, ViewExtensionManager } from '@blocksuite/affine/ext-loader';
-import { getInternalStoreExtensions } from '@blocksuite/affine/extensions/store';
-import { getInternalViewExtensions } from '@blocksuite/affine/extensions/view';
-import { BlockStdScope } from '@blocksuite/affine/std';
+import { BlockStdScope, TextSelection } from '@blocksuite/affine/std';
 import { render } from 'lit';
 
 import { StudyWorkspace } from '@/lib/study/workspace';
+import { studyStoreManager, studyViewManager } from '@/lib/study/extensions';
 import type { DocSource } from '@blocksuite/sync';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { humanError } from '@/lib/live/errors';
@@ -72,8 +84,12 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
         // where the room should have been.
         workspace = new StudyWorkspace({ id: WORKSPACE, docSource: makeSource() });
 
-        const storeManager = new StoreExtensionManager(getInternalStoreExtensions());
-        const viewManager = new ViewExtensionManager(getInternalViewExtensions());
+        // NOT getInternalViewExtensions(). That loads every block BlockSuite
+        // has -- the whiteboard, the databases, the embeds -- and it is why the
+        // chunk was 4.6 MB. See lib/study/extensions.ts for what a study room
+        // is actually made of.
+        const storeManager = studyStoreManager();
+        const viewManager = studyViewManager();
         workspace.storeExtensions = storeManager.get('store');
 
         workspace.start();
@@ -111,7 +127,8 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
         // timed out is how somebody's notes get replaced by a blank one.
         if (!store.root && synced) {
           const rootId = store.addBlock('affine:page', {});
-          store.addBlock('affine:surface', {}, rootId);
+          // No surface block: that is the infinite canvas, which this room does
+          // not have and no longer carries the code for.
           const noteId = store.addBlock('affine:note', {}, rootId);
           store.addBlock('affine:paragraph', {}, noteId);
         }
@@ -120,6 +137,30 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
         const std = new BlockStdScope({ store, extensions: viewManager.get('page') });
         render(std.render(), host.current);
         setReady(true);
+
+        // A ROOM WITH NOTHING IN IT HAS TO STILL LOOK LIKE A ROOM, and this is
+        // the third report of the study room "not working" that turned out to
+        // be a working editor nobody could tell was there. An untouched page is
+        // one empty paragraph. BlockSuite only draws its placeholder while the
+        // caret is inside the block, so with no caret there is no placeholder,
+        // no toolbar and no title: a white rectangle, which is exactly what a
+        // broken page looks like.
+        //
+        // So put the caret in it. Only when the page is genuinely empty -- a
+        // returning Explorer opens on their own words and is not interrupted,
+        // and nothing is written into anybody's document to achieve this.
+        requestAnimationFrame(() => {
+          if (cancelled) return;
+          const blocks = store.getBlocksByFlavour('affine:paragraph');
+          const first = blocks[0];
+          if (blocks.length !== 1 || !first || (first.model.text?.length ?? 0) > 0) return;
+          std.selection.setGroup('note', [
+            std.selection.create(TextSelection, {
+              from: { blockId: first.id, index: 0, length: 0 },
+              to: null,
+            }),
+          ]);
+        });
         if (!synced) {
           setNotice('Your saved pages are still on their way. Anything you write '
             + 'now is kept, but give it a moment before you rely on it.');

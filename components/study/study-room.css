@@ -1,0 +1,46 @@
+/* The two numbers that decide how wide somebody gets to write.
+ *
+ * ---------------------------------------------------------------------------
+ * AFFiNE's defaults are `--affine-editor-width: 944px` and
+ * `--affine-editor-side-padding: 96px`, which are the right numbers for a
+ * desktop app with a document at the centre of a large window. On a 412px
+ * phone they leave about 220 pixels to write in, and the placeholder came out
+ * as "Write what you not..." with the rest cut off.
+ *
+ * Most people using this app are on a phone, so the phone is the default here
+ * and the padding is added back as the screen gets wide enough to want a
+ * margin. The room's own card already provides the gutter.
+ *
+ * Loaded from StudyRoomEditor, so these rules travel in the editor's chunk and
+ * reach only the one screen that has an editor on it.
+ * ---------------------------------------------------------------------------
+ */
+
+.affine-page-viewport {
+  --affine-editor-width: 100%;
+  --affine-editor-side-padding: 0px;
+}
+
+@media (min-width: 768px) {
+  .affine-page-viewport {
+    --affine-editor-side-padding: 24px;
+  }
+}
+
+/* THE CARET IS THE FOCUS INDICATOR INSIDE A PAGE OF TEXT.
+ *
+ * globals.css gives every focused element a navy outline and a gold ring, and
+ * it is right to: gold alone measures 1.84:1 on white, well under the 3:1 a
+ * focus indicator owes a low-vision user, so the two layers cover both
+ * surfaces. But the editor's page root takes focus the moment somebody starts
+ * writing, and the result was a gold band drawn around the whole document for
+ * as long as they typed.
+ *
+ * Only the two surfaces that show a blinking caret are exempted here, and only
+ * those. Every button, link and control inside the room keeps the ring.
+ */
+.affine-page-viewport affine-page-root:focus-visible,
+.affine-page-viewport [contenteditable='true']:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

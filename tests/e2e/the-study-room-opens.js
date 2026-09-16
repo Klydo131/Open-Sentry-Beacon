@@ -79,6 +79,15 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   ok(await page.locator('affine-paragraph').count() > 0,
      'and there is somewhere to type');
 
+  // AND IT LOOKS LIKE A ROOM BEFORE ANYBODY TOUCHES IT, which is the assertion
+  // that would have caught what two screenshots caught instead. An untouched
+  // page is one empty paragraph; BlockSuite draws its placeholder only while
+  // the caret is inside the block, so a room nobody has tapped renders as white
+  // space and nothing else. Every check above passed while that was true.
+  const hint = page.locator('.affine-paragraph-placeholder.visible');
+  ok(await hint.count() > 0 && /\S/.test(await hint.first().innerText()),
+     'an untouched room says what it is for, before anybody taps it');
+
   // 3. SOMEBODY CAN WRITE IN IT, which is the whole point and the thing every
   //    silent failure got wrong.
   await page.locator('affine-paragraph').first().click();
