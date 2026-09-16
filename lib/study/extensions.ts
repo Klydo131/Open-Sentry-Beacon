@@ -50,6 +50,20 @@
 // room is for, and it is answered by adding a line to this file rather than by
 // discovering the bundle grew.
 //
+// TWO THINGS ARE HELD BACK FOR REASONS THAT ARE NOT TASTE, recorded here so
+// nobody adds them thinking they were forgotten:
+//
+//   THE IMAGE BLOCK NEEDS SOMEWHERE TO PUT IMAGES. Blocks are text and live in
+//   study_docs; an image is a blob, and the workspace is wired to
+//   MemoryBlobSource, which forgets on reload. Registering the block without
+//   somewhere to keep the bytes gives an Explorer a photo of their Bible page
+//   that vanishes the next time they open the room. Persisting blobs to the
+//   church's storage is the prerequisite, not an afterthought.
+//
+//   THE CODE BLOCK'S HIGHLIGHTER CANNOT RUN HERE. shiki matches with oniguruma,
+//   a 466 kB WebAssembly module, and this app's policy has no `wasm-unsafe-eval`
+//   so the browser refuses to compile it. 225 kB gzipped for a grey box.
+//
 // THE SCHEMA IS NOT THE VIEW. `affine:surface` is the infinite canvas, which
 // this room does not draw, so the view extension is gone and the canvas code
 // with it. But the rooms already in the database were written by a version that
@@ -95,7 +109,12 @@ import { ReferenceViewExtension } from '@blocksuite/affine-inline-reference/view
 import { FootnoteViewExtension } from '@blocksuite/affine-inline-footnote/view';
 import { MentionViewExtension } from '@blocksuite/affine-inline-mention/view';
 import { LatexViewExtension } from '@blocksuite/affine-inline-latex/view';
+import { SurfaceViewExtension } from '@blocksuite/affine-block-surface/view';
 import { DragHandleViewExtension } from '@blocksuite/affine-widget-drag-handle/view';
+import { SlashMenuViewExtension } from '@blocksuite/affine-widget-slash-menu/view';
+import { ToolbarViewExtension } from '@blocksuite/affine-widget-toolbar/view';
+import { KeyboardToolbarViewExtension } from '@blocksuite/affine-widget-keyboard-toolbar/view';
+import { ScrollAnchoringViewExtension } from '@blocksuite/affine-widget-scroll-anchoring/view';
 
 /** The blocks a study page may contain. */
 export function studyStoreManager() {
@@ -148,6 +167,33 @@ export function studyViewManager() {
     MentionViewExtension,
     LatexViewExtension,
     DragHandleViewExtension,
+
+    // THE CANVAS, REGISTERED BUT NOT DRAWN, and this is not a change of mind.
+    // In page scope SurfaceViewExtension draws `affine-surface-void` -- nothing
+    // -- and what it actually contributes is a handful of services the rest of
+    // the editor resolves, including the one the slash menu asks for. Without
+    // it the menu mounts at zero by zero and the console says
+    // `Service [AffineEdgelessLegacySlotService] not found in container`.
+    //
+    // The whiteboard itself lives behind `isEdgeless(scope)` and this room asks
+    // for `page`, so none of it is reachable. That remains a product decision;
+    // this line is about the editor being able to construct itself.
+    SurfaceViewExtension,
+
+    // THE WAY IN. Everything above this line was already registered and none of
+    // it could be reached: a room that could do headings, quotes, three kinds
+    // of list, tables, callouts and dividers offered a person one plain
+    // paragraph and no hint that anything else existed. "that's it? that's what
+    // all the study room can do? write notes?" -- and that was a fair
+    // description of what was on the screen.
+    //
+    // Blocks are the what; widgets are the how you get at them. Wiring the
+    // first and not the second is how an editor ends up looking like a text
+    // box, which is what happened.
+    SlashMenuViewExtension,
+    ToolbarViewExtension,
+    KeyboardToolbarViewExtension,
+    ScrollAnchoringViewExtension,
   ]);
 
   manager.configure(ParagraphViewExtension, {

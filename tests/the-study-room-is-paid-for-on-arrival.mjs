@@ -173,15 +173,27 @@ const ROOM = 'components/study/StudyRoom.tsx';
     ok(!exts.includes(gone), `the study room does not carry ${gone}`);
   }
 
-  // THE CANVAS IS NOT DRAWN BUT IT IS STILL READ. Rooms already in the database
-  // have an `affine:surface` block in them, written by the version that built
-  // pages with one. Without its schema, loading one raises an error on every
-  // open and leaves a block the app cannot model. Proven in
-  // tests/a-room-that-already-exists-still-opens.mjs rather than asserted here.
-  ok(!/affine-block-surface\/view/.test(exts),
-     'the infinite canvas is not drawn');
+  // THE CANVAS IS PRESENT AND NOT DRAWN, WHICH IS THREE DIFFERENT THINGS.
+  //
+  // Its SCHEMA has to be there or every room already in the database raises an
+  // error on open and loses a block it cannot model. Proven in
+  // tests/a-room-that-already-exists-still-opens.mjs, not asserted here.
   ok(/affine-block-surface\/store/.test(exts),
-     'but its schema is kept, or every room that already has one stops opening');
+     'the canvas schema is kept, or every room that already has one stops opening');
+
+  // Its VIEW provider has to be there too, and this was a surprise: in page
+  // scope it draws `affine-surface-void`, which is nothing, and what it really
+  // contributes is services the rest of the editor resolves. Without it the
+  // slash menu mounts at zero by zero and the console says
+  // `Service [AffineEdgelessLegacySlotService] not found in container`.
+  ok(/affine-block-surface\/view/.test(exts),
+     'and its view provider, which is where the editor gets services it needs');
+
+  // And the WHITEBOARD is not reachable, because that is a scope the room never
+  // asks for. This is the assertion that actually holds the product decision:
+  // the edgeless canvas is drawn only under an edgeless scope.
+  ok(/viewManager\.get\('page'\)/.test(editor) && !/'(mobile-)?edgeless'/.test(editor),
+     'but the room only ever asks for a page, so no whiteboard is drawn');
 
   // AND THE HALF THAT IS NOT OPTIONAL. DefaultInlineManager declares every one
   // of these as a dependency. Drop one and the manager does not construct, so

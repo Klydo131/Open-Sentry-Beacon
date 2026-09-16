@@ -74,6 +74,16 @@ export function StudyRoom({ me, demo = false, fullPage = false }: {
         yours: your Guide can see that you have been working, never what you
         wrote.
       </p>
+      {/* THE ROOM CAN DO A GREAT DEAL AND SAID NONE OF IT. Headings, quotes,
+          three kinds of list, tables and callouts were all there and all
+          invisible, because the only way to reach them is a key nobody had been
+          told about. "that's it? that's what all the study room can do? write
+          notes?" A feature nobody can find is not a feature. */}
+      <p className="mt-2 text-sm text-gray-500">
+        Type <span className="rounded bg-gray-100 px-1 font-mono">/</span> on a line
+        for headings, lists, to&#8209;do boxes, quotes, tables and dividers. Select
+        words to make them bold or add a link.
+      </p>
 
       {demo && (
         <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
