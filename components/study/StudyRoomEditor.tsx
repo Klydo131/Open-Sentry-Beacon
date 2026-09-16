@@ -56,6 +56,7 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
   const host = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     let workspace: StudyWorkspace | null = null;
@@ -77,10 +78,26 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
 
         workspace.start();
         workspace.meta.initialize();
-        // Wait for what is already saved before deciding the room is empty,
-        // or a returning Explorer gets a blank page and a new one written over
-        // the top of everything they had.
-        await workspace.waitForSynced();
+
+        // WAITING FOR THE DATABASE MUST NOT BE ABLE TO STOP THE ROOM OPENING,
+        // and that is not a theoretical worry -- it is what reached somebody.
+        //
+        // This used to be a bare `await workspace.waitForSynced()`. Against the
+        // in-memory source the tutorial uses, that resolves at once, which is
+        // why every test passed. Against the live source it can hang, and when
+        // it hangs nothing after this line ever runs: no editor, no error, an
+        // empty white room. The one path nobody could test was the only path
+        // that mattered.
+        //
+        // The wait still happens, because opening before the saved pages arrive
+        // would show a returning Explorer an empty page and then write a new
+        // one over the top of everything they had. But it is bounded, and the
+        // room opens either way. A slow network costs somebody the first few
+        // seconds of their own writing, not the room.
+        const synced = await Promise.race([
+          workspace.waitForSynced().then(() => true),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
+        ]);
         if (cancelled) return;
 
         const existing = workspace.getDoc(FIRST_PAGE);
@@ -89,8 +106,10 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
         const store = doc.getStore();
 
         // A page needs a root, a surface and somewhere to type before it can be
-        // rendered at all. Only on a genuinely new room.
-        if (!store.root) {
+        // rendered at all. Only on a genuinely NEW room -- and only when the
+        // database actually answered. Writing a fresh page after a sync that
+        // timed out is how somebody's notes get replaced by a blank one.
+        if (!store.root && synced) {
           const rootId = store.addBlock('affine:page', {});
           store.addBlock('affine:surface', {}, rootId);
           const noteId = store.addBlock('affine:note', {}, rootId);
@@ -101,6 +120,10 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
         const std = new BlockStdScope({ store, extensions: viewManager.get('page') });
         render(std.render(), host.current);
         setReady(true);
+        if (!synced) {
+          setNotice('Your saved pages are still on their way. Anything you write '
+            + 'now is kept, but give it a moment before you rely on it.');
+        }
       } catch (cause) {
         if (!cancelled) setError(humanError(cause, 'The study room could not be opened.'));
       }
@@ -119,6 +142,11 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
 
   return (
     <div className="relative min-h-[60vh] [min-height:60dvh]">
+      {notice && !error && (
+        <p className="mb-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+          {notice}
+        </p>
+      )}
       {error && (
         <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">
           {error}
