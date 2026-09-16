@@ -61,8 +61,26 @@ function fromBase64(text: string): Uint8Array {
 
 type Row = { state: string; version: number };
 
-export class SupabaseDocSource implements DocSource {
+/**
+ * A document source that can say when it is in trouble.
+ *
+ * WHY THIS EXISTS. DocEngine catches everything a source throws and retries on
+ * its own schedule, which is right -- a dropped packet should not be an error
+ * screen. But it means a source that can never save throws into a void: the
+ * person keeps typing, nothing reaches the database, and the screen looks
+ * exactly like the screen where everything is fine. For a room whose entire
+ * job is keeping what somebody wrote, silence is the worst possible answer.
+ *
+ * So a source may report trouble upward, and the room shows it. Non-null is a
+ * problem that has not cleared; null means the last write got through.
+ */
+export type Troubled = { onTrouble?: (cause: unknown | null) => void };
+
+export class SupabaseDocSource implements DocSource, Troubled {
   name = 'supabase';
+
+  /** Set by whoever is showing the room. See Troubled. */
+  onTrouble?: (cause: unknown | null) => void;
 
   /** How many times a write may lose the race before it gives up and throws. */
   private static readonly RETRIES = 3;
@@ -85,7 +103,11 @@ export class SupabaseDocSource implements DocSource {
 
   async pull(docId: string, state: Uint8Array) {
     const { data, error } = await this.row(docId);
-    if (error) throw new Error(error.message);
+    if (error) {
+      const cause = new Error(error.message);
+      this.onTrouble?.(cause);
+      throw cause;
+    }
     if (!data) return null;
 
     const update = fromBase64((data as Row).state);
@@ -97,6 +119,19 @@ export class SupabaseDocSource implements DocSource {
   }
 
   async push(docId: string, data: Uint8Array): Promise<void> {
+    try {
+      await this.write(docId, data);
+      // The last write got through, so whatever was wrong is over. Reported
+      // every time rather than only after a failure, because the room has no
+      // other way to learn that a problem has cleared.
+      this.onTrouble?.(null);
+    } catch (cause) {
+      this.onTrouble?.(cause);
+      throw cause;
+    }
+  }
+
+  private async write(docId: string, data: Uint8Array): Promise<void> {
     for (let attempt = 0; attempt < SupabaseDocSource.RETRIES; attempt += 1) {
       const { data: existing, error } = await this.row(docId);
       if (error) throw new Error(error.message);

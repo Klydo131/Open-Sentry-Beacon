@@ -201,5 +201,28 @@ const ROOM = 'components/study/StudyRoom.tsx';
      'and the editor brings the stylesheet that defines its colours');
 }
 
+// ---------------------------------------------------------------------------
+// 6. AND THE ROOM NEVER LIES ABOUT WHAT IS HAPPENING
+// ---------------------------------------------------------------------------
+//
+// Three separate reports of this room "not working" were a working editor with
+// nothing on screen to say otherwise. Every state it can be in now has to say
+// which one it is: opened, opened-but-not-saving, or never reached at all.
+{
+  const editor = strip(read(EDITOR));
+
+  ok(/onTrouble\s*=/.test(editor),
+     'the room listens for a source that cannot save');
+  ok(/setTrouble/.test(editor) && /Not saved yet/.test(read(EDITOR)),
+     'and says so on screen rather than letting somebody write into nothing');
+
+  // A page that never arrived is not an empty page, and rendering an editor
+  // with no blocks in it is the white rectangle that started all of this.
+  ok(/setStalled\(true\)/.test(editor),
+     'a room that could not be reached is told apart from an empty one');
+  ok(/Try again/.test(read(EDITOR)),
+     'and offers the one action that helps');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

@@ -50,6 +50,7 @@ import { render } from 'lit';
 import { StudyWorkspace } from '@/lib/study/workspace';
 import { studyStoreManager, studyViewManager } from '@/lib/study/extensions';
 import type { DocSource } from '@blocksuite/sync';
+import type { Troubled } from '@/lib/study/doc-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { Button } from '@/components/ui';
 import { humanError } from '@/lib/live/errors';
@@ -74,6 +75,8 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
   // point of this flag. See where it is set.
   const [stalled, setStalled] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // NOT SAVED IS NOT THE SAME AS NOT WORKING, and neither is worth hiding.
+  const [trouble, setTrouble] = useState('');
 
   useEffect(() => {
     let workspace: StudyWorkspace | null = null;
@@ -81,6 +84,7 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
     setStalled(false);
     setNotice('');
     setError('');
+    setTrouble('');
 
     (async () => {
       try {
@@ -90,7 +94,20 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
         // sees -- it is a component that renders nothing, which is exactly how
         // this first reached somebody: a heading, a sentence, and a blank space
         // where the room should have been.
-        workspace = new StudyWorkspace({ id: WORKSPACE, docSource: makeSource() });
+        // A SOURCE THAT CANNOT SAVE MUST BE ABLE TO SAY SO. DocEngine swallows
+        // whatever a source throws and retries quietly, which is right for a
+        // dropped packet and wrong for a room that will never save again: the
+        // person keeps writing into a page that looks perfectly normal. The
+        // live source reports upward; the tutorial's never has anything to
+        // report, and does not implement this at all.
+        const source = makeSource() as DocSource & Troubled;
+        source.onTrouble = (cause) => {
+          if (cancelled) return;
+          setTrouble(cause === null
+            ? ''
+            : humanError(cause, 'Your writing is not reaching the database.'));
+        };
+        workspace = new StudyWorkspace({ id: WORKSPACE, docSource: source });
 
         // NOT getInternalViewExtensions(). That loads every block BlockSuite
         // has -- the whiteboard, the databases, the embeds -- and it is why the
@@ -207,6 +224,12 @@ export function StudyRoomEditor({ makeSource }: { makeSource: () => DocSource })
 
   return (
     <div className="relative min-h-[60vh] [min-height:60dvh]">
+      {trouble && !error && !stalled && (
+        <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">
+          <span className="font-semibold">Not saved yet.</span> {trouble} Keep this
+          page open; it keeps trying, and what you have written is still here.
+        </p>
+      )}
       {notice && !error && (
         <p className="mb-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
           {notice}

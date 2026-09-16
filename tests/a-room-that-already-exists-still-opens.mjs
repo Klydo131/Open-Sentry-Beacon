@@ -20,7 +20,9 @@
 // store but not in the model. Keeping the schema costs nothing and ends both.
 //
 // The reason to have this file is broader than that one block: no check in this
-// repo had ever opened a page it did not just write.
+// repo had ever opened a page it did not just write, and none had ever asked
+// what happens when the database refuses. It now covers both -- the second half
+// is at the bottom, where a source that cannot save has to say so.
 //
 // So this opens a page of that shape with today's extension set. It runs the
 // real StudyWorkspace against a document source that hands back stored bytes,
@@ -52,10 +54,11 @@ const ok = (cond, msg) => {
   if (!cond) bad++;
 };
 
-let result;
-try {
+/** Bundle one fixture and run it, handing back the JSON it prints. */
+async function runFixture(name) {
+  const outfile = path.join(out, `${name}.mjs`);
   await build({
-    entryPoints: [path.join(root, 'tests/fixtures/open-a-stored-room.ts')],
+    entryPoints: [path.join(root, `tests/fixtures/${name}.ts`)],
     bundle: true,
     platform: 'node',
     format: 'esm',
@@ -63,14 +66,20 @@ try {
     // passing it through for Node to choke on.
     target: 'es2020',
     alias: { '@': root },
-    outfile: bundle,
+    outfile,
     logLevel: 'error',
   });
-  const stdout = execFileSync(process.execPath, [bundle], { cwd: root, encoding: 'utf8', timeout: 90_000 });
-  const line = stdout.trim().split('\n').filter(Boolean).pop() ?? '{}';
-  result = JSON.parse(line);
+  const stdout = execFileSync(process.execPath, [outfile], { cwd: root, encoding: 'utf8', timeout: 90_000 });
+  return JSON.parse(stdout.trim().split('\n').filter(Boolean).pop() ?? '{}');
+}
+
+let result;
+let trouble;
+try {
+  result = await runFixture('open-a-stored-room');
+  trouble = await runFixture('a-source-in-trouble');
 } catch (cause) {
-  ok(false, `the fixture ran at all (${String(cause).slice(0, 200)})`);
+  ok(false, `the fixtures ran at all (${String(cause).slice(0, 200)})`);
   console.log(`\nRESULT: ${bad} FAILURE(S)`);
   process.exit(1);
 }
@@ -92,6 +101,20 @@ for (const flavour of ['affine:page', 'affine:surface', 'affine:note', 'affine:p
 // matters.
 ok(result.text === 'what was written before',
    `what was already written is still there (${JSON.stringify(result.text)})`);
+
+// ---------------------------------------------------------------------------
+// AND A SOURCE THAT CANNOT SAVE SAYS SO
+// ---------------------------------------------------------------------------
+//
+// DocEngine catches everything a source throws and retries quietly. That is
+// right for a dropped packet and wrong for a room that will never save again:
+// the person keeps writing into a page that looks perfectly normal, and the
+// only thing this app exists to do -- keep what they wrote -- is not happening.
+ok(trouble.reportedOnPull === true, 'a failed read is reported upward');
+ok(trouble.reportedOnPush === true, 'a failed save is reported upward');
+// A warning that never clears is its own bug: somebody stops believing it, and
+// then does not believe the true one either.
+ok(trouble.clearedOnSuccess === true, 'and the warning clears once a save gets through');
 
 fs.rmSync(out, { recursive: true, force: true });
 
