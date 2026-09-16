@@ -168,10 +168,20 @@ const ROOM = 'components/study/StudyRoom.tsx';
   // The weight, by name. Each of these is a whole feature area that a page of
   // handwritten study notes has no use for.
   for (const gone of ['affine-block-database', 'affine-block-embed',
-                      'affine-block-surface', 'affine-block-data-view',
-                      'affine-block-attachment', 'affine-block-code']) {
+                      'affine-block-data-view', 'affine-block-attachment',
+                      'affine-block-code']) {
     ok(!exts.includes(gone), `the study room does not carry ${gone}`);
   }
+
+  // THE CANVAS IS NOT DRAWN BUT IT IS STILL READ. Rooms already in the database
+  // have an `affine:surface` block in them, written by the version that built
+  // pages with one. Without its schema, loading one raises an error on every
+  // open and leaves a block the app cannot model. Proven in
+  // tests/a-room-that-already-exists-still-opens.mjs rather than asserted here.
+  ok(!/affine-block-surface\/view/.test(exts),
+     'the infinite canvas is not drawn');
+  ok(/affine-block-surface\/store/.test(exts),
+     'but its schema is kept, or every room that already has one stops opening');
 
   // AND THE HALF THAT IS NOT OPTIONAL. DefaultInlineManager declares every one
   // of these as a dependency. Drop one and the manager does not construct, so

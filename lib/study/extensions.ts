@@ -49,6 +49,24 @@
 // later wants a whiteboard in here, that is a conversation about what a study
 // room is for, and it is answered by adding a line to this file rather than by
 // discovering the bundle grew.
+//
+// THE SCHEMA IS NOT THE VIEW. `affine:surface` is the infinite canvas, which
+// this room does not draw, so the view extension is gone and the canvas code
+// with it. But the rooms already in the database were written by a version that
+// put a surface block in every page, and loading one without its schema raises
+// `schema for flavour: affine:surface not found`.
+//
+// What that actually costs, measured rather than assumed: BlockSuite catches
+// the error, logs it, skips the block and carries on. The page opens, the note
+// and the paragraph are there, the writing is intact. So this is not an outage
+// -- it is an error on every open of every room that already exists, and one
+// block the app holds in the store but cannot see in the model.
+//
+// SurfaceStoreExtension therefore stays, because it is the schema and the
+// schema has to be able to read what is already stored. Dropping a block from
+// the view costs that block's feature, which is a decision. Dropping it from
+// the schema costs everybody who already has one, which is a bug. Anything this
+// room has ever written stays readable even after it stops being drawn.
 // ---------------------------------------------------------------------------
 
 import { StoreExtensionManager, ViewExtensionManager } from '@blocksuite/affine/ext-loader';
@@ -61,6 +79,7 @@ import { ListStoreExtension } from '@blocksuite/affine-block-list/store';
 import { DividerStoreExtension } from '@blocksuite/affine-block-divider/store';
 import { TableStoreExtension } from '@blocksuite/affine-block-table/store';
 import { CalloutStoreExtension } from '@blocksuite/affine-block-callout/store';
+import { SurfaceStoreExtension } from '@blocksuite/affine-block-surface/store';
 
 import { FoundationViewExtension } from '@blocksuite/affine-foundation/view';
 import { RootViewExtension } from '@blocksuite/affine-block-root/view';
@@ -89,6 +108,7 @@ export function studyStoreManager() {
     DividerStoreExtension,
     TableStoreExtension,
     CalloutStoreExtension,
+    SurfaceStoreExtension,
   ]);
 }
 

@@ -223,6 +223,9 @@ const staticChecks = [
   ['the room belongs to its owner at any width', 'tests/the-room-belongs-to-its-owner-at-any-width.mjs'],
   ['a study room the church owns', 'tests/a-study-room-the-church-owns.mjs'],
   ['the study room is paid for on arrival', 'tests/the-study-room-is-paid-for-on-arrival.mjs'],
+  // Every other check on the study room opens a room it just made. This one
+  // opens a page of the shape already sitting in the database.
+  ['a room that already exists still opens', 'tests/a-room-that-already-exists-still-opens.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.
