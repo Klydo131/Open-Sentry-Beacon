@@ -2106,11 +2106,30 @@ export async function shareMaterial(materialId: string, pairingId: string, note?
     shared_by: me_id,
     note: note?.trim() || null,
   });
+  if (!error) return;
+
   // The unique index is the one somebody will hit, so it gets words rather
   // than a constraint name.
-  if (error) {
-    throw new Error(error.code === '23505' ? 'That is already shared with them.' : error.message);
+  if (error.code === '23505') throw new Error('That is already shared with them.');
+
+  // WHY, NOT JUST NO. Found by probing the live database: a Guide sharing with
+  // their own Explorer was refused because an open case pauses sharing for that
+  // pairing. All they saw was a row-level-security violation, which humanError
+  // turns into "you do not have permission, ask your Director" -- wrong three
+  // times over. They DO have permission; it is paused rather than withheld; and
+  // it sends them to a Director, a tier this church has none of.
+  //
+  // So when the rules refuse, ask the rules why. The answer comes from the same
+  // function the policy itself is defined in terms of, so it cannot claim
+  // nothing is wrong while the insert is being refused.
+  if (/row-level security/i.test(error.message)) {
+    const { data: why } = await supabase.rpc('why_library_sharing_is_paused', {
+      p_pairing: pairingId,
+    });
+    if (typeof why === 'string' && why) throw new Error(why);
   }
+
+  throw new Error(error.message);
 }
 
 /** Unshare. Only whoever shared it may take it back. */
