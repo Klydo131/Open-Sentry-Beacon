@@ -17,6 +17,7 @@ import { Avatar, Card } from '@/components/ui';
 import { Conversation, Notice, errorText } from '@/components/live/shared';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { NextStudy } from '@/components/live/NextStudy';
+import { StudyRoom } from '@/components/study/StudyRoom';
 import { JourneyBar } from '@/components/live/JourneyBar';
 import { LiveAnnouncements } from '@/components/LiveAnnouncements';
 import { LiveBlogFeed } from '@/components/LiveBlog';
@@ -300,6 +301,12 @@ export function LiveExplorerPage() {
             )}
             <LiveSharedWithMe />
             <LiveStudies openSeries={openSeries} />
+            {/* SOMEWHERE TO WRITE, BESIDE WHAT THERE IS TO READ. It sits last
+                because it is the heaviest thing in the app by a wide margin --
+                the editor is 3.25 MB gzipped against 0.54 MB for everything
+                else -- so it arrives only when somebody asks for it, and never
+                on any other screen. See components/study/StudyRoom.tsx. */}
+            {profile && <StudyRoom me={profile} />}
           </>
         )}
 

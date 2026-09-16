@@ -105,7 +105,18 @@ if (ready) {
   let res, html = '';
   try {
     res = await fetch(`http://127.0.0.1:${port}/`, {
-      signal: AbortSignal.timeout(30_000),
+      // NINETY SECONDS, RAISED FROM THIRTY, and the reason matters more than
+      // the number. `next dev` compiles on demand, and the study room's editor
+      // put seventy more packages into the graph -- the first request measured
+      // 29.8s against a 30s limit, which passes and then does not, at random,
+      // on a slower machine or a cold cache.
+      //
+      // This check is not a speed check. It exists because a
+      // Content-Security-Policy without 'unsafe-eval' makes the dev server
+      // answer 200 with a BLANK page, which is what happened on 2026-08-12 and
+      // is what the assertions below actually look for. A longer patience still
+      // catches that; a tight one just makes the gate lie at random.
+      signal: AbortSignal.timeout(90_000),
     });
     html = await res.text();
   } catch (e) {

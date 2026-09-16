@@ -74,6 +74,7 @@ ships and the code that is checked.
 | `lib/live/errors.ts` | `humanError()`. Where a database error becomes a sentence. |
 | `lib/supabase/client.ts` | The browser's connection, or **null** when there is none. |
 | `lib/backend/` | The seam where you plug in a real backend. |
+| `lib/study/` | The Explorer's study room. AFFiNE's editor is MIT and its server is not, so the workspace and the place documents are kept are ours: `workspace.ts` implements BlockSuite's `Workspace` over its public pieces, `doc-source.ts` keeps pages in `study_docs`, `memory-source.ts` is the tutorial's, and forgets. |
 | `lib/quest.ts` | The guided tutorial: one walk per role. |
 | `lib/types.ts` | Every shape in the app, in one file. |
 | `supabase/migrations/` | The schema and every permission rule, in order. |

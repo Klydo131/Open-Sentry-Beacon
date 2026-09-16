@@ -1,4 +1,19 @@
 /** @type {import('next').NextConfig} */
+import { createVanillaExtractPlugin } from '@vanilla-extract/next-plugin';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { blocksuiteAliases, NEEDS_LOADERS } from './scripts/blocksuite-aliases.mjs';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+
+// THE STUDY ROOM'S EDITOR NEEDS BOTH OF THESE, and both were found by building
+// rather than by reading. BlockSuite styles three of its packages with
+// vanilla-extract, which generates CSS at BUILD time from .css.ts files and
+// throws at runtime without its plugin -- the failure reads like a Lit styling
+// error and sends you looking in the wrong place for an hour. And every
+// @blocksuite package resolves to its own TypeScript source unless pointed at
+// dist; see scripts/blocksuite-aliases.mjs for what that costs otherwise.
+const withVanillaExtract = createVanillaExtractPlugin();
 
 // Security headers.
 //
@@ -77,6 +92,12 @@ const csp = [
   // this, media-src falls back to default-src 'self', blob: is not 'self', and
   // every local audio/video file fails to play with no visible error.
   `media-src ${mediaSources.join(' ')}`,
+  // THE STUDY ROOM'S EDITOR RUNS WORKERS, and builds them from a blob rather
+  // than a URL. Without this directive worker-src falls back to default-src
+  // 'self', blob: is not 'self', and the worker is refused -- in production
+  // only, silently, on the one screen that needs it. This widens workers and
+  // nothing else: default-src stays exactly as tight as it was.
+  "worker-src 'self' blob:",
   // The only third-party frames allowed, and only these: the YouTube and
   // Facebook video players. frame-src otherwise falls back to default-src
   // 'self' and every embed is blocked. Scripts, XHR and everything else stay
@@ -127,6 +148,37 @@ const nextConfig = {
   // end-to-end phase that runs next, failing with "Could not find a production
   // build" — a failure caused entirely by the test that ran before it. Separate
   // directories remove the ordering dependency instead of documenting it.
+  // THREE PACKAGES STYLE THEMSELVES WITH VANILLA-EXTRACT, and Next excludes
+  // node_modules from its loaders by default, so the plugin never sees their
+  // .css files and webpack meets a bare `style()` call it cannot parse. Naming
+  // them here is what lets the loaders run over them. Only these three: the
+  // list is small on purpose, because transpiling all seventy would be slow and
+  // would undo the point of resolving to compiled output.
+  // EVERY @blocksuite PACKAGE, and both halves of that are needed.
+  //
+  // Next excludes node_modules from its loaders, and BlockSuite's compiled
+  // output needs two of them. Three packages style themselves with
+  // vanilla-extract, whose `style()` calls are meaningless until its plugin has
+  // run. And twenty-five ship the `accessor` keyword from the decorators
+  // proposal, which webpack's own parser cannot read -- it reports a syntax
+  // error against whichever filename module concatenation happened to be
+  // holding, which is how this looked like a CSS problem for an hour.
+  //
+  // Naming them all is slower than naming a few, and it is the only list that
+  // does not have to be revisited every time a dependency of a dependency picks
+  // up a decorator.
+  // PRODUCTION ONLY, and the reason is React Fast Refresh. Next injects its
+  // refresh runtime into everything named here, and these are Lit and plain
+  // modules rather than React ones, so in `next dev` every page 500s with
+  // "$RefreshReg$ is not defined" -- including pages that have nothing to do
+  // with the study room, because the module graph still gets compiled.
+  //
+  // In development the accessor loader below still makes these files parse, so
+  // the app compiles and runs; what is missing is the vanilla-extract pass, so
+  // opening the study room itself under `next dev` will fail at runtime. That
+  // is a worse experience for somebody developing than for anybody using the
+  // app, and it is written down rather than left to be discovered.
+  ...(DEV ? {} : { transpilePackages: NEEDS_LOADERS }),
   distDir: process.env.BEACON_DIST_DIR || '.next',
   reactStrictMode: true,
   // The image optimizer is disabled, and that is a security decision as much as
@@ -148,6 +200,61 @@ const nextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  webpack(config) {
+    // Resolve @blocksuite to compiled output rather than its TypeScript source.
+    // Without this the build dies on raw Lit decorators and the `accessor`
+    // keyword, neither of which is a bundler's job to guess at.
+    //
+    // EVERY KEY ENDS IN `$`, WHICH IS LOAD-BEARING. A webpack alias without it
+    // matches as a PREFIX, so `@blocksuite/affine` also swallows
+    // `@blocksuite/affine/effects` and rewrites it to a path inside a file.
+    // The build then reports "Can't resolve '@blocksuite/affine/effects'",
+    // which reads like a missing package and is actually this. Every subpath is
+    // mapped explicitly, so every match should be exact.
+    const exact = Object.fromEntries(
+      Object.entries(blocksuiteAliases(HERE)).map(([spec, file]) => [`${spec}$`, file]),
+    );
+    config.resolve.alias = { ...config.resolve.alias, ...exact };
+
+    // The three packages resolved from source write `./block-type.js` and mean
+    // `./block-type.ts` -- TypeScript's own convention for ESM specifiers,
+    // which webpack's resolver does not know. Without this the build reports a
+    // missing .js file that was never supposed to exist.
+    config.resolve.extensionAlias = {
+      ...config.resolve.extensionAlias,
+      '.js': ['.ts', '.tsx', '.js'],
+    };
+
+    // See scripts/accessor-loader.cjs. Scoped to @blocksuite's compiled output
+    // and nothing else, so the app's own code still goes through Next's
+    // compiler untouched.
+    config.module.rules.push({
+      test: /\.js$/,
+      include: /node_modules[\\/]@blocksuite[\\/].*[\\/]dist[\\/]/,
+      // NOT the vanilla-extract files. They parse perfectly well on their own --
+      // it is `accessor` elsewhere that webpack chokes on -- and putting them
+      // through a loader here drags them into Next's client transform, where
+      // React Fast Refresh then injects $RefreshReg$ into modules that are Lit
+      // rather than React. Every page in the app 500s in `next dev` when that
+      // happens, including pages with nothing to do with the study room.
+      exclude: /\.css\.js$/,
+      use: [{ loader: path.join(HERE, 'scripts', 'accessor-loader.cjs') }],
+    });
+    return config;
+  },
 };
 
-export default nextConfig;
+// PRODUCTION ONLY, and this is a real limitation rather than a tidy-up.
+//
+// The plugin adds a webpack rule for vanilla-extract's `.css.js` files, and in
+// development Next then injects React Fast Refresh into whatever that rule
+// touches. Those files are Lit and plain modules, not React, so $RefreshReg$ is
+// undefined and EVERY page in the app 500s under `next dev` -- the landing
+// page included, which has nothing to do with the study room.
+//
+// So in development the plugin is left off. The .css.js files parse on their
+// own, the app compiles and runs normally, and the one thing that does not work
+// is the study room's editor, which needs the styles the plugin generates.
+// Developing that screen means `npm run build && npm run start` rather than
+// `npm run dev`.
+export default DEV ? nextConfig : withVanillaExtract(nextConfig);

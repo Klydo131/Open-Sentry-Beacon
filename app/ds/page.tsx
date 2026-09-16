@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { emitQuest } from '@/lib/quest';
 import { AppShell } from '@/components/AppShell';
+import { StudyRoom } from '@/components/study/StudyRoom';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { Chat } from '@/components/Chat';
 import { Avatar, Button, Card, EmptyState } from '@/components/ui';
@@ -126,6 +127,12 @@ function Home() {
           <MySeries />
           <MyLessons />
           <StudyShelf />
+          {/* THE SAME ROOM THE REAL EXPLORER GETS, on a source that forgets.
+              The demo has no session, so it cannot write to study_docs -- see
+              lib/study/memory-source.ts for why it does not use IndexedDB
+              either. Without this the walkthrough quietly stopped showing one
+              of the rooms the app actually has. */}
+          <StudyRoom me={me} demo />
         </>
       )}
 

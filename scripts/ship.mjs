@@ -112,13 +112,29 @@ if (branch !== 'main') {
 // ---------------------------------------------------------------------------
 // The gate. Nothing is committed before it is green.
 // ---------------------------------------------------------------------------
-say('running the full gate...');
+say('running the static gate...');
 // `shell: true` because on Windows `npm` is a .cmd shim rather than an
 // executable, and spawning it without a shell fails with ENOENT. The repo's
 // own portability check enforces this, and it caught this script on its first
 // real run -- which is a fair verdict on writing a shipping tool that could not
 // itself have shipped from half the machines the CI matrix covers.
-const gate = spawnSync('npm', ['run', 'verify:all'], {
+// THE STATIC HALF, BY THE OWNER'S DECISION on 2026-09-16, and worth recording
+// rather than leaving as a silent downgrade.
+//
+// This ran `verify:all` -- the static checks PLUS every end-to-end walk --
+// which took twenty-five to thirty minutes a commit and had grown worse: the
+// study room's editor adds seventy packages through an extra compile pass
+// before the suite even starts. CLAUDE.md asks for `npm run verify`, which is
+// the static half; running the superset was this script's own initiative, so
+// this is a return to the documented rule rather than a relaxation of it.
+//
+// WHAT IS GIVEN UP, AND IT IS NOT NOTHING. The walks are the only checks that
+// open a real browser, and some failures are visible nowhere else: the study
+// room's editor failed three separate ways while it was being built and every
+// one of them rendered a blank box with no error at all. A static check cannot
+// see that. Run `npm run verify:all` by hand before shipping anything that
+// changes how a screen behaves, and say plainly when it has not been run.
+const gate = spawnSync('npm', ['run', 'verify'], {
   cwd: root, encoding: 'utf8', shell: true,
 });
 const log = `${gate.stdout ?? ''}${gate.stderr ?? ''}`;
