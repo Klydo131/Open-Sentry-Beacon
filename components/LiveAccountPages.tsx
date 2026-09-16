@@ -264,25 +264,24 @@ export function LiveSettingsPage() {
   useEffect(() => { setDeviceKind(appleKind()); }, []);
 
   const rooms: Room[] = [
-    // NOT "Install" ON AN APPLE DEVICE. Nothing in an iPhone, iPad or Mac menu
-    // is called that, so a chip labelled Install sends somebody hunting a Share
-    // sheet for a word that is not in it. `addChip` says what the device says.
-    { id: 'device', label: `📱 ${addChip(deviceKind)}` },
+    // ONE GENERAL FOLDER, BECAUSE SEVEN TABS IS A SCROLLBAR.
+    // "This is too many sub-room for settings, can combine some please for
+    // general settings as a sub room please." Photographed with the row of
+    // tabs cut off mid-word and a horizontal scrollbar under it -- folders
+    // exist to stop a page being a scroll, and a row of folders that is itself
+    // a scroll has put the problem back one level.
+    //
+    // Installing, alerts, language and text size are all the same question --
+    // how this app behaves on this device, for me -- so they are one folder
+    // with headed cards inside it. Password stays out because somebody
+    // following an emailed instruction is hunting for that word, Admin Reports
+    // because it is a different kind of thing entirely, and Help because it is
+    // where people go when lost.
+    { id: 'general', label: `⚙️ General` },
     // FIRST FOR SOMEBODY WHO ARRIVED ON AN EMAILED PASSWORD, because the
     // invitation tells them to come here and change it, and a person following
     // an instruction should not have to hunt for the folder it named.
     { id: 'account', label: '🔑 Password' },
-    { id: 'alerts', label: '🔔 Alerts' },
-    // FOR EVERYBODY, WITH NO ROLE TEST. The demo settings had this folder and
-    // the live one did not, so the only people who could make the text bigger
-    // were the people pretending. Reading the screen is not a rank.
-    { id: 'reading', label: '🔠 Language and size' },
-    // ADMIN REPORTS, AND FOR EVERYBODY -- which looks odd beside the name and
-    // is the whole point. The room left the Guide and Explorer sidebars because
-    // a permanent scales-of-justice door reads as an accusation waiting to
-    // happen. But an Explorer summoned to a case is the person in it with the
-    // least standing, and their answer must be reachable without anybody
-    // telling them where to look. So the door is gone and the room is not.
     { id: 'reports', label: '⚖️ Admin Reports' },
     ...(leads ? [{ id: 'church', label: '⛪ Church' }] : []),
     { id: 'help', label: '❓ Help' },
@@ -295,7 +294,7 @@ export function LiveSettingsPage() {
   // Safari cannot install for them, so this one failing would fail exactly the
   // people it exists for.
   const [room, chooseRoom] = useRoom(rooms, `beacon:settings-room:${profile?.role ?? 'none'}`, {
-    install: 'device',
+    install: 'general',
     tutorial: 'help',
     // The invitation e-mail and the reminder card both send people to
     // /settings#password. Without this they would land on the Install folder.
@@ -308,7 +307,7 @@ export function LiveSettingsPage() {
     <div className="space-y-6">
       <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
 
-      {room === 'device' && (
+      {room === 'general' && (
         <>
           {/* First, because it is the first thing somebody does on a new
               device, and because device alerts below are far more useful once
@@ -365,9 +364,9 @@ export function LiveSettingsPage() {
         </div>
       )}
 
-      {room === 'alerts' && <NotificationCard />}
+      {room === 'general' && <NotificationCard />}
 
-      {room === 'reading' && <ReadingSettings />}
+      {room === 'general' && <ReadingSettings />}
 
       {room === 'reports' && (
         <>

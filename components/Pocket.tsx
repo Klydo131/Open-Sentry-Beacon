@@ -15,6 +15,9 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
   const [url, setUrl] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
+  // Which tiles have no logo to show. Kept per render rather than stored:
+  // a site that was down once should get another chance tomorrow.
+  const [failed, setFailed] = useState<Set<string>>(new Set());
 
   // Read after mount, never during render: the server has no localStorage, so
   // reading it while rendering makes the first paint disagree with the second.
@@ -95,11 +98,31 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
                   title={i.label}
                   className="tap flex flex-col items-center gap-1"
                 >
+                  {/* THE REAL LOGO, FETCHED BY THIS APP'S OWN SERVER.
+                      Asked for: "I wanted to see the logo of the web app please
+                      if there is a logo." The src is our own origin, so the
+                      content policy stays `img-src 'self' data: blob:` with
+                      nothing widened, and a member's phone never contacts
+                      Spotify or Facebook to draw a tile. See
+                      app/api/app-icon/route.ts for why the server does it.
+
+                      The drawn mark stays underneath and shows through whenever
+                      a site has no logo, or the fetch fails, or the person is
+                      offline -- so this can only ever add, never regress. */}
                   <span
                     aria-hidden
-                    className="grid h-11 w-11 place-items-center rounded-xl text-lg font-bold text-white"
+                    className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl text-lg font-bold text-white"
                     style={{ backgroundColor: mark.color }}
                   >
+                    {!failed.has(i.id) && (
+                      <img
+                        src={`/api/app-icon?url=${encodeURIComponent(i.url)}`}
+                        alt=""
+                        loading="lazy"
+                        onError={() => setFailed((f) => new Set(f).add(i.id))}
+                        className="absolute inset-0 h-full w-full bg-white object-contain p-1.5"
+                      />
+                    )}
                     {mark.glyph}
                   </span>
                   <span className="w-full truncate text-center text-[10px]" style={{ color: theme.ink }}>

@@ -130,26 +130,99 @@ const ui = strip(read('components/Pocket.tsx'));
 }
 
 // ---------------------------------------------------------------------------
-// 4. NO LOGO IS FETCHED FROM ANYWHERE
+// 4. THE LOGO IS REAL, AND THE PHONE STILL NEVER TALKS TO THAT COMPANY
 // ---------------------------------------------------------------------------
 //
-// THE PRIVACY HALF, and the reason the marks are drawn rather than downloaded.
-// A favicon per tile would need img-src widened to arbitrary origins, and would
-// tell each of those companies that this person is here every time the rail
-// renders. The CSP is the backstop; this is the rule that keeps the code from
-// needing the CSP changed in the first place.
+// THIS RULE CHANGED ON PURPOSE. It used to read "no tile fetches anything",
+// because the marks were drawn from the hostname and a favicon would have
+// needed img-src widened to arbitrary origins AND would have told each company
+// that a church member was on their screen, every render.
+//
+// Asked for directly -- "I wanted to see the logo of the web app please if
+// there is a logo" -- and the answer moves the fetch rather than accepts
+// either cost. app/api/app-icon fetches it SERVER-SIDE, so the tile's src is
+// this app's own origin: `img-src 'self'` covers it with nothing widened, and
+// the only thing the company sees is a server asking for a picture, once,
+// carrying nothing about any member.
+//
+// So what is asserted is no longer "nothing is fetched" but the two things
+// that made that rule worth having: the browser never names a third-party
+// host, and the policy is untouched.
 {
-  ok(!/fetch\(|<img|XMLHttpRequest|googleusercontent|\/favicon/.test(ui + lib),
-     'no tile fetches anything: the mark is computed from the address');
+  const route = read('app/api/app-icon/route.ts');
 
-  // The CSP lives in next.config.mjs. Only the app's own backend origin is
-  // added to it (for member photos); the base list is the backstop that would
-  // have to be widened before any third-party favicon could load at all.
+  ok(/src=\{`\/api\/app-icon\?url=\$\{encodeURIComponent/.test(read('components/Pocket.tsx')),
+     'a tile asks this app for the logo, never the other site directly');
+
+  ok(!/<img[^>]*src=\{`?https?:/.test(ui),
+     'and no tile ever points its src at a third-party address');
+
   const csp = read('next.config.mjs');
   ok(/const imageSources = \["'self'", 'data:', 'blob:'\]/.test(csp),
-     'and img-src starts from self, data and blob only');
+     'img-src is still self, data and blob only — nothing was widened for this');
   ok(!/imageSources\.push\((?!backend\.origin)/.test(csp),
      'with nothing but the app\'s own backend added to it');
+
+  // THE DRAWN MARK IS STILL THERE, UNDERNEATH. A site with no logo, a failed
+  // fetch and an offline phone are all ordinary; if the fallback went away this
+  // feature would have replaced a tile that always worked with one that
+  // sometimes does.
+  ok(/markFor/.test(ui) && /onError=/.test(ui),
+     'and the drawn mark still shows when a site has no logo or the fetch fails');
+}
+
+// ---------------------------------------------------------------------------
+// 4b. A SERVER THAT FETCHES A TYPED URL IS FENCED
+// ---------------------------------------------------------------------------
+//
+// THE PART THAT WOULD BE DANGEROUS TO GET WRONG. "The server" sits inside the
+// network and the person typing does not, so an unfenced fetcher is a
+// request-forgery engine: paste http://169.254.169.254/ and the reply is the
+// cloud host's own credentials. The address test is a pure function, so it is
+// executed here against the real targets rather than pattern-matched.
+{
+  const route = read('app/api/app-icon/route.ts');
+
+  const at = route.indexOf('function isPrivateAddress');
+  const fnSrc = route.slice(at, route.indexOf('\n}', at) + 2)
+    .replace('(ip: string): boolean', '(ip)')
+    .replace(/:\s*boolean/g, '');
+  // eslint-disable-next-line no-new-func
+  const isPrivateAddress = new Function(`${fnSrc}; return isPrivateAddress;`)();
+
+  const mustBlock = [
+    '127.0.0.1', '0.0.0.0', '10.1.2.3', '172.16.0.1', '172.31.255.255',
+    '192.168.1.1', '169.254.169.254', '100.64.0.1', '::1', '::',
+    'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:169.254.169.254',
+  ];
+  const leaked = mustBlock.filter((ip) => !isPrivateAddress(ip));
+  ok(leaked.length === 0,
+     `every private and metadata address is refused (${mustBlock.length - leaked.length}/${mustBlock.length})`
+     + (leaked.length ? ` — LET THROUGH: ${leaked.join(', ')}` : ''));
+
+  const mustAllow = ['1.1.1.1', '142.250.72.14', '2606:4700::1111'];
+  ok(mustAllow.every((ip) => !isPrivateAddress(ip)),
+     'and an ordinary public address still resolves');
+
+  // The fence has to be applied, not merely defined — and at every hop, since
+  // a public URL that redirects to the metadata address is the usual way past.
+  ok(/addresses\.some\(\(a\) => isPrivateAddress\(a\.address\)\)/.test(route),
+     'the address test is applied to every address a host resolves to');
+  ok(/redirect: 'manual'/.test(route),
+     'redirects are followed by hand, not blindly');
+  ok(/current = await publicUrl\(new URL\(location, current\)/.test(route),
+     'and each redirect target is re-checked before it is opened');
+
+  ok(/if \(!type\.startsWith\('image\/'\)\) continue;/.test(route),
+     'only an image is ever returned, so this is not an open proxy');
+  ok(/MAX_ICON_BYTES/.test(route) && /MAX_HTML_BYTES/.test(route) && /readCapped/.test(route),
+     'responses are capped, so an endless one cannot hold a worker');
+  ok(/AbortController/.test(route) && /FETCH_TIMEOUT_MS/.test(route),
+     'and every fetch has a timeout');
+  ok(/export const runtime = 'nodejs'/.test(route),
+     'the route runs where DNS exists, or the fence could not be built at all');
+  ok(/safeExternalUrl/.test(route),
+     'and the protocol decision is still lib/url.ts\'s, not a third copy');
 }
 
 // ---------------------------------------------------------------------------

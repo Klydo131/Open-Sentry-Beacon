@@ -85,9 +85,15 @@ ok(missing.length === 0,
 // role test is the thing to assert. A folder added behind `leads ?` would
 // satisfy the comparison above and still fail the person who asked.
 {
-  const line = live.split('\n').find((l) => /id:\s*'reading'/.test(l)) ?? '';
-  ok(/id:\s*'reading'/.test(line) && !/\?|&&|leads|role/.test(line),
-     'the reading folder is offered with no role test on it');
+  // FOUND BY WHAT IT HOLDS, NOT BY ITS NAME. This pinned the id 'reading' and
+  // then failed the day seven tabs were merged into one General folder -- a
+  // change that did not touch who may reach the screen at all. The rule is that
+  // language and text size reach everybody; the folder's name is not the rule.
+  const holder = (live.match(/\{room === '([a-z-]+)' && <ReadingSettings/) ?? [])[1];
+  ok(!!holder, 'some folder draws the reading settings');
+  const line = live.split('\n').find((l) => new RegExp(`id:\\s*'${holder}'`).test(l)) ?? '';
+  ok(!!line && !/\?|&&|leads|role/.test(line),
+     `the folder holding text size (${holder ?? 'none'}) has no role test on it`);
 
   // BOUND TO ONE SOURCE, NOT TWO COPIES THAT AGREE TODAY. Two pages rendering
   // their own copy of the same card is what let them drift in the first place.

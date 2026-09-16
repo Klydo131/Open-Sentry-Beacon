@@ -455,16 +455,27 @@ function Body() {
   // the language and the text size, which was five screens of the six the page
   // had. A folder that is still a scroll has not solved anything.
   const rooms: Room[] = [
-    { id: 'device', label: '📱 Install' },
-    { id: 'alerts', label: '🔔 Alerts' },
-    { id: 'reading', label: '🔠 Language and size' },
+    // ONE GENERAL FOLDER, BECAUSE SEVEN TABS IS A SCROLLBAR.
+    // "This is too many sub-room for settings, can combine some please for
+    // general settings as a sub room please." Photographed with the row of
+    // tabs cut off mid-word and a horizontal scrollbar under it -- folders
+    // exist to stop a page being a scroll, and a row of folders that is itself
+    // a scroll has put the problem back one level.
+    //
+    // Installing, alerts, language and text size are all the same question --
+    // how this app behaves on this device, for me -- so they are one folder
+    // with headed cards inside it. Password stays out because somebody
+    // following an emailed instruction is hunting for that word, Admin Reports
+    // because it is a different kind of thing entirely, and Help because it is
+    // where people go when lost.
+    { id: 'general', label: '⚙️ General' },
     ...(canRename || canManageData ? [{ id: 'church', label: '⛪ Church' }] : []),
     { id: 'help', label: '❓ Help' },
   ];
   // The Install chip and the desk both point at a card by name. Translated, or
   // they arrive at a folder that is not drawing what they were sent for.
   const [room, chooseRoom] = useRoom(rooms, 'beacon:demo-settings-room', {
-    install: 'device',
+    install: 'general',
     tutorial: 'help',
   });
 
@@ -485,7 +496,7 @@ function Body() {
 
       {/* THE SAME FOLDERS THE LIVE SETTINGS HAS. Nine cards for a Director on
           one page is nearly seven screens of scrolling to change one thing. */}
-      {room === 'device' && (
+      {room === 'general' && (
         <>
           {/* Anchored so the header's Install chip can land ON it. Apple users
               are the ones who need this: Safari never fires
@@ -502,7 +513,7 @@ function Body() {
         </>
       )}
 
-      {room === 'alerts' && <NotificationCard />}
+      {room === 'general' && <NotificationCard />}
 
       {room === 'church' && (
         <>
@@ -529,7 +540,7 @@ function Body() {
           product drifted because nothing compared them. Now both pages draw
           this, and tests/the-live-app-offers-what-the-tutorial-offers.mjs fails
           the build if either grows a folder the other lacks. */}
-      {room === 'reading' && <ReadingSettings />}
+      {room === 'general' && <ReadingSettings />}
     </div>
   );
 }
