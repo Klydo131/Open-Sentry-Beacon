@@ -22,6 +22,7 @@
 //   node tests/e2e/the-study-room-on-every-size.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions } = require('./_playwright');
+const { signInAsExplorer, openStudyRoom, openPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -52,26 +53,22 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
 
-  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(900);
-  await page.getByText(/John Reyes/).first().click();
-  await page.waitForTimeout(1700);
-  const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
-  if (await consent.count()) { await consent.first().click().catch(() => {}); await page.waitForTimeout(600); }
+  await signInAsExplorer(page, BASE);
 
   for (const size of SIZES) {
     const at = `${size.name} (${size.width}px)`;
     errors.length = 0;
 
     await page.setViewportSize({ width: size.width, height: size.height });
-    await page.goto(`${BASE}/study`, { waitUntil: 'networkidle' });
-    // The editor chunk is megabytes; a short timeout here makes a flaky suite
-    // rather than a true answer.
-    const arrived = await page.waitForSelector('affine-paragraph', { timeout: 60_000 })
-      .then(() => true).catch(() => false);
-    ok(arrived, `${at}: the editor arrives`);
+    // THE SHELF FIRST, THEN A PAGE. The room opens on its list of pages now,
+    // so "the editor arrives" means arriving at the end of that walk rather
+    // than on landing.
+    const arrived = await openStudyRoom(page, BASE)
+      .then(() => openPage(page, 0))
+      .then(() => true)
+      .catch(() => false);
+    ok(arrived, `${at}: the shelf opens and a page can be opened from it`);
     if (!arrived) continue;
-    await page.waitForTimeout(900);
 
     // 1. IT SAYS WHAT IT IS FOR before anybody touches it. An empty BlockSuite
     //    page draws nothing at all, which is what got reported as broken.

@@ -24,6 +24,7 @@
 //   node tests/e2e/the-study-room-can-do-more-than-type.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions } = require('./_playwright');
+const { signInAsExplorer, openStudyRoom, openPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -56,16 +57,9 @@ const textIn = (host) => {
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
 
-  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(900);
-  await page.getByText(/John Reyes/).first().click();
-  await page.waitForTimeout(1700);
-  const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
-  if (await consent.count()) { await consent.first().click().catch(() => {}); await page.waitForTimeout(600); }
-
-  await page.goto(`${BASE}/study`, { waitUntil: 'networkidle' });
-  await page.waitForSelector('affine-paragraph', { timeout: 60_000 });
-  await page.waitForTimeout(1200);
+  await signInAsExplorer(page, BASE);
+  await openStudyRoom(page, BASE);
+  await openPage(page, 0);
 
   // The size of ordinary body text, read from the page rather than pinned to a
   // number, so a change of theme is not a failing test.

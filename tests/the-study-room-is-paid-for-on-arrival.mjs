@@ -88,30 +88,37 @@ const ROOM = 'components/study/StudyRoom.tsx';
 }
 
 // ---------------------------------------------------------------------------
-// 2. AND NOT EVEN FETCHED UNTIL SOMEBODY ASKS
+// 2. AND ONLY ONE ROUTE RENDERS IT
 // ---------------------------------------------------------------------------
 //
-// dynamic() alone would still fetch the chunk as soon as the Study tab renders.
-// The room is behind state that starts closed, so an Explorer who never opens
-// it never downloads it.
+// THE RULE CHANGED WHEN THE ROOM BECAME A ROOM, and the change is the point
+// rather than a loosening. The editor used to sit in a card inside somebody
+// else's screen behind an "Open my study room" button, because a megabyte
+// should not land on an Explorer reading their journey. It now takes the whole
+// window and has a route of its own, so walking into /study IS the asking and
+// the button would be a door in front of a door.
+//
+// What replaces the button is this: nothing but the /study route renders the
+// room at all. Lose that and the old problem is back, quietly, on whichever
+// screen picked it up.
 {
-  const room = strip(read(ROOM));
+  const walk = (dir, out = []) => {
+    for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(rel, out);
+      else if (/\.(ts|tsx)$/.test(entry.name)) out.push(rel);
+    }
+    return out;
+  };
 
-  // THE RULE CHANGED WHEN THE ROOM BECAME A ROOM, and the change is the point
-  // rather than a loosening. On its own page at /study, walking in IS the
-  // asking, so it opens on arrival: `useState(fullPage)`. Everywhere else --
-  // embedded in somebody else's screen, which is how this started -- it must
-  // still start closed, or three megabytes lands on a page nobody asked it of.
-  //
-  // So what is asserted is that the default is closed and opening is opt-in,
-  // not that the initial value is the literal `false`.
-  ok(/useState\(fullPage\)/.test(room),
-     'the room opens on arrival only on its own page');
-  ok(/fullPage\s*=\s*false/.test(room),
-     'and stays closed by default anywhere it is embedded');
+  const renderers = [...walk('app'), ...walk('components')].filter((f) => {
+    if (f.endsWith(ROOM)) return false;
+    return /<StudyRoom[\s/>]/.test(strip(read(f)));
+  });
 
-  const gated = /\{\s*open\s*\?[\s\S]{0,400}?<StudyRoomEditor/.test(room);
-  ok(gated, 'the editor is rendered only once it has been opened');
+  ok(renderers.length === 1 && renderers[0] === 'app/study/page.tsx',
+     `only the /study route renders the room (found: ${renderers.join(', ') || 'none'})`);
 }
 
 // ---------------------------------------------------------------------------

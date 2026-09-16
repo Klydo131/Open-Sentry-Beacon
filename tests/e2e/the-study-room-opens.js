@@ -21,6 +21,7 @@
 //   node tests/e2e/the-study-room-opens.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions } = require('./_playwright');
+const { signInAsExplorer, openStudyRoom, openPage, writtenOnPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -40,12 +41,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
 
-  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(900);
-  await page.getByText(/John Reyes/).first().click();
-  await page.waitForTimeout(1700);
-  const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
-  if (await consent.count()) { await consent.first().click().catch(() => {}); await page.waitForTimeout(600); }
+  await signInAsExplorer(page, BASE);
 
   // 1. IT IS A ROOM, reachable from the navigation rather than buried in a tab.
   //    This is the part that was wrong first time and is worth asserting: the
@@ -65,14 +61,13 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.setViewportSize({ width: 412, height: 915 });
 
   // 2. AND IT OPENS ON ARRIVAL, because walking in is the asking.
-  await page.goto(`${BASE}/study`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(1500);
-  ok(/nothing you type here is saved/i.test(await page.locator('body').innerText()),
+  await openStudyRoom(page, BASE);
+  ok(/nothing you write here is saved/i.test(await page.locator('body').innerText()),
      'the walkthrough says plainly that nothing is kept');
-  // The chunk is several megabytes; on a cold build this is not instant, and a
-  // short timeout here would produce a flaky suite rather than a true answer.
-  await page.waitForSelector('affine-paragraph', { timeout: 60_000 }).catch(() => {});
-  await page.waitForTimeout(1200);
+
+  // THE ROOM OPENS ON ITS SHELF, NOT ON A PAGE, which is the change asked for:
+  // "a special room like the library page". So the editor is one tap in.
+  await openPage(page, 0);
 
   const host = await page.locator('editor-host').count();
   ok(host > 0, 'the editor mounts');

@@ -35,7 +35,7 @@ function LiveStudyRoom() {
   return (
     <LiveAppShell allow={['ds']}>
       {profile
-        ? <StudyRoom me={profile} fullPage />
+        ? <StudyRoom me={profile} />
         : <BeaconSpinner inline label="Opening your study room" />}
     </LiveAppShell>
   );
@@ -46,7 +46,7 @@ function DemoStudyRoom() {
   return (
     <AppShell allow={['ds']}>
       {currentUser
-        ? <StudyRoom me={currentUser} demo fullPage />
+        ? <StudyRoom me={currentUser} demo />
         : <BeaconSpinner inline label="Opening your study room" />}
     </AppShell>
   );
