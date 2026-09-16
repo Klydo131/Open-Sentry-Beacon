@@ -62,6 +62,65 @@ export function tidyUrl(raw: string): string | null {
   return safe;
 }
 
+/**
+ * Sites the pocket will not keep, and why.
+ *
+ * ASKED FOR: "I want to limit (with a disclosure of course to every user) to
+ * take our social media apps in the pocket application (Except for Youtube).
+ * Facebook, X, Instagram, Tiktok, LinkedIn, etc. are not allowed in the pocket
+ * application because it can bring distractions to all users."
+ *
+ * THIS IS A PRODUCT RULE, NOT A SAFETY ONE, and the difference matters for how
+ * it is written. `tidyUrl` refuses things that could HARM somebody -- a
+ * `javascript:` address that would run in this app's origin. This refuses
+ * things that are perfectly safe and that the church has decided do not belong
+ * one tap from a study. So it fails with an explanation rather than silently,
+ * and the reason is said on the screen before anybody tries rather than only
+ * after.
+ *
+ * YOUTUBE IS DELIBERATELY IN AND MESSAGING IS DELIBERATELY OUT OF SCOPE.
+ * YouTube was named as the exception: the church links studies and hymns there,
+ * and the app deliberately keeps video out of its own uploads for storage and
+ * egress reasons, so YouTube is where that material already lives. Messaging --
+ * Messenger, WhatsApp, Viber, Telegram -- is NOT on this list, because what was
+ * named was social media and because in this congregation those are how people
+ * arrange a lift to church rather than how they lose an evening. Say the word
+ * and the list widens; that is a decision rather than an oversight.
+ */
+export const NOT_IN_THE_POCKET: { match: RegExp; name: string }[] = [
+  { match: /(^|\.)(facebook\.com|fb\.com|fb\.watch)$/,       name: 'Facebook' },
+  { match: /(^|\.)(x\.com|twitter\.com|t\.co)$/,             name: 'X' },
+  { match: /(^|\.)instagram\.com$/,                          name: 'Instagram' },
+  { match: /(^|\.)(tiktok\.com|douyin\.com)$/,               name: 'TikTok' },
+  { match: /(^|\.)linkedin\.com$/,                           name: 'LinkedIn' },
+  { match: /(^|\.)threads\.(net|com)$/,                      name: 'Threads' },
+  { match: /(^|\.)snapchat\.com$/,                           name: 'Snapchat' },
+  { match: /(^|\.)reddit\.com$/,                             name: 'Reddit' },
+  { match: /(^|\.)pinterest\.[a-z.]+$/,                      name: 'Pinterest' },
+  { match: /(^|\.)tumblr\.com$/,                             name: 'Tumblr' },
+  { match: /(^|\.)(bsky\.app|bluesky\.social)$/,             name: 'Bluesky' },
+  { match: /(^|\.)(weibo\.com|vk\.com)$/,                    name: 'a social network' },
+];
+
+/** The one exception, named because it was named. */
+export const ALWAYS_WELCOME = /(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com)$/;
+
+/**
+ * Why this address cannot be kept, or null if it can.
+ *
+ * Checked AFTER YouTube, so a link to a study on YouTube is never caught by a
+ * rule about feeds.
+ */
+export function pocketRefusal(url: string): string | null {
+  const host = hostOf(url);
+  if (ALWAYS_WELCOME.test(host)) return null;
+  const blocked = NOT_IN_THE_POCKET.find((b) => b.match.test(host));
+  if (!blocked) return null;
+  return `${blocked.name} is not kept in the pocket. The pocket is for the tools `
+    + 'you work with, and social feeds are left out so they are not one tap '
+    + 'from a study. YouTube is the exception.';
+}
+
 /** The bare name a person recognises: "youtube.com" from a long watch link. */
 export function hostOf(url: string): string {
   try {

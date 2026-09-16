@@ -8,7 +8,8 @@ import { useIsLive } from '@/lib/tutorial';
 import { useKeepUp, KEEP_UP_POCKET } from '@/lib/live/keep-up';
 import * as live from '@/lib/live/data';
 import {
-  type Pocket as Item, POCKET_LIMIT, labelFor, markFor, readPocket, tidyUrl, writePocket,
+  type Pocket as Item, POCKET_LIMIT, labelFor, markFor, pocketRefusal, readPocket,
+  tidyUrl, writePocket,
 } from '@/lib/pocket';
 import { humanError } from '@/lib/live/errors';
 
@@ -72,6 +73,14 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
     const tidy = tidyUrl(url);
     if (!tidy) {
       setError('That does not look like a web address. Try pasting the whole thing.');
+      return;
+    }
+    // THE POLICY, AFTER THE SAFETY CHECK AND BEFORE ANYTHING IS SAVED. It
+    // refuses with a reason, because a tile that simply fails to appear reads
+    // as a broken app rather than a decision the church made.
+    const refused = pocketRefusal(tidy);
+    if (refused) {
+      setError(refused);
       return;
     }
     if (items.some((i) => i.url === tidy)) {
@@ -138,6 +147,15 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
           Paste a web address and it waits here. Tap it to go straight there.
         </p>
       )}
+
+      {/* SAID TO EVERYBODY, BEFORE THEY TRY. "with a disclosure of course to
+          every user" was the request, and a rule somebody only meets as a
+          refusal is a rule they experience as the app being broken. It sits
+          under the tiles whether or not anybody has one. */}
+      <p className="mt-2 text-[11px] leading-snug" style={{ color: theme.inkSoft }}>
+        Social feeds are not kept here, so they are not one tap from a study.
+        YouTube is the exception.
+      </p>
 
       {items.length > 0 && (
         <div className="mt-3 grid grid-cols-4 gap-2">
