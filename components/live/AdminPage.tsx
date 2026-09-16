@@ -24,6 +24,7 @@ function onDay(iso: string | null | undefined): string {
 }
 import { LiveReportsForDirector } from '@/components/LiveSafeguarding';
 import { LiveTrialRoom, LiveCourt } from '@/components/LiveTrialRoom';
+import { LiveHallOfJustice } from '@/components/LiveHallOfJustice';
 import { LiveGuilds, LiveChurchPulse } from '@/components/LiveGuilds';
 import { LiveSecurityAudit } from '@/components/LiveSecurityAudit';
 import { LiveFeedbackInbox } from '@/components/LiveFeedbackInbox';
@@ -529,6 +530,7 @@ export function LiveAdminPage() {
             where a head judge works through the ones they opened. Both call the
             same component because the component already tells those two jobs
             apart by whether the reader leads the church. */}
+        {room === 'safeguarding' && profile && <LiveHallOfJustice me={profile} />}
         {room === 'safeguarding' && profile && <LiveCourt me={profile} />}
         {room === 'safeguarding' && profile && (
           <LiveTrialRoom

@@ -22,6 +22,7 @@
 import { AppShell } from '@/components/AppShell';
 import { LiveAppShell } from '@/components/LiveAppShell';
 import { LiveCourt } from '@/components/LiveTrialRoom';
+import { LiveHallOfJustice } from '@/components/LiveHallOfJustice';
 import { useLiveSession } from '@/lib/live/session';
 import { useIsLive } from '@/lib/tutorial';
 import { Card } from '@/components/ui';
@@ -82,6 +83,11 @@ function Live() {
       {/* LiveCourt draws nothing when there are no cases, which is right on a
           dashboard and wrong here: this room would be a blank page. It takes an
           empty state for exactly this screen. */}
+      {/* THE HALL FIRST, FOR LEADERSHIP. It draws nothing for a Guide or an
+          Explorer, so an Explorer called to answer something still opens this
+          page on their own case and not on a list of other people's. */}
+      <LiveHallOfJustice me={profile} />
+
       <LiveCourt me={profile} emptyState={<Nothing />} />
     </div>
   );

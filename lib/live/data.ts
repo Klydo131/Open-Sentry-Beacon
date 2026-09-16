@@ -4208,3 +4208,43 @@ export async function removePocketApp(id: string): Promise<void> {
   const { error } = await db().from('pocket_apps').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
+
+// ---------------------------------------------------------------------------
+// The Hall of Justice
+// ---------------------------------------------------------------------------
+//
+// Who may take a seat is decided by private.may_sit_on_trial in migration
+// 20260916120000, never here: leadership of that church, but never on a case
+// about themselves, and never on a case about a Director unless they are an
+// Executive Director. The screen draws what the database already allowed.
+
+export type SeatableTrial = {
+  id: string;
+  summary: string;
+  status: string;
+  verdict: string | null;
+  opened_at: string;
+  accused_name: string | null;
+  accused_role: string;
+  seated: number;
+  i_am_seated: boolean;
+};
+
+export async function trialsIMaySitOn(): Promise<SeatableTrial[]> {
+  const { data, error } = await db().rpc('trials_i_may_sit_on');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SeatableTrial[];
+}
+
+/** Take a seat, on the record: who was in the room is part of the case. */
+export async function joinTrial(trialId: string): Promise<void> {
+  const { error } = await db().rpc('join_trial', { p_trial: trialId });
+  if (error) throw new Error(error.message);
+}
+
+// SUMMONING IS ALREADY HERE. `openTrial` above does exactly this and has
+// since the trial room was written -- LiveTrialRoom's "Open a case" button
+// calls it, and open_trial notifies the person it summons. A second wrapper
+// was written here before checking, which is the mistake the clipboard and
+// lib/url.ts guards both exist to prevent: two ways to do one thing, and one
+// of them eventually wrong. Deleted rather than kept for symmetry.

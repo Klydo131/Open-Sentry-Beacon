@@ -216,6 +216,7 @@ const staticChecks = [
   ['a case is reachable by whoever is in it', 'tests/a-case-is-reachable-by-whoever-is-in-it.mjs'],
   ['a report is answered by one person', 'tests/a-report-is-answered-by-one-person.mjs'],
   ['an animation that loops does not repaint', 'tests/an-animation-that-loops-does-not-repaint.mjs'],
+  ['who may take a seat', 'tests/who-may-take-a-seat.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.
