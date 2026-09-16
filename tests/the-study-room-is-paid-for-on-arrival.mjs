@@ -192,7 +192,7 @@ const ROOM = 'components/study/StudyRoom.tsx';
   // And the WHITEBOARD is not reachable, because that is a scope the room never
   // asks for. This is the assertion that actually holds the product decision:
   // the edgeless canvas is drawn only under an edgeless scope.
-  ok(/viewManager\.get\('page'\)/.test(editor) && !/'(mobile-)?edgeless'/.test(editor),
+  ok(/\.get\('page'\)/.test(editor) && !/'(mobile-)?edgeless'/.test(editor),
      'but the room only ever asks for a page, so no whiteboard is drawn');
 
   // AND THE HALF THAT IS NOT OPTIONAL. DefaultInlineManager declares every one
@@ -234,6 +234,29 @@ const ROOM = 'components/study/StudyRoom.tsx';
      'a room that could not be reached is told apart from an empty one');
   ok(/Try again/.test(read(EDITOR)),
      'and offers the one action that helps');
+}
+
+// ---------------------------------------------------------------------------
+// 7. AND THE PAGE LIST IS NOT BLANKED BEFORE IT ARRIVES
+// ---------------------------------------------------------------------------
+//
+// `meta.initialize()` means "if this room has no page list, give it an empty
+// one". Run before the database answers, a room that HAS pages looks like a
+// room that has none, so it writes an empty list -- and when the real list
+// arrives, two clients have set the same key concurrently and Yjs keeps one of
+// them. Lose that toss and an Explorer opens a room listing one page while
+// everything else they have written sits in the database with nothing pointing
+// at it.
+//
+// Measured in tests/a-room-that-already-exists-still-opens.mjs: with the call
+// before the wait, a room seeded with two stored pages came back with one.
+// This holds the order, because the order is the fix.
+{
+  const editor = strip(read(EDITOR));
+  const wait = editor.indexOf('waitForSynced');
+  const init = editor.indexOf('meta.initialize()');
+  ok(wait !== -1 && init !== -1 && init > wait,
+     'the page list is only initialised after the database has had its say');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

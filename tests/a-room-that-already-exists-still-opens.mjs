@@ -102,6 +102,14 @@ for (const flavour of ['affine:page', 'affine:surface', 'affine:note', 'affine:p
 ok(result.text === 'what was written before',
    `what was already written is still there (${JSON.stringify(result.text)})`);
 
+// THE PAGE LIST COMES BACK TOO. It lives in the workspace document rather than
+// in any page, and a room that loses it opens showing one page while the rest of
+// somebody's writing sits in the database with nothing pointing at it.
+ok((result.pages ?? []).length === 2,
+   `every stored page is in the list (${JSON.stringify(result.pages)})`);
+ok((result.pages ?? []).includes('page-2:Daniel'),
+   'and a page somebody named keeps its name');
+
 // ---------------------------------------------------------------------------
 // AND A SOURCE THAT CANNOT SAVE SAYS SO
 // ---------------------------------------------------------------------------

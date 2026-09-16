@@ -67,22 +67,38 @@ function storedPage(): Uint8Array {
   return Y.encodeStateAsUpdate(doc);
 }
 
-/** The workspace meta a room that already has one page carries. */
+/**
+ * The workspace meta a room that already has pages carries.
+ *
+ * TWO OF THEM, because the page list is the one part of a room that lives in
+ * the workspace document rather than in a page: if it does not come back from
+ * the database, an Explorer opens a room that has quietly forgotten every page
+ * but the first, and the writing is still stored where nothing will look for
+ * it. The browser walk cannot see this -- it runs against the tutorial, whose
+ * pages never leave the tab.
+ */
 function storedMeta(): Uint8Array {
   const doc = new Y.Doc({ guid: WORKSPACE });
   const meta = doc.getMap('meta');
   const docs = new Y.Array<Y.Map<unknown>>();
-  const entry = new Y.Map<unknown>();
-  entry.set('id', PAGE);
-  entry.set('title', '');
-  entry.set('createDate', Date.now());
-  entry.set('tags', new Y.Array());
-  docs.push([entry]);
-  meta.set('docs', docs);
+  for (const [id, title] of [[PAGE, ''], ['page-2', 'Daniel']] as const) {
+    const entry = new Y.Map<unknown>();
+    entry.set('id', id);
+    entry.set('title', title);
+    entry.set('createDate', Date.now());
+    entry.set('tags', new Y.Array());
+    docs.push([entry]);
+  }
+  // `pages`, NOT `docs`. StudyMeta reads `pages`; the first version of this
+  // fixture wrote `docs`, so the room found no list, built a fresh one, and the
+  // test passed while proving nothing about stored pages at all. A fixture that
+  // does not match the shape it claims to be is a green test with no subject.
+  meta.set('pages', docs);
   meta.set('workspaceVersion', 2);
   meta.set('pageVersion', 2);
   meta.set('blockVersions', new Y.Map());
   doc.getMap('spaces').set(PAGE, new Y.Doc({ guid: PAGE }));
+  doc.getMap('spaces').set('page-2', new Y.Doc({ guid: 'page-2' }));
   return Y.encodeStateAsUpdate(doc);
 }
 
@@ -107,11 +123,11 @@ const source: DocSource = {
   const workspace = new StudyWorkspace({ id: WORKSPACE, docSource: source });
   workspace.storeExtensions = studyStoreManager().get('store');
   workspace.start();
-  workspace.meta.initialize();
   await Promise.race([
     workspace.waitForSynced(),
     new Promise((resolve) => setTimeout(resolve, 8000)),
   ]);
+  workspace.meta.initialize();
 
   const doc = workspace.getDoc(PAGE) ?? workspace.createDoc(PAGE);
   doc.load();
@@ -129,6 +145,8 @@ const source: DocSource = {
       root: store.root?.flavour ?? null,
       flavours,
       text: String((paragraph?.model as { text?: unknown })?.text ?? ''),
+      // The page list, as the room would draw it in its strip.
+      pages: workspace.meta.docMetas.map((m) => `${m.id}:${m.title ?? ''}`),
     }),
   );
 
