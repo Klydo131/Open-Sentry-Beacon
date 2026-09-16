@@ -4173,3 +4173,38 @@ export async function sayInReport(reportId: string, body: string): Promise<void>
   const { error } = await db().rpc('say_in_report', { p_report: reportId, p_body: body });
   if (error) throw new Error(error.message);
 }
+
+// ---------------------------------------------------------------------------
+// The pocket
+// ---------------------------------------------------------------------------
+//
+// Personal shortcuts, private to the person who saved them. The policy on
+// pocket_apps is `owner_id = auth.uid()` on every verb -- not their Guide, not
+// a Director, not the Head ED -- so nothing here needs to filter by hand.
+
+export type PocketApp = { id: string; url: string; label: string; created_at: string };
+
+export async function myPocket(): Promise<PocketApp[]> {
+  const { data, error } = await db()
+    .from('pocket_apps')
+    .select('id,url,label,created_at')
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as PocketApp[];
+}
+
+export async function addPocketApp(url: string, label: string): Promise<void> {
+  // NO owner_id, AND NO getUser(). The column defaults to auth.uid() and the
+  // insert policy checks it, so the row cannot be written in anybody else's
+  // name whatever the browser sends. Asking Auth who this is would be a second
+  // round trip and a second source of truth; the app already holds a verified
+  // first-party session, and tests/security-invariants.mjs fails the build for
+  // reaching past it.
+  const { error } = await db().from('pocket_apps').insert({ url, label });
+  if (error) throw new Error(error.message);
+}
+
+export async function removePocketApp(id: string): Promise<void> {
+  const { error } = await db().from('pocket_apps').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+}

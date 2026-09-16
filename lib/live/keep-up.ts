@@ -212,6 +212,16 @@ export const KEEP_UP_REPORTS = ['reports', 'report_files', 'profiles'] as const;
  * for the row, `in_report` for the thread -- and realtime evaluates the policy
  * per subscriber. So this changes when somebody finds out, never who may.
  */
+/**
+ * The pocket, which is the whole point of putting it in the database.
+ *
+ * "so that I can see my apps on aNY devices" is not satisfied by a table
+ * somebody has to reload to see. The read policy is `owner_id = auth.uid()` and
+ * realtime evaluates it per subscriber, so a tile saved on a phone lands on
+ * that person's laptop and on nobody else's screen at all.
+ */
+export const KEEP_UP_POCKET = ['pocket_apps'] as const;
+
 export const KEEP_UP_ADMIN_REPORTS =
   ['reports', 'report_messages', 'profiles'] as const;
 

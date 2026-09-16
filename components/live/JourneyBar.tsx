@@ -125,12 +125,31 @@ export function JourneyBar({ guideName }: { guideName?: string }) {
           background: linear-gradient(90deg, #2F80ED 0%, #35B6A4 55%, #E8B84B 100%);
           transition: width 1100ms cubic-bezier(.22,.75,.28,1);
         }
+        /* THE LOOP RUNS ON THE COMPOSITOR NOW, NOT THE PAINTER.
+           Reported as "the animation is not that smooth, I can still and feel
+           it's lagging loop". It was animating background-position, and a
+           background position is a PAINT property: every frame the browser
+           re-drew the gradient across the whole bar, for ever, on a phone that
+           has better things to do. Sixty times a second of repainting is what
+           the lag was.
+           transform is the one property a browser can move without painting
+           anything again -- it hands the layer to the GPU and slides it. Same
+           sheen, same 4.2s, none of the work. */
         .jb-sheen {
           position: absolute; inset: 0; border-radius: 9999px;
+          overflow: hidden;
+        }
+        .jb-sheen::after {
+          content: ''; position: absolute; top: 0; bottom: 0;
+          left: 0; width: 45%;
           background: linear-gradient(
-            100deg, transparent 20%, rgba(255,255,255,.5) 50%, transparent 80%);
-          background-size: 220% 100%;
-          animation: jb-slide 4.2s ease-in-out infinite;
+            100deg, transparent, rgba(255,255,255,.5), transparent);
+          transform: translate3d(-140%, 0, 0);
+          animation: jb-slide 4.2s linear infinite;
+          /* Promotes it to its own layer up front, so the first pass is as
+             smooth as the tenth rather than stuttering while the browser
+             works out that it should have. */
+          will-change: transform;
         }
         .jb-cap {
           position: absolute; top: 50%; right: 0;
@@ -139,21 +158,42 @@ export function JourneyBar({ guideName }: { guideName?: string }) {
           box-shadow: 0 0 8px 2px rgba(232,184,75,.85);
         }
         .jb-cap-moved { animation: jb-pulse 900ms ease-out 2; }
+        /* A HOLD AT THE END RATHER THAN A HARD RESTART. The old loop ran
+           ease-in-out and then snapped back to the beginning, so it slowed in
+           the middle and jumped at the seam -- which is the other half of what
+           reads as lagging. Linear across, then still, then again: the pass
+           itself is even and the repeat is a pause instead of a jolt. */
         @keyframes jb-slide {
-          0%   { background-position: 180% 0; }
-          100% { background-position: -80% 0; }
+          0%   { transform: translate3d(-140%, 0, 0); }
+          55%  { transform: translate3d(320%, 0, 0); }
+          100% { transform: translate3d(320%, 0, 0); }
         }
+        /* Transform and opacity only, for the same reason: a box-shadow is
+           painted, and animating one is the most expensive way to make a dot
+           glow. The glow is a layer that fades instead. */
+        .jb-cap::after {
+          content: ''; position: absolute; inset: -6px;
+          border-radius: 9999px; background: rgba(232,184,75,.55);
+          opacity: 0; transform: scale(.6);
+        }
+        .jb-cap-moved::after { animation: jb-glow 900ms ease-out 2; }
         @keyframes jb-pulse {
-          0%   { transform: scale(1);   box-shadow: 0 0 8px 2px rgba(232,184,75,.85); }
-          50%  { transform: scale(1.5); box-shadow: 0 0 16px 6px rgba(232,184,75,.6); }
-          100% { transform: scale(1);   box-shadow: 0 0 8px 2px rgba(232,184,75,.85); }
+          0%   { transform: scale(1); }
+          50%  { transform: scale(1.5); }
+          100% { transform: scale(1); }
+        }
+        @keyframes jb-glow {
+          0%   { opacity: 0;   transform: scale(.6); }
+          40%  { opacity: .85; transform: scale(1.15); }
+          100% { opacity: 0;   transform: scale(1.4); }
         }
         /* Somebody who has asked their device for less motion gets the position
            and none of the movement. The bar still says the true thing. */
         @media (prefers-reduced-motion: reduce) {
           .jb-fill  { transition: none; }
-          .jb-sheen { animation: none; opacity: 0; }
+          .jb-sheen::after { animation: none; opacity: 0; }
           .jb-cap-moved { animation: none; }
+          .jb-cap-moved::after { animation: none; opacity: 0; }
         }
       `}</style>
     </Card>

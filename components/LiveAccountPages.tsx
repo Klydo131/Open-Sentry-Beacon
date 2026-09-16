@@ -299,6 +299,10 @@ export function LiveSettingsPage() {
     // The invitation e-mail and the reminder card both send people to
     // /settings#password. Without this they would land on the Install folder.
     password: 'account',
+    // The bell sends a report notification to /settings#reports. Without this
+    // the hash names nothing and somebody arrives on the General folder, which
+    // is the same class of bug as the summons that opened the home page.
+    reports: 'reports',
   });
 
   if (!profile) return <BeaconSpinner inline label="Loading your account" />;

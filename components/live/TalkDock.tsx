@@ -74,6 +74,10 @@ export function TalkDock() {
   const path = usePathname();
   const [threads, setThreads] = useState<live.Thread[]>([]);
   const [open, setOpen] = useState(false);
+  // ON ITS WAY OUT. Closing used to be an unmount, so the panel vanished
+  // between one frame and the next with nothing saying where it had gone. It
+  // now stays on screen for the length of the exit and leaves afterwards.
+  const [leaving, setLeaving] = useState(false);
   // What was already waiting when this device last looked, so arriving is told
   // apart from having-been-there-all-along. Without it, opening the app with
   // three unread pops three notifications for messages you already knew about.
@@ -146,6 +150,33 @@ export function TalkDock() {
   // The two states need different positioning, so the wrapper is not shared.
   // Squeezing both into one set of classes is how a fixed overlay ends up
   // inheriting `bottom-4 right-4` and sitting in the corner at full width.
+  /**
+   * Put the panel down rather than deleting it.
+   *
+   * REDUCED MOTION CLOSES AT ONCE, and this is the half that would have been a
+   * real bug rather than a missing nicety: with `animation: none` no
+   * animationend event ever fires, so a close that waited for one would leave
+   * the panel open for ever for exactly the people who asked for less movement.
+   * The timer is the authority, and it is zero for them.
+   */
+  const close = () => {
+    let still = false;
+    try {
+      still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch {
+      // An old browser that cannot answer gets the animation; it is harmless.
+    }
+    if (still) {
+      setOpenAndRemember(false);
+      return;
+    }
+    setLeaving(true);
+    window.setTimeout(() => {
+      setLeaving(false);
+      setOpenAndRemember(false);
+    }, 170);
+  };
+
   if (open) {
     // THE HOME INDICATOR STILL EXISTS ABOVE 1280px. An iPad Pro in landscape
     // is 1366 CSS pixels, so it takes the xl branch AND has a home indicator
@@ -154,7 +185,7 @@ export function TalkDock() {
     // instead, which is what .talk-sheet does.
     return (
       <div className="fixed inset-0 z-50 xl:inset-auto xl:bottom-4 xl:right-4 xl:z-40 xl:[margin-bottom:env(safe-area-inset-bottom,0px)]">
-        <div className="talk-sheet talk-panel-in flex h-full w-full flex-col overflow-hidden bg-white ring-1 ring-black/10 xl:h-[32rem] xl:w-[22rem] xl:rounded-2xl xl:lift-3">
+        <div className={`talk-sheet ${leaving ? 'talk-panel-out' : 'talk-panel-in'} flex h-full w-full flex-col overflow-hidden bg-white ring-1 ring-black/10 xl:h-[32rem] xl:w-[22rem] xl:rounded-2xl xl:lift-3`}>
           <div className="flex items-center gap-2 border-b border-black/5 bg-navy px-3 py-2 text-white">
             <span className="flex-1 text-sm font-bold">Talk</span>
             {/* NOT ON A PHONE, because there it would do nothing: the sheet is
@@ -170,7 +201,7 @@ export function TalkDock() {
             </button>
             <button
               type="button"
-              onClick={() => setOpenAndRemember(false)}
+              onClick={close}
               className="tap-sm px-2 text-xs font-semibold underline"
               aria-label="Close the chat panel"
             >

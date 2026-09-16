@@ -3,14 +3,25 @@
 // The pocket, on the desk. See lib/pocket.ts for why the marks are drawn
 // rather than fetched, and why this lives in the browser rather than a table.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useIsLive } from '@/lib/tutorial';
+import { useKeepUp, KEEP_UP_POCKET } from '@/lib/live/keep-up';
+import * as live from '@/lib/live/data';
 import {
   type Pocket as Item, POCKET_LIMIT, labelFor, markFor, readPocket, tidyUrl, writePocket,
 } from '@/lib/pocket';
+import { humanError } from '@/lib/live/errors';
 
 type Theme = { panel: string; line: string; ink: string; inkSoft: string };
 
 export function Pocket({ theme, className = '' }: { theme: Theme; className?: string }) {
+  // WHERE THE TILES LIVE DEPENDS ON WHO IS ASKING.
+  //
+  // Signed in, they are rows in pocket_apps and follow the person to any
+  // device, which is what was asked for. In the tutorial there is no account to
+  // own a row, so the browser keeps them exactly as before -- somebody trying
+  // the app out should not be told to sign in before they can pin a shortcut.
+  const isLive = useIsLive();
   const [items, setItems] = useState<Item[]>([]);
   const [url, setUrl] = useState('');
   const [adding, setAdding] = useState(false);
@@ -21,7 +32,40 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
 
   // Read after mount, never during render: the server has no localStorage, so
   // reading it while rendering makes the first paint disagree with the second.
-  useEffect(() => { setItems(readPocket()); }, []);
+  const adopted = useRef(false);
+
+  const load = useCallback(async () => {
+    if (!isLive) { setItems(readPocket()); return; }
+    try {
+      const rows = await live.myPocket();
+
+      // NOTHING SAVED BEFORE TODAY IS LOST. Anybody who used the pocket while
+      // it lived in the browser has tiles there and no rows at all, and a
+      // straight switch would have shown them an empty pocket and looked like
+      // the feature had eaten their shortcuts. Their existing tiles go up once,
+      // the first time they open it signed in, and the local copy is left
+      // alone so a failure halfway through costs nothing.
+      if (rows.length === 0 && !adopted.current) {
+        adopted.current = true;
+        const local = readPocket();
+        if (local.length > 0) {
+          for (const item of local) {
+            try { await live.addPocketApp(item.url, item.label); } catch { /* keep going */ }
+          }
+          setItems(await live.myPocket());
+          return;
+        }
+      }
+      setItems(rows.map((r) => ({ id: r.id, url: r.url, label: r.label })));
+    } catch (cause) {
+      setError(humanError(cause, 'Your pocket could not be loaded.'));
+    }
+  }, [isLive]);
+
+  useEffect(() => { void load(); }, [load]);
+  // A tile saved on a phone lands on the laptop without a reload, which is the
+  // whole reason these are rows rather than browser storage.
+  useKeepUp(KEEP_UP_POCKET, load);
 
   const save = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -38,19 +82,32 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
       setError(`The pocket holds ${POCKET_LIMIT}. Remove one to add another.`);
       return;
     }
-    const next = [...items, { id: `${Date.now()}`, url: tidy, label: labelFor(tidy) }];
-    setItems(next);
-    writePocket(next);
+    const label = labelFor(tidy);
     setUrl('');
     setError('');
     setAdding(false);
-  }, [items, url]);
+    if (isLive) {
+      void live.addPocketApp(tidy, label)
+        .then(load)
+        .catch((cause) => setError(humanError(cause, 'That could not be saved.')));
+      return;
+    }
+    const next = [...items, { id: `${Date.now()}`, url: tidy, label }];
+    setItems(next);
+    writePocket(next);
+  }, [items, url, isLive, load]);
 
   const remove = useCallback((id: string) => {
+    if (isLive) {
+      void live.removePocketApp(id)
+        .then(load)
+        .catch((cause) => setError(humanError(cause, 'That could not be removed.')));
+      return;
+    }
     const next = items.filter((i) => i.id !== id);
     setItems(next);
     writePocket(next);
-  }, [items]);
+  }, [items, isLive, load]);
 
   return (
     <div
@@ -143,6 +200,10 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
             );
           })}
         </div>
+      )}
+
+      {error && !adding && (
+        <p className="mt-2 text-xs font-semibold text-red-600">{error}</p>
       )}
 
       {adding && (

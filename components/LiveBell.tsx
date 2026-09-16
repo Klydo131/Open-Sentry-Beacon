@@ -39,10 +39,16 @@ import { useKeepUp, KEEP_UP_BELL } from '@/lib/live/keep-up';
 function routeFor(type: string, role: Role): string {
   const leads = role === 'admin' || role === 'executive';
   switch (type) {
-    case 'report':
     case 'trial':
       // Leadership judges these; anybody else was CALLED to one.
       return leads ? '/admin?room=safeguarding' : '/cases';
+    case 'report':
+      // EVERYBODY GOES TO THE SAME PLACE, and it is not /admin. A report is now
+      // a conversation between the person who raised it and the one who picked
+      // it up, and both halves live in Settings under Admin Reports. Sending
+      // leadership to the old safeguarding room would land them on a summary of
+      // a case whose thread is somewhere else.
+      return '/settings#reports';
     case 'approval':
       return leads ? '/admin?room=approvals' : '/church';
     case 'pairing':

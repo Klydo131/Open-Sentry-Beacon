@@ -172,10 +172,30 @@ const routes = tracked.filter((f) => /^app\/.*\/route\.(ts|js)$/.test(f));
 //       tests/security-invariants.mjs assert about it. It arrived with the live
 //       session handoff and was never added here, so this suite had been failing
 //       on a route the rest of the suite treats as required.
+//
+//   app/api/app-icon/route.ts
+//       Fetches the logo of a web app somebody saved in their pocket, and it
+//       exists SO THAT the browser does not. A tile pointing straight at
+//       faithlife.com/favicon.ico would need img-src widened to arbitrary
+//       origins for every page in the app, and would tell that company a church
+//       member is on their screen -- with their IP -- every time the rail
+//       renders. Fetched here, the policy stays as narrow as it was and the
+//       only thing the company sees is a server asking for a picture.
+//       It is a server route in the sense this file means, which is why it is
+//       named here rather than waved through: it takes a URL a person typed and
+//       opens it. Its fences (http(s) only via lib/url.ts, every resolved
+//       address checked against the private ranges including the cloud metadata
+//       address, redirects followed by hand and re-checked per hop, byte caps,
+//       timeouts, images only) are asserted by
+//       tests/the-pocket-keeps-a-web-app-safely.mjs, which executes the address
+//       test rather than reading it.
+//       It holds nothing and remembers nothing, which is what "no backend"
+//       actually asks of a route.
 const ALLOWED_ROUTES = [
   'app/sw.js/route.ts',
   'app/version.json/route.ts',
   'app/api/auth/sign-in/route.ts',
+  'app/api/app-icon/route.ts',
 ];
 for (const r of routes) {
   ok(

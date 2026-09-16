@@ -233,8 +233,32 @@ const ui = strip(read('components/Pocket.tsx'));
 // reading it during render makes the server's first paint disagree with the
 // browser's. Both have bitten this app before.
 {
-  ok(/useEffect\(\(\) => \{ setItems\(readPocket\(\)\); \}, \[\]\);/.test(ui),
-     'the pocket is read in an effect, not during render');
+  // THE PROPERTY, NOT THE LINE. This pinned one exact statement and then
+  // refused the commit that moved the tiles into the database -- the loader
+  // became an async function called from an effect, which reads storage in
+  // exactly the same place for exactly the same reason. Fifth exact-expression
+  // pin in this repository to block its own intention, third of them mine.
+  //
+  // What matters is that nothing reads storage while rendering: the server has
+  // no localStorage, so a read during render makes the first paint disagree
+  // with the second. So the rule is that every readPocket() call sits inside a
+  // hook, and none is in the body of the component.
+  const reads = [...ui.matchAll(/readPocket\(\)/g)].map((m) => m.index ?? 0);
+  ok(reads.length > 0, 'the pocket is read somewhere');
+  const inAHook = reads.every((at) => {
+    // Walk back to the nearest useEffect/useCallback opening before this read.
+    const before = ui.slice(0, at);
+    const hook = Math.max(before.lastIndexOf('useEffect('), before.lastIndexOf('useCallback('));
+    if (hook < 0) return false;
+    // And make sure that hook has not already closed before the read.
+    let depth = 0;
+    for (let i = hook; i < at; i += 1) {
+      if (ui[i] === '(') depth += 1;
+      else if (ui[i] === ')') { depth -= 1; if (depth === 0) return false; }
+    }
+    return true;
+  });
+  ok(inAHook, 'and every read of it happens inside a hook, never during render');
   ok((lib.match(/catch/g) ?? []).length >= 2,
      'and every storage access is wrapped, because a private window refuses');
 }

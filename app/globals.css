@@ -250,14 +250,18 @@ a[role='button'],
   }
 }
 
-/* A block standing in for content, sweeping left to right. */
+/* A block standing in for content, sweeping left to right.
+
+   THE SAME DEFECT THE JOURNEY BAR HAD, found by the check written for that one
+   and not by anybody looking. This animated background-position, so every
+   loading skeleton on every screen repainted itself sixty times a second for as
+   long as it was on display -- which is precisely while the device is already
+   busy fetching the thing the skeleton stands for. The worst possible moment to
+   spend paint on decoration.
+   A sweeping highlight moved by transform costs nothing per frame. */
 @keyframes beaconShimmer {
-  0% {
-    background-position: -280px 0;
-  }
-  100% {
-    background-position: 280px 0;
-  }
+  0%   { transform: translate3d(-100%, 0, 0); }
+  100% { transform: translate3d(220%, 0, 0); }
 }
 
 /* A newly arrived person, greeted once. Two turns of a soft ring, then it
@@ -281,10 +285,19 @@ a[role='button'],
 }
 
 .beacon-skeleton {
-  background-image: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 40%, #f3f4f6 80%);
-  background-size: 280px 100%;
-  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+  background-color: #f3f4f6;
+}
+
+.beacon-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent 0%, #e5e7eb 50%, transparent 100%);
+  transform: translate3d(-100%, 0, 0);
   animation: beaconShimmer 1.3s ease-in-out infinite;
+  will-change: transform;
 }
 
 .beacon-new {
@@ -313,9 +326,14 @@ a[role='button'],
   .beacon-spinner-label {
     animation: beaconBreathe 1.6s ease-in-out infinite;
   }
-  .beacon-skeleton {
+  /* THE SWEEP MOVED TO ::after, SO THIS HAD TO FOLLOW IT. Silencing
+     .beacon-skeleton alone would have left the highlight sliding for exactly
+     the people who asked for less movement -- a reduced-motion rule aimed at
+     the element the animation used to be on is worse than none, because it
+     looks handled. */
+  .beacon-skeleton::after {
     animation: none;
-    background-image: none;
+    opacity: 0;
   }
   .beacon-new {
     animation: none;
@@ -713,6 +731,7 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
      the transition simply stops interpolating -- so nothing is mid-flight or
      invisible for somebody who asked for stillness. */
   .talk-panel-in,
+  .talk-panel-out,
   .talk-message-in {
     animation: none;
   }
@@ -894,6 +913,45 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 
 .talk-message-in {
   animation: talkMessageIn 140ms ease-out;
+}
+
+/* LEAVING IS AS MUCH A MOVEMENT AS ARRIVING.
+   Reported: "The exit for the bubble chat is flat, it needs animation click it
+   and exiting it so that users can feel entering chat or exiting on it."
+
+   Opening had an animation from the day it was written; closing had none,
+   because closing was an unmount -- the panel was simply not rendered on the
+   next frame and vanished mid-blink. That is not a missing flourish. Without
+   it there is nothing telling somebody where the conversation WENT, so the
+   chat feels like it was destroyed rather than put down, and the bubble in the
+   corner does not read as the place it went back into.
+
+   The exit is the entrance reversed, and slightly quicker, which is the usual
+   asymmetry: people wait to see a thing arrive and do not want to wait to see
+   it leave. Same transform-origin, so it collapses towards the bubble it came
+   from. */
+@keyframes talkSheetOut {
+  from { opacity: 1; transform: scale(1)    translateY(0); }
+  to   { opacity: 0; transform: scale(.97)  translateY(8px); }
+}
+
+@keyframes talkPanelOut {
+  from { opacity: 1; transform: scale(1)   translateY(0); }
+  to   { opacity: 0; transform: scale(.94) translateY(6px); }
+}
+
+.talk-panel-out {
+  transform-origin: bottom right;
+  animation: talkSheetOut 160ms ease-in forwards;
+  /* Nothing can be pressed while it is on its way out, so a second tap cannot
+     land on a control that is already half gone. */
+  pointer-events: none;
+}
+
+@media (min-width: 1280px) {
+  .talk-panel-out {
+    animation: talkPanelOut 140ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
 }
 
 /* THE BUBBLE DIPS, and `transform` only -- never width or padding, which would
