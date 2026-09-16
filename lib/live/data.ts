@@ -4259,3 +4259,29 @@ export async function joinTrial(trialId: string): Promise<void> {
 // was written here before checking, which is the mistake the clipboard and
 // lib/url.ts guards both exist to prevent: two ways to do one thing, and one
 // of them eventually wrong. Deleted rather than kept for symmetry.
+
+// ---------------------------------------------------------------------------
+// The next thing to read
+// ---------------------------------------------------------------------------
+//
+// Deliberately NOT the journey stage. The stage is a note the church keeps about
+// a person and a seeker never sees it -- lib/types.ts says so, and it is a
+// safeguarding decision rather than an oversight. This is the other truth: what
+// the Explorer has actually done. Before it, somebody could read every study in
+// the church and watch nothing move until their Guide changed their mind.
+
+export type StudyProgress = {
+  read_count: number;
+  total_count: number;
+  next_id: string | null;
+  next_title: string | null;
+  next_series: string | null;
+  next_series_id: string | null;
+};
+
+export async function myStudyProgress(): Promise<StudyProgress | null> {
+  const { data, error } = await db().rpc('my_study_progress');
+  if (error) throw new Error(error.message);
+  const row = (data ?? [])[0] as StudyProgress | undefined;
+  return row ?? null;
+}

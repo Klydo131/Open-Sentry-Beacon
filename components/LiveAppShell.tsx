@@ -223,9 +223,18 @@ export function LiveAppShell({
   if (!profile.is_approved) {
     return (
       <CenteredCard title="Your account is being reviewed">
+        {/* WHO, AND ROUGHLY WHEN. This is the first screen a new member ever
+            sees, and it used to say only that somebody needed to approve them --
+            no sense of who, how long, or whether anything was expected of them.
+            Waiting without knowing whether anybody is there is most of what
+            makes joining feel like shouting into a room. */}
         <p className="text-gray-600">
-          Your invitation worked. A Director or Executive Director now needs to approve
-          your account before you enter the app.
+          Your invitation worked, and you are signed in. A Director has been told
+          and will let you in, usually within a day or two.
+        </p>
+        <p className="mt-3 text-gray-600">
+          There is nothing else for you to do. You do not need to sign up again or
+          send another invitation, and you can close this and come back later.
         </p>
         <p className="mt-3 text-sm text-gray-500">
           Signed in as {session.user.email ?? profile.full_name}

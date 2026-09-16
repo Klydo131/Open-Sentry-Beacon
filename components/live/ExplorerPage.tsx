@@ -16,6 +16,7 @@ import { LiveStudies } from '@/components/LiveStudies';
 import { Avatar, Card } from '@/components/ui';
 import { Conversation, Notice, errorText } from '@/components/live/shared';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
+import { NextStudy } from '@/components/live/NextStudy';
 import { JourneyBar } from '@/components/live/JourneyBar';
 import { LiveAnnouncements } from '@/components/LiveAnnouncements';
 import { LiveBlogFeed } from '@/components/LiveBlog';
@@ -160,6 +161,9 @@ export function LiveExplorerPage() {
     { id: 'prayer', label: '🙏 Prayer' },
   ];
   const [room, chooseRoom] = useRoom(rooms, 'beacon:journey-room', { prayer: 'prayer' });
+  // Which series the shelf should already be open at, when somebody arrives
+  // from the Read next card rather than by browsing.
+  const [openSeries, setOpenSeries] = useState('');
 
   return (
     <LiveAppShell allow={['ds']}>
@@ -201,6 +205,16 @@ export function LiveExplorerPage() {
                 outside the branch below that handles that case. */}
             {pairing && <JourneyBar guideName={pairing.dm_name} />}
 
+            {/* THE FIRST THING ON THE FIRST SCREEN. An Explorer who opens the
+                app cold now meets one sentence telling them what to do, by
+                name, before the conversation or anything else. */}
+            <NextStudy
+              onOpen={(seriesId) => {
+                setOpenSeries(seriesId);
+                chooseRoom('study');
+              }}
+            />
+
             {/* THE CHURCH, BETWEEN THE PERSON AND THE TALKING. Asked for in
                 exactly those words: after the Guide's name box and before the
                 chat box. It is the one thing in this folder that did not come
@@ -210,12 +224,32 @@ export function LiveExplorerPage() {
 
             {!pairing ? (
               <Card className="p-6 text-center">
+                {/* THE WAIT, WITH SOMETHING IN IT. One line saying a Guide
+                    was coming "soon" was the whole of this screen, so an
+                    Explorer's first week could be a sentence that never
+                    changed. It now says what has already happened, that the
+                    church can see they are waiting, and what they can do
+                    meanwhile -- because the studies do not need a Guide. */}
                 <h2 className="text-xl font-bold text-navy">Your Guide is being arranged</h2>
-                <p className="mt-2 text-gray-500">Your church will connect one person with you soon.</p>
+                <p className="mt-2 text-gray-600">
+                  A Director can see that you are waiting, and pairs people
+                  themselves rather than leaving it to chance. It usually takes a
+                  few days.
+                </p>
+                <p className="mt-3 text-gray-600">
+                  You do not have to wait to begin. The studies your church has
+                  published are open to you now, in the Study folder above, and
+                  whoever you are paired with will be able to see where you got to.
+                </p>
               </Card>
             ) : (
               <>
                 <Conversation
+                  // THE THIRD WAITING SCREEN. An Explorer whose Guide has not
+                  // written yet was told to "start with a welcome", which is the
+                  // Guide's job. This says the true thing instead: nothing is
+                  // wrong, and they are allowed to go first.
+                  emptyLine="No messages yet. Your Guide will write, and you can write first if you would like to."
                   messages={messages}
                   files={files}
                   myId={profile?.id ?? ''}
@@ -265,7 +299,7 @@ export function LiveExplorerPage() {
               />
             )}
             <LiveSharedWithMe />
-            <LiveStudies />
+            <LiveStudies openSeries={openSeries} />
           </>
         )}
 

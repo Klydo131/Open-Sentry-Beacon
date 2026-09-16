@@ -372,7 +372,7 @@ function SeriesBody({ series, mine }: { series: live.LessonSeries; mine: boolean
   );
 }
 
-export function LiveStudies() {
+export function LiveStudies({ openSeries = '' }: { openSeries?: string }) {
   const { profile } = useLiveSession();
   // THE ROLE DECIDES, NOT THE CALLER. This was a `canWrite` prop each screen
   // passed by hand, and the four call sites had already drifted: the Guide's
@@ -385,7 +385,11 @@ export function LiveStudies() {
   // permission wrong.
   const canWrite = canWriteStudies(profile?.role);
   const [rows, setRows] = useState<live.LessonSeries[] | null>(null);
-  const [open, setOpen] = useState('');
+  // ARRIVING FROM "READ NEXT" OPENS THE RIGHT SERIES. Without this the card
+  // would name a study and then drop somebody on a shelf of closed folders to
+  // find it again, which is most of the way back to the problem it solves.
+  const [open, setOpen] = useState(openSeries);
+  useEffect(() => { if (openSeries) setOpen(openSeries); }, [openSeries]);
   const [title, setTitle] = useState('');
   const [topic, setTopic] = useState('');
   // THE LINE UNDER THE TITLE, which no form has ever asked for.

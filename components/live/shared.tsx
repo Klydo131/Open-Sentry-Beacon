@@ -146,6 +146,7 @@ function PutAway({ onClick, what }: { onClick: () => void; what: string }) {
 }
 
 export function Conversation({
+  emptyLine,
   messages,
   files,
   myId,
@@ -161,6 +162,15 @@ export function Conversation({
   onEditMessage,
   onDeleteMessage,
 }: {
+  /**
+   * What an empty thread says, to THIS reader.
+   *
+   * It said "Start with a welcome" to everybody, which is the Guide's job.
+   * An Explorer opening their first conversation was being told to do
+   * somebody else's work, on the screen where they are least sure what is
+   * expected of them.
+   */
+  emptyLine?: string;
   messages: Message[];
   files: live.PairingFile[];
   myId: string;
@@ -424,7 +434,11 @@ export function Conversation({
            difference that makes a run read as one piece of talking. */
         className="overflow-y-auto overscroll-contain bg-white p-4 sm:p-5"
       >
-        {timeline.length === 0 && <p className="py-16 text-center text-gray-400">Start with a welcome.</p>}
+        {timeline.length === 0 && (
+          <p className="py-16 text-center text-gray-400">
+            {emptyLine ?? 'Start with a welcome.'}
+          </p>
+        )}
         {timeline.map((entry, index) => {
           const mine = entry.who === myId;
           const isNewest = index === timeline.length - 1;
