@@ -26,6 +26,7 @@
 
 import { useEffect } from 'react';
 
+import { APP_NAME } from '@/lib/brand';
 import type { ShelfView } from '@/components/study/StudyShelf';
 
 export function StudyWorkspaceShell({
@@ -86,7 +87,7 @@ export function StudyWorkspaceShell({
           onClick={onExit}
           className="tap-sm shrink-0 rounded-xl px-3 text-sm font-semibold text-white ring-1 ring-white/25 hover:bg-white/10"
         >
-          ← Hope Beacon
+          ← {APP_NAME}
         </button>
 
         <div className="min-w-0 flex-1">

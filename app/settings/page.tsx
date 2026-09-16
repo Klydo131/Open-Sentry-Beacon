@@ -25,7 +25,9 @@ import { WhatsNewButton } from '@/components/WhatsNew';
 import { WhichApp } from '@/components/WhichApp';
 import { FeedbackButton } from '@/components/Feedback';
 import { DataManager } from '@/components/DataManager';
-import { pushSupported, permission as pushPermission, requestPermission, subscribeToPush, showLocalNotification } from '@/lib/push';
+import { pushSupported, permission as pushPermission, requestPermission, subscribeToPush, showLocalNotification, iosNeedsInstall } from '@/lib/push';
+import { rememberThisDevice, forgetThisDevice } from '@/lib/live/push-devices';
+import { APP_SHORT_NAME } from '@/lib/brand';
 import type { Role } from '@/lib/types';
 
 // Executives included.
@@ -156,14 +158,46 @@ function NotificationCard() {
   const [perm, setPerm] = useState<NotificationPermission>(() =>
     typeof Notification !== 'undefined' ? Notification.permission : 'denied',
   );
+  const [reachable, setReachable] = useState(false);
+  const [needsInstall, setNeedsInstall] = useState(false);
 
+  // Read after mount: both of these answer differently on the server, and a
+  // value that flips on hydration is a warning in the console and a flicker on
+  // the screen.
+  useEffect(() => setNeedsInstall(iosNeedsInstall()), []);
+
+  // GRANTING PERMISSION IS NOT THE SAME AS BEING REACHABLE, and for a long time
+  // this app treated them as one thing. Permission lets the browser SHOW a
+  // notification; a subscription that somebody has kept is what lets the church
+  // SEND one. Without the second step the switch went green and a locked phone
+  // still heard nothing, which is exactly what was reported.
   const enableAlerts = async () => {
     const p = await requestPermission();
     setPerm(p);
-    if (p === 'granted') {
-      update({ push: true });
-      await subscribeToPush();
-      showLocalNotification('Alerts are on', 'Beacon will notify you here and on this device.');
+    if (p !== 'granted') return;
+    update({ push: true });
+    const sub = await subscribeToPush();
+    const reachable = sub ? await rememberThisDevice(sub) : false;
+    setReachable(reachable);
+    showLocalNotification(
+      'Alerts are on',
+      reachable
+        ? 'This device will be told even when the app is closed.'
+        : 'Beacon will notify you here while the app is open.',
+    );
+  };
+
+  // TURNING IT OFF MUST ACTUALLY STOP THE SENDING. Hiding the notification
+  // while the database keeps pushing to the device is not the setting anybody
+  // thinks they are using.
+  const setPush = async (on: boolean) => {
+    update({ push: on });
+    if (on) {
+      const sub = await subscribeToPush();
+      setReachable(sub ? await rememberThisDevice(sub) : false);
+    } else {
+      await forgetThisDevice();
+      setReachable(false);
     }
   };
 
@@ -181,15 +215,40 @@ function NotificationCard() {
           checked={prefs.inApp}
           onChange={(v) => update({ inApp: v })}
         />
-        {pushSupported() && (
+        {/* THE ONE PLATFORM THAT SAYS NO, and saying so is better than a switch
+            that will never do anything. On an iPhone or iPad, web push exists
+            only for an app added to the Home Screen, on iOS 16.4 or later.
+            Safari in a tab cannot receive one however the rest is set up. */}
+        {needsInstall && (
+          <div className="rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200">
+            <p className="text-sm font-semibold text-amber-900">
+              Add {APP_SHORT_NAME} to your Home Screen first
+            </p>
+            <p className="mt-1 text-sm text-amber-900">
+              On an iPhone or iPad, alerts only work for the installed app, not
+              for a Safari tab. Tap Share, then Add to Home Screen, and open it
+              from the new icon. This is Apple&rsquo;s rule and it applies
+              to every website.
+            </p>
+          </div>
+        )}
+        {pushSupported() && !needsInstall && (
           <>
             {perm === 'granted' ? (
-              <SettingsToggle
-                label="Device alerts"
-                hint="Show system notifications on your phone or desktop."
-                checked={prefs.push}
-                onChange={(v) => update({ push: v })}
-              />
+              <>
+                <SettingsToggle
+                  label="Device alerts"
+                  hint="Show system notifications on your phone or desktop."
+                  checked={prefs.push}
+                  onChange={(v) => void setPush(v)}
+                />
+                {prefs.push && !reachable && (
+                  <p className="px-1 text-sm text-gray-500">
+                    Alerts show while the app is open. To be told when it is
+                    closed, turn this off and on again once.
+                  </p>
+                )}
+              </>
             ) : perm === 'denied' ? (
               <div className="rounded-xl bg-gray-50 p-3">
                 <p className="text-sm font-semibold text-gray-500">Device alerts</p>

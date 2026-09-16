@@ -1,19 +1,47 @@
-// On-device notifications.
+// Notifications, both kinds, and the difference matters.
 //
-// This build has no backend, so only the first of the two usual layers exists
-// here, and it is the one that needs no server anyway:
+// ---------------------------------------------------------------------------
+// ON-DEVICE. The app raises a real system notification itself, from the page,
+// about something the browser already knows. It has always worked and it can
+// only ever reach somebody who has the app open in front of them.
 //
-//   On-device system notifications — once the user grants permission, the
-//   service worker raises a real OS notification, shown on the lock screen or
-//   notification tray while the app is installed. Everything that triggers one
-//   originates in the browser from the sample data.
+// BACKGROUND PUSH. The church's database sends to the device whether or not
+// the app is running: a locked phone in a pocket lights up. This is the half
+// that was missing, and "notifications do not work on all devices" was a fair
+// description of an app that had only the first kind.
 //
-// The second layer — true background push, where a server pushes to a device
-// that is not open — is intentionally NOT wired here. It would need a backend to
-// hold subscriptions and send with a VAPID private key, and this repo has no
-// backend by design (see ARCHITECTURE.md). subscribeToPush() below still records
-// a subscription so the surrounding UI works in the demo, but nothing sends to
-// it, and no subscription ever leaves the device.
+// It is wired now: subscribeToPush() asks the browser, lib/live/push-devices.ts
+// keeps the answer in `push_subscriptions`, a trigger on `notifications` calls
+// the `notify` edge function, and the service worker's push handler -- which
+// has been sitting ready this whole time -- raises the notification.
+//
+// THE ONE PLATFORM THAT SAYS NO, and it is not something code can fix: on an
+// iPhone or iPad, web push only exists for an app that has been added to the
+// Home Screen, on iOS 16.4 or later. Safari in a tab cannot receive a push,
+// whatever is set up behind it. iosNeedsInstall() below is how the app tells
+// somebody that rather than showing them a switch that will never do anything.
+// ---------------------------------------------------------------------------
+
+/**
+ * True on an iPhone or iPad where the app is open in a browser tab rather than
+ * installed, which is the one configuration where notifications cannot work and
+ * no amount of granting permission will change that.
+ *
+ * DETECTED BY SHAPE, NOT BY NAME. iPadOS reports itself as a Mac, so a plain
+ * user-agent test misses every iPad; a Mac with a touchscreen does not exist,
+ * so "claims to be a Mac and has touch points" is an iPad. Neither test is
+ * pretty and both are what the platform leaves available.
+ */
+export function iosNeedsInstall(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const isApple = /iPad|iPhone|iPod/.test(ua)
+    || (/Macintosh/.test(ua) && (navigator.maxTouchPoints ?? 0) > 1);
+  if (!isApple) return false;
+  const installed = window.matchMedia?.('(display-mode: standalone)').matches
+    || (navigator as { standalone?: boolean }).standalone === true;
+  return !installed;
+}
 
 export function pushSupported(): boolean {
   return (
