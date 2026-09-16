@@ -4,19 +4,28 @@
 //
 // ASKED FOR: "Any Director, ED, and Head can join the trial room (the court
 // room should look like a UI game where it is looks like a virtual Hall of
-// Justice Room)", and then, asked back and answered: "yes do that, except
-// trials about themselves or fellow Directors".
+// Justice Room)", and then, corrected twice: "yes do that, except trials
+// about themselves or fellow Directors", and then "what I mean ED, Director
+// and Head Director can join is they are on the sidelines and can monitor the
+// hearing. That's all. The only one who accepted the case will be main Judge
+// Director."
 //
 // WHAT THIS FILE IS NOT ALLOWED TO DECIDE. Every rule lives in migration
 // 20260916120000. `trials_i_may_sit_on` already excludes a case about the
 // person asking and, unless they are an Executive Director, a case about a
-// Director. So a list that is empty is a list of cases they may not hear, and
+// Director. So a list that is empty is a list of cases they may not watch, and
 // this screen cannot widen that by drawing a button.
+//
+// WATCHING IS SILENT, and that is enforced by trial_statements_speak rather
+// than by this file drawing no composer: the person who accepted the case and
+// the people actually called to it may speak, and an observer may not. The
+// first version of this screen let every watcher post into the hearing, which
+// would have put Directors in a member's transcript who were never called.
 //
 // WHY IT LOOKS LIKE A ROOM RATHER THAN A TABLE. A hearing about a member of a
 // church is the heaviest thing this app does, and it used to be a list of grey
 // cards indistinguishable from a roster. The room is deep navy with a gold
-// bench line and the seats drawn as a row -- serious rather than playful, and
+// bench line and the watchers drawn as a row -- serious rather than playful, and
 // nothing decorative moves, because a page about somebody's conduct is not the
 // place for an animation. What the visual is FOR is telling somebody at a
 // glance that they have walked somewhere different.
@@ -30,10 +39,10 @@ import { useKeepUp, KEEP_UP_CASES } from '@/lib/live/keep-up';
 import { roleNoun } from '@/lib/brand';
 import type { Profile } from '@/lib/types';
 
-function Seats({ n, mine }: { n: number; mine: boolean }) {
-  // Eight chairs drawn, however many are filled: an empty seat is the point.
-  // A bench with one person on it should look like a bench with one person on
-  // it, not like a full room.
+function Watchers({ n, mine }: { n: number; mine: boolean }) {
+  // Eight places drawn, however many are filled: an empty one is the point. A
+  // hearing with one watcher should look like a hearing with one watcher, not
+  // like a full room.
   const chairs = Array.from({ length: 8 }, (_, i) => i < n);
   return (
     <div className="flex items-center gap-1.5" aria-hidden>
@@ -51,7 +60,7 @@ function Seats({ n, mine }: { n: number; mine: boolean }) {
   );
 }
 
-function Bench({ t, onJoin, busy }: {
+function Hearing({ t, onJoin, busy }: {
   t: live.SeatableTrial;
   onJoin: (id: string) => void;
   busy: string | null;
@@ -63,7 +72,8 @@ function Bench({ t, onJoin, busy }: {
       style={{ backgroundColor: '#16223F' }}
     >
       {/* The bench line. Gold on navy is the app's own pairing, used here at
-          full strength because this is the one room that should feel formal. */}
+          full strength because this is the one room that should feel formal.
+          It marks where the hearing is run from, which is one person. */}
       <div className="h-1 w-full" style={{ backgroundColor: '#E8B84B' }} />
 
       <div className="p-4">
@@ -80,10 +90,10 @@ function Bench({ t, onJoin, busy }: {
 
           <div className="text-right">
             <p className="text-[11px] font-bold uppercase tracking-widest text-white/50">
-              On the bench
+              Watching
             </p>
             <div className="mt-1.5 flex justify-end">
-              <Seats n={Number(t.seated)} mine={t.i_am_seated} />
+              <Watchers n={Number(t.watching)} mine={t.i_am_watching} />
             </div>
           </div>
         </div>
@@ -99,13 +109,22 @@ function Bench({ t, onJoin, busy }: {
         )}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {t.i_am_seated ? (
+          {/* THE JUDGE IS NAMED, BECAUSE THE TWO ROLES LOOK IDENTICAL FROM
+              HERE OTHERWISE. Watching and hearing a case are the same row in
+              trial_parties as far as the eye goes, and only one of them can
+              speak or decide. Saying which one somebody is, is the difference
+              between a hearing and a crowd. */}
+          {t.i_am_judge ? (
+            <span className="rounded-full bg-gold px-3 py-1 text-xs font-bold text-navy">
+              You are hearing this case
+            </span>
+          ) : t.i_am_watching ? (
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/80">
-              You are in this room
+              You are watching
             </span>
           ) : open ? (
             <Button variant="gold" disabled={busy === t.id} onClick={() => onJoin(t.id)}>
-              {busy === t.id ? 'Taking a seat' : 'Take a seat'}
+              {busy === t.id ? 'Joining' : 'Watch this hearing'}
             </Button>
           ) : null}
           <a
@@ -134,7 +153,7 @@ export function LiveHallOfJustice({ me }: { me: Profile }) {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
-  // Somebody else taking a seat, or a verdict landing, shows up without a
+  // Somebody else beginning to watch, or a verdict landing, shows up without a
   // reload -- which is most of the reason to draw a room at all.
   useKeepUp(KEEP_UP_CASES, load);
 
@@ -145,7 +164,7 @@ export function LiveHallOfJustice({ me }: { me: Profile }) {
       await live.joinTrial(id);
       await load();
     } catch (cause) {
-      setError(humanError(cause, 'That seat could not be taken.'));
+      setError(humanError(cause, 'That hearing could not be joined.'));
     } finally {
       setBusy(null);
     }
@@ -158,8 +177,9 @@ export function LiveHallOfJustice({ me }: { me: Profile }) {
     <Card className="p-5">
       <h2 className="text-xl font-bold text-navy">🏛️ Hall of Justice</h2>
       <p className="mt-1 text-sm text-gray-500">
-        Cases you may hear. Taking a seat is recorded, so the case always says
-        who was in the room.
+        Hearings you may watch. Watching is recorded, so the case always says
+        who was in the room, and it carries no voice: only the Director who
+        accepted a case speaks in it or decides it.
       </p>
 
       {/* SAID OUT LOUD, BECAUSE AN EMPTY LIST IS AMBIGUOUS OTHERWISE. Somebody
@@ -182,7 +202,7 @@ export function LiveHallOfJustice({ me }: { me: Profile }) {
         </p>
       ) : (
         <div className="mt-4 space-y-3">
-          {rows.map((t) => <Bench key={t.id} t={t} onJoin={join} busy={busy} />)}
+          {rows.map((t) => <Hearing key={t.id} t={t} onJoin={join} busy={busy} />)}
         </div>
       )}
     </Card>

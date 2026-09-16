@@ -4226,8 +4226,11 @@ export type SeatableTrial = {
   opened_at: string;
   accused_name: string | null;
   accused_role: string;
-  seated: number;
-  i_am_seated: boolean;
+  /** How many of leadership are watching. Watching carries no voice. */
+  watching: number;
+  i_am_watching: boolean;
+  /** The one who accepted the case, and the only one who runs or ends it. */
+  i_am_judge: boolean;
 };
 
 export async function trialsIMaySitOn(): Promise<SeatableTrial[]> {
@@ -4236,7 +4239,15 @@ export async function trialsIMaySitOn(): Promise<SeatableTrial[]> {
   return (data ?? []) as SeatableTrial[];
 }
 
-/** Take a seat, on the record: who was in the room is part of the case. */
+/**
+ * Watch a hearing, on the record.
+ *
+ * WATCHING IS SILENT. `trial_statements_speak` admits the person who accepted
+ * the case and anybody actually called to it -- the accused, the reporter, a
+ * witness -- and nobody else. An observer reads and cannot write, so a member
+ * answering something said about them never finds a Director in the transcript
+ * who was never called to the case.
+ */
 export async function joinTrial(trialId: string): Promise<void> {
   const { error } = await db().rpc('join_trial', { p_trial: trialId });
   if (error) throw new Error(error.message);

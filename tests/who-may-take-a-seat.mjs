@@ -96,19 +96,59 @@ function body(name) {
 }
 
 // ---------------------------------------------------------------------------
-// 3. SITTING DOWN IS ON THE RECORD
+// 3. WATCHING IS ON THE RECORD, AND SILENT
 // ---------------------------------------------------------------------------
 //
-// Who was in the room when a member was judged is exactly what a church needs
-// to answer afterwards, and a policy leaves no trace of it.
+// CORRECTED BY THE OWNER AFTER THE FIRST VERSION SHIPPED: "what I mean ED,
+// Director and Head Director can join is they are on the sidelines and can
+// monitor the hearing. That's all. The only one who accepted the case will be
+// main Judge Director."
+//
+// The first version read "join the trial room" as joining the PROCEEDING, and
+// `trial_statements_speak` admits anybody `in_trial` -- which had just been
+// widened to every eligible leader. So every watching Director could post into
+// the hearing, and a member answering something said about them would have
+// found Directors in the transcript who were never called to the case. Reading
+// was the intention; writing came along with it because the two had never
+// needed separating before.
+const later = fs.readdirSync(dir).find((f) => f.includes('the_sidelines_are_not_the_bench'));
+ok(!!later, 'the correction migration is present');
+const fix = later ? read(`supabase/migrations/${later}`) : '';
+
+function bodyIn(src, name) {
+  const at = src.indexOf(`function ${name}(`);
+  if (at < 0) return '';
+  const start = src.indexOf('$$', at);
+  if (start < 0) return '';
+  return src.slice(start, src.indexOf('$$;', start + 2)).replace(/--[^\n]*/g, '');
+}
+
 {
-  const join = body('public.join_trial');
-  ok(/if not private\.may_sit_on_trial\(p_trial\) then\s*\n\s*raise exception/.test(join),
-     'taking a seat goes through the same test as seeing the case');
-  ok(/insert into public\.trial_parties[\s\S]{0,120}'bench'/.test(join),
-     'and writes a row, so the case says who heard it');
-  ok(/check \(part in \('accused', 'reporter', 'witness', 'bench'\)\)/.test(sql),
-     'the bench is a recognised part, kept like any other');
+  const join = bodyIn(fix, 'public.join_trial');
+  ok(/if not private\.may_sit_on_trial\(p_trial\) then[\s\S]{0,80}raise exception/.test(join),
+     'watching goes through the same test as seeing the case');
+  ok(/insert into public\.trial_parties[\s\S]{0,120}'observer'/.test(join),
+     'and writes a row, so the case says who was in the room');
+  ok(/check \(part in \('accused', 'reporter', 'witness', 'observer'\)\)/.test(fix),
+     'an observer is a recognised part, kept like any other');
+
+  // THE ONE THAT MATTERS NOW. The speak policy must name the parts that may
+  // speak, and 'observer' must not be among them.
+  const speak = /create policy trial_statements_speak on public\.trial_statements([\s\S]*?);\n/.exec(fix);
+  ok(!!speak, 'the speak policy is rewritten in the correction');
+  const rule = speak ? speak[1] : '';
+  ok(/head_judge_id = \(select auth\.uid\(\)\)/.test(rule),
+     'the one who accepted the case may speak in it');
+  ok(/tp\.part in \('accused', 'reporter', 'witness'\)/.test(rule),
+     'and so may anybody actually called to it');
+  ok(!/'observer'/.test(rule),
+     'but an observer may not: watching the sidelines carries no voice');
+
+  // AND SUSPENSION STILL DOES NOT SILENCE ANYBODY. Predates this change and has
+  // to survive it: taking away somebody's answer is not a punishment, it is a
+  // way to lose the truth.
+  ok(!/suspended_at/.test(rule),
+     'and a suspended member can still answer, as before');
 }
 
 // ---------------------------------------------------------------------------
