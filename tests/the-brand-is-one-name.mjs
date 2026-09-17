@@ -36,15 +36,39 @@ const ok = (cond, msg) => {
   if (!cond) bad++;
 };
 
-/** Every tracked text file, which is the only surface a rename has to cover. */
+/**
+ * Every text file this repository would ship, tracked or not yet.
+ *
+ * `--others --exclude-standard` IS THE WHOLE POINT OF THIS FUNCTION, and its
+ * absence was a hole recorded in three reports before anybody closed it. Plain
+ * `git ls-files` lists what is in the INDEX, so a brand-new file is invisible
+ * to this check on the one ship that introduces it and only fails on the next
+ * one -- which is precisely when nobody is looking for it.
+ *
+ * It happened: components/study/StudyWorkspaceShell.tsx hard-coded the brand
+ * name, passed this check on the ship that created it because it was untracked
+ * at the time, and failed the following day on a change that had nothing to do
+ * with it. A guard that lets the first version of a file through is a guard
+ * against edits, not against mistakes, and new files are where mistakes are.
+ *
+ * `--exclude-standard` keeps .gitignore honoured, so this does not start
+ * reading build output or node_modules through the back door.
+ */
 function tracked() {
   const skipDir = new Set(['node_modules', '.next', '.next-dev', '.git', 'screenshots']);
   const skipExt = new Set(['.png', '.jpg', '.jpeg', '.pdf', '.ico', '.webp', '.zip',
                            '.woff', '.woff2', '.docx']);
-  return execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
+  return execFileSync(
+    'git', ['ls-files', '--cached', '--others', '--exclude-standard'],
+    { cwd: root, encoding: 'utf8' },
+  )
     .split('\n').filter(Boolean)
+    // An untracked file can also be one git has just been told about twice, so
+    // the list is made unique before anybody counts anything from it.
+    .filter((f, i, all) => all.indexOf(f) === i)
     .filter((f) => !f.split('/').some((part) => skipDir.has(part)))
-    .filter((f) => !skipExt.has(path.extname(f).toLowerCase()));
+    .filter((f) => !skipExt.has(path.extname(f).toLowerCase()))
+    .filter((f) => fs.existsSync(path.join(root, f)));
 }
 
 // The two localStorage addresses that must never be renamed.
