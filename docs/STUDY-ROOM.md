@@ -66,8 +66,14 @@ remembering, because everything else lives behind it:
 - **Table** for a comparison
 - **Callout** for something you want to stand out
 - **Today**, **Tomorrow**, **Yesterday** to drop a date in
+- **Image** and **Attachment** for a photograph or a file
+- **Table view** and **Kanban** for a database you can sort and group
+- **Equation** for mathematical notation
+- **Linked doc** to point at another of your pages
+- **Code block**, **Bookmark**, and the embeds
 
-Start typing after the `/` to narrow the list, then press Enter.
+There are over four hundred entries in that menu, which is AFFiNE's whole list.
+Start typing after the `/` to narrow it, then press Enter.
 
 ### Select words to format them
 
@@ -137,18 +143,84 @@ rather than by a setting anybody can change.
 
 ---
 
-## What is not in the room yet
+## Tags, and finding things later
 
-Said plainly, so you are not looking for something that is not there:
+A page can carry tags: **Romans**, **Sabbath**, **Prayer meeting**, whatever you
+would look for it by. Add them under the page's name, one at a time, pressing
+Enter or the comma key after each.
 
-- **Photos.** You cannot put a picture of your Bible page in yet. The room has
-  nowhere permanent to keep pictures, and adding it before that would mean your
-  photo disappearing the next time you opened the room.
-- **The whiteboard.** AFFiNE's infinite canvas is not switched on here.
-- **Coloured code.** The code block is left out because the highlighting it
-  needs cannot run inside this app's security rules.
+- The box **offers the tags you already use**, so you end up with one *Romans*
+  rather than *Romans*, *romans* and *Romans 8*.
+- On the shelf, every tag in your room is a row of buttons above the list. Tap
+  one and the list narrows to it; tap **Every tag** to see them all again.
+- The search box looks at tags as well as titles and words.
 
-Each of these is a decision that can be reversed. If you want one, say so.
+A page can have as many tags as you like, and the same page can sit under all of
+them. That is the point of tags rather than folders: a page about Romans 8 is
+about the book, the sermon it came from and the group it was written for, all at
+once, and a folder would make you pick one.
+
+---
+
+## The journal: a page for each day
+
+**Journal** in the sidebar gives every day a page of its own. Press
+**Today's page** and you are writing in today.
+
+- It is named for the day, in full, so you never have to name it.
+- Pressing Today again **opens the same page**, not a new one, however many
+  times you press it and whatever you have renamed it to.
+- The journal is ordered by the day each page is about, so correcting last
+  Sabbath's notes does not move them above this morning's.
+
+It is meant for morning devotion, a sermon, a prayer that was answered: the
+things nobody names and everybody wants to find again.
+
+---
+
+## The whiteboard
+
+Every page can be looked at two ways, and the two buttons above the page say
+which: **Page** is the document, **Whiteboard** is the same page on an infinite
+canvas. It is one page, not two: there is nothing to copy across.
+
+On the whiteboard you have shapes, arrows that stay attached to what they join,
+a pen, text anywhere you like, mindmaps and frames. It is for the things a
+column of text is bad at: how a passage is built, who is related to whom, a plan
+for a study on a wall.
+
+---
+
+## Pictures, tables, databases and the rest
+
+Everything AFFiNE can do, this room can do, because it is the same editor with
+the same set of blocks. Press `/` on a computer, or use the bar of buttons on a
+phone:
+
+- **Pictures and files.** Put a photograph of a page straight into your notes.
+  They are kept in the church's own database like everything else in your room,
+  and they are still there tomorrow. There is a size limit of about one
+  megabyte a picture, which is a generous photograph, because the database is
+  shared by the whole church.
+- **Tables**, and **databases** with a **table view** and a **kanban board** if
+  you want to track a study across weeks.
+- **Equations**, in proper mathematical notation.
+- **`@` to link to another page** of yours, or to a date. A page that links to
+  another shows the link at the bottom of the page it points at, so you can walk
+  back the way you came.
+- **Bookmarks and embeds**: a link laid out as a card, a YouTube video, and a
+  whole page of yours embedded inside another.
+- **Code**, if you ever want it.
+
+---
+
+## The one thing that does not work properly
+
+**Code has no colours.** The block works, keeps what you type and copies out
+fine, but the words are all one colour. The thing that colours them needs a
+permission this app's security rules do not grant, and widening that rule is a
+security decision rather than a styling one. Say the word if you want it and it
+will be put to you properly.
 
 ---
 

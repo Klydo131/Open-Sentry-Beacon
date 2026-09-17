@@ -21,44 +21,68 @@
 
 import { useMemo, useState } from 'react';
 
-import { GROUP_ORDER, groupFor, whenWritten, type ShelfEntry } from '@/lib/study/shelf';
+import {
+  GROUP_ORDER, dayInWords, groupFor, hasTag, tagsAcross, whenWritten, type ShelfEntry,
+} from '@/lib/study/shelf';
 
-export type ShelfView = 'all' | 'favourites' | 'trash';
+export type ShelfView = 'all' | 'favourites' | 'journal' | 'trash';
 
 export function StudyShelf({
   entries,
   view,
+  tag,
+  onTag,
   onOpen,
   onToggleFavourite,
   onTrash,
   onRestore,
   onDeleteForever,
   onAdd,
+  onToday,
 }: {
   entries: ShelfEntry[];
   view: ShelfView;
+  /** The tag the list is narrowed to, or empty for all of them. */
+  tag: string;
+  onTag: (tag: string) => void;
   onOpen: (id: string) => void;
   onToggleFavourite: (id: string) => void;
   onTrash: (id: string) => void;
   onRestore: (id: string) => void;
   onDeleteForever: (id: string) => void;
   onAdd: () => void;
+  /** Open today's journal page, making it if today has not been written in. */
+  onToday: () => void;
 }) {
   const [query, setQuery] = useState('');
   const [confirming, setConfirming] = useState('');
+
+  const tags = useMemo(() => tagsAcross(entries), [entries]);
 
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return entries
       .filter((e) => (view === 'trash' ? e.trashed : !e.trashed))
       .filter((e) => (view === 'favourites' ? e.favorite : true))
+      .filter((e) => (view === 'journal' ? Boolean(e.journalDate) : true))
+      .filter((e) => !tag || hasTag(e, tag))
+      // SEARCH LOOKS AT THE TAGS TOO. Somebody who tagged four pages "Romans"
+      // and then types Romans into the search means those four pages, whatever
+      // the words on them happen to be.
       .filter((e) => !needle
         || e.title.toLowerCase().includes(needle)
-        || e.preview.toLowerCase().includes(needle))
-      .sort((a, b) => b.updated - a.updated);
-  }, [entries, view, query]);
+        || e.preview.toLowerCase().includes(needle)
+        || e.tags.some((t) => t.toLowerCase().includes(needle)))
+      // THE JOURNAL IS ORDERED BY THE DAY IT IS ABOUT, not the day it was last
+      // touched. Correcting a note from last Sabbath should not move it above
+      // this morning's.
+      .sort((a, b) => (view === 'journal'
+        ? b.journalDate.localeCompare(a.journalDate)
+        : b.updated - a.updated));
+  }, [entries, view, query, tag]);
 
   const groups = useMemo(() => {
+    if (view === 'journal') return [{ name: 'Your journal', entries: shown }];
     const byGroup = new Map<string, ShelfEntry[]>();
     for (const entry of shown) {
       const key = view === 'trash' ? 'In the bin' : groupFor(entry.updated);
@@ -85,28 +109,80 @@ export function StudyShelf({
         {view !== 'trash' && (
           <button
             type="button"
-            onClick={onAdd}
+            onClick={view === 'journal' ? onToday : onAdd}
             className="shrink-0 rounded-xl bg-navy px-4 py-3 text-base font-semibold text-white hover:opacity-90"
           >
-            + New page
+            {view === 'journal' ? "Today's page" : '+ New page'}
           </button>
         )}
       </div>
+
+      {/* THE TAGS IN THIS ROOM, AS A ROW RATHER THAN A SIDEBAR. AFFiNE puts them
+          down the side, which works on a laptop and is where the sidebar
+          already is on a phone: nowhere. A row of chips under the search reads
+          the same at 360px as at 1440px, and there is only one of it to keep
+          right. */}
+      {view !== 'trash' && tags.length > 0 && (
+        <div
+          role="group"
+          aria-label="Narrow these pages to one tag"
+          className="thin-scroll -mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1"
+        >
+          <button
+            type="button"
+            onClick={() => onTag('')}
+            aria-pressed={!tag}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ring-1 ${
+              tag ? 'bg-white text-navy ring-black/10' : 'bg-navy text-white ring-navy'
+            }`}
+          >
+            Every tag
+          </button>
+          {tags.map((t) => (
+            <button
+              key={t.tag}
+              type="button"
+              onClick={() => onTag(tag.toLowerCase() === t.tag.toLowerCase() ? '' : t.tag)}
+              aria-pressed={tag.toLowerCase() === t.tag.toLowerCase()}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-sm ring-1 ${
+                tag.toLowerCase() === t.tag.toLowerCase()
+                  ? 'bg-navy text-white ring-navy'
+                  : 'bg-white text-navy ring-black/10'
+              }`}
+            >
+              {t.tag} <span className="opacity-60">{t.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {shown.length === 0 && (
         <div className="rounded-2xl bg-white p-8 text-center ring-1 ring-black/5">
           <p className="text-lg font-semibold text-navy">
             {view === 'trash' ? 'Nothing in the bin'
-              : view === 'favourites' ? 'No starred pages yet'
-                : query ? 'Nothing matches that'
-                  : 'Your study room is empty'}
+              : view === 'journal' ? 'Your journal has not been started'
+                : view === 'favourites' ? 'No starred pages yet'
+                  : tag ? `No pages tagged ${tag}`
+                    : query ? 'Nothing matches that'
+                      : 'Your study room is empty'}
           </p>
           <p className="mt-1 text-sm text-gray-500">
             {view === 'trash' ? 'Pages you put in the bin wait here until you empty it.'
-              : view === 'favourites' ? 'Star a page and it will be here whenever you come back.'
-                : query ? 'Try a different word, or look in the bin.'
-                  : 'Start a page for whatever you are reading.'}
+              : view === 'journal' ? 'A journal gives every day a page of its own. Today is one tap away.'
+                : view === 'favourites' ? 'Star a page and it will be here whenever you come back.'
+                  : tag ? 'Open a page and add that tag to it, or choose a different tag.'
+                    : query ? 'Try a different word, or look in the bin.'
+                      : 'Start a page for whatever you are reading.'}
           </p>
+          {view === 'journal' && (
+            <button
+              type="button"
+              onClick={onToday}
+              className="tap mt-3 rounded-xl bg-navy px-5 text-base font-semibold text-white"
+            >
+              Start today&rsquo;s page
+            </button>
+          )}
         </div>
       )}
 
@@ -133,7 +209,11 @@ export function StudyShelf({
                     <p className="mt-0.5 line-clamp-2 text-sm text-gray-500">
                       {entry.preview || 'Nothing written on this page yet.'}
                     </p>
-                    <p className="mt-1 text-xs text-gray-400">{whenWritten(entry.updated)}</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      {entry.journalDate
+                        ? `${dayInWords(entry.journalDate)} · ${whenWritten(entry.updated)}`
+                        : whenWritten(entry.updated)}
+                    </p>
                   </button>
 
                   {!entry.trashed && (
@@ -156,6 +236,21 @@ export function StudyShelf({
                     were two things in it. Both are quiet; neither is the thing
                     the row is for. */}
                 <div className="flex flex-wrap items-center gap-2 px-3 pb-3 text-sm">
+                  {/* A TAG ON A ROW IS ALSO THE WAY TO SEE THE REST OF THEM.
+                      It sits out here rather than inside the row's own button
+                      because a button inside a button is not a thing a browser
+                      will render, and a tag nobody can press is decoration. */}
+                  {!entry.trashed && entry.tags.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => onTag(tag.toLowerCase() === t.toLowerCase() ? '' : t)}
+                      aria-label={`Show every page tagged ${t}`}
+                      className="rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-navy hover:bg-gold/30"
+                    >
+                      {t}
+                    </button>
+                  ))}
                   {entry.trashed ? (
                     <>
                       <button

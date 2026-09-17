@@ -73,10 +73,25 @@ needs more than one person and needs a record.
 
 - **A head judge**, who runs it.
 - **The subject**, the person the matter is about.
+- **The person who reported it**, put in automatically when the trial comes out
+  of a report.
 - **Other parties**, summoned because they have something to say.
 
 Everybody in a trial can read the whole of it, and nobody outside it can read
 any of it.
+
+**Read that third line twice before you file a report about something serious.**
+If your report becomes a trial you are in the room: you will be able to read
+what the person you reported says in their answer, and they will know somebody
+reported them, because a trial has to tell its subject what it is about. They
+are not shown your report and they are not told your name by the app. Being a
+party to the trial is a different thing from the report staying private, and
+both are true at the same time.
+
+This was checked against the live database rather than remembered: a Guide who
+is in neither the report nor the trial reads nothing of either, an Explorer with
+no part in it reads nothing, and the person the trial is about can read it and
+answer in it.
 
 ### Speaking in one
 

@@ -3,15 +3,20 @@
 // The study room: a workspace of pages, and the editor for one of them.
 //
 // ---------------------------------------------------------------------------
-// THIS FILE IS THE HEAVIEST THING IN THE APPLICATION, and that number is why it
-// is shaped the way it is. Measured, minified, in a browser: this chunk gzips
-// to about 800 kB against roughly 540 kB for the whole of the rest of the app.
-// Most people using this are on a phone on Philippine mobile data.
+// THE ROOM IS LIGHT AND THE EDITOR IS HEAVY, and keeping those two facts apart
+// is the shape of this file. The full AFFiNE feature set -- the canvas, the
+// databases, the embeds, the code highlighter's WebAssembly -- is over a
+// megabyte gzipped. The list of pages needs none of it.
 //
-// So it is loaded by exactly one screen, on demand, and never by anybody else.
-// components/study/StudyRoom.tsx is the only importer and it uses next/dynamic
-// with ssr:false, which is what keeps this out of the shared bundle. Importing
-// it anywhere else silently puts a megabyte on every screen in the app, and
+// So nothing here imports the drawing half at the top. `lib/study/effects.ts`
+// and `lib/study/view-extensions.ts` are fetched with `await import(...)` at
+// the moment somebody opens a page, which is the moment they have asked for an
+// editor. Opening the room itself pays for the schema and this screen, and the
+// page list appears while the editor is still arriving.
+//
+// AND THE WHOLE THING IS STILL BEHIND ONE ROUTE. components/study/StudyRoom.tsx
+// is the only importer and uses next/dynamic with ssr:false. Importing this
+// anywhere else silently puts the editor on every screen in the app, and
 // tests/the-study-room-is-paid-for-on-arrival.mjs is there to stop that.
 //
 // WHY IT LOOKS LIKE PLUMBING. BlockSuite gives you the pieces of an editor
@@ -20,37 +25,26 @@
 // What follows is the minimum assembly, taken from their own playground: the
 // block registrations, a store manager, a view manager, a standard scope, and
 // Lit rendering the result into a plain div.
-//
-// The import below has no bindings on purpose. It registers roughly a hundred
-// custom elements as a side effect, and it is the whole reason paragraphs,
-// lists and everything else exist. Deleting it leaves an editor that renders
-// nothing and reports no error.
 // ---------------------------------------------------------------------------
-
-import '@blocksuite/affine/effects';
-
-// THE EDITOR SHIPS NO COLOURS OF ITS OWN. Every BlockSuite stylesheet is
-// written against `var(--affine-text-primary-color)` and about two hundred
-// siblings, and nothing in the package defines them -- AFFiNE's own app does,
-// in this file. Without it every one of those variables resolves to nothing and
-// each rule silently falls back to whatever it inherits.
-import '@toeverything/theme/style.css';
-import './study-room.css';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BlockStdScope, TextSelection } from '@blocksuite/affine/std';
 import { render } from 'lit';
 import type { DocMeta, Store } from '@blocksuite/store';
-import type { DocSource } from '@blocksuite/sync';
+import type { BlobSource, DocSource } from '@blocksuite/sync';
 
 import { StudyWorkspace } from '@/lib/study/workspace';
-import { studyStoreManager, studyViewManager } from '@/lib/study/extensions';
-import { previewFrom, readShelf, type ShelfEntry, type ShelfMeta } from '@/lib/study/shelf';
+import { studyStoreManager } from '@/lib/study/extensions';
+import {
+  dayInWords, dayKey, journalFor, previewFrom, readShelf, tagsAcross,
+  type ShelfEntry, type ShelfMeta,
+} from '@/lib/study/shelf';
 import type { Troubled } from '@/lib/study/doc-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { humanError } from '@/lib/live/errors';
 import { StudyShelf, type ShelfView } from '@/components/study/StudyShelf';
 import { StudyInsertBar, type InsertKind } from '@/components/study/StudyInsertBar';
+import { StudyTags } from '@/components/study/StudyTags';
 import { StudyWorkspaceShell } from '@/components/study/StudyWorkspaceShell';
 
 /** One room per person. The id is stable so the same room reopens every time. */
@@ -71,8 +65,10 @@ const FIRST_PAGE = 'page-1';
 /** How long after somebody stops typing the shelf is brought up to date. */
 const SETTLE_MS = 1200;
 
-export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
+export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }: {
   makeSource: () => DocSource;
+  /** Where pictures and files are kept. Left out, they stay in the tab. */
+  makeBlobs?: () => BlobSource;
   demo?: boolean;
   onExit: () => void;
 }) {
@@ -95,6 +91,15 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
   const [entries, setEntries] = useState<ShelfEntry[]>([]);
   const [openPage, setOpenPage] = useState('');
   const [view, setView] = useState<ShelfView>('all');
+  const [tag, setTag] = useState('');
+  // PAGE OR WHITEBOARD, the switch beside the title in AFFiNE's own app. Two
+  // ways of looking at ONE page rather than two kinds of page: the same blocks,
+  // laid out in a column or placed on a canvas.
+  const [mode, setMode] = useState<'page' | 'edgeless'>('page');
+  // THE EDITOR IS ON ITS WAY. Only true while the chunk is being fetched, and
+  // it is the difference between a blank rectangle and a page that says it is
+  // coming -- which is what a blank rectangle was reported as, three times.
+  const [drawing, setDrawing] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
 
   const refresh = useCallback(() => {
@@ -132,7 +137,11 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
             ? ''
             : humanError(cause, 'Your writing is not reaching the database.'));
         };
-        const room = new StudyWorkspace({ id: WORKSPACE, docSource: source });
+        const room = new StudyWorkspace({
+          id: WORKSPACE,
+          docSource: source,
+          blobSource: makeBlobs?.(),
+        });
         workspace.current = room;
         room.storeExtensions = studyStoreManager().get('store');
         room.start();
@@ -193,7 +202,7 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
         room?.dispose();
       });
     };
-  }, [makeSource, attempt, refresh]);
+  }, [makeSource, makeBlobs, attempt, refresh]);
 
   // -------------------------------------------------------------------------
   // SHOWING ONE PAGE. Runs again whenever the open page changes, and only this
@@ -201,17 +210,30 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
   // -------------------------------------------------------------------------
   useEffect(() => {
     const room = workspace.current;
-    if (!ready || !openPage || !room || !host.current) return;
+    if (!ready || !openPage || !room) return;
     let cancelled = false;
     let settle: ReturnType<typeof setTimeout> | undefined;
+    let letGo: (() => void) | undefined;
+    setDrawing(true);
 
+    (async () => {
     try {
+      // THE EDITOR IS FETCHED HERE, not at the top of the file, and this line
+      // is the whole reason the room opens quickly. Everything AFFiNE can draw
+      // arrives now, because now is when somebody asked to write.
+      const [, { studyViewManager }] = await Promise.all([
+        import('@/lib/study/effects'),
+        import('@/lib/study/view-extensions'),
+      ]);
+      if (cancelled || !host.current) return;
+
       const doc = room.getDoc(openPage) ?? room.createDoc(openPage);
       doc.load();
       const store = doc.getStore();
 
       if (!store.root && synced.current) {
         const rootId = store.addBlock('affine:page', {});
+        store.addBlock('affine:surface', {}, rootId);
         const noteId = store.addBlock('affine:note', {}, rootId);
         store.addBlock('affine:paragraph', {}, noteId);
       }
@@ -221,9 +243,18 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
         return;
       }
 
-      const std = new BlockStdScope({ store, extensions: studyViewManager().get('page') });
+      // A WHITEBOARD NEEDS A CANVAS TO DRAW ON, and every page written before
+      // today was written by a version of this room that had no canvas in it.
+      // Without this, switching to the whiteboard on an older page renders
+      // nothing at all and says nothing about why.
+      if (store.getBlocksByFlavour('affine:surface').length === 0) {
+        try { store.addBlock('affine:surface', {}, store.root.id); } catch { /* read-only */ }
+      }
+
+      const std = new BlockStdScope({ store, extensions: studyViewManager().get(mode) });
       editing.current = { std, store };
       render(std.render(), host.current);
+      setDrawing(false);
 
       // WHAT THE SHELF SHOWS COMES FROM HERE, and it has to, because every page
       // is a separate document that must be fetched before a word of it can be
@@ -268,19 +299,27 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
         ]);
       });
 
-      return () => {
-        cancelled = true;
-        clearTimeout(settle);
+      letGo = () => {
         doc.spaceDoc.off('update', onEdit);
         // Leaving a page brings the shelf up to date at once rather than a
         // second later, so the list somebody lands on is already right.
         summarise();
       };
     } catch (cause) {
-      setError(humanError(cause, 'That page could not be opened.'));
-      return () => { cancelled = true; clearTimeout(settle); };
+      if (!cancelled) setError(humanError(cause, 'That page could not be opened.'));
     }
-  }, [ready, openPage]);
+    })();
+
+    // THE CLEANUP IS SYNCHRONOUS THOUGH THE WORK IS NOT, which is the one thing
+    // an async effect gets wrong. React takes the function this returns now, so
+    // it cannot be the one the await produces later: `letGo` is filled in when
+    // the editor is up, and leaving before that simply has nothing to undo.
+    return () => {
+      cancelled = true;
+      clearTimeout(settle);
+      letGo?.();
+    };
+  }, [ready, openPage, mode]);
 
   // -------------------------------------------------------------------------
   // KEEPING PAGES
@@ -368,13 +407,48 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
   const open = useCallback((id: string) => {
     const meta = workspace.current?.meta.getDocMeta(id);
     setTitleDraft((meta?.title ?? '').trim());
+    // EVERY PAGE OPENS AS A PAGE. Carrying the whiteboard over from the last
+    // one means somebody who tried the canvas once meets it again on a page
+    // they only wanted to read.
+    setMode('page');
     setOpenPage(id);
   }, []);
 
+  /**
+   * Today's page in the journal, made if today has not been written in yet.
+   *
+   * IT FINDS BEFORE IT MAKES, and that is the whole feature. A Today button
+   * that started a fresh page every time it was pressed would give somebody
+   * four pages for one morning and no way to tell which one had the thing they
+   * wrote first. The day is matched on `journalDate` rather than on the title,
+   * so renaming today's page to "Prayer meeting" keeps it as today's page.
+   */
+  const openToday = useCallback(() => {
+    const room = workspace.current;
+    if (!room) return;
+    const key = dayKey();
+    const already = journalFor(readShelf(room.meta), key);
+    if (already) { open(already.id); return; }
+    try {
+      const made = room.createDoc();
+      room.meta.setDocMeta(made.id, {
+        title: dayInWords(key),
+        journalDate: key,
+      } as Partial<DocMeta>);
+      refresh();
+      setTitleDraft(dayInWords(key));
+      setOpenPage(made.id);
+    } catch (cause) {
+      setError(humanError(cause, "Today's page could not be started."));
+    }
+  }, [open, refresh]);
+
   const current = entries.find((e) => e.id === openPage);
+  const knownTags = tagsAcross(entries).map((t) => t.tag);
   const counts = {
     all: entries.filter((e) => !e.trashed).length,
     favourites: entries.filter((e) => e.favorite && !e.trashed).length,
+    journal: entries.filter((e) => e.journalDate && !e.trashed).length,
     trash: entries.filter((e) => e.trashed).length,
   };
 
@@ -429,8 +503,11 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
           <StudyShelf
             entries={entries}
             view={view}
+            tag={tag}
+            onTag={setTag}
             onOpen={open}
             onAdd={addPage}
+            onToday={openToday}
             onToggleFavourite={(id) => {
               const was = entries.find((e) => e.id === id)?.favorite ?? false;
               setMeta(id, { favorite: !was });
@@ -471,8 +548,54 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
           aria-label="Name this page"
           className="mb-2 w-full bg-transparent text-2xl font-bold text-navy outline-none placeholder:text-gray-300"
         />
-        <StudyInsertBar onInsert={insert} />
-        <div ref={host} className="affine-page-viewport" />
+        {/* THE SAME SWITCH AFFiNE PUTS BESIDE THE TITLE. Page is the document;
+            whiteboard is the same page on an infinite canvas, with shapes,
+            connectors, a pen and mindmaps. Nothing is copied between them
+            because there is nothing to copy: it is one page. */}
+        <div role="group" aria-label="How to look at this page" className="mb-3 flex gap-2">
+          {([['page', 'Page'], ['edgeless', 'Whiteboard']] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setMode(id)}
+              aria-pressed={mode === id}
+              className={`rounded-full px-3 py-1.5 text-sm font-semibold ring-1 ${
+                mode === id ? 'bg-navy text-white ring-navy' : 'bg-white text-navy ring-black/10'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'page' && (
+          <>
+            <StudyTags
+              tags={current?.tags ?? []}
+              known={knownTags}
+              onChange={(next) => setMeta(openPage, { tags: next })}
+            />
+            <StudyInsertBar onInsert={insert} />
+          </>
+        )}
+        {drawing && (
+          <div className="grid place-items-center py-12">
+            <BeaconSpinner inline label="Opening this page" />
+          </div>
+        )}
+        <div
+          ref={host}
+          // THE CANVAS HAS TO BE GIVEN A HEIGHT. A page viewport grows with its
+          // writing; an edgeless one is a window onto something with no size of
+          // its own, so with `height: auto` it renders as a nought-pixel strip
+          // and looks exactly like a feature that does not work.
+          // `dvh` AS WELL AS `vh`, because a phone's `vh` is measured against a
+          // window that includes the browser's own bars: the canvas would run
+          // under the address bar and the bottom of it would never be reachable.
+          className={mode === 'edgeless'
+            ? 'affine-edgeless-viewport h-[70vh] [height:70dvh] overflow-hidden rounded-2xl ring-1 ring-black/10'
+            : 'affine-page-viewport'}
+        />
       </div>
     );
   };
@@ -480,7 +603,10 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
   return (
     <StudyWorkspaceShell
       view={view}
-      onView={setView}
+      // MOVING SOMEWHERE ELSE DROPS THE TAG. A filter left on across a change
+      // of place is how somebody lands in the Bin, sees nothing, and concludes
+      // the app lost their pages.
+      onView={(next) => { setView(next); setTag(''); }}
       counts={counts}
       onExit={onExit}
       onHome={() => setOpenPage('')}

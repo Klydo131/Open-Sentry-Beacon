@@ -40,6 +40,16 @@ export type ShelfMeta = DocMeta & {
   preview?: string;
   /** When it was put in the trash. Absent means it is not in the trash. */
   trashedAt?: number;
+  /**
+   * `YYYY-MM-DD` when this page is the journal entry for that day.
+   *
+   * WHY A DAY AND NOT A TITLE. The journal has to reopen the same page every
+   * time somebody taps Today, and a title is a thing people rename. Matching on
+   * the date it stands for means renaming "Thursday, 17 September" to "Prayer
+   * meeting" keeps it as that day's page rather than quietly starting a second
+   * one the next time the button is pressed.
+   */
+  journalDate?: string;
 };
 
 /** One page as the shelf draws it. */
@@ -55,6 +65,8 @@ export type ShelfEntry = {
   favorite: boolean;
   tags: string[];
   trashed: boolean;
+  /** `YYYY-MM-DD` if this page is a journal entry, otherwise empty. */
+  journalDate: string;
 };
 
 export function readShelf(meta: WorkspaceMeta): ShelfEntry[] {
@@ -69,8 +81,9 @@ export function readShelf(meta: WorkspaceMeta): ShelfEntry[] {
       updated: m.updatedDate ?? m.createDate ?? 0,
       created: m.createDate ?? 0,
       favorite: Boolean(m.favorite),
-      tags: Array.isArray(m.tags) ? m.tags : [],
+      tags: Array.isArray(m.tags) ? m.tags.filter((t) => typeof t === 'string') : [],
       trashed: typeof m.trashedAt === 'number',
+      journalDate: typeof m.journalDate === 'string' ? m.journalDate : '',
     };
   });
 }
@@ -138,4 +151,118 @@ export function previewFrom(text: string, limit = 140): string {
   const flat = text.replace(/\s+/g, ' ').trim();
   if (flat.length <= limit) return flat;
   return `${flat.slice(0, limit).trimEnd()}…`;
+}
+
+// ---------------------------------------------------------------------------
+// TAGS
+//
+// ASKED FOR, IN THE SAME SCREENSHOT AS THE SHELF: AFFiNE's All docs carries a
+// tag on each row and a list of tags down the side. BlockSuite's own DocMeta
+// already has the field; nothing had ever written to it or drawn it.
+//
+// WHY TAGS RATHER THAN FOLDERS FIRST. A page about Romans 8 belongs to the
+// sermon it came from AND to the book it is in AND to the study group it was
+// written for, and a folder makes somebody pick one. Tags are also the thing
+// that survives a phone: a tree needs somewhere to show the tree, and a chip
+// fits on any screen. Folders are still worth having; they are not the first
+// thing to build.
+// ---------------------------------------------------------------------------
+
+/** The longest a tag can be. A tag is a label, not a sentence. */
+export const TAG_LIMIT = 24;
+
+/**
+ * A tag as it will be stored, or an empty string when there is nothing to store.
+ *
+ * TIDIED RATHER THAN REFUSED. Somebody typing "  romans 8 " means the same
+ * thing as "Romans 8", and a study room that rejected the first would be
+ * teaching people to type carefully instead of taking notes. A leading `#` goes
+ * the same way: it is how people write tags everywhere else, and it is not part
+ * of the word.
+ */
+export function cleanTag(raw: string): string {
+  // TRIMMED BEFORE THE HASH IS LOOKED FOR, and a test caught the other order.
+  // " #daniel " has a space in front of the hash, so a `^#+` against the raw
+  // string matches nothing and the hash is stored as part of the tag -- which
+  // then sorts apart from "daniel" and counts as a second tag forever.
+  return raw.trim().replace(/^#+/, '').replace(/\s+/g, ' ').trim()
+    .slice(0, TAG_LIMIT).trim();
+}
+
+/** Add a tag to a list without letting the same one in twice. */
+export function withTag(tags: string[], raw: string): string[] {
+  const tag = cleanTag(raw);
+  if (!tag) return tags;
+  // CASE-INSENSITIVE, because "romans" and "Romans" are one tag to a person and
+  // two tags in a list is how a tag list stops being useful. The spelling
+  // already in the room wins, so a room does not slowly acquire both.
+  const already = tags.find((t) => t.toLowerCase() === tag.toLowerCase());
+  return already ? tags : [...tags, tag];
+}
+
+/** Every tag in the room, commonest first, with how many pages carry it. */
+export function tagsAcross(entries: ShelfEntry[]): Array<{ tag: string; count: number }> {
+  const counts = new Map<string, { tag: string; count: number }>();
+  for (const entry of entries) {
+    if (entry.trashed) continue;
+    for (const tag of entry.tags) {
+      const key = tag.toLowerCase();
+      const seen = counts.get(key);
+      if (seen) seen.count += 1;
+      else counts.set(key, { tag, count: 1 });
+    }
+  }
+  return [...counts.values()].sort(
+    (a, b) => b.count - a.count || a.tag.localeCompare(b.tag),
+  );
+}
+
+/** Whether a page carries a tag, however either of them is capitalised. */
+export function hasTag(entry: ShelfEntry, tag: string): boolean {
+  const needle = tag.toLowerCase();
+  return entry.tags.some((t) => t.toLowerCase() === needle);
+}
+
+// ---------------------------------------------------------------------------
+// THE JOURNAL
+//
+// AFFiNE gives every day a page of its own, reached by one button. It is the
+// feature that fits a church best of everything in that screenshot: morning
+// devotion, a sermon on Sabbath, what somebody prayed about on Tuesday. Nobody
+// names those pages, and nobody should have to.
+// ---------------------------------------------------------------------------
+
+/**
+ * The day a moment falls on, as `YYYY-MM-DD`, in the reader's own timezone.
+ *
+ * LOCAL, NOT UTC, and it matters here more than it usually does. Manila is
+ * UTC+8, so anything written before eight in the morning would be filed under
+ * the previous day if this used UTC -- which is most of the morning devotions
+ * this is for.
+ */
+export function dayKey(at: number | Date = Date.now()): string {
+  const d = at instanceof Date ? at : new Date(at);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * A day key as somebody would say it: "Thursday, 17 September 2026".
+ *
+ * BUILT FROM THE PARTS, NOT PARSED. `new Date('2026-09-17')` is read as
+ * midnight UTC and then shown in local time, which in Manila is the 17th at
+ * eight in the morning and in Los Angeles is the 16th at five in the evening.
+ * A journal that names the wrong day is worse than one with no name at all.
+ */
+export function dayInWords(key: string): string {
+  const [y, m, d] = key.split('-').map((part) => Number(part));
+  if (!y || !m || !d) return key;
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+}
+
+/** The journal entry for a day, if the room has one that is not in the bin. */
+export function journalFor(entries: ShelfEntry[], key: string): ShelfEntry | undefined {
+  return entries.find((e) => e.journalDate === key && !e.trashed);
 }

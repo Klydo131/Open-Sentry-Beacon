@@ -33,6 +33,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 import { SupabaseDocSource } from '@/lib/study/doc-source';
+import { SupabaseBlobSource } from '@/lib/study/blob-source';
 import { MemoryDocSource } from '@/lib/study/memory-source';
 import { db } from '@/lib/live/data';
 import { BeaconSpinner } from '@/components/BeaconLoader';
@@ -69,11 +70,21 @@ export function StudyRoom({ me, demo = false }: {
     [demo, me.id],
   );
 
+  // AND SOMEWHERE FOR THE PICTURES. The walkthrough keeps them in the tab,
+  // which is honest there -- nothing in the walkthrough is saved anywhere. In
+  // the live room they are rows in the church's own database, so a photograph
+  // of a Bible page is still there tomorrow.
+  const makeBlobs = useMemo(
+    () => (demo ? undefined : () => new SupabaseBlobSource(db(), me.id, 'study-room')),
+    [demo, me.id],
+  );
+
   if (me.role !== 'ds') return null;
 
   return (
     <StudyRoomEditor
       makeSource={makeSource}
+      makeBlobs={makeBlobs}
       demo={demo}
       // OUT OF THE ROOM AND BACK INTO THE APP. Their own journey, which is
       // where they came from and the one screen every Explorer has.

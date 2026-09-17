@@ -157,67 +157,84 @@ const ROOM = 'components/study/StudyRoom.tsx';
 }
 
 // ---------------------------------------------------------------------------
-// 5. AND THE ROOM CARRIES ONLY WHAT A ROOM NEEDS
+// 5. THE ROOM HAS EVERY FEATURE, AND THE SHELF DOES NOT WAIT FOR THEM
 // ---------------------------------------------------------------------------
 //
-// The first working version called getInternalViewExtensions(), which loads
-// every block BlockSuite has: the infinite canvas, the databases, the embeds,
-// the attachments. Measured, that put 4.61 MB on the one screen an Explorer
-// opens to write, and it was reported as the room being broken before anybody
-// got as far as it being slow.
+// THIS SECTION USED TO ASSERT THE OPPOSITE, and it was wrong in a way worth
+// recording. It held a hand-picked list of nine blocks and named five whole
+// feature areas -- databases, embeds, attachments, code, data views -- that the
+// room was checked for NOT having. Every assertion passed. The owner, with four
+// screenshots of AFFiNE and a link to their repository: "Did you even scan the
+// whole affine on how the whole notion works? ... I want the whole feature
+// please." A suite that checks only what was built cannot tell anybody that
+// something was not built, and this file was the reason nobody noticed.
+//
+// So the invariant is inverted. The feature set is AFFiNE'S OWN, entire, and
+// what is held instead is the thing that made the trim tempting: the WEIGHT has
+// to be paid at the moment somebody opens a page, not at the moment they open
+// the room.
 {
-  const editor = strip(read(EDITOR));
-  ok(!/getInternal(Store|View)Extensions/.test(editor),
-     'the editor names the blocks it needs rather than loading every block there is');
-
   const exts = strip(read('lib/study/extensions.ts'));
+  const views = strip(read('lib/study/view-extensions.ts'));
 
-  // The weight, by name. Each of these is a whole feature area that a page of
-  // handwritten study notes has no use for.
-  for (const gone of ['affine-block-database', 'affine-block-embed',
-                      'affine-block-data-view', 'affine-block-attachment',
-                      'affine-block-code']) {
-    ok(!exts.includes(gone), `the study room does not carry ${gone}`);
+  // EVERY BLOCK AFFiNE HAS. Not a list to keep in step with theirs by hand --
+  // their own function, so a block they add is a block this room gains.
+  ok(/getInternalStoreExtensions\(\)/.test(exts),
+     'the room can hold every block AFFiNE has, by taking their own set');
+  ok(/getInternalViewExtensions\(\)/.test(views),
+     'and can draw every one of them');
+
+  // AND THE SCHEMA SIDE MATTERS MOST. Dropping a block from the view costs that
+  // feature. Dropping it from the schema costs everybody who already wrote one:
+  // their page raises `schema for flavour: ... not found`, the block is skipped,
+  // and what they wrote in it is in the database with nothing able to draw it.
+  ok(!/getInternalViewExtensions/.test(exts),
+     'the schema half carries no drawing, so opening the room stays cheap');
+
+  // THE SPLIT, WHICH IS WHAT MAKES THE ABOVE AFFORDABLE. Over a megabyte
+  // gzipped may not be fetched before a list of page titles can be drawn, so
+  // the drawing half must be reached by `await import(...)` and never by a
+  // plain import at the top of a file.
+  const heavy = ['lib/study/view-extensions', 'lib/study/effects'];
+  const sources = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      const here = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) { if (entry.name !== 'node_modules') walk(here); }
+      else if (/\.(ts|tsx)$/.test(entry.name)) sources.push(here);
+    }
+  };
+  for (const dir of ['app', 'components', 'lib']) walk(dir);
+
+  for (const module of heavy) {
+    const statically = sources.filter((file) => {
+      const src = strip(read(file));
+      // `import ... from '<module>'` or a bare `import '<module>'`, but not
+      // `await import('<module>')`, which is the whole point.
+      return new RegExp(`(^|\\n)\\s*import\\s[^\\n]*['"][^'"]*${module.replace('lib/study', '(@/lib/study|\\.)')}['"]`)
+        .test(src);
+    });
+    ok(statically.length === 0,
+       `nothing imports ${module} at the top of a file (${statically.join(', ') || 'nothing does'})`);
   }
 
-  // THE CANVAS IS PRESENT AND NOT DRAWN, WHICH IS THREE DIFFERENT THINGS.
-  //
-  // Its SCHEMA has to be there or every room already in the database raises an
-  // error on open and loses a block it cannot model. Proven in
-  // tests/a-room-that-already-exists-still-opens.mjs, not asserted here.
-  ok(/affine-block-surface\/store/.test(exts),
-     'the canvas schema is kept, or every room that already has one stops opening');
-
-  // Its VIEW provider has to be there too, and this was a surprise: in page
-  // scope it draws `affine-surface-void`, which is nothing, and what it really
-  // contributes is services the rest of the editor resolves. Without it the
-  // slash menu mounts at zero by zero and the console says
-  // `Service [AffineEdgelessLegacySlotService] not found in container`.
-  ok(/affine-block-surface\/view/.test(exts),
-     'and its view provider, which is where the editor gets services it needs');
-
-  // And the WHITEBOARD is not reachable, because that is a scope the room never
-  // asks for. This is the assertion that actually holds the product decision:
-  // the edgeless canvas is drawn only under an edgeless scope.
-  ok(/\.get\('page'\)/.test(editor) && !/'(mobile-)?edgeless'/.test(editor),
-     'but the room only ever asks for a page, so no whiteboard is drawn');
-
-  // AND THE HALF THAT IS NOT OPTIONAL. DefaultInlineManager declares every one
-  // of these as a dependency. Drop one and the manager does not construct, so
-  // no rich text renders anywhere -- an empty paragraph zero pixels tall, no
-  // error on screen, one line in the console. It is not a feature list; it is
-  // all or nothing.
-  for (const need of ['affine-inline-latex', 'affine-inline-mention',
-                      'affine-inline-reference', 'affine-inline-footnote',
-                      'affine-inline-link', 'affine-inline-preset']) {
-    ok(exts.includes(need),
-       `the inline set is complete (${need}), or no text renders at all`);
-  }
+  // The editor screen itself must fetch it rather than carry it.
+  const editor = strip(read(EDITOR));
+  ok(/await Promise\.all\(\[\s*import\('@\/lib\/study\/effects'\)/.test(editor)
+     || (/import\('@\/lib\/study\/effects'\)/.test(editor)
+         && /import\('@\/lib\/study\/view-extensions'\)/.test(editor)),
+     'the editor is fetched when a page is opened, not when the room is');
 
   // The editor arrives with no colours of its own; every BlockSuite rule reads
-  // a --affine-* variable that only this stylesheet defines.
-  ok(/@toeverything\/theme\/style\.css/.test(editor),
-     'and the editor brings the stylesheet that defines its colours');
+  // a --affine-* variable that only this stylesheet defines. It rides with the
+  // effects, so it is fetched at the same moment and never before.
+  ok(/@toeverything\/theme\/style\.css/.test(strip(read('lib/study/effects.ts'))),
+     'and it brings the stylesheet that defines its colours');
+
+  // BOTH WAYS OF LOOKING AT A PAGE. The whiteboard is a scope, not a second
+  // editor, and the room now asks for whichever one somebody chose.
+  ok(/\.get\(mode\)/.test(editor) && /'page' \| 'edgeless'/.test(editor),
+     'a page can be looked at as a page or as a whiteboard');
 }
 
 // ---------------------------------------------------------------------------

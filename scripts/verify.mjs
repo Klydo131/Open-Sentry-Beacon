@@ -226,6 +226,10 @@ const staticChecks = [
   // Every other check on the study room opens a room it just made. This one
   // opens a page of the shape already sitting in the database.
   ['a room that already exists still opens', 'tests/a-room-that-already-exists-still-opens.mjs'],
+  // Two spellings of one tag are two tags forever, and a journal built the
+  // obvious way names the wrong day everywhere west of Greenwich. Both are
+  // silent, and the second one is wrong in Manila before eight in the morning.
+  ['a page can be tagged and dated', 'tests/a-page-can-be-tagged-and-dated.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

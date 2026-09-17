@@ -41,7 +41,7 @@ export function StudyWorkspaceShell({
 }: {
   view: ShelfView;
   onView: (v: ShelfView) => void;
-  counts: { all: number; favourites: number; trash: number };
+  counts: { all: number; favourites: number; journal: number; trash: number };
   /** Out of the room and back into the rest of the app. */
   onExit: () => void;
   /** Back to the shelf from an open page. */
@@ -62,6 +62,11 @@ export function StudyWorkspaceShell({
   const places: Array<{ id: ShelfView; label: string; icon: string; count: number }> = [
     { id: 'all', label: 'All pages', icon: '📄', count: counts.all },
     { id: 'favourites', label: 'Starred', icon: '★', count: counts.favourites },
+    // A DAY AT A TIME, which is the shape most of what happens in a church
+    // already has: a morning devotion, a sermon on Sabbath, what somebody
+    // prayed about on Tuesday. Nobody names those pages and nobody should have
+    // to, so the journal names them by the day they belong to.
+    { id: 'journal', label: 'Journal', icon: '📅', count: counts.journal },
     { id: 'trash', label: 'Bin', icon: '🗑️', count: counts.trash },
   ];
 
