@@ -247,6 +247,11 @@ const staticChecks = [
   // column would answer so many questions. What is held is the SHAPE of the
   // answer -- counts and dates -- rather than any particular number.
   ['leadership can measure without reading', 'tests/leadership-can-measure-without-reading.mjs'],
+  // The thing that removes comments before a check searches a file. It ate
+  // `xn--` out of the link classifier twice and reported a security rule
+  // missing that was there; "it can only produce a false FAIL" is true and is
+  // not the same as safe.
+  ['the comment stripper keeps the code', 'tests/the-comment-stripper-keeps-the-code.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

@@ -24,6 +24,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { stripSql, stripTs } from './_strip.mjs';
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
@@ -32,11 +34,6 @@ const ok = (cond, msg) => {
   console.log(`${cond ? 'OK  ' : 'FAIL'}  ${msg}`);
   if (!cond) bad++;
 };
-
-const stripSql = (src) =>
-  src.replace(/\/\*[\s\S]*?\*\/|--[^\n]*/g, (m) => m.replace(/[^\n]/g, ' '));
-const stripTs = (src) =>
-  src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
 
 const dir = 'supabase/migrations';
 const files = fs.readdirSync(path.join(root, dir)).filter((f) => f.endsWith('.sql')).sort();
@@ -97,15 +94,14 @@ const sql = mine ? stripSql(read(`${dir}/${mine}`)) : '';
 {
   ok(/create or replace function private\.how_safe/.test(sql),
      'the judgement is made in the database');
-  // READ FROM THE RAW SOURCE, NOT THE STRIPPED ONE, and that is not laziness.
-  // The comment stripper blanks `--` to the end of the line, and `xn--` is a
-  // real piece of a real rule that happens to contain two hyphens: stripped,
-  // the rule vanishes and this reported a missing feature that was there. The
-  // stripper can only ever produce a false FAIL, which is the safe direction
-  // and still cost a round trip. String search, against what was written.
-  const raw = mine ? read(`${dir}/${mine}`) : '';
+  // THE WORKAROUND HERE IS GONE. This used to read the raw, unstripped source,
+  // because the pasted stripper blanked `--` to the end of the line and `xn--`
+  // is a real piece of a real rule: stripped, the punycode check vanished and
+  // this reported a missing feature that was there. The shared stripper in
+  // tests/_strip.mjs knows a `--` inside a string literal is not a comment, so
+  // the rules can be looked for where they actually are.
   for (const flavour of ['javascript', 'xn--', 'porn', 'casino', 'bit\\.ly']) {
-    ok(raw.includes(flavour), `and it knows about ${flavour.replace('\\', '')}`);
+    ok(sql.includes(flavour), `and it knows about ${flavour.replace('\\', '')}`);
   }
   ok(/private\.record_activity\(/.test(sql)
      && (sql.match(/perform private\.record_activity\(/g) ?? []).length >= 3,
