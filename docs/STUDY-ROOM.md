@@ -162,6 +162,32 @@ once, and a folder would make you pick one.
 
 ---
 
+## Folders and saved views
+
+Three ways to find a page, and they are not the same thing.
+
+**A tag** is what a page is *about*. A page can have as many as you like.
+
+**A folder** is where you *put* it. One folder per page, and you never create
+one: type a name in the Folder box on a page and the folder exists because
+something is in it. When the last page leaves, it is gone.
+
+- Folders appear as a row above the list. Tap one to see only what is in it.
+- Start a new page while a folder is showing and it is filed there already.
+
+**A saved view** is a *question* you keep. Narrow the shelf by a tag or a
+search, press **Save this view**, and give it a name.
+
+- It keeps the question, not the pages. A page you write next week that matches
+  it turns up in it without you doing anything.
+- Forgetting a saved view does not touch a single page.
+
+If you are not sure which to use: tag everything, make a folder when a study
+gets long enough that you want it in one place, and save a view when you find
+yourself typing the same search twice.
+
+---
+
 ## The journal: a page for each day
 
 **Journal** in the sidebar gives every day a page of its own. Press

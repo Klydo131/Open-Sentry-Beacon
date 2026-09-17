@@ -22,7 +22,8 @@
 import { useMemo, useState } from 'react';
 
 import {
-  GROUP_ORDER, dayInWords, groupFor, hasTag, tagsAcross, whenWritten, type ShelfEntry,
+  GROUP_ORDER, dayInWords, foldersAcross, groupFor, hasTag, matchesCollection,
+  nameForView, tagsAcross, whenWritten, type Collection, type ShelfEntry,
 } from '@/lib/study/shelf';
 
 export type ShelfView = 'all' | 'favourites' | 'journal' | 'trash';
@@ -32,6 +33,13 @@ export function StudyShelf({
   view,
   tag,
   onTag,
+  folder,
+  onFolder,
+  collections,
+  collection,
+  onCollection,
+  onSaveCollection,
+  onForgetCollection,
   onOpen,
   onToggleFavourite,
   onTrash,
@@ -45,6 +53,15 @@ export function StudyShelf({
   /** The tag the list is narrowed to, or empty for all of them. */
   tag: string;
   onTag: (tag: string) => void;
+  /** The folder the list is narrowed to, or empty for all of them. */
+  folder: string;
+  onFolder: (folder: string) => void;
+  /** Saved views, and the one being looked through. */
+  collections: Collection[];
+  collection: string;
+  onCollection: (id: string) => void;
+  onSaveCollection: (name: string) => void;
+  onForgetCollection: (id: string) => void;
   onOpen: (id: string) => void;
   onToggleFavourite: (id: string) => void;
   onTrash: (id: string) => void;
@@ -56,8 +73,11 @@ export function StudyShelf({
 }) {
   const [query, setQuery] = useState('');
   const [confirming, setConfirming] = useState('');
+  const [naming, setNaming] = useState('');
 
   const tags = useMemo(() => tagsAcross(entries), [entries]);
+  const folders = useMemo(() => foldersAcross(entries), [entries]);
+  const looking = collections.find((c) => c.id === collection) ?? null;
 
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -66,6 +86,11 @@ export function StudyShelf({
       .filter((e) => (view === 'favourites' ? e.favorite : true))
       .filter((e) => (view === 'journal' ? Boolean(e.journalDate) : true))
       .filter((e) => !tag || hasTag(e, tag))
+      .filter((e) => !folder || e.folder.toLowerCase() === folder.toLowerCase())
+      // A SAVED VIEW IS A FILTER LIKE ANY OTHER, applied in the same pass. It
+      // is not a separate list to keep in step: the pages in a collection were
+      // never put there, so writing a new page that matches puts it in.
+      .filter((e) => !looking || matchesCollection(e, looking))
       // SEARCH LOOKS AT THE TAGS TOO. Somebody who tagged four pages "Romans"
       // and then types Romans into the search means those four pages, whatever
       // the words on them happen to be.
@@ -79,7 +104,7 @@ export function StudyShelf({
       .sort((a, b) => (view === 'journal'
         ? b.journalDate.localeCompare(a.journalDate)
         : b.updated - a.updated));
-  }, [entries, view, query, tag]);
+  }, [entries, view, query, tag, folder, looking]);
 
   const groups = useMemo(() => {
     if (view === 'journal') return [{ name: 'Your journal', entries: shown }];
@@ -116,6 +141,135 @@ export function StudyShelf({
           </button>
         )}
       </div>
+
+      {/* FOLDERS: THE PLACES SOMEBODY PUT THINGS. A folder is what a person
+          decides; a tag is what a page is about; a collection is a question.
+          All three are rows of chips for the same reason, which is that a
+          sidebar is somewhere a phone does not have. */}
+      {view !== 'trash' && folders.length > 0 && (
+        <div
+          role="group"
+          aria-label="Folders in this room"
+          className="thin-scroll -mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1"
+        >
+          <button
+            type="button"
+            onClick={() => onFolder('')}
+            aria-pressed={!folder}
+            className={`shrink-0 rounded-xl px-3 py-1.5 text-sm ring-1 ${
+              folder ? 'bg-white text-navy ring-black/10' : 'bg-navy text-white ring-navy'
+            }`}
+          >
+            Every folder
+          </button>
+          {folders.map((f) => (
+            <button
+              key={f.folder}
+              type="button"
+              onClick={() => onFolder(folder.toLowerCase() === f.folder.toLowerCase() ? '' : f.folder)}
+              aria-pressed={folder.toLowerCase() === f.folder.toLowerCase()}
+              className={`shrink-0 rounded-xl px-3 py-1.5 text-sm ring-1 ${
+                folder.toLowerCase() === f.folder.toLowerCase()
+                  ? 'bg-navy text-white ring-navy'
+                  : 'bg-white text-navy ring-black/10'
+              }`}
+            >
+              📁 {f.folder} <span className="opacity-60">{f.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* SAVED VIEWS. A collection is not a place and holds nothing: it is the
+          question "everything tagged Romans that mentions grace", kept so
+          nobody retypes it. Write a page tomorrow that matches and it is in. */}
+      {view !== 'trash' && (collections.length > 0 || tag || query.trim()) && (
+        <div className="mb-3">
+          <div
+            role="group"
+            aria-label="Saved views"
+            className="thin-scroll -mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+          >
+            {collections.map((c) => (
+              <span
+                key={c.id}
+                className={`inline-flex shrink-0 items-center gap-1 rounded-xl py-1.5 pl-3 pr-1 text-sm ring-1 ${
+                  collection === c.id
+                    ? 'bg-navy text-white ring-navy'
+                    : 'bg-white text-navy ring-black/10'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => onCollection(collection === c.id ? '' : c.id)}
+                  aria-pressed={collection === c.id}
+                >
+                  🔎 {c.name}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onForgetCollection(c.id)}
+                  aria-label={`Forget the saved view ${c.name}`}
+                  title={`Forget the saved view ${c.name}`}
+                  className={`grid h-6 w-6 place-items-center rounded-full text-base leading-none ${
+                    collection === c.id ? 'text-white/70 hover:bg-white/15' : 'text-navy/50 hover:bg-navy/10'
+                  }`}
+                >
+                  <span aria-hidden>×</span>
+                </button>
+              </span>
+            ))}
+
+            {/* THE OFFER APPEARS WHEN THERE IS SOMETHING WORTH SAVING, and not
+                before. A Save button over an unfiltered list saves "everything",
+                which is the shelf. */}
+            {(tag || query.trim()) && !collection && (
+              naming ? null : (
+                <button
+                  type="button"
+                  onClick={() => setNaming(nameForView(tag ? [tag] : [], query))}
+                  className="shrink-0 rounded-xl bg-gold/20 px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-gold/40"
+                >
+                  Save this view
+                </button>
+              )
+            )}
+          </div>
+
+          {naming && (
+            <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-black/10">
+              <p className="text-sm font-semibold text-navy">Name this view</p>
+              <p className="mt-1 text-sm text-gray-600">
+                It keeps the question, not the pages. A page you write next week
+                that matches it will be in here without you doing anything.
+              </p>
+              <input
+                value={naming}
+                onChange={(e) => setNaming(e.target.value)}
+                maxLength={40}
+                aria-label="Name for this saved view"
+                className="tap mt-2 w-full rounded-xl bg-gray-50 px-3 text-base outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-gold"
+              />
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => { onSaveCollection(naming); setNaming(''); }}
+                  className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white"
+                >
+                  Save it
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNaming('')}
+                  className="rounded-xl px-4 py-2 text-sm font-semibold text-navy"
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* THE TAGS IN THIS ROOM, AS A ROW RATHER THAN A SIDEBAR. AFFiNE puts them
           down the side, which works on a laptop and is where the sidebar
@@ -240,6 +394,18 @@ export function StudyShelf({
                       It sits out here rather than inside the row's own button
                       because a button inside a button is not a thing a browser
                       will render, and a tag nobody can press is decoration. */}
+                  {!entry.trashed && entry.folder && (
+                    <button
+                      type="button"
+                      onClick={() => onFolder(
+                        folder.toLowerCase() === entry.folder.toLowerCase() ? '' : entry.folder,
+                      )}
+                      aria-label={`Show every page in ${entry.folder}`}
+                      className="rounded-lg bg-navy/5 px-2 py-0.5 text-xs font-semibold text-navy hover:bg-navy/10"
+                    >
+                      📁 {entry.folder}
+                    </button>
+                  )}
                   {!entry.trashed && entry.tags.map((t) => (
                     <button
                       key={t}

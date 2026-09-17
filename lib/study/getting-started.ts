@@ -60,6 +60,8 @@ export const GUIDE_LINES: Line[] = [
   { kind: 'todo', words: 'Open Journal, then Today’s page, and write one line about today' },
   { kind: 'todo', words: 'Press Whiteboard at the top of a page, to draw instead of type' },
   { kind: 'todo', words: 'Make a new page from All pages, and name it after what you are reading' },
+  { kind: 'todo', words: 'Put a page in a folder, by typing a name in the Folder box' },
+  { kind: 'todo', words: 'Narrow the shelf by a tag, then press Save this view to keep the question' },
   { kind: 'rule' },
 
   { kind: 'h2', words: 'What you can put on a page' },
@@ -77,6 +79,12 @@ export const GUIDE_LINES: Line[] = [
   { kind: 'number', words: 'All pages is the shelf. Everything you have written, newest first, with a search over the top' },
   { kind: 'number', words: 'Journal gives every day a page of its own, named for the day, so you never have to name it' },
   { kind: 'number', words: 'Starred is for the few you keep coming back to. The Bin holds what you delete, until you empty it' },
+  { kind: 'rule' },
+
+  { kind: 'h2', words: 'Three ways to find something again' },
+  { kind: 'bullet', words: 'A tag is what a page is about. Put as many on a page as you like' },
+  { kind: 'bullet', words: 'A folder is where you put it. One per page, and typing a name is how a folder starts existing' },
+  { kind: 'bullet', words: 'A saved view is a question you keep. It gathers pages you write later, without you doing anything' },
   { kind: 'rule' },
 
   { kind: 'h2', words: 'Worth knowing' },

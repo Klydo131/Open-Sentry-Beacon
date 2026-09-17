@@ -29,6 +29,8 @@
 // ---------------------------------------------------------------------------
 
 import { NoopLogger } from '@blocksuite/global/utils';
+
+import type { Collection } from '@/lib/study/shelf';
 import {
   AwarenessStore,
   createYProxy,
@@ -71,6 +73,16 @@ type MetaState = {
    * again. Same rule as the starter tile in the pocket.
    */
   guided?: boolean;
+  /**
+   * The saved views in this room.
+   *
+   * IN THE WORKSPACE DOCUMENT AND NOT ON A PAGE, because a collection is about
+   * the room rather than about any page in it: the pages it gathers do not know
+   * they are in it and must not have to be rewritten when one is saved. It
+   * syncs with the page list, so a collection made on a phone is there on a
+   * laptop.
+   */
+  collections?: unknown[];
 };
 
 /** The list of pages in a room, and their titles. */
@@ -147,6 +159,36 @@ class StudyMeta implements WorkspaceMeta {
   /** Remember that it has, so it is never written a second time. */
   markGuided() {
     this.doc.transact(() => { this._proxy.guided = true; }, this.doc.clientID);
+  }
+
+  /** The saved views in this room. */
+  get collections(): Collection[] {
+    const saved = this._proxy.collections;
+    return Array.isArray(saved) ? (saved as Collection[]) : [];
+  }
+
+  /**
+   * Save a view, or replace the one with the same id.
+   *
+   * REPLACED BY ID RATHER THAN APPENDED, so renaming a collection on one device
+   * does not leave two of it on another. The list is small enough that rewriting
+   * it whole is cheaper than teaching Yjs to patch one entry in place, and a
+   * patch that goes wrong here loses somebody's saved views.
+   */
+  saveCollection(collection: Collection) {
+    this.doc.transact(() => {
+      const kept = this.collections.filter((c) => c.id !== collection.id);
+      this._proxy.collections = [...kept, collection];
+    }, this.doc.clientID);
+    this.docMetaUpdated.next();
+  }
+
+  /** Forget a saved view. The pages it gathered are untouched. */
+  removeCollection(id: string) {
+    this.doc.transact(() => {
+      this._proxy.collections = this.collections.filter((c) => c.id !== id);
+    }, this.doc.clientID);
+    this.docMetaUpdated.next();
   }
 
   addDocMeta(meta: DocMeta, index?: number) {

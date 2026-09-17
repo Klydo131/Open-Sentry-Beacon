@@ -37,8 +37,9 @@ import { StudyWorkspace } from '@/lib/study/workspace';
 import { giveTheGuideOnce } from '@/lib/study/getting-started';
 import { studyStoreManager } from '@/lib/study/extensions';
 import {
-  dayInWords, dayKey, journalFor, previewFrom, readShelf, tagsAcross,
-  type ShelfEntry, type ShelfMeta,
+  cleanFolder, dayInWords, dayKey, foldersAcross, journalFor, nameForView,
+  previewFrom, readShelf, tagsAcross,
+  type Collection, type ShelfEntry, type ShelfMeta,
 } from '@/lib/study/shelf';
 import type { Troubled } from '@/lib/study/doc-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
@@ -93,6 +94,9 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   const [openPage, setOpenPage] = useState('');
   const [view, setView] = useState<ShelfView>('all');
   const [tag, setTag] = useState('');
+  const [folder, setFolder] = useState('');
+  const [collection, setCollection] = useState('');
+  const [collections, setCollections] = useState<Collection[]>([]);
   // PAGE OR WHITEBOARD, the switch beside the title in AFFiNE's own app. Two
   // ways of looking at ONE page rather than two kinds of page: the same blocks,
   // laid out in a column or placed on a canvas.
@@ -102,10 +106,13 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   // coming -- which is what a blank rectangle was reported as, three times.
   const [drawing, setDrawing] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
+  const [folderDraft, setFolderDraft] = useState('');
 
   const refresh = useCallback(() => {
     const meta = workspace.current?.meta;
-    if (meta) setEntries(readShelf(meta));
+    if (!meta) return;
+    setEntries(readShelf(meta));
+    setCollections(meta.collections);
   }, []);
 
   // -------------------------------------------------------------------------
@@ -406,15 +413,23 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       const made = room.createDoc();
       refresh();
       setTitleDraft('');
+      // A NEW PAGE LANDS IN THE FOLDER BEING LOOKED AT. Somebody who has
+      // narrowed the shelf to "Romans" and pressed New page means a page about
+      // Romans, and making them file it by hand is a step they will skip.
+      setFolderDraft(folder);
+      if (folder) setMeta(made.id, { folder });
       setOpenPage(made.id);
     } catch (cause) {
       setError(humanError(cause, 'A new page could not be added.'));
     }
-  }, [refresh]);
+    // `folder` and `setMeta` are read here, so a stale closure would file a new
+    // page in whichever folder was showing when this callback was last built.
+  }, [refresh, folder, setMeta]);
 
   const open = useCallback((id: string) => {
-    const meta = workspace.current?.meta.getDocMeta(id);
+    const meta = workspace.current?.meta.getDocMeta(id) as ShelfMeta | undefined;
     setTitleDraft((meta?.title ?? '').trim());
+    setFolderDraft((meta?.folder ?? '').trim());
     // EVERY PAGE OPENS AS A PAGE. Carrying the whiteboard over from the last
     // one means somebody who tried the canvas once meets it again on a page
     // they only wanted to read.
@@ -445,6 +460,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       } as Partial<DocMeta>);
       refresh();
       setTitleDraft(dayInWords(key));
+      setFolderDraft('');
       setOpenPage(made.id);
     } catch (cause) {
       setError(humanError(cause, "Today's page could not be started."));
@@ -453,6 +469,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
 
   const current = entries.find((e) => e.id === openPage);
   const knownTags = tagsAcross(entries).map((t) => t.tag);
+  const knownFolders = foldersAcross(entries).map((f) => f.folder);
   const counts = {
     all: entries.filter((e) => !e.trashed).length,
     favourites: entries.filter((e) => e.favorite && !e.trashed).length,
@@ -513,6 +530,30 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
             view={view}
             tag={tag}
             onTag={setTag}
+            folder={folder}
+            onFolder={setFolder}
+            collections={collections}
+            collection={collection}
+            onCollection={setCollection}
+            onSaveCollection={(name) => {
+              const room = workspace.current;
+              if (!room) return;
+              room.meta.saveCollection({
+                // The moment is enough of an id: nobody makes two saved views
+                // in the same millisecond, and a uuid here would be a
+                // dependency for a number nothing else ever reads.
+                id: `view-${Date.now()}`,
+                name: cleanFolder(name) || nameForView(tag ? [tag] : [], ''),
+                tags: tag ? [tag] : [],
+                words: '',
+              });
+              refresh();
+            }}
+            onForgetCollection={(id) => {
+              workspace.current?.meta.removeCollection(id);
+              if (collection === id) setCollection('');
+              refresh();
+            }}
             onOpen={open}
             onAdd={addPage}
             onToday={openToday}
@@ -583,6 +624,30 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
               known={knownTags}
               onChange={(next) => setMeta(openPage, { tags: next })}
             />
+
+            {/* WHICH FOLDER THIS PAGE IS IN, beside the tags rather than behind
+                a menu, and for the same reason: the moment somebody knows what
+                a page is for is the moment they are naming it. A folder is
+                offered from the ones that already exist AND is free text, so
+                the first page of a new study makes the folder by being put in
+                it. Nobody creates a folder in this room; they file something. */}
+            <label className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-gray-500">📁 Folder</span>
+              <input
+                value={folderDraft}
+                onChange={(e) => setFolderDraft(e.target.value)}
+                onBlur={() => setMeta(openPage, { folder: cleanFolder(folderDraft) || undefined })}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                list="study-folders"
+                maxLength={40}
+                placeholder="Filed nowhere"
+                aria-label="Which folder this page is filed in"
+                className="min-w-0 flex-1 rounded-full bg-white px-3 py-1 text-sm ring-1 ring-black/10 placeholder:text-gray-400"
+              />
+              <datalist id="study-folders">
+                {knownFolders.map((f) => <option key={f} value={f} />)}
+              </datalist>
+            </label>
             <StudyInsertBar onInsert={insert} />
           </>
         )}
@@ -611,10 +676,11 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   return (
     <StudyWorkspaceShell
       view={view}
-      // MOVING SOMEWHERE ELSE DROPS THE TAG. A filter left on across a change
+      // MOVING SOMEWHERE ELSE DROPS EVERY FILTER. One left on across a change
       // of place is how somebody lands in the Bin, sees nothing, and concludes
-      // the app lost their pages.
-      onView={(next) => { setView(next); setTag(''); }}
+      // the app lost their pages. Three of them now, which makes it likelier
+      // rather than less.
+      onView={(next) => { setView(next); setTag(''); setFolder(''); setCollection(''); }}
       counts={counts}
       onExit={onExit}
       onHome={() => setOpenPage('')}

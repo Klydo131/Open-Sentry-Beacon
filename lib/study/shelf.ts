@@ -50,6 +50,44 @@ export type ShelfMeta = DocMeta & {
    * one the next time the button is pressed.
    */
   journalDate?: string;
+  /**
+   * The folder this page is filed in, by name. Absent means it is filed nowhere.
+   *
+   * ONE FOLDER, NOT MANY, AND THAT IS A DECISION. AFFiNE lets a document sit in
+   * several folders at once, which is right for them and wrong here for a
+   * reason that has nothing to do with difficulty: this room already has TAGS,
+   * and a page in five folders is a page with five tags wearing a different
+   * name. What a folder adds that a tag does not is the feeling of a place --
+   * "the Romans study is in there" -- and a place somebody's page can be in
+   * five of at once is not a place.
+   *
+   * BY NAME AND NOT BY ID, for the same reason tags are. There is no folder
+   * object to keep in step, renaming is a rename, and a folder stops existing
+   * when the last page leaves it, which is what people expect of a thing they
+   * never deliberately created.
+   */
+  folder?: string;
+};
+
+/**
+ * A saved way of looking at the shelf: some tags, and some words.
+ *
+ * WHAT A COLLECTION IS, AND WHY IT IS NOT A FOLDER. A folder is a place a page
+ * is IN; a collection is a QUESTION the shelf answers, saved so nobody has to
+ * ask it again. "Everything tagged Romans that mentions grace" is a collection.
+ * The pages in it were never put there and do not know they are in it: write a
+ * new page, tag it Romans, and it appears.
+ *
+ * That difference is the whole reason both exist. A folder is what somebody
+ * decides; a collection is what is true.
+ */
+export type Collection = {
+  id: string;
+  name: string;
+  /** Tags a page must carry. Empty means the tags do not narrow it. */
+  tags: string[];
+  /** Words that must appear in the title, the preview or a tag. */
+  words: string;
 };
 
 /** One page as the shelf draws it. */
@@ -67,6 +105,8 @@ export type ShelfEntry = {
   trashed: boolean;
   /** `YYYY-MM-DD` if this page is a journal entry, otherwise empty. */
   journalDate: string;
+  /** The folder it is filed in, or empty for filed nowhere. */
+  folder: string;
 };
 
 export function readShelf(meta: WorkspaceMeta): ShelfEntry[] {
@@ -84,6 +124,7 @@ export function readShelf(meta: WorkspaceMeta): ShelfEntry[] {
       tags: Array.isArray(m.tags) ? m.tags.filter((t) => typeof t === 'string') : [],
       trashed: typeof m.trashedAt === 'number',
       journalDate: typeof m.journalDate === 'string' ? m.journalDate : '',
+      folder: typeof m.folder === 'string' ? m.folder : '',
     };
   });
 }
@@ -265,4 +306,53 @@ export function dayInWords(key: string): string {
 /** The journal entry for a day, if the room has one that is not in the bin. */
 export function journalFor(entries: ShelfEntry[], key: string): ShelfEntry | undefined {
   return entries.find((e) => e.journalDate === key && !e.trashed);
+}
+
+// ---------------------------------------------------------------------------
+// FOLDERS AND COLLECTIONS
+// ---------------------------------------------------------------------------
+
+/** Every folder in the room, with how many pages are filed in each. */
+export function foldersAcross(entries: ShelfEntry[]): Array<{ folder: string; count: number }> {
+  const counts = new Map<string, { folder: string; count: number }>();
+  for (const entry of entries) {
+    if (entry.trashed || !entry.folder) continue;
+    const key = entry.folder.toLowerCase();
+    const seen = counts.get(key);
+    if (seen) seen.count += 1;
+    else counts.set(key, { folder: entry.folder, count: 1 });
+  }
+  return [...counts.values()].sort((a, b) => a.folder.localeCompare(b.folder));
+}
+
+/** A folder name as it will be stored, or empty for "filed nowhere". */
+export function cleanFolder(raw: string): string {
+  return raw.replace(/\s+/g, ' ').trim().slice(0, 40).trim();
+}
+
+/**
+ * Whether a page belongs in a saved collection.
+ *
+ * EVERY TAG, NOT ANY TAG. A collection named "Romans, for Sabbath school" that
+ * returned everything tagged either one would be a wider net than the name
+ * promises, and a saved view somebody cannot predict is one they stop opening.
+ */
+export function matchesCollection(entry: ShelfEntry, collection: Collection): boolean {
+  if (entry.trashed) return false;
+  for (const tag of collection.tags) {
+    if (!hasTag(entry, tag)) return false;
+  }
+  const needle = collection.words.trim().toLowerCase();
+  if (!needle) return true;
+  return entry.title.toLowerCase().includes(needle)
+    || entry.preview.toLowerCase().includes(needle)
+    || entry.tags.some((t) => t.toLowerCase().includes(needle));
+}
+
+/** A name for a collection built from what is currently being looked at. */
+export function nameForView(tags: string[], words: string): string {
+  const said = words.trim();
+  if (tags.length && said) return `${tags.join(', ')} · ${said}`;
+  if (tags.length) return tags.join(', ');
+  return said || 'Everything';
 }
