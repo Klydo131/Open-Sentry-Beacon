@@ -93,11 +93,17 @@ export function LiveAskForPrayer() {
       <div className="p-5 sm:p-6">
       <Err msg={error} />
 
+      {/* "What would you like prayer for?" was correct and read like a form.
+          Somebody asking about a sick dog is not filling in a request, and the
+          box should sound like the question a person would actually be asked.
+          The label matches the placeholder, so a screen reader hears the same
+          question a sighted person reads rather than nothing at all. */}
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
-        placeholder="What would you like prayer for?"
+        placeholder="What would you like to pray for?"
+        aria-label="What would you like to pray for?"
         className="mt-4 w-full rounded-2xl bg-slate-50 px-4 py-3 text-base text-navy ring-1 ring-emerald-700/15 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500"
       />
       {/* THE CHOICE TO BROADCAST IS GONE, and the request now goes to one
