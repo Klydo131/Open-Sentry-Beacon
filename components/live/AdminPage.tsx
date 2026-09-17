@@ -225,6 +225,10 @@ export function LiveAdminPage() {
   const freeExplorers = explorers.filter(
     (explorer) => !pairings.some((p) => p.ds_id === explorer.id && p.status === 'active'),
   );
+  // Whether EITHER picker in the pairing form will draw a search box. The same
+  // threshold SelectPerson uses; passing it to both is what keeps the two
+  // dropdowns on one line.
+  const pairPickersSearch = guides.length > 6 || freeExplorers.length > 6;
   const manageable = members.filter(
     (member) => member.id !== profile?.id && roleOptions.includes(member.role),
   );
@@ -1131,12 +1135,17 @@ export function LiveAdminPage() {
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Pair a Guide and Explorer</h2>
           <form onSubmit={pair} className="mt-4 grid gap-3 sm:grid-cols-2">
+            {/* BOTH PICKERS RESERVE THE SEARCH ROW TOGETHER, so the two
+                dropdowns stay on one line whichever of the two lists happens to
+                be long enough to need a search box. The parent is the only
+                thing that can see both. */}
             <SelectPerson
               label="Guide"
               value={dmId}
               onChange={setDmId}
               people={guides}
               loading={loading}
+              reserveSearchRow={pairPickersSearch}
               emptyNote={guides.length === 0
                 ? 'Nobody in this church has the Guide role yet. Invite one, or change somebody\u2019s role from their profile.'
                 : undefined}
@@ -1154,6 +1163,7 @@ export function LiveAdminPage() {
               onChange={setDsId}
               loading={loading}
               people={freeExplorers}
+              reserveSearchRow={pairPickersSearch}
               emptyLabel={explorers.length === 0
                 ? undefined
                 : 'Everybody already has a Guide'}

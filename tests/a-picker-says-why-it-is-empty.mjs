@@ -90,5 +90,43 @@ const admin = stripTs(read('components/live/AdminPage.tsx'));
      'and it is still "an Explorer who has no active Guide"');
 }
 
+// ---------------------------------------------------------------------------
+// 4. AND THE TWO PICKERS STAY ON ONE LINE
+// ---------------------------------------------------------------------------
+//
+// REPORTED: "when Directors are pairing, the UI is glitching ... some can't
+// even pair because of the UI glitch."
+//
+// A picker grows a search box once its list passes six names. The live church
+// has twelve Guides and, because every Explorer is already paired, nothing to
+// choose on the other side -- so one column grew a 56px box and the other did
+// not, and the two dropdowns landed on different lines. Measured in a browser
+// at 60px apart. A Director reading that sees a form that has come apart.
+//
+// THE WALKTHROUGH CANNOT CATCH THIS. It has two Guides and two free Explorers,
+// both under the threshold, so neither column draws a box and the row is level.
+// Every walk was right about a shape the live church does not have.
+{
+  ok(/reserveSearchRow/.test(picker),
+     'a picker can keep the search box\u2019s space without drawing the box');
+  ok(/aria-hidden className="tap mt-1 w-full"/.test(picker),
+     'and the space it keeps is the same height the box would have been');
+
+  // WHY THE PARENT DECIDES. Neither picker can see the other's list, and the
+  // whole fault is one column reacting to a length the other one does not have.
+  ok(/const pairPickersSearch = guides\.length > 6 \|\| freeExplorers\.length > 6/.test(admin),
+     'the form asks whether EITHER list is long enough, not each on its own');
+
+  const form = admin.slice(admin.indexOf('Pair a Guide and Explorer'));
+  const bothReserve = (form.match(/reserveSearchRow=\{pairPickersSearch\}/g) ?? []).length;
+  ok(bothReserve === 2,
+     `and passes the same answer to both pickers (${bothReserve} of 2)`);
+
+  // AND THE THRESHOLD IS STILL ONE NUMBER. Two places deciding "is this list
+  // long enough" is how they drift apart and the row breaks again.
+  ok(/people\.length > 6 && !loading \?/.test(picker),
+     'the picker still uses the same six-name threshold the form asks about');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

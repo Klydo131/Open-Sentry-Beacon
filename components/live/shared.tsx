@@ -1068,6 +1068,7 @@ export function SelectPerson({
   noneLabel,
   emptyLabel,
   emptyNote,
+  reserveSearchRow = false,
 }: {
   label: string;
   value: string;
@@ -1097,6 +1098,24 @@ export function SelectPerson({
   emptyLabel?: string;
   /** A sentence under the control saying what to do about it. */
   emptyNote?: string;
+  /**
+   * Keep the search box's space even when this picker does not need one.
+   *
+   * REPORTED AS "the UI is glitching ... some can't even pair". Two of these
+   * side by side in a grid, and the search box appears only once a list passes
+   * six names. The live church has twelve Guides and -- because everybody is
+   * already paired -- no Explorers to choose, so the Guide column grew a search
+   * box and the Explorer column did not. The two dropdowns then sat on
+   * DIFFERENT LINES: the Explorer picker level with the Guide's search field,
+   * and the Guide's actual dropdown below it. A Director reading that sees a
+   * form that has come apart, and the one they want is not where it should be.
+   *
+   * WHY A RESERVED ROW AND NOT "ALWAYS SHOW THE BOX". A search field over an
+   * empty list is a control that cannot do anything, and over three names it is
+   * one more thing to read on the way to a name already on screen -- which is
+   * why the threshold exists. The space is what has to match, not the box.
+   */
+  reserveSearchRow?: boolean;
 }) {
   const noun = label.toLowerCase();
 
@@ -1140,7 +1159,7 @@ export function SelectPerson({
       {/* The box appears only once the list is long enough to need it. Below
           that it is one more thing to read on the way to a name already on
           screen. */}
-      {people.length > 6 && !loading && (
+      {people.length > 6 && !loading ? (
         <input
           value={find}
           onChange={(event) => setFind(event.target.value)}
@@ -1150,7 +1169,12 @@ export function SelectPerson({
           aria-label={`Search the ${noun} list by name`}
           className="tap mt-1 w-full rounded-xl bg-gray-100 px-4 text-base outline-none focus:ring-2 focus:ring-teal-600"
         />
-      )}
+      ) : reserveSearchRow ? (
+        // THE SAME HEIGHT, AND NOTHING IN IT. `tap` is the 56px tap target
+        // every control on this screen stands on, so the row it leaves behind
+        // is exactly the row the box would have taken.
+        <div aria-hidden className="tap mt-1 w-full" />
+      ) : null}
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
