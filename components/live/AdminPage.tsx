@@ -29,6 +29,7 @@ import { LiveGuilds, LiveChurchPulse } from '@/components/LiveGuilds';
 import { LiveSecurityAudit } from '@/components/LiveSecurityAudit';
 import { LiveFeedbackInbox } from '@/components/LiveFeedbackInbox';
 import { LiveLibraryRecord } from '@/components/LiveLibraryRecord';
+import { LiveActivityAnalysis } from '@/components/LiveActivityAnalysis';
 import type { Profile, Role } from '@/lib/types';
 import { LiveAppShell } from '@/components/LiveAppShell';
 import { LiveLibraryForGuide } from '@/components/LiveLibrary';
@@ -633,6 +634,13 @@ export function LiveAdminPage() {
 
         {room === 'security' && (
           <>
+            {/* THE ANALYSIS FIRST, THE FEED AFTER IT. A Director opening this
+                room has a question about people, not about events: the feed
+                answers "what happened" and can only ever show what is there,
+                which is why an Explorer nobody has spoken to appears in it zero
+                times. The screen that counts silence goes above the one that
+                lists noise. */}
+            <LiveActivityAnalysis />
             <LiveSecurityAudit />
             <LiveLibraryRecord audience={profile?.role === 'executive' ? 'executive' : 'admin'} />
           </>

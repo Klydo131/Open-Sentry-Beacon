@@ -291,6 +291,19 @@ export const KEEP_UP_FEEDBACK = ['feedback'] as const;
 export const KEEP_UP_LIBRARY_RECORD = ['materials', 'material_shares'] as const;
 
 /**
+ * The activity analysis: pairings, appointments and what people added.
+ *
+ * FOUR TABLES BECAUSE THE SCREEN COUNTS FOUR THINGS. The one that matters most
+ * is `pairings`: a Director watching this while they pair people is the whole
+ * reason it is on their screen, and a figure that still says "1 Explorer with
+ * no Guide" after they have just given that person a Guide is a figure they
+ * stop believing.
+ */
+export const KEEP_UP_ACTIVITY_ANALYSIS = [
+  'pairings', 'meetings', 'materials', 'material_shares',
+] as const;
+
+/**
  * The apps a church offers.
  *
  * Leadership adds one and every phone in the congregation should have it

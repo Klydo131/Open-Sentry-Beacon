@@ -243,6 +243,10 @@ const staticChecks = [
   // every one of them was already paired. The control was right; the sentence
   // was the bug, and it is indistinguishable from a failed load.
   ['a picker says why it is empty', 'tests/a-picker-says-why-it-is-empty.mjs'],
+  // "Analysis" is the word under which a conversation gets read: one more
+  // column would answer so many questions. What is held is the SHAPE of the
+  // answer -- counts and dates -- rather than any particular number.
+  ['leadership can measure without reading', 'tests/leadership-can-measure-without-reading.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

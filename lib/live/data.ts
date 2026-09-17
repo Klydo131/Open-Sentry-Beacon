@@ -1844,6 +1844,54 @@ export async function listLibraryActivity(limit = 100): Promise<LibraryActivity[
  * rather than two. The detail it writes carries the label and not the address,
  * because leadership cannot see the address to put there.
  */
+/**
+ * What each Guide and Explorer has actually been doing.
+ *
+ * ASKED FOR: "Head ED, ED, and Directors must have analysis to track Guide and
+ * Explorer activities please."
+ *
+ * THE RECORD ANSWERS "what happened". THIS ANSWERS "who is being walked with
+ * and who is not", which is the question a Director actually has and cannot get
+ * by scrolling a feed: forty events do not tell anybody that one Explorer has
+ * heard from nobody in three weeks.
+ *
+ * SAME TWO RULES AS THE RECORD, because they are the church's and not one
+ * screen's: nothing here reads a conversation, and nothing here carries an
+ * address. Every field is a count or a date.
+ */
+export interface ActivityAnalysis {
+  person_id: string;
+  person_name: string;
+  person_role: 'dm' | 'ds' | 'admin';
+  /** Who they walk with. Null for an Explorer is the row that matters most. */
+  walks_with: string | null;
+  explorers_carried: number;
+  cap: number;
+  appointments_proposed: number;
+  appointments_confirmed: number;
+  appointments_declined: number;
+  appointments_kept: number;
+  resources_shared: number;
+  pocket_adds: number;
+  /** Things they added or shared that the database labelled as needing a look. */
+  flagged: number;
+  last_seen: string;
+  /**
+   * How long since they did anything the app can see.
+   *
+   * THE ONE FIGURE THAT FINDS THE PERSON NOBODY HAS NOTICED, which is what the
+   * whole discipleship shape exists to prevent and what a roster of green ticks
+   * hides.
+   */
+  quiet_days: number;
+}
+
+export async function activityAnalysis(days = 30): Promise<ActivityAnalysis[]> {
+  const { data, error } = await db().rpc('guide_and_explorer_activity', { p_days: days });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ActivityAnalysis[];
+}
+
 export async function openCaseFromActivity(activityId: string, note?: string): Promise<string> {
   const { data, error } = await db().rpc('open_case_from_activity', {
     p_activity: activityId,
