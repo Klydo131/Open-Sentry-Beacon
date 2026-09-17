@@ -40,7 +40,7 @@ import './study-room.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BlockStdScope, TextSelection } from '@blocksuite/affine/std';
 import { render } from 'lit';
-import type { DocMeta } from '@blocksuite/store';
+import type { DocMeta, Store } from '@blocksuite/store';
 import type { DocSource } from '@blocksuite/sync';
 
 import { StudyWorkspace } from '@/lib/study/workspace';
@@ -50,6 +50,7 @@ import type { Troubled } from '@/lib/study/doc-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { humanError } from '@/lib/live/errors';
 import { StudyShelf, type ShelfView } from '@/components/study/StudyShelf';
+import { StudyInsertBar, type InsertKind } from '@/components/study/StudyInsertBar';
 import { StudyWorkspaceShell } from '@/components/study/StudyWorkspaceShell';
 
 /** One room per person. The id is stable so the same room reopens every time. */
@@ -78,6 +79,8 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
   const host = useRef<HTMLDivElement | null>(null);
   const workspace = useRef<StudyWorkspace | null>(null);
   const synced = useRef(false);
+  // Held so the insert bar can put a block where the caret is.
+  const editing = useRef<{ std: BlockStdScope; store: Store } | null>(null);
 
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
@@ -219,6 +222,7 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
       }
 
       const std = new BlockStdScope({ store, extensions: studyViewManager().get('page') });
+      editing.current = { std, store };
       render(std.render(), host.current);
 
       // WHAT THE SHELF SHOWS COMES FROM HERE, and it has to, because every page
@@ -281,6 +285,68 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
   // -------------------------------------------------------------------------
   // KEEPING PAGES
   // -------------------------------------------------------------------------
+  /**
+   * Put a block on the page, where the caret is.
+   *
+   * WHAT THE SLASH MENU DOES, WITHOUT NEEDING A `/` KEY. A phone's on-screen
+   * keyboard sends composition events rather than keydowns, so the character
+   * arrives and BlockSuite's menu never hears the keystroke that opens it.
+   * This does the same job from a button: work out which block the caret is in,
+   * and add the new one immediately after it.
+   */
+  const insert = useCallback((kind: InsertKind) => {
+    const current = editing.current;
+    if (!current) return;
+    const { std, store } = current;
+
+    const recipes: Record<InsertKind, { flavour: string; props: Record<string, unknown> }> = {
+      h1: { flavour: 'affine:paragraph', props: { type: 'h1' } },
+      h2: { flavour: 'affine:paragraph', props: { type: 'h2' } },
+      h3: { flavour: 'affine:paragraph', props: { type: 'h3' } },
+      quote: { flavour: 'affine:paragraph', props: { type: 'quote' } },
+      bulleted: { flavour: 'affine:list', props: { type: 'bulleted' } },
+      numbered: { flavour: 'affine:list', props: { type: 'numbered' } },
+      todo: { flavour: 'affine:list', props: { type: 'todo' } },
+      divider: { flavour: 'affine:divider', props: {} },
+      table: { flavour: 'affine:table', props: {} },
+      callout: { flavour: 'affine:callout', props: {} },
+    };
+
+    try {
+      const recipe = recipes[kind];
+      const selected = std.selection.find(TextSelection);
+      const focused = selected ? store.getBlock(selected.from.blockId) : null;
+      const parent = focused
+        ? store.getParent(focused.model)
+        : store.getBlocksByFlavour('affine:note')[0]?.model ?? null;
+      if (!parent) return;
+
+      // AFTER THE BLOCK SOMEBODY IS IN, not at the end of the page. Appending
+      // to the bottom is the behaviour that makes a person scroll to find what
+      // they just added, on the screen with the least room to scroll.
+      const index = focused
+        ? parent.children.findIndex((child) => child.id === focused.model.id) + 1
+        : undefined;
+
+      const id = store.addBlock(recipe.flavour, recipe.props, parent, index);
+
+      // AND THE CARET GOES INTO IT. A divider has nowhere to type, so the caret
+      // stays where it was rather than disappearing into a line.
+      if (recipe.flavour !== 'affine:divider') {
+        requestAnimationFrame(() => {
+          std.selection.setGroup('note', [
+            std.selection.create(TextSelection, {
+              from: { blockId: id, index: 0, length: 0 },
+              to: null,
+            }),
+          ]);
+        });
+      }
+    } catch (cause) {
+      setError(humanError(cause, 'That could not be added to the page.'));
+    }
+  }, []);
+
   const setMeta = useCallback((id: string, props: Partial<ShelfMeta>) => {
     workspace.current?.meta.setDocMeta(id, props as Partial<DocMeta>);
     refresh();
@@ -405,6 +471,7 @@ export function StudyRoomEditor({ makeSource, demo = false, onExit }: {
           aria-label="Name this page"
           className="mb-2 w-full bg-transparent text-2xl font-bold text-navy outline-none placeholder:text-gray-300"
         />
+        <StudyInsertBar onInsert={insert} />
         <div ref={host} className="affine-page-viewport" />
       </div>
     );

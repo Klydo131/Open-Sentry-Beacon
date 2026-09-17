@@ -90,11 +90,18 @@ export function StudyWorkspaceShell({
           ← {APP_NAME}
         </button>
 
-        <div className="min-w-0 flex-1">
+        {/* ON A PAGE, AT 360px, THIS HAD ABOUT FORTY PIXELS and rendered the
+            title as "P...". Two buttons and a name do not fit across the
+            narrowest phone, and of the three the name is the one already on
+            the screen: it is the first thing in the page body, in full, as an
+            editable field. So it is dropped from the bar rather than shown as
+            an ellipsis. The shelf has only one button and keeps its title. */}
+        <div className={`min-w-0 flex-1 ${showingPage ? 'hidden sm:block' : ''}`}>
           <p className="truncate text-base font-bold">
             {showingPage ? pageTitle : '📖 Study Room'}
           </p>
         </div>
+        {showingPage && <div className="flex-1 sm:hidden" aria-hidden />}
 
         {showingPage ? (
           <button

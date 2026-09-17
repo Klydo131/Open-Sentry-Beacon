@@ -321,6 +321,12 @@ const GUARDRAILS = new Set([
   // member's name, and the credential-shape scan above still applies to it.
   'docs/HANDBOOK.md',
   'supabase/functions/invite/index.ts',
+  // The notification sender, for the same reason as invite above: it runs on a
+  // server, never in a browser, and the ONE caller it will accept is identified
+  // by that key, so it has to name the runtime variable holding it. The
+  // credential-shape scan above still applies, so naming the variable is
+  // permitted and committing an actual key is still caught.
+  'supabase/functions/notify/index.ts',
   // The handbook generators are documentation that happens to be JavaScript.
   // They teach an IT reader which variables to set and which key must never be
   // public, so they have to name both — the same reason DEMO-SETUP.md is here.
