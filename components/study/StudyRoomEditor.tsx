@@ -34,6 +34,7 @@ import type { DocMeta, Store } from '@blocksuite/store';
 import type { BlobSource, DocSource } from '@blocksuite/sync';
 
 import { StudyWorkspace } from '@/lib/study/workspace';
+import { giveTheGuideOnce } from '@/lib/study/getting-started';
 import { studyStoreManager } from '@/lib/study/extensions';
 import {
   dayInWords, dayKey, journalFor, previewFrom, readShelf, tagsAcross,
@@ -174,6 +175,13 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           }
           room.createDoc(FIRST_PAGE);
         }
+
+        // THE GETTING STARTED PAGE, ONCE PER ROOM AND NEVER AGAIN. The rule
+        // lives in lib/study/getting-started.ts rather than here, because it
+        // cannot be checked from a browser: the only room a walk can reach is
+        // the walkthrough's, which forgets its pages on reload, so deleting the
+        // guide and reloading correctly gets it back and proves nothing.
+        giveTheGuideOnce(room, arrived);
 
         room.slots.docListUpdated.subscribe(() => {
           if (!cancelled) refresh();

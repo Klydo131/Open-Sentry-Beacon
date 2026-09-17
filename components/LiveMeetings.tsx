@@ -113,6 +113,12 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   // The screen keeps up when somebody else changes something.
   useKeepUp(KEEP_UP_MEETINGS, load);
 
+  // WHICH ROW IS BEING SAID NO TO, and what reason is being typed. A reason is
+  // optional: making it required turns "I am working that afternoon" into a
+  // form somebody abandons, and an unanswered proposal is worse than a bare no.
+  const [refusing, setRefusing] = useState('');
+  const [why, setWhy] = useState('');
+
   const act = async (fn: () => Promise<void>) => {
     setBusy(true);
     setError('');
@@ -121,15 +127,25 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
     finally { setBusy(false); }
   };
 
-  // Cancelled ones are kept but not shown: somebody who arranged an afternoon
-  // around this needs to know it was called off, and that is what the message
-  // in the conversation is for. A permanent list of things that are not
-  // happening is not a diary.
+  // ANSWERED ONES ARE SHOWN, WHICH THEY WERE NOT.
+  //
+  // ASKED FOR: "If there is a record for acceptance in appointment, there must
+  // be a record for cancel too so that Guides and Explorers are informed who
+  // accepted and who declined."
+  //
+  // The old comment here said a cancelled meeting is kept but not shown, and
+  // that the message in the conversation carries the news. No message was ever
+  // sent. What actually happened was that the card disappeared, which reads as
+  // a bug rather than an answer, and the person who arranged their afternoon
+  // around it had nothing to look at and nobody to ask.
+  //
+  // So an answered appointment stays on the list until its time has passed,
+  // drawn as what it is: who said no, when, and why if they said why.
   const STILL_ON = 60 * 60 * 1000;   // an hour's grace, so a meeting in progress stays put
   const all = rows ?? [];
   const past = (m: live.Meeting) => new Date(m.starts_at).getTime() <= Date.now() - STILL_ON;
 
-  const upcoming = all.filter((m) => m.status !== 'cancelled' && !past(m));
+  const upcoming = all.filter((m) => !past(m));
 
   // A TIME THAT CAME AND WENT WITHOUT AN ANSWER.
   //
@@ -359,10 +375,39 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                         Confirmed
                       </span>
                     )}
+                    {/* AN ANSWER IS NOT AN ERROR, so neither of these is red.
+                        Somebody who cannot make a Tuesday has not done anything
+                        wrong, and a scarlet badge on their name says otherwise
+                        to the person reading it. */}
+                    {m.status === 'declined' && (
+                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-700">
+                        Not this time
+                      </span>
+                    )}
+                    {m.status === 'cancelled' && (
+                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-700">
+                        Called off
+                      </span>
+                    )}
                   </div>
                   <p className="mt-0.5 text-sm text-gray-600">
                     {when(m.starts_at)} · {m.mode === 'online' ? 'Online call' : 'In person'}
                   </p>
+
+                  {/* WHO ANSWERED, WHICH IS THE WHOLE REQUEST. It reads the
+                      name recorded at the time rather than looking one up, so
+                      it still says who it was after an account is deleted. */}
+                  {m.answered_at && m.status !== 'proposed' && (
+                    <p className="mt-0.5 text-sm text-gray-600">
+                      {m.status === 'confirmed' ? '✅' : '↩️'}{' '}
+                      <span className="font-semibold">{m.answer_name || 'Somebody'}</span>
+                      {m.status === 'confirmed'
+                        ? ' said yes'
+                        : m.status === 'declined' ? ' could not make it' : ' called it off'}
+                      {' · '}{when(m.answered_at)}
+                      {m.answer_note && <>{' · '}&ldquo;{m.answer_note}&rdquo;</>}
+                    </p>
+                  )}
                   {/* THE PLACE ON ITS OWN LINE. Run into the date it was a tail
                       on a sentence nobody finished reading, which is half of
                       why the location looked like it was not there. */}
@@ -384,9 +429,28 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                     confirming your own proposal says nothing, because the whole
                     value of the state is that somebody else agreed to it. */}
                 {m.status === 'proposed' && !mine ? (
-                  <Button disabled={busy} onClick={() => act(() => live.confirmMeeting(m.id))}>
-                    Yes, that works
-                  </Button>
+                  // TWO ANSWERS, NOT ONE. A card with only "Yes, that works" on
+                  // it leaves somebody who cannot make the time with nothing to
+                  // press, so they press nothing, and the other person is left
+                  // reading silence. The refusal is a quiet button rather than
+                  // a red one: saying no to a Tuesday is not a destructive act.
+                  // NOT shrink-0: two controls allowed to wrap but not to
+                  // shrink push the row wider than a 360px phone, which the
+                  // gate catches and a person would meet as a sideways scroll
+                  // on the one screen they answer on.
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <Button disabled={busy} onClick={() => act(() => live.confirmMeeting(m.id))}>
+                      Yes, that works
+                    </Button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => { setRefusing(refusing === m.id ? '' : m.id); setWhy(''); }}
+                      className="text-sm font-semibold text-gray-600 underline underline-offset-2 disabled:opacity-40"
+                    >
+                      Not this time
+                    </button>
+                  </div>
                 ) : join ? (
                   /* THE ONE TAP. Named after the service where it can be told,
                      because "Join the Zoom call" is recognised in a way that a
@@ -444,15 +508,60 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                     {placeLabel(map)}
                   </a>
                 )}
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => act(() => live.cancelMeeting(m.id))}
-                  className="text-sm text-gray-500 underline underline-offset-2 disabled:opacity-40"
-                >
-                  Cancel
-                </button>
+                {/* NOTHING TO CALL OFF ONCE IT IS ANSWERED. Offering Cancel on
+                    a declined appointment is offering an action that can only
+                    fail, and the database refuses it for the same reason. */}
+                {(m.status === 'proposed' || m.status === 'confirmed') && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => act(() => live.cancelMeeting(m.id))}
+                    className="text-sm text-gray-500 underline underline-offset-2 disabled:opacity-40"
+                  >
+                    Call it off
+                  </button>
+                )}
               </div>
+
+              {/* SAYING WHY, IF THERE IS A WHY WORTH SAYING. Optional on
+                  purpose. Requiring a reason turns "I am working that
+                  afternoon" into a form somebody abandons, and an unanswered
+                  proposal is worse for the other person than a bare no. */}
+              {refusing === m.id && (
+                <div className="mt-3 rounded-xl bg-slate-50 p-3 ring-1 ring-black/10">
+                  <p className="text-sm font-semibold text-navy">
+                    Tell them you cannot make this one?
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    They will be told straight away, with your name on it. Nothing
+                    is deleted: the appointment stays here saying you could not
+                    make it.
+                  </p>
+                  <input
+                    value={why}
+                    onChange={(e) => setWhy(e.target.value)}
+                    maxLength={140}
+                    placeholder="A reason, if you want to give one (optional)"
+                    aria-label="Why you cannot make this time"
+                    className="tap mt-2 w-full rounded-xl bg-white px-3 text-base outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-gold"
+                  />
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button
+                      disabled={busy}
+                      onClick={() => act(async () => {
+                        await live.declineMeeting(m.id, why);
+                        setRefusing('');
+                        setWhy('');
+                      })}
+                    >
+                      Send my answer
+                    </Button>
+                    <Button variant="ghost" onClick={() => { setRefusing(''); setWhy(''); }}>
+                      Go back
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* WHAT THEY WROTE, UNDER THE ARRANGEMENT. Below the controls
                   rather than above them: the time and the place are what

@@ -61,6 +61,16 @@ type MetaState = {
   pages?: unknown[];
   properties?: DocsPropertiesMeta;
   name?: string;
+  /**
+   * Whether this room has already been given its Getting Started page.
+   *
+   * A FLAG AND NOT A LOOK AT THE PAGE LIST, and the difference is the whole
+   * behaviour. "Is the guide page there?" is also false for somebody who read
+   * it and deleted it, so a room that asks that question writes the page again
+   * every time they open it. Given once, recorded once, never argued about
+   * again. Same rule as the starter tile in the pocket.
+   */
+  guided?: boolean;
 };
 
 /** The list of pages in a room, and their titles. */
@@ -127,6 +137,16 @@ class StudyMeta implements WorkspaceMeta {
 
   initialize() {
     if (!this._proxy.pages) this._proxy.pages = [];
+  }
+
+  /** Whether this room has had its Getting Started page. */
+  get guided(): boolean {
+    return this._proxy.guided === true;
+  }
+
+  /** Remember that it has, so it is never written a second time. */
+  markGuided() {
+    this.doc.transact(() => { this._proxy.guided = true; }, this.doc.clientID);
   }
 
   addDocMeta(meta: DocMeta, index?: number) {
@@ -277,7 +297,7 @@ export class StudyWorkspace implements Workspace {
   readonly awarenessSync: AwarenessEngine;
   readonly docSync: DocEngine;
   readonly blobSync: BlobEngine;
-  readonly meta: WorkspaceMeta;
+  readonly meta: StudyMeta;
 
   storeExtensions: ExtensionType[] = [];
 

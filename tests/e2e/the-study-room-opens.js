@@ -76,12 +76,23 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
   // AND IT LOOKS LIKE A ROOM BEFORE ANYBODY TOUCHES IT, which is the assertion
   // that would have caught what two screenshots caught instead. An untouched
-  // page is one empty paragraph; BlockSuite draws its placeholder only while
-  // the caret is inside the block, so a room nobody has tapped renders as white
-  // space and nothing else. Every check above passed while that was true.
+  // page used to be one empty paragraph, and BlockSuite draws its placeholder
+  // only while the caret is inside the block, so a room nobody had tapped
+  // rendered as white space and nothing else. Every check above passed while
+  // that was true.
+  //
+  // THE TEST IS THE OUTCOME, NOT THE MECHANISM. A new room now opens on its
+  // Getting Started page, which is words on a screen and satisfies this far
+  // better than a placeholder did -- but it means there is no placeholder to
+  // find, and pinning the mechanism made a genuine improvement look like a
+  // regression. What has to be true is that somebody who has tapped nothing
+  // sees something telling them what the room is for.
   const hint = page.locator('.affine-paragraph-placeholder.visible');
-  ok(await hint.count() > 0 && /\S/.test(await hint.first().innerText()),
-     'an untouched room says what it is for, before anybody taps it');
+  const placeholder = await hint.count() > 0 && /\S/.test(await hint.first().innerText());
+  const onScreen = (await page.locator('editor-host').innerText()).replace(/\u200b/g, '').trim();
+  ok(placeholder || onScreen.length > 40,
+     `an untouched room says what it is for, before anybody taps it (${
+       placeholder ? 'placeholder' : `${onScreen.length} characters on the page`})`);
 
   // 3. SOMEBODY CAN WRITE IN IT, which is the whole point and the thing every
   //    silent failure got wrong.

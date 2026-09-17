@@ -119,7 +119,7 @@ signal.
 
 ## Part 3 — If you are a Guide
 
-A Guide walks with up to five Explorers. Five is a limit the app enforces, not a
+A Guide walks with up to the number of Explorers the church has set. It is a limit the app enforces, not a
 suggestion: somebody carrying forty names is not walking with anybody.
 
 ### Your desk

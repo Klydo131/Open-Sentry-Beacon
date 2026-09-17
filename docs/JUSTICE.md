@@ -58,13 +58,109 @@ query anybody can make.
 | **A trial** | Only the people in that trial. |
 | **What is said in a trial** | Only the people in that trial. |
 | **The discipline log** | Only those leading the church. |
+| **The activity record** | Leadership, for the ranks below them. It holds no addresses. See Part 3. |
 
 "Nobody else" includes Directors who are not on the case, Guides, and the person
 who set the app up.
 
 ---
 
-## Part 3 — A trial
+## Part 3 — The activity record, and what leadership cannot see
+
+Leadership can see **that** you shared or saved something. It cannot see **what**.
+
+### What is recorded
+
+Three things, and only these three:
+
+- A Guide **adding** a resource to the library.
+- Anyone **sharing** a resource with the person they walk with.
+- Anyone **putting a web app in their pocket**.
+
+Each one records who did it, when, what it was called, and **a label saying what
+kind of address it was**. Nothing else.
+
+### What is not recorded, ever
+
+- **Conversations.** Nothing you say to your Guide, your Explorer, or in a guild
+  room appears here or anywhere leadership can read. That exception is
+  deliberate and it is checked by the build.
+- **What you read.** Opening something is not an event. Only adding, sharing and
+  pocketing are.
+- **The address itself.** This is the part worth understanding properly.
+
+### The addresses are not hidden. They are not kept.
+
+A Director does not see a link because **there is no link in the record to
+see** — the column that used to hold it was deleted from the database, not
+merely left out of the screen. Nobody can restore it, including whoever built
+this, because it is not anywhere to restore.
+
+What replaces it is a label the database works out as the row is written:
+
+| The label | What it means |
+|---|---|
+| **Ordinary** | An ordinary web address. |
+| **Needs a look** | A shortened link, an unprotected connection, a throwaway kind of address. |
+| **Not good** | Adult content, gambling, a link that runs code, an address disguised as another, a file that installs something. |
+
+Alongside it the record says **how many times that person has been to the same
+place** — not which place. That is what turns a slip into a pattern without
+telling anybody where somebody went.
+
+### Where your links do still live
+
+With you and the person you shared them with. Your Guide's resource keeps its
+address in the library, visible to that Guide and the Explorer they gave it to.
+Your pocket keeps your own web apps. Those are yours. The *record* of the act is
+a different thing, read by a different rank, and it carries the shape rather
+than the thing.
+
+### Nothing is sent anywhere to be checked
+
+The labels are worked out entirely inside your church's own database, by rules
+about the **shape** of an address. No link a member shares is sent to any
+outside company to be scored. Doing that would hand a stranger the reading
+habits of the whole congregation, which is worse than the problem it solves, and
+it would happen quietly.
+
+The rules are not clever and are not meant to be. They will miss things, and
+they will occasionally flag something innocent. The label means *somebody should
+look*, never *this person did wrong*.
+
+### Who reads it
+
+- A **Director** reads it for the Guides and Explorers of a church they lead.
+- An **Executive Director**, head or otherwise, reads those and the Directors.
+- **Nobody reads their own row.** An account that can watch itself is not being
+  watched.
+- **A Guide or an Explorer cannot open this record at all.**
+
+### What happens when something is labelled Not good
+
+Everyone in leadership is **alerted straight away** — on their phone, if they
+have notifications on. The alert names the person, what they did and the label.
+It does not name the address, because nobody in leadership has been shown it.
+
+The person it is about is **not told they are being looked at**, for the same
+reason a report is not shown to the person reported.
+
+### Opening a case from it
+
+Any Director or Executive Director can turn one line of the record into a case,
+from the row itself. It becomes an ordinary report — the same object anybody
+could have raised, answered by the same people, kept for as long — carrying what
+was done and how it was labelled.
+
+**It cannot carry the address**, because leadership never had it. If the address
+matters to the case, it has to come from the person, in their own words. That is
+a real limit and it is the price of the rest of this page.
+
+The record itself is kept for **30 days** and then deleted. A case is not.
+
+---
+
+## Part 4 — A trial
 
 Most reports never become one. A trial is for the serious end: when a decision
 needs more than one person and needs a record.
@@ -114,7 +210,7 @@ to the trial for good.
 
 ---
 
-## Part 4 — The discipline log
+## Part 5 — The discipline log
 
 When somebody is disciplined, removed or restored, that goes in the log.
 
@@ -128,7 +224,7 @@ were involved. It is readable by those leading the church, and by nobody else.
 
 ---
 
-## Part 5 — What this app will not do
+## Part 6 — What this app will not do
 
 Said plainly, because a safeguarding system that overpromises is worse than one
 that is modest.
@@ -146,7 +242,7 @@ that is modest.
 
 ---
 
-## Part 6 — If you are asked to handle one
+## Part 7 — If you are asked to handle one
 
 For Directors and Executive Directors.
 

@@ -1066,6 +1066,8 @@ export function SelectPerson({
   people,
   loading = false,
   noneLabel,
+  emptyLabel,
+  emptyNote,
 }: {
   label: string;
   value: string;
@@ -1079,6 +1081,22 @@ export function SelectPerson({
    * decision and "Choose guide" would read as a thing left undone.
    */
   noneLabel?: string;
+  /**
+   * What to say when the list is empty because everybody was FILTERED OUT,
+   * rather than because nobody exists.
+   *
+   * REPORTED AS A BUG, AND IT WAS ONE. The Explorer picker offers only people
+   * with no Guide, so once every Explorer in a church is paired the list is
+   * correctly empty and the control said "No Explorers to choose yet". "Yet"
+   * means none exist. A Director looking at a roster of fourteen Explorers and
+   * a picker saying there are none concludes the screen is broken, and the
+   * default placeholder gave them no way to tell a full church from a failed
+   * load. Same class of fault as the one three comments up: a control that is
+   * indistinguishable from a broken one.
+   */
+  emptyLabel?: string;
+  /** A sentence under the control saying what to do about it. */
+  emptyNote?: string;
 }) {
   const noun = label.toLowerCase();
 
@@ -1113,7 +1131,7 @@ export function SelectPerson({
   const placeholder = loading
     ? `Loading ${noun}s…`
     : people.length === 0
-      ? `No ${noun}s to choose yet`
+      ? emptyLabel ?? `No ${noun}s to choose yet`
       : `Choose ${noun}`;
 
   return (
@@ -1150,6 +1168,12 @@ export function SelectPerson({
           </option>
         ))}
       </select>
+      {/* WHY THERE IS NOBODY TO CHOOSE, WHEN THERE IS NOBODY TO CHOOSE. A
+          greyed-out control with no explanation beside it is the same report
+          every time: "it is not working". It is usually working. */}
+      {!loading && people.length === 0 && emptyNote && (
+        <span className="mt-1 block text-xs text-gray-500">{emptyNote}</span>
+      )}
       {/* WHAT THE TYPING DID. A list that silently shortens is one a Director
           cannot trust: they type three letters, see four names, and have no way
           to know whether the fifth person is missing or simply does not match.

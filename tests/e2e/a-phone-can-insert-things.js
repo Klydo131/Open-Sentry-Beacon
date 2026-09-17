@@ -22,7 +22,7 @@
 //   node tests/e2e/a-phone-can-insert-things.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions } = require('./_playwright');
-const { signInAsExplorer, openStudyRoom, openPage } = require('./_study');
+const { signInAsExplorer, openStudyRoom, newPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -42,7 +42,12 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE);
-  await openPage(page, 0);
+  // A BLANK PAGE, NOT THE FIRST ONE ON THE SHELF. The first one is the Getting
+  // Started page now, whose own heading is 28px -- so "the heading is bigger
+  // than the body text" measured the guide's title against itself and failed on
+  // a working insert bar. The bar is for writing on an empty page; test it on
+  // an empty page.
+  await newPage(page);
 
   // 1. THERE IS A WAY IN THAT IS NOT A KEYSTROKE, on the smallest screen.
   const bar = page.getByRole('toolbar', { name: /Add to this page/i });

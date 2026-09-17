@@ -510,10 +510,23 @@ export async function memberContact(): Promise<Record<string, { email: string; j
 export interface Church {
   id: string;
   name: string;
+  /**
+   * How many Explorers one Guide of this church may carry.
+   *
+   * A CHURCH'S OWN NUMBER, NOT THE APP'S. It was five for a long time and the
+   * whole discipleship shape was built on it; the owner has raised it to a
+   * hundred. What has not changed is that the database enforces it, so a Guide
+   * cannot give themselves more people than their church agreed to.
+   */
+  guide_cap: number;
 }
 
 export async function myChurch(): Promise<Church | null> {
-  const { data, error } = await db().from('churches').select('id, name').limit(1).maybeSingle();
+  // THE CAP COMES WITH THE CHURCH, because the screen that shows a Guide's load
+  // has to show it against the number this congregation actually agreed to. It
+  // used to print "/5" from a literal, which was a lie the day the cap moved.
+  const { data, error } = await db()
+    .from('churches').select('id, name, guide_cap').limit(1).maybeSingle();
   if (error) throw new Error(error.message);
   return (data as Church) ?? null;
 }
@@ -701,7 +714,7 @@ export async function getMyPairing(): Promise<MyPairing | null> {
   //
   // This was `.maybeSingle()`, which RAISES when it finds more than one row —
   // and nothing in the database ever said an Explorer has one Guide. The only
-  // trigger on pairings caps a GUIDE at five Explorers, the other side of the
+  // trigger on pairings caps a GUIDE at the church's own figure, the other side of the
   // relationship, so pairing an Explorer who already had a Guide was simply
   // allowed. Four of them ended up with two.
   //
@@ -1768,10 +1781,18 @@ export async function listMaterials(): Promise<Material[]> {
 /**
  * The record of who shared what, for church leadership.
  *
- * EACH RANK SEES THE RANK BELOW IT AND NO FURTHER DOWN. A Director reads this
- * for the Guides and Explorers of a church they lead; an Executive Director
- * reads it for Directors and is shown nothing about a Guide or an Explorer.
- * The database decides that, not this file.
+ * THERE IS NO ADDRESS IN HERE, AND THAT IS THE POINT OF THE WHOLE RECORD.
+ * "Head ED, ED, and Directors can detect the activities (Except for chat) of
+ * Guide and Explorer, but ... can't see the references." So a row says what was
+ * done and what KIND of thing it was done with, and the address itself is not
+ * hidden from this type -- it is not in the database. See migration
+ * 20260917140000: the column was dropped rather than narrowed, because a column
+ * that exists and is not selected today is one somebody selects next year.
+ *
+ * WHO SEES WHOM. A Director reads this for the Guides and Explorers of a church
+ * they lead. An Executive Director, head or otherwise, reads those too, and
+ * Directors as well. Nobody reads their own row. The database decides that, not
+ * this file.
  *
  * Rows older than 30 days are gone. A record kept forever is a different
  * product from a record kept to answer "what happened last month".
@@ -1781,10 +1802,26 @@ export interface LibraryActivity {
   actor_id: string | null;
   actor_name: string;
   actor_role: 'dm' | 'ds' | 'admin' | 'executive';
-  action: 'added' | 'shared';
+  action: 'added' | 'shared' | 'pocketed';
+  /** Where it happened: the library, or somebody's pocket of web apps. */
+  source: 'library' | 'pocket';
   title: string;
-  address: string | null;
   with_name: string | null;
+  /** How the database judged the shape of the address. Never the address. */
+  concern: 'ordinary' | 'questionable' | 'harmful';
+  /** That judgement in words, written to name a kind and never a site. */
+  label: string;
+  /**
+   * A one-way mark for the site, per church.
+   *
+   * WHAT IT IS FOR AND WHAT IT CANNOT DO. Two rows with the same mark are the
+   * same site, so "this is the fourth time" can be said out loud. It cannot be
+   * turned back into an address by anybody, including us, and the salt is per
+   * church so it cannot be compared against another congregation's.
+   */
+  host_mark: string | null;
+  /** How many times this person has been to that same site. */
+  seen_before: number;
   blocked: boolean;
   occurred_at: string;
 }
@@ -1793,6 +1830,27 @@ export async function listLibraryActivity(limit = 100): Promise<LibraryActivity[
   const { data, error } = await db().rpc('library_activity_feed', { p_limit: limit });
   if (error) throw new Error(error.message);
   return (data ?? []) as LibraryActivity[];
+}
+
+/**
+ * Turn one line of the record into a case somebody has to answer.
+ *
+ * ASKED FOR: "Once those inappropriate things happen, Head ED, ED, and
+ * Directors can file an open case."
+ *
+ * IT GOES THROUGH THE REPORT PATH THAT ALREADY EXISTS rather than writing a
+ * report row of its own, so who may read it, who may claim it and the record
+ * that outlives the account all come free, and the church has one kind of case
+ * rather than two. The detail it writes carries the label and not the address,
+ * because leadership cannot see the address to put there.
+ */
+export async function openCaseFromActivity(activityId: string, note?: string): Promise<string> {
+  const { data, error } = await db().rpc('open_case_from_activity', {
+    p_activity: activityId,
+    p_note: note?.trim() || null,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
 }
 
 /**
@@ -2402,7 +2460,7 @@ export async function avatarUrl(path: string | null | undefined): Promise<string
 // the Explorer is a full participant here rather than a spectator.
 
 export type { MeetingMode };
-export type MeetingStatus = 'proposed' | 'confirmed' | 'cancelled' | 'done';
+export type MeetingStatus = 'proposed' | 'confirmed' | 'declined' | 'cancelled' | 'done';
 
 export interface Meeting {
   id: string;
@@ -2414,13 +2472,28 @@ export interface Meeting {
   notes: string | null;
   status: MeetingStatus;
   created_by: string;
+  /**
+   * Who answered it, and what they said when they did.
+   *
+   * DECLINED AND CANCELLED ARE DIFFERENT THINGS and both are kept. Declined is
+   * "I cannot make the time you proposed"; cancelled is "the time we agreed is
+   * off". Collapsing them loses the one fact the other person actually wants,
+   * which is whether there was ever an agreement to break.
+   *
+   * `answer_name` is the name as it was at the moment of answering, so the
+   * record still reads properly after an account is deleted.
+   */
+  answered_by: string | null;
+  answered_at: string | null;
+  answer_name: string | null;
+  answer_note: string | null;
 }
 
 /** Everything arranged for this pairing, soonest first. */
 export async function listMeetings(pairingId: string): Promise<Meeting[]> {
   const { data, error } = await db()
     .from('meetings')
-    .select('id, pairing_id, title, starts_at, mode, location, notes, status, created_by')
+    .select('id, pairing_id, title, starts_at, mode, location, notes, status, created_by, answered_by, answered_at, answer_name, answer_note')
     .eq('pairing_id', pairingId)
     .order('starts_at', { ascending: true });
   if (error) throw new Error(error.message);
@@ -2480,8 +2553,11 @@ export async function scheduleMeeting(
 export async function myUpcomingMeetings(limit = 5): Promise<Meeting[]> {
   const { data, error } = await db()
     .from('meetings')
-    .select('id, pairing_id, title, starts_at, mode, location, notes, status, created_by')
-    .neq('status', 'cancelled')
+    .select('id, pairing_id, title, starts_at, mode, location, notes, status, created_by, answered_by, answered_at, answer_name, answer_note')
+    // ANSWERED ONES STAY ON THE LIST. Filtering cancelled out is what made a
+    // refusal look like the card silently disappearing: the person who arranged
+    // their afternoon around it saw nothing at all. They are drawn differently
+    // and they are still there.
     // An hour's grace, so something starting right now is still "ahead".
     .gte('starts_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
     .order('starts_at', { ascending: true })
@@ -2490,19 +2566,54 @@ export async function myUpcomingMeetings(limit = 5): Promise<Meeting[]> {
   return (data ?? []) as Meeting[];
 }
 
+/**
+ * Answer a proposed time, or call off one that was agreed.
+ *
+ * ASKED FOR: "If there is a record for acceptance in appointment, there must be
+ * a record for cancel too so that Guides and Explorers are informed who accepted
+ * and who declined."
+ *
+ * WHAT WAS WRONG, AND IT WAS WORSE THAN A MISSING BUTTON. Confirming wrote
+ * `status = 'confirmed'` and cancelling wrote `status = 'cancelled'`, and the
+ * list then filtered cancelled ones out. So a Guide who proposed a time and had
+ * it called off did not see a refusal: they saw the card VANISH, which reads as
+ * a bug rather than an answer. Nobody was told anything either way.
+ *
+ * ONE FUNCTION IN THE DATABASE INSTEAD OF THREE TABLE WRITES, because the
+ * record and the telling have to happen together or neither is reliable. It
+ * writes who answered, their name as it was at the time, when, and why; it
+ * notifies the other person; and it refuses the two answers that mean nothing:
+ * accepting your own proposal, and answering something already answered.
+ */
+export async function answerMeeting(
+  id: string,
+  answer: 'confirmed' | 'declined' | 'cancelled',
+  note?: string,
+): Promise<void> {
+  const { error } = await db().rpc('answer_meeting', {
+    p_meeting: id,
+    p_answer: answer,
+    p_note: note?.trim() || null,
+  });
+  if (error) throw new Error(error.message);
+}
+
 /** Confirm a proposed time. The other person agreeing is what makes it real. */
 export async function confirmMeeting(id: string): Promise<void> {
-  const { error } = await db().from('meetings').update({ status: 'confirmed' }).eq('id', id);
-  if (error) throw new Error(error.message);
+  await answerMeeting(id, 'confirmed');
+}
+
+/** Say no to a proposed time, with a reason if there is one worth giving. */
+export async function declineMeeting(id: string, note?: string): Promise<void> {
+  await answerMeeting(id, 'declined', note);
 }
 
 /**
  * Cancel rather than delete. Somebody who arranged their afternoon around this
  * should see that it was called off, not find that it silently never existed.
  */
-export async function cancelMeeting(id: string): Promise<void> {
-  const { error } = await db().from('meetings').update({ status: 'cancelled' }).eq('id', id);
-  if (error) throw new Error(error.message);
+export async function cancelMeeting(id: string, note?: string): Promise<void> {
+  await answerMeeting(id, 'cancelled', note);
 }
 
 /**

@@ -230,6 +230,19 @@ const staticChecks = [
   // obvious way names the wrong day everywhere west of Greenwich. Both are
   // silent, and the second one is wrong in Manila before eight in the morning.
   ['a page can be tagged and dated', 'tests/a-page-can-be-tagged-and-dated.mjs'],
+  // Leadership can see that somebody did something, not what they did it with.
+  // The obvious version of this check -- "the screen does not print it" -- is
+  // useless: what is held is that the column is not there to print.
+  ['leadership sees the shape, not the thing', 'tests/leadership-sees-the-shape-not-the-thing.mjs'],
+  // The Getting Started page is a gift, not a nag. "Is it there?" is also false
+  // for somebody who read it and binned it, so the wrong question hands it back
+  // every visit forever. A browser cannot ask this: the walkthrough's room
+  // forgets everything on reload.
+  ['a guide is given once', 'tests/a-guide-is-given-once.mjs'],
+  // "No Explorers to choose yet" over a church of fourteen Explorers, because
+  // every one of them was already paired. The control was right; the sentence
+  // was the bug, and it is indistinguishable from a failed load.
+  ['a picker says why it is empty', 'tests/a-picker-says-why-it-is-empty.mjs'],
   // The Kind dropdown defaults to Link and sits below the address, so the
   // field was whatever the form defaulted to -- and then filter chips were
   // built on it, making a field nobody maintains into a control that lies.

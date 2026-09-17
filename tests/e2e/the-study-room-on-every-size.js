@@ -72,8 +72,16 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
     // 1. IT SAYS WHAT IT IS FOR before anybody touches it. An empty BlockSuite
     //    page draws nothing at all, which is what got reported as broken.
+    //
+    //    THE OUTCOME, NOT THE MECHANISM. A new room opens on its Getting
+    //    Started page now, which answers this better than a placeholder ever
+    //    did and leaves no placeholder to find. Pinning the mechanism turned an
+    //    improvement into five red lines.
     const hint = page.locator('.affine-paragraph-placeholder.visible');
-    ok(await hint.count() > 0, `${at}: an untouched room says what it is for`);
+    const onScreen = (await page.locator('editor-host').innerText())
+      .replace(/\u200b/g, '').trim();
+    ok(await hint.count() > 0 || onScreen.length > 40,
+       `${at}: an untouched room says what it is for`);
 
     // 2. AND THE HINT IS NOT CUT OFF, which is how the too-narrow column showed
     //    itself: "Write what you not..." with the rest clipped. scrollWidth

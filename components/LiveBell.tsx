@@ -49,6 +49,10 @@ function routeFor(type: string, role: Role): string {
       // leadership to the old safeguarding room would land them on a summary of
       // a case whose thread is somewhere else.
       return '/settings#reports';
+    case 'watch':
+      // THE ACTIVITY RECORD, which only leadership has. Nobody else is ever
+      // sent one of these, and if somehow they are, home is not a refusal.
+      return leads ? '/admin?room=security' : '/church';
     case 'approval':
       return leads ? '/admin?room=approvals' : '/church';
     case 'pairing':

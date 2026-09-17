@@ -136,6 +136,69 @@ export function LiveAdminPage() {
     live.memberContact().then(setContact).catch(() => setContact({}));
   }, []);
 
+  /**
+   * Show somebody's sign-in details again, for handing over by any means.
+   *
+   * ASKED FOR: "I need to see this to all the e-mails I invited so have a
+   * chance to just copy and paste to other platforms not just in e-mail, like
+   * an alternative and chance please."
+   *
+   * WHY IT RE-ISSUES RATHER THAN LOOKS UP. There is nowhere to look it up. The
+   * password is generated when the invitation is made and handed over once; it
+   * is never stored anywhere in a form anybody can read, which is the only
+   * acceptable way to hold somebody's password and is not going to change. So
+   * the honest way to show it again is to make a new one.
+   *
+   * AND THAT IS SAFE FOR EXACTLY ONE KIND OF ACCOUNT. The invite function
+   * refuses an address that has finished signing up, so this can only ever
+   * replace a password on an account created by an invitation and never used.
+   * Somebody who has chosen their own password cannot have it taken away by a
+   * Director pressing this, and the refusal is shown rather than swallowed.
+   *
+   * `deliver: 'link'` sends no email at all. The point of the button is the
+   * congregation that lives on Messenger.
+   */
+  const showSignIn = async (member: Profile) => {
+    const email = contact[member.id]?.email;
+    if (!email) {
+      setError('That account has no address on file, so there is nothing to hand over.');
+      return;
+    }
+    setBusy(member.id);
+    setError('');
+    setLinkCopied('');
+    try {
+      const result = await live.inviteMember({
+        email,
+        role: member.role,
+        fullName: member.full_name || '',
+        deliver: 'link',
+      });
+      setHandLink(result.link
+        ? {
+            to: email,
+            url: result.link,
+            // NOT 'sent', because nothing was sent. The panel draws the 'sent'
+            // case in green with "in case the e-mail does not arrive", which
+            // would be describing a message that does not exist.
+            why: result.mailNote
+              || 'Made for you to pass on. Nothing was e-mailed.',
+            wait: result.waitSeconds,
+            pass: result.tempPassword,
+          }
+        : null);
+      if (!result.link) {
+        setError(result.mailNote
+          || 'No sign-in details could be made for that account. Somebody who has '
+          + 'already chosen their own password keeps it, and it cannot be read here.');
+      }
+    } catch (cause) {
+      setError(errorText(cause));
+    } finally {
+      setBusy('');
+    }
+  };
+
   const openPerson = members.find((m) => m.id === openId) ?? null;
   // The other half of their pairing, so the compatibility panel has something
   // to compare against.
@@ -157,6 +220,11 @@ export function LiveAdminPage() {
     : ['dm', 'ds'];
   const guides = members.filter((member) => member.role === 'dm' && member.is_approved);
   const explorers = members.filter((member) => member.role === 'ds' && member.is_approved);
+  // WHO CAN ACTUALLY BE PAIRED: an Explorer with no Guide. One at a time is the
+  // rule, and it is the reason this list is usually short and sometimes empty.
+  const freeExplorers = explorers.filter(
+    (explorer) => !pairings.some((p) => p.ds_id === explorer.id && p.status === 'active'),
+  );
   const manageable = members.filter(
     (member) => member.id !== profile?.id && roleOptions.includes(member.role),
   );
@@ -516,6 +584,7 @@ export function LiveAdminPage() {
             people={room === 'guides' ? guides : room === 'explorers' ? explorers : directors}
             kind={room}
             pairings={pairings}
+            cap={church?.guide_cap ?? 100}
             onOpen={setOpenId}
           />
         )}
@@ -551,8 +620,11 @@ export function LiveAdminPage() {
             one door too many.
 
             Who appears in each is decided in the database. A Director reads the
-            library record for Guides and Explorers; an Executive Director reads
-            it for Directors and sees nothing about a Guide or an Explorer. */}
+            activity record for the Guides and Explorers of a church they lead;
+            an Executive Director, head or otherwise, reads those and the
+            Directors as well. Nobody appears in their own oversight, and
+            nobody at any rank is shown the address of anything: the record
+            carries what KIND of thing it was, never which. */}
         {room === 'feedback' && <LiveFeedbackInbox />}
 
         {room === 'security' && (
@@ -960,6 +1032,17 @@ export function LiveAdminPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {/* NOT A DESTRUCTIVE BUTTON, SO NOT A RED ONE, and it sits
+                        before the two that are. A Director reaching for this is
+                        helping somebody get in, which is the opposite errand
+                        from the two beside it. */}
+                    <Button
+                      variant="ghost"
+                      onClick={() => void showSignIn(member)}
+                      disabled={busy === member.id}
+                    >
+                      {busy === member.id ? 'Working…' : 'Sign-in details'}
+                    </Button>
                     <Button
                       variant="danger"
                       onClick={() => void disapprove(member)}
@@ -1048,13 +1131,37 @@ export function LiveAdminPage() {
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Pair a Guide and Explorer</h2>
           <form onSubmit={pair} className="mt-4 grid gap-3 sm:grid-cols-2">
-            <SelectPerson label="Guide" value={dmId} onChange={setDmId} people={guides} loading={loading} />
+            <SelectPerson
+              label="Guide"
+              value={dmId}
+              onChange={setDmId}
+              people={guides}
+              loading={loading}
+              emptyNote={guides.length === 0
+                ? 'Nobody in this church has the Guide role yet. Invite one, or change somebody\u2019s role from their profile.'
+                : undefined}
+            />
+            {/* AN EMPTY LIST HERE IS USUALLY GOOD NEWS, AND USED TO READ AS A
+                FAULT. The picker offers only Explorers who have no Guide, so a
+                church where everybody is paired correctly has nothing to
+                choose. It said "No Explorers to choose yet" -- and "yet" means
+                none exist, which to a Director looking at a roster of fourteen
+                Explorers means the screen is broken. Reported as a bug, and
+                the message was the bug. */}
             <SelectPerson
               label="Explorer"
               value={dsId}
               onChange={setDsId}
               loading={loading}
-              people={explorers.filter((explorer) => !pairings.some((p) => p.ds_id === explorer.id && p.status === 'active'))}
+              people={freeExplorers}
+              emptyLabel={explorers.length === 0
+                ? undefined
+                : 'Everybody already has a Guide'}
+              emptyNote={explorers.length === 0
+                ? 'No Explorers have been approved into this church yet.'
+                : `All ${explorers.length} Explorers in this church are already `
+                  + 'walking with a Guide. To move somebody to a different Guide, '
+                  + 'end their pairing below first: an Explorer has one Guide at a time.'}
             />
             <div className="sm:col-span-2">
               <Button type="submit" disabled={busy === 'pair' || !dmId || !dsId}>Create pairing</Button>
@@ -1390,6 +1497,7 @@ function PeopleRoom({
   people,
   kind,
   pairings,
+  cap,
   onOpen,
 }: {
   people: Profile[];
@@ -1397,6 +1505,8 @@ function PeopleRoom({
   /** Open somebody's profile. The panel lives on the page, not in this list. */
   onOpen: (id: string) => void;
   pairings: live.PairingView[];
+  /** This church's own limit, read from the church rather than assumed. */
+  cap: number;
 }) {
   const active = pairings.filter((p) => p.status === 'active');
   const loadOf = (guideId: string) => active.filter((p) => p.dm_id === guideId).length;
@@ -1453,16 +1563,21 @@ function PeopleRoom({
                   )}
                 </div>
                 {kind === 'guides' && (
-                  // Five is the cap, enforced in the database (migration 0030).
-                  // Showing the load against it means a Director can see who
-                  // has room without opening anything.
+                  // THE CAP IS THE CHURCH'S, READ FROM THE CHURCH. This printed
+                  // "/5" from a literal in three places, which was true for as
+                  // long as five was the only number anybody had and a lie the
+                  // moment a church chose a different one. The database has
+                  // always enforced the church's own figure; only the screen
+                  // was guessing.
                   <span
                     className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                      load >= 5 ? 'bg-red-100 text-red-800' : 'bg-white text-navy ring-1 ring-black/5'
+                      load >= cap ? 'bg-red-100 text-red-800' : 'bg-white text-navy ring-1 ring-black/5'
                     }`}
-                    title={load >= 5 ? 'At the cap of five' : `${5 - load} place${5 - load === 1 ? '' : 's'} free`}
+                    title={load >= cap
+                      ? `At this church's cap of ${cap}`
+                      : `${cap - load} place${cap - load === 1 ? '' : 's'} free`}
                   >
-                    {load}/5
+                    {load}/{cap}
                   </span>
                 )}
               </div>

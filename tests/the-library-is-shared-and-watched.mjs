@@ -119,8 +119,16 @@ const explorer = strip(readFileSync('components/live/ExplorerPage.tsx', 'utf8'))
      `and the pruning runs on write and on read rather than on a schedule (${pruneCalls} call sites)`);
   ok(/Kept for 30 days, then deleted/.test(record),
      'the screen says so, so a Director is not surprised by it');
-  ok(/safeguarding report/.test(record),
+  // THE WORDING MOVED AND THE INTENT DID NOT. This used to look for the phrase
+  // "safeguarding report", which was the only way to make something outlast the
+  // month when the screen had no control of its own. It has one now -- a case
+  // can be opened from the row it is about -- so the assertion is on the thing
+  // a Director can actually do rather than on the sentence that used to
+  // describe it.
+  ok(/open a case|safeguarding report/i.test(record),
      'and says what to do when something needs to outlast the month');
+  ok(/openCaseFromActivity/.test(record),
+     'and the way to do it is on the row, not in another room');
 }
 
 // ---------------------------------------------------------------------------

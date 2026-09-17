@@ -100,6 +100,43 @@ const HEADING_WORDS = new Set([
 const tidy = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.:]+$/, '');
 
 /**
+ * A file somebody can open, look at, and type over.
+ *
+ * ASKED FOR: "I need a format to download for the sample so that new Admins
+ * have an idea how the format in sheets and excel should be made."
+ *
+ * WHY A FILE AND NOT A PICTURE OF ONE. The instructions above the box already
+ * describe the format in words, and a Director who has never made a CSV does
+ * not learn it from a sentence: they learn it by opening one, seeing three
+ * columns, and typing over the rows. The download is the instruction.
+ *
+ * IT CARRIES THE HEADER ROW ON PURPOSE. The parser treats a heading line as a
+ * heading rather than as a person -- `HEADING_WORDS` is there for exactly this
+ * -- so the sample can be uploaded straight back without editing anything and
+ * will read as three example people and not four.
+ *
+ * THE EXAMPLES ARE OBVIOUSLY EXAMPLES. example.org is the address reserved for
+ * documentation and can never belong to a real person, so a Director who
+ * forgets to replace a row invites nobody by accident.
+ */
+const SAMPLE_ROWS = [
+  ['Name', 'Email', 'Role'],
+  ['Maria Santos', 'maria@example.org', 'Explorer'],
+  ['Joel Reyes', 'joel@example.org', 'Guide'],
+  ['Ana Cruz', 'ana@example.org', 'Director'],
+];
+
+function sampleFile(): string {
+  // CRLF, BECAUSE EXCEL ON WINDOWS IS WHO THIS IS FOR. A file with bare \n
+  // opens in Notepad as one long line, which is the first thing somebody sees
+  // and the reason they decide the format is complicated.
+  const body = SAMPLE_ROWS.map((row) => row.join(',')).join('\r\n');
+  // A BYTE ORDER MARK, so Excel reads it as UTF-8 and a Filipino name with an
+  // accent in it does not arrive as mojibake in the church's roster.
+  return `\ufeff${body}\r\n`;
+}
+
+/**
  * The fields inside one line.
  *
  * Commas, semicolons and tabs all separate, because a file saved out of a
@@ -408,6 +445,31 @@ export function LiveBulkInvite({ roles }: { roles: Role[] }) {
         <p className="mt-2 text-xs text-gray-500">
           A .csv or .txt file, or drop one here. From Google Sheets or Excel,
           choose File, then Download, then Comma-separated values.
+        </p>
+
+        {/* THE SAMPLE, NEXT TO THE THING IT IS A SAMPLE OF. Somewhere else on
+            the page is somewhere nobody looks while they are stuck. */}
+        <button
+          type="button"
+          onClick={() => {
+            const blob = new Blob([sampleFile()], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'invitation-list-sample.csv';
+            document.body.append(link);
+            link.click();
+            link.remove();
+            // Let the download start before the address stops meaning anything.
+            setTimeout(() => URL.revokeObjectURL(url), 10_000);
+          }}
+          className="mt-2 text-sm font-semibold text-navy underline decoration-dotted"
+        >
+          Download a sample list to fill in
+        </button>
+        <p className="mt-1 text-xs text-gray-500">
+          Opens in Sheets or Excel. Type over the three example rows, keep the
+          headings, and upload it back here.
         </p>
       </div>
 

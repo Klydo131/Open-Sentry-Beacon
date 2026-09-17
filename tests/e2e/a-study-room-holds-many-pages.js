@@ -52,6 +52,14 @@ const nameAndWrite = async (page, title, words) => {
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE);
 
+  // WHAT THE ROOM STARTS WITH, COUNTED RATHER THAN ASSUMED. A new room comes
+  // with its own Getting Started page now, so "the shelf holds two" stopped
+  // being true the day that shipped. Counting from what is actually there
+  // keeps this walk about the thing it is testing -- that a second page can be
+  // made and kept apart from the first -- rather than about how many pages the
+  // app happens to give somebody on their first morning.
+  const atFirst = await shelfRows(page).count();
+
   // 1. THE ROOM OPENS ON ITS SHELF, which is the shape that was asked for:
   //    "a special room like the library page".
   ok(await shelfRows(page).count() >= 1, 'the room opens on a list of its pages');
@@ -76,7 +84,8 @@ const nameAndWrite = async (page, title, words) => {
   await nameAndWrite(page, 'Daniel', 'The fourth man in the fire.');
   await backToShelf(page);
 
-  ok(await shelfRows(page).count() === 2, 'the shelf now holds two pages');
+  ok(await shelfRows(page).count() === atFirst + 1,
+     `the shelf now holds the page that was added (${atFirst} + 1)`);
 
   // 4. AND THE FIRST ONE IS STILL WHERE IT WAS.
   await page.getByText('Romans', { exact: true }).first().click();
@@ -114,7 +123,8 @@ const nameAndWrite = async (page, title, words) => {
   //    and the difference is the whole reason there is a bin.
   await page.getByRole('button', { name: /Move to bin/i }).first().click();
   await page.waitForTimeout(700);
-  ok(await shelfRows(page).count() === 1, 'a page put in the bin leaves the shelf');
+  ok(await shelfRows(page).count() === atFirst,
+     `a page put in the bin leaves the shelf (back to ${atFirst})`);
 
   await page.getByRole('button', { name: /Bin/i }).first().click();
   await page.waitForTimeout(600);
@@ -124,7 +134,7 @@ const nameAndWrite = async (page, title, words) => {
   await page.waitForTimeout(700);
   await page.getByRole('button', { name: /All pages/i }).first().click();
   await page.waitForTimeout(600);
-  ok(await shelfRows(page).count() === 2, 'and can be taken back out again');
+  ok(await shelfRows(page).count() === atFirst + 1, 'and can be taken back out again');
 
   // 9. AND DELETING FOR GOOD ASKS FIRST.
   await page.getByRole('button', { name: /Move to bin/i }).first().click();

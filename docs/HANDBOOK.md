@@ -61,7 +61,7 @@ What an Explorer says to their Guide is readable by those two and nobody else. N
 
 ### The limit is people, not computers
 
-A Guide walks with at most five Explorers at once, and the database enforces it rather than the screen. The app will run a church of a hundred without complaint, on the plan it is on today and with room to spare. See [What it costs](./WHAT-IT-COSTS.md) for the measured figures. What it cannot do is find you a sixth Guide. Growth here means recruiting and training people, and the app is built to keep that constraint visible rather than hide it behind a number that keeps rising.
+A Guide walks with at most as many Explorers as the church has set, and the database enforces it rather than the screen. The figure started at five, which is roughly what one person can actually walk with; this congregation has raised it to a hundred. The app will run a church of a hundred without complaint, on the plan it is on today and with room to spare. See [What it costs](./WHAT-IT-COSTS.md) for the measured figures. What it cannot do is find you a sixth Guide. Growth here means recruiting and training people, and the app is built to keep that constraint visible rather than hide it behind a number that keeps rising.
 
 ## 2. The four roles
 
@@ -70,7 +70,7 @@ A person's role is chosen when they are approved, and it decides everything they
 | Role | What they do | What they can see |
 | --- | --- | --- |
 | **Explorer** | Walks the journey. Reads what their Guide sends, talks with them, asks for prayer. | Their own journey, and their conversation with their Guide. Nothing about anybody else. |
-| **Guide** | Walks with up to five Explorers. Chooses what to share and when. Recommends new people, but cannot invite them. | Only the Explorers paired with them. Never another Guide's people. |
+| **Guide** | Walks with up to the church's own limit of Explorers. Chooses what to share and when. Recommends new people, but cannot invite them. | Only the Explorers paired with them. Never another Guide's people. |
 | **Director** | Runs the church. Invites, approves, pairs, and reads safeguarding reports. | Everyone in their church and the counts behind them. Not private conversations, except inside a report. |
 | **Executive Director** | Oversees one or more churches, and appoints Directors. | Everything a Director sees, across every church they oversee. |
 
@@ -128,7 +128,9 @@ A sixth idea sits behind these: **Commission**. An Explorer who has been walked 
 
 Open the **Pairings** room, choose one of each, and press **Create pairing**. They can talk from that moment. A Guide already carrying five will not appear in the list, because the database will not allow a sixth.
 
-**Five is a ceiling, and a church can raise it.** A Guide walks with five Explorers by default, enforced by the database. A congregation with more Explorers than Guides can carry may raise that limit in Church settings, up to twenty-five. Only a Director or an Executive Director can, and only for their own church: a Guide can never give themselves more people.
+**The ceiling is the church's, and a church can move it.** A Guide walks with as many Explorers as the congregation has set, enforced by the database. It may be raised in Church settings, up to a hundred. Only a Director or an Executive Director can, and only for their own church: a Guide can never give themselves more people.
+
+Five was the original figure and the number the discipleship shape was designed around. Raising it does not make one person able to walk with more people; it makes the app stop refusing. What the cap protects is not the servers, it is the Explorer at the bottom of a long list.
 
 Raising it is a decision, not a drift. Five is the number the design is built around because it is how many people one person can actually walk with.
 
@@ -881,7 +883,7 @@ Every privacy promise this app makes is kept by the database, not by the screens
 | Nobody can change their own role. | A trigger that rejects the change, and a saved profile that always writes back the role it read. |
 | An Explorer sees only themselves. | Row level security on every table, scoped by church and by pairing. |
 | A Guide sees only the Explorers paired with them. | The same. |
-| A Guide carries at most five Explorers. | A trigger that counts, because a limit across rows cannot be a constraint. |
+| A Guide carries at most the church's own number of Explorers. | A trigger that counts, because a limit across rows cannot be a constraint. |
 | The Head Executive Director cannot be removed. | The discipline check, refused before anything happens. |
 | A removal is always recorded. | A log written before the deletion, which outlives the person it describes. |
 | A change to somebody's details is visible to their Guide. | An append-only table with no write policy at all, filled by a trigger. |

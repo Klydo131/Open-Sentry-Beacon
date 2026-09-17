@@ -24,7 +24,7 @@
 //   node tests/e2e/the-study-room-can-do-more-than-type.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions } = require('./_playwright');
-const { signInAsExplorer, openStudyRoom, openPage } = require('./_study');
+const { signInAsExplorer, openStudyRoom, newPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -59,7 +59,10 @@ const textIn = (host) => {
 
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE);
-  await openPage(page, 0);
+  // A BLANK PAGE. The first page on the shelf is the Getting Started guide now,
+  // whose own heading is 28px, so "the block became a heading" compared the
+  // guide's title against itself and failed on a working slash menu.
+  await newPage(page);
 
   // The size of ordinary body text, read from the page rather than pinned to a
   // number, so a change of theme is not a failing test.

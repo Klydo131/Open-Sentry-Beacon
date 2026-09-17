@@ -112,8 +112,10 @@ export function buildReport(input: {
         ],
         notes: [
           'The limit on this church is Guides, not servers. A Guide carries at '
-          + 'most five Explorers, enforced in the database. Growth is recruiting '
-          + 'and training a Guide, not buying anything.',
+          + 'most as many Explorers as this church has set, enforced in the '
+          + 'database rather than on a screen. Growth is recruiting and training '
+          + 'a Guide, not buying anything: a Guide with ninety people is a '
+          + 'number, not a discipleship relationship.',
         ],
       }],
     },

@@ -61,7 +61,10 @@ const data = strip(read('lib/live/data.ts'));
   ok(/notes\?: string/.test(data), 'the data layer takes a note');
   ok(/notes: \(meeting\.notes \|\| ''\)\.trim\(\) \|\| null/.test(data),
      'and writes it, or null rather than a row of spaces');
-  ok(/select\('id, pairing_id, title, starts_at, mode, location, notes, status, created_by'\)/.test(data),
+  // THE WHOLE SELECT STRING WAS PINNED HERE, which made this fail the day the
+  // row grew columns it should have. What matters is that `notes` is still
+  // asked for, not that the list is the exact one it was in September.
+  ok(/\.select\('id, pairing_id, title,[^']*\bnotes\b[^']*'\)/.test(data),
      'and reads it back');
 
   // THE LINK THAT WAS MISSING, TWICE OVER: nowhere to type it, nowhere it showed.
@@ -142,8 +145,22 @@ const data = strip(read('lib/live/data.ts'));
 {
   ok(/STILL_ON = 60 \* 60 \* 1000/.test(code),
      'a meeting already under way stays on the card for an hour');
-  ok(/upcoming = all\.filter\(\(m\) => m\.status !== 'cancelled' && !past\(m\)\)/.test(code),
+  ok(/upcoming = all\.filter\(\(m\) => !past\(m\)\)/.test(code),
      'and what is ahead is still what the card leads with');
+
+  // AND AN ANSWERED ONE STAYS ON IT, which is the opposite of what this file
+  // used to assert. The old rule filtered cancelled appointments out on the
+  // grounds that "the message in the conversation" carried the news; no message
+  // was ever sent, so what actually happened was the card disappearing, and the
+  // person who arranged their afternoon around it had nothing to look at.
+  // Asked for in these words: "there must be a record for cancel too so that
+  // Guides and Explorers are informed who accepted and who declined."
+  ok(!/status !== 'cancelled'/.test(code),
+     'a called-off appointment is not hidden, it is drawn as called off');
+  ok(/answer_name/.test(code) && /answered_at/.test(code),
+     'and the row says who answered it and when');
+  ok(/declineMeeting/.test(code),
+     'and there is a way to say no, not only a way to say yes');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
