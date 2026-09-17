@@ -9,6 +9,7 @@ import { useKeepUp, KEEP_UP_POCKET } from '@/lib/live/keep-up';
 import * as live from '@/lib/live/data';
 import {
   type Pocket as Item, POCKET_LIMIT, labelFor, markFor, pocketRefusal, readPocket,
+  pocketWithStarters,
   tidyUrl, writePocket,
 } from '@/lib/pocket';
 import { humanError } from '@/lib/live/errors';
@@ -36,7 +37,10 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
   const adopted = useRef(false);
 
   const load = useCallback(async () => {
-    if (!isLive) { setItems(readPocket()); return; }
+    // The walkthrough has no account, so its starter tiles are seeded here,
+    // once per device. The live app is seeded by a trigger when the account is
+    // made, so nothing on this screen can ever put a removed tile back.
+    if (!isLive) { setItems(pocketWithStarters()); return; }
     try {
       const rows = await live.myPocket();
 

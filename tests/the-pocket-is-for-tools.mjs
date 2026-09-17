@@ -160,5 +160,42 @@ const ui = read('components/Pocket.tsx')
      'and it refuses with words a person can read');
 }
 
+// ---------------------------------------------------------------------------
+// A POCKET STARTS WITH SOMETHING IN IT, AND STAYS HOW SOMEBODY LEAVES IT
+// ---------------------------------------------------------------------------
+//
+// ASKED FOR: "please make faithlife as the default (can be removed or add by
+// users too) web app in the pocket app please."
+//
+// The second half of that sentence is the hard half. A default the app puts
+// back is not a default, it is a nag: somebody who removes a tile has said what
+// they want. So the live app is seeded by a trigger ONCE, when the account is
+// made, and no screen may ever seed it -- because a screen only knows that a
+// pocket is empty, which is also true of a pocket somebody has just emptied.
+{
+  const pocket = read('lib/pocket.ts');
+  const screen = read('components/Pocket.tsx');
+
+  ok(/faithlife\.com/.test(pocket), 'Faithlife is what a pocket starts with');
+  ok(/STARTER_APPS/.test(pocket), 'and the starter list is named rather than inlined');
+
+  // ONCE PER DEVICE IN THE WALKTHROUGH, and the flag is written BEFORE the
+  // tiles: a storage failure halfway through should leave somebody with no
+  // starter rather than one that reappears on every visit.
+  const seeding = pocket.slice(pocket.indexOf('export function pocketWithStarters'));
+  const flagAt = seeding.indexOf('POCKET_SEEDED_KEY, String');
+  const writeAt = seeding.indexOf('writePocket(starters)');
+  ok(flagAt !== -1 && writeAt !== -1 && flagAt < writeAt,
+     'the walkthrough remembers it has seeded before it seeds');
+
+  // AND THE LIVE SCREEN NEVER SEEDS. This is the assertion that keeps a removed
+  // tile removed: the seeding call may only appear on the branch that has no
+  // database behind it.
+  const live = screen.slice(screen.indexOf('if (!isLive)'));
+  const afterBranch = live.slice(live.indexOf('\n'));
+  ok(!/pocketWithStarters/.test(afterBranch),
+     'and the live pocket is never seeded by the screen, so a removed tile stays removed');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

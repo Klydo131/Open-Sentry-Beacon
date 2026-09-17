@@ -152,6 +152,7 @@ const KNOWN: { match: RegExp; glyph: string; color: string }[] = [
   { match: /(^|\.)canva\.com$/,                        glyph: '✦',  color: '#00C4CC' },
   { match: /(^|\.)(bible\.com|youversion\.com)$/,      glyph: '✝',  color: '#6B4FBB' },
   { match: /(^|\.)adventist\.org$/,                    glyph: '✝',  color: '#F5A623' },
+  { match: /(^|\.)(faithlife\.com|logos\.com)$/,        glyph: '✦',  color: '#4A9C2D' },
 ];
 
 // Colours for everything else, chosen to sit against both a light and a dark
@@ -169,6 +170,57 @@ export function markFor(url: string): { glyph: string; color: string } {
     glyph: (host[0] ?? '?').toUpperCase(),
     color: FALLBACK[sum % FALLBACK.length],
   };
+}
+
+/**
+ * What a pocket starts with.
+ *
+ * ASKED FOR: "please make faithlife as the default (can be removed or add by
+ * users too) web app in the pocket app please."
+ *
+ * A DEFAULT THAT COMES BACK IS NOT A DEFAULT, IT IS A NAG. Somebody who removes
+ * a tile has said what they want, and an app that quietly puts it back the next
+ * time they open the room is arguing with them. So in the live app this is not
+ * seeded by the screen at all: a trigger gives it to an account once, when the
+ * account is made, and after that the rows are entirely the person's own. There
+ * is nothing anywhere that can add it a second time.
+ *
+ * In the walkthrough, which has no account and no database, it is seeded once
+ * per device against the flag below and then left alone for the same reason.
+ */
+export const STARTER_APPS: { url: string; label: string }[] = [
+  { url: 'https://faithlife.com', label: 'Faithlife' },
+];
+
+/** Remembers that the walkthrough's pocket has been given its starter tiles. */
+export const POCKET_SEEDED_KEY = 'beacon-pocket-seeded';
+
+/**
+ * The walkthrough's pocket, with its starter tiles added the first time only.
+ *
+ * ONCE PER DEVICE, AND NEVER AGAIN. The flag is written before the tiles are,
+ * so a storage failure halfway through leaves somebody with no starter rather
+ * than with one that reappears every visit. Of the two, the nag is worse.
+ */
+export function pocketWithStarters(): Pocket[] {
+  const existing = readPocket();
+  try {
+    if (window.localStorage.getItem(POCKET_SEEDED_KEY)) return existing;
+    window.localStorage.setItem(POCKET_SEEDED_KEY, String(Date.now()));
+  } catch {
+    // No storage at all. Nothing can be remembered, so nothing is seeded: a
+    // tile that came back on every page load would be worse than none.
+    return existing;
+  }
+  if (existing.length > 0) return existing;
+
+  const starters: Pocket[] = STARTER_APPS.map((app, i) => ({
+    id: `starter-${i}`,
+    url: app.url,
+    label: app.label,
+  }));
+  writePocket(starters);
+  return starters;
 }
 
 /** Everything in the pocket. A private window refuses storage; that is empty, not broken. */
