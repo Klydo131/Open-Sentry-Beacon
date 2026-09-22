@@ -44,3 +44,81 @@
   outline: none;
   box-shadow: none;
 }
+
+/* ---------------------------------------------------------------------------
+ * THE EDITOR'S STYLESHEET REACHES OUT OF THE EDITOR.
+ *
+ * REPORTED WITH A SCREENSHOT of a tag box stretched across the whole page and
+ * an "Add sdasda" button the size of a banner. The box is `w-32`. It measured
+ * 828px.
+ *
+ * WHERE IT COMES FROM, ACCORDING TO CHROME RATHER THAN ACCORDING TO ME. My
+ * first version of this comment blamed AFFiNE's theme stylesheet. That was
+ * wrong and it took a `CSS.getMatchedStylesForNode` call over the debugger
+ * protocol to find out: @toeverything/theme mentions `input` exactly once and
+ * sets no flex at all, and no stylesheet this app BUILDS contains a bare
+ * `input` rule. The rule is injected at runtime, and it is three of them:
+ *
+ *   node_modules/@blocksuite/affine-inline-reference/src/reference-node/
+ *     reference-popup/reference-popup.ts, in `static override styles`:
+ *
+ *       input { display: flex; flex: 1; padding: 0; border: none;
+ *               background: transparent; color: var(--affine-text-primary-color) }
+ *       ${fontXSStyle('input')}
+ *       input::placeholder { color: var(--affine-placeholder-color) }
+ *
+ * That is the little popup you get when you `@` another page. It is a lit
+ * component and its stylesheet uses `:host`, so it was WRITTEN to live in a
+ * shadow root where a bare `input` selector is perfectly safe and means "the
+ * one input I contain". It does not end up in one. Chrome reports it as a
+ * document stylesheet of `regular` origin, matching a light-DOM input that
+ * belongs to this app and sits nowhere near the editor.
+ *
+ * They are meant for the editor's own controls and they land on every input on
+ * the screen, because a bare element selector has no idea what page it is on.
+ * A class beats an element selector, so `bg-white`, `px-3` and `text-sm` all
+ * win -- but `flex: 1 1 0%` is not a property any width class sets. In a flex
+ * row, `flex-basis: 0%` with `flex-grow: 1` is what decides the size, and
+ * `width` is never consulted. So the box grew to fill the row and nothing in
+ * the component could have stopped it.
+ *
+ * WHY THE FIX IS HERE AND NOT ON THAT ONE INPUT. Adding `flex-none` to the tag
+ * box fixes the tag box. It does not fix the folder box, the search field, the
+ * name of a saved view, or the next input somebody adds to this screen without
+ * knowing any of this. The leak is the bug; the tag box was where it showed.
+ *
+ * SCOPED TO OUTSIDE THE EDITOR, so the editor's own controls keep whatever
+ * AFFiNE intends for them. Most BlockSuite controls do sit inside shadow roots,
+ * where a document rule cannot reach them and none of this matters either way.
+ * The second rule below is for the ones that do not -- the same escape that
+ * caused this in the first place, pointing the other way.
+ *
+ * `body` is on the front so this outranks a bare `input` whatever order the
+ * stylesheets end up in. Specificity, not luck.
+ *
+ * AND IT IS TWO RULES RATHER THAN ONE `:not()`, which is the whole reason this
+ * reads oddly. The obvious way to write it is `input:not(editor-host *)` -- one
+ * rule, says exactly what it means. A descendant selector inside `:not()` is
+ * Selectors Level 4, and Safari did not take it until 16.4. An unsupported
+ * selector does not degrade: the browser discards the ENTIRE RULE, so on an
+ * iPhone a version or two behind, the fix would simply not be there and the tag
+ * box would stretch exactly as it does in the screenshot -- on the devices most
+ * likely to be reading this app, and nowhere a desktop browser would show it.
+ * docs/PLATFORMS.md tracks floors as far back as Safari 11.3 for this reason.
+ *
+ * So: put every input back, then hand the editor's own back to it. Both rules
+ * are plain descendant selectors, which every browser has had for twenty years,
+ * and (0,0,3) beats (0,0,2) so the second one wins where it applies.
+ * ---------------------------------------------------------------------------
+ */
+body input {
+  display: revert;
+  flex: 0 1 auto;
+  color: inherit;
+}
+
+body editor-host input {
+  display: flex;
+  flex: 1 1 0%;
+  color: var(--affine-text-primary-color);
+}

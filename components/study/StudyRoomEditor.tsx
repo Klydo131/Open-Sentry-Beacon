@@ -571,8 +571,15 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         </>
       );
     }
+    // A READING COLUMN FOR READING, THE WHOLE ROOM FOR A CANVAS. `max-w-3xl`
+    // is the right width for prose and the wrong one for a whiteboard:
+    // squeezed to 828px the board is cramped, and AFFiNE's own toolbar lays
+    // itself out for more room than that and overlapped its own zoom controls.
+    // A canvas wants the space.
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 pb-24 pt-4">
+      <div className={`mx-auto w-full px-4 pb-24 pt-4 ${
+        mode === 'edgeless' ? 'max-w-none' : 'max-w-3xl'
+      }`}>
         {trouble && (
           <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">
             <span className="font-semibold">Not saved yet.</span> {trouble} Keep this
@@ -665,8 +672,17 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           // `dvh` AS WELL AS `vh`, because a phone's `vh` is measured against a
           // window that includes the browser's own bars: the canvas would run
           // under the address bar and the bottom of it would never be reachable.
+          // AND `relative`, WHICH IS THE WHOLE OF A REPORTED BUG. The canvas
+          // draws its toolbar with `position: absolute; bottom: 0`, and an
+          // absolute box anchors to the nearest POSITIONED ancestor. This div
+          // had none, so the toolbar climbed past it to the full-screen shell
+          // and pinned itself to the bottom of the WINDOW: measured at 820-900
+          // against a canvas ending at 825, so it floated below the board,
+          // overlapping whatever was under it and half cut off by the edge of
+          // the screen. Making this div positioned puts the toolbar back on
+          // the board it belongs to, inside the rounded corners.
           className={mode === 'edgeless'
-            ? 'affine-edgeless-viewport h-[70vh] [height:70dvh] overflow-hidden rounded-2xl ring-1 ring-black/10'
+            ? 'affine-edgeless-viewport relative h-[70vh] [height:70dvh] overflow-hidden rounded-2xl ring-1 ring-black/10'
             : 'affine-page-viewport'}
         />
       </div>

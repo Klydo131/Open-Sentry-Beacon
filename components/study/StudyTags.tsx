@@ -92,9 +92,16 @@ export function StudyTags({ tags, known, onChange }: {
         <button
           type="button"
           onPointerDown={(e) => { e.preventDefault(); add(); }}
-          className="rounded-full bg-navy px-3 py-1 text-sm font-semibold text-white"
+          // THE WORD, NOT THE TAG. This read `Add {cleanTag(draft)}`, which put
+          // whatever somebody was typing inside the button: at the 24-character
+          // limit it measured 322px, and it restated a word already on the
+          // screen two inches to the left. The name of the tag belongs to the
+          // screen reader, where it is the only way to know which tag this
+          // button adds.
+          aria-label={`Add the tag ${cleanTag(draft)}`}
+          className="rounded-full bg-navy px-4 py-1 text-sm font-semibold text-white"
         >
-          Add {cleanTag(draft)}
+          Add
         </button>
       ) : null}
     </div>
