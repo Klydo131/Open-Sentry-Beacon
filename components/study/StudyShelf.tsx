@@ -47,6 +47,9 @@ export function StudyShelf({
   onDeleteForever,
   onAdd,
   onToday,
+  onExportVault,
+  onImportVault,
+  vaultBusy = '',
 }: {
   entries: ShelfEntry[];
   view: ShelfView;
@@ -70,6 +73,12 @@ export function StudyShelf({
   onAdd: () => void;
   /** Open today's journal page, making it if today has not been written in. */
   onToday: () => void;
+  /** Hand the whole room over as an Obsidian vault. */
+  onExportVault: () => void;
+  /** Take Markdown -- one file, several, or a zipped vault -- back in. */
+  onImportVault: (files: FileList) => void;
+  /** What the vault is doing right now, said out loud, or empty when idle. */
+  vaultBusy?: string;
 }) {
   const [query, setQuery] = useState('');
   const [confirming, setConfirming] = useState('');
@@ -141,6 +150,47 @@ export function StudyShelf({
           </button>
         )}
       </div>
+
+      {/* OBSIDIAN, AND WHY IT SITS HERE RATHER THAN IN A SETTINGS SCREEN.
+          What somebody writes in this room is theirs -- the same argument
+          components/LiveExport.tsx makes about the church's own roster. A room
+          you can only read inside one website is a room somebody is renting,
+          and the moment to notice you can take a copy is while you are looking
+          at the pages, not three menus away.
+
+          Quiet, though. This is not what anybody came here to do, so it is a
+          line of small text under the search box rather than two more buttons
+          competing with New page. */}
+      {view !== 'trash' && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+          <button
+            type="button"
+            onClick={onExportVault}
+            disabled={!!vaultBusy}
+            className="underline underline-offset-2 hover:text-navy disabled:no-underline disabled:opacity-60"
+          >
+            Take a copy for Obsidian
+          </button>
+          <label className="cursor-pointer underline underline-offset-2 hover:text-navy">
+            Bring in Markdown
+            <input
+              type="file"
+              multiple
+              accept=".md,.markdown,.zip,text/markdown,application/zip"
+              className="sr-only"
+              aria-label="Bring in Markdown or a zipped vault"
+              onChange={(e) => {
+                if (e.target.files?.length) onImportVault(e.target.files);
+                // Cleared so choosing the same file twice still counts as a
+                // change, which is the whole reason a second import appears to
+                // do nothing.
+                e.target.value = '';
+              }}
+            />
+          </label>
+          {vaultBusy && <span aria-live="polite">{vaultBusy}</span>}
+        </div>
+      )}
 
       {/* FOLDERS: THE PLACES SOMEBODY PUT THINGS. A folder is what a person
           decides; a tag is what a page is about; a collection is a question.

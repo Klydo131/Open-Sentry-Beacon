@@ -494,6 +494,10 @@ const staticChecks = [
   // it. Five days of pushes failed at Install with `Verify` skipped while this
   // script said everything passed.
   ['the lockfile can install', 'tests/the-lockfile-can-install.mjs'],
+  // The half of the Obsidian bridge that needs no browser: what a file is
+  // called, what its front matter says, and a zip checked against a real
+  // Info-ZIP and Python rather than against our own reader.
+  ['a room can become a vault', 'tests/a-room-can-become-a-vault.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

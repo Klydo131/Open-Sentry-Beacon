@@ -44,6 +44,11 @@ import {
 import type { Troubled } from '@/lib/study/doc-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { humanError } from '@/lib/live/errors';
+import {
+  toVaultFile, parseVaultFile, vaultFilenames, zipVault, unzipVault,
+  linksToTitles, folderOf, journalDateOf, safeName,
+} from '@/lib/study/obsidian';
+import { markdownFromPage, markdownIntoPage } from '@/lib/study/vault-io';
 import { StudyShelf, type ShelfView } from '@/components/study/StudyShelf';
 import { StudyInsertBar, type InsertKind } from '@/components/study/StudyInsertBar';
 import { StudyTags } from '@/components/study/StudyTags';
@@ -406,6 +411,142 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     refresh();
   }, [refresh]);
 
+  // -------------------------------------------------------------------------
+  // OBSIDIAN
+  // -------------------------------------------------------------------------
+  //
+  // Out: every page that is not in the trash becomes a Markdown file, in the
+  // folder it was filed in, with its tags in front matter and journal entries
+  // named for their day. In: Markdown files, or a zipped vault, become pages.
+  //
+  // THE WHOLE ROOM, NOT THE OPEN PAGE. A copy that holds one page is a copy
+  // somebody has to take sixty times, and the pages they forget are the ones
+  // they wanted.
+  // TWO THINGS, NOT ONE. `vaultBusy` is what the person is told; `vaultWorking`
+  // is whether a copy is actually in flight. They were the same value at first,
+  // and because the finished message stays up for a few seconds to be read, an
+  // import started straight after an export was silently refused -- the guard
+  // saw a message and thought the work was still running. Nothing failed, and
+  // nothing happened, which is the worst pair.
+  const [vaultBusy, setVaultBusy] = useState('');
+  const vaultWorking = useRef(false);
+
+  const exportVault = useCallback(async () => {
+    const room = workspace.current;
+    if (!room || vaultWorking.current) return;
+    vaultWorking.current = true;
+    setVaultBusy('Getting your pages together…');
+    try {
+      const living = readShelf(room.meta).filter((e) => !e.trashed);
+      const titleOf = new Map(living.map((e) => [e.id, e.title]));
+      const paths = vaultFilenames(living);
+      const files = [];
+
+      for (const entry of living) {
+        const doc = room.getDoc(entry.id);
+        if (!doc) continue;
+        doc.load();
+        const markdown = await markdownFromPage(doc.getStore());
+        files.push({
+          path: paths.get(entry.id) ?? `${safeName(entry.title)}.md`,
+          // A link written as an id resolves to nothing in Obsidian, and looks
+          // to the reader like the export lost the page it pointed at.
+          text: toVaultFile({
+            id: entry.id,
+            title: entry.title,
+            tags: entry.tags,
+            folder: entry.folder,
+            journalDate: entry.journalDate,
+            created: entry.created,
+            updated: entry.updated,
+            markdown: linksToTitles(markdown, (id) => titleOf.get(id)),
+          }),
+        });
+      }
+
+      if (!files.length) {
+        setVaultBusy('');
+        setError('There are no pages to take a copy of yet.');
+        return;
+      }
+
+      const bytes = zipVault(files);
+      const url = URL.createObjectURL(new Blob([bytes.slice().buffer as ArrayBuffer], { type: 'application/zip' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `study-room-${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Revoked on a turn of its own: revoking in the same tick cancels the
+      // download on some browsers before it has started.
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      setVaultBusy(`${files.length} page${files.length === 1 ? '' : 's'} saved.`);
+      setTimeout(() => setVaultBusy(''), 4000);
+    } catch (cause) {
+      setVaultBusy('');
+      setError(humanError(cause, 'That copy could not be made.'));
+    } finally {
+      vaultWorking.current = false;
+    }
+  }, []);
+
+  const importVault = useCallback(async (chosen: FileList) => {
+    const room = workspace.current;
+    if (!room || vaultWorking.current) return;
+    vaultWorking.current = true;
+    setVaultBusy('Reading what you chose…');
+    try {
+      // A zip is unpacked; a .md is itself. Anything else is ignored rather
+      // than guessed at.
+      const incoming: Array<{ path: string; text: string }> = [];
+      const unreadable: string[] = [];
+      for (const file of Array.from(chosen)) {
+        if (/\.zip$/i.test(file.name)) {
+          const { files, skipped } = unzipVault(new Uint8Array(await file.arrayBuffer()));
+          incoming.push(...files.filter((f) => /\.(md|markdown)$/i.test(f.path)));
+          unreadable.push(...skipped.filter((p) => /\.(md|markdown)$/i.test(p)));
+        } else if (/\.(md|markdown)$/i.test(file.name)) {
+          incoming.push({ path: file.name, text: await file.text() });
+        }
+      }
+
+      if (!incoming.length) {
+        setVaultBusy('');
+        setError(unreadable.length
+          ? 'That vault is compressed in a way this cannot read yet. Zipping the folder without compression will work.'
+          : 'There was no Markdown in what you chose.');
+        return;
+      }
+
+      let made = 0;
+      for (const file of incoming) {
+        const parsed = parseVaultFile(file.text);
+        const name = file.path.split('/').pop() ?? file.path;
+        const doc = room.createDoc();
+        doc.load();
+        await markdownIntoPage(doc.getStore(), parsed.body);
+        setMeta(doc.id, {
+          title: parsed.title || name.replace(/\.(md|markdown)$/i, ''),
+          tags: parsed.tags,
+          folder: folderOf(file.path),
+          journalDate: parsed.journalDate || journalDateOf(file.path),
+        });
+        made += 1;
+        setVaultBusy(`Bringing in ${made} of ${incoming.length}…`);
+      }
+
+      refresh();
+      setVaultBusy(`${made} page${made === 1 ? '' : 's'} brought in.`);
+      setTimeout(() => setVaultBusy(''), 4000);
+    } catch (cause) {
+      setVaultBusy('');
+      setError(humanError(cause, 'Those pages could not be brought in.'));
+    } finally {
+      vaultWorking.current = false;
+    }
+  }, [refresh, setMeta]);
+
   const addPage = useCallback(() => {
     const room = workspace.current;
     if (!room) return;
@@ -557,6 +698,9 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
             onOpen={open}
             onAdd={addPage}
             onToday={openToday}
+            onExportVault={exportVault}
+            onImportVault={importVault}
+            vaultBusy={vaultBusy}
             onToggleFavourite={(id) => {
               const was = entries.find((e) => e.id === id)?.favorite ?? false;
               setMeta(id, { favorite: !was });
