@@ -49,16 +49,35 @@ const SCRIPT = `(function(){
       setTimeout(go,3000);
     }catch(e){ go(); }
   }
+  // Only heal when the file really is gone from the server. An error event
+  // says something went wrong near a URL; it does not say the deploy deleted
+  // it, and those are the two cases this has to tell apart.
+  function ifReallyGone(url){
+    if(!navigator.onLine) return;
+    try{
+      fetch(url,{method:'HEAD',cache:'no-store'}).then(function(r){
+        if(!r.ok) heal();
+      },function(){ /* the network, not the deploy */ });
+    }catch(e){ /* no fetch: leave it alone rather than guess */ }
+  }
   window.addEventListener('error',function(e){
     var t=e&&e.target;
+    // A picture or a sound failing is not a broken app. Only the two things a
+    // deploy can delete out from under a running page count.
+    var tag=(t&&t.tagName||'').toLowerCase();
+    if(tag!=='script'&&tag!=='link') { if(chunky(e&&e.message)&&navigator.onLine) heal(); return; }
     var src=(t&&(t.src||t.href))||'';
-    if(chunky(e&&e.message)||(src&&src.indexOf('/_next/static/')>-1)) heal();
+    if(src&&src.indexOf('/_next/static/')>-1){ ifReallyGone(src); return; }
+    if(chunky(e&&e.message)&&navigator.onLine) heal();
   },true);
   window.addEventListener('unhandledrejection',function(e){
     var r=e&&e.reason;
-    if(chunky((r&&(r.message||r.name))||String(r||''))) heal();
+    // Webpack raises this after its own retries, so there is no URL left to
+    // ask about -- but healing while offline would delete the cache that is
+    // keeping the app usable, which is the worst possible moment for it.
+    if(chunky((r&&(r.message||r.name))||String(r||''))&&navigator.onLine) heal();
   });
-})();`;
+})()`;
 
 export function SelfHeal() {
   // Reaching this line means React mounted, so whatever was broken is not
