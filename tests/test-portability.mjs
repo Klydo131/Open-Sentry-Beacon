@@ -21,6 +21,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stripTs } from './_strip.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let bad = 0;
@@ -161,16 +162,12 @@ silent.length
     ...fs.readdirSync(path.join(root, 'scripts')).filter((f) => /\.mjs$/.test(f)).map((f) => path.join('scripts', f)),
   ];
   for (const rel of scanned) {
-    // Line by line, skipping comments, rather than running the shared stripper
-    // over the whole file. The first version of this rule reported ITSELF: the
-    // paragraph above spells the pattern out in prose, and a comment is still
-    // text. Reaching for stripTs did not fix it either, for a reason worth
-    // writing down -- see the note under this block.
-    const lines = fs.readFileSync(path.join(root, rel), 'utf8').split('\n');
-    for (const [n, line] of lines.entries()) {
-      const code = line.trim();
-      if (code.startsWith('//') || code.startsWith('*') || code.startsWith('/*')) continue;
-      for (const m of code.matchAll(GENERATED_IMPORT)) {
+    // Comments out first. The first version of this rule reported ITSELF,
+    // because the paragraph above spells the pattern out in prose and a
+    // comment is still text.
+    const src = stripTs(fs.readFileSync(path.join(root, rel), 'utf8'));
+    for (const [n, line] of src.split('\n').entries()) {
+      for (const m of line.matchAll(GENERATED_IMPORT)) {
         const expr = m[1];
         if (!/FileURL|file:\/\//i.test(expr)) {
           offenders.push(`${rel}:${n + 1} (imports from \${${expr.trim()}}, a path on Windows)`);
@@ -183,26 +180,17 @@ silent.length
     : ok(`every generated import specifier is a file:// URL (${scanned.length} checked)`);
 }
 
-// WHY THIS ONE DOES NOT USE tests/_strip.mjs, WHICH IS THE OBVIOUS TOOL.
+// A NOTE ON THE STRIPPER, BECAUSE THIS RULE IS WHY IT WAS FIXED.
 //
-// The shared stripper does not know about regular-expression literals, and two
-// rules in THIS FILE put a backtick inside a character class -- [`'"] . The
-// stripper reads that backtick as the start of a template literal, and from
-// there it is out of step with the source: the rest of the file comes back
-// unstripped, comments and all.
+// This was written reading the file line by line and skipping anything that
+// looked like a comment, because tests/_strip.mjs did not work here: it had no
+// notion of a regular expression, and the two rules above put a backtick
+// inside a character class -- [`'"] . It read that backtick as the start of a
+// template literal and never recovered, handing back the comments it was asked
+// to remove. Fifty-one of this repository's source files were affected.
 //
-// That is worse than the bug the stripper was written to fix. That one ate real
-// code and could only ever produce a false FAIL, which is noisy but safe. This
-// one hands a check the comments it was supposed to have removed, so a rule
-// that is only DESCRIBED in a paragraph can be mistaken for a rule that is
-// implemented -- a false PASS, and nobody goes looking for those.
-//
-// Reproduction, which is short enough to paste:
-//     stripTs('const RE = /[`\'"]/;\nconst x = 1; // survives')
-// returns its input unchanged.
-//
-// Not fixed here: _strip.mjs has other callers and teaching it about regex
-// literals is its own change with its own blast radius.
+// The stripper understands regex literals now, so this uses it like everything
+// else. The workaround is gone; the reason it existed is worth keeping.
 
 console.log(
   bad === 0

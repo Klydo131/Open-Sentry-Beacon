@@ -99,6 +99,64 @@ const ok = (cond, msg) => {
 }
 
 // ---------------------------------------------------------------------------
+// 2b. A REGULAR EXPRESSION IS A LITERAL TOO
+// ---------------------------------------------------------------------------
+//
+// The bug these hold down was found in tests/test-portability.mjs, whose own
+// rules match on quote characters. With no notion of a regex, the backtick in
+// `[`'"]` opens a template literal and the walk is out of step from there --
+// so comments came back unstripped. Across this repository at the time: 51
+// source files out of 485.
+//
+// It is the DANGEROUS direction, which is why these assertions exist at all.
+// The `xn--` bug above eats code and shows up as a red line. This one returns
+// comments to a check that asked for them gone, so a rule written only in a
+// paragraph of prose passes for one that is implemented.
+{
+  const classWithQuotes = 'const RE = /[`\'"]/;\nconst x = 1; // a secret note';
+  const strippedClass = stripTs(classWithQuotes);
+  ok(!/a secret note/.test(strippedClass),
+     'a quote inside a regex character class does not swallow the file');
+  ok(strippedClass.includes('/[`\'"]/'), 'and the class itself is kept intact');
+
+  // `=>` opens a value; a bare `>` closes a JSX tag. Both put a `/` after `>`.
+  ok(!/gone/.test(stripTs('const f = (x) => /a[\'"]b/.test(x); // gone')),
+     'a regex straight after an arrow is recognised');
+
+  // JSX, where guessing "regex" is what breaks things.
+  ok(!/gone/.test(stripTs('<div></div>; // gone')),
+     'a JSX closing tag is not the start of a regex');
+  ok(!/gone/.test(stripTs('<p>and/or</p>; // gone')),
+     'a slash in JSX text is not the start of a regex');
+  ok(!/gone/.test(stripTs("<p>Time's up.</p>\nconst x = 1; // gone")),
+     'an apostrophe in JSX text is not the start of a string');
+
+  // Division still divides.
+  ok(!/gone/.test(stripTs('const half = total / 2; // gone')),
+     'a division after an identifier is not a regex');
+  ok(!/gone/.test(stripTs('const r = (a + b) / c; // gone')),
+     'and a division after a parenthesis is not one either');
+
+  // A template literal is code inside its `${ }` and text outside it.
+  const nested = 'const t = `a ${`b ${1 / 2} c`} d`;\nconst x = 1; // gone';
+  const strippedNested = stripTs(nested);
+  ok(!/gone/.test(strippedNested),
+     'a template nested inside an interpolation closes in the right place');
+  ok(strippedNested.includes('`a ${`b '), 'and the template text survives');
+
+  ok(!/secret/.test(stripTs('const t = `a ${/* secret */ 1} b`;')),
+     'a comment inside ${ } is code and goes');
+  ok(stripTs('const t = `a // b ${1} c`;').includes('a // b'),
+     'while the template TEXT around it is left alone');
+
+  // The remaining invariant: ending inside a template means the walk lost its
+  // place, and saying so is better than returning something that looks fine.
+  let threw = false;
+  try { stripTs('const t = `unclosed'); } catch { threw = true; }
+  ok(threw, 'a source that ends inside a template literal is reported, not guessed at');
+}
+
+// ---------------------------------------------------------------------------
 // 3. POSITIONS STILL POINT AT THE RIGHT LINE
 // ---------------------------------------------------------------------------
 //
