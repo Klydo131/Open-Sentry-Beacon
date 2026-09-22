@@ -51,6 +51,58 @@ function run(label, cmd, args, opts = {}) {
   return passed;
 }
 
+/**
+ * The same as `run`, but for something that can happen alongside others.
+ *
+ * WHY THE OUTPUT IS CAPTURED RATHER THAN INHERITED. Four browser walks writing
+ * to one terminal at once produces a transcript in which no line can be
+ * attributed to the suite that wrote it, which is worse than no output: a
+ * failure is still printed and is no longer findable. Each suite's output is
+ * held and printed as one block when it finishes, so the log reads exactly as
+ * it did when they ran one after another -- only sooner.
+ */
+function runAside(label, cmd, args) {
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, {
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, NEXT_TELEMETRY_DISABLED: '1' },
+    });
+    let output = '';
+    child.stdout.on('data', (d) => (output += d));
+    child.stderr.on('data', (d) => (output += d));
+    child.on('close', (code) => {
+      process.stdout.write(`\n─── ${label} ${'─'.repeat(Math.max(0, 56 - label.length))}\n`);
+      process.stdout.write(output);
+      resolve({ label, passed: code === 0 });
+    });
+  });
+}
+
+/**
+ * Run a list of jobs a few at a time, keeping every worker busy.
+ *
+ * HOW MANY AT ONCE, AND WHY IT IS NOT THE CORE COUNT. Each job is a whole
+ * browser; they are bounded by memory rather than by CPU, and a runner that
+ * swaps is slower than one that waits. Four is what a two-core CI runner and a
+ * laptop both survive. E2E_WORKERS overrides it for anybody whose machine has
+ * the room -- or for anybody bisecting a suite that only fails alongside
+ * others, where 1 is the setting that answers the question.
+ */
+async function inParallel(jobs, workers) {
+  const out = new Array(jobs.length);
+  let next = 0;
+  const worker = async () => {
+    for (;;) {
+      const mine = next++;
+      if (mine >= jobs.length) return;
+      out[mine] = await jobs[mine]();
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(workers, jobs.length) }, worker));
+  return out;
+}
+
 function freePort() {
   return new Promise((resolve, reject) => {
     const srv = createServer();
@@ -575,13 +627,29 @@ if (withE2e) {
           : '\nThe server never became ready (log above).',
       );
     } else {
-      console.log(`Serving build ${expected || '(unknown)'}\n`);
-      for (const suite of suites) {
-        run(`e2e · ${suite.replace(/\.js$/, '')}`, 'node', [
-          `tests/e2e/${suite}`,
-          String(port),
-        ]);
-      }
+      // A FEW AT A TIME, AND THIS IS THE WHOLE REASON THE WALKS CAN BE IN CI.
+      // Fifty-four suites, each starting its own browser, took a little over
+      // half an hour one after another -- long enough that they were run by
+      // hand when somebody remembered, which in practice meant that every
+      // layout bug reported from the live site this week had passed through a
+      // gate that never looked. Four at a time brings it under ten minutes,
+      // which is a length a push can wait for.
+      //
+      // They do not tread on each other: every suite launches its own browser
+      // with its own profile directory, so what one stores is invisible to the
+      // rest, and the walkthrough they all drive keeps its pages in the tab
+      // rather than in the database.
+      const workers = Math.max(1, Number(process.env.E2E_WORKERS) || 4);
+      console.log(`Serving build ${expected || '(unknown)'} — ${suites.length} walks, ${workers} at a time\n`);
+      const done = await inParallel(
+        suites.map((suite) => () => runAside(
+          `e2e · ${suite.replace(/\.js$/, '')}`,
+          'node',
+          [`tests/e2e/${suite}`, String(port)],
+        )),
+        workers,
+      );
+      for (const r of done) results.push(r);
       stop();
     }
   }

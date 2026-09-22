@@ -66,3 +66,43 @@ jobs:
       # portability, media, the update floor, and workflow structure.
       - name: Verify
         run: npm test
+
+  # ---------------------------------------------------------------------------
+  # THE BROWSER WALKS, WHICH UNTIL NOW RAN NOWHERE BUT A DEVELOPER'S MACHINE.
+  #
+  # Fifty-four suites drive a real browser through the app. They existed, they
+  # passed, and `npm test` does not include them -- so they ran when somebody
+  # remembered, which is to say rarely. Every layout bug reported from the live
+  # site in one week (a tag box stretched across the page, a whiteboard toolbar
+  # drawn off the bottom of the screen, a pairing form that came apart when one
+  # list was long) is the exact class these catch, and each one shipped through
+  # a gate that never looked at a rendered page.
+  #
+  # They took a little over half an hour one after another. Run four at a time
+  # they take about ten minutes, which is a length a push can wait for, and
+  # that -- not any new check -- is what puts them here.
+  #
+  # UBUNTU ONLY, AND THAT IS A CHOICE RATHER THAN AN OVERSIGHT. The job above
+  # runs on three operating systems because it is cheap and catches real
+  # portability faults. This one downloads a browser and drives it for ten
+  # minutes; doing that three times over would triple the cost to re-check
+  # layout, which does not differ between a Linux runner and a Windows one --
+  # they are the same Chromium. Safari is the engine that actually behaves
+  # differently, and it has its own workflow.
+  walks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      # The browser is a separate download from the npm package, and without it
+      # every suite fails at launch with a message about a missing executable.
+      - name: Get a browser
+        run: npx playwright install --with-deps chromium
+      - name: Walk through the app
+        run: npm run verify:all
