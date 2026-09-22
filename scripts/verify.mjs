@@ -482,6 +482,10 @@ const staticChecks = [
   // right of every screen.
   ['live header fits a phone', 'tests/live-header-fits.mjs'],
   ['live conversations fit phones and tablets', 'tests/live-conversation-mobile.mjs'],
+  // Written, passing, and never wired in until an audit went looking for it.
+  // Six assertions that the presentation screens stay connected to real
+  // feature paths -- a clean card that cannot open, share or send is a mock.
+  ['the presentation screens are connected', 'tests/presentation-feature-ui.mjs'],
   ['workflow files', 'tests/workflows.mjs'],
   // And that the workflows can get past their first step. `npm ci` is the
   // Install step in both workflows that build this project, and it refuses a
@@ -496,8 +500,24 @@ const staticChecks = [
   // checks above it.
   ['dev server', 'tests/dev-server.mjs'],
 ];
+// A REGISTERED CHECK THAT IS NOT ON DISK IS A FAILURE, NOT A SKIP.
+//
+// This used to be `if (existsSync(...)) run(...)`, so deleting or renaming a
+// test file removed it from the gate in silence: the run below simply counted
+// one fewer and still printed "All N checks passed". The number is the only
+// place it showed, and nobody reads the number -- they read the last line.
+//
+// Nothing was missing when this was written. That is the point: the hole costs
+// nothing to close while it is empty, and the next person to rename a file
+// gets told rather than quietly losing a guard.
 for (const [label, file] of staticChecks) {
-  if (fs.existsSync(path.join(root, file))) run(label, 'node', [file]);
+  if (fs.existsSync(path.join(root, file))) {
+    run(label, 'node', [file]);
+  } else {
+    process.stdout.write(`\n─── ${label} ${'─'.repeat(Math.max(0, 56 - label.length))}\n`);
+    console.log(`MISSING ${file} is registered in this gate and is not on disk.`);
+    results.push({ label: `${label} (file missing)`, passed: false });
+  }
 }
 
 // ------------------------------------------------------------------- e2e ----

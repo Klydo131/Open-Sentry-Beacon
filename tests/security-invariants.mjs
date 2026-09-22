@@ -14,6 +14,7 @@
 // Plain Node, no dependencies. Exits non-zero on any violation.
 import fs from 'node:fs';
 import path from 'node:path';
+import { stripTs } from './_strip.mjs';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -663,8 +664,7 @@ if (exists('app/api/auth/sign-in/route.ts')) {
 // is why this is a test rather than a comment.
 // ---------------------------------------------------------------------------
 {
-  const strip = (src) =>
-    src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, ' '));
+  const strip = stripTs;
 
   const offenders = [];
   for (const file of sources) {
@@ -707,8 +707,7 @@ if (exists('app/api/auth/sign-in/route.ts')) {
 // picker OPENS, or in a finally after the bytes are read.
 // ---------------------------------------------------------------------------
 {
-  const strip = (src) =>
-    src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, ' '));
+  const strip = stripTs;
 
   const offenders = [];
   for (const file of sources) {
@@ -752,8 +751,7 @@ if (exists('app/api/auth/sign-in/route.ts')) {
 // modern one is unavailable, and returns a boolean the caller must look at.
 // ---------------------------------------------------------------------------
 {
-  const strip = (src) =>
-    src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, ' '));
+  const strip = stripTs;
 
   const offenders = sources.filter(
     (f) => f !== path.join('lib', 'share.ts') && /navigator\.clipboard/.test(strip(read(f))),
@@ -975,8 +973,7 @@ if (exists('lib/canonical.ts')) {
 // only ever read the helper. A rule that checks the helper and not its callers
 // is a rule about a file rather than about the app.
 {
-  const strip = (src) =>
-    src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, ' '));
+  const strip = stripTs;
   const offenders = sources
     .filter((f) => f !== 'lib/canonical.ts' && f !== 'lib/build-info.ts')
     .filter((f) => /(!==|===)\s*CANONICAL_HOST\b|\bCANONICAL_HOST\s*(!==|===)/.test(strip(read(f))));
