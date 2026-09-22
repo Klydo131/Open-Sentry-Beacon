@@ -76,9 +76,23 @@ jobs:
       # E2E_BROWSER is read by tests/e2e/_playwright.js. Without it the suites
       # run on Chromium, which is what verify.yml already does and would make
       # this job an expensive duplicate that proves nothing new.
+      # E2E_WORKERS: 1 KEEPS THIS JOB SERIAL, ON PURPOSE.
+      #
+      # The walks run four at a time now, which is what makes them affordable
+      # in verify.yml. That number was measured against CHROMIUM ON LINUX, and
+      # there is no WebKit in the sandbox where it was measured -- so applying
+      # it here would be a guess about a heavier engine on a different machine,
+      # made by somebody with no way to test it.
+      #
+      # It also keeps this job's answer attributable. Serial is exactly what it
+      # did before the walks were parallelised, so a WebKit failure reported
+      # here is a fact about Safari rather than a fact about how many browsers
+      # were open at once. If this job is ever the bottleneck, raise it
+      # deliberately and watch what happens -- do not inherit the number.
       - name: Run every suite on WebKit
         env:
           E2E_BROWSER: webkit
+          E2E_WORKERS: '1'
           E2E_OUT: ${{ runner.temp }}/webkit-shots
           NEXT_TELEMETRY_DISABLED: '1'
         run: |
