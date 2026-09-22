@@ -483,6 +483,13 @@ const staticChecks = [
   ['live header fits a phone', 'tests/live-header-fits.mjs'],
   ['live conversations fit phones and tablets', 'tests/live-conversation-mobile.mjs'],
   ['workflow files', 'tests/workflows.mjs'],
+  // And that the workflows can get past their first step. `npm ci` is the
+  // Install step in both workflows that build this project, and it refuses a
+  // lock that disagrees with package.json -- which `npm install` quietly
+  // repairs, so the machine that causes it is the one machine that cannot see
+  // it. Five days of pushes failed at Install with `Verify` skipped while this
+  // script said everything passed.
+  ['the lockfile can install', 'tests/the-lockfile-can-install.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green
