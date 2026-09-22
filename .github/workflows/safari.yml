@@ -76,23 +76,38 @@ jobs:
       # E2E_BROWSER is read by tests/e2e/_playwright.js. Without it the suites
       # run on Chromium, which is what verify.yml already does and would make
       # this job an expensive duplicate that proves nothing new.
-      # E2E_WORKERS: 1 KEEPS THIS JOB SERIAL, ON PURPOSE.
+      # WHY THIS JOB IS NOT PINNED TO ONE AT A TIME, HAVING BEEN, BRIEFLY.
       #
-      # The walks run four at a time now, which is what makes them affordable
-      # in verify.yml. That number was measured against CHROMIUM ON LINUX, and
-      # there is no WebKit in the sandbox where it was measured -- so applying
-      # it here would be a guess about a heavier engine on a different machine,
-      # made by somebody with no way to test it.
+      # The walks run four at a time in verify.yml, and that number was
+      # measured against Chromium on Linux by somebody with no WebKit to try it
+      # on. When this job then reported fourteen failing suites, the honest
+      # question was whether that was Safari or the concurrency -- so it was
+      # pinned to one at a time to find out.
       #
-      # It also keeps this job's answer attributable. Serial is exactly what it
-      # did before the walks were parallelised, so a WebKit failure reported
-      # here is a fact about Safari rather than a fact about how many browsers
-      # were open at once. If this job is ever the bottleneck, raise it
-      # deliberately and watch what happens -- do not inherit the number.
+      # THAT WOULD HAVE ANSWERED NOTHING. Fifty-four WebKit suites in single
+      # file runs well past this job's thirty-minute timeout, so the run would
+      # have been killed with no result at all, on every push, on a macOS
+      # runner. A slower experiment that cannot finish is not a more careful
+      # one.
+      #
+      # And the answer was already in the log. The failures are app-level and
+      # engine-specific, not the shape concurrency makes:
+      #
+      #   landing               a bare pushState does not scroll the page in
+      #                         WebKit as it does in Blink
+      #   quest-roles           a walk step points at nothing
+      #   the-study-room-opens  navigation interrupted by /?fresh=... -- which
+      #                         is SelfHeal, firing because a chunk failed to
+      #                         load. That is a real thing happening to Safari
+      #                         users and the most interesting of the three.
+      #
+      # So: four, which finishes in about twelve minutes and leaves the
+      # findings legible. If a suite here is ever suspected of failing only
+      # alongside others, run it with E2E_WORKERS=1 by hand through
+      # workflow_dispatch rather than making every push pay for the doubt.
       - name: Run every suite on WebKit
         env:
           E2E_BROWSER: webkit
-          E2E_WORKERS: '1'
           E2E_OUT: ${{ runner.temp }}/webkit-shots
           NEXT_TELEMETRY_DISABLED: '1'
         run: |
