@@ -28,7 +28,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -54,11 +54,22 @@ await build({
 
 // The driver runs inside a child process so its timezone can be chosen. It
 // prints one line of JSON and nothing else.
+//
+// THE IMPORT IS A file:// URL AND HAS TO BE. An ESM specifier is a URL, not a
+// path, and the two are the same thing only on POSIX. On Windows the bundle
+// lands at C:\Users\...\shelf.mjs, and Node reads the drive letter as a URL
+// SCHEME -- it fails with "Received protocol 'c:'" before any of these
+// assertions run. The sibling checks that bundle with esbuild hand their
+// output to node as an argv path, which is a path and is fine; this one is the
+// only place a generated path goes into an `import`.
+//
+// It failed on Windows for five days without anybody seeing it, because the
+// lockfile was out of sync and CI never got past `npm ci` to run it.
 const driver = path.join(out, 'driver.mjs');
 fs.writeFileSync(driver, `
 import {
   cleanTag, withTag, tagsAcross, hasTag, dayKey, dayInWords, journalFor, readShelf, TAG_LIMIT,
-} from ${JSON.stringify(shelf)};
+} from ${JSON.stringify(pathToFileURL(shelf).href)};
 
 const page = (over) => ({ id: 'x', title: '', preview: '', updated: 0, created: 0,
   favorite: false, tags: [], trashed: false, journalDate: '', named: false, ...over });

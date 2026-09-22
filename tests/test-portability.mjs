@@ -133,6 +133,77 @@ silent.length
     : ok(`no test or script depends on a Unix shell (${everywhere.length} checked)`);
 }
 
+// A GENERATED `import` SPECIFIER IS A URL, NOT A PATH, and on POSIX those are
+// indistinguishable so the mistake is invisible on the machine that makes it.
+//
+// tests/a-page-can-be-tagged-and-dated.mjs bundled a module to a temporary
+// directory and wrote a driver that imported it by its absolute path. On Linux
+// and macOS that is `/tmp/...` and resolves. On Windows it is
+// `C:\Users\...`, and Node reads the drive letter as a URL scheme:
+// ERR_UNSUPPORTED_ESM_URL_SCHEME, "Received protocol 'c:'", thrown before a
+// single assertion runs. `pathToFileURL(p).href` is correct on every platform
+// and costs nothing on the two where the bare path happened to work.
+//
+// This rule exists because the check above it -- the one about Unix-only
+// commands -- was already asking the right question and had no way to see this
+// particular answer.
+{
+  const offenders = [];
+  // `from ${...}` inside a template literal: a module specifier being built at
+  // runtime. Anything already converted to a URL is fine, and so is a bare
+  // package name; what is not fine is handing it a path.
+  const GENERATED_IMPORT = /\bfrom\s+\$\{([^}]*)\}/g;
+  // Same list as the Windows-shell rule above, rebuilt because that one keeps
+  // it in its own block.
+  const scanned = [
+    ...fs.readdirSync(path.join(root, 'tests')).filter((f) => /\.(mjs|js)$/.test(f)).map((f) => path.join('tests', f)),
+    ...fs.readdirSync(e2eDir).map((f) => path.join('tests', 'e2e', f)),
+    ...fs.readdirSync(path.join(root, 'scripts')).filter((f) => /\.mjs$/.test(f)).map((f) => path.join('scripts', f)),
+  ];
+  for (const rel of scanned) {
+    // Line by line, skipping comments, rather than running the shared stripper
+    // over the whole file. The first version of this rule reported ITSELF: the
+    // paragraph above spells the pattern out in prose, and a comment is still
+    // text. Reaching for stripTs did not fix it either, for a reason worth
+    // writing down -- see the note under this block.
+    const lines = fs.readFileSync(path.join(root, rel), 'utf8').split('\n');
+    for (const [n, line] of lines.entries()) {
+      const code = line.trim();
+      if (code.startsWith('//') || code.startsWith('*') || code.startsWith('/*')) continue;
+      for (const m of code.matchAll(GENERATED_IMPORT)) {
+        const expr = m[1];
+        if (!/FileURL|file:\/\//i.test(expr)) {
+          offenders.push(`${rel}:${n + 1} (imports from \${${expr.trim()}}, a path on Windows)`);
+        }
+      }
+    }
+  }
+  offenders.length
+    ? fail(`these build an import specifier from a path:\n    ${offenders.join('\n    ')}`)
+    : ok(`every generated import specifier is a file:// URL (${scanned.length} checked)`);
+}
+
+// WHY THIS ONE DOES NOT USE tests/_strip.mjs, WHICH IS THE OBVIOUS TOOL.
+//
+// The shared stripper does not know about regular-expression literals, and two
+// rules in THIS FILE put a backtick inside a character class -- [`'"] . The
+// stripper reads that backtick as the start of a template literal, and from
+// there it is out of step with the source: the rest of the file comes back
+// unstripped, comments and all.
+//
+// That is worse than the bug the stripper was written to fix. That one ate real
+// code and could only ever produce a false FAIL, which is noisy but safe. This
+// one hands a check the comments it was supposed to have removed, so a rule
+// that is only DESCRIBED in a paragraph can be mistaken for a rule that is
+// implemented -- a false PASS, and nobody goes looking for those.
+//
+// Reproduction, which is short enough to paste:
+//     stripTs('const RE = /[`\'"]/;\nconst x = 1; // survives')
+// returns its input unchanged.
+//
+// Not fixed here: _strip.mjs has other callers and teaching it about regex
+// literals is its own change with its own blast radius.
+
 console.log(
   bad === 0
     ? '\nRESULT: the suites run anywhere ✓'
