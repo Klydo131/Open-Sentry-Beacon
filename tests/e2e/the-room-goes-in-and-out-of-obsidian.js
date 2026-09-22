@@ -50,6 +50,23 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.keyboard.type('The grace of God appeared.');
   await page.waitForTimeout(800);
 
+  // A PICTURE ON THE PAGE, because a page of writing is not the hard case.
+  // Pasting is the path that works without a file dialog this sandbox cannot
+  // raise; the block it produces is the same one either way.
+  await page.evaluate(() => {
+    const host = document.querySelector('editor-host');
+    const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], 'bible.png', { type: 'image/png' }));
+    const target = document.querySelector('affine-paragraph rich-text') || host;
+    target.dispatchEvent(new ClipboardEvent('paste', {
+      clipboardData: dt, bubbles: true, cancelable: true, composed: true,
+    }));
+  });
+  await page.waitForTimeout(4000);
+  ok(await page.locator('affine-image').count() > 0, 'a picture is on the page before the copy is taken');
+
   const tagBox = page.getByLabel('Add a tag to this page');
   if (await tagBox.count()) {
     await tagBox.fill('Romans');
@@ -92,6 +109,61 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
       ok(/title: Grace abounds/.test(body), 'which names the page');
       ok(/tags:\r?\n\s+- Romans/.test(body), 'and carries the tag, where Obsidian reads tags');
       ok(/The grace of God appeared\./.test(body), 'and the writing itself came through as Markdown');
+      ok(/!\[\[[^\]]+\.png\]\]/.test(body),
+         'and the picture is embedded the way Obsidian resolves from any folder');
+    }
+
+    // THE PICTURE IS IN THE VAULT AS A FILE, and is the file it was.
+    const asset = listing.split('\n').find((f) => /^assets\/.+\.png$/.test(f));
+    ok(!!asset, `the picture is a file in the vault (${asset || 'not found'})`);
+    if (asset) {
+      let bytes = Buffer.alloc(0);
+      try { bytes = execFileSync('unzip', ['-p', zipPath, asset], { encoding: 'buffer' }); } catch { /* reported below */ }
+      ok(bytes.length > 0 && bytes[0] === 0x89 && bytes.toString('latin1', 1, 4) === 'PNG',
+         `and it is a real PNG when it comes out (${bytes.length} bytes)`);
+    }
+
+    // ---- THE WHOLE CIRCLE: the vault we just made, brought back in --------
+    const beforeCircle = await shelfRows(page).count();
+    await page.setInputFiles('input[aria-label="Bring in Markdown or a zipped vault"]', zipPath);
+    await page.waitForTimeout(12000);
+    ok(await shelfRows(page).count() > beforeCircle,
+       `the vault can be brought back in (${beforeCircle} -> ${await shelfRows(page).count()})`);
+
+    // EVERY COPY, AND THE PICTURE HAS TO HAVE LOADED. Two things were wrong
+    // with the first version of this and they hid each other.
+    //
+    // It opened `.last()` of the pages called "Grace abounds", and after an
+    // import there are two -- the newest first, so `.last()` was the ORIGINAL
+    // page, which of course still had its picture. And it asked only whether
+    // an `affine-image` element existed. A picture whose bytes never arrived
+    // is STILL an affine-image: BlockSuite renders its placeholder, which
+    // reads "Image -1B" and contains no <img> at all.
+    //
+    // So: check them all, and ask the browser whether the picture actually
+    // decoded. With the import deliberately broken, the imported copy reports
+    // no <img> and this goes red, which the old version did not.
+    const copies = page.locator('ul[aria-label^="Pages:"] li', { hasText: 'Grace abounds' });
+    const howMany = await copies.count();
+    ok(howMany >= 2, `both the original and the imported page are on the shelf (${howMany})`);
+    for (let i = 0; i < howMany; i++) {
+      await copies.nth(i).click();
+      await page.waitForTimeout(4000);
+      const shown = await page.evaluate(() => {
+        const block = document.querySelector('affine-image');
+        if (!block) return { block: false, loaded: false, says: '' };
+        const img = block.querySelector('img') ?? block.shadowRoot?.querySelector('img');
+        return {
+          block: true,
+          loaded: !!img && img.naturalWidth > 0,
+          says: (block.innerText || '').trim().slice(0, 30),
+        };
+      });
+      ok(shown.block, `page ${i + 1} of ${howMany} still holds a picture block`);
+      ok(shown.loaded,
+         `and its picture actually loaded${shown.loaded ? '' : ` (shows "${shown.says}" instead)`}`);
+      await backToShelf(page);
+      await page.waitForTimeout(800);
     }
   }
 

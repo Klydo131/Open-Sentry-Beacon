@@ -47,8 +47,10 @@ import { humanError } from '@/lib/live/errors';
 import {
   toVaultFile, parseVaultFile, vaultFilenames, zipVault, unzipVault,
   linksToTitles, folderOf, journalDateOf, safeName,
+  picturesAsEmbeds, embedsAsPictures, picturesWanted, ASSET_FOLDER,
+  type VaultFile,
 } from '@/lib/study/obsidian';
-import { markdownFromPage, markdownIntoPage } from '@/lib/study/vault-io';
+import { markdownFromPage, markdownIntoPage, type PageAsset } from '@/lib/study/vault-io';
 import { StudyShelf, type ShelfView } from '@/components/study/StudyShelf';
 import { StudyInsertBar, type InsertKind } from '@/components/study/StudyInsertBar';
 import { StudyTags } from '@/components/study/StudyTags';
@@ -440,13 +442,16 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       const living = readShelf(room.meta).filter((e) => !e.trashed);
       const titleOf = new Map(living.map((e) => [e.id, e.title]));
       const paths = vaultFilenames(living);
-      const files = [];
+      const files: VaultFile[] = [];
+      // One picture used on three pages is one file in the vault, not three.
+      const pictures = new Map<string, Uint8Array>();
 
       for (const entry of living) {
         const doc = room.getDoc(entry.id);
         if (!doc) continue;
         doc.load();
-        const markdown = await markdownFromPage(doc.getStore());
+        const { markdown, assets } = await markdownFromPage(doc.getStore());
+        for (const asset of assets) pictures.set(asset.name, asset.bytes);
         files.push({
           path: paths.get(entry.id) ?? `${safeName(entry.title)}.md`,
           // A link written as an id resolves to nothing in Obsidian, and looks
@@ -459,9 +464,13 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
             journalDate: entry.journalDate,
             created: entry.created,
             updated: entry.updated,
-            markdown: linksToTitles(markdown, (id) => titleOf.get(id)),
+            markdown: picturesAsEmbeds(linksToTitles(markdown, (id) => titleOf.get(id))),
           }),
         });
+      }
+
+      for (const [name, bytes] of pictures) {
+        files.push({ path: `${ASSET_FOLDER}/${name}`, bytes });
       }
 
       if (!files.length) {
@@ -481,7 +490,10 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       // Revoked on a turn of its own: revoking in the same tick cancels the
       // download on some browsers before it has started.
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
-      setVaultBusy(`${files.length} page${files.length === 1 ? '' : 's'} saved.`);
+      const pages = files.length - pictures.size;
+      setVaultBusy(`${pages} page${pages === 1 ? '' : 's'}`
+        + (pictures.size ? ` and ${pictures.size} picture${pictures.size === 1 ? '' : 's'}` : '')
+        + ' saved.');
       setTimeout(() => setVaultBusy(''), 4000);
     } catch (cause) {
       setVaultBusy('');
@@ -501,13 +513,25 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       // than guessed at.
       const incoming: Array<{ path: string; text: string }> = [];
       const unreadable: string[] = [];
+      // Pictures by their bare filename, which is how a note asks for one
+      // whether it was written by this app or by a person in Obsidian.
+      const pictures = new Map<string, Uint8Array>();
+      const isPicture = /\.(png|jpe?g|gif|webp|avif|bmp|svg)$/i;
+
       for (const file of Array.from(chosen)) {
         if (/\.zip$/i.test(file.name)) {
           const { files, skipped } = unzipVault(new Uint8Array(await file.arrayBuffer()));
-          incoming.push(...files.filter((f) => /\.(md|markdown)$/i.test(f.path)));
+          for (const f of files) {
+            if (/\.(md|markdown)$/i.test(f.path)) incoming.push({ path: f.path, text: f.text ?? '' });
+            else if (isPicture.test(f.path) && f.bytes) {
+              pictures.set(f.path.split('/').pop() ?? f.path, f.bytes);
+            }
+          }
           unreadable.push(...skipped.filter((p) => /\.(md|markdown)$/i.test(p)));
         } else if (/\.(md|markdown)$/i.test(file.name)) {
           incoming.push({ path: file.name, text: await file.text() });
+        } else if (isPicture.test(file.name)) {
+          pictures.set(file.name, new Uint8Array(await file.arrayBuffer()));
         }
       }
 
@@ -525,7 +549,12 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         const name = file.path.split('/').pop() ?? file.path;
         const doc = room.createDoc();
         doc.load();
-        await markdownIntoPage(doc.getStore(), parsed.body);
+        // Only the pictures THIS note asks for, so one page does not drag
+        // every image in the vault into the room behind it.
+        const wanted: PageAsset[] = picturesWanted(parsed.body)
+          .map((name) => ({ name, bytes: pictures.get(name) }))
+          .filter((p): p is PageAsset => !!p.bytes);
+        await markdownIntoPage(doc.getStore(), embedsAsPictures(parsed.body), wanted);
         setMeta(doc.id, {
           title: parsed.title || name.replace(/\.(md|markdown)$/i, ''),
           tags: parsed.tags,

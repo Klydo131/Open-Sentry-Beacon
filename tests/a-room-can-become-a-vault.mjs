@@ -163,5 +163,57 @@ ok(V.folderOf('Journal/2026-09-22.md') === '', 'except Journal, which is where d
 ok(V.journalDateOf('Journal/2026-09-22.md') === '2026-09-22', 'a date-named file comes back as that day');
 ok(V.journalDateOf('Romans 8.md') === '', 'and an ordinary page does not');
 
+// ---------------------------------------------------------------------------
+// 7. PICTURES
+// ---------------------------------------------------------------------------
+//
+// AFFiNE writes a picture as `![](assets/x.png)`, a path relative to the NOTE.
+// That is right for a flat export and wrong for this one: a page filed in
+// Sermons becomes Sermons/Romans 8.md, and the relative path then points at
+// Sermons/assets/x.png, where nothing is. Obsidian's own `![[x.png]]` embed
+// resolves by filename from any depth, so that is what goes in the file.
+ok(V.picturesAsEmbeds('![a photo](assets/bible.png)') === '![[bible.png]]',
+   'a picture becomes an embed that resolves from any folder in the vault');
+ok(V.picturesAsEmbeds('![](https://example.org/x.png)') === '![](https://example.org/x.png)',
+   'a picture that lives on the web is left exactly as it is');
+ok(V.embedsAsPictures('![[bible.png]]') === '![](assets/bible.png)',
+   'and back again, into the form the adapter can read');
+ok(V.embedsAsPictures('![[Another page]]') === '![[Another page]]',
+   'an embed of a NOTE is not mangled into a broken picture');
+ok(V.picturesWanted('![[a.png]] and ![x](assets/b.jpg) and ![](https://e.org/c.gif)').join('|') === 'a.png|b.jpg',
+   'a note says which pictures it wants, however it asked, and not the web ones');
+
+// A picture has to survive the zip as BYTES. Decoding it as text does not
+// fail, it quietly produces replacement characters and the picture is gone.
+{
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64');
+  const mixed = V.zipVault([
+    { path: 'Note.md', text: '---\ntitle: Note\n---\n\n![[bible.png]]\n' },
+    { path: 'assets/bible.png', bytes: new Uint8Array(png) },
+  ], Date.UTC(2026, 8, 22));
+  const mixedPath = path.join(out, 'mixed.zip');
+  fs.writeFileSync(mixedPath, Buffer.from(mixed));
+
+  let tested = '';
+  try { tested = execFileSync('unzip', ['-t', mixedPath], { encoding: 'utf8' }); } catch (e) { tested = String(e); }
+  ok(/No errors detected/.test(tested), 'a vault holding a picture is still a zip a real unzip opens');
+
+  // The oracle that matters: the bytes, out of a real unzip, compared exactly.
+  let got = Buffer.alloc(0);
+  try {
+    got = execFileSync('unzip', ['-p', mixedPath, 'assets/bible.png'], { encoding: 'buffer', maxBuffer: 1 << 24 });
+  } catch { got = Buffer.alloc(0); }
+  ok(got.equals(png), `the picture comes back byte for byte (${got.length} of ${png.length} bytes)`);
+
+  const back = V.unzipVault(mixed);
+  const note = back.files.find((f) => f.path === 'Note.md');
+  const pic = back.files.find((f) => f.path === 'assets/bible.png');
+  ok(!!note?.text && note.text.includes('![[bible.png]]'), 'our reader gives the note back as text');
+  ok(!!pic?.bytes && Buffer.from(pic.bytes).equals(png), 'and the picture back as bytes, not as mangled text');
+  ok(pic?.text === undefined, 'a picture is never handed back as a string');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

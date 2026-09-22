@@ -39,8 +39,16 @@ export type VaultPage = {
   markdown: string;
 };
 
-/** A file on its way into or out of a vault. */
-export type VaultFile = { path: string; text: string };
+/**
+ * A file on its way into or out of a vault.
+ *
+ * `text` for Markdown, `bytes` for a picture. A file has one or the other;
+ * both is meaningless and neither is an empty file.
+ */
+export type VaultFile = { path: string; text?: string; bytes?: Uint8Array };
+
+/** Where pictures live inside the vault, beside the notes rather than among them. */
+export const ASSET_FOLDER = 'assets';
 
 /** Where daily notes go when the page is not filed anywhere else. */
 export const JOURNAL_FOLDER = 'Journal';
@@ -246,6 +254,66 @@ export function linksToTitles(markdown: string, titleOf: (id: string) => string 
 }
 
 // ---------------------------------------------------------------------------
+// PICTURES
+// ---------------------------------------------------------------------------
+//
+// AFFiNE's Markdown adapter writes a picture as `![alt](assets/name.png)`, a
+// path RELATIVE TO THE NOTE. That is correct for a flat export and wrong for
+// this one: a page filed in Sermons becomes Sermons/Romans 8.md, and a
+// relative `assets/name.png` then points at Sermons/assets/name.png, which is
+// not where the picture is. Every picture in every filed page would be broken,
+// and only for people who use folders.
+//
+// `![[name.png]]` is Obsidian's own embed, and it resolves BY FILENAME across
+// the whole vault, from any depth, without knowing where anything lives. So
+// that is what the export writes -- and it is what a person who already uses
+// Obsidian writes by hand, which is the same reason the import understands it.
+
+/** `![alt](assets/x.png)` -> `![[x.png]]`, so it resolves from any folder. */
+export function picturesAsEmbeds(markdown: string): string {
+  return String(markdown ?? '').replace(
+    /!\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,
+    (whole, url: string) => {
+      if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return whole;   // a real address, left alone
+      const name = decodeURIComponent(url).split('/').pop();
+      return name ? `![[${name}]]` : whole;
+    },
+  );
+}
+
+/**
+ * `![[x.png]]` -> `![alt](assets/x.png)`, which is what the adapter can read.
+ *
+ * Only for things that look like a picture: `![[Another page]]` is an embed of
+ * a NOTE, which Obsidian also supports, and turning that into a broken image
+ * would be worse than leaving it as text somebody can still read.
+ */
+export function embedsAsPictures(markdown: string): string {
+  return String(markdown ?? '').replace(
+    /!\[\[([^\]|]+?)(?:\|([^\]]*))?\]\]/g,
+    (whole, target: string, alias: string | undefined) => {
+      const name = String(target).trim();
+      if (!/\.(png|jpe?g|gif|webp|avif|bmp|svg)$/i.test(name)) return whole;
+      return `![${alias ?? ''}](${ASSET_FOLDER}/${encodeURIComponent(name)})`;
+    },
+  );
+}
+
+/** Every picture a note asks for, however it asked. */
+export function picturesWanted(markdown: string): string[] {
+  const names: string[] = [];
+  const add = (raw: string) => {
+    const name = decodeURIComponent(String(raw).trim()).split('/').pop();
+    if (name && !names.includes(name)) names.push(name);
+  };
+  for (const m of String(markdown ?? '').matchAll(/!\[\[([^\]|]+?)(?:\|[^\]]*)?\]\]/g)) add(m[1]);
+  for (const m of String(markdown ?? '').matchAll(/!\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(m[1])) add(m[1]);
+  }
+  return names;
+}
+
+// ---------------------------------------------------------------------------
 // THE ZIP
 // ---------------------------------------------------------------------------
 //
@@ -301,7 +369,7 @@ export function zipVault(files: VaultFile[], at = Date.now()): Uint8Array {
 
   for (const file of files) {
     const name = enc.encode(file.path.replace(/\\/g, '/'));
-    const body = enc.encode(file.text);
+    const body = file.bytes ?? enc.encode(file.text ?? '');
     const sum = crc32(body);
 
     const local = new Uint8Array(30 + name.length + body.length);
@@ -382,7 +450,13 @@ export function unzipVault(bytes: Uint8Array): { files: VaultFile[]; skipped: st
     const path = dec.decode(bytes.subarray(nameAt, nameAt + nameLen));
     if (method !== 0) skipped.push(path);
     else if (!path.endsWith('/')) {
-      files.push({ path, text: dec.decode(bytes.subarray(dataAt, dataAt + compressed)) });
+      const body = bytes.slice(dataAt, dataAt + compressed);
+      // TEXT ONLY WHERE IT IS TEXT. Decoding a PNG as UTF-8 does not fail, it
+      // silently produces replacement characters -- and the picture is gone
+      // with no error anywhere to say so.
+      files.push(/\.(md|markdown|txt|json|csv)$/i.test(path)
+        ? { path, text: dec.decode(body) }
+        : { path, bytes: body });
     }
     i = dataAt + compressed;
   }
