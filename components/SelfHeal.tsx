@@ -54,11 +54,22 @@ const SCRIPT = `(function(){
   // it, and those are the two cases this has to tell apart.
   function ifReallyGone(url){
     if(!navigator.onLine) return;
-    try{
-      fetch(url,{method:'HEAD',cache:'no-store'}).then(function(r){
-        if(!r.ok) heal();
-      },function(){ /* the network, not the deploy */ });
-    }catch(e){ /* no fetch: leave it alone rather than guess */ }
+    // WAIT FIRST, AND THAT IS THE IMPORTANT HALF. If this failure is a request
+    // cancelled because the page is on its way somewhere else, the document is
+    // about to be replaced and this timer dies with it -- so the check never
+    // runs and nothing is asked. Only a page that is still here a moment later
+    // gets as far as the request below.
+    setTimeout(function(){
+      if(document.visibilityState==='hidden') return;
+      try{
+        // same-origin, no credentials: this is our own asset on our own host,
+        // and asking for it as a CORS request is what made WebKit refuse it
+        // with "Fetch API cannot load ... due to access control checks".
+        fetch(url,{method:'HEAD',cache:'no-store',mode:'same-origin',credentials:'omit'})
+          .then(function(r){ if(!r.ok) heal(); })
+          .catch(function(){ /* the network, not the deploy */ });
+      }catch(e){ /* no fetch here: leave it alone rather than guess */ }
+    },1500);
   }
   window.addEventListener('error',function(e){
     var t=e&&e.target;
