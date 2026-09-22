@@ -22,6 +22,27 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+/**
+ * Is this tool on this machine?
+ *
+ * THE ORACLES ARE UNIX TOOLS AND WINDOWS HAS NONE OF THEM, which cost two red
+ * CI runs before it was noticed. The format assertions above need nothing and
+ * run everywhere; the three below ask Info-ZIP and Python whether the zip this
+ * file wrote is a zip, and on a machine with neither there is no question to
+ * ask.
+ *
+ * NOT SILENTLY, THOUGH. A skip that reads like a pass is how a check stops
+ * being a check. Where an oracle COULD exist -- anywhere but Windows -- its
+ * absence is a failure, not a shrug.
+ */
+const have = (tool) => {
+  try {
+    execFileSync(process.platform === 'win32' ? 'where' : 'which', [tool],
+      { stdio: 'ignore' });
+    return true;
+  } catch { return false; }
+};
 const out = fs.mkdtempSync(path.join(os.tmpdir(), 'beacon-vault-'));
 
 let bad = 0;
@@ -122,22 +143,37 @@ const bytes = V.zipVault(vault, Date.UTC(2026, 8, 22, 10, 30));
 const zipPath = path.join(out, 'vault.zip');
 fs.writeFileSync(zipPath, Buffer.from(bytes));
 
-let infozip = '';
-try { infozip = execFileSync('unzip', ['-t', zipPath], { encoding: 'utf8' }); } catch (e) { infozip = String(e); }
-ok(/No errors detected/.test(infozip), `Info-ZIP opens it and finds no errors (${infozip.trim().split('\n').pop()})`);
+const unzipHere = have('unzip');
+const pythonHere = have('python3');
+ok(unzipHere || process.platform === 'win32',
+   'there is an unzip to check the zip against');
+ok(pythonHere || process.platform === 'win32',
+   'and a Python to check it a second way');
 
-let listed = '';
-try { listed = execFileSync('unzip', ['-Z1', zipPath], { encoding: 'utf8' }); } catch { listed = ''; }
-ok(listed.includes('Sermons/Ang Panalangin.md'), 'a folder inside the vault survives, with its name intact');
+if (unzipHere) {
+  let infozip = '';
+  try { infozip = execFileSync('unzip', ['-t', zipPath], { encoding: 'utf8' }); } catch (e) { infozip = String(e); }
+  ok(/No errors detected/.test(infozip), `Info-ZIP opens it and finds no errors (${infozip.trim().split('\n').pop()})`);
 
-let py = '';
-try {
-  py = execFileSync('python3', ['-c',
-    `import zipfile;z=zipfile.ZipFile(${JSON.stringify(zipPath)});print(z.testzip() or 'ok');` +
-    `print(z.read('Journal/2026-09-22.md').decode('utf-8')[:3])`,
-  ], { encoding: 'utf8' });
-} catch (e) { py = String(e); }
-ok(/^ok/m.test(py) && /---/.test(py), "Python's zipfile agrees, and the file inside reads back as text");
+  let listed = '';
+  try { listed = execFileSync('unzip', ['-Z1', zipPath], { encoding: 'utf8' }); } catch { listed = ''; }
+  ok(listed.includes('Sermons/Ang Panalangin.md'), 'a folder inside the vault survives, with its name intact');
+} else {
+  console.log('--    no unzip on this machine, so Info-ZIP was not asked');
+}
+
+if (pythonHere) {
+  let py = '';
+  try {
+    py = execFileSync('python3', ['-c',
+      `import zipfile;z=zipfile.ZipFile(${JSON.stringify(zipPath)});print(z.testzip() or 'ok');` +
+      `print(z.read('Journal/2026-09-22.md').decode('utf-8')[:3])`,
+    ], { encoding: 'utf8' });
+  } catch (e) { py = String(e); }
+  ok(/^ok/m.test(py) && /---/.test(py), "Python's zipfile agrees, and the file inside reads back as text");
+} else {
+  console.log('--    no python3 on this machine, so zipfile was not asked');
+}
 
 const back = V.unzipVault(bytes);
 ok(back.files.length === 3, `our own reader finds all three files (${back.files.length})`);
@@ -149,15 +185,19 @@ ok(back.skipped.length === 0, 'nothing was skipped');
 // ---------------------------------------------------------------------------
 //
 // The import side has to cope with a folder zipped by a person, not by us.
-const theirs = path.join(out, 'theirs');
-fs.mkdirSync(path.join(theirs, 'Studies'), { recursive: true });
-fs.writeFileSync(path.join(theirs, 'Studies', 'Grace.md'), '---\ntags:\n  - Grace\n---\n\nOn grace.\n');
-fs.writeFileSync(path.join(theirs, 'Plain.md'), 'No front matter at all.\n');
-execFileSync('zip', ['-q', '-r', '-0', path.join(out, 'theirs.zip'), '.'], { cwd: theirs });
-const mine = V.unzipVault(new Uint8Array(fs.readFileSync(path.join(out, 'theirs.zip'))));
-const grace = mine.files.find((f) => f.path.endsWith('Grace.md'));
-ok(!!grace, 'a vault zipped by somebody else can be read');
-ok(grace && V.parseVaultFile(grace.text).tags.join('|') === 'Grace', 'and its tags come through');
+if (have('zip')) {
+  const theirs = path.join(out, 'theirs');
+  fs.mkdirSync(path.join(theirs, 'Studies'), { recursive: true });
+  fs.writeFileSync(path.join(theirs, 'Studies', 'Grace.md'), '---\ntags:\n  - Grace\n---\n\nOn grace.\n');
+  fs.writeFileSync(path.join(theirs, 'Plain.md'), 'No front matter at all.\n');
+  execFileSync('zip', ['-q', '-r', '-0', path.join(out, 'theirs.zip'), '.'], { cwd: theirs });
+  const mine = V.unzipVault(new Uint8Array(fs.readFileSync(path.join(out, 'theirs.zip'))));
+  const grace = mine.files.find((f) => f.path.endsWith('Grace.md'));
+  ok(!!grace, 'a vault zipped by somebody else can be read');
+  ok(grace && V.parseVaultFile(grace.text).tags.join('|') === 'Grace', 'and its tags come through');
+} else {
+  console.log('--    no zip on this machine, so a vault made by somebody else was not tried');
+}
 ok(V.folderOf('Studies/Grace.md') === 'Studies', 'the folder it was in becomes the folder it goes in');
 ok(V.folderOf('Journal/2026-09-22.md') === '', 'except Journal, which is where daily notes already live');
 ok(V.journalDateOf('Journal/2026-09-22.md') === '2026-09-22', 'a date-named file comes back as that day');
@@ -196,16 +236,20 @@ ok(V.picturesWanted('![[a.png]] and ![x](assets/b.jpg) and ![](https://e.org/c.g
   const mixedPath = path.join(out, 'mixed.zip');
   fs.writeFileSync(mixedPath, Buffer.from(mixed));
 
-  let tested = '';
-  try { tested = execFileSync('unzip', ['-t', mixedPath], { encoding: 'utf8' }); } catch (e) { tested = String(e); }
-  ok(/No errors detected/.test(tested), 'a vault holding a picture is still a zip a real unzip opens');
+  if (unzipHere) {
+    let tested = '';
+    try { tested = execFileSync('unzip', ['-t', mixedPath], { encoding: 'utf8' }); } catch (e) { tested = String(e); }
+    ok(/No errors detected/.test(tested), 'a vault holding a picture is still a zip a real unzip opens');
 
-  // The oracle that matters: the bytes, out of a real unzip, compared exactly.
-  let got = Buffer.alloc(0);
-  try {
-    got = execFileSync('unzip', ['-p', mixedPath, 'assets/bible.png'], { encoding: 'buffer', maxBuffer: 1 << 24 });
-  } catch { got = Buffer.alloc(0); }
-  ok(got.equals(png), `the picture comes back byte for byte (${got.length} of ${png.length} bytes)`);
+    // The oracle that matters: the bytes, out of a real unzip, compared exactly.
+    let got = Buffer.alloc(0);
+    try {
+      got = execFileSync('unzip', ['-p', mixedPath, 'assets/bible.png'], { encoding: 'buffer', maxBuffer: 1 << 24 });
+    } catch { got = Buffer.alloc(0); }
+    ok(got.equals(png), `the picture comes back byte for byte (${got.length} of ${png.length} bytes)`);
+  } else {
+    console.log('--    no unzip on this machine, so the picture was not checked against one');
+  }
 
   const back = V.unzipVault(mixed);
   const note = back.files.find((f) => f.path === 'Note.md');

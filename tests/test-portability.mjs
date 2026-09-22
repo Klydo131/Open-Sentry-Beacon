@@ -109,13 +109,46 @@ silent.length
   ];
 
   // Commands that either do not exist on Windows or mean something else there.
-  const UNIX_ONLY = /\b(execSync|exec|spawnSync|spawn)\(\s*[`'"]\s*(find|grep|sed|awk|ls|rm|cp|mv|cat|which|xargs|chmod)\b/;
+  // `execFileSync` is in this list because leaving it out is how a check that
+  // shells out to `unzip`, `zip` and `python3` went red on Windows for two
+  // pushes without this rule noticing: the old pattern asked for `exec(` and
+  // `execFileSync(` does not match it.
+  //
+  // And the commands themselves grew for the same reason. zip, unzip and
+  // python3 are on a Linux and a macOS runner and on nobody's Windows one,
+  // which is exactly the shape of thing this file exists to catch.
+  const UNIX_ONLY = /\b(execSync|exec|execFile|execFileSync|spawnSync|spawn)\(\s*[`'"]\s*(find|grep|sed|awk|ls|rm|cp|mv|cat|which|xargs|chmod|zip|unzip|python3?|tar|gzip|gunzip|curl|wget|make)\b/;
   // npm and npx are .cmd files on Windows: spawn cannot find them without a
   // shell. `shell: true`, or resolving the real binary, both fix it.
   const BARE_NPM = /\bspawn(Sync)?\(\s*[`'"](npm|npx|yarn|pnpm)[`'"]/;
 
   const offenders = [];
+  // FILES THAT SHELL OUT AND COPE WHEN THE TOOL IS NOT THERE.
+  //
+  // The rule cannot tell "depends on unzip" from "asks unzip if it is around",
+  // and that difference is the whole question. These three have been read, and
+  // each checks first and carries on without:
+  //
+  //   scripts/screenshots.mjs        python3 shrinks a PNG and is optional on
+  //                                  purpose -- without it the images are
+  //                                  correct and larger.
+  //   a-room-can-become-a-vault      unzip, python3 and zip are ORACLES. On a
+  //   the-room-goes-in-and-out-      machine with none of them there is no
+  //     of-obsidian                  second opinion to ask, and the format
+  //                                  assertions still run. Where an oracle
+  //                                  COULD exist, its absence is a failure.
+  //
+  // An exemption is a sentence somebody has to write, which is the point. The
+  // alternative -- dropping zip and unzip from the list to make this quiet --
+  // would let through exactly the failure that prompted the list growing.
+  const COPES_WITHOUT = new Set([
+    path.join('scripts', 'screenshots.mjs'),
+    path.join('tests', 'a-room-can-become-a-vault.mjs'),
+    path.join('tests', 'e2e', 'the-room-goes-in-and-out-of-obsidian.js'),
+  ]);
+
   for (const rel of everywhere) {
+    if (COPES_WITHOUT.has(rel)) continue;
     let src;
     try { src = fs.readFileSync(path.join(root, rel), 'utf8'); } catch { continue; }
     const shipped = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');

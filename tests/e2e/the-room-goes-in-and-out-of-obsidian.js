@@ -20,6 +20,18 @@ const { execFileSync } = require('node:child_process');
 const os = require('node:os'), fs = require('node:fs'), path = require('node:path');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
+
+// The oracle is Info-ZIP, and Windows has none. These walks only run on Linux
+// in CI, so in practice it is always here -- but a developer on Windows should
+// get a walk that says what it could not check rather than one that fails at
+// something unrelated to the app. See tests/a-room-can-become-a-vault.mjs for
+// the same decision written out at length.
+const haveUnzip = (() => {
+  try {
+    execFileSync(process.platform === 'win32' ? 'where' : 'which', ['unzip'], { stdio: 'ignore' });
+    return true;
+  } catch { return false; }
+})();
 let bad = 0;
 const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
 
@@ -93,16 +105,17 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     await download.saveAs(zipPath);
     ok(fs.statSync(zipPath).size > 0, `the file has something in it (${fs.statSync(zipPath).size} bytes)`);
 
+    if (!haveUnzip) console.log('--  no unzip here, so the vault was not opened independently');
     // The oracle is a real unzip, not our own reader.
     let tested = '';
     try { tested = execFileSync('unzip', ['-t', zipPath], { encoding: 'utf8' }); } catch (e) { tested = String(e); }
-    ok(/No errors detected/.test(tested), 'and a real unzip opens it without complaint');
+    if (haveUnzip) ok(/No errors detected/.test(tested), 'and a real unzip opens it without complaint');
 
     try { listing = execFileSync('unzip', ['-Z1', zipPath], { encoding: 'utf8' }); } catch { listing = ''; }
-    ok(/\.md$/m.test(listing), `it is full of Markdown (${listing.trim().split('\n').length} files)`);
+    if (haveUnzip) ok(/\.md$/m.test(listing), `it is full of Markdown (${listing.trim().split('\n').length} files)`);
 
     const mine = listing.split('\n').find((f) => /Grace abounds\.md$/.test(f));
-    ok(!!mine, `the page is in there under its own name (${mine || 'not found'})`);
+    if (haveUnzip) ok(!!mine, `the page is in there under its own name (${mine || 'not found'})`);
     if (mine) {
       try { body = execFileSync('unzip', ['-p', zipPath, mine], { encoding: 'utf8' }); } catch { body = ''; }
       ok(/^---\r?\n/.test(body), 'the file opens with front matter');
@@ -115,7 +128,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
     // THE PICTURE IS IN THE VAULT AS A FILE, and is the file it was.
     const asset = listing.split('\n').find((f) => /^assets\/.+\.png$/.test(f));
-    ok(!!asset, `the picture is a file in the vault (${asset || 'not found'})`);
+    if (haveUnzip) ok(!!asset, `the picture is a file in the vault (${asset || 'not found'})`);
     if (asset) {
       let bytes = Buffer.alloc(0);
       try { bytes = execFileSync('unzip', ['-p', zipPath, asset], { encoding: 'buffer' }); } catch { /* reported below */ }
