@@ -550,6 +550,10 @@ const staticChecks = [
   // called, what its front matter says, and a zip checked against a real
   // Info-ZIP and Python rather than against our own reader.
   ['a room can become a vault', 'tests/a-room-can-become-a-vault.mjs'],
+  ['a suspension is immediate', 'tests/a-suspension-is-immediate.mjs'],
+  // `x.col = col` inside a subquery is always true: the bare name binds to x.
+  // Two live policies checked nothing because of it.
+  ['a door compares the right things', 'tests/a-door-compares-the-right-things.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green
