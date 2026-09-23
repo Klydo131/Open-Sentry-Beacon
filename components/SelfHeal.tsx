@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+import { BUILD_ID } from '@/lib/build-info';
+
 // Repairs an app that cannot start.
 //
 // The failure this exists for is real and was seen on a real device: an
@@ -28,6 +30,7 @@ const HEAL_KEY = 'beacon-healed';
 
 const SCRIPT = `(function(){
   var K=${JSON.stringify(HEAL_KEY)};
+  var MINE=${JSON.stringify(BUILD_ID)};
   function chunky(m){return /ChunkLoadError|Loading chunk|Loading CSS chunk|dynamically imported module|module script failed/i.test(m||'');}
   function heal(){
     try{ if(sessionStorage.getItem(K)) return; sessionStorage.setItem(K,'1'); }catch(e){ return; }
@@ -71,22 +74,58 @@ const SCRIPT = `(function(){
       }catch(e){ /* no fetch here: leave it alone rather than guess */ }
     },1500);
   }
+
+  // The same question for the failures that arrive with NO URL attached.
+  //
+  // WHY THIS IS HERE. Narrowing the resource-error path above left three other
+  // ways in -- two chunky(message) branches and the rejection handler -- and
+  // every one of them called heal() on the spot. WebKit run 238 walked straight
+  // through one of them: conversation-fits-the-glass clicked sign-in, the app
+  // navigated to /?fresh=..., and the walk died waiting. A dynamic import that
+  // is cancelled by navigating away rejects with "Importing a module script
+  // failed", which is one of the strings chunky() matches. So the fix I shipped
+  // covered one door and left three open. This is the rest of it.
+  //
+  // WHAT IT ASKS INSTEAD. There is no URL to test here, but there is a better
+  // question: has the server moved to a different build than the one this page
+  // was built from? That is the actual condition this whole file exists for --
+  // a stale HTML shell asking for chunks a newer deploy deleted. /version.json
+  // answers it directly, and MINE is baked into this shell at build time, so an
+  // old cached shell carries an old id and the comparison is exactly right.
+  //
+  // Same build means reloading cannot help: the file is not missing because of
+  // a deploy, and the rule in this file has always been that reloading forever
+  // is worse than showing the error. And the 1500ms wait does the same work it
+  // does above -- a page on its way somewhere else never runs this timer.
+  function ifTheBuildMoved(){
+    if(!navigator.onLine) return;
+    setTimeout(function(){
+      if(document.visibilityState==='hidden') return;
+      try{
+        fetch('/version.json?probe='+Date.now(),
+              {cache:'no-store',mode:'same-origin',credentials:'omit'})
+          .then(function(r){ return r.ok?r.json():null; })
+          .then(function(v){ if(v&&v.build&&MINE&&v.build!==MINE) heal(); })
+          .catch(function(){ /* the network, not the deploy */ });
+      }catch(e){ /* no fetch here: leave it alone rather than guess */ }
+    },1500);
+  }
   window.addEventListener('error',function(e){
     var t=e&&e.target;
     // A picture or a sound failing is not a broken app. Only the two things a
     // deploy can delete out from under a running page count.
     var tag=(t&&t.tagName||'').toLowerCase();
-    if(tag!=='script'&&tag!=='link') { if(chunky(e&&e.message)&&navigator.onLine) heal(); return; }
+    if(tag!=='script'&&tag!=='link') { if(chunky(e&&e.message)) ifTheBuildMoved(); return; }
     var src=(t&&(t.src||t.href))||'';
     if(src&&src.indexOf('/_next/static/')>-1){ ifReallyGone(src); return; }
-    if(chunky(e&&e.message)&&navigator.onLine) heal();
+    if(chunky(e&&e.message)) ifTheBuildMoved();
   },true);
   window.addEventListener('unhandledrejection',function(e){
     var r=e&&e.reason;
     // Webpack raises this after its own retries, so there is no URL left to
-    // ask about -- but healing while offline would delete the cache that is
-    // keeping the app usable, which is the worst possible moment for it.
-    if(chunky((r&&(r.message||r.name))||String(r||''))&&navigator.onLine) heal();
+    // ask about -- and a cancelled import lands here too. The build check is
+    // the only honest way to tell those apart without one.
+    if(chunky((r&&(r.message||r.name))||String(r||''))) ifTheBuildMoved();
   });
 })()`;
 

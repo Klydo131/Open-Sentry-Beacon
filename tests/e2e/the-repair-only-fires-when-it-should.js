@@ -26,7 +26,14 @@
 //     data turned into an app that stays broken until signal returns.
 //
 // So the trigger now asks the server whether the file is actually gone, and
-// only a real 404 counts. These four cases are the whole contract.
+// only a real 404 counts.
+//
+// AND THERE WAS A SECOND DOOR, which the first fix did not close. Failures that
+// arrive with no URL -- a rejected dynamic import, a bare error message -- were
+// still healing on the spot, and a cancelled import rejects with a message that
+// matches. Those now ask /version.json whether the server is on a different
+// build than this page was made from, which is the real question underneath all
+// of this. These six cases are the whole contract.
 //
 //   node tests/e2e/the-repair-only-fires-when-it-should.js [port]
 // ---------------------------------------------------------------------------
@@ -114,6 +121,75 @@ const addScript = (src) => {
     ok(!r.repaired, 'a chunk failing while offline does not set it off');
     ok(r.caches > 0,
        `and the offline copy survives, which is the whole point of having one (${r.caches} caches)`);
+  }
+
+  // 5 AND 6. THE SECOND DOOR: failures that arrive with no URL to ask about.
+  //
+  // Narrowing the resource-error path left the two chunky(message) branches and
+  // the rejection handler still calling heal() on the spot, and "Importing a
+  // module script failed" is exactly what a dynamic import rejects with when
+  // you navigate away mid-import. WebKit run 238 walked straight through it:
+  // conversation-fits-the-glass clicked sign-in and the app reloaded underneath
+  // the click. So those now ask /version.json whether the server is on a
+  // different build than this page was made from.
+  //
+  // Both halves are tested, because either one alone can be satisfied by doing
+  // nothing at all. And the probe is COUNTED, so a case that passes because the
+  // check never ran is a failure here rather than a green tick.
+  //
+  // serviceWorkers: 'block' is not decoration. The app installs a worker, and a
+  // request it serves does not pass through Playwright's routing -- which is
+  // exactly why the first version of this case reported the repair as broken
+  // when the repair was fine and the test was not looking at the real traffic.
+  async function askedAndAnswered(serverBuild) {
+    const ctx = await chromium.launchPersistentContext(
+      fs.mkdtempSync(path.join(os.tmpdir(), 'beacon-heal-')),
+      { ...launchOptions, serviceWorkers: 'block' });
+    const page = ctx.pages()[0] || await ctx.newPage();
+    let probes = 0;
+    await ctx.route(/version\.json/, (route) => {
+      // ONLY the repair's own probe is answered with a made-up build. The app
+      // ALSO polls this route (AutoUpdate, with ?t=), and it is built to reload
+      // when the build moves -- so answering that one too made case 6 go green
+      // on the wrong mechanism entirely. The probe counter is what caught it,
+      // which is the only reason it is here.
+      if (!route.request().url().includes('probe=')) return route.continue();
+      probes += 1;
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ build: serverBuild }),
+      });
+    });
+    await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
+    const mine = await page.evaluate(() => {
+      const t = [...document.scripts].map((x) => x.textContent || '')
+        .find((x) => x.includes('var MINE='));
+      return t ? (t.match(/var MINE="([^"]*)"/) || [])[1] : '';
+    });
+    await page.waitForTimeout(500);
+    await page.evaluate(() => {
+      Promise.reject(new Error('Importing a module script failed: /_next/static/chunks/x.js'));
+    });
+    await page.waitForTimeout(4500);
+    const repaired = page.url().includes('fresh=');
+    await ctx.close();
+    return { repaired, probes, mine };
+  }
+
+  // 5. The server is on the same build, so a reload cannot fix anything.
+  {
+    const mine = (await askedAndAnswered('placeholder')).mine;
+    const r = await askedAndAnswered(mine);
+    ok(r.probes > 0, `the repair asks before it acts (${r.probes} probe)`);
+    ok(!r.repaired, 'a dynamic import cancelled by navigating away does not set it off');
+  }
+
+  // 6. The server has moved on, which is the case this whole file exists for.
+  {
+    const r = await askedAndAnswered('a-build-this-page-was-not-made-from');
+    ok(r.probes > 0, `and it asks here too (${r.probes} probe)`);
+    ok(r.repaired, 'but the same signal DOES repair when the server has moved on');
   }
 
   console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
