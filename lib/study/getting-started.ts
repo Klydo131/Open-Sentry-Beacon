@@ -115,7 +115,10 @@ export function writeTheGuide(store: Store): void {
   const noteId = store.getBlocksByFlavour('affine:note')[0]?.id
     ?? store.addBlock('affine:note', {}, rootId);
 
-  store.addBlock('affine:paragraph', { type: 'h1', text: new Text(GUIDE_TITLE) }, noteId);
+  // NO HEADING WITH THE PAGE'S OWN NAME. The page's title is drawn large above
+  // the writing, so a first block saying the same words printed it twice, one
+  // under the other, on the first page every Explorer opens. The name is the
+  // page's title (see giveTheGuideOnce), which is also what the shelf lists.
 
   for (const line of GUIDE_LINES) {
     if (line.kind === 'rule') {

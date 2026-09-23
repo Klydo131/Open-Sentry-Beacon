@@ -103,6 +103,41 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   }
 
   // -------------------------------------------------------------------------
+  // 2b. AND NO LABEL IS STRETCHED BY THE EDITOR'S `.truncate`
+  // -------------------------------------------------------------------------
+  //
+  // Two BlockSuite blocks ship `.truncate { align-self: stretch }` into the
+  // document, the same name as Tailwind's utility. It showed as "Hope Beacon"
+  // sitting ten pixels above its own chevron once a page was open. Asserted
+  // two ways: on that one label, which is where it was seen, and as a sweep,
+  // which is where the next one would be.
+  {
+    const leak = await page.evaluate(() => {
+      const way = document.querySelector('.sr-bar button');
+      const svg = way?.querySelector('svg')?.getBoundingClientRect();
+      const words = way?.querySelector('span')?.getBoundingClientRect();
+      const stretched = [];
+      for (const el of document.querySelectorAll('.truncate')) {
+        if (el.closest('editor-host')) continue;
+        if (/\bself-/.test(el.className)) continue;
+        if (getComputedStyle(el).alignSelf === 'stretch') {
+          stretched.push((el.textContent || '?').trim().slice(0, 30));
+        }
+      }
+      return {
+        off: svg && words ? Math.abs((svg.top + svg.height / 2) - (words.top + words.height / 2)) : 99,
+        tall: words ? Math.round(words.height) : 0,
+        stretched,
+      };
+    });
+    ok(leak.off <= 2 && leak.tall < 40,
+       `the way out's words sit level with its chevron (${leak.off.toFixed(1)}px apart, label ${leak.tall}px tall)`);
+    ok(leak.stretched.length === 0,
+       `no truncated label outside the editor is stretched by the editor's stylesheet (${
+         leak.stretched.join(', ') || 'none is'})`);
+  }
+
+  // -------------------------------------------------------------------------
   // 3. THE WHITEBOARD'S TOOLS ARE ON THE WHITEBOARD
   // -------------------------------------------------------------------------
   {

@@ -47,7 +47,7 @@ const StudyRoomEditor = dynamic(
     // screen. A spinner in a card, replaced a second later by something that
     // covers the window, is two different screens in a row for no reason.
     loading: () => (
-      <div className="fixed inset-0 z-50 grid place-items-center bg-[#FAF7F2]">
+      <div className="fixed inset-0 z-50 grid place-items-center bg-[#f6f4f0]">
         <BeaconSpinner inline label="Opening your study room" />
       </div>
     ),

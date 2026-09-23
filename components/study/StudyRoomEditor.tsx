@@ -43,6 +43,7 @@ import {
 } from '@/lib/study/shelf';
 import type { Troubled } from '@/lib/study/doc-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
+import { BoardGlyph, DocGlyph, FolderGlyph } from '@/components/Glyph';
 import { humanError } from '@/lib/live/errors';
 import {
   toVaultFile, parseVaultFile, vaultFilenames, zipVault, unzipVault,
@@ -113,6 +114,21 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   // coming -- which is what a blank rectangle was reported as, three times.
   const [drawing, setDrawing] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
+  // THE TITLE GROWS WITH ITS WORDS. A textarea keeps whatever height it was
+  // given, so it is measured after every change -- and after the window changes
+  // width, because the same words wrap onto a different number of lines.
+  const titleBox = useRef<HTMLTextAreaElement | null>(null);
+  useEffect(() => {
+    const fit = () => {
+      const el = titleBox.current;
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  });
   const [folderDraft, setFolderDraft] = useState('');
 
   const refresh = useCallback(() => {
@@ -647,20 +663,30 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     trash: entries.filter((e) => e.trashed).length,
   };
 
+  // MOVING SOMEWHERE ELSE DROPS EVERY FILTER. One left on across a change of
+  // place is how somebody lands in the Bin, sees nothing, and concludes the app
+  // lost their pages. Three of them now, which makes it likelier rather than
+  // less. One function, because the places are now in two controls -- the
+  // sidebar and the phone's segmented control -- and two copies of this rule
+  // is how one of them forgets a filter.
+  const changePlace = (next: ShelfView) => {
+    setView(next); setTag(''); setFolder(''); setCollection('');
+  };
+
   const shellBody = () => {
     if (error) {
       return (
-        <div className="mx-auto max-w-2xl p-4">
-          <p className="rounded-xl bg-red-50 p-4 text-sm text-red-800 ring-1 ring-red-200">{error}</p>
+        <div className="mx-auto max-w-2xl px-4 pt-6">
+          <p className="sr-note sr-note--trouble">{error}</p>
         </div>
       );
     }
     if (stalled) {
       return (
-        <div className="mx-auto max-w-2xl p-4">
-          <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
-            <p className="font-semibold">Your study room did not answer.</p>
-            <p className="mt-1">
+        <div className="mx-auto max-w-xl px-4 pt-10">
+          <div className="sr-group px-6 py-8 text-center">
+            <p className="text-xl font-semibold">Your study room did not answer.</p>
+            <p className="sr-row-meta mt-2">
               Nothing has been lost. Your pages are in the church&rsquo;s database and
               this device simply could not reach them just now. It is usually the
               connection.
@@ -668,7 +694,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
             <button
               type="button"
               onClick={() => setAttempt((n) => n + 1)}
-              className="tap mt-3 rounded-xl bg-navy px-5 text-base font-semibold text-white"
+              className="tap-sm mt-5 rounded-full bg-navy px-6 text-[17px] font-semibold text-white"
             >
               Try again
             </button>
@@ -686,18 +712,12 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     if (!openPage) {
       return (
         <>
-          {demo && (
-            <div className="mx-auto max-w-3xl px-4 pt-4">
-              <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
-                This is the walkthrough, so nothing you write here is saved
-                anywhere. In the real app it is kept in your church&rsquo;s own
-                database.
-              </p>
-            </div>
-          )}
           <StudyShelf
             entries={entries}
             view={view}
+            onView={changePlace}
+            counts={counts}
+            walkthrough={demo}
             tag={tag}
             onTag={setTag}
             folder={folder}
@@ -744,75 +764,82 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         </>
       );
     }
-    // A READING COLUMN FOR READING, THE WHOLE ROOM FOR A CANVAS. `max-w-3xl`
-    // is the right width for prose and the wrong one for a whiteboard:
-    // squeezed to 828px the board is cramped, and AFFiNE's own toolbar lays
-    // itself out for more room than that and overlapped its own zoom controls.
-    // A canvas wants the space.
+    // A READING COLUMN FOR READING, THE WHOLE ROOM FOR A CANVAS. A column the
+    // width of a book is right for prose and wrong for a whiteboard: squeezed,
+    // the board is cramped, and AFFiNE's own toolbar lays itself out for more
+    // room than that and overlapped its own zoom controls. A canvas wants the
+    // space -- the whole height of the window as well as the width, so it opens
+    // as a board rather than as a box in the middle of a page.
+    const board = mode === 'edgeless';
     return (
-      <div className={`mx-auto w-full px-4 pb-24 pt-4 ${
-        mode === 'edgeless' ? 'max-w-none' : 'max-w-3xl'
-      }`}>
+      <div
+        className={board
+          ? 'flex flex-col px-3 pb-3 pt-4 md:px-5'
+          : 'mx-auto w-full max-w-[46rem] px-4 pt-6 md:px-8 md:pt-10'}
+        // The window's height less the bar's, which the spacer above this
+        // column already occupies: a definite height for the board to fill.
+        style={board ? { height: 'calc(100% - var(--sr-bar-h))' } : undefined}
+      >
         {trouble && (
-          <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">
-            <span className="font-semibold">Not saved yet.</span> {trouble} Keep this
-            page open; it keeps trying, and what you have written is still here.
+          <p className="sr-note sr-note--trouble mb-4">
+            <span>
+              <span className="font-semibold">Not saved yet.</span> {trouble} Keep this
+              page open; it keeps trying, and what you have written is still here.
+            </span>
           </p>
         )}
-        {notice && (
-          <p className="mb-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
-            {notice}
-          </p>
-        )}
-        {/* THE TITLE IS PART OF THE PAGE, not a setting hidden behind a menu.
-            It is the first thing in AFFiNE's own document view and the first
-            thing somebody wants to write when they start a study. */}
-        <input
+        {notice && <p className="sr-note mb-4">{notice}</p>}
+
+        {/* THE TITLE IS PART OF THE PAGE, not a setting hidden behind a menu --
+            the first thing in AFFiNE's document view and the first thing
+            somebody writes when they start a study. And it WRAPS: it was a
+            one-line input, so a long name was cut off at the edge of a phone
+            with no way to read the rest. A textarea that grows with its words,
+            where Return still means "done" as it did before. */}
+        <textarea
+          ref={titleBox}
           value={titleDraft}
-          onChange={(e) => setTitleDraft(e.target.value)}
+          rows={1}
+          onChange={(e) => setTitleDraft(e.target.value.replace(/\n/g, ' '))}
           onBlur={() => setMeta(openPage, { title: titleDraft.trim() })}
-          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); }
+          }}
           maxLength={80}
           placeholder="Name this page"
           aria-label="Name this page"
-          className="mb-2 w-full bg-transparent text-2xl font-bold text-navy outline-none placeholder:text-gray-300"
+          className={`sr-page-title ${board ? 'md:!text-[24px]' : ''}`}
         />
-        {/* THE SAME SWITCH AFFiNE PUTS BESIDE THE TITLE. Page is the document;
-            whiteboard is the same page on an infinite canvas, with shapes,
-            connectors, a pen and mindmaps. Nothing is copied between them
-            because there is nothing to copy: it is one page. */}
-        <div role="group" aria-label="How to look at this page" className="mb-3 flex gap-2">
-          {([['page', 'Page'], ['edgeless', 'Whiteboard']] as const).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setMode(id)}
-              aria-pressed={mode === id}
-              className={`rounded-full px-3 py-1.5 text-sm font-semibold ring-1 ${
-                mode === id ? 'bg-navy text-white ring-navy' : 'bg-white text-navy ring-black/10'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+
+        {/* PAGE OR WHITEBOARD: one page, two ways of looking at it, so it is a
+            segmented control rather than two buttons. Nothing is copied between
+            them because there is nothing to copy. */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div role="group" aria-label="How to look at this page" className="sr-seg sr-seg--inline">
+            {([['page', 'Page', DocGlyph], ['edgeless', 'Whiteboard', BoardGlyph]] as const).map(([id, label, Icon]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setMode(id)}
+                aria-pressed={mode === id}
+                className="tap-sm"
+              >
+                <Icon size={17} />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {mode === 'page' && (
-          <>
-            <StudyTags
-              tags={current?.tags ?? []}
-              known={knownTags}
-              onChange={(next) => setMeta(openPage, { tags: next })}
-            />
-
-            {/* WHICH FOLDER THIS PAGE IS IN, beside the tags rather than behind
-                a menu, and for the same reason: the moment somebody knows what
-                a page is for is the moment they are naming it. A folder is
-                offered from the ones that already exist AND is free text, so
-                the first page of a new study makes the folder by being put in
-                it. Nobody creates a folder in this room; they file something. */}
-            <label className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-gray-500">📁 Folder</span>
+        {/* WHICH FOLDER, AND WHAT IT IS ABOUT, as one quiet line of pills under
+            the switch rather than two labelled rows above the writing. The
+            folder is offered from the ones that already exist AND is free
+            text, so the first page of a new study makes the folder by being
+            filed. */}
+        {!board && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <label className="sr-field">
+              <FolderGlyph size={16} />
               <input
                 value={folderDraft}
                 onChange={(e) => setFolderDraft(e.target.value)}
@@ -820,17 +847,33 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
                 onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                 list="study-folders"
                 maxLength={40}
-                placeholder="Filed nowhere"
+                placeholder="No folder"
                 aria-label="Which folder this page is filed in"
-                className="min-w-0 flex-1 rounded-full bg-white px-3 py-1 text-sm ring-1 ring-black/10 placeholder:text-gray-400"
+                // Wide enough for "Romans study", which the first width cut to
+                // "Romans stud". A folder name is up to 40 characters; the
+                // field scrolls inside itself past this, as any input does.
+                className="w-36"
               />
               <datalist id="study-folders">
                 {knownFolders.map((f) => <option key={f} value={f} />)}
               </datalist>
             </label>
-            <StudyInsertBar onInsert={insert} />
-          </>
+            <StudyTags
+              tags={current?.tags ?? []}
+              known={knownTags}
+              onChange={(next) => setMeta(openPage, { tags: next })}
+            />
+          </div>
         )}
+
+        {/* THE INSERT BAR, directly above the writing and held under the
+            navigation bar while the page scrolls. See .sr-formatbar for why it
+            is here and not at the bottom of the screen. */}
+        {/* A direct child of the page's column, not wrapped: a sticky element
+            only sticks within its parent, and a wrapper as tall as the bar
+            gives it nowhere to go. */}
+        {!board && <StudyInsertBar onInsert={insert} />}
+
         {drawing && (
           <div className="grid place-items-center py-12">
             <BeaconSpinner inline label="Opening this page" />
@@ -841,23 +884,21 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           // THE CANVAS HAS TO BE GIVEN A HEIGHT. A page viewport grows with its
           // writing; an edgeless one is a window onto something with no size of
           // its own, so with `height: auto` it renders as a nought-pixel strip
-          // and looks exactly like a feature that does not work.
-          // `dvh` AS WELL AS `vh`, because a phone's `vh` is measured against a
-          // window that includes the browser's own bars: the canvas would run
-          // under the address bar and the bottom of it would never be reachable.
+          // and looks exactly like a feature that does not work. Here it takes
+          // what is left of a column whose own height is the window's, which is
+          // a definite size, and never less than 360px on a short landscape
+          // phone, where the room scrolls rather than squashing the board.
           // AND `relative`, WHICH IS THE WHOLE OF A REPORTED BUG. The canvas
           // draws its toolbar with `position: absolute; bottom: 0`, and an
-          // absolute box anchors to the nearest POSITIONED ancestor. This div
-          // had none, so the toolbar climbed past it to the full-screen shell
-          // and pinned itself to the bottom of the WINDOW: measured at 820-900
-          // against a canvas ending at 825, so it floated below the board,
-          // overlapping whatever was under it and half cut off by the edge of
-          // the screen. Making this div positioned puts the toolbar back on
-          // the board it belongs to, inside the rounded corners.
-          className={mode === 'edgeless'
-            ? 'affine-edgeless-viewport relative h-[70vh] [height:70dvh] overflow-hidden rounded-2xl ring-1 ring-black/10'
-            : 'affine-page-viewport'}
+          // absolute box anchors to the nearest POSITIONED ancestor. Without
+          // it the toolbar climbed to the full-screen shell and pinned itself
+          // to the bottom of the WINDOW, floating below the board and half cut
+          // off by the edge of the screen.
+          className={board
+            ? 'affine-edgeless-viewport relative mt-3 min-h-[360px] flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_0_0_0.5px_rgba(26,34,51,0.12),0_1px_3px_rgba(16,24,40,0.06)]'
+            : 'affine-page-viewport min-h-[40vh] [min-height:40dvh] pb-6'}
         />
+
       </div>
     );
   };
@@ -865,16 +906,15 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   return (
     <StudyWorkspaceShell
       view={view}
-      // MOVING SOMEWHERE ELSE DROPS EVERY FILTER. One left on across a change
-      // of place is how somebody lands in the Bin, sees nothing, and concludes
-      // the app lost their pages. Three of them now, which makes it likelier
-      // rather than less.
-      onView={(next) => { setView(next); setTag(''); setFolder(''); setCollection(''); }}
+      onView={changePlace}
       counts={counts}
       onExit={onExit}
       onHome={() => setOpenPage('')}
       showingPage={Boolean(openPage)}
       pageTitle={current?.title ?? 'Study Room'}
+      action={!ready || view === 'trash' ? undefined
+        : view === 'journal' ? { label: "Today's page", onClick: openToday }
+          : { label: 'New page', onClick: addPage }}
     >
       {shellBody()}
     </StudyWorkspaceShell>

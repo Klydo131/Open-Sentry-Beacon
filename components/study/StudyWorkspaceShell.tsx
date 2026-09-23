@@ -26,8 +26,28 @@
 
 import { useEffect } from 'react';
 
+import '@/components/study/study-shell.css';
+
 import { APP_NAME } from '@/lib/brand';
 import type { ShelfView } from '@/components/study/StudyShelf';
+import {
+  CalendarGlyph, ChevronLeftGlyph, DocGlyph, GridGlyph, PlusGlyph, StarGlyph, TrashGlyph,
+} from '@/components/Glyph';
+
+/**
+ * The four places, in one list so the sidebar and the phone's segmented control
+ * can never disagree about what they are called or in what order they come.
+ */
+export const PLACES: Array<{ id: ShelfView; label: string; Icon: typeof DocGlyph }> = [
+  { id: 'all', label: 'All pages', Icon: DocGlyph },
+  { id: 'favourites', label: 'Starred', Icon: StarGlyph },
+  // A DAY AT A TIME, which is the shape most of what happens in a church
+  // already has: a morning devotion, a sermon on Sabbath, what somebody
+  // prayed about on Tuesday. Nobody names those pages and nobody should have
+  // to, so the journal names them by the day they belong to.
+  { id: 'journal', label: 'Journal', Icon: CalendarGlyph },
+  { id: 'trash', label: 'Bin', Icon: TrashGlyph },
+];
 
 export function StudyWorkspaceShell({
   view,
@@ -37,6 +57,7 @@ export function StudyWorkspaceShell({
   onHome,
   showingPage,
   pageTitle,
+  action,
   children,
 }: {
   view: ShelfView;
@@ -48,6 +69,12 @@ export function StudyWorkspaceShell({
   onHome: () => void;
   showingPage: boolean;
   pageTitle: string;
+  /**
+   * The shelf's one main thing to do -- New page, or Today's page in the
+   * journal -- drawn in the bar on a phone, where there is no room for it
+   * beside the large title. Wider screens show it beside the title instead.
+   */
+  action?: { label: string; onClick: () => void };
   children: React.ReactNode;
 }) {
   // A ROOM THAT TAKES THE SCREEN MUST NOT LEAVE THE PAGE BEHIND IT SCROLLING.
@@ -59,16 +86,12 @@ export function StudyWorkspaceShell({
     return () => { document.body.style.overflow = previous; };
   }, []);
 
-  const places: Array<{ id: ShelfView; label: string; icon: string; count: number }> = [
-    { id: 'all', label: 'All pages', icon: '📄', count: counts.all },
-    { id: 'favourites', label: 'Starred', icon: '★', count: counts.favourites },
-    // A DAY AT A TIME, which is the shape most of what happens in a church
-    // already has: a morning devotion, a sermon on Sabbath, what somebody
-    // prayed about on Tuesday. Nobody names those pages and nobody should have
-    // to, so the journal names them by the day they belong to.
-    { id: 'journal', label: 'Journal', icon: '📅', count: counts.journal },
-    { id: 'trash', label: 'Bin', icon: '🗑️', count: counts.trash },
-  ];
+  const countOf = (id: ShelfView) => (
+    id === 'all' ? counts.all
+      : id === 'favourites' ? counts.favourites
+        : id === 'journal' ? counts.journal
+          : counts.trash
+  );
 
   return (
     <div
@@ -77,75 +100,78 @@ export function StudyWorkspaceShell({
       // with it: the "Hope Beacon" button was behind it, which is the one
       // control somebody must always be able to reach. A room that takes the
       // screen has to actually take it.
-      className="fixed inset-0 z-[100] flex flex-col bg-[#FAF7F2]"
-      style={{
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      }}
+      className="sr fixed inset-0 z-[100]"
     >
       {/* THE WAY OUT IS THE FIRST THING ON THE SCREEN, and it says where it
           goes. "Close" would leave somebody guessing what closing means when
-          the room is the whole window. */}
-      <header className="flex shrink-0 items-center gap-2 bg-navy px-3 py-2 text-white">
-        <button
-          type="button"
-          onClick={onExit}
-          className="tap-sm shrink-0 rounded-xl px-3 text-sm font-semibold text-white ring-1 ring-white/25 hover:bg-white/10"
-        >
-          ← {APP_NAME}
-        </button>
+          the room is the whole window. Drawn as Apple draws a back button --
+          a chevron and the name of the place it returns to, in the tint
+          colour, with no box around it. */}
+      <header className="sr-bar">
+        <div className="sr-bar-row">
+          <div className="flex min-w-0 shrink-0 justify-start">
+            <button type="button" onClick={onExit} className="sr-bar-btn tap-sm">
+              <ChevronLeftGlyph size={22} />
+              <span className="truncate">{APP_NAME}</span>
+            </button>
+          </div>
 
-        {/* ON A PAGE, AT 360px, THIS HAD ABOUT FORTY PIXELS and rendered the
-            title as "P...". Two buttons and a name do not fit across the
-            narrowest phone, and of the three the name is the one already on
-            the screen: it is the first thing in the page body, in full, as an
-            editable field. So it is dropped from the bar rather than shown as
-            an ellipsis. The shelf has only one button and keeps its title. */}
-        <div className={`min-w-0 flex-1 ${showingPage ? 'hidden sm:block' : ''}`}>
-          <p className="truncate text-base font-bold">
-            {showingPage ? pageTitle : '📖 Study Room'}
+          {/* NOTHING IN THE MIDDLE ON A PHONE. At 360px a centred title leaves
+              each side about 118px, and the way out needs 143 -- it came out
+              as "Hope Bea...", on the one control that must always read
+              clearly. On a page the name is already the first thing in the
+              body, in full, and on the shelf the large title says where you
+              are. So the bar's own title is for wide screens only, and on the
+              shelf the sidebar says it instead. */}
+          <p className="sr-bar-title hidden md:block">
+            {showingPage ? pageTitle : ''}
           </p>
-        </div>
-        {showingPage && <div className="flex-1 sm:hidden" aria-hidden />}
 
-        {showingPage ? (
-          <button
-            type="button"
-            onClick={onHome}
-            className="tap-sm shrink-0 rounded-xl px-3 text-sm font-semibold text-white ring-1 ring-white/25 hover:bg-white/10"
-          >
-            All pages
-          </button>
-        ) : null}
+          <div className="flex min-w-0 shrink-0 justify-end">
+            {showingPage ? (
+              <button type="button" onClick={onHome} className="sr-bar-btn tap-sm">
+                <GridGlyph size={19} className="mr-1" />
+                All pages
+              </button>
+            ) : action ? (
+              // WRAPPED, because `.sr-bar-btn` sets its own display and a class
+              // in this room's stylesheet outranks Tailwind's `md:hidden` by
+              // arriving later -- which put this button on the desktop too,
+              // beside the one next to the large title.
+              <span className="md:hidden">
+                <button type="button" onClick={action.onClick} className="sr-bar-btn tap-sm font-semibold">
+                  <PlusGlyph size={20} className="mr-0.5" />
+                  {action.label}
+                </button>
+              </span>
+            ) : null}
+          </div>
+        </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        {/* THE SIDEBAR IS A SIDEBAR ONLY WHERE THERE IS ROOM FOR ONE. Below
-            768px it is the strip under the header instead: the same three
-            places, one row, no drawer to discover. */}
+      <div className="absolute inset-0 flex">
+        {/* THE SIDEBAR IS A SIDEBAR ONLY WHERE THERE IS ROOM FOR ONE, as on an
+            iPad. Below 768px the same four places are a segmented control
+            under the title instead: one row, nothing to discover. */}
         {!showingPage && (
           <nav
             aria-label="Places in your study room"
-            className="hidden w-56 shrink-0 border-r border-black/5 bg-white/60 p-3 md:block"
+            className="sr-side hidden w-64 shrink-0 overflow-y-auto px-3 pb-6 md:block"
+            style={{ paddingTop: 'calc(var(--sr-bar-h) + 20px)' }}
           >
-            <ul className="space-y-1">
-              {places.map((place) => (
-                <li key={place.id}>
+            <p className="px-2 pb-3 text-[22px] font-bold tracking-tight">Study Room</p>
+            <ul className="space-y-0.5">
+              {PLACES.map(({ id, label, Icon }) => (
+                <li key={id}>
                   <button
                     type="button"
-                    onClick={() => onView(place.id)}
-                    aria-current={view === place.id ? 'true' : undefined}
-                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-base ${
-                      view === place.id
-                        ? 'bg-navy font-semibold text-white'
-                        : 'text-navy hover:bg-navy/5'
-                    }`}
+                    onClick={() => onView(id)}
+                    aria-current={view === id ? 'true' : undefined}
+                    className="sr-side-item tap-sm"
                   >
-                    <span aria-hidden>{place.icon}</span>
-                    <span className="min-w-0 flex-1 truncate">{place.label}</span>
-                    <span className={view === place.id ? 'text-white/70' : 'text-gray-400'}>
-                      {place.count}
-                    </span>
+                    <Icon size={20} />
+                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                    <span className="text-[15px] tabular-nums opacity-60">{countOf(id)}</span>
                   </button>
                 </li>
               ))}
@@ -153,32 +179,20 @@ export function StudyWorkspaceShell({
           </nav>
         )}
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {!showingPage && (
-            <nav
-              aria-label="Places in your study room"
-              className="thin-scroll flex shrink-0 gap-2 overflow-x-auto border-b border-black/5 px-3 py-2 md:hidden"
-            >
-              {places.map((place) => (
-                <button
-                  key={place.id}
-                  type="button"
-                  onClick={() => onView(place.id)}
-                  aria-current={view === place.id ? 'true' : undefined}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-sm ring-1 ${
-                    view === place.id
-                      ? 'bg-navy text-white ring-navy'
-                      : 'bg-white text-navy ring-black/10'
-                  }`}
-                >
-                  <span aria-hidden>{place.icon}</span> {place.label}
-                  <span className="ml-1 opacity-60">{place.count}</span>
-                </button>
-              ))}
-            </nav>
-          )}
-
-          <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+        <div className="relative min-w-0 flex-1">
+          {/* THE PAGE SCROLLS UNDER THE BAR, which is what makes the bar a
+              material rather than a stripe. A SPACER the bar's height, safe
+              area included, so nothing starts hidden -- and a spacer rather
+              than padding on purpose: the insert bar is sticky inside this
+              box, and whether a sticky element measures from a scroll box's
+              padding edge or its outer edge is exactly the kind of thing
+              engines have disagreed on. With no padding there is nothing to
+              disagree about, and the insert bar's offset can simply be the
+              bar's height. */}
+          <div data-study-scroll className="absolute inset-0 overflow-y-auto overscroll-contain">
+            <div aria-hidden style={{ height: 'var(--sr-bar-h)' }} />
+            {children}
+          </div>
         </div>
       </div>
     </div>

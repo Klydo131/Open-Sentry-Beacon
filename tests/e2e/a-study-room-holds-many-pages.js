@@ -34,7 +34,13 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
 const nameAndWrite = async (page, title, words) => {
   await page.getByLabel('Name this page').fill(title);
-  await page.locator('affine-paragraph').first().click();
+  // AT THE START OF THE FIRST PARAGRAPH, not its middle. A bare click lands in
+  // the centre of the block, which was fine while the first block of the
+  // Getting Started page was its short heading. That heading repeated the
+  // page's own title and was taken out; the first block is now a paragraph of
+  // some two hundred characters, so words typed into its middle landed past the
+  // 140 the shelf's preview shows, and this failed on a room that was working.
+  await page.locator('affine-paragraph').first().click({ position: { x: 4, y: 8 } });
   await page.waitForTimeout(300);
   await page.keyboard.type(words);
   await page.waitForTimeout(600);

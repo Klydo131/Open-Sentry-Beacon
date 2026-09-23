@@ -122,3 +122,59 @@ body editor-host input {
   flex: 1 1 0%;
   color: var(--affine-text-primary-color);
 }
+
+/* ---------------------------------------------------------------------------
+ * AND A SECOND ONE, OF THE SAME KIND: `.truncate`.
+ *
+ * FOUND IN A SCREENSHOT of the redesigned room: on an open page the words
+ * "Hope Beacon" in the way-out button sat about ten pixels above their own
+ * chevron, and on the shelf -- before any page had been opened -- they did not.
+ * Measured: the label went from 26px tall to 44, the full height of the button,
+ * with its text pinned to the top.
+ *
+ * Chrome's matched-styles call named it, twice, as `regular` document rules:
+ *
+ *   @blocksuite/affine-block-attachment/dist/styles.js
+ *   @blocksuite/affine-block-image/dist/components/image-block-fallback.js
+ *
+ *       .truncate { align-self: stretch; text-overflow: ellipsis;
+ *                   white-space: nowrap; overflow: hidden; }
+ *
+ * Written for the file name on an attachment card, arriving in the document,
+ * and colliding with Tailwind's utility of the SAME NAME, which this app uses
+ * on dozens of labels. Tailwind's sets the last three properties and not the
+ * first, so every `truncate` label that is a flex item in a centred row was
+ * stretched to the row's height and its words floated to the top.
+ *
+ * NOT ONLY IN THIS ROOM. The editor's stylesheets stay in the document after
+ * somebody leaves /study -- the app does not reload between rooms -- so once an
+ * Explorer had opened a page, the same thing could happen on any screen they
+ * went to next. The fix therefore lives here, with the rules that leak, and
+ * reaches wherever they do.
+ *
+ * Same shape as the input fix, for the same reasons: a plain descendant
+ * selector with `body` in front to outrank the leak, then the editor's own
+ * truncated labels handed back to it. `:not([class*="self-"])` leaves alone any
+ * element that asked for an alignment of its own with a Tailwind `self-*`
+ * class -- a Level 3 `:not()` with a single attribute selector, which every
+ * browser on docs/PLATFORMS.md understands.
+ * ---------------------------------------------------------------------------
+ */
+body .truncate:not([class*="self-"]) {
+  align-self: auto;
+}
+
+body editor-host .truncate:not([class*="self-"]) {
+  align-self: stretch;
+}
+
+/* THE WRITING IS SET IN THE SYSTEM FONT TOO. AFFiNE asks for Inter, then
+   Source Sans, then Poppins -- none of which this app loads -- so a page fell
+   through to Helvetica or Tahoma or Arial depending on the machine, beside an
+   app set in something else. Pointing its variable at the app's own stack puts
+   the writing in SF Pro on an iPhone, the same face as the room around it. */
+.affine-page-viewport,
+.affine-edgeless-viewport {
+  --affine-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+}

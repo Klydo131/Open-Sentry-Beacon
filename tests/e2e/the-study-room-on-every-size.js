@@ -116,6 +116,47 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     const written = (await page.locator('editor-host').innerText()).replace(/​/g, '');
     ok(/Nagbasa ako ngayon\./.test(written), `${at}: what was typed is on the page`);
 
+    // 6. A LONG NAME IS READ IN FULL. The title was a one-line input and a
+    //    long name was cut off at the edge of a phone -- "Getting started in
+    //    your Study" -- with no way to read the rest. It is a textarea that
+    //    grows now; this holds that nothing of the name is hidden, across or
+    //    down, at any size.
+    {
+      const name = page.getByLabel('Name this page');
+      await name.fill('What Paul means by the law of the Spirit of life in Romans 8');
+      await page.waitForTimeout(250);
+      const box = await name.evaluate((el) => ({
+        across: el.scrollWidth - el.clientWidth,
+        down: el.scrollHeight - el.clientHeight,
+        lines: Math.round(el.clientHeight / parseFloat(getComputedStyle(el).lineHeight)),
+      }));
+      ok(box.across <= 1 && box.down <= 1,
+         `${at}: a long page name is shown in full (${box.lines} line${box.lines === 1 ? '' : 's'}, hidden ${Math.max(box.across, box.down)}px)`);
+    }
+
+    // 7. THE INSERT BAR STAYS IN REACH. It was at the top of the page and
+    //    scrolled away with it, so every heading on a long page was a scroll
+    //    back up. It is held just under the bar now; measured with the page
+    //    scrolled a long way down, where the old one had long since gone.
+    {
+      const held = await page.evaluate(() => {
+        const scroller = document.querySelector('[data-study-scroll]');
+        if (!scroller) return null;
+        scroller.scrollTop = scroller.scrollHeight;
+        const bar = document.querySelector('.sr-bar')?.getBoundingClientRect();
+        const tools = document.querySelector('[role="toolbar"][aria-label="Add to this page"]')?.getBoundingClientRect();
+        const long = scroller.scrollHeight - scroller.clientHeight > 200;
+        return bar && tools ? { long, gap: Math.round(tools.top - bar.bottom), bottom: Math.round(tools.bottom) } : null;
+      });
+      await page.waitForTimeout(200);
+      ok(held !== null, `${at}: the insert bar is on the page`);
+      if (held && held.long) {
+        ok(Math.abs(held.gap) <= 12 && held.bottom <= size.height,
+           `${at}: and stays just under the top bar when the page is scrolled (gap ${held.gap}px)`);
+      }
+      await page.evaluate(() => { const s = document.querySelector('[data-study-scroll]'); if (s) s.scrollTop = 0; });
+    }
+
     // 5. NOTHING BROKE QUIETLY, and the page does not scroll sideways.
     ok(errors.length === 0, `${at}: no page errors (${errors.slice(0, 1).join('') || 'none'})`);
     const sideways = await page.evaluate(

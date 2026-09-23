@@ -24,35 +24,40 @@
 // appears on some devices and not others is a second thing to get wrong.
 // ---------------------------------------------------------------------------
 
+import {
+  CalloutGlyph, CheckboxGlyph, DividerGlyph, ListGlyph, NumberedListGlyph, QuoteGlyph, TableGlyph,
+} from '@/components/Glyph';
+
 export type InsertKind =
   | 'h1' | 'h2' | 'h3'
   | 'bulleted' | 'numbered' | 'todo'
   | 'quote' | 'divider' | 'table' | 'callout';
 
-const BUTTONS: Array<{ kind: InsertKind; label: string; hint: string }> = [
-  { kind: 'h1', label: 'H1', hint: 'Big heading' },
-  { kind: 'h2', label: 'H2', hint: 'Heading' },
-  { kind: 'h3', label: 'H3', hint: 'Small heading' },
-  { kind: 'bulleted', label: '• List', hint: 'Bulleted list' },
-  { kind: 'numbered', label: '1. List', hint: 'Numbered list' },
-  { kind: 'todo', label: '☐ To-do', hint: 'To-do with a box to tick' },
-  { kind: 'quote', label: '❝ Quote', hint: 'Quote a verse or a line' },
-  { kind: 'divider', label: 'Line', hint: 'A line across the page' },
-  { kind: 'table', label: '▦ Table', hint: 'Table' },
-  { kind: 'callout', label: '◆ Note', hint: 'Set something apart' },
+// WORDS, NOT `H1`. The first three were `H1 H2 H3`, which is a typesetter's
+// shorthand, in an app whose base font is 18px because many of the people
+// using it are older. And each visible word is INSIDE the button's spoken name
+// ("List" in "Bulleted list", "Line" in "A line across the page"), so somebody
+// using voice control can say what they see and have it work.
+const BUTTONS: Array<{ kind: InsertKind; label: string; hint: string; Icon?: typeof ListGlyph }> = [
+  { kind: 'h1', label: 'Big heading', hint: 'Big heading' },
+  { kind: 'h2', label: 'Heading', hint: 'Heading' },
+  { kind: 'h3', label: 'Small heading', hint: 'Small heading' },
+  { kind: 'bulleted', label: 'List', hint: 'Bulleted list', Icon: ListGlyph },
+  { kind: 'numbered', label: 'Numbered', hint: 'Numbered list', Icon: NumberedListGlyph },
+  { kind: 'todo', label: 'To-do', hint: 'To-do with a box to tick', Icon: CheckboxGlyph },
+  { kind: 'quote', label: 'Quote', hint: 'Quote a verse or a line', Icon: QuoteGlyph },
+  { kind: 'divider', label: 'Line', hint: 'A line across the page', Icon: DividerGlyph },
+  { kind: 'table', label: 'Table', hint: 'Table', Icon: TableGlyph },
+  { kind: 'callout', label: 'Note', hint: 'Note, to set something apart', Icon: CalloutGlyph },
 ];
 
 export function StudyInsertBar({ onInsert }: { onInsert: (kind: InsertKind) => void }) {
   return (
-    <div className="mb-2 -mx-1">
-      <p className="px-1 pb-1 text-xs text-gray-500">
-        Add to this page. On a computer you can also press{' '}
-        <span className="rounded bg-gray-100 px-1 font-mono">/</span> while writing.
-      </p>
+    <div className="sr-formatbar mt-4">
       <div
         role="toolbar"
         aria-label="Add to this page"
-        className="thin-scroll flex gap-2 overflow-x-auto px-1 pb-1"
+        className="thin-scroll flex items-center gap-2 overflow-x-auto"
       >
         {BUTTONS.map((button) => (
           <button
@@ -64,11 +69,18 @@ export function StudyInsertBar({ onInsert }: { onInsert: (kind: InsertKind) => v
             onPointerDown={(e) => { e.preventDefault(); onInsert(button.kind); }}
             title={button.hint}
             aria-label={button.hint}
-            className="shrink-0 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-navy/5"
+            className={`sr-tool tap-sm ${button.kind === 'h1' ? 'text-[16px]' : ''}`}
           >
+            {button.Icon ? <button.Icon size={17} /> : null}
             {button.label}
           </button>
         ))}
+        {/* The keyboard way in, said once, where a computer can use it. A
+            phone has no key that opens the menu, so a phone is not told about
+            one. */}
+        <span className="ml-1 hidden shrink-0 items-center gap-1.5 whitespace-nowrap pr-1 text-[14px] text-[color:var(--sr-ink-2)] lg:inline-flex">
+          or press <span className="sr-kbd">/</span> while writing
+        </span>
       </div>
     </div>
   );

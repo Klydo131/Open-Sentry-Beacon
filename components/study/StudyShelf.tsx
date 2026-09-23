@@ -22,6 +22,11 @@
 import { useMemo, useState } from 'react';
 
 import {
+  CloseGlyph, DownloadGlyph, FolderGlyph, PlusGlyph, RestoreGlyph, SearchGlyph, StarGlyph,
+  TagGlyph, TrashGlyph, UploadGlyph, CalendarGlyph, DocGlyph,
+} from '@/components/Glyph';
+import { PLACES } from '@/components/study/StudyWorkspaceShell';
+import {
   GROUP_ORDER, dayInWords, foldersAcross, groupFor, hasTag, matchesCollection,
   nameForView, tagsAcross, whenWritten, type Collection, type ShelfEntry,
 } from '@/lib/study/shelf';
@@ -31,6 +36,9 @@ export type ShelfView = 'all' | 'favourites' | 'journal' | 'trash';
 export function StudyShelf({
   entries,
   view,
+  onView,
+  counts,
+  walkthrough = false,
   tag,
   onTag,
   folder,
@@ -53,6 +61,11 @@ export function StudyShelf({
 }: {
   entries: ShelfEntry[];
   view: ShelfView;
+  /** Move to another place. On a phone the places live here, under the title. */
+  onView: (v: ShelfView) => void;
+  counts: { all: number; favourites: number; journal: number; trash: number };
+  /** The sample side, where nothing written is kept, and says so. */
+  walkthrough?: boolean;
   /** The tag the list is narrowed to, or empty for all of them. */
   tag: string;
   onTag: (tag: string) => void;
@@ -84,16 +97,21 @@ export function StudyShelf({
   const [confirming, setConfirming] = useState('');
   const [naming, setNaming] = useState('');
 
-  const tags = useMemo(() => tagsAcross(entries), [entries]);
-  const folders = useMemo(() => foldersAcross(entries), [entries]);
+  // THE PAGES IN THIS PLACE, before any filter. The folder and tag chips are
+  // drawn from these rather than from the whole room: an empty Journal showed
+  // "Romans study 1" above the words "Your journal has not been started",
+  // offering to narrow a list of nothing to a page that was not in it.
+  const inPlace = useMemo(() => entries
+    .filter((e) => (view === 'trash' ? e.trashed : !e.trashed))
+    .filter((e) => (view === 'favourites' ? e.favorite : true))
+    .filter((e) => (view === 'journal' ? Boolean(e.journalDate) : true)), [entries, view]);
+  const tags = useMemo(() => tagsAcross(inPlace), [inPlace]);
+  const folders = useMemo(() => foldersAcross(inPlace), [inPlace]);
   const looking = collections.find((c) => c.id === collection) ?? null;
 
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return entries
-      .filter((e) => (view === 'trash' ? e.trashed : !e.trashed))
-      .filter((e) => (view === 'favourites' ? e.favorite : true))
-      .filter((e) => (view === 'journal' ? Boolean(e.journalDate) : true))
+    return inPlace
       .filter((e) => !tag || hasTag(e, tag))
       .filter((e) => !folder || e.folder.toLowerCase() === folder.toLowerCase())
       // A SAVED VIEW IS A FILTER LIKE ANY OTHER, applied in the same pass. It
@@ -113,7 +131,7 @@ export function StudyShelf({
       .sort((a, b) => (view === 'journal'
         ? b.journalDate.localeCompare(a.journalDate)
         : b.updated - a.updated));
-  }, [entries, view, query, tag, folder, looking]);
+  }, [inPlace, view, query, tag, folder, looking]);
 
   const groups = useMemo(() => {
     if (view === 'journal') return [{ name: 'Your journal', entries: shown }];
@@ -129,104 +147,121 @@ export function StudyShelf({
       .map((name) => ({ name, entries: byGroup.get(name)! }));
   }, [shown, view]);
 
+  const place = PLACES.find((p) => p.id === view) ?? PLACES[0];
+  const howMany = view === 'all' ? counts.all
+    : view === 'favourites' ? counts.favourites
+      : view === 'journal' ? counts.journal
+        : counts.trash;
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-24 pt-4">
-      <div className="mb-4 flex items-center gap-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          type="search"
-          placeholder="Search your pages"
-          aria-label="Search your pages"
-          className="min-w-0 flex-1 rounded-xl bg-white px-4 py-3 text-base ring-1 ring-black/10 placeholder:text-gray-400"
-        />
+    <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-5 md:px-8 md:pt-8">
+      {/* THE LARGE TITLE, as Apple opens every list. On a phone it names the
+          room, because the bar above no longer has room to; on a wider screen
+          the sidebar names the room and this names the place within it. */}
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="sr-title">
+            <span className="md:hidden">Study Room</span>
+            <span className="hidden md:inline">{place.label}</span>
+          </h1>
+          <p className="sr-subtitle mt-1">
+            {howMany === 0 ? 'Nothing here yet'
+              : howMany === 1 ? '1 page' : `${howMany} pages`}
+          </p>
+        </div>
         {view !== 'trash' && (
           <button
             type="button"
             onClick={view === 'journal' ? onToday : onAdd}
-            className="shrink-0 rounded-xl bg-navy px-4 py-3 text-base font-semibold text-white hover:opacity-90"
+            // BESIDE THE TITLE ON A WIDE SCREEN, IN THE BAR ON A PHONE. At 390px
+            // the two did not fit on one line and "Study Room" broke in half.
+            className="tap-sm hidden shrink-0 items-center gap-1.5 rounded-full bg-navy px-5 text-[17px] font-semibold text-white shadow-sm hover:bg-navy-700 md:inline-flex"
           >
-            {view === 'journal' ? "Today's page" : '+ New page'}
+            <PlusGlyph size={18} />
+            {view === 'journal' ? "Today's page" : 'New page'}
           </button>
         )}
       </div>
 
-      {/* OBSIDIAN, AND WHY IT SITS HERE RATHER THAN IN A SETTINGS SCREEN.
-          What somebody writes in this room is theirs -- the same argument
-          components/LiveExport.tsx makes about the church's own roster. A room
-          you can only read inside one website is a room somebody is renting,
-          and the moment to notice you can take a copy is while you are looking
-          at the pages, not three menus away.
-
-          Quiet, though. This is not what anybody came here to do, so it is a
-          line of small text under the search box rather than two more buttons
-          competing with New page. */}
-      {view !== 'trash' && (
-        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-          <button
-            type="button"
-            onClick={onExportVault}
-            disabled={!!vaultBusy}
-            className="underline underline-offset-2 hover:text-navy disabled:no-underline disabled:opacity-60"
-          >
-            Take a copy for Obsidian
-          </button>
-          <label className="cursor-pointer underline underline-offset-2 hover:text-navy">
-            Bring in Markdown
-            <input
-              type="file"
-              multiple
-              accept=".md,.markdown,.zip,text/markdown,application/zip"
-              className="sr-only"
-              aria-label="Bring in Markdown or a zipped vault"
-              onChange={(e) => {
-                if (e.target.files?.length) onImportVault(e.target.files);
-                // Cleared so choosing the same file twice still counts as a
-                // change, which is the whole reason a second import appears to
-                // do nothing.
-                e.target.value = '';
-              }}
-            />
-          </label>
-          {vaultBusy && <span aria-live="polite">{vaultBusy}</span>}
-        </div>
+      {walkthrough && (
+        <p className="sr-note mt-4">
+          This is the walkthrough, so nothing you write here is saved anywhere.
+          In the real app it is kept in your church&rsquo;s own database.
+        </p>
       )}
+
+      {/* THE FOUR PLACES, ON A PHONE: a segmented control rather than a row of
+          56px pills that ran off the side of the screen. Wider screens have
+          the sidebar instead. Before the list in the page's order as well as
+          on the screen, so the first control called Bin or Starred is always
+          the place and never a star or a bin on somebody's page. */}
+      <nav aria-label="Places in your study room" className="mt-5 md:hidden">
+        <div className="sr-seg">
+          {PLACES.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onView(id)}
+              aria-current={view === id ? 'true' : undefined}
+              className="tap-sm"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <label className="sr-search mt-4">
+        <SearchGlyph size={19} />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          type="search"
+          // SHORT, SO IT IS NEVER CUT OFF. "Search your pages" came out as
+          // "Search your" beside the old New page button on a phone. The full
+          // sentence is still what a screen reader hears.
+          placeholder="Search"
+          aria-label="Search your pages"
+        />
+      </label>
 
       {/* FOLDERS: THE PLACES SOMEBODY PUT THINGS. A folder is what a person
           decides; a tag is what a page is about; a collection is a question.
-          All three are rows of chips for the same reason, which is that a
-          sidebar is somewhere a phone does not have. */}
+          All three are rows of capsules for the same reason, which is that a
+          sidebar is somewhere a phone does not have. Each row scrolls sideways
+          inside itself, out to the edge of a phone as Apple's do. */}
       {view !== 'trash' && folders.length > 0 && (
         <div
           role="group"
           aria-label="Folders in this room"
-          className="thin-scroll -mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1"
+          className="thin-scroll -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0"
         >
           <button
             type="button"
             onClick={() => onFolder('')}
             aria-pressed={!folder}
-            className={`shrink-0 rounded-xl px-3 py-1.5 text-sm ring-1 ${
-              folder ? 'bg-white text-navy ring-black/10' : 'bg-navy text-white ring-navy'
-            }`}
+            className="sr-chip tap-sm"
           >
-            Every folder
+            <span className="sr-chip-face">Every folder</span>
           </button>
-          {folders.map((f) => (
-            <button
-              key={f.folder}
-              type="button"
-              onClick={() => onFolder(folder.toLowerCase() === f.folder.toLowerCase() ? '' : f.folder)}
-              aria-pressed={folder.toLowerCase() === f.folder.toLowerCase()}
-              className={`shrink-0 rounded-xl px-3 py-1.5 text-sm ring-1 ${
-                folder.toLowerCase() === f.folder.toLowerCase()
-                  ? 'bg-navy text-white ring-navy'
-                  : 'bg-white text-navy ring-black/10'
-              }`}
-            >
-              📁 {f.folder} <span className="opacity-60">{f.count}</span>
-            </button>
-          ))}
+          {folders.map((f) => {
+            const on = folder.toLowerCase() === f.folder.toLowerCase();
+            return (
+              <button
+                key={f.folder}
+                type="button"
+                onClick={() => onFolder(on ? '' : f.folder)}
+                aria-pressed={on}
+                className="sr-chip tap-sm"
+              >
+                <span className="sr-chip-face">
+                  <FolderGlyph size={16} />
+                  {f.folder}
+                  <span className="sr-chip-count">{f.count}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -234,38 +269,29 @@ export function StudyShelf({
           question "everything tagged Romans that mentions grace", kept so
           nobody retypes it. Write a page tomorrow that matches and it is in. */}
       {view !== 'trash' && (collections.length > 0 || tag || query.trim()) && (
-        <div className="mb-3">
+        <div className="mt-2">
           <div
             role="group"
             aria-label="Saved views"
-            className="thin-scroll -mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+            className="thin-scroll -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-0.5 md:mx-0 md:px-0"
           >
             {collections.map((c) => (
-              <span
-                key={c.id}
-                className={`inline-flex shrink-0 items-center gap-1 rounded-xl py-1.5 pl-3 pr-1 text-sm ring-1 ${
-                  collection === c.id
-                    ? 'bg-navy text-white ring-navy'
-                    : 'bg-white text-navy ring-black/10'
-                }`}
-              >
+              <span key={c.id} className="sr-chip-pair" data-on={collection === c.id ? 'true' : undefined}>
                 <button
                   type="button"
                   onClick={() => onCollection(collection === c.id ? '' : c.id)}
                   aria-pressed={collection === c.id}
                 >
-                  🔎 {c.name}
+                  <SearchGlyph size={15} />
+                  {c.name}
                 </button>
                 <button
                   type="button"
                   onClick={() => onForgetCollection(c.id)}
                   aria-label={`Forget the saved view ${c.name}`}
                   title={`Forget the saved view ${c.name}`}
-                  className={`grid h-6 w-6 place-items-center rounded-full text-base leading-none ${
-                    collection === c.id ? 'text-white/70 hover:bg-white/15' : 'text-navy/50 hover:bg-navy/10'
-                  }`}
                 >
-                  <span aria-hidden>×</span>
+                  <CloseGlyph size={14} />
                 </button>
               </span>
             ))}
@@ -273,45 +299,47 @@ export function StudyShelf({
             {/* THE OFFER APPEARS WHEN THERE IS SOMETHING WORTH SAVING, and not
                 before. A Save button over an unfiltered list saves "everything",
                 which is the shelf. */}
-            {(tag || query.trim()) && !collection && (
-              naming ? null : (
-                <button
-                  type="button"
-                  onClick={() => setNaming(nameForView(tag ? [tag] : [], query))}
-                  className="shrink-0 rounded-xl bg-gold/20 px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-gold/40"
-                >
+            {(tag || query.trim()) && !collection && !naming && (
+              <button
+                type="button"
+                onClick={() => setNaming(nameForView(tag ? [tag] : [], query))}
+                className="sr-chip tap-sm"
+              >
+                <span className="sr-chip-face text-navy">
+                  <PlusGlyph size={15} />
                   Save this view
-                </button>
-              )
+                </span>
+              </button>
             )}
           </div>
 
           {naming && (
-            <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-black/10">
-              <p className="text-sm font-semibold text-navy">Name this view</p>
-              <p className="mt-1 text-sm text-gray-600">
+            <div className="sr-group mt-2 p-4">
+              <p className="text-[17px] font-semibold">Name this view</p>
+              <p className="sr-row-meta mt-1">
                 It keeps the question, not the pages. A page you write next week
                 that matches it will be in here without you doing anything.
               </p>
-              <input
-                value={naming}
-                onChange={(e) => setNaming(e.target.value)}
-                maxLength={40}
-                aria-label="Name for this saved view"
-                className="tap mt-2 w-full rounded-xl bg-gray-50 px-3 text-base outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-gold"
-              />
-              <div className="mt-2 flex flex-wrap gap-2">
+              <label className="sr-search mt-3">
+                <input
+                  value={naming}
+                  onChange={(e) => setNaming(e.target.value)}
+                  maxLength={40}
+                  aria-label="Name for this saved view"
+                />
+              </label>
+              <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => { onSaveCollection(naming); setNaming(''); }}
-                  className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white"
+                  className="tap-sm rounded-full bg-navy px-5 text-[17px] font-semibold text-white"
                 >
                   Save it
                 </button>
                 <button
                   type="button"
                   onClick={() => setNaming('')}
-                  className="rounded-xl px-4 py-2 text-sm font-semibold text-navy"
+                  className="tap-sm rounded-full px-4 text-[17px] font-medium text-navy hover:bg-navy/5"
                 >
                   Not now
                 </button>
@@ -323,46 +351,52 @@ export function StudyShelf({
 
       {/* THE TAGS IN THIS ROOM, AS A ROW RATHER THAN A SIDEBAR. AFFiNE puts them
           down the side, which works on a laptop and is where the sidebar
-          already is on a phone: nowhere. A row of chips under the search reads
-          the same at 360px as at 1440px, and there is only one of it to keep
-          right. */}
+          already is on a phone: nowhere. A row reads the same at 360px as at
+          1440px, and there is only one of it to keep right. */}
       {view !== 'trash' && tags.length > 0 && (
         <div
           role="group"
           aria-label="Narrow these pages to one tag"
-          className="thin-scroll -mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1"
+          className="thin-scroll -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0"
         >
           <button
             type="button"
             onClick={() => onTag('')}
             aria-pressed={!tag}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ring-1 ${
-              tag ? 'bg-white text-navy ring-black/10' : 'bg-navy text-white ring-navy'
-            }`}
+            className="sr-chip tap-sm"
           >
-            Every tag
+            <span className="sr-chip-face">Every tag</span>
           </button>
-          {tags.map((t) => (
-            <button
-              key={t.tag}
-              type="button"
-              onClick={() => onTag(tag.toLowerCase() === t.tag.toLowerCase() ? '' : t.tag)}
-              aria-pressed={tag.toLowerCase() === t.tag.toLowerCase()}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-sm ring-1 ${
-                tag.toLowerCase() === t.tag.toLowerCase()
-                  ? 'bg-navy text-white ring-navy'
-                  : 'bg-white text-navy ring-black/10'
-              }`}
-            >
-              {t.tag} <span className="opacity-60">{t.count}</span>
-            </button>
-          ))}
+          {tags.map((t) => {
+            const on = tag.toLowerCase() === t.tag.toLowerCase();
+            return (
+              <button
+                key={t.tag}
+                type="button"
+                onClick={() => onTag(on ? '' : t.tag)}
+                aria-pressed={on}
+                className="sr-chip tap-sm"
+              >
+                <span className="sr-chip-face">
+                  <TagGlyph size={15} />
+                  {t.tag}
+                  <span className="sr-chip-count">{t.count}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
       {shown.length === 0 && (
-        <div className="rounded-2xl bg-white p-8 text-center ring-1 ring-black/5">
-          <p className="text-lg font-semibold text-navy">
+        <div className="sr-group mt-6 px-6 py-10 text-center">
+          <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-navy/5 text-navy">
+            {view === 'trash' ? <TrashGlyph size={26} />
+              : view === 'journal' ? <CalendarGlyph size={26} />
+                : view === 'favourites' ? <StarGlyph size={26} />
+                  : tag || query ? <SearchGlyph size={26} /> : <DocGlyph size={26} />}
+          </span>
+          <p className="text-xl font-semibold">
             {view === 'trash' ? 'Nothing in the bin'
               : view === 'journal' ? 'Your journal has not been started'
                 : view === 'favourites' ? 'No starred pages yet'
@@ -370,7 +404,7 @@ export function StudyShelf({
                     : query ? 'Nothing matches that'
                       : 'Your study room is empty'}
           </p>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="sr-row-meta mx-auto mt-1 max-w-sm">
             {view === 'trash' ? 'Pages you put in the bin wait here until you empty it.'
               : view === 'journal' ? 'A journal gives every day a page of its own. Today is one tap away.'
                 : view === 'favourites' ? 'Star a page and it will be here whenever you come back.'
@@ -382,7 +416,7 @@ export function StudyShelf({
             <button
               type="button"
               onClick={onToday}
-              className="tap mt-3 rounded-xl bg-navy px-5 text-base font-semibold text-white"
+              className="tap-sm mt-5 rounded-full bg-navy px-6 text-[17px] font-semibold text-white"
             >
               Start today&rsquo;s page
             </button>
@@ -391,131 +425,143 @@ export function StudyShelf({
       )}
 
       {groups.map((group) => (
-        <section key={group.name} className="mb-6">
-          <h2 className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-gray-500">
-            {group.name} <span className="font-normal text-gray-400">· {group.entries.length}</span>
+        <section key={group.name} className="mt-7">
+          <h2 className="sr-group-head">
+            {group.name} <span className="font-normal opacity-70">· {group.entries.length}</span>
           </h2>
-          <ul
-            aria-label={`Pages: ${group.name}`}
-            className="overflow-hidden rounded-2xl bg-white ring-1 ring-black/5"
-          >
+          <ul aria-label={`Pages: ${group.name}`} className="sr-group">
             {group.entries.map((entry) => (
-              <li key={entry.id} className="border-b border-black/5 last:border-0">
-                <div className="flex items-start gap-2 p-3">
-                  <button
-                    type="button"
-                    onClick={() => (entry.trashed ? onRestore(entry.id) : onOpen(entry.id))}
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <p className={`truncate text-base font-semibold text-navy ${entry.named ? '' : 'italic'}`}>
-                      {entry.title}
-                    </p>
-                    <p className="mt-0.5 line-clamp-2 text-sm text-gray-500">
-                      {entry.preview || 'Nothing written on this page yet.'}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      {entry.journalDate
-                        ? `${dayInWords(entry.journalDate)} · ${whenWritten(entry.updated)}`
-                        : whenWritten(entry.updated)}
-                    </p>
-                  </button>
+              <li key={entry.id}>
+                <div className="flex items-start gap-1 py-2 pl-4 pr-2">
+                  <div className="min-w-0 flex-1 py-1">
+                    <button
+                      type="button"
+                      onClick={() => (entry.trashed ? onRestore(entry.id) : onOpen(entry.id))}
+                      className="sr-row-open block w-full"
+                    >
+                      <span className={`sr-row-title block truncate ${entry.named ? '' : 'italic'}`}>
+                        {entry.title}
+                      </span>
+                      <span className="sr-row-meta mt-0.5 line-clamp-2">
+                        <time>
+                          {entry.journalDate
+                            ? `${dayInWords(entry.journalDate)} · ${whenWritten(entry.updated)}`
+                            : whenWritten(entry.updated)}
+                        </time>
+                        {'  '}
+                        {entry.preview || 'Nothing written on this page yet.'}
+                      </span>
+                    </button>
 
-                  {!entry.trashed && (
-                    <button
-                      type="button"
-                      onClick={() => onToggleFavourite(entry.id)}
-                      aria-pressed={entry.favorite}
-                      aria-label={entry.favorite
-                        ? `Remove ${entry.title} from starred pages`
-                        : `Star ${entry.title}`}
-                      className="shrink-0 rounded-lg px-2 py-1 text-xl leading-none"
-                    >
-                      <span aria-hidden>{entry.favorite ? '★' : '☆'}</span>
-                    </button>
-                  )}
-                </div>
-
-                {/* WHAT CAN BE DONE TO A PAGE sits under it rather than behind a
-                    menu, because a menu on a phone is a tap to find out there
-                    were two things in it. Both are quiet; neither is the thing
-                    the row is for. */}
-                <div className="flex flex-wrap items-center gap-2 px-3 pb-3 text-sm">
-                  {/* A TAG ON A ROW IS ALSO THE WAY TO SEE THE REST OF THEM.
-                      It sits out here rather than inside the row's own button
-                      because a button inside a button is not a thing a browser
-                      will render, and a tag nobody can press is decoration. */}
-                  {!entry.trashed && entry.folder && (
-                    <button
-                      type="button"
-                      onClick={() => onFolder(
-                        folder.toLowerCase() === entry.folder.toLowerCase() ? '' : entry.folder,
-                      )}
-                      aria-label={`Show every page in ${entry.folder}`}
-                      className="rounded-lg bg-navy/5 px-2 py-0.5 text-xs font-semibold text-navy hover:bg-navy/10"
-                    >
-                      📁 {entry.folder}
-                    </button>
-                  )}
-                  {!entry.trashed && entry.tags.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => onTag(tag.toLowerCase() === t.toLowerCase() ? '' : t)}
-                      aria-label={`Show every page tagged ${t}`}
-                      className="rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-navy hover:bg-gold/30"
-                    >
-                      {t}
-                    </button>
-                  ))}
-                  {entry.trashed ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => onRestore(entry.id)}
-                        className="rounded-lg px-2 py-1 font-semibold text-navy ring-1 ring-navy/20 hover:bg-navy/5"
-                      >
-                        Put it back
-                      </button>
-                      {confirming === entry.id ? (
-                        <>
-                          <span className="text-gray-700">Delete it for good?</span>
+                    {/* A TAG ON A ROW IS ALSO THE WAY TO SEE THE REST OF THEM.
+                        Outside the row's own button, because a button inside
+                        a button is not a thing a browser will render, and a tag
+                        nobody can press is decoration. */}
+                    {!entry.trashed && (entry.folder || entry.tags.length > 0) && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {entry.folder && (
                           <button
                             type="button"
-                            onClick={() => { setConfirming(''); onDeleteForever(entry.id); }}
-                            className="tap-sm rounded-xl bg-white px-4 text-sm font-bold text-red-700 ring-1 ring-red-200"
+                            onClick={() => onFolder(
+                              folder.toLowerCase() === entry.folder.toLowerCase() ? '' : entry.folder,
+                            )}
+                            aria-label={`Show every page in ${entry.folder}`}
+                            className="sr-mini sr-mini--folder"
                           >
-                            Yes, delete forever
+                            <FolderGlyph size={13} />
+                            {entry.folder}
                           </button>
+                        )}
+                        {entry.tags.map((t) => (
                           <button
+                            key={t}
                             type="button"
-                            onClick={() => setConfirming('')}
-                            className="rounded-lg px-2 py-1 font-semibold text-navy"
+                            onClick={() => onTag(tag.toLowerCase() === t.toLowerCase() ? '' : t)}
+                            aria-label={`Show every page tagged ${t}`}
+                            className="sr-mini sr-mini--tag"
                           >
-                            Keep it
+                            {t}
                           </button>
-                        </>
-                      ) : (
+                        ))}
+                      </div>
+                    )}
+
+                    {entry.trashed && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setConfirming(entry.id)}
-                          className="tap-sm rounded-xl bg-white px-4 text-sm font-bold text-red-700 ring-1 ring-red-200"
+                          onClick={() => onRestore(entry.id)}
+                          className="tap-sm inline-flex items-center gap-1.5 rounded-full px-3 text-[15px] font-semibold text-navy ring-1 ring-navy/15 hover:bg-navy/5"
                         >
-                          Delete forever
+                          <RestoreGlyph size={16} />
+                          Put it back
                         </button>
-                      )}
-                    </>
-                  ) : (
-                    // NOT A DELETE. A page goes to the bin and waits there, so
-                    // the tap that ends a month of study is one somebody can
-                    // take back. The irreversible one lives in the bin, behind
-                    // a question.
-                    <button
-                      type="button"
-                      onClick={() => onTrash(entry.id)}
-                      className="rounded-lg px-2 py-1 text-gray-500 underline decoration-dotted hover:text-navy"
-                    >
-                      Move to bin
-                    </button>
+                        {confirming === entry.id ? (
+                          <>
+                            <span className="text-[15px]">Delete it for good?</span>
+                            <button
+                              type="button"
+                              onClick={() => { setConfirming(''); onDeleteForever(entry.id); }}
+                              className="tap-sm rounded-full bg-white px-4 text-[15px] font-bold text-red-700 ring-1 ring-red-200"
+                            >
+                              Yes, delete forever
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirming('')}
+                              className="tap-sm rounded-full px-3 text-[15px] font-semibold text-navy hover:bg-navy/5"
+                            >
+                              Keep it
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirming(entry.id)}
+                            className="tap-sm rounded-full bg-white px-4 text-[15px] font-bold text-red-700 ring-1 ring-red-200"
+                          >
+                            Delete forever
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* STAR AND BIN AT THE END OF THE ROW, where Apple puts what
+                      can be done to an item. They were a line of their own
+                      under every page, which doubled the height of the list for
+                      two controls nobody came to the shelf to press. Still one
+                      tap each and never behind a menu -- a menu on a phone is a
+                      tap to find out there were two things in it. And the bin
+                      is still not a delete: the page waits there, and the
+                      irreversible step lives in the bin, behind a question. */}
+                  {!entry.trashed && (
+                    <div className="flex shrink-0 items-center">
+                      <button
+                        type="button"
+                        onClick={() => onToggleFavourite(entry.id)}
+                        aria-pressed={entry.favorite}
+                        aria-label={entry.favorite
+                          ? `Remove ${entry.title} from starred pages`
+                          : `Star ${entry.title}`}
+                        title={entry.favorite ? 'Starred' : 'Star this page'}
+                        className="sr-icon-btn tap-sm"
+                      >
+                        <StarGlyph size={21} filled={entry.favorite} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onTrash(entry.id)}
+                        // "Move to bin" FIRST, then the page. Walks and screen
+                        // readers alike look for the words, and the name of the
+                        // page after them is what tells ten of these apart.
+                        aria-label={`Move to bin: ${entry.title}`}
+                        title="Move to bin"
+                        className="sr-icon-btn tap-sm"
+                      >
+                        <TrashGlyph size={20} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </li>
@@ -523,6 +569,59 @@ export function StudyShelf({
           </ul>
         </section>
       ))}
+
+      {/* OBSIDIAN, AND WHY IT IS ON THIS SCREEN RATHER THAN IN A SETTINGS ONE.
+          What somebody writes in this room is theirs -- the same argument
+          components/LiveExport.tsx makes about the church's own roster. A room
+          you can only read inside one website is a room somebody is renting,
+          and the moment to notice you can take a copy is while you are looking
+          at the pages, not three menus away. Quiet, though: at the foot of the
+          list as its own small group, not two more buttons beside New page. */}
+      {view !== 'trash' && (
+        <section className="mt-9">
+          <h2 className="sr-group-head">Your pages, anywhere</h2>
+          <ul className="sr-group">
+            <li>
+              <button
+                type="button"
+                onClick={onExportVault}
+                disabled={!!vaultBusy}
+                className="sr-action disabled:opacity-60"
+              >
+                <span className="sr-action-icon"><DownloadGlyph size={17} /></span>
+                <span className="min-w-0 flex-1 py-2">
+                  <span className="block">Take a copy for Obsidian</span>
+                  <span className="sr-row-meta block">Every page as Markdown, pictures and all</span>
+                </span>
+              </button>
+            </li>
+            <li>
+              <label className="sr-action min-h-[56px] cursor-pointer">
+                <span className="sr-action-icon"><UploadGlyph size={17} /></span>
+                <span className="min-w-0 flex-1 py-2">
+                  <span className="block">Bring in Markdown</span>
+                  <span className="sr-row-meta block">One file, several, or a zipped vault</span>
+                </span>
+                <input
+                  type="file"
+                  multiple
+                  accept=".md,.markdown,.zip,text/markdown,application/zip"
+                  className="sr-only"
+                  aria-label="Bring in Markdown or a zipped vault"
+                  onChange={(e) => {
+                    if (e.target.files?.length) onImportVault(e.target.files);
+                    // Cleared so choosing the same file twice still counts as a
+                    // change, which is the whole reason a second import appears to
+                    // do nothing.
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </li>
+          </ul>
+          {vaultBusy && <p aria-live="polite" className="sr-subtitle mt-2 px-4">{vaultBusy}</p>}
+        </section>
+      )}
     </div>
   );
 }

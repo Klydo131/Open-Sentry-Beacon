@@ -209,3 +209,212 @@ export function HeartGlyph({ filled = false, ...props }: GlyphProps & { filled?:
     </Svg>
   );
 }
+
+// ---------------------------------------------------------------------------
+// THE STUDY ROOM'S SET. Drawn in the same 24-unit box, the same 2-unit stroke
+// and round joins as everything above, so they sit on a line of text the way
+// Apple's own symbols do: a family, not a collection.
+//
+// They replace characters. The room's star was `★`/`☆`, its way out `←`, the
+// insert bar used `☐ ❝ ▦ ◆`, and the places were emoji -- a colour picture of
+// a wastebasket beside a line-art star, at four different sizes. The star pair
+// had the heart's exact problem: one of the two has an emoji form and the other
+// does not, so starring a page swapped a thin outline for a fat yellow emoji.
+// ---------------------------------------------------------------------------
+
+/** Starred, or not. One path, filled or hollow, like the heart. */
+export function StarGlyph({ filled = false, ...props }: GlyphProps & { filled?: boolean }) {
+  return (
+    <Svg {...props}>
+      <path
+        d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"
+        fill={filled ? 'currentColor' : 'none'}
+      />
+    </Svg>
+  );
+}
+
+/** A page of writing. */
+export function DocGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+      <path d="M14 3v5h5M9 13h6M9 17h4" />
+    </Svg>
+  );
+}
+
+/** A day on a calendar, for the journal. */
+export function CalendarGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M4 10h16M8 3v4M16 3v4" />
+    </Svg>
+  );
+}
+
+/** The bin. */
+export function TrashGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </Svg>
+  );
+}
+
+/** Taking something back out of the bin. */
+export function RestoreGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" />
+    </Svg>
+  );
+}
+
+/** A folder. */
+export function FolderGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    </Svg>
+  );
+}
+
+/** A tag. */
+export function TagGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z" />
+      <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}
+
+/** Add, or make a new one. */
+export function PlusGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Svg>
+  );
+}
+
+/** Back, the chevron Apple puts before the name of where you came from. */
+export function ChevronLeftGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M15 5l-7 7 7 7" />
+    </Svg>
+  );
+}
+
+/** Every page, as a grid of them. */
+export function GridGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="4" width="7" height="7" rx="1.5" />
+      <rect x="13" y="4" width="7" height="7" rx="1.5" />
+      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+    </Svg>
+  );
+}
+
+/** A copy going out. */
+export function DownloadGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+    </Svg>
+  );
+}
+
+/** Something coming in. */
+export function UploadGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 16V5M7 10l5-5 5 5M5 20h14" />
+    </Svg>
+  );
+}
+
+/** A whiteboard: a frame with a line drawn on it. */
+export function BoardGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="4" width="18" height="14" rx="2" />
+      <path d="M7 14c2-3 4 1 6-2s3-1 4-2M9 21h6" />
+    </Svg>
+  );
+}
+
+/** Bulleted list. */
+export function ListGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M10 6h10M10 12h10M10 18h10" />
+      <circle cx="5" cy="6" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="12" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="18" r="1.3" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}
+
+/** Numbered list. */
+export function NumberedListGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M10 6h10M10 12h10M10 18h10M4 5l1.5-1V9M3.5 14.5a1.5 1.5 0 1 1 2.5 1L3.5 18.5H6.5" strokeWidth={1.6} />
+    </Svg>
+  );
+}
+
+/** A box to tick. */
+export function CheckboxGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="3.5" />
+      <path d="M8.5 12.2l2.4 2.4 4.6-5" />
+    </Svg>
+  );
+}
+
+/** A quotation. */
+export function QuoteGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 18V6M9 9h10M9 13h10M9 17h6" />
+    </Svg>
+  );
+}
+
+/** A table. */
+export function TableGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 10h18M3 14.5h18M9.5 5v14M15 5v14" />
+    </Svg>
+  );
+}
+
+/** A line across the page. */
+export function DividerGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 12h18" />
+      <path d="M7 7h10M7 17h10" strokeOpacity={0.45} />
+    </Svg>
+  );
+}
+
+/** Something set apart: a note in a box. */
+export function CalloutGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="4" width="18" height="16" rx="3" />
+      <path d="M8 9.5h8M8 13.5h5" />
+    </Svg>
+  );
+}

@@ -1,0 +1,487 @@
+/* The study room's own look, loaded with the room rather than with the editor.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS NOT IN study-room.css. That file travels in lib/study/effects.ts,
+ * which is fetched the moment somebody OPENS A PAGE -- so that walking into the
+ * room does not pay for the editor. The shelf is on screen long before that.
+ * Put these rules there and the room would arrive unstyled and snap into shape
+ * the first time a page was opened. StudyWorkspaceShell imports this file, and
+ * the shell is part of the room itself.
+ * ---------------------------------------------------------------------------
+ */
+
+/* ===========================================================================
+ * THE ROOM'S LOOK: calm, light, and built from Apple's own vocabulary.
+ *
+ * ASKED FOR: "as nice, sleek, and Apple looking as possible", in a room that
+ * already had to wear Hope Beacon's navy and gold. Those are not in tension.
+ * Apple's apps are neutral surfaces with ONE tint colour doing all the talking,
+ * and navy is a perfectly good tint -- it is what Notes does with yellow and
+ * Freeform with blue. So: warm-neutral grounds, white grouped lists, hairlines
+ * instead of boxes, and navy only where something can be pressed.
+ *
+ * WHAT IT REPLACED, measured on a 390px phone: a navy slab for a header, every
+ * chip and toggle forced to 56px tall by the app-wide button rule, emoji for
+ * icons, "Move to bin" taking a full row under every page, and the first
+ * screen of an open page almost entirely controls -- the writing started about
+ * 800px down.
+ *
+ * THE TYPE IS THE SYSTEM'S, which is the single most Apple thing available to
+ * a web page: `system-ui` IS SF Pro on an iPhone or a Mac, and Segoe or Roboto
+ * elsewhere. No web font, nothing to download, nothing the CSP has to allow.
+ * The sizes stay generous on purpose. This app's base is 18px for older eyes,
+ * and "Apple-looking" was never a reason to shrink anybody's reading.
+ *
+ * NO DARK MODE HERE, deliberately and for now: nothing else in the app has one,
+ * and a room that turned dark on its own would be the only such screen. It is
+ * on the list for the overhaul, where the whole app can get it at once.
+ * =========================================================================== */
+
+.sr {
+  --sr-bg: #f6f4f0;
+  --sr-surface: #ffffff;
+  --sr-ink: #1a2233;
+  /* SECONDARY TEXT KEEPS AA. Apple's secondary label is 60% ink; on white that
+     measures about 4.6:1 here, so dates and previews stay readable rather than
+     fashionable. There is no tertiary text colour in this room on purpose. */
+  --sr-ink-2: rgba(26, 34, 51, 0.64);
+  --sr-sep: rgba(26, 34, 51, 0.12);
+  --sr-fill: rgba(26, 34, 51, 0.06);
+  --sr-fill-2: rgba(26, 34, 51, 0.1);
+  --sr-tint: #1e2a4a;
+  --sr-tint-soft: rgba(30, 42, 74, 0.08);
+  /* The star. Deeper than the brand gold so the SHAPE clears 3:1 on white,
+     which a graphic owes the person trying to see whether it is filled. */
+  --sr-star: #b8860b;
+  --sr-danger: #c4291c;
+  --sr-bar-h: calc(52px + env(safe-area-inset-top, 0px));
+
+  background: var(--sr-bg);
+  color: var(--sr-ink);
+}
+
+/* ---- The bar across the top -------------------------------------------------
+ * Translucent, the way every Apple toolbar is: the page scrolls up underneath
+ * it and shows through, softened. It is laid over the scrolling area rather
+ * than above it for exactly that reason -- a bar with nothing behind it is
+ * just a stripe. Where backdrop-filter is missing it is simply opaque. */
+.sr-bar {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 20;
+  padding-top: env(safe-area-inset-top, 0px);
+  /* More opaque than Apple's own 80%, deliberately: where the blur is not
+     drawn -- a headless browser, an old phone, a power-saving mode -- text
+     scrolling underneath showed through legibly enough to read over the bar's
+     own words. At 88% it is a tint, blurred or not. */
+  background: rgba(246, 244, 240, 0.88);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--sr-sep);
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .sr-bar { background: var(--sr-bg); }
+}
+/* A ROW WITH THE TITLE LAID OVER ITS MIDDLE, not a three-column grid. The
+   grid was the first version, and on a phone -- where the title is hidden --
+   a `display: none` grid item simply leaves the grid, so "All pages" slid into
+   the middle column and "Hope Beacon" was squeezed to "Hope B...". */
+.sr-bar-row {
+  position: relative;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-inline: 6px;
+}
+.sr-bar-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 40%;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+/* A bar button is text in the tint colour. No outline, no fill until pressed
+   or pointed at: that is how every navigation bar on an iPhone reads. */
+.sr-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-inline: 8px;
+  border-radius: 10px;
+  color: var(--sr-tint);
+  font-size: 17px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.sr-bar-btn:hover { background: var(--sr-tint-soft); }
+
+/* ---- Large title ---------------------------------------------------------- */
+.sr-title {
+  font-size: 34px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+.sr-subtitle {
+  font-size: 15px;
+  color: var(--sr-ink-2);
+}
+
+/* ---- Segmented control ------------------------------------------------------
+ * One track, one raised thumb. Used for the four places on a phone and for
+ * Page / Whiteboard. The segments are tap-sm (44px), the track 3px around them. */
+.sr-seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.sr-seg > button {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 10px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--sr-ink);
+  white-space: nowrap;
+}
+.sr-seg > button[aria-pressed='true'],
+.sr-seg > button[aria-current='true'] {
+  background: var(--sr-surface);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12), 0 0 0 0.5px rgba(16, 24, 40, 0.06);
+}
+.sr-seg--inline { display: inline-flex; }
+.sr-seg--inline > button { flex: 0 0 auto; padding-inline: 16px; }
+
+/* ---- Search field ----------------------------------------------------------- */
+.sr-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding-inline: 12px;
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.12);
+  color: var(--sr-ink-2);
+}
+.sr-search:focus-within { box-shadow: 0 0 0 3px rgba(30, 42, 74, 0.22); }
+/* (0,1,1) beats `body input` (0,0,2) in study-room.css, and it has to:
+   that rule exists to stop inputs growing, and this is the one that should. */
+.sr-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 17px;
+  color: var(--sr-ink);
+}
+.sr-search input::placeholder { color: var(--sr-ink-2); }
+/* The field's own ring above is the focus indicator here, so the input's
+   outline would be a second ring inside the first. */
+.sr-search input:focus-visible { outline: none; box-shadow: none; }
+
+/* ---- Chips -------------------------------------------------------------------
+ * A 44px button carrying a 36px capsule. The difference is the hit area Apple
+ * asks for around a small control, spent as breathing room between the rows. */
+.sr-chip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0;
+  background: none;
+}
+.sr-chip-face {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding-inline: 14px;
+  border-radius: 999px;
+  background: var(--sr-surface);
+  box-shadow: inset 0 0 0 0.5px var(--sr-sep), 0 1px 2px rgba(16, 24, 40, 0.04);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--sr-ink);
+  white-space: nowrap;
+}
+.sr-chip:hover .sr-chip-face { background: #fbfaf8; }
+.sr-chip[aria-pressed='true'] .sr-chip-face {
+  background: var(--sr-tint);
+  color: #fff;
+  box-shadow: none;
+}
+.sr-chip-count { opacity: 0.6; font-variant-numeric: tabular-nums; }
+
+/* The saved view's chip has two controls in one capsule: look through it, or
+   forget it. Both are 40px tall inside it -- over WCAG's 24px floor and far
+   over the 24x56 sliver the forget cross used to be. */
+.sr-chip-pair {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--sr-surface);
+  box-shadow: inset 0 0 0 0.5px var(--sr-sep), 0 1px 2px rgba(16, 24, 40, 0.04);
+  color: var(--sr-ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+.sr-chip-pair[data-on='true'] { background: var(--sr-tint); color: #fff; box-shadow: none; }
+.sr-chip-pair > button {
+  min-height: 0;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.sr-chip-pair > button:first-child { padding-inline: 14px 6px; }
+.sr-chip-pair > button:last-child { width: 40px; justify-content: center; opacity: 0.7; }
+.sr-chip-pair > button:last-child:hover { opacity: 1; background: rgba(255, 255, 255, 0.14); }
+
+/* ---- Grouped list -------------------------------------------------------------
+ * White, rounded, hairlines between rows inset to where the text starts. */
+.sr-group-head {
+  padding: 0 16px 6px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--sr-ink-2);
+}
+.sr-group {
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--sr-surface);
+  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+.sr-group > li { position: relative; }
+.sr-group > li + li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 0.5px solid var(--sr-sep);
+}
+.sr-row-open { text-align: left; }
+.sr-row-open:hover .sr-row-title { color: var(--sr-tint); }
+.sr-row-title {
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sr-row-meta { font-size: 15px; line-height: 1.45; color: var(--sr-ink-2); }
+.sr-row-meta time { color: var(--sr-ink); font-weight: 500; }
+/* The two things that can be done to a page sit at the end of its row, as
+   Apple puts them, rather than under it as a line of their own. */
+.sr-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  border-radius: 999px;
+  color: var(--sr-ink-2);
+}
+.sr-icon-btn:hover { background: var(--sr-fill); color: var(--sr-ink); }
+.sr-icon-btn[aria-pressed='true'] { color: var(--sr-star); }
+.sr-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 0;
+  height: 28px;
+  padding-inline: 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.sr-mini--folder { background: var(--sr-tint-soft); color: var(--sr-tint); }
+.sr-mini--tag { background: rgba(232, 184, 75, 0.2); color: #5b4410; }
+.sr-mini:hover { filter: brightness(0.96); }
+
+/* A row that does something rather than opens something: Obsidian in and out. */
+.sr-action {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding-inline: 16px;
+  text-align: left;
+  font-size: 17px;
+  color: var(--sr-tint);
+}
+.sr-action:hover { background: rgba(30, 42, 74, 0.04); }
+.sr-action-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--sr-tint);
+  color: #fff;
+}
+
+/* ---- The sidebar, where there is room for one -------------------------------- */
+.sr-side {
+  background: rgba(236, 233, 227, 0.6);
+  border-right: 0.5px solid var(--sr-sep);
+}
+.sr-side-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding-inline: 10px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 17px;
+  color: var(--sr-ink);
+}
+.sr-side-item svg { color: var(--sr-tint); }
+.sr-side-item:hover { background: var(--sr-fill); }
+.sr-side-item[aria-current='true'] { background: var(--sr-tint); color: #fff; font-weight: 600; }
+.sr-side-item[aria-current='true'] svg { color: #fff; }
+
+/* ---- Notes and notices, quiet unless they have to be loud -------------------- */
+.sr-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  background: rgba(232, 184, 75, 0.14);
+  color: #4a3a12;
+}
+.sr-note--trouble { background: #fdecea; color: #7a1a12; }
+
+/* ---- A page -------------------------------------------------------------------- */
+/* The title wraps. It was a one-line input, and a long name was cut off at the
+   edge of a phone with no way to read the rest -- "Getting started in your
+   Study" -- in the one place a person looks to see which page they are on. */
+.sr-page-title {
+  display: block;
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--sr-ink);
+}
+.sr-page-title::placeholder { color: rgba(26, 34, 51, 0.3); }
+.sr-page-title:focus-visible { outline: none; box-shadow: none; }
+
+/* Folder and tags, as one quiet line of pills under the title. */
+.sr-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  background: var(--sr-fill);
+  color: var(--sr-ink-2);
+  font-size: 15px;
+}
+.sr-field:focus-within { box-shadow: 0 0 0 3px rgba(30, 42, 74, 0.2); }
+.sr-field input {
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 15px;
+  color: var(--sr-ink);
+}
+.sr-field input::placeholder { color: var(--sr-ink-2); }
+.sr-field input:focus-visible { outline: none; box-shadow: none; }
+
+/* The insert bar, held just under the navigation bar while the page scrolls,
+   the way Pages keeps its formatting bar in reach. It was at the top of the
+   page and scrolled away with it, so every heading on a long page was a
+   scroll back up to find the button.
+
+   NOT AT THE BOTTOM, though that is where Notes puts it and it was the first
+   version of this. On an iPhone the keyboard slides over the bottom of the
+   screen without moving anything, so a bar pinned there is hidden precisely
+   while somebody is typing -- the only moment it is for. Getting it to ride
+   above the keyboard needs the visual viewport, and a phone keyboard cannot be
+   opened in the headless browser this room is tested in. A bar nobody can
+   check on the device it is for does not ship. */
+.sr-formatbar {
+  position: sticky;
+  top: var(--sr-bar-h);
+  z-index: 10;
+  margin-inline: -16px;
+  padding: 6px 16px;
+  background: rgba(246, 244, 240, 0.92);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--sr-sep);
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .sr-formatbar { background: var(--sr-bg); }
+}
+@media (min-width: 768px) {
+  .sr-formatbar { margin-inline: -32px; padding-inline: 32px; }
+}
+.sr-tool {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 12px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sr-ink);
+  background: transparent;
+}
+.sr-tool:hover { background: var(--sr-fill-2); }
+.sr-tool:active { background: rgba(26, 34, 51, 0.14); }
+.sr-tool svg { color: var(--sr-tint); }
+.sr-kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding-inline: 5px;
+  border-radius: 6px;
+  background: var(--sr-surface);
+  box-shadow: inset 0 0 0 0.5px var(--sr-sep), 0 1px 0 var(--sr-sep);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-seg > button,
+  .sr-chip-face,
+  .sr-icon-btn { transition: none; }
+}

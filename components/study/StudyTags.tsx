@@ -22,6 +22,7 @@
 import { useId, useState } from 'react';
 
 import { TAG_LIMIT, cleanTag, withTag } from '@/lib/study/shelf';
+import { CloseGlyph, TagGlyph } from '@/components/Glyph';
 
 export function StudyTags({ tags, known, onChange }: {
   tags: string[];
@@ -43,11 +44,14 @@ export function StudyTags({ tags, known, onChange }: {
   );
 
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2">
+    // `contents`: the tags, the field and the button join the line their
+    // parent draws -- beside the folder -- instead of starting a row of their
+    // own. A plain div with no role, so nothing is lost to a screen reader.
+    <div className="contents">
       {tags.map((tag) => (
         <span
           key={tag}
-          className="inline-flex items-center gap-1 rounded-full bg-gold/15 py-1 pl-3 pr-1 text-sm font-semibold text-navy"
+          className="inline-flex h-9 items-center gap-1 rounded-full bg-[rgba(232,184,75,0.2)] pl-3 pr-1 text-[15px] font-semibold text-[#5b4410]"
         >
           {tag}
           <button
@@ -58,29 +62,32 @@ export function StudyTags({ tags, known, onChange }: {
             // wrong tag off a page is a small thing done silently.
             aria-label={`Take the tag ${tag} off this page`}
             title={`Take the tag ${tag} off this page`}
-            className="grid h-6 w-6 place-items-center rounded-full text-base leading-none text-navy/60 hover:bg-navy/10 hover:text-navy"
+            className="grid h-7 min-h-0 w-7 place-items-center rounded-full opacity-70 hover:bg-black/5 hover:opacity-100"
           >
-            <span aria-hidden>×</span>
+            <CloseGlyph size={13} />
           </button>
         </span>
       ))}
 
-      <input
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          // ENTER AND COMMA BOTH FINISH A TAG. Comma is how people type lists
-          // without thinking about it, and a tag with a comma in it is nobody's
-          // intention.
-          if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(); }
-        }}
-        onBlur={add}
-        list={listId}
-        maxLength={TAG_LIMIT}
-        placeholder="Add a tag"
-        aria-label="Add a tag to this page"
-        className="w-32 rounded-full bg-white px-3 py-1 text-sm ring-1 ring-black/10 placeholder:text-gray-400"
-      />
+      <label className="sr-field">
+        <TagGlyph size={15} />
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            // ENTER AND COMMA BOTH FINISH A TAG. Comma is how people type lists
+            // without thinking about it, and a tag with a comma in it is nobody's
+            // intention.
+            if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(); }
+          }}
+          onBlur={add}
+          list={listId}
+          maxLength={TAG_LIMIT}
+          placeholder="Add a tag"
+          aria-label="Add a tag to this page"
+          className="w-28"
+        />
+      </label>
       <datalist id={listId}>
         {suggestions.map((tag) => <option key={tag} value={tag} />)}
       </datalist>
@@ -99,7 +106,7 @@ export function StudyTags({ tags, known, onChange }: {
           // screen reader, where it is the only way to know which tag this
           // button adds.
           aria-label={`Add the tag ${cleanTag(draft)}`}
-          className="rounded-full bg-navy px-4 py-1 text-sm font-semibold text-white"
+          className="tap-sm rounded-full bg-navy px-4 text-[15px] font-semibold text-white"
         >
           Add
         </button>
