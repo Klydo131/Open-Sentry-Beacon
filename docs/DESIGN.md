@@ -1,5 +1,8 @@
 # How Beacon is meant to feel
 
+*How it should look — the colours, type, and components, with the Study Room as
+the reference — is in [`VISUAL-LANGUAGE.md`](./VISUAL-LANGUAGE.md).*
+
 Four rules. They are not decoration: every one of them was written after
 something went wrong, and each is enforced by a test where a test can reach it.
 

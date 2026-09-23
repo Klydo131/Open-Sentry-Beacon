@@ -97,11 +97,11 @@ paragraph into a heading or a list.
 
 ## Looking after your pages
 
-**Star** a page with the ☆ on its row and it appears in Starred. Tap again to
-unstar it.
+**Star** a page with the star at the end of its row and it appears in Starred.
+Tap again to unstar it.
 
-**Move to bin** takes a page off the shelf without destroying it. It waits in
-the Bin until you decide.
+**Move to bin** — the bin at the end of a page's row — takes a page off the
+shelf without destroying it. It waits in the Bin until you decide.
 
 **Put it back** returns a page from the Bin to All pages.
 
@@ -190,8 +190,8 @@ yourself typing the same search twice.
 
 ## The journal: a page for each day
 
-**Journal** in the sidebar gives every day a page of its own. Press
-**Today's page** and you are writing in today.
+**Journal** (in the sidebar, or along the top on a phone) gives every day a
+page of its own. Press **Today's page** and you are writing in today.
 
 - It is named for the day, in full, so you never have to name it.
 - Pressing Today again **opens the same page**, not a new one, however many
@@ -206,7 +206,7 @@ things nobody names and everybody wants to find again.
 
 ## The whiteboard
 
-Every page can be looked at two ways, and the two buttons above the page say
+Every page can be looked at two ways, and the switch above the page says
 which: **Page** is the document, **Whiteboard** is the same page on an infinite
 canvas. It is one page, not two: there is nothing to copy across.
 
