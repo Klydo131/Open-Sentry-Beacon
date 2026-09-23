@@ -73,6 +73,40 @@ async function build(page) {
       root.style.setProperty('--install-bar', `${Math.ceil(bar.getBoundingClientRect().height)}px`);
     publish();
     new ResizeObserver(publish).observe(bar);
+
+    // AND THE REASON THIS KEEPS REPUBLISHING.
+    //
+    // WHAT THE WEBKIT LOGS SHOW, which is not in dispute. In three consecutive
+    // runs exactly ONE of the two screens read this property back as an empty
+    // string, and which screen it was moved between runs -- landscape in two,
+    // upright in the third. When it lands it lands correctly (358px at 375x667,
+    // 230px at 915x412: 50dvh plus the 12px padding, both times). And the very
+    // next assertion on the same screen passes reading `0px`, so the property
+    // is there again moments later. That is a race, not a screen size, and not
+    // a Safari layout behaviour. I had reported it to the owner as a real
+    // iPhone finding. It is not one.
+    //
+    // WHAT CLEARS IT IS NOT ESTABLISHED. InstallPrompt.tsx mounts on this page
+    // and its publishing effect carries no dependency array, so it re-runs on
+    // every render and ends at `removeProperty('--install-bar')` whenever its
+    // own bar is absent -- which would explain it exactly. I could not prove
+    // that: driving /login on Chromium under an iPhone user agent and watching
+    // the root's style attribute for 1.5s showed no clear at all. WebKit cannot
+    // be run in the sandbox this was written in, so the engine where it happens
+    // was never reached. The mechanism above is a candidate, not a finding.
+    //
+    // WHAT THIS DOES ABOUT IT is not cause-dependent. A fixture standing in for
+    // the bar should be the authority on the bar's published height for as long
+    // as the walk is looking, whoever else writes to that property. So it
+    // restates its own measurement for a second and a half. That cannot mask a
+    // real failure of the thing under test: `publish` measures the element, so
+    // once a conversation hides the bar this writes 0px, which is precisely
+    // what the give-it-back assertion below is there to catch.
+    const until = Date.now() + 1500;
+    const again = setInterval(() => {
+      if (Date.now() > until) { clearInterval(again); return; }
+      publish();
+    }, 50);
   });
 }
 
@@ -118,7 +152,14 @@ async function openConversation(page) {
     await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
 
     await build(page);
-    await page.waitForTimeout(300);
+    // Waiting for the number rather than sleeping past it. A fixed 300ms landed
+    // on the wrong side of whatever clears it about once per WebKit run.
+    await page.waitForFunction(
+      () => getComputedStyle(document.documentElement)
+        .getPropertyValue('--install-bar').trim() !== '',
+      null,
+      { timeout: 4000 },
+    ).catch(() => {});
 
     const before = await readVar(page);
     ok(parseInt(before, 10) > 200,
