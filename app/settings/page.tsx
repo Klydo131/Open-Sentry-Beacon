@@ -451,7 +451,7 @@ function VersionCard() {
                   'Throw away this copy of the app and download it fresh?\n\nYour data stays. Saved files, sample data and settings are all kept.',
                 )
               ) {
-                void hardRefresh();
+                void hardRefresh('settings');
               }
             }}
             className="tap rounded-xl bg-white px-5 text-base font-semibold text-navy ring-1 ring-navy/20"

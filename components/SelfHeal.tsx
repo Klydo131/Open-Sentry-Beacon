@@ -32,10 +32,15 @@ const SCRIPT = `(function(){
   var K=${JSON.stringify(HEAL_KEY)};
   var MINE=${JSON.stringify(BUILD_ID)};
   function chunky(m){return /ChunkLoadError|Loading chunk|Loading CSS chunk|dynamically imported module|module script failed/i.test(m||'');}
-  function heal(){
+  // WHY sits in the address it reloads to. The app has three other ways to
+  // land on /?fresh=... -- the auto-update, the Settings button and the error
+  // screen -- and for a whole day of WebKit logs every one of them looked like
+  // this one. A reload that does not say who asked for it cannot be attributed,
+  // and a guess about which one fired went into two commit messages.
+  function heal(why){
     try{ if(sessionStorage.getItem(K)) return; sessionStorage.setItem(K,'1'); }catch(e){ return; }
     var went=false;
-    var go=function(){ if(went) return; went=true; location.replace('/?fresh='+Date.now()); };
+    var go=function(){ if(went) return; went=true; location.replace('/?fresh='+Date.now()+'&by=repair-'+(why||'unknown')); };
     try{
       var jobs=[];
       if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){
@@ -69,7 +74,7 @@ const SCRIPT = `(function(){
         // and asking for it as a CORS request is what made WebKit refuse it
         // with "Fetch API cannot load ... due to access control checks".
         fetch(url,{method:'HEAD',cache:'no-store',mode:'same-origin',credentials:'omit'})
-          .then(function(r){ if(!r.ok) heal(); })
+          .then(function(r){ if(!r.ok) heal('chunk'); })
           .catch(function(){ /* the network, not the deploy */ });
       }catch(e){ /* no fetch here: leave it alone rather than guess */ }
     },1500);
@@ -105,7 +110,7 @@ const SCRIPT = `(function(){
         fetch('/version.json?probe='+Date.now(),
               {cache:'no-store',mode:'same-origin',credentials:'omit'})
           .then(function(r){ return r.ok?r.json():null; })
-          .then(function(v){ if(v&&v.build&&MINE&&v.build!==MINE) heal(); })
+          .then(function(v){ if(v&&v.build&&MINE&&v.build!==MINE) heal('build'); })
           .catch(function(){ /* the network, not the deploy */ });
       }catch(e){ /* no fetch here: leave it alone rather than guess */ }
     },1500);

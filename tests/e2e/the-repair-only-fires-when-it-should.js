@@ -75,7 +75,11 @@ const addScript = (src) => {
   // 1. THE CASE IT EXISTS FOR. A chunk the server does not have.
   {
     const r = await tryIt({}, addScript, '/_next/static/chunks/deleted-by-a-deploy.js');
-    ok(r.repaired, `a chunk the deploy really deleted sets off the repair (${r.url.split('/').pop()})`);
+    // THE REPAIR, AND NOT SOMETHING ELSE THAT RELOADS. Four things in this app
+    // land on /?fresh=..., and case 6 below once went green on the auto-update
+    // instead of on this. Each now says who it is.
+    ok(r.repaired && /by=repair-chunk/.test(r.url),
+       `a chunk the deploy really deleted sets off the repair (${r.url.split('/').pop()})`);
   }
 
   // 2. A CANCELLED REQUEST, which is what navigating away looks like.
@@ -172,9 +176,10 @@ const addScript = (src) => {
       Promise.reject(new Error('Importing a module script failed: /_next/static/chunks/x.js'));
     });
     await page.waitForTimeout(4500);
-    const repaired = page.url().includes('fresh=');
+    const url = page.url();
+    const repaired = url.includes('fresh=');
     await ctx.close();
-    return { repaired, probes, mine };
+    return { repaired, probes, mine, url };
   }
 
   // 5. The server is on the same build, so a reload cannot fix anything.
@@ -189,7 +194,8 @@ const addScript = (src) => {
   {
     const r = await askedAndAnswered('a-build-this-page-was-not-made-from');
     ok(r.probes > 0, `and it asks here too (${r.probes} probe)`);
-    ok(r.repaired, 'but the same signal DOES repair when the server has moved on');
+    ok(r.repaired && /by=repair-build/.test(r.url),
+       `but the same signal DOES repair when the server has moved on (${r.url.split('/').pop()})`);
   }
 
   console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

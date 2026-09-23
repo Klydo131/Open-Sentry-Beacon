@@ -43,7 +43,7 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
     } catch {
       // Reload regardless. Fetching the app again is the whole point.
     }
-    location.replace(`/?fresh=${Date.now()}`);
+    location.replace(`/?fresh=${Date.now()}&by=error-screen`);
   }
 
   function resetDemoData() {
@@ -58,7 +58,7 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
     } catch {
       // Storage blocked entirely. Reload anyway; there is nothing else to try.
     }
-    location.replace(`/?fresh=${Date.now()}`);
+    location.replace(`/?fresh=${Date.now()}&by=reset-sample`);
   }
 
   return (

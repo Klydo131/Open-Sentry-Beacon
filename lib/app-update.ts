@@ -287,7 +287,7 @@ export function versionLabel(): string {
 // room theme, their saved library files. Those are untouched, so this is safe to
 // offer to anybody rather than telling them to uninstall and reinstall,
 // which is the thing the whole auto-update system exists to avoid.
-export async function hardRefresh(): Promise<void> {
+export async function hardRefresh(by: 'update' | 'settings' = 'update'): Promise<void> {
   try {
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
@@ -301,5 +301,7 @@ export async function hardRefresh(): Promise<void> {
     // Whatever failed, still reload — a fresh fetch is the point.
   }
   // A query the app has never seen, so nothing can answer it from a cache.
-  window.location.replace(`/?fresh=${Date.now()}`);
+  // `by` names the caller, so a log that shows this address can say which of
+  // the four reloads in the app produced it. See components/SelfHeal.tsx.
+  window.location.replace(`/?fresh=${Date.now()}&by=${by}`);
 }
