@@ -131,7 +131,20 @@ const textIn = (host) => {
 
   // Bold through the keyboard, which is the same command the toolbar button
   // runs and does not depend on where the popover landed.
-  await page.keyboard.press('Control+b');
+  //
+  // WITH THE MODIFIER THE EDITOR ACTUALLY LISTENS FOR. BlockSuite binds bold
+  // to `Mod-b`, and @blocksuite/std/event/keymap.js turns Mod into Meta when
+  // navigator.platform says Mac and into Ctrl everywhere else. safari.yml runs
+  // on a macOS runner, so this pressed Ctrl+B on a Mac -- a key with nothing
+  // bound to it -- and failed in all four WebKit runs. I reported that to the
+  // owner as the one genuine Safari finding. It was this line.
+  //
+  // Proven on Chromium by making it report a Mac platform: Ctrl+B left the
+  // words plain and Cmd+B bolded them, which is what a person on a Mac gets.
+  // Read from the page rather than from Node's process.platform because the
+  // browser's answer is the one the editor uses.
+  const onAMac = await page.evaluate(() => /Mac|darwin/i.test(navigator.platform));
+  await page.keyboard.press(onAMac ? 'Meta+b' : 'Control+b');
   await page.waitForTimeout(600);
   const bolded = await page.evaluate(() => {
     const blocks = [...document.querySelectorAll('affine-paragraph')];
