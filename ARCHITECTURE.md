@@ -79,6 +79,7 @@ ships and the code that is checked.
 | `lib/types.ts` | Every shape in the app, in one file. |
 | `supabase/migrations/` | The schema and every permission rule, in order. |
 | `supabase/functions/` | Server-side work the browser must not do — invitations. |
+| `supabase/tests/` | The fresh-install proof: what a new Supabase project already has, the protections a fresh install must hold, and the fingerprint a live project is compared with. Run by `scripts/fresh-install.sh`. |
 | `supabase/seed/` | Run once by hand: makes you the first Executive Director. |
 | `tests/` | Guardrails and unit checks. |
 | `tests/e2e/` | Real-browser suites, phone-sized by default. |

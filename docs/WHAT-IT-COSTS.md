@@ -183,8 +183,8 @@ compute on top of the plan, for the same work.
   page. The allowances above are what matters at today's volumes; the overage
   rates matter only in the ten-church case and should be read off the pricing
   page before that decision.
-- **The domain.** `hopeklyde.online` is not pointed at anything yet, and I do
-  not know what it renews at.
+- **The domain.** Yours is not pointed at anything yet, and I do not know what
+  it renews at.
 - **Development cost.** Your time, and the assistants. Not something I can put a
   number on.
 

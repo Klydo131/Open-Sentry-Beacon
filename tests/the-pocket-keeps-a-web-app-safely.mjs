@@ -183,24 +183,39 @@ const ui = strip(read('components/Pocket.tsx'));
 {
   const route = read('app/api/app-icon/route.ts');
 
-  const at = route.indexOf('function isPrivateAddress');
-  const fnSrc = route.slice(at, route.indexOf('\n}', at) + 2)
-    .replace('(ip: string): boolean', '(ip)')
-    .replace(/:\s*boolean/g, '');
+  // Transpiled with the real TypeScript compiler rather than stripped by hand:
+  // the address test now leans on a second function (the IPv6 reader), and a
+  // regular expression that removes type annotations is exactly the kind of
+  // thing that quietly mangles the body under test.
+  const ts = (await import('typescript')).default;
+  const js = ts.transpileModule(route, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const fnOf = (name) => {
+    const at = js.indexOf(`function ${name}(`);
+    return js.slice(at, js.indexOf('\n}', at) + 2);
+  };
   // eslint-disable-next-line no-new-func
-  const isPrivateAddress = new Function(`${fnSrc}; return isPrivateAddress;`)();
+  const isPrivateAddress = new Function(
+    `${fnOf('isPrivateAddress')}\n${fnOf('hextets')}\nreturn isPrivateAddress;`)();
 
   const mustBlock = [
     '127.0.0.1', '0.0.0.0', '10.1.2.3', '172.16.0.1', '172.31.255.255',
     '192.168.1.1', '169.254.169.254', '100.64.0.1', '::1', '::',
     'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:169.254.169.254',
+    // The same private IPv4 addresses in their other IPv6 coats: mapped but
+    // written in hex, the old "compatible" form, NAT64 and 6to4.
+    '::ffff:7f00:1', '::ffff:a9fe:a9fe', '::127.0.0.1', '64:ff9b::a9fe:a9fe',
+    '64:ff9b::7f00:1', '64:ff9b:1::1', '2002:7f00:1::1', '2002:a9fe:a9fe::',
+    'fec0::1', 'ff02::1', 'not-an-address',
   ];
   const leaked = mustBlock.filter((ip) => !isPrivateAddress(ip));
   ok(leaked.length === 0,
      `every private and metadata address is refused (${mustBlock.length - leaked.length}/${mustBlock.length})`
      + (leaked.length ? ` — LET THROUGH: ${leaked.join(', ')}` : ''));
 
-  const mustAllow = ['1.1.1.1', '142.250.72.14', '2606:4700::1111'];
+  const mustAllow = ['1.1.1.1', '142.250.72.14', '2606:4700::1111', '2001:4860:4860::8888',
+    '64:ff9b::808:808', '2002:808:808::1'];
   ok(mustAllow.every((ip) => !isPrivateAddress(ip)),
      'and an ordinary public address still resolves');
 
@@ -208,17 +223,45 @@ const ui = strip(read('components/Pocket.tsx'));
   // a public URL that redirects to the metadata address is the usual way past.
   ok(/addresses\.some\(\(a\) => isPrivateAddress\(a\.address\)\)/.test(route),
      'the address test is applied to every address a host resolves to');
-  ok(/redirect: 'manual'/.test(route),
+  ok(/res\.status >= 300 && res\.status < 400/.test(route) && !/redirect:\s*'follow'/.test(route),
      'redirects are followed by hand, not blindly');
-  ok(/current = await publicUrl\(new URL\(location, current\)/.test(route),
+  ok(/new URL\(res\.location, current\)/.test(route) && /current = await publicUrl\(next\)/.test(route),
      'and each redirect target is re-checked before it is opened');
 
-  ok(/if \(!type\.startsWith\('image\/'\)\) continue;/.test(route),
+  // DNS REBINDING. A check made BEFORE connecting is answered by one DNS
+  // lookup and the connection makes another; a name server that says "public"
+  // and then "127.0.0.1" walks past it. Proven against the previous version of
+  // this route with a local server standing in for the loopback target: it was
+  // reached. So the socket is given the fenced lookup, and that is run here
+  // against exactly that name server.
+  ok(/lookup: fencedLookup/.test(route),
+     'the connection itself resolves through the fence, not through the system');
+  if (!js.includes('function fencedLookup(')) {
+    ok(false, 'a fenced lookup exists to be tested');
+  } else {
+    let n = 0;
+    const rebinding = async () => [{ address: n++ === 0 ? '93.184.216.34' : '127.0.0.1', family: 4 }];
+    // eslint-disable-next-line no-new-func
+    const fencedLookup = new Function('lookup', 'isPrivateAddress',
+      `${fnOf('fencedLookup')}\nreturn fencedLookup;`)(rebinding, isPrivateAddress);
+    const connect = (opts) => new Promise((resolve) => fencedLookup('rebind.example', opts, (err, address) => resolve({ err, address })));
+    const first = await connect({ all: true });   // the answer the pre-check would have seen
+    const second = await connect({ all: true });  // the answer the socket would have used
+    const single = await connect({});
+    ok(!first.err && Array.isArray(first.address) && first.address[0].address === '93.184.216.34',
+       'a public answer is passed to the socket as it is');
+    ok(second.err?.code === 'EREFUSED' && single.err?.code === 'EREFUSED',
+       'and a second answer of 127.0.0.1 is refused at the moment of connecting');
+  }
+
+  ok(/if \(!type\.startsWith\('image\/'\)\) (?:continue;|\{ res\.close\(\); continue; \})/.test(route),
      'only an image is ever returned, so this is not an open proxy');
   ok(/MAX_ICON_BYTES/.test(route) && /MAX_HTML_BYTES/.test(route) && /readCapped/.test(route),
      'responses are capped, so an endless one cannot hold a worker');
-  ok(/AbortController/.test(route) && /FETCH_TIMEOUT_MS/.test(route),
-     'and every fetch has a timeout');
+  ok(/AbortController/.test(route) && /FETCH_TIMEOUT_MS/.test(route) && /signal: deadline\.signal/.test(route),
+     'and every fetch has one deadline, for the headers and the body together');
+  ok(/createGunzip/.test(route) && /readCapped/.test(route),
+     'a compressed reply is inflated before the cap counts it, so a small bomb cannot pass as a small file');
   ok(/export const runtime = 'nodejs'/.test(route),
      'the route runs where DNS exists, or the fence could not be built at all');
   ok(/safeExternalUrl/.test(route),

@@ -947,7 +947,7 @@ if (exists('lib/canonical.ts')) {
      'and membership is an exact host match, not a substring or a suffix');
   ok(/BUILD_ENV === 'preview'/.test(c),
      'a preview build is still refused outright, whatever the list says');
-  // A suffix test would make evil-hopeklyde.online canonical.
+  // A suffix test would make evil-yourchurch.org canonical.
   ok(!/endsWith\(|includes\(CANONICAL|indexOf\(CANONICAL/.test(c),
      'no suffix or substring matching, which would make a lookalike domain canonical');
 }

@@ -122,5 +122,21 @@ for (const [policy, table] of [['guilds_read', 'guilds'], ['guild_members_read',
   }
 }
 
+// 5. THE FUNCTIONS THAT HOLD THE SERVICE ROLE KEY. They read the caller's
+//    profile with a key no row rule applies to, and the data API's check never
+//    sees them, so each one that acts FOR a signed-in person has to ask itself.
+{
+  const fnDir = 'supabase/functions';
+  for (const name of fs.existsSync(fnDir) ? fs.readdirSync(fnDir) : []) {
+    const file = path.join(fnDir, name, 'index.ts');
+    if (!fs.existsSync(file)) continue;
+    const src = fs.readFileSync(file, 'utf8').replace(/\/\/[^\n]*/g, '');
+    // Acting for a signed-in person = resolving the caller from their token.
+    if (!/auth\.getUser\(/.test(src)) continue;
+    ok(/select\([^)]*suspended_at/.test(src) && /if\s*\(\s*me\.suspended_at\s*\)\s*return[^;]*403/.test(src),
+       `supabase/functions/${name} refuses a suspended caller before it does anything`);
+  }
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

@@ -173,7 +173,7 @@ export function roleWord(role: InviteRole): string {
  *
  * WHY THIS IS FUSSY ABOUT WHAT COUNTS AS A NAME. The bulk panel falls back to
  * the local part of the address when a row has no name, so what arrives here
- * can be `ironhart321` or `maria.santos`. "Hi ironhart321," is worse than no
+ * can be `stormwell88` or `maria.santos`. "Hi stormwell88," is worse than no
  * greeting at all: it is the exact tell of a machine-generated message, and
  * this e-mail is already fighting to be read as correspondence rather than as
  * a mailshot. So a greeting is used only when the first word looks like

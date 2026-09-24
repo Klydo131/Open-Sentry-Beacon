@@ -1,0 +1,52 @@
+# A new church's first day, on every push: every migration, from nothing.
+#
+# The verify job reads the migrations; this one RUNS them, in order, on an empty
+# database from the same Postgres image Supabase runs, then checks the
+# protections that have gone missing somewhere before and prints the
+# fingerprint a live project can be compared with (supabase/tests/fingerprint.sql).
+#
+# Why it exists: on 23 September 2026 doing this by hand found a fresh install
+# stopping at migration 33, a backfilled migration sorting before the table it
+# needed, and a protection the live database had silently lost for five weeks.
+# None of those were visible to a test that only reads the files.
+#
+# Same rules as verify.yml: read-only token, no secrets, `push`/`pull_request`
+# only, and nothing it touches outlives the job.
+
+name: fresh-install
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  fresh-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: supabase/postgres:17.6.1.011
+        env:
+          POSTGRES_PASSWORD: fresh
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Every migration, in order, on an empty database
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: '5432'
+          PGPASSWORD: fresh
+        run: scripts/fresh-install.sh

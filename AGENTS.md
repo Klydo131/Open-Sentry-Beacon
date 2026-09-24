@@ -162,6 +162,29 @@ nothing in the database and quietly makes a fresh environment differ from
 production. Add a corrective migration that re-creates the object. (Editing one
 that failed on a syntax error and never ran is fine, because nothing has it yet.)
 
+One narrow exception, used once and written down so it stays narrow: a guard
+that lets a FRESH database get past an object a new project may not have, and
+changes nothing where the object exists. `0032` revoked grants on
+`rls_auto_enable()`, which the Supabase dashboard creates on some projects and
+not others, so a new church's install stopped there; a corrective migration
+could not help, because the install died inside the earlier file. The guard
+(`if to_regprocedure(...) is not null`) runs the same revoke wherever the
+function exists. Anything that would make a database end up DIFFERENT is not
+this exception.
+
+**A fresh install is proven, not assumed.** `scripts/fresh-install.sh` applies
+every migration in order to an empty `supabase/postgres` database, checks the
+protections in `supabase/tests/fresh-install-holds.sql`, and prints
+`supabase/tests/fingerprint.sql`. CI runs it on every push
+(`.github/workflows/fresh-install.yml`). Run the same fingerprint file against
+the live project: every line should match. On 23 September 2026 they did, after
+`20260923190000_live_matches_the_repository`.
+
+**Name a backfill for where it ran, not when.** A migration applied live and
+committed later must sort where it actually ran relative to the files around
+it. Named by its ledger time, `pocket_owner_defaults_to_the_session` sorted
+before the file that creates its table.
+
 **Dry-run every migration before applying it**: run the body inside
 `begin; … rollback;` against the real database. It costs one call and catches
 the ambiguous column reference that a fresh pair of eyes will not.

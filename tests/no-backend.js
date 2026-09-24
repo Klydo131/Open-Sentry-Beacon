@@ -408,6 +408,27 @@ const GUARDRAILS = new Set([
   // allowed and committing one is still caught. The file creates an empty
   // table; the values are inserted by the deployment, never by the repo.
   'supabase/migrations/0014_mail_settings_fallback.sql',
+  // A BACKFILL, AND IT HAS TO BE THE APPLIED TEXT BYTE FOR BYTE. The live
+  // database ran this migration months before it was committed, and the copy
+  // here is checked against the recorded text by md5 -- so it cannot be
+  // reworded to avoid the term. It grants the new table to the server role,
+  // which is what every table in this schema does.
+  'supabase/migrations/20260908033953_guide_only_lesson_planning.sql',
+  // THE SUSPENSION FIXES OF 23 SEPTEMBER 2026. Each creates a check and grants
+  // it by name to the roles that must be able to run it. The per-request check
+  // in particular MUST be executable by the server role: PostgREST runs it
+  // before EVERY request, the server's included, and a missing grant would fail
+  // them all. Naming the role is the security property of the line.
+  'supabase/migrations/20260923164500_a_suspension_is_immediate.sql',
+  'supabase/migrations/20260923173000_a_suspension_reaches_the_socket_too.sql',
+  'supabase/migrations/20260923180000_a_door_compares_the_right_things.sql',
+  // The once-per-request read sets: revoked from public and anon by name,
+  // granted to the roles that evaluate rules, same shape as the three above.
+  'supabase/migrations/20260923200000_the_rules_ask_once.sql',
+  // The replica fingerprint compares the settings of the four database roles
+  // Supabase creates, so it has to name them to select them. It reads the
+  // catalogue only; it holds no key and no hostname.
+  'supabase/tests/fingerprint.sql',
 ]);
 for (const f of textFiles) {
   if (GUARDRAILS.has(f)) continue;

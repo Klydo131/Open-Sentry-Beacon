@@ -343,7 +343,7 @@ Secrets**, and add three:
 | Name | Value |
 |---|---|
 | `BREVO_API_KEY` | the `xkeysib-…` key |
-| `MAIL_FROM` | the sender address you just verified |
+| `BREVO_SENDER` | the sender address you just verified |
 | `SITE_URL` | your app's address, e.g. `https://your-church.vercel.app` |
 
 `SITE_URL` is what invitation links point at. Set it after Part 4, when you know
@@ -370,6 +370,52 @@ Deploy a new function**, name it exactly `invite`, and paste the contents of
 > `localhost:3000`. If the app says the invitation was created but shows you a
 > link to copy instead of sending it, the three secrets above are not set
 > correctly. That is the single most common setup failure.
+
+### Step 6 — Push notifications to phones *(optional, 15 minutes)*
+
+Without this the app still shows notifications while it is open. With it, a
+message reaches a phone that is locked. On an iPhone that only ever works for the
+app added to the Home Screen, on iOS 16.4 or later -- Apple's rule, not ours.
+
+1. Make a key pair, once: `npx web-push generate-vapid-keys`. Keep the private
+   one private.
+2. In Supabase, **Edge Functions → Secrets**: `VAPID_PUBLIC_KEY`,
+   `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (a `mailto:` address of yours).
+3. Deploy the sender:
+   `npx supabase functions deploy notify --project-ref YOUR_PROJECT_REF`
+4. In Vercel, add `NEXT_PUBLIC_VAPID_PUBLIC_KEY` with the **public** key, and
+   redeploy.
+5. Tell the database where the sender is. In the Supabase **SQL editor**:
+
+   ```sql
+   select vault.create_secret('<your service role key>', 'notify_service_key');
+   select vault.create_secret('https://YOUR_PROJECT_REF.supabase.co/functions/v1/notify',
+                              'notify_function_url');
+   ```
+
+   These live in your project's own Vault. Never put either value in the
+   repository or in anything named `NEXT_PUBLIC_`.
+
+Until step 5 is done nothing is sent and nothing breaks: notifications are saved
+exactly as before.
+
+### Step 7 — Lock the invitation sender to your site *(2 minutes)*
+
+In **Edge Functions → Secrets**, add `BEACON_ALLOWED_ORIGINS` with your site's
+address, for example `https://your-church.vercel.app` (several can be listed,
+separated by commas). Without it the invitation sender answers any website that
+calls it -- it still refuses anybody who is not one of your Directors, but there
+is no reason to let other sites read its replies.
+
+### Step 8 — Check your copy is the same app *(5 minutes, optional)*
+
+Everything in `supabase/migrations/` builds the same database that the first
+church runs; that is checked on every change by
+`.github/workflows/fresh-install.yml`. To see it for yourself, run
+`supabase/tests/fingerprint.sql` in your project's **SQL editor**. It reads only
+the structure, never anybody's rows, and prints one line per kind of thing --
+tables, columns, rules, functions. The same file run on any correct install
+prints the same lines.
 
 ---
 
@@ -658,7 +704,7 @@ psql "$DATABASE_URL" -f supabase/seed/01_make_me_the_first_director.sql
 # 6. Email
 npx supabase secrets set \
   BREVO_API_KEY=xkeysib-... \
-  MAIL_FROM=invites@yourchurch.org \
+  BREVO_SENDER=invites@yourchurch.org \
   SITE_URL=https://yourchurch.vercel.app \
   --project-ref <ref>
 npx supabase functions deploy invite --project-ref <ref>
@@ -857,7 +903,7 @@ Nobody else can join until this is done.
    block every invitation you send.
 4. In Supabase: **Edge Functions → Secrets**, add three:
    - `BREVO_API_KEY` — the key you just copied
-   - `MAIL_FROM` — the sender address you verified
+   - `BREVO_SENDER` — the sender address you verified
    - `SITE_URL` — your Vercel address, starting `https://`
 5. In Supabase: **Authentication → URL Configuration**. Set **Site URL** to your
    Vercel address, and add `https://your-address/join` under **Redirect URLs**.

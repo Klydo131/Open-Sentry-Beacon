@@ -140,11 +140,19 @@ async function handle(req: Request): Promise<Response> {
 
   const { data: me } = await admin
     .from('profiles')
-    .select('id, role, church_id, is_approved')
+    .select('id, role, church_id, is_approved, suspended_at')
     .eq('id', caller.user.id)
     .maybeSingle();
 
   if (!me || !me.is_approved) return json({ error: 'Your account is not approved yet.' }, 403);
+  // A SUSPENDED DIRECTOR INVITES NOBODY. This function holds the service role
+  // key and reads the caller's profile with it, so none of the database's own
+  // refusals of a suspended account apply here: not the check the data API runs
+  // before every request, not the row rules. An access token issued before the
+  // suspension stays valid until it lapses, and "approved" never meant "not
+  // suspended" -- so without this line a suspended Director could go on
+  // bringing people into the church for up to an hour.
+  if (me.suspended_at) return json({ error: 'This account is suspended.' }, 403);
   if (me.role !== 'admin' && me.role !== 'executive') {
     return json({ error: 'Only a Director may send an invitation.' }, 403);
   }
@@ -471,6 +479,16 @@ async function handle(req: Request): Promise<Response> {
   // the next person understands why the code is not arranged around a rule that
   // used to matter enormously.
   const brevoKey = await setting(admin, 'BREVO_API_KEY');
+  // THE SENDER IS THE CHURCH'S, NEVER A DEFAULT IN THIS FILE. This fell back to
+  // one particular church's address, which put that church's domain in every
+  // fork of a public repository and made every other church's Brevo refuse the
+  // mail, because Brevo only sends from an address that account has verified.
+  // No sender set means Brevo is not ready, so Supabase's own mailer is used,
+  // exactly as when no Brevo key is set, and the log says why.
+  const brevoSender = brevoKey ? await setting(admin, 'BREVO_SENDER') : '';
+  if (brevoKey && !brevoSender) {
+    console.log(JSON.stringify({ at: 'invite', warn: 'BREVO_API_KEY is set but BREVO_SENDER is not; using the Supabase mailer' }));
+  }
 
   let via = '';
   let sendError = '';
@@ -482,7 +500,7 @@ async function handle(req: Request): Promise<Response> {
     // every other unsent invitation uses, so there is one place in this
     // function that decides the shape of the link and one to get wrong.
     sendError = 'No email was sent. You asked to pass the details on yourself.';
-  } else if (brevoKey) {
+  } else if (brevoKey && brevoSender) {
     // NO TOKEN IS MINTED ANY MORE, and that is the point of this change.
     //
     // This used to call generateLink and put a one-time token in the message.
@@ -523,7 +541,7 @@ async function handle(req: Request): Promise<Response> {
         Number(await setting(admin, ROLE_TEMPLATE_SETTING[role] ?? '')) ||
         Number(await setting(admin, 'BREVO_INVITE_TEMPLATE_ID')) || 0;
 
-      const senderEmail = (await setting(admin, 'BREVO_SENDER')) || 'hello@hopeklyde.online';
+      const senderEmail = brevoSender;
       const senderName = (await setting(admin, 'BREVO_SENDER_NAME')) || 'Hope Beacon';
 
       const asRole = role as InviteRole;

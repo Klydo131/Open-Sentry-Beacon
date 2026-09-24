@@ -8,6 +8,12 @@
 -- committed. It is already in the live database, which records migrations by
 -- the time they ran, so this file changes nothing there. It exists so that a
 -- fresh database built from this repository is the same database.
+--
+-- NAMED FOR WHERE IT RAN, not for when. Live ran it between
+-- a_notification_goes_where_it_is_about and who_may_take_a_seat, and this
+-- filename puts it in that same place. Named first by its ledger time
+-- (20260916033358), it sorted before the file that creates pocket_apps and a
+-- fresh install stopped here.
 -- ---------------------------------------------------------------------------
 alter table public.pocket_apps
   alter column owner_id set default auth.uid();

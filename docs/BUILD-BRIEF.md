@@ -170,7 +170,7 @@ const { data, error } = await supabase()!.functions.invoke('invite', {
 if (error) setError(error.message);   // show it verbatim
 ```
 
-Deploy first: `supabase functions deploy invite --project-ref bcpuushjwcejytdthlnn`
+Deploy first: `supabase functions deploy invite --project-ref <your-project-ref>`
 
 **Done when:** a real invitation email arrives, the link sets a password on an
 unapproved account in the right role, and a Director's separate approval opens

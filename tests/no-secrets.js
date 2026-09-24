@@ -158,32 +158,23 @@ if (tracked.includes(seed)) {
 }
 
 // ---------------------------------------------------------------------------
-// 6. Only the demo project may be named. Any other is a leak.
+// 6. No Supabase project is named. Every one is somebody's church.
 //
-// This repository DOES name a live Supabase project on purpose. It is the
-// maintainers' own, published so a developer evaluating Hope Beacon can see a
-// working backend rather than assemble one before learning whether they want
-// it. That is a deliberate choice by its owner, not an accident, and this check
-// is not here to reverse it.
+// THIS USED TO ALLOW ONE. The maintainers' own project was named here and in
+// docs/DEMO-SETUP.md as "the published demo backend", so a developer could point
+// a checkout at a working database. That stopped being true when the same
+// project became the first church's live one, with real members in it: the
+// docs were inviting strangers to "evaluate against it freely". On 23 September
+// 2026 the allow-list was emptied and the docs now say, everywhere, to use your
+// own project -- which is also what "a 1 to 1 copy, but not my data" means.
 //
-// What the check is for is every OTHER project. The same repository is worked
-// on alongside a private client deployment holding real churches and real
-// members, and a ref pasted from the wrong terminal reads exactly like a ref
-// pasted from the right one. Nothing else here would catch it: the other checks
-// hunt key-shaped strings, and a ref is twenty plain lowercase letters.
-//
-// So the rule is an allow-list of one, and anything else fails loudly.
-//
-// If the demo project is ever retired or replaced, change DEMO_REFS. Do not
-// delete the check — the value is in what it refuses, not what it permits.
+// The check stays because the value is in what it refuses. A ref is twenty
+// plain lowercase letters, so nothing that hunts key-shaped strings would catch
+// one pasted from the wrong terminal, and every project that could be pasted
+// holds somebody's congregation.
 // ---------------------------------------------------------------------------
-const DEMO_REFS = new Set([
-  'bcpuushjwcejytdthlnn', // Open Sentry Beacon — the published demo backend
-]);
+const ALLOWED_REFS = new Set();
 
-// Refs are exactly twenty lowercase letters. That shape also matches ordinary
-// words, so only the two positions that can mean a real project are searched:
-// a <ref>.supabase.co host, and a --project-ref argument.
 const REF_HOST = /\b([a-z]{20})\.supabase\.co/g;
 const REF_FLAG = /--project-ref[= ]+([a-z]{20})\b/g;
 const foreignRefs = [];
@@ -195,18 +186,70 @@ for (const file of tracked) {
     re.lastIndex = 0;
     let m;
     while ((m = re.exec(body))) {
-      if (!DEMO_REFS.has(m[1])) foreignRefs.push(`${file}: ${m[1]}`);
+      if (!ALLOWED_REFS.has(m[1])) foreignRefs.push(`${file}: ${m[1]}`);
     }
   }
 }
 if (foreignRefs.length) {
   fail(
-    'a Supabase project other than the published demo is named here:\n    ' +
+    'a real Supabase project is named here:\n    ' +
       [...new Set(foreignRefs)].join('\n    ') +
-      '\n    If this is a private deployment, remove it. If the demo project moved, update DEMO_REFS.',
+      '\n    Use a placeholder such as <your-project-ref>. A real ref points a reader at a real church.',
   );
 } else {
-  ok('only the published demo project is named; no private deployment leaked');
+  ok('no real Supabase project is named anywhere in the repository');
+}
+
+// ---------------------------------------------------------------------------
+// 7. Nothing of the first church's own.
+//
+// The owner's instruction for this repository: "a 1 to 1 copy for the open
+// source project BUT NOT MY DATA". On 23 September 2026 a sweep of every
+// tracked file (and the text of every committed PDF) found the live project's
+// ref, the owner's domain and the handle of one real member's e-mail address,
+// and removed them. This keeps them out.
+//
+// FINGERPRINTS, NOT THE VALUES. Listing the identifiers here would publish the
+// very things this check exists to keep out, so each is kept as the first 24
+// hex digits of its SHA-256. Every e-mail address, every host name, every
+// twenty-letter project ref and every handle-shaped word in every tracked text
+// file is fingerprinted the same way and compared.
+// ---------------------------------------------------------------------------
+{
+  const crypto = require('crypto');
+  const fingerprint = (s) => crypto.createHash('sha256').update(s.toLowerCase()).digest('hex').slice(0, 24);
+  const PRIVATE = new Set([
+    'e9e533bed926977576578cbd', // the live project's ref
+    'cb5355bbf2237e8490fcec8d', // the owner's domain
+    'c3cc7088e1acbbf0a6f70e92', // a protected owner address
+    '86d8ee3f0dbd686da2472f95', // a protected owner address
+    '074db29d1282cfa527925c9a', // a protected owner address
+    'f95bb5e3995a8a6eeff6fcaa', // the handle of a real member's address
+  ]);
+  const shapes = [
+    /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+/gi, // e-mail addresses
+    /\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:online|com|org|net|ph|app|co|io|edu)\b/gi, // host names
+    /\b[a-z]{20}\b/g, // project refs
+    /\b[a-z]+\d{2,}\b/gi, // handles like name123
+  ];
+  const found = [];
+  for (const file of tracked) {
+    if (!/\.(md|ts|tsx|js|mjs|cjs|json|ya?ml|sql|txt|html|css|env\.example)$/i.test(file)) continue;
+    if (file === 'tests/no-secrets.js') continue;
+    const body = read(file);
+    for (const re of shapes) {
+      for (const m of body.matchAll(re)) {
+        if (PRIVATE.has(fingerprint(m[0]))) found.push(`${file}: fingerprint ${fingerprint(m[0])}`);
+      }
+    }
+  }
+  if (found.length) {
+    fail('something belonging to the first church is back in the repository:\n    ' +
+      [...new Set(found)].join('\n    ') +
+      '\n    Replace it with a placeholder. The fingerprint says which one without repeating it.');
+  } else {
+    ok('nothing of the first church\'s own is in any tracked text file');
+  }
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

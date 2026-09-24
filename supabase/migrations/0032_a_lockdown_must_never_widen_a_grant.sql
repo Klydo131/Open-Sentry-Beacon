@@ -33,7 +33,18 @@
 revoke all on function public.member_by_email(text) from public, anon, authenticated;
 grant execute on function public.member_by_email(text) to service_role;
 
-revoke all on function public.rls_auto_enable() from public, anon, authenticated;
+-- GUARDED, ADDED 2026-09-23 SO A NEW CHURCH CAN INSTALL. rls_auto_enable() is
+-- put there by the Supabase dashboard on some projects and not others, and a
+-- brand-new project does not have it -- so this line, unguarded, stopped a
+-- fresh install at this file (proven by applying every migration to an empty
+-- Supabase database). 0005 already guards the same function the same way.
+-- Where the function exists nothing changes: the same revoke runs.
+do $$
+begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    revoke all on function public.rls_auto_enable() from public, anon, authenticated;
+  end if;
+end $$;
 
 create or replace function public.lock_new_functions()
 returns event_trigger

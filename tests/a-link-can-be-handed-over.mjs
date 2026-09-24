@@ -38,11 +38,11 @@ ok(/const handOver = body\.deliver === 'link'/.test(fn), 'and reads it as an exp
 
 // The branch has to come BEFORE both mailers, not filter them afterwards.
 const handAt = fn.indexOf('if (handOver)');
-const brevoAt = fn.indexOf('} else if (brevoKey)');
+const brevoAt = fn.indexOf('} else if (brevoKey');
 const inviteMailAt = fn.indexOf('inviteUserByEmail');
 ok(handAt > -1 && brevoAt > handAt, 'it is decided before the Brevo path is entered');
 ok(handAt > -1 && inviteMailAt > handAt, 'and before Supabase Auth is asked to send anything');
-ok(/} else if \(brevoKey\)/.test(fn),
+ok(/} else if \(brevoKey(?: && brevoSender)?\)/.test(fn),
    'the mailers are the OTHER branches, so no message can leave on this route');
 
 // ---- The one-token rule, now satisfied by having no tokens ----

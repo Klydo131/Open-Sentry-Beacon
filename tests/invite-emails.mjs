@@ -279,7 +279,7 @@ for (const role of ROLES) {
 //
 // AND WHY IT IS NOT ALWAYS THERE. The bulk panel falls back to the local part
 // of the address when a row carries no name, so what arrives can be
-// `ironhart321`. "Hi ironhart321," is worse than no greeting: it is the exact
+// `stormwell88`. "Hi stormwell88," is worse than no greeting: it is the exact
 // tell of a machine-generated message, in an e-mail already fighting to be read
 // as correspondence rather than as a mailshot.
 {
@@ -294,7 +294,7 @@ for (const role of ROLES) {
   ok(text.includes('Hi Maria,'), 'and the plain-text half is greeted too, not just the HTML');
 
   // What a row with no name produces once the panel has fallen back.
-  for (const notAName of ['ironhart321', 'maria.santos', 'a', '', '   ', 'x@y.org']) {
+  for (const notAName of ['stormwell88', 'maria.santos', 'a', '', '   ', 'x@y.org']) {
     const anon = inviteHtml('ds', CHURCH, URL_, APP_URL, SIGN_IN_EMAIL, TEMP_PASSWORD, notAName);
     ok(!/Hi\s/.test(anon.replace(/<[^>]*>/g, '')),
        `"${notAName}" is not a name, so there is no greeting rather than a bad one`);

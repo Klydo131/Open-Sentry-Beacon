@@ -209,10 +209,10 @@ about money or paperwork.
 
 ## 10. Point the domain, then redeploy · 20 minutes, then a wait
 
-`hopeklyde.online` is bought and points at nothing.
+Your domain is bought and points at nothing.
 
 1. In Vercel, open the project → **Settings → Domains** → **Add**, and enter
-   `hopeklyde.online`. Vercel will show you the records to create.
+   your domain. Vercel will show you the records to create.
 2. At whoever sold you the domain, add exactly those records.
 3. Wait. Twenty minutes is usual; a few hours is normal.
 
@@ -221,7 +221,7 @@ about money or paperwork.
 Set the app's own address so it can warn anybody running an old copy:
 
 1. Vercel → **Settings → Environment Variables** → **Add**.
-2. Name `CANONICAL_HOST`, value `hopeklyde.online`, for Production.
+2. Name `CANONICAL_HOST`, value your domain (for example `yourchurch.org`), for Production.
 3. **Redeploy.** This one is read when the app is built, so saving it changes
    nothing on its own.
 
