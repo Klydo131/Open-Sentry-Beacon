@@ -10,6 +10,13 @@
 # needed, and a protection the live database had silently lost for five weeks.
 # None of those were visible to a test that only reads the files.
 #
+# And it does it TWICE, the two ways a church actually installs: every file
+# with psql (the manual path), and `supabase db push` (the one command
+# docs/START-HERE.md recommends, which also remembers what it applied, so the
+# same command installs later updates). The CLI reads the folder differently
+# -- it skips any file not named <digits>_name.sql -- so the job fails unless
+# both databases have the same fingerprint.
+#
 # Same rules as verify.yml: read-only token, no secrets, `push`/`pull_request`
 # only, and nothing it touches outlives the job.
 
@@ -26,7 +33,7 @@ permissions:
 jobs:
   fresh-install:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -35,6 +42,18 @@ jobs:
           POSTGRES_PASSWORD: fresh
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+      # A second empty database for the second way in.
+      postgres_cli:
+        image: supabase/postgres:17.6.1.011
+        env:
+          POSTGRES_PASSWORD: fresh
+        ports:
+          - 5433:5432
         options: >-
           --health-cmd "pg_isready -U postgres -h 127.0.0.1"
           --health-interval 5s
@@ -49,4 +68,19 @@ jobs:
           PGHOST: 127.0.0.1
           PGPORT: '5432'
           PGPASSWORD: fresh
-        run: scripts/fresh-install.sh
+        shell: bash
+        run: scripts/fresh-install.sh | tee "$RUNNER_TEMP/psql.out"
+
+      - name: The same, through supabase db push
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: '5433'
+          PGPASSWORD: fresh
+        shell: bash
+        run: scripts/fresh-install.sh --via-cli | tee "$RUNNER_TEMP/cli.out"
+
+      - name: Both ways build the same database
+        shell: bash
+        run: |
+          diff <(sed -n '/^Fingerprint/,$p' "$RUNNER_TEMP/psql.out") \
+               <(sed -n '/^Fingerprint/,$p' "$RUNNER_TEMP/cli.out")

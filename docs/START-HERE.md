@@ -274,10 +274,37 @@ It asks two questions and checks your answers.
 
 ### Step 3 — Create the tables
 
-In Supabase, open the **SQL Editor**. Open each file in `supabase/migrations/`
-**in filename order**, paste the contents in, and click **Run**.
+**One command, and it is the same command for every update later.** In Supabase,
+open **Connect** at the top of your project and copy the connection string (the
+one that starts `postgresql://`). If it offers a choice, take **Session
+pooler**: it works on every home and church network. Put your database password
+where it says `[YOUR-PASSWORD]`. Then, in the project folder:
 
-Order is not optional — each file builds on the one before.
+```bash
+npx supabase db push --db-url "<the connection string>"
+```
+
+Answer **Y** when it lists the files. It runs every file in
+`supabase/migrations/`, in order, and records which ones it ran. When you update
+the app later (`git pull`), run exactly the same command: it runs only the new
+files, and says *"Remote database is up to date"* when there are none.
+
+> **One line it prints is expected:** *"Skipping migration
+> 0001a_fix_policy_recursion.sql"*. That early fix was later rewritten by the
+> files after it, so the database is the same with or without it. That is not a
+> promise: every change to this repository builds the database both ways and
+> fails unless the two are identical (`.github/workflows/fresh-install.yml`).
+>
+> **If it cannot connect** and your password has symbols such as `@`, `#` or
+> `/` in it, those break the address. Reset the database password in
+> **Settings → Database** to letters and numbers only, and copy the string again.
+
+**Without a terminal**, the same result by hand: open the **SQL Editor**, then
+open each file in `supabase/migrations/` **in filename order**, paste it in and
+click **Run**. There are well over a hundred. Filename order means character by
+character: `0001_core_schema.sql` comes before `0001a_fix_policy_recursion.sql`,
+the numbered files `0001` to `0049` come first, and the dated ones (`2026…`)
+follow in date order. The first fifteen, and what each is for:
 
 ```
 0001_core_schema.sql               the tables, and the security rules
@@ -295,7 +322,12 @@ Order is not optional — each file builds on the one before.
 0012_lessons_and_notifications.sql lessons and the notification bell
 0013_the_invitation_is_the_approval.sql  the sign-up form, and approval on invite
 20260816130240_approval_revocation_gate.sql  removing approval takes effect at once
+…and every file after it, to the newest.
 ```
+
+Order is not optional — each file builds on the one before. By hand you must
+also remember which files you have run: the next update adds files, and only
+those are to be run. The command above keeps that list for you.
 
 > **Why 0010 exists, because it is worth your time.** An earlier migration tried
 > to take away permission to run certain internal database functions and used
@@ -410,8 +442,9 @@ is no reason to let other sites read its replies.
 ### Step 8 — Check your copy is the same app *(5 minutes, optional)*
 
 Everything in `supabase/migrations/` builds the same database that the first
-church runs; that is checked on every change by
-`.github/workflows/fresh-install.yml`. To see it for yourself, run
+church runs, whether you used the one command or ran every file by hand; that
+is checked on every change by `.github/workflows/fresh-install.yml`, which
+builds it both ways and compares them. To see it for yourself, run
 `supabase/tests/fingerprint.sql` in your project's **SQL editor**. It reads only
 the structure, never anybody's rows, and prints one line per kind of thing --
 tables, columns, rules, functions. The same file run on any correct install
@@ -663,6 +696,11 @@ running files out of order, or running one twice. Most are written to be safe to
 re-run; if one is not, the error will say the object already exists, which is
 harmless.
 
+`npx supabase db push` avoids both: it runs the files in the right order and
+never runs one twice. If you started by hand and switch to it, it will try to
+run everything again, because it has no record of what you ran; finish by hand
+in that case, or start again on a fresh project.
+
 ### Nothing above matches
 
 1. `npm run verify:all` — it checks a lot and names what it finds.
@@ -693,9 +731,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable key: eyJ... or sb_publishable_...>
 EOF
 # or: npm run setup  — same result, and it refuses the service_role key
 
-# 4. Schema, in filename order. Every file, no exceptions.
+# 4. Schema. The one command, which also remembers what it ran:
+npx supabase db push --db-url "$DATABASE_URL"
+#    ...or every file by hand, in BYTE order. Without LC_ALL=C most Linux
+#    machines sort 0001a_ before 0001_ (the language setting ignores the
+#    underscore), and the loop would run a fix before the thing it fixes.
+export LC_ALL=C
 for f in supabase/migrations/*.sql; do
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f" || { echo "Stopped at $f"; break; }
 done
 
 # 5. Bootstrap yourself, after signing up in the app with this address

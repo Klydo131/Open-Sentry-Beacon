@@ -152,6 +152,14 @@ lexicographically, and `0050_` sorts *before* `20260829…`, so a `00NN` file
 added today would run before tables it depends on and fail on a fresh database
 while passing on yours.
 
+**Digits, then an underscore, and nothing else before it.** `supabase db push`,
+the one command a church is told to use, silently skips any file not named
+`<digits>_name.sql` (it prints one line and carries on). `0001a_` is the only
+such file and is harmless only because later migrations rewrote what it did;
+`tests/a-church-can-install-it-either-way.mjs` refuses a second one, and the
+fresh-install workflow builds the database with psql AND with the CLI and fails
+unless the two are identical.
+
 **The version recorded in the database never matches the filename.** Migrations
 applied through the Supabase tooling are stamped with the time they were
 applied. Do not read the ledger and the directory as if they line up; check for
@@ -175,7 +183,8 @@ this exception.
 **A fresh install is proven, not assumed.** `scripts/fresh-install.sh` applies
 every migration in order to an empty `supabase/postgres` database, checks the
 protections in `supabase/tests/fresh-install-holds.sql`, and prints
-`supabase/tests/fingerprint.sql`. CI runs it on every push
+`supabase/tests/fingerprint.sql`; with `--via-cli` it does the same through
+`supabase db push`. CI runs both on every push and compares them
 (`.github/workflows/fresh-install.yml`). Run the same fingerprint file against
 the live project: every line should match. On 23 September 2026 they did, after
 `20260923190000_live_matches_the_repository`.

@@ -557,6 +557,9 @@ const staticChecks = [
   // A Guide asks the people they walk with to pray for them, too. Who reads,
   // who writes, who may change what, who is told, and a way to report.
   ['prayer runs both ways', 'tests/prayer-runs-both-ways.mjs'],
+  // The two ways a church installs the database -- one command, or every file
+  // by hand -- read the folder differently. What each can trip over.
+  ['a church can install it either way', 'tests/a-church-can-install-it-either-way.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

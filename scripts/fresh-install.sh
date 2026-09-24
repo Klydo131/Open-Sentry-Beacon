@@ -21,8 +21,29 @@
 #
 # WHAT IT PRINTS at the end is supabase/tests/fingerprint.sql. Run that same
 # file against a live project and every line should match.
+#
+# TWO WAYS IN, BECAUSE A CHURCH HAS TWO. By default every file is run with psql,
+# one at a time, in byte order -- the manual path in docs/START-HERE.md. With
+#
+#   PGPASSWORD=fresh scripts/fresh-install.sh --via-cli
+#
+# the same files go in through `supabase db push`, the one command the guide
+# recommends, which also remembers what it applied so the same command later
+# installs only what is new. The CLI reads files differently (it skips any name
+# that is not <digits>_name.sql), so CI runs both and requires the two
+# fingerprints to be identical.
 # ---------------------------------------------------------------------------
 set -euo pipefail
+
+via="psql"
+case "${1:-}" in
+  '') ;;
+  --via-cli) via="cli" ;;
+  *) echo "Usage: $0 [--via-cli]" >&2; exit 2 ;;
+esac
+# Pinned, like everything else CI runs: a new CLI release must not change what
+# "the same database" means without somebody choosing to move this.
+cli_version="${SUPABASE_CLI_VERSION:-2.117.0}"
 
 export PGHOST="${PGHOST:-127.0.0.1}"
 export PGPORT="${PGPORT:-5432}"
@@ -46,17 +67,34 @@ done
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/platform-stand-in.sql" >/dev/null
 
-n=0
-while IFS= read -r file; do
-  n=$((n + 1))
-  if ! psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f "$file" >"$log" 2>&1; then
-    echo "A fresh install stops at migration $n: $(basename "$file")" >&2
-    grep -E 'ERROR|DETAIL|HINT|LINE' "$log" >&2 || cat "$log" >&2
+if [ "$via" = "cli" ]; then
+  # The throwaway database has no TLS, and a password of letters needs no
+  # escaping in a URL. Neither is true of a real project, which is why the guide
+  # tells a church to paste the connection string Supabase gives them instead.
+  if ! (cd "$here" && npx -y "supabase@$cli_version" db push --include-all --yes \
+        --db-url "postgresql://postgres:${PGPASSWORD}@${PGHOST}:${PGPORT}/postgres?sslmode=disable") >"$log" 2>&1; then
+    echo "supabase db push stopped:" >&2
+    grep -iE 'error|failed|skipping' "$log" >&2 || cat "$log" >&2
     exit 1
   fi
-done < <(find "$here/supabase/migrations" -maxdepth 1 -name '*.sql' | LC_ALL=C sort)
+  n="$(psql -U postgres -d postgres -tAc 'select count(*) from supabase_migrations.schema_migrations')"
+  echo "Applied $n migrations to an empty database with supabase db push."
+  # Said out loud rather than buried: a file the CLI will not read is a file a
+  # church using the recommended path never gets.
+  grep -i 'skipping migration' "$log" || true
+else
+  n=0
+  while IFS= read -r file; do
+    n=$((n + 1))
+    if ! psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f "$file" >"$log" 2>&1; then
+      echo "A fresh install stops at migration $n: $(basename "$file")" >&2
+      grep -E 'ERROR|DETAIL|HINT|LINE' "$log" >&2 || cat "$log" >&2
+      exit 1
+    fi
+  done < <(find "$here/supabase/migrations" -maxdepth 1 -name '*.sql' | LC_ALL=C sort)
 
-echo "Applied all $n migrations to an empty database in one pass."
+  echo "Applied all $n migrations to an empty database in one pass."
+fi
 
 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/fresh-install-holds.sql"
