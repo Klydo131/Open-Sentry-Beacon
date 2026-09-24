@@ -250,6 +250,10 @@ An Explorer asks for prayer on their own screen, at the foot of it. It goes to t
 
 The date is not decoration. "Somebody is praying about my mother" is worth knowing the day of, and an Explorer who wrote something hard and saw nothing change had no way to tell whether anybody had seen it at all.
 
+**It runs both ways.** A Guide can ask the Explorers they walk with to pray for them: from the Prayer folder, choosing each person, or from one Explorer's **Care** tab. Every person asked gets their own copy and sees only their own, so nobody learns who else was asked, and a Guide's request never goes on the church wall. The Explorer finds it at the top of their Prayer folder, with a count on the tab, and presses *"I am praying for this"*; the Guide is told, by name. Only whoever asked can withdraw a request or call it answered: the other side can say they are praying, and nothing else.
+
+Each side is told when the other asks, in a notification that never carries the words: a notification becomes a pop-up on a locked phone. And whoever a request was written **to** can report it from the request itself. The words are copied into the report, so a request withdrawn a moment later still reads in the Directors' queue, and every Director is told. The person reported is not.
+
 > **NOTE** · What the notice does not carry
 >
 > The Explorer's own words are never repeated back to them in the notice, and nothing about the request leaves the two of them. If the person pressing the button is the person who asked, nothing is sent at all: nobody is notified about themselves.

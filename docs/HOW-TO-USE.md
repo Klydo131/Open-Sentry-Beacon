@@ -99,6 +99,10 @@ Ask for prayer. By default your request goes to your Guide alone. If you tick
 the box, the whole church can pray for it, and **your name is never shown when
 they do**.
 
+Your Guide can ask you to pray for them too. It shows at the top of Prayer.
+Press **I am praying for this** and they are told. If something in it worries
+you, **Report** is on the same card.
+
 ![Prayer. Your request goes to your Guide unless you choose otherwise.](screenshots/walkthrough/06-explorer-prayer.png)
 
 ### Your shelf
@@ -135,6 +139,10 @@ of you. You can attach a photograph or a file, and photographs are made smaller
 and have their location removed before they are sent.
 
 ![A conversation. Private between the two of you.](screenshots/walkthrough/09-conversation.png)
+
+Prayer runs both ways. On a person's **Care** tab you can read what they asked
+and tell them you are praying, and ask them to pray for you. Only they see what
+you ask, and you see when they are praying for it.
 
 ### Moving somebody along
 

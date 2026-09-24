@@ -85,7 +85,9 @@ export function LiveGuidePage() {
       const requests = await live.listPrayerRequests();
       const counts: Record<string, number> = {};
       for (const r of requests) {
-        if (r.status !== 'open') continue;
+        // The Explorer's own requests only: what the Guide asked THEM is
+        // waiting on the Explorer, not on the Guide.
+        if (r.status !== 'open' || !live.isExplorersOwn(r)) continue;
         counts[r.ds_id] = (counts[r.ds_id] ?? 0) + 1;
       }
       setUnprayed(counts);
@@ -260,7 +262,11 @@ export function LiveGuidePage() {
       {/* alwaysShow, because a folder called Prayer that draws nothing at all
           when a Guide opens it reads as broken rather than as quiet. */}
       {room === 'prayer' && <div className="mt-6 space-y-6">
-        <LivePrayerForGuide nameFor={(id) => rows.find((r) => r.ds_id === id)?.ds_name ?? 'An Explorer'} alwaysShow />
+        <LivePrayerForGuide
+          nameFor={(id) => rows.find((r) => r.ds_id === id)?.ds_name ?? 'An Explorer'}
+          explorers={rows.map((r) => ({ id: r.ds_id, name: r.ds_name }))}
+          alwaysShow
+        />
       </div>}
 
       {room === 'church' && <div className="mt-6"><LiveBlogFeed selfId={profile?.id} /></div>}
@@ -399,7 +405,7 @@ export function LiveConversationPage() {
         try {
           const requests = await live.listPrayerRequests();
           setPrayerWaiting(
-            requests.filter((r) => r.status === 'open' && r.ds_id === mine.ds_id).length,
+            requests.filter((r) => r.status === 'open' && r.ds_id === mine.ds_id && live.isExplorersOwn(r)).length,
           );
         } catch {
           setPrayerWaiting(0);
@@ -695,7 +701,7 @@ export function LiveConversationPage() {
                 alwaysShow
                 onlyFor={pairing.ds_id}
                 nameFor={() => pairing.ds_name}
-                heading={`What ${pairing.ds_name.split(' ')[0]} has asked prayer for`}
+                heading={`Praying with ${pairing.ds_name.split(' ')[0]}`}
               />
               <LiveNotes pairingId={pairing.id} />
             </>

@@ -173,11 +173,23 @@ export interface LessonSeries {
 // church-wide prayer wall so the whole church can pray.
 export interface PrayerRequest {
   id: string;
+  /** The Explorer this request lives with, whoever wrote it. */
   ds_id: string;
+  /**
+   * Who wrote it: the Explorer, or their Guide asking them to pray. Missing on
+   * requests saved before prayer ran both ways, which were all the Explorer's
+   * own -- read it through prayerAuthor() rather than directly.
+   */
+  author_id?: string;
   body: string;
   share_with_board: boolean;
   status: 'open' | 'praying' | 'answered';
   created_at: string;
+}
+
+/** Who wrote a prayer request. Older saved requests were all the Explorer's. */
+export function prayerAuthor(r: Pick<PrayerRequest, 'ds_id' | 'author_id'>): string {
+  return r.author_id ?? r.ds_id;
 }
 
 // A study item a Digital Seeker keeps for themselves — their own notes and

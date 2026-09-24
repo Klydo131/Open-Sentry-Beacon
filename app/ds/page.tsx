@@ -13,7 +13,8 @@ import { safeExternalUrl } from '@/lib/url';
 import { lessonById } from '@/lib/lessons';
 import { Meetings } from '@/components/Meetings';
 import { MySeries } from '@/components/MySeries';
-import type { MaterialType } from '@/lib/types';
+import { prayerAuthor, type MaterialType } from '@/lib/types';
+import { ReportDialog } from '@/components/ReportDialog';
 import { seekerPriorities, meetingWhen } from '@/lib/engagement';
 import { useIsLive } from '@/lib/tutorial';
 import { LiveExplorerPage } from '@/components/LiveCorePages';
@@ -61,11 +62,16 @@ function Home() {
   // two must not disagree about how many tabs an Explorer has. The reasoning is
   // written out in components/live/ExplorerPage.tsx.
   const churchHasSomething = db.blog_posts.some((p) => p.visibility === 'published');
+  // What their Guide has asked them to pray for and they have not answered yet,
+  // counted on the tab, as on the live journey.
+  const askedOfMe = db.prayer_requests.filter(
+    (r) => r.ds_id === me.id && prayerAuthor(r) !== me.id && r.status === 'open',
+  ).length;
   const rooms: Room[] = [
     { id: 'guide', label: '🤝 My Guide' },
     { id: 'study', label: '📖 Study' },
     ...(churchHasSomething ? [{ id: 'church', label: '⛪ Church' }] : []),
-    { id: 'prayer', label: '🙏 Prayer' },
+    { id: 'prayer', label: '🙏 Prayer', badge: askedOfMe, urgent: askedOfMe > 0 },
   ];
 
   const [room, chooseRoom] = useRoom(rooms, 'beacon:demo-journey-room');
@@ -232,14 +238,22 @@ const PRAYER_STATUS: Record<string, { label: string; color: string }> = {
 // A seeker's prayer corner: send a request to their missionary, optionally to
 // the whole church anonymously, and see how each one is being held.
 function PrayerCorner() {
-  const { db, currentUser, addPrayerRequest } = useDemo();
+  const { db, currentUser, addPrayerRequest, setPrayerStatus, reportPrayerRequest } = useDemo();
   const me = currentUser!;
   const [body, setBody] = useState('');
   const [shareBoard, setShareBoard] = useState(false);
+  const [reporting, setReporting] = useState('');
 
+  // Split by who wrote it: a request from their Guide lives with them too, and
+  // must not be drawn as one of their own.
   const mine = db.prayer_requests
-    .filter((r) => r.ds_id === me.id)
+    .filter((r) => r.ds_id === me.id && prayerAuthor(r) === me.id)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const asked = db.prayer_requests
+    .filter((r) => r.ds_id === me.id && prayerAuthor(r) !== me.id)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const nameOf = (id: string) =>
+    db.profiles.find((p) => p.id === id)?.full_name ?? 'Your Guide';
 
   const send = () => {
     if (!body.trim()) return;
@@ -255,6 +269,49 @@ function PrayerCorner() {
         Share a request with your Guide. You can also let the whole church
         pray for it. Your name is never shown when they do.
       </p>
+
+      {/* What their Guide has asked them to pray for, first: it is the one
+          thing here asking something of them. */}
+      {asked.length > 0 && (
+        <div className="mb-4 space-y-2" aria-label="Your Guide asked you to pray">
+          {asked.map((r) => {
+            const first = nameOf(prayerAuthor(r)).split(' ')[0];
+            return (
+              <div key={r.id} data-asked-by-guide={r.id} className="rounded-xl bg-teal-50 px-4 py-3 ring-1 ring-teal-700/15">
+                <p className="text-sm font-semibold text-teal-900">{first} asked you to pray for them</p>
+                <p className="mt-1 text-navy">{r.body}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  {r.status === 'open' ? (
+                    <Button variant="ghost" className="px-4 text-base" onClick={() => setPrayerStatus(r.id, 'praying')}>
+                      🙏 I am praying for this
+                    </Button>
+                  ) : (
+                    <span className="text-sm font-semibold text-teal-800">🙏 You told {first} you are praying</span>
+                  )}
+                  {reporting !== r.id && (
+                    <button
+                      type="button"
+                      onClick={() => setReporting(r.id)}
+                      className="ml-auto px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+                    >
+                      Report
+                    </button>
+                  )}
+                </div>
+                {reporting === r.id && (
+                  <div className="mt-3">
+                    <ReportDialog
+                      subjectName={nameOf(prayerAuthor(r))}
+                      onCancel={() => setReporting('')}
+                      onSubmit={(reason, detail) => reportPrayerRequest(r.id, reason, detail)}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="rounded-xl bg-gray-50 p-3">
         <textarea
@@ -295,7 +352,7 @@ function PrayerCorner() {
           mine.map((r) => {
             const st = PRAYER_STATUS[r.status];
             return (
-              <div key={r.id} className="rounded-xl bg-gray-50 px-4 py-3">
+              <div key={r.id} data-my-prayer={r.id} className="rounded-xl bg-gray-50 px-4 py-3">
                 <p className="text-navy">{r.body}</p>
                 <div className="mt-1 flex items-center gap-2 text-sm">
                   <span className="font-semibold" style={{ color: st.color }}>

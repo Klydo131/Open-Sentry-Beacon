@@ -1617,6 +1617,12 @@ export async function recordBlogView(id: string): Promise<void> {
 // served by prayer_wall() rather than by a policy — a policy grants whole rows,
 // and the row carries ds_id, so "leaders see the request but not who wrote it"
 // would be a promise the network tab disproves in one click.
+//
+// IT RUNS BOTH WAYS (20260924100000). A request lives with one relationship and
+// `ds_id` is always the Explorer in it; `author_id` is who wrote it. An
+// Explorer's own request has the two equal. A Guide asking an Explorer to pray
+// for them writes a row with ds_id = that Explorer and author_id = themselves,
+// one row per Explorer asked, so each "I am praying" answers exactly one ask.
 // ---------------------------------------------------------------------------
 
 export type PrayerStatus = 'open' | 'praying' | 'answered';
@@ -1624,13 +1630,21 @@ export type PrayerStatus = 'open' | 'praying' | 'answered';
 /** A request as its author or their Guide sees it: with the person attached. */
 export interface PrayerRequestRow {
   id: string;
+  /** The Explorer this request lives with, whoever wrote it. */
   ds_id: string;
+  /** Who wrote it: the Explorer themselves, or their Guide asking them. */
+  author_id: string;
   body: string;
   share_with_church: boolean;
   status: PrayerStatus;
   created_at: string;
-  /** When a Guide said they were praying for this. Null until one does. */
+  /** When the other side said they were praying for this. Null until they do. */
   praying_at: string | null;
+}
+
+/** An Explorer's own request, as against one their Guide wrote to them. */
+export function isExplorersOwn(r: Pick<PrayerRequestRow, 'ds_id' | 'author_id'>): boolean {
+  return r.author_id === r.ds_id;
 }
 
 /** A request as the congregation sees it. No name, no id of the person. */
@@ -1662,14 +1676,53 @@ export async function addPrayerRequest(body: string, shareWithChurch: boolean): 
 }
 
 /**
- * The requests this caller may see WITH a name: their own if they are an
- * Explorer, their Explorers' if they are a Guide. A Director gets nothing here
- * and that is correct — they are shown the wall instead.
+ * A Guide asks the Explorers they walk with to pray for them.
+ *
+ * ONE ROW PER EXPLORER, written one at a time, because each ask is answered by
+ * one person: "I am praying for this" moves that row, and tells its author.
+ * The database decides everything that matters here -- the author is the
+ * session, never a value this sends; the Explorer must be one this Guide walks
+ * with now; and a Guide's words never go on the church wall -- so a browser
+ * that skipped this function would get exactly the same answer.
+ *
+ * Returns how many asks went. It stops at the first refusal and throws it, so
+ * a Guide is never told "asked" about somebody who was not.
+ */
+export async function askForPrayer(explorerIds: string[], body: string): Promise<number> {
+  const supabase = db();
+  const me_id = await uid();
+  const text = body.trim();
+  if (!text) throw new Error('Write something first.');
+  if (explorerIds.length === 0) throw new Error('Choose who to ask.');
+
+  const { data: me } = await supabase
+    .from('profiles').select('church_id').eq('id', me_id).maybeSingle();
+  if (!me?.church_id) throw new Error('Your account is not in a church yet.');
+
+  let sent = 0;
+  for (const ds_id of [...new Set(explorerIds)]) {
+    const { error } = await supabase.from('prayer_requests').insert({
+      ds_id,
+      church_id: me.church_id,
+      body: text,
+      share_with_church: false,
+    });
+    if (error) throw new Error(error.message);
+    sent += 1;
+  }
+  return sent;
+}
+
+/**
+ * The requests this caller may see WITH a name. An Explorer: their own, and
+ * what their Guide has asked them to pray for. A Guide: their Explorers' own,
+ * and what they themselves have asked. A Director gets nothing here and that
+ * is correct — they are shown the wall instead.
  */
 export async function listPrayerRequests(): Promise<PrayerRequestRow[]> {
   const { data, error } = await db()
     .from('prayer_requests')
-    .select('id, ds_id, body, share_with_church, status, created_at, praying_at')
+    .select('id, ds_id, author_id, body, share_with_church, status, created_at, praying_at')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as PrayerRequestRow[];
@@ -1682,14 +1735,18 @@ export async function listPrayerWall(): Promise<WallEntry[]> {
   return (data ?? []) as WallEntry[];
 }
 
-/** Either side may move the status; only the author owns the words. */
+/**
+ * The author may move the status anywhere; the other side may only move it from
+ * open to praying (20260924100000). Only the author owns the words.
+ */
 export async function setPrayerStatus(id: string, status: PrayerStatus): Promise<void> {
   const { error } = await db().from('prayer_requests').update({ status }).eq('id', id);
   if (error) throw new Error(error.message);
 }
 
 /**
- * A Guide says they are praying for this, and the Explorer is told.
+ * The other side says they are praying for this, and whoever asked is told --
+ * a Guide answering an Explorer, or an Explorer answering their Guide.
  *
  * ONE CALL, AND IT DOES NOT SEND THE MESSAGE. The message is sent by a trigger
  * on the row (migration 0049), because a client that updates and then notifies
@@ -1710,10 +1767,42 @@ export async function markPrayingFor(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Withdraw a request. Only the author may; a Guide cannot delete a confidence. */
+/** Withdraw a request. Only the author may; nobody can delete the other's confidence. */
 export async function deletePrayerRequest(id: string): Promise<void> {
   const { error } = await db().from('prayer_requests').delete().eq('id', id);
   if (error) throw new Error(error.message);
+}
+
+/**
+ * Report a prayer request somebody wrote to you.
+ *
+ * NO SUBJECT ARGUMENT. The function resolves the author from the request, so
+ * the only thing the browser names is the request it is looking at, and it may
+ * name only one written to it. It copies the words into the report: a request
+ * can be withdrawn a moment after it is reported, and a Director must not open
+ * a report about nothing. Every Director is told; the author is not.
+ */
+export async function reportPrayerRequest(
+  requestId: string,
+  reason: ReportReason,
+  detail?: string,
+  evidence?: File[],
+): Promise<string> {
+  const { data, error } = await db().rpc('report_prayer_request', {
+    p_request: requestId,
+    p_reason: reason,
+    p_detail: detail?.trim() || null,
+  });
+  if (error) throw new Error(error.message);
+  const reportId = String(data ?? '');
+  // Filed first, files after, exactly as reportPerson does: a report must not
+  // be lost to a photo that failed to upload.
+  if (reportId && evidence?.length) {
+    for (const file of evidence) {
+      try { await attachReportEvidence(reportId, file); } catch { /* the report stands */ }
+    }
+  }
+  return reportId;
 }
 
 // ---------------------------------------------------------------------------

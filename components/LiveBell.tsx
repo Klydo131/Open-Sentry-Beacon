@@ -58,7 +58,9 @@ function routeFor(type: string, role: Role): string {
     case 'pairing':
       return leads ? '/admin?room=pairings' : role === 'dm' ? '/dm' : '/ds';
     case 'prayer':
-      return role === 'dm' ? '/dm#prayer' : '/ds';
+      // Both sides open straight onto the Prayer room: prayer runs both ways,
+      // so an Explorer is now told when their Guide asks them to pray.
+      return role === 'dm' ? '/dm#prayer' : '/ds#prayer';
     case 'message':
       return role === 'dm' ? '/dm' : '/ds';
     case 'meeting':

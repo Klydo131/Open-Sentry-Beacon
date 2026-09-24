@@ -15,6 +15,7 @@ import {
   todayKey,
 } from '@/lib/engagement';
 import { useIsLive } from '@/lib/tutorial';
+import { prayerAuthor } from '@/lib/types';
 import { BlogDesk } from '@/components/Blog';
 import { LiveGuidePage } from '@/components/LiveCorePages';
 
@@ -299,8 +300,10 @@ function Dashboard() {
               // `open` is the state nobody has responded to yet — once a Guide
               // presses "I'm praying" it stops nagging, which is what makes the
               // badge worth reading rather than permanent furniture.
+              // The Explorer's own requests: what the Guide asked THEM is
+              // waiting on the Explorer, not on the Guide.
               const unprayed = db.prayer_requests.filter(
-                (r) => r.ds_id === ds!.id && r.status === 'open',
+                (r) => r.ds_id === ds!.id && prayerAuthor(r) === ds!.id && r.status === 'open',
               );
               return (
                 <Card key={p.id}>

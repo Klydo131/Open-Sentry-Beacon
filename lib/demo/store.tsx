@@ -47,6 +47,7 @@ function welcomeLine(role: string): string {
 import { publishDb, subscribeDb } from '../realtime';
 import { deleteMedia, newMediaId, putMedia, typeFromMime } from '../localMedia';
 import { makeSeed } from './seed';
+import { prayerAuthor } from '../types';
 
 // -------------------------------------------------------------------------
 // Demo store. A self-contained, in-browser backend so the app runs and
@@ -230,7 +231,17 @@ export interface Ctx {
   }) => void;
   giveConsent: () => void;
   addPrayerRequest: (body: string, shareWithBoard: boolean) => void;
+  /**
+   * The author may move a request anywhere; the other side may only move it
+   * from open to praying. The same rule the live database enforces.
+   */
   setPrayerStatus: (id: string, status: PrayerRequest['status']) => void;
+  /** A Guide asks each chosen Explorer they walk with to pray for them. */
+  askForPrayer: (dsIds: string[], body: string) => void;
+  /** Only whoever wrote a request may withdraw it. */
+  withdrawPrayerRequest: (id: string) => void;
+  /** Report a request somebody wrote TO you; its words go into the report. */
+  reportPrayerRequest: (id: string, reason: ReportReason, detail?: string) => void;
   assignLesson: (pairingId: string, lessonId: string) => void;
   completeLesson: (assignmentId: string) => void;
   /** Library: create a course on one area of interest. Returns its id. */
@@ -1661,6 +1672,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             {
               id: uid(),
               ds_id: userId,
+              author_id: userId,
               body: text,
               share_with_board: shareWithBoard,
               status: 'open',
@@ -1668,14 +1680,16 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             },
             ...prev.prayer_requests,
           ],
+          // No prayer text in the notification, as on the live app, where it
+          // becomes a pop-up on a locked phone.
           notifications: pairing
             ? [
                 {
                   id: uid(),
                   user_id: pairing.dm_id,
                   type: 'prayer',
-                  title: `${dsName} shared a prayer request`,
-                  body: text.slice(0, 80),
+                  title: `${dsName.split(' ')[0]} asked for prayer`,
+                  body: 'Open Prayer to read it.',
                   created_at: nowIso(),
                 },
                 ...prev.notifications,
@@ -1689,39 +1703,103 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // A missionary marks a request as being prayed over / answered; the seeker is
-  // notified so they feel accompanied.
+  // Either side says "I am praying for this" and whoever asked is told -- a
+  // Guide answering an Explorer, or an Explorer answering their Guide. Only the
+  // author may do anything else with the status, which is the rule the live
+  // database enforces (20260924100000).
   const setPrayerStatus = useCallback(
     (id: string, status: PrayerRequest['status']) => {
       if (!userId) return;
       persistUpdate((prev) => {
         const pr = prev.prayer_requests.find((r) => r.id === id);
-        if (!pr) return prev;
-        const notifyDs = pr.ds_id !== userId;
+        if (!pr || pr.status === status) return prev;
+        const author = prayerAuthor(pr);
+        const mine = author === userId;
+        if (!mine && !(pr.status === 'open' && status === 'praying')) return prev;
+        const me = prev.profiles.find((p) => p.id === userId);
+        const who = me?.full_name.split(' ')[0] || 'Someone you walk with';
         return {
           ...prev,
           prayer_requests: prev.prayer_requests.map((r) =>
             r.id === id ? { ...r, status } : r,
           ),
-          notifications: notifyDs
+          notifications: !mine && status === 'praying'
             ? [
                 {
                   id: uid(),
-                  user_id: pr.ds_id,
+                  user_id: author,
                   type: 'prayer',
-                  title:
-                    status === 'praying'
-                      ? 'Your Guide is praying with you 🙏'
-                      : status === 'answered'
-                        ? 'A prayer marked answered 🙌'
-                        : 'A prayer update',
-                  body: pr.body.slice(0, 80),
+                  title: `${who} is praying with you 🙏`,
+                  body: 'They have seen what you asked prayer for.',
                   created_at: nowIso(),
                 },
                 ...prev.notifications,
               ]
             : prev.notifications,
         };
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userId],
+  );
+
+  // A Guide asks the Explorers they walk with to pray for them: one request per
+  // Explorer, so each "I am praying" answers exactly one ask and nobody learns
+  // who else was asked. Never on the church wall.
+  const askForPrayer = useCallback(
+    (dsIds: string[], body: string) => {
+      const text = body.trim();
+      if (!userId || !text) return;
+      persistUpdate((prev) => {
+        const walking = new Set(
+          prev.pairings
+            .filter((p) => p.dm_id === userId && p.status === 'active')
+            .map((p) => p.ds_id),
+        );
+        const to = [...new Set(dsIds)].filter((id) => walking.has(id));
+        if (to.length === 0) return prev;
+        const who =
+          prev.profiles.find((p) => p.id === userId)?.full_name.split(' ')[0] || 'Your Guide';
+        const at = nowIso();
+        return {
+          ...prev,
+          prayer_requests: [
+            ...to.map((ds_id) => ({
+              id: uid(),
+              ds_id,
+              author_id: userId,
+              body: text,
+              share_with_board: false,
+              status: 'open' as const,
+              created_at: at,
+            })),
+            ...prev.prayer_requests,
+          ],
+          notifications: [
+            ...to.map((ds_id) => ({
+              id: uid(),
+              user_id: ds_id,
+              type: 'prayer',
+              title: `${who} asked you to pray for them`,
+              body: 'Open Prayer to read it.',
+              created_at: at,
+            })),
+            ...prev.notifications,
+          ],
+        };
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userId],
+  );
+
+  const withdrawPrayerRequest = useCallback(
+    (id: string) => {
+      if (!userId) return;
+      persistUpdate((prev) => {
+        const pr = prev.prayer_requests.find((r) => r.id === id);
+        if (!pr || prayerAuthor(pr) !== userId) return prev;
+        return { ...prev, prayer_requests: prev.prayer_requests.filter((r) => r.id !== id) };
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1889,6 +1967,37 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
    * must be as easy to record as the other. What is NOT offered is deleting
    * it — a safeguarding record that can be made to disappear is not a record.
    */
+  // Report a prayer request somebody wrote TO you. The words go into the
+  // report, as the live function copies them, so it still reads after the
+  // request is withdrawn. The author is worked out here, never passed in.
+  const reportPrayerRequest = useCallback(
+    (id: string, reason: ReportReason, detail?: string) => {
+      if (!userId) return;
+      const pr = db.prayer_requests.find((r) => r.id === id);
+      if (!pr) return;
+      const author = prayerAuthor(pr);
+      if (author === userId) return;
+      const pairing = db.pairings.find(
+        (p) => p.status === 'active' &&
+          ((p.dm_id === userId && p.ds_id === author) || (p.ds_id === userId && p.dm_id === author)),
+      );
+      // Written to me: the Explorer it lives with, or the Guide of an Explorer
+      // who asked.
+      const toMe = pr.ds_id === userId || (author === pr.ds_id && pairing?.dm_id === userId);
+      if (!pairing || !toMe) return;
+      reportPerson({
+        subjectId: author,
+        reason,
+        pairingId: pairing.id,
+        detail: [
+          detail?.trim(),
+          `The prayer request, as it read when it was reported:\n"${pr.body}"`,
+        ].filter(Boolean).join('\n\n'),
+      });
+    },
+    [userId, db, reportPerson],
+  );
+
   const resolveReport = useCallback(
     (reportId: string, status: 'actioned' | 'dismissed', outcome?: string) => {
       if (!userId) return;
@@ -2300,6 +2409,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     giveConsent,
     addPrayerRequest,
     setPrayerStatus,
+    askForPrayer,
+    withdrawPrayerRequest,
+    reportPrayerRequest,
     createSeries,
     setSeriesPublished,
     startSeries,

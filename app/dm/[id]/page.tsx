@@ -20,6 +20,8 @@ import {
 } from '@/lib/engagement';
 import { Meetings } from '@/components/Meetings';
 import { useIsLive } from '@/lib/tutorial';
+import { ReportDialog } from '@/components/ReportDialog';
+import { prayerAuthor } from '@/lib/types';
 import { LiveConversationPage } from '@/components/LiveCorePages';
 
 type TabKey = 'talk' | 'journey' | 'care' | 'resources';
@@ -40,6 +42,9 @@ function Detail() {
     advanceStage,
     shareMaterial,
     setPrayerStatus,
+    askForPrayer,
+    withdrawPrayerRequest,
+    reportPrayerRequest,
     assignLesson,
     startSeries,
   } = useDemo();
@@ -49,6 +54,8 @@ function Detail() {
   const pairingId = String(params.id);
   const available = offerableSeries(db.lesson_series);
   const [tab, setTab] = useState<TabKey>('talk');
+  const [askText, setAskText] = useState('');
+  const [reportingPrayer, setReportingPrayer] = useState('');
 
   const pairing = db.pairings.find((p) => p.id === pairingId);
 
@@ -80,8 +87,13 @@ function Detail() {
   const history = db.journey_events
     .filter((e) => e.pairing_id === pairingId)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  // Their own requests, and what this Guide has asked them to pray for: both
+  // live with this Explorer, and are told apart by who wrote them.
   const prayers = db.prayer_requests
-    .filter((r) => r.ds_id === ds.id)
+    .filter((r) => r.ds_id === ds.id && prayerAuthor(r) === ds.id)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const myAsks = db.prayer_requests
+    .filter((r) => r.ds_id === ds.id && prayerAuthor(r) === me.id)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
   const shelf = db.seeker_media
     .filter((m) => m.ds_id === ds.id)
@@ -387,8 +399,11 @@ function Detail() {
             ) : (
               <div className="space-y-2">
                 {prayers.map((r) => (
-                  <div key={r.id} className="rounded-xl bg-gray-50 px-4 py-3">
+                  <div key={r.id} data-prayer-request={r.id} className="rounded-xl bg-gray-50 px-4 py-3">
                     <p className="text-navy">{r.body}</p>
+                    {/* No "Mark answered": whether a prayer was answered is
+                        the asker's to say, and the live database refuses it
+                        from anybody else. */}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       {r.status !== 'praying' && r.status !== 'answered' && (
                         <Button
@@ -397,15 +412,6 @@ function Detail() {
                           onClick={() => setPrayerStatus(r.id, 'praying')}
                         >
                           🙏 I’m praying
-                        </Button>
-                      )}
-                      {r.status !== 'answered' && (
-                        <Button
-                          variant="ghost"
-                          className="px-4 text-base"
-                          onClick={() => setPrayerStatus(r.id, 'answered')}
-                        >
-                          ✓ Mark answered
                         </Button>
                       )}
                       {r.status === 'praying' && (
@@ -423,11 +429,78 @@ function Detail() {
                           · on the church prayer wall
                         </span>
                       )}
+                      {reportingPrayer !== r.id && (
+                        <button
+                          type="button"
+                          onClick={() => setReportingPrayer(r.id)}
+                          className="ml-auto px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+                        >
+                          Report
+                        </button>
+                      )}
                     </div>
+                    {reportingPrayer === r.id && (
+                      <div className="mt-3">
+                        <ReportDialog
+                          subjectName={ds.full_name}
+                          onCancel={() => setReportingPrayer('')}
+                          onSubmit={(reason, detail) => reportPrayerRequest(r.id, reason, detail)}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
+
+            {/* PRAYER RUNS BOTH WAYS. The Guide asks too, and only this one
+                person sees it; they can say they are praying, and the Guide
+                is told. */}
+            <div className="mt-5 rounded-xl bg-teal-50/60 p-4 ring-1 ring-teal-700/10" aria-label="Ask them to pray for you">
+              <p className="font-bold text-navy">Ask {first} to pray for you</p>
+              <p className="text-sm text-gray-600">Only {first} sees it. They can tell you they are praying.</p>
+              <textarea
+                id={`ask-prayer-${ds.id}`}
+                value={askText}
+                onChange={(e) => setAskText(e.target.value)}
+                rows={3}
+                maxLength={4000}
+                placeholder="What would you like prayer for?"
+                aria-label={`What would you like ${first} to pray for?`}
+                className="mt-3 w-full rounded-xl bg-white px-4 py-3 text-lg outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-gold"
+              />
+              <Button
+                className="mt-2"
+                disabled={!askText.trim()}
+                onClick={() => { askForPrayer([ds.id], askText); setAskText(''); }}
+              >
+                Ask {first}
+              </Button>
+              {myAsks.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-bold uppercase tracking-wide text-teal-700">What you have asked</p>
+                  {myAsks.map((r) => (
+                    <div key={r.id} data-my-ask={r.id} className="rounded-xl bg-white px-4 py-3 ring-1 ring-teal-700/15">
+                      <p className="text-navy">{r.body}</p>
+                      <div className="mt-1 flex items-center gap-2 text-sm">
+                        <span className={r.status === 'praying' ? 'font-semibold text-teal-800' : 'text-gray-500'}>
+                          {r.status === 'praying'
+                            ? `🙏 ${first} is praying for this`
+                            : r.status === 'answered' ? 'Answered' : 'Sent'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => withdrawPrayerRequest(r.id)}
+                          className="ml-auto text-xs font-semibold text-gray-500 underline"
+                        >
+                          Withdraw
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </Card>
         </div>
       )}

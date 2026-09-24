@@ -554,6 +554,9 @@ const staticChecks = [
   // `x.col = col` inside a subquery is always true: the bare name binds to x.
   // Two live policies checked nothing because of it.
   ['a door compares the right things', 'tests/a-door-compares-the-right-things.mjs'],
+  // A Guide asks the people they walk with to pray for them, too. Who reads,
+  // who writes, who may change what, who is told, and a way to report.
+  ['prayer runs both ways', 'tests/prayer-runs-both-ways.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

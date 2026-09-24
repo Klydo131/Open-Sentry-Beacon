@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useKeepUp, KEEP_UP_MY_PAIRING } from '@/lib/live/keep-up';
+import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_PRAYER } from '@/lib/live/keep-up';
 import { NAVY } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
 import * as live from '@/lib/live/data';
@@ -155,11 +155,28 @@ export function LiveExplorerPage() {
       .catch(() => setChurchHasSomething(false));
   }, []);
 
+  // WHAT THEIR GUIDE HAS ASKED THEM TO PRAY FOR, counted on the tab. The same
+  // reason the Guide's Prayer tab carries a count: a request in a folder
+  // nobody opens is a request nobody answers. Only the Guide's asks that are
+  // still open: the Explorer's own requests are waiting on somebody else.
+  const [askedOfMe, setAskedOfMe] = useState(0);
+  const loadAsked = useCallback(async () => {
+    try {
+      const requests = await live.listPrayerRequests();
+      setAskedOfMe(requests.filter((r) => !live.isExplorersOwn(r) && r.status === 'open').length);
+    } catch {
+      // A badge that fails to load must not take the page down with it.
+      setAskedOfMe(0);
+    }
+  }, []);
+  useEffect(() => { void loadAsked(); }, [loadAsked]);
+  useKeepUp(KEEP_UP_PRAYER, loadAsked);
+
   const rooms: Room[] = [
     { id: 'guide', label: '🤝 My Guide' },
     { id: 'study', label: '📖 Study' },
     ...(churchHasSomething ? [{ id: 'church', label: '⛪ Church' }] : []),
-    { id: 'prayer', label: '🙏 Prayer' },
+    { id: 'prayer', label: '🙏 Prayer', badge: askedOfMe, urgent: askedOfMe > 0 },
   ];
   const [room, chooseRoom] = useRoom(rooms, 'beacon:journey-room', { prayer: 'prayer' });
   // Which series the shelf should already be open at, when somebody arrives
@@ -312,7 +329,9 @@ export function LiveExplorerPage() {
             the first thing anybody sees on opening their journey. */}
         {room === 'church' && <LiveBlogFeed selfId={profile?.id} />}
 
-        {room === 'prayer' && <LiveAskForPrayer />}
+        {room === 'prayer' && (
+          <LiveAskForPrayer guide={pairing ? { id: pairing.dm_id, name: pairing.dm_name } : null} />
+        )}
       </div>
     </LiveAppShell>
   );

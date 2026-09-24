@@ -99,8 +99,8 @@ Four kinds of people, each seeing a different app built from the same data.
 
 | | What they see |
 |---|---|
-| **Explorer** | Messages from the person walking with them, their lessons, how far through a course they are, and a way to ask for prayer. |
-| **Guide** | Their own people and nobody else's. Conversations, lessons to share, meetings to arrange, private notes. |
+| **Explorer** | Messages from the person walking with them, their lessons, how far through a course they are, and a way to ask for prayer and to pray for their Guide. |
+| **Guide** | Their own people and nobody else's. Conversations, lessons to share, meetings to arrange, private notes, and prayer both ways. |
 | **Director** | Who gets in, who walks with whom, and what is on the library shelf. |
 | **Executive Director** | The church in numbers, and how those numbers are changing. Never anybody's conversations. |
 

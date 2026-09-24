@@ -1,4 +1,4 @@
-import type { DB, Pairing, Meeting, MaterialShare, Message } from './types';
+import { prayerAuthor, type DB, type Pairing, type Meeting, type MaterialShare, type Message } from './types';
 
 // Turn the activity we already log (messages + behaviour events) into a simple
 // engagement read for a missionary: when the seeker was last active, a few
@@ -150,7 +150,7 @@ export function seekerPriorities(
       lessonsOpen: 0,
       latestShare: null,
       unansweredPrayer: db.prayer_requests.filter(
-        (r) => r.ds_id === dsId && r.status === 'open',
+        (r) => r.ds_id === dsId && prayerAuthor(r) === dsId && r.status === 'open',
       ).length,
     };
   }
@@ -191,7 +191,7 @@ export function seekerPriorities(
     ).length,
     latestShare,
     unansweredPrayer: db.prayer_requests.filter(
-      (r) => r.ds_id === dsId && r.status === 'open',
+      (r) => r.ds_id === dsId && prayerAuthor(r) === dsId && r.status === 'open',
     ).length,
   };
 }

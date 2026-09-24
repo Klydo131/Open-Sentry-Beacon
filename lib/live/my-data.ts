@@ -107,7 +107,11 @@ export async function collectMyData(): Promise<MyDataFile> {
   }, out);
 
   await section('my_prayer_requests', async () => {
-    const { data } = await client.from('prayer_requests').select('*').eq('ds_id', me);
+    // Written by me, or written to me: a Guide's own asks live with the
+    // Explorer they asked, so `ds_id` alone would leave a Guide's words out of
+    // a Guide's own copy.
+    const { data } = await client.from('prayer_requests').select('*')
+      .or(`ds_id.eq.${me},author_id.eq.${me}`);
     return data ?? [];
   }, out);
 

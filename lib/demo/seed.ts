@@ -384,6 +384,7 @@ export function makeSeed(): DB {
       {
         id: 'pr1',
         ds_id: 'ds-john',
+        author_id: 'ds-john',
         body: 'Please pray for my mother, she is unwell.',
         share_with_board: true,
         status: 'praying',
@@ -392,10 +393,22 @@ export function makeSeed(): DB {
       {
         id: 'pr2',
         ds_id: 'ds-grace',
+        author_id: 'ds-grace',
         body: 'Praying for peace and direction in a big decision.',
         share_with_board: true,
         status: 'open',
         created_at: iso(60 * 6),
+      },
+      // Prayer runs both ways: John's Guide has asked him to pray for her.
+      // Never on the wall -- a Guide's ask goes to the one person asked.
+      {
+        id: 'pr3',
+        ds_id: 'ds-john',
+        author_id: 'dm-maria',
+        body: 'I am leading the youth retreat this weekend. Please pray I have the right words.',
+        share_with_board: false,
+        status: 'open',
+        created_at: iso(60 * 3),
       },
     ],
     // One ready-made series, so the feature is visible the moment somebody

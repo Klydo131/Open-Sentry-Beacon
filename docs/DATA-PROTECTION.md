@@ -64,7 +64,7 @@ Structure read from the live database. No values were read.
 |---|---|---|
 | `messages` | the conversation between a Guide and an Explorer | Those two people, and a Director only inside a safeguarding report |
 | `pairing_media` + object storage | files sent in that conversation | The same two |
-| `prayer_requests` | what somebody asked prayer for | The Explorer and their Guide |
+| `prayer_requests` | what somebody asked prayer for, an Explorer or their Guide | The Explorer and their Guide; a Guide's request only to the one Explorer it was written to |
 | `guild_activity_posts` | a post on a guild board | Members of that guild, unsigned; leadership only when reported |
 | `posts` | blogs, at the audience the author chose | As chosen |
 | `meetings`, `notes`, `follow_ups` | arrangements and a Guide's private notes | The pair, or the Guide alone |

@@ -34,7 +34,11 @@ async function signInAs(page, who) {
   }
 }
 
-const REQUEST = 'Please pray for my mother, she is unwell.';
+// NOT the sample church's own request. It used to be the same sentence as one
+// already in the seed, already marked as being prayed for, so every "is it
+// there" and "is it being prayed for" below could pass without the request
+// ever being sent -- found when a deliberately broken build passed them.
+const REQUEST = 'Please pray for my sister, she starts a new job on Monday.';
 
 (async () => {
   const browser = await chromium.launch(launchOptions);
@@ -61,7 +65,7 @@ const REQUEST = 'Please pray for my mother, she is unwell.';
   await send.click();
   await page.waitForTimeout(1200);
 
-  ok(new RegExp(REQUEST.slice(0, 24), 'i').test(await page.locator('body').innerText()),
+  ok(await page.locator('[data-my-prayer]', { hasText: REQUEST.slice(0, 24) }).count() === 1,
     'the request appears in the Explorer\'s own list straight away');
 
   // ---- The Guide is told, WITHOUT having to go looking --------------------
@@ -89,7 +93,11 @@ const REQUEST = 'Please pray for my mother, she is unwell.';
   ok(await praying.count() > 0, 'the Guide can say they are praying');
   await praying.click();
   await page.waitForTimeout(1200);
-  ok(/being prayed for/i.test(await page.locator('body').innerText()),
+  // THIS request, not the page. The sample church already has a request being
+  // prayed for, so "somewhere on the page says so" passed with the button
+  // broken.
+  const sentRequest = page.locator('[data-prayer-request]', { hasText: REQUEST.slice(0, 24) });
+  ok(await sentRequest.count() === 1 && /being prayed for/i.test(await sentRequest.innerText()),
     'the request is marked as being prayed for');
 
   // ---- The Explorer finds out ---------------------------------------------
@@ -98,8 +106,9 @@ const REQUEST = 'Please pray for my mother, she is unwell.';
   await signInAs(page, /John/i);
   await page.goto(`${BASE}/ds`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
-  const seeker = await page.locator('body').innerText();
-  ok(/praying|being prayed/i.test(seeker),
+  await openRoom(page, /Prayer/i);
+  const mineNow = page.locator('[data-my-prayer]', { hasText: REQUEST.slice(0, 24) });
+  ok(await mineNow.count() === 1 && /being prayed for/i.test(await mineNow.innerText()),
     'THE EXPLORER SEES THAT SOMEBODY IS PRAYING FOR THEM');
 
   // ---- The church wall, anonymously ---------------------------------------
@@ -122,6 +131,62 @@ const REQUEST = 'Please pray for my mother, she is unwell.';
   const leaked = names.filter((n) => new RegExp(`\\b${n}\\b`).test(wallText));
   ok(leaked.length === 0,
     `NO ASKER'S NAME APPEARS ON THE PRAYER WALL${leaked.length ? ` (found ${leaked.join(', ')})` : ''}`);
+
+  // ---- And the other way: the Guide asks ---------------------------------
+  // "Can we make a feature where both Guide and Explorer can pray [for] each
+  // other." The same round trip, reversed: the Guide asks, the Explorer is the
+  // one who reads it and answers, and the Guide learns that somebody is
+  // praying. Plus the two things a new route between two people needs: a way
+  // to report it from where it is read, and it going nowhere else.
+  const GUIDE_ASK = 'Please pray for my father, his surgery is on Friday.';
+
+  await signInAs(page, /Maria Santos/i);
+  await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1400);
+  const johnCard = page.locator('[data-quest="seeker-card"]', { hasText: 'John' }).first();
+  await johnCard.click();
+  await page.waitForTimeout(1500);
+  await page.locator('button', { hasText: /^\s*(🤲\s*)?Care/ }).first().click();
+  await page.waitForTimeout(1100);
+
+  const askBox = page.getByLabel(/What would you like John to pray for/i);
+  ok(await askBox.count() > 0, 'the Guide has somewhere to ask John to pray for them');
+  await askBox.fill(GUIDE_ASK);
+  await page.getByRole('button', { name: /^Ask John$/ }).click();
+  await page.waitForTimeout(900);
+  const sent = page.locator('[data-my-ask]', { hasText: GUIDE_ASK.slice(0, 24) });
+  ok(await sent.count() === 1, 'the Guide sees what they asked, once');
+
+  await signInAs(page, /John/i);
+  await page.goto(`${BASE}/ds`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1500);
+  await openRoom(page, /Prayer/i);
+  const askCard = page.locator('[data-asked-by-guide]', { hasText: GUIDE_ASK.slice(0, 24) });
+  ok(await askCard.count() === 1, 'THE EXPLORER CAN READ WHAT THEIR GUIDE ASKED');
+  ok(/Maria asked you to pray for them/i.test(await askCard.innerText()),
+    'and it says who asked');
+  ok(await askCard.getByRole('button', { name: /^Report$/ }).count() === 1,
+    'the Explorer can report it from the request itself');
+  await askCard.getByRole('button', { name: /I am praying for this/i }).click();
+  await page.waitForTimeout(900);
+  ok(/You told Maria you are praying/i.test(await askCard.innerText()),
+    'the Explorer can say they are praying for their Guide');
+
+  await signInAs(page, /Maria Santos/i);
+  await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1400);
+  await page.locator('[data-quest="seeker-card"]', { hasText: 'John' }).first().click();
+  await page.waitForTimeout(1500);
+  await page.locator('button', { hasText: /^\s*(🤲\s*)?Care/ }).first().click();
+  await page.waitForTimeout(1100);
+  ok(/John is praying for this/i.test(
+    await page.locator('[data-my-ask]', { hasText: GUIDE_ASK.slice(0, 24) }).innerText()),
+    'THE GUIDE LEARNS THAT THEIR EXPLORER IS PRAYING FOR THEM');
+
+  await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  ok(!(await page.locator('body').innerText()).includes(GUIDE_ASK.slice(0, 24)),
+    "a Guide's request never reaches the church wall");
 
   await browser.close();
   console.log(bad === 0 ? '\nAll prayer checks passed.' : `\n${bad} failed.`);

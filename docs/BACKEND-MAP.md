@@ -77,7 +77,7 @@ verify gate fails if a new one arrives without it.
 | `journey_events` | the Guide, or `manages_church` | ● |
 | `seeker_notes` | **the author alone** | |
 | `follow_ups` | the owner alone | ● |
-| `prayer_requests` | the person who asked, or whoever walks with them | ● |
+| `prayer_requests` | whoever wrote it; the one Explorer a Guide's request was written to, while they walk together; a Guide, for their Explorers' own requests | ● |
 | `prayer_encouragements` | same as the request it belongs to | ● |
 
 ### The library and the studies
