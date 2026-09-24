@@ -136,8 +136,18 @@ const mine = stripSql(read(MINE));
 // keeping one Explorer out of another Explorer's shares.
 {
   const shares = allSql.slice(allSql.lastIndexOf('create policy shares_read'));
-  ok(/using \(public\.in_pairing\(pairing_id\)\)/.test(shares.slice(0, shares.indexOf(';') + 1)),
+  // Either spelling of the same rule: in_pairing(pairing_id), asked per row,
+  // or pairing_id in (select private.my_pairing_ids()), asked once per request
+  // (20260923200000_the_rules_ask_once, proven identical for every account).
+  ok(/using \((?:public\.in_pairing\(pairing_id\)|pairing_id in \(select private\.my_pairing_ids\(\)\))\)/
+       .test(shares.slice(0, shares.indexOf(';') + 1)),
      'a share is readable only inside the one pairing it was made into');
+  // And the set means the same two people, while approved.
+  const mine = allSql.slice(allSql.lastIndexOf('create or replace function private.my_pairing_ids'));
+  const setDef = mine.slice(0, mine.indexOf('$$;', mine.indexOf('$$') + 2));
+  ok(/p\.dm_id = \(select auth\.uid\(\)\) or p\.ds_id = \(select auth\.uid\(\)\)/.test(setDef)
+       && /is_approved_user\(\)/.test(setDef),
+     'and that set is the pairings the reader is in, while approved');
 
   // ANCHORED ON THE DEFINITION, NOT ON ANY MENTION. `lastIndexOf` on the bare
   // name lands on the GRANT at the bottom of the file, and the slice that
