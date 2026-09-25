@@ -80,6 +80,19 @@ is no screen that shows them. If you connect a backend, that boundary is now
 yours to enforce in your data rules. It is easy to lose by accident and hard to
 explain afterwards.
 
+### Nobody promotes themselves
+
+A signed-in person cannot change their own role, approval, church or a
+guardian's consent. The database refuses it (`lock_privileged_profile_columns`,
+error 42501), whatever the screen sends. The one way through is claiming an
+unexpired invitation for exactly that church and role, while still unapproved.
+The app never asks, either: updating your own profile sends a fixed list of
+fields that has none of them. The sample app's role switcher changes a role
+only in the browser's own store, so a pastor can see every screen before
+adopting it; the live half never loads it. `tests/nobody-promotes-themselves.mjs`
+fails if any of that changes, including a later migration that drops the
+trigger.
+
 ### Files people upload
 
 The live app keeps every uploaded file in **one private storage bucket**, and a

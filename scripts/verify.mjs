@@ -569,6 +569,10 @@ const staticChecks = [
   // can upload is bounded, and handouts are for the people who write studies.
   ['photos lose their location', 'tests/photos-lose-their-location.mjs'],
   ['what one person can upload', 'tests/what-one-person-can-upload.mjs'],
+  // The lock that stops anybody making themselves an admin, approving
+  // themselves or moving church. In the database since the first migration,
+  // and until 25 September 2026 held by no test at all.
+  ['nobody promotes themselves', 'tests/nobody-promotes-themselves.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

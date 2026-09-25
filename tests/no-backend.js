@@ -428,6 +428,10 @@ const GUARDRAILS = new Set([
   // Prayer both ways adds one more of those read sets, my_explorers(), granted
   // the same way for the same reason.
   'supabase/migrations/20260924100000_a_guide_can_ask_for_prayer_too.sql',
+  // What one person can upload: room_to_upload() is evaluated inside a storage
+  // rule, so it is revoked from public and anon by name and granted to the
+  // roles that evaluate rules -- the same shape as the read sets above.
+  'supabase/migrations/20260925120000_what_one_person_can_upload.sql',
   // The replica fingerprint compares the settings of the four database roles
   // Supabase creates, so it has to name them to select them. It reads the
   // catalogue only; it holds no key and no hostname.
