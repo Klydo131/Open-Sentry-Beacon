@@ -120,8 +120,8 @@ const ok = (cond, msg) => {
 // while nobody had chosen. The owner then asked for these screens to be less
 // technical, and the dropdown went from the add form altogether: the address
 // answers it, and anything the reader is unsure of is a link. The one place a
-// person CHOOSES a kind is now More -> Edit, which is where this rule lives --
-// and nothing there ever runs the reader.
+// person CHOOSES a kind is now Edit -> More options, which is where this rule
+// lives -- and nothing there ever runs the reader.
 {
   const lib = read('components/LiveLibrary.tsx');
   ok(/kind: kindFromUrl\(url\) \?\? 'link'/.test(lib),
@@ -135,7 +135,8 @@ const ok = (cond, msg) => {
      'editing opens on the kind the row already has');
   ok(/kind: editKind/.test(saveEdit),
      'and saves exactly the kind the person left in the box');
-  const editForm = lib.slice(lib.indexOf('{editing === m.id && ('), lib.indexOf('Save the changes'));
+  const editStart = lib.indexOf(') : editing === m.id ? (');
+  const editForm = lib.slice(editStart, lib.indexOf('void saveEdit(m)', editStart));
   ok(/id=\{`edit-kind-\$\{m\.id\}`\}/.test(editForm),
      'the edit form is where a kind is chosen');
   ok(!/kindFromUrl/.test(startEdit + saveEdit + editForm),

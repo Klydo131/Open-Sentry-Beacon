@@ -31,36 +31,48 @@ const ok = (cond, msg) => {
 const read = (f) => fs.readFileSync(f, 'utf8');
 
 // ---------------------------------------------------------------------------
-// 1. A RESOURCE SHOWS WHAT PEOPLE COME TO DO, AND KEEPS THE REST BEHIND "MORE"
+// 1. A RESOURCE SAYS WHAT EACH BUTTON DOES, AND KEEPS THE RARE SETTINGS IN EDIT
 // ---------------------------------------------------------------------------
+// First pass (25 September 2026, morning): five controls under every title
+// went behind one "More" button. The owner's answer the same day: "the sharing
+// of resources is also complicated ... Easy to add, easy to delete". A "More"
+// that has to be found before anything can be deleted is not easy to delete.
+// So the row names its errands plainly -- Send, Edit, Delete (or Hide) -- and
+// what is rare, how it is filed and the church shelf, lives inside Edit under
+// "More options".
 {
   const lib = read('components/LiveLibrary.tsx');
   const shelf = lib.slice(lib.indexOf('export function LiveLibraryForGuide'), lib.indexOf('export function LiveSharedWithMe'));
-  const row = shelf.slice(shelf.indexOf('{shown.map((m) => ('));
-  const moreAt = row.indexOf('{more === m.id && sharing !== m.id && (');
-  ok(moreAt !== -1, 'the rare errands have a "More" of their own');
-  for (const [label, needle] of [
-    ['Edit', 'startEdit(m)'],
-    ['the church-shelf switch', 'void publish(m,'],
-    ['Remove', "setConfirming(m.id)"],
-  ]) {
-    const at = row.indexOf(needle);
-    ok(at > moreAt, `${label} lives behind More, not on the row`);
-  }
-  // The idle row: one way to send, one "More". Counted between the end of the
-  // send panel and the More panel, where the idle branch is drawn.
-  const idle = row.slice(row.lastIndexOf(') : (', moreAt), moreAt);
+  // Comments out: the ones on this row explain what USED to be on it.
+  const row = shelf.slice(shelf.indexOf('{shown.map((m) => ('))
+    .replace(/\{?\/\*[\s\S]*?\*\/\}?/g, '').replace(/\/\/[^\n]*/g, '');
+  ok(!/const \[more, setMore\]/.test(shelf), 'no "More" button stands between a person and Edit or Delete');
+
+  // The idle row: everything after the edit panel's branch ends.
+  const idleAt = row.indexOf(') : (', row.indexOf(') : editing === m.id ? ('));
+  const idle = row.slice(idleAt, row.indexOf('</Item>', idleAt));
+  const edit = row.slice(row.indexOf(') : editing === m.id ? ('), idleAt);
+  ok(idleAt !== -1 && /Send to /.test(idle), 'an idle row offers "Send to …"');
+  ok(/startEdit\(m\)/.test(idle) && />\s*Edit\s*</.test(idle), 'and "Edit", on the row');
+  ok(/canManage\(m\) \? 'Delete' : 'Hide'/.test(idle), 'and "Delete" (or "Hide"), on the row');
   const buttons = (idle.match(/<button\b/g) ?? []).length + (idle.match(/<SendOut\b/g) ?? []).length;
-  ok(buttons <= 3 && /Send to /.test(idle) && /'More'/.test(idle),
-    `an idle row draws "Send to …" and "More" and nothing else (${buttons} controls in the branch)`);
+  // Send (or SendOut), Edit, Delete, and the two answers of the confirm.
+  ok(buttons <= 6, `and nothing else (${buttons} controls, counting the delete confirmation)`);
+  ok(!/void publish\(m,/.test(idle) && !/edit-kind-/.test(idle),
+    'the church shelf and the kind are not on the row');
+
+  const moreOptions = edit.indexOf('More options');
+  ok(moreOptions !== -1 && edit.lastIndexOf('<details', moreOptions) !== -1,
+    'Edit folds the rare settings under "More options"');
+  ok(edit.indexOf('edit-kind-') > moreOptions && edit.indexOf('void publish(m,') > moreOptions,
+    'and both the kind and the church shelf are inside it');
 
   ok(!/id="mat-kind"/.test(shelf), 'adding a link does not ask what kind it is');
   ok(/kind: kindFromUrl\(url\) \?\? 'link'/.test(shelf), 'the address answers that instead');
   ok(/siteOf\(m\.external_url\)/.test(lib) && !/>\{m\.external_url\}</.test(lib),
     'a row says which site a link goes to, not the whole address');
-  const why = shelf.indexOf('files stay on your own device');
-  ok(why !== -1 && shelf.lastIndexOf('<details', why) > shelf.lastIndexOf('</details>', why),
-    'the note about files is folded away until somebody asks');
+  ok(/\{url\.trim\(\) && \(/.test(shelf) && shelf.indexOf('{url.trim() && (') < shelf.indexOf('id="mat-title"'),
+    'the name and the reason appear once there is a link to name');
   ok(/kindsPresent\.length > 1 && \(items\?\.length \?\? 0\) > 6/.test(shelf),
     'the kind chips wait for a shelf long enough to need them');
 }
@@ -98,6 +110,56 @@ const read = (f) => fs.readFileSync(f, 'utf8');
 
   ok(/const canWrite = canWriteStudies\(profile\?\.role\) && !readOnly;/.test(main),
     'readOnly can only take the writing controls away, never hand them out');
+}
+
+// ---------------------------------------------------------------------------
+// 2b. A SERIES IS WRITTEN IN ONE FORM, AND ITS HANDOUTS ARE DROPPED IN
+// ---------------------------------------------------------------------------
+// The owner, the same afternoon: "the lesson study making in guide is
+// complicated". A series with two studies and a handout took four forms: make
+// the empty series, open it, add a study, add another, then Edit to find
+// "Attach a file". Now: one form, studies written in it, files dropped beside
+// them, and the rare settings folded away.
+{
+  const st = read('components/LiveStudies.tsx');
+  const form = st.slice(st.indexOf('function NewSeries('), st.indexOf('export function LiveStudies('));
+  ok(form.length > 0 && /<NewSeries\b/.test(st), 'a new series is made by one form');
+  ok(/id=\{`draft-body-\$\{s\.key\}`\}/.test(form) && /\+ Add another study/.test(form),
+    'the studies are written in it, as many as are wanted');
+  ok(/<FileDrop\b/.test(form), 'with their handouts dragged in beside them');
+  const more = form.indexOf('>More options<');
+  ok(more !== -1 && form.lastIndexOf('<details', more) !== -1
+     && form.indexOf('id="new-series-topic"') > more && form.indexOf('id="new-series-desc"') > more,
+    'the topic and the line under the name are folded under "More options"');
+  ok(/<details\b[^>]*>\s*<summary[^>]*>Formatting tips<\/summary>/.test(st.slice(st.indexOf('function WritingHints('))),
+    'and the formatting tips are folded, not an open box under every study');
+
+  const save = form.slice(form.indexOf('const save = async'));
+  const series = save.indexOf('live.addLessonSeries(');
+  const lesson = save.indexOf('live.addLesson(id,');
+  const files = save.indexOf('live.attachLessonFile(lessonId,');
+  const share = save.indexOf('live.setSeriesPublished(id, true)');
+  ok(series !== -1 && series < lesson && lesson < files && files < share,
+    'it saves the series, then each study, then its files -- and shares only once all of it is saved');
+  ok(!/publish: true/.test(save) && !/publish: share/.test(save),
+    'so a failure half way leaves a private draft, never half a series on the church shelf');
+
+  const body = st.slice(st.indexOf('function SeriesBody('), st.indexOf('function NewSeries('));
+  const adding = body.slice(body.indexOf('{mine && adding && ('));
+  ok(/<FileDrop\b/.test(adding) && /live\.attachLessonFile\(id, f\)/.test(adding),
+    'adding one more study to a series takes its handouts in the same step');
+  ok(adding.indexOf('setAdding(false)') < adding.indexOf('live.attachLessonFile(id, f)'),
+    'and closes before they upload, so a failed file cannot tempt a second, duplicate study');
+  const editStudy = body.slice(body.indexOf('Edit this study'), body.indexOf('Delete study'));
+  ok(/<FileDrop\b/.test(editStudy), 'editing a study takes handouts by drag and drop too');
+
+  const data = read('lib/live/data.ts');
+  const remove = data.slice(data.indexOf('export async function removeLessonFile'), data.indexOf('export async function listAssignments'));
+  ok(remove.indexOf(".remove([path])") !== -1 && remove.indexOf(".remove([path])") < remove.indexOf(".from('lesson_files').delete()"),
+    'removing a handout deletes the file itself, not only the line pointing at it');
+  const attach = data.slice(data.indexOf('export async function attachLessonFile'), data.indexOf('export async function lessonFileUrl'));
+  ok(/if \(error\) \{[\s\S]{0,200}\.remove\(\[path\]\)/.test(attach),
+    'and a handout whose record cannot be written is taken back out of storage');
 }
 
 // ---------------------------------------------------------------------------

@@ -84,7 +84,9 @@ ok(/setEditing\(''\)/.test(ui) && /setRenaming\(''\)/.test(ui),
 // This is the shape of the original bug: Delete existed, Edit did not, so
 // somebody fixing a typo had to reach for the button that destroys the work.
 const lessonControls = ui.slice(ui.indexOf('Edit this study'), ui.indexOf('Delete study'));
-ok(lessonControls.length > 0 && lessonControls.includes('Attach a file'),
+// The handout box, not a word: "Attach a file" is now only in a comment
+// explaining what the drop box replaced, and a comment is not a control.
+ok(lessonControls.length > 0 && lessonControls.includes('<FileDrop'),
    'Edit comes before Delete on a study, not after it');
 
 // ---- Everybody may change a study, nobody changes it for anybody else ----

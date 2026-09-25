@@ -563,6 +563,7 @@ const staticChecks = [
   // The owner asked for Resources and Lesson studies to be simple rather than
   // technical. What made them complicated, kept from coming back.
   ['resources and studies stay simple', 'tests/resources-and-studies-stay-simple.mjs'],
+  ['a resource can be a file', 'tests/a-resource-can-be-a-file.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

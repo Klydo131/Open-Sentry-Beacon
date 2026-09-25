@@ -1815,8 +1815,14 @@ export async function reportPrayerRequest(
 // storage is a later, deliberate decision with a quota attached.
 // ---------------------------------------------------------------------------
 
-export type MaterialKind = 'link' | 'video' | 'audio' | 'pdf' | 'image';
+export type MaterialKind = 'link' | 'video' | 'audio' | 'pdf' | 'image' | 'file';
 
+/**
+ * A resource is a LINK or a FILE, never both (20260925100000). A file lives in
+ * the church's own storage under `library/<whoever added it>/`, and whoever can
+ * read the resource can open the file: sharing the resource is what hands it
+ * over.
+ */
 export interface Material {
   id: string;
   church_id: string;
@@ -1824,9 +1830,100 @@ export interface Material {
   title: string;
   description: string | null;
   kind: MaterialKind;
-  external_url: string;
+  /** Null for a file. */
+  external_url: string | null;
+  /** Where the file is kept, for a file. Null for a link. */
+  file_path?: string | null;
+  /** What the file was called on the phone or computer it came from. */
+  file_name?: string | null;
+  file_type?: string | null;
+  file_size?: number | null;
   is_published: boolean;
   created_at: string;
+}
+
+/** The biggest file the church's storage takes, the same as a study handout. */
+export const MAX_RESOURCE_FILE = 10 * 1024 * 1024;
+
+/** What a file IS, from its type, for the icon and the shelf's piles. */
+export function kindFromFile(file: { type?: string | null; name?: string | null }): MaterialKind {
+  const type = (file.type ?? '').toLowerCase();
+  const name = (file.name ?? '').toLowerCase();
+  if (type.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic|heif)$/.test(name)) return 'image';
+  if (type.startsWith('audio/') || /\.(mp3|m4a|ogg|wav)$/.test(name)) return 'audio';
+  if (type === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+  return 'file';
+}
+
+/**
+ * Put a file on the shelf: upload it, then describe it.
+ *
+ * THE FILE FIRST, THEN THE ROW, and the file comes back out if the row cannot
+ * be written, so a failure never leaves a file nobody can reach. The path holds
+ * no part of the name somebody typed -- a name is text a person chose, a path is
+ * used to build addresses -- only the uploader's id, which the database checks
+ * against who added the resource, and a random id.
+ */
+export async function addMaterialFile(file: File, m: { title?: string; description?: string } = {}): Promise<string> {
+  if (file.size > MAX_RESOURCE_FILE) throw new Error(`\u201c${file.name}\u201d is over 10 MB. Share a link to it instead.`);
+  const supabase = db();
+  const me_id = await uid();
+  const { data: me } = await supabase.from('profiles').select('church_id').eq('id', me_id).maybeSingle();
+  if (!me?.church_id) throw new Error('Your account is not in a church yet.');
+
+  const ext = (file.name.split('.').pop() || '').replace(/[^a-z0-9]/gi, '').slice(0, 8).toLowerCase();
+  const path = `library/${me_id}/${uuid()}${ext ? '.' + ext : ''}`;
+  const up = await supabase.storage.from('pairing-media')
+    .upload(path, file, { upsert: false, contentType: file.type || undefined });
+  if (up.error) {
+    throw new Error(/mime|type/i.test(up.error.message)
+      ? `\u201c${file.name}\u201d is not a kind of file the church keeps. Pictures, PDFs, documents and audio are.`
+      : up.error.message);
+  }
+
+  // A name somebody would recognise: what they typed, or the file's own name
+  // without the extension.
+  const title = (m.title?.trim() || file.name.replace(/\.[a-z0-9]{1,8}$/i, '')).slice(0, 200) || 'A file';
+  const { data, error } = await supabase
+    .from('materials')
+    .insert({
+      church_id: me.church_id,
+      added_by: me_id,
+      title,
+      description: m.description?.trim() || null,
+      kind: kindFromFile(file),
+      file_path: path,
+      file_name: file.name.slice(0, 300),
+      file_type: file.type || null,
+      file_size: file.size,
+    })
+    .select('id')
+    .single();
+  if (error) {
+    await supabase.storage.from('pairing-media').remove([path]);
+    throw new Error(error.message);
+  }
+  return data.id as string;
+}
+
+/**
+ * A short-lived address to open a resource's file. Signed when opened, never
+ * stored. With `saveAs`, the address downloads the file under that name rather
+ * than opening it -- for a computer with no share sheet to hand it to.
+ */
+export async function materialFileUrl(path: string, saveAs?: string): Promise<string> {
+  const { data, error } = await db().storage.from('pairing-media')
+    .createSignedUrl(path, 60 * 60, saveAs ? { download: saveAs } : undefined);
+  if (error || !data?.signedUrl) throw new Error('That file could not be opened. It may have been removed.');
+  return data.signedUrl;
+}
+
+/** The file itself, for handing to the phone's share sheet. */
+export async function materialFileForSharing(m: Material): Promise<File> {
+  if (!m.file_path) throw new Error('This resource is a link, not a file.');
+  const { data, error } = await db().storage.from('pairing-media').download(m.file_path);
+  if (error || !data) throw new Error('That file could not be fetched to share.');
+  return new File([data], m.file_name || m.title, { type: m.file_type || data.type });
 }
 
 export interface MaterialShare {
@@ -2202,12 +2299,13 @@ export async function listShares(pairingId: string): Promise<MaterialShare[]> {
  */
 export async function updateMaterial(id: string, m: {
   title: string;
-  url: string;
+  /** Left out for a file: a file has no link to change. */
+  url?: string;
   kind: MaterialKind;
   description?: string;
 }): Promise<void> {
-  const url = m.url.trim();
-  if (!/^https?:\/\//i.test(url)) throw new Error('The address needs to start with http:// or https://');
+  const url = m.url?.trim();
+  if (url !== undefined && !/^https?:\/\//i.test(url)) throw new Error('The address needs to start with http:// or https://');
   if (!m.title.trim()) throw new Error('Give it a name so people know what it is.');
 
   const { error } = await db()
@@ -2216,7 +2314,7 @@ export async function updateMaterial(id: string, m: {
       title: m.title.trim(),
       description: m.description?.trim() || null,
       kind: m.kind,
-      external_url: url,
+      ...(url !== undefined ? { external_url: url } : {}),
     })
     .eq('id', id);
   if (error) throw new Error(error.message);
@@ -2238,13 +2336,21 @@ export async function deleteMaterial(id: string): Promise<'deleted' | 'hidden'> 
   const me_id = await uid();
 
   const { data: row } = await supabase
-    .from('materials').select('added_by').eq('id', id).maybeSingle();
+    .from('materials').select('added_by, file_path').eq('id', id).maybeSingle();
   const { data: me } = await supabase
     .from('profiles').select('role').eq('id', me_id).maybeSingle();
-  const mine = (row as { added_by: string } | null)?.added_by === me_id;
+  const found = row as { added_by: string; file_path: string | null } | null;
+  const mine = found?.added_by === me_id;
   const leads = ['admin', 'executive'].includes(String((me as { role?: string } | null)?.role ?? ''));
 
   if (mine || leads) {
+    // THE FILE GOES FIRST. Leadership may remove a file only while they can
+    // still see the resource that points at it, so it cannot wait for the row
+    // to be gone. If it fails the resource is still removed: a file nothing
+    // points at can be opened by nobody but whoever uploaded it.
+    if (found?.file_path) {
+      await supabase.storage.from('pairing-media').remove([found.file_path]);
+    }
     const { error } = await supabase.from('materials').delete().eq('id', id);
     if (error) throw new Error(error.message);
     return 'deleted';
@@ -3370,7 +3476,11 @@ export async function attachLessonFile(lessonId: string, file: File): Promise<vo
     lesson_id: lessonId, church_id: me.church_id, added_by: me_id,
     name: file.name.slice(0, 200), path, mime: file.type || null, size_bytes: file.size,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    // The file comes back out, so a failure never leaves one nobody can reach.
+    await supabase.storage.from('pairing-media').remove([path]);
+    throw new Error(error.message);
+  }
 }
 
 export async function lessonFileUrl(path: string): Promise<string> {
@@ -3378,8 +3488,20 @@ export async function lessonFileUrl(path: string): Promise<string> {
   return data?.signedUrl ?? '';
 }
 
+/**
+ * Take a handout off a study, and delete the file itself.
+ *
+ * It used to delete only the row, which left the file in storage for good:
+ * nobody could open it any more (the read rule asks for the row), but the
+ * church kept paying to hold it. The file goes first, while the row still
+ * says it is yours; if that fails the handout is still taken off the study.
+ */
 export async function removeLessonFile(id: string): Promise<void> {
-  const { error } = await db().from('lesson_files').delete().eq('id', id);
+  const supabase = db();
+  const { data: row } = await supabase.from('lesson_files').select('path').eq('id', id).maybeSingle();
+  const path = (row as { path?: string } | null)?.path;
+  if (path) await supabase.storage.from('pairing-media').remove([path]);
+  const { error } = await supabase.from('lesson_files').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 

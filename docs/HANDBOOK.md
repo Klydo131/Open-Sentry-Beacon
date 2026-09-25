@@ -217,15 +217,15 @@ Before this, an online meeting had a title and a time and nowhere to put the add
 
 ### The library, and who watches it
 
-**Anybody in the church can put a link in the library and share it.** A Guide and an Explorer both can, without asking a Director first. That freedom is the point: somebody who finds a reading worth passing on should be able to pass it on.
+**Anybody in the church can put a link or a file in the library and share it.** A Guide and an Explorer both can, without asking a Director first. That freedom is the point: somebody who finds a reading worth passing on should be able to pass it on.
 
-**The library holds links, and files stay on your own device.** A file saved under *On this device* is passed from your phone to theirs through your phone's own share sheet, so it never sits on a server. That is what keeps this app free to run while it is small, and storing files for everybody is on the list for when it can be paid for properly. The screen says so, so nobody hunts for an upload button that is not there.
+**A file is kept by the church, within the limits the app already had.** Drag it onto the Resources card, or tap **+ Add** and drag it into the box or choose it from the phone. Pictures, PDFs, Word, Excel and PowerPoint files, audio and text, up to 10 MB each; no video (put it on YouTube and add the link). It goes on the shelf under its own name, with nothing to fill in, and can be renamed under *Edit*. Only the person who added it can open it until they send it to somebody, and then that person can too. Nobody else can open it, and that includes the church's leaders. Deleting the resource deletes the file.
 
-**Each resource has one thing to press: _Send to …_.** It opens a small panel: an optional line saying why, the people you walk with (anybody who already has it is ticked), and *Share outside the app* for WhatsApp, a text or anybody without an account. Everything else lives behind **More** on the same row: *Edit*, putting it on or taking it off the church shelf (leadership only), and *Remove*, which asks first and says whether it goes for everybody or only from your own shelf. A row shows the site a link goes to (*youtube.com*), not the whole address.
+**Each resource shows what you can do with it: _Send to …_, _Edit_ and _Delete_.** *Send* opens a small panel with an optional line saying why, the people you walk with (anybody who already has it is ticked), and *Share outside the app* for WhatsApp, a text or anybody without an account. For a file, *Share outside the app* sends the file itself; on a computer that cannot do that, the file is saved so you can attach it. *Delete* asks first and says what goes with it. On something another person added, the red button says *Hide*: it takes the item off your own shelf and leaves it for everybody else. The rare settings sit inside *Edit* under *More options*: whether it shows as a video, music, a PDF, a picture or a document, and (for leadership) putting it on the church shelf. A row shows the site a link goes to (*youtube.com*), or a file's name and size, not a whole address.
 
-**Adding one asks three things:** paste the link, what it is called, and why it helps (optional). The app works out from the link whether it is a video, music, a PDF or a picture. The note about files sits behind *Have a file instead of a link?* inside that form, where it is needed, rather than above the shelf on every visit.
+**Adding a link asks for the link first.** The name and why it helps (optional) appear once the link is pasted. The app works out from the link whether it is a video, music, a PDF or a picture.
 
-The card says what it is for where it appears: **Resources** in the Office, **Send John something** on one Explorer's page, and **Your links** in an Explorer's own Study folder, which opens on what was sent to them and their studies before their own links.
+The card says what it is for where it appears: **Resources** in the Office, **Send John something** on one Explorer's page, and **Your resources** in an Explorer's own Study folder, which opens on what was sent to them and their studies before their own.
 
 #### What a Director sees, and what an Executive Director sees
 
@@ -268,9 +268,9 @@ A Guide's own screen puts the requests waiting for them at the top, before the r
 
 ### Lesson studies
 
-A Guide writes their own. Tap **+ New series**, give it a name (a topic and one line about it are optional), then open it and **+ Add a study**. Until you tap **Share with the church** at the foot of the series, it is a draft only you can see. Anybody in the church can then open the series, read the studies and open the files.
+A Guide writes their own, in one form. Tap **+ New series**, give it a name, and write the studies underneath it: a title and the study for each, **+ Add another study** for the next, and handouts dragged into the box beside each study (or chosen from the phone). Then tap **Save and share** to put it on the church's shelf, or **Save as a draft** to finish later; a draft is only yours to see. A study left without a title is called *Study 1*, *Study 2* and so on. The topic that groups it on the shelf and the line shown under its name are under **More options**, and how to make text bold or slanted is under **Formatting tips**. Anybody in the church can then open the series, read the studies and open the files.
 
-**The shelf opens on the studies, not on a form.** A series row is just its name; tap it to open it. Inside, each study has **Mark as read**, and for writers **Edit this study**, which is also where you attach a handout or delete the study. **Rename**, **Share with the church** / **Hide from the church** and **Delete series** sit at the foot of an open series. Deleting a series or a study asks first and says what it takes with it: until 25 September 2026 deleting a series, with every study in it, was one tap on a red word beside *Rename*.
+**The shelf opens on the studies, not on a form.** A series row is just its name; tap it to open it. Inside, each study has **Mark as read**, and for writers **Edit this study**, which is also where you drag in more handouts or delete the study. Removing a handout deletes the file too. **+ Add a study** at the foot of a series takes its handouts in the same step. **Rename**, **Share with the church** / **Hide from the church** and **Delete series** sit at the foot of an open series. Deleting a series or a study asks first and says what it takes with it: until 25 September 2026 deleting a series, with every study in it, was one tap on a red word beside *Rename*.
 
 On one Explorer's **Lessons** tab a Guide sees the studies the way that Explorer does, with how far they have read; writing and changing studies is in the Office, one tap away.
 
@@ -960,7 +960,7 @@ Pictures further up a thread are not fetched until they are scrolled to, and a v
 >
 > **This is under review and the cost has been worked out.** At this church's size video turns out to be affordable, and it stops being affordable at about ten churches sharing one instance. [What it costs](./WHAT-IT-COSTS.md) has the numbers, the three arguments against that are not about money, and the recommendation: allow it with a short cap, and measure for a month before widening it.
 
-**Files in the library never reach a server at all.** The library holds links; a file saved under *On this device* is passed from one phone to the other through the phone's own share sheet. Files in a **conversation** do reach the server, because the two people are rarely holding their phones at the same moment and the file has to wait somewhere. That is the honest line between the two.
+**Files reach the server in three places, all within the same 10 MB limit and none of them video:** a **conversation**, because the two people are rarely holding their phones at the same moment and the file has to wait somewhere; a **study handout**; and, since 25 September 2026, a **resource**, because the owner asked for files in Resources to be easy to add and easy to share. A file saved under *On this device* in My Files still never leaves the phone that saved it, unless its owner shares it through the phone's own share sheet.
 
 ### Backups
 

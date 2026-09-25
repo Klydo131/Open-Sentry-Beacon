@@ -160,20 +160,22 @@ const explorer = strip(readFileSync('components/live/ExplorerPage.tsx', 'utf8'))
 }
 
 // ---------------------------------------------------------------------------
-// 7. The library holds links. Files stay on the device.
+// 7. A resource can be a file now, and the screen never touches storage itself.
 // ---------------------------------------------------------------------------
-// Not a preference: a start-up on a free plan pays for every megabyte and every
-// download of it. The rule is worth a check because "just upload it" is the
-// obvious next feature request and it would arrive without anybody costing it.
+// This section used to hold the opposite rule -- "the library holds links,
+// files stay on the device" -- because a start-up on a free plan pays for
+// every megabyte, and "just upload it" would otherwise arrive without anybody
+// costing it. On 25 September 2026 the owner asked for exactly that: "I cant
+// even upload files in the resources ... please fix that". It arrived costed:
+// the bucket's existing 10 MB limit, no video, the file deleted with its
+// resource. Those limits live in the data layer and the database, and are
+// held by tests/a-resource-can-be-a-file.mjs. What stays here is the part that
+// was always true: the screen goes through the data layer, never to storage.
 {
   ok(!/storage\.from/.test(strip(readFileSync('components/LiveLibrary.tsx', 'utf8'))),
-     'nothing in the library uploads to the backend');
-  ok(/files stay on your own device/i.test(shelf),
-     'and the screen says so plainly rather than leaving somebody hunting for an upload button');
-  ok(/share sheet/.test(shelf),
-     'naming how a file does reach the other person');
-  ok(/when it can be paid for properly/.test(shelf),
-     'and saying it is a limit of today rather than a decision forever');
+     'the library screen never talks to storage itself; the data layer does, with its limits');
+  ok(!/files stay on your own device/i.test(shelf),
+     'and no longer tells anybody their files cannot be kept');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

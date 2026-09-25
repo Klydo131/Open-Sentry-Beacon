@@ -320,7 +320,7 @@ export function LiveExplorerPage() {
             {pairing && (
               <LiveLibraryForGuide
                 pairings={[{ id: pairing.id, ds_name: pairing.dm_name }]}
-                heading="Your links"
+                heading="Your resources"
                 intro={`Found something good? Add it here and send it to ${pairing.dm_name.split(' ')[0]}.`}
               />
             )}

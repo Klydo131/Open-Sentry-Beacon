@@ -54,14 +54,17 @@ const data = strip(read('lib/live/data.ts'));
 // 1. THE BOX THAT WAS NEVER THERE
 // ---------------------------------------------------------------------------
 {
-  const form = studies.slice(studies.indexOf('placeholder="New series title"'));
-  const upTo = form.slice(0, form.indexOf('Create'));
-  ok(/value=\{desc\}/.test(upTo),
+  // Since 25 September 2026 a series is written in ONE form (NewSeries): the
+  // name, its studies, their handouts, and the line under the name folded into
+  // "More options". The line must still be asked for and still be sent.
+  const form = studies.slice(studies.indexOf('function NewSeries('), studies.indexOf('export function LiveStudies('));
+  ok(/value=\{desc\}/.test(form),
      'a new series can be given the line that appears under its title');
-  ok(/description: desc/.test(form.slice(0, form.indexOf('setOpen(id)'))),
+  ok(/live\.addLessonSeries\(\{ title, topic, description: desc \}\)/.test(form),
      'and the line is actually sent when it is created');
-  ok(/setDesc\(''\)/.test(form.slice(0, form.indexOf('setOpen(id)'))),
-     'and the box is emptied afterwards, like the two beside it');
+  const saved = studies.slice(studies.indexOf('onSaved={(id, said) => {'), studies.indexOf('onSaved={(id, said) => {') + 200);
+  ok(/setCreating\(false\)/.test(saved),
+     'and the form closes once saved, so the next one starts empty');
 }
 
 // ---------------------------------------------------------------------------

@@ -47,8 +47,8 @@ const ui = read('components/LiveLibrary.tsx');
   // The search still reads all three fields it used to.
   ok(/m\.title\.toLowerCase\(\)\.includes\(needle\)/.test(ui)
      && /description \?\? ''\)\.toLowerCase\(\)\.includes\(needle\)/.test(ui)
-     && /external_url\.toLowerCase\(\)\.includes\(needle\)/.test(ui),
-     'and the search still covers name, description and address');
+     && /\(m\.external_url \?\? m\.file_name \?\? ''\)\.toLowerCase\(\)\.includes\(needle\)/.test(ui),
+     'and the search still covers name, description and address (or a file\'s name)');
 }
 
 // ---------------------------------------------------------------------------

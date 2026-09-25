@@ -24,7 +24,8 @@ import { useLiveSession } from '@/lib/live/session';
 import { Button, Card } from '@/components/ui';
 import { Rich } from '@/components/Rich';
 import { humanError } from '@/lib/live/errors';
-import { ATTACHMENT_ACCEPT } from '@/lib/live/attachments';
+import { FileDrop } from '@/components/FileDrop';
+import { uuid } from '@/lib/uuid';
 import { useKeepUp, KEEP_UP_STUDIES } from '@/lib/live/keep-up';
 import { ReadingBar } from '@/components/live/ReadingProgress';
 import type { Role } from '@/lib/types';
@@ -118,9 +119,12 @@ function WritingHints() {
       {children}
     </code>
   );
+  // FOLDED, AND OPENED BY ASKING. The tips were an always-open grey box under
+  // every study being written; the owner asked on 25 September 2026 for the
+  // advanced parts to be optional. Still under the box, still one tap away.
   return (
-    <div className="rounded-xl bg-gray-100 px-3 py-2 text-xs leading-relaxed text-gray-600">
-      <p className="font-semibold text-gray-700">Three things you can do here</p>
+    <details className="rounded-xl bg-gray-100 px-3 py-2 text-xs leading-relaxed text-gray-600">
+      <summary className="cursor-pointer font-semibold text-gray-700">Formatting tips</summary>
       <ul className="mt-1 space-y-0.5">
         <li>
           <Mark>**Read:**</Mark> makes a bold opening, the way the sample studies
@@ -134,7 +138,7 @@ function WritingHints() {
           <Mark>adventist.org/beliefs</Mark> is enough, with no https in front of it.
         </li>
       </ul>
-    </div>
+    </details>
   );
 }
 
@@ -161,6 +165,8 @@ function SeriesBody({ series, mine, ownSeries }: {
   // The new-study form is shut until somebody asks for it: a series you are
   // READING should read like one, not open on an empty form.
   const [adding, setAdding] = useState(false);
+  // Handouts dropped onto the new study, sent once the study exists.
+  const [newFiles, setNewFiles] = useState<File[]>([]);
   // WHICH OF THESE I HAVE READ. Mine alone: the database refuses a read row
   // written for anybody else, so this never holds somebody else's answer.
   const [reads, setReads] = useState<Set<string>>(new Set());
@@ -279,7 +285,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                  visible while the words are being changed, because the study
                  and the sheet that goes with it are one thing to the person
                  teaching from them. */
-              <div className="grid gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <label className="text-xs font-semibold text-navy" htmlFor={`study-title-${lesson.id}`}>Title</label>
                 <input
                   id={`study-title-${lesson.id}`}
@@ -332,29 +338,19 @@ function SeriesBody({ series, mine, ownSeries }: {
                       ))}
                     </ul>
                   )}
-                  <label className="tap-sm mt-1 inline-flex cursor-pointer items-center text-sm font-semibold text-navy underline">
-                    Attach a file
-                    <input
-                      type="file"
-                      // Same list as the conversation picker and the bucket.
-                      // See lib/live/attachments.ts.
-                      accept={ATTACHMENT_ACCEPT}
-                      className="hidden"
-                      disabled={busy}
-                      onChange={(event) => {
-                        const input = event.target;
-                        const file = input.files?.[0];
-                        if (!file) return;
-                        // The reset comes AFTER the upload. Clearing the input
-                        // first aborts the read on WebKit, which fails silently
-                        // and looks like a broken button on every iPhone.
-                        void act(async () => {
-                          try { await live.attachLessonFile(lesson.id, file); }
-                          finally { input.value = ''; }
-                        });
-                      }}
+                  {/* DRAG HANDOUTS IN, or choose them -- several at once. It
+                      was a single "Attach a file" link, one file per trip. */}
+                  <div className="mt-2">
+                    <FileDrop
+                      compact
+                      busy={busy}
+                      title="Add handouts"
+                      hint="Drag files here, or choose them. Up to 10 MB each."
+                      onFiles={(picked) => void act(async () => {
+                        for (const file of picked) await live.attachLessonFile(lesson.id, file);
+                      })}
                     />
-                  </label>
+                  </div>
                 </div>
 
                 {/* LAST, RED, AND IT ASKS FIRST. Deleting a study was one tap on
@@ -413,7 +409,7 @@ function SeriesBody({ series, mine, ownSeries }: {
         </button>
       )}
       {mine && adding && (
-        <div className="mt-3 grid gap-2 rounded-xl bg-gray-50 p-3">
+        <div className="mt-3 grid grid-cols-1 gap-2 rounded-xl bg-gray-50 p-3">
           <label className="text-xs font-semibold text-navy" htmlFor={`new-study-title-${series.id}`}>Title</label>
           <input
             id={`new-study-title-${series.id}`}
@@ -432,21 +428,55 @@ function SeriesBody({ series, mine, ownSeries }: {
             className="w-full min-w-0 rounded-xl bg-white px-3 py-2 ring-1 ring-navy/10"
           />
           <WritingHints />
+          <FileDrop
+            compact
+            busy={busy}
+            title="Handouts"
+            hint="Drag files here, or choose them. Up to 10 MB each."
+            onFiles={(picked) => {
+              const fits = picked.filter((f) => f.size <= live.MAX_RESOURCE_FILE);
+              setError(fits.length < picked.length ? 'A file over 10 MB was left out. Share a link to it instead.' : '');
+              setNewFiles((was) => [...was, ...fits]);
+            }}
+          />
+          {newFiles.length > 0 && (
+            <ul className="space-y-1 text-sm">
+              {newFiles.map((f, at) => (
+                <li key={`${f.name}-${at}`} className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 break-words font-semibold text-navy">📎 {f.name}</span>
+                  <span className="text-xs text-gray-400">{kb(f.size)}</span>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setNewFiles((was) => was.filter((_, x) => x !== at))}
+                    className="tap-sm px-2 text-xs font-semibold text-red-700 underline"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="flex flex-wrap items-center gap-3">
             <Button
               disabled={busy || !title.trim()}
               onClick={() => act(async () => {
-                await live.addLesson(series.id, {
+                const id = await live.addLesson(series.id, {
                   title, body, position: (lessons?.length ?? 0) + 1,
                 });
-                setTitle(''); setBody(''); setAdding(false);
+                // The study exists now: the form closes BEFORE the handouts
+                // go, so a failed file cannot tempt a second tap that writes
+                // the study twice. A file that fails can be added under Edit.
+                const handouts = newFiles;
+                setTitle(''); setBody(''); setNewFiles([]); setAdding(false);
+                for (const f of handouts) await live.attachLessonFile(id, f);
               })}
             >
               {busy ? 'Saving…' : 'Add this study'}
             </Button>
             <button
               type="button"
-              onClick={() => { setAdding(false); setTitle(''); setBody(''); }}
+              onClick={() => { setAdding(false); setTitle(''); setBody(''); setNewFiles([]); }}
               className="tap-sm text-sm font-semibold text-gray-600 underline"
             >
               Cancel
@@ -454,6 +484,241 @@ function SeriesBody({ series, mine, ownSeries }: {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** One study on the new-series form, before anything is saved. */
+type DraftStudy = { key: string; title: string; body: string; files: File[] };
+const blankStudy = (): DraftStudy => ({ key: uuid(), title: '', body: '', files: [] });
+
+/**
+ * A NEW SERIES, WRITTEN IN ONE FORM.
+ *
+ * Asked for on 25 September 2026: "the lesson study making in guide is
+ * complicated". It was. Making a series with two studies and a handout took
+ * four separate forms and a dozen taps -- create the empty series, open it,
+ * "+ Add a study", save, "+ Add a study" again, save, then "Edit this study" to
+ * find "Attach a file" -- and nothing on the first form said any of that was
+ * coming.
+ *
+ * Now it is one page: the series' name, then the studies written out under it
+ * with their handouts dropped in beside them, then Save. What most people never
+ * need -- the topic it is grouped under, the line shown under its name, how to
+ * make text bold -- is folded away under "More options" and "Formatting tips".
+ *
+ * SAVED IN ORDER, AND NOTHING SHARED UNTIL ALL OF IT IS. The series is written
+ * as a draft, then each study, then its files, and only then is it shared if
+ * that was asked for -- so a failure half way leaves a private draft to finish,
+ * never a half-written series on everybody's shelf.
+ */
+function NewSeries({ onSaved, onCancel }: {
+  /** The series now exists: open it, and say what happened (or what did not). */
+  onSaved: (id: string, said: { flash?: string; error?: string }) => void;
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState('');
+  const [topic, setTopic] = useState('');
+  const [desc, setDesc] = useState('');
+  const [studies, setStudies] = useState<DraftStudy[]>([blankStudy()]);
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState('');
+  const [error, setError] = useState('');
+
+  const change = (key: string, patch: Partial<DraftStudy>) =>
+    setStudies((list) => list.map((s) => (s.key === key ? { ...s, ...patch } : s)));
+
+  // A FILE TOO BIG IS REFUSED WHEN IT IS DROPPED, by name, not after the rest
+  // of the series has been saved around it.
+  const addFiles = (key: string, files: File[]) => {
+    const tooBig = files.filter((f) => f.size > live.MAX_RESOURCE_FILE);
+    setError(tooBig.length
+      ? `${tooBig.map((f) => `“${f.name}”`).join(', ')} ${tooBig.length === 1 ? 'is' : 'are'} over 10 MB. Share a link to it instead.`
+      : '');
+    const fits = files.filter((f) => f.size <= live.MAX_RESOURCE_FILE);
+    setStudies((list) => list.map((s) => (s.key === key ? { ...s, files: [...s.files, ...fits] } : s)));
+  };
+
+  const save = async (share: boolean) => {
+    if (!title.trim() || busy) return;
+    setBusy(true); setError('');
+    let id = '';
+    const written = studies.filter((s) => s.title.trim() || s.body.trim() || s.files.length);
+    try {
+      setProgress('Saving the series…');
+      id = await live.addLessonSeries({ title, topic, description: desc });
+      for (let i = 0; i < written.length; i++) {
+        const s = written[i];
+        setProgress(`Saving study ${i + 1} of ${written.length}…`);
+        // An untitled study is called by its place in the series, rather than
+        // refused: the words are what matter, and a title can come later.
+        const lessonId = await live.addLesson(id, {
+          title: s.title.trim() || `Study ${i + 1}`, body: s.body, position: i + 1,
+        });
+        for (const f of s.files) {
+          setProgress(`Adding “${f.name}”…`);
+          await live.attachLessonFile(lessonId, f);
+        }
+      }
+      if (share) await live.setSeriesPublished(id, true);
+      onSaved(id, {
+        flash: share
+          ? `“${title.trim()}” is shared with the church.`
+          : `“${title.trim()}” is saved as a draft. Only you can see it until you share it.`,
+      });
+    } catch (cause) {
+      // Whatever was saved is kept, as a draft, and opened so it can be
+      // finished from where it stopped.
+      if (id) onSaved(id, { error: `Saved as a draft so far, but not all of it: ${message(cause)}` });
+      else setError(message(cause));
+    } finally {
+      setBusy(false); setProgress('');
+    }
+  };
+
+  return (
+    <div className="mb-5 grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
+      <p className="text-base font-extrabold text-navy">New series</p>
+      <div>
+        <label className="text-sm font-semibold text-navy" htmlFor="new-series-title">Name of the series</label>
+        <input
+          id="new-series-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="New series title"
+          className="tap mt-1 w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
+        />
+      </div>
+
+      {/* THE STUDIES, WRITTEN HERE, not in a second form after this one. */}
+      <ol className="grid grid-cols-1 gap-3">
+        {studies.map((s, i) => (
+          <li key={s.key} className="grid grid-cols-1 gap-2 rounded-xl bg-white p-3 ring-1 ring-black/5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-bold text-navy">Study {i + 1}</p>
+              {studies.length > 1 && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setStudies((list) => list.filter((x) => x.key !== s.key))}
+                  className="tap-sm text-sm font-semibold text-red-700 underline"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <label className="text-xs font-semibold text-navy" htmlFor={`draft-title-${s.key}`}>Title</label>
+            <input
+              id={`draft-title-${s.key}`}
+              value={s.title}
+              onChange={(e) => change(s.key, { title: e.target.value })}
+              placeholder={`Study ${i + 1}`}
+              className="tap w-full min-w-0 rounded-xl bg-slate-50 px-3 ring-1 ring-navy/10"
+            />
+            <label className="text-xs font-semibold text-navy" htmlFor={`draft-body-${s.key}`}>The study</label>
+            <textarea
+              id={`draft-body-${s.key}`}
+              value={s.body}
+              onChange={(e) => change(s.key, { body: e.target.value })}
+              rows={5}
+              placeholder="Write the study here."
+              className="w-full min-w-0 rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-navy/10"
+            />
+            <WritingHints />
+            <FileDrop
+              compact
+              busy={busy}
+              title="Handouts"
+              hint="Drag files here, or choose them. Up to 10 MB each."
+              onFiles={(files) => addFiles(s.key, files)}
+            />
+            {s.files.length > 0 && (
+              <ul className="space-y-1 text-sm">
+                {s.files.map((f, at) => (
+                  <li key={`${f.name}-${at}`} className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 break-words font-semibold text-navy">📎 {f.name}</span>
+                    <span className="text-xs text-gray-400">{kb(f.size)}</span>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => change(s.key, { files: s.files.filter((_, x) => x !== at) })}
+                      className="tap-sm px-2 text-xs font-semibold text-red-700 underline"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ol>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => setStudies((list) => [...list, blankStudy()])}
+        className="tap-sm justify-self-start rounded-full px-4 text-sm font-bold text-navy ring-1 ring-navy/20"
+      >
+        + Add another study
+      </button>
+
+      {/* WHAT MOST PEOPLE NEVER NEED, folded away. (grid-cols-1 on the grids
+          above: a single track is minmax(0, 1fr), so a long file name that
+          will not wrap is cut with an ellipsis instead of widening the whole
+          form past the edge of a phone.) */}
+      <details className="text-sm">
+        <summary className="cursor-pointer font-semibold text-navy underline underline-offset-2">More options</summary>
+        <div className="mt-2 grid gap-2">
+          <label className="text-sm font-semibold text-navy" htmlFor="new-series-topic">
+            Topic <span className="font-normal text-gray-500">(optional, groups it on the shelf)</span>
+          </label>
+          <input
+            id="new-series-topic"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            list="series-topics"
+            placeholder="e.g. Prayer"
+            className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <label className="text-sm font-semibold text-navy" htmlFor="new-series-desc">
+            One line about it <span className="font-normal text-gray-500">(optional)</span>
+          </label>
+          <input
+            id="new-series-desc"
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            placeholder="Shown under the name"
+            className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
+          />
+        </div>
+      </details>
+
+      {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">{error}</p>}
+      {progress && <p className="text-sm font-semibold text-gray-600" aria-live="polite">{progress}</p>}
+
+      <div className="flex flex-wrap items-center gap-3">
+        {/* "Save and share", not "Share with the church": the longer words
+            wrapped onto two lines of a phone-sized button. The line below says
+            who it is shared with. */}
+        <Button disabled={busy || !title.trim()} onClick={() => void save(true)}>
+          Save and share
+        </Button>
+        <Button variant="ghost" disabled={busy || !title.trim()} onClick={() => void save(false)}>
+          Save as a draft
+        </Button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onCancel}
+          className="tap-sm text-sm font-semibold text-gray-600 underline"
+        >
+          Cancel
+        </button>
+      </div>
+      <p className="text-xs text-gray-500">
+        Sharing puts it on the church&rsquo;s shelf for everyone. A draft is only yours to see.
+        Either way you can add, change or delete studies at any time.
+      </p>
     </div>
   );
 }
@@ -493,13 +758,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
   // the top of the card on every visit, above the studies people came to read,
   // for the one day in a month somebody starts a series.
   const [creating, setCreating] = useState(false);
-  const [title, setTitle] = useState('');
-  const [topic, setTopic] = useState('');
-  // THE LINE UNDER THE TITLE, which no form ever asked for until it did:
-  // `lesson_series.description` has existed since the table was created, and a
-  // Guide writing their own series could not give it one. The TOPIC is the
-  // grouping, drawn as the heading above the series, which is why it says so.
-  const [desc, setDesc] = useState('');
+  const [flash, setFlash] = useState('');
   // Which series is being renamed. Same one-at-a-time rule as the studies
   // inside them.
   const [renaming, setRenaming] = useState('');
@@ -549,67 +808,25 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
           </div>
         </div>
         {canWrite && !creating && (
-          <Button onClick={() => setCreating(true)}>+ New series</Button>
+          <Button onClick={() => { setCreating(true); setFlash(''); }}>+ New series</Button>
         )}
       </div>
       <div className="p-5 sm:p-6">
 
       {error && <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">{error}</p>}
 
+      {flash && <p className="mb-3 rounded-xl bg-green-50 p-3 text-sm font-semibold text-green-800">{flash}</p>}
       {canWrite && creating && (
-        <div className="mb-5 grid gap-2 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
-          <label className="text-sm font-semibold text-navy" htmlFor="new-series-title">Name</label>
-          <input
-            id="new-series-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="New series title"
-            aria-label="New series title"
-            className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <label className="mt-1 text-sm font-semibold text-navy" htmlFor="new-series-topic">
-            Topic <span className="font-normal text-gray-500">(optional, groups it on the shelf)</span>
-          </label>
-          <input
-            id="new-series-topic"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            list="series-topics"
-            placeholder="e.g. Prayer"
-            className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <label className="mt-1 text-sm font-semibold text-navy" htmlFor="new-series-desc">
-            One line about it <span className="font-normal text-gray-500">(optional)</span>
-          </label>
-          <input
-            id="new-series-desc"
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            placeholder="Shown under the name"
-            className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <Button
-              disabled={busy || !title.trim()}
-              onClick={() => act(async () => {
-                const id = await live.addLessonSeries({ title, topic, description: desc });
-                setTitle(''); setTopic(''); setDesc('');
-                setCreating(false);
-                setOpen(id);
-              })}
-            >
-              Create series
-            </Button>
-            <button
-              type="button"
-              onClick={() => { setCreating(false); setTitle(''); setTopic(''); setDesc(''); }}
-              className="tap-sm text-sm font-semibold text-gray-600 underline"
-            >
-              Cancel
-            </button>
-          </div>
-          <p className="text-xs text-gray-500">It starts as a draft only you can see. Share it with the church when it is ready.</p>
-        </div>
+        <NewSeries
+          onCancel={() => setCreating(false)}
+          onSaved={(id, said) => {
+            setCreating(false);
+            setOpen(id);
+            setFlash(said.flash ?? '');
+            setError(said.error ?? '');
+            void load();
+          }}
+        />
       )}
       <datalist id="series-topics">
         {topics.map((t) => <option key={t} value={t} />)}

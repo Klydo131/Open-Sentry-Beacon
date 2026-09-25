@@ -36,16 +36,20 @@ ok(/from\('materials'\)\s*\.delete\(\)/.test(data), 'and it deletes from the mat
 
 // ---- The screen offers it ----
 ok(/live\.deleteMaterial\(/.test(ui), 'the library screen calls deleteMaterial');
-ok(/Remove from library/.test(ui), 'and a row offers "Remove from library"');
+// "Delete", on the row. It was "Remove from library" behind a "More" button;
+// on 25 September 2026 the owner asked for resources that are "easy to add,
+// easy to delete", and the plainest word for it is the one on every phone.
+const ASK = "canManage(m) ? 'Delete' : 'Hide'";
+ok(ui.includes(ASK), 'and a row offers "Delete" (or "Hide", see below)');
 
 // ---- It asks before it does it ----
 // The shelf is a dense list where the controls sit side by side, and for a
 // deleter the tap cannot be undone. A single tap that destroys something is
 // the wrong shape, so the first one asks.
-ok(/Yes, remove it/.test(ui), 'the first tap asks rather than removing');
+ok(/Yes, delete it/.test(ui), 'the first tap asks rather than deleting');
 ok(/Keep it/.test(ui), 'and there is a way to say no');
-const askIndex = ui.indexOf('Remove from library');
-const doIndex = ui.indexOf('Yes, remove it');
+const askIndex = ui.indexOf(ASK);
+const doIndex = ui.indexOf('Yes, delete it');
 ok(askIndex !== -1 && doIndex !== -1 && doIndex < askIndex,
    'the confirmation is a separate control from the one that opens it');
 
@@ -140,10 +144,10 @@ ok(/startEdit\(m\)/.test(ui) && />\s*Edit\s*</.test(ui),
      'the Remove control is not gated on being allowed to delete');
   ok(/\{confirming === m\.id \? \(/.test(ui),
      'it is drawn for every row and every role');
-  ok(/Take it off my shelf/.test(ui),
-     'and says "Take it off my shelf" to somebody who cannot delete it');
-  ok(/Remove from library/.test(ui),
-     'while whoever may delete it still reads "Remove from library"');
+  ok(ui.includes(ASK) && /Yes, hide it/.test(ui),
+     'and says "Hide" to somebody who cannot delete it');
+  ok(/'Yes, delete it' : 'Yes, hide it'/.test(ui),
+     'while whoever may delete it reads "Delete", and each confirms in its own word');
 
   // ---- And says which one it is about to do BEFORE the tap ----
   // The flash afterwards was not enough. By the time it is read the row is

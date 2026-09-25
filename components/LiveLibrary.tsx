@@ -2,16 +2,18 @@
 
 // The church library, against a real database. See migration 0008.
 //
-// A resource is a title and a LINK, and that is the whole answer to a bug the
-// sibling deployment shipped: a Guide could "share" a file held in their own
-// browser, an Explorer received a title with nothing behind it, and the player
-// sat at 0:00. A link opens on any device; a file in IndexedDB opens on one.
+// A resource is a title and a LINK, or a FILE kept in the church's own storage
+// (20260925100000). What it must never be is a file held in one person's
+// browser: that was a bug the sibling deployment shipped -- a Guide "shared" a
+// file from IndexedDB, an Explorer received a title with nothing behind it, and
+// the player sat at 0:00. A link opens on any device, and so does a file the
+// church keeps; a file in IndexedDB opens on one.
 //
 // The Explorer's view is not a filtered copy of the Guide's. Both call the same
 // function and the database returns different rows, because the policy already
 // knows who is asking. A filter here would protect nobody.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { kindFromUrl } from '@/lib/live/kind-from-url';
 import * as live from '@/lib/live/data';
 import { Button, Card } from '@/components/ui';
@@ -19,13 +21,14 @@ import { BeaconSpinner } from '@/components/BeaconLoader';
 import { humanError } from '@/lib/live/errors';
 import { useKeepUp, KEEP_UP_LIBRARY } from '@/lib/live/keep-up';
 import { useLiveSession } from '@/lib/live/session';
-import { shareItem } from '@/lib/share';
+import { canShareFiles, shareItem } from '@/lib/share';
+import { FileDrop, draggingFiles } from '@/components/FileDrop';
 
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong.');
 
 const KIND_ICON: Record<live.MaterialKind, string> = {
-  link: '🔗', video: '🎬', audio: '🎧', pdf: '📄', image: '🖼️',
+  link: '🔗', video: '🎬', audio: '🎧', pdf: '📄', image: '🖼️', file: '📎',
 };
 
 /**
@@ -36,7 +39,7 @@ const KIND_ICON: Record<live.MaterialKind, string> = {
  * an odd one out.
  */
 const KIND_LABEL: Record<live.MaterialKind, string> = {
-  link: 'Links', video: 'Videos', audio: 'Audio', pdf: 'PDFs', image: 'Pictures',
+  link: 'Links', video: 'Videos', audio: 'Audio', pdf: 'PDFs', image: 'Pictures', file: 'Documents',
 };
 
 function Err({ msg }: { msg: string }) {
@@ -51,11 +54,15 @@ function Err({ msg }: { msg: string }) {
 /**
  * Hand a resource to somebody who is not in the app.
  *
- * The library holds LINKS, so this needs no upload and no hosting: it passes
- * the address to the phone's own share sheet — WhatsApp, Messenger, a text,
- * another device — and where there is no share sheet (most desktops) it copies
- * the address and says so. Being told is the point; a button that silently did
- * nothing is the failure lib/share.ts exists to have fixed once.
+ * A LINK needs no upload and no hosting: it passes the address to the phone's
+ * own share sheet -- WhatsApp, Messenger, a text, another device -- and where
+ * there is no share sheet (most desktops) it copies the address and says so.
+ *
+ * A FILE is handed over as the file itself, so the person at the other end gets
+ * the PDF and not a link to a private shelf they cannot open. Where the device
+ * cannot share files it is saved to this computer instead, to attach wherever
+ * the person likes. Either way they are TOLD what happened: a button that
+ * silently did nothing is the failure lib/share.ts exists to have fixed once.
  */
 function SendOut({ onSend }: { onSend: () => void }) {
   return (
@@ -66,6 +73,54 @@ function SendOut({ onSend }: { onSend: () => void }) {
       Share outside the app
     </button>
   );
+}
+
+/** Save a file to this computer. An address signed to download, not open. */
+async function saveFile(m: live.Material) {
+  const url = await live.materialFileUrl(m.file_path!, m.file_name || m.title);
+  const a = document.createElement('a');
+  a.href = url;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/**
+ * The whole of "share outside the app", for a link or a file, as the sentence
+ * to show afterwards. One function for both cards, so the shelf and "Shared
+ * with you" cannot drift into saying different things about the same button.
+ *
+ * `ready` is the file already fetched, when the caller had the chance: a phone
+ * only opens its share sheet while the tap is fresh, and a download in between
+ * can outlast that. Without it the file is fetched here, and if the sheet then
+ * refuses, the file is saved instead of lost.
+ */
+async function sendOutMaterial(m: live.Material, ready?: File): Promise<{ flash?: string; error?: string }> {
+  if (!m.file_path) {
+    const result = await shareItem({
+      title: m.title,
+      text: m.description || m.title,
+      url: m.external_url ?? undefined,
+    });
+    if (result === 'shared') return { flash: `Sent \u201c${m.title}\u201d.` };
+    if (result === 'copied') return { flash: 'The address is copied. Paste it wherever you like.' };
+    if (result === 'cancelled') return {};
+    return { error: 'This browser cannot share for you. Tap the title to open it, then share from there.' };
+  }
+
+  try {
+    const file = ready ?? await live.materialFileForSharing(m);
+    if (canShareFiles(file)) {
+      const result = await shareItem({ title: m.title, text: m.description || m.title, file });
+      if (result === 'shared') return { flash: `Sent \u201c${m.title}\u201d.` };
+      if (result === 'cancelled') return {};
+    }
+    await saveFile(m);
+    return { flash: `Saved \u201c${m.file_name || m.title}\u201d to this device. Attach it wherever you like.` };
+  } catch (cause) {
+    return { error: message(cause) };
+  }
 }
 
 /**
@@ -84,23 +139,65 @@ function siteOf(address: string): string {
   }
 }
 
+function sizeOf(bytes?: number | null): string {
+  if (!bytes) return '';
+  return bytes >= 1024 * 1024
+    ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+/** What is under the title: the site for a link, the file's name and size for a file. */
+function whereItIs(m: live.Material): string {
+  if (m.file_path) return [m.file_name, sizeOf(m.file_size)].filter(Boolean).join(' · ');
+  return m.external_url ? siteOf(m.external_url) : '';
+}
+
 function Item({ m, children }: { m: live.Material; children?: React.ReactNode }) {
+  const [opening, setOpening] = useState(false);
+  const [failed, setFailed] = useState('');
+  // A FILE IS OPENED BY ASKING FOR A FRESH ADDRESS, never one kept from
+  // earlier: a signed address expires, and a stored one becomes a dead link
+  // with nothing to explain it. The same rule as every other file in the app.
+  const openFile = async () => {
+    setOpening(true); setFailed('');
+    try {
+      const url = await live.materialFileUrl(m.file_path!);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (cause) { setFailed(message(cause)); }
+    finally { setOpening(false); }
+  };
   return (
     <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
       <div className="flex items-start gap-3">
-        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-xl shadow-sm">{KIND_ICON[m.kind]}</span>
+        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-xl shadow-sm">{KIND_ICON[m.kind] ?? KIND_ICON.file}</span>
         <div className="min-w-0 flex-1">
-          <a
-            href={m.external_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold text-navy underline underline-offset-2"
-          >
-            {m.title}
-          </a>
+          {m.file_path ? (
+            <button
+              type="button"
+              onClick={() => void openFile()}
+              disabled={opening}
+              /* min-h-0: every button is 56px tall by default, which put a
+                 blank line under a file's title that a link's title does not
+                 have. It reads as the title, the same as a link. */
+              className="min-h-0 text-left font-bold text-navy underline underline-offset-2"
+            >
+              {m.title}
+            </button>
+          ) : (
+            <a
+              href={m.external_url ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-navy underline underline-offset-2"
+            >
+              {m.title}
+            </a>
+          )}
           {m.description && <p className="mt-0.5 text-sm text-gray-600">{m.description}</p>}
-          {/* Where it goes, in plain sight -- as a site, see siteOf. */}
-          <p className="mt-0.5 truncate text-xs text-gray-400">{siteOf(m.external_url)}</p>
+          {/* Where it goes, in plain sight -- as a site, see siteOf, or as the
+              file somebody added. */}
+          <p className="mt-0.5 truncate text-xs text-gray-400">{whereItIs(m)}</p>
+          {failed && <p className="mt-1 text-xs font-semibold text-red-700">{failed}</p>}
         </div>
       </div>
       {children && <div className="mt-2 flex flex-wrap gap-2">{children}</div>}
@@ -165,8 +262,9 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
   // Picture from a dropdown, which is a filing question somebody pasting a
   // link has no reason to answer -- and the address already answers it:
   // kindFromUrl reads youtube, .mp3, .pdf and the rest. Anything it is not sure
-  // about is a link, which is always true. The choice is still there under
-  // More -> Edit for the rare person who wants a YouTube talk filed as audio.
+  // about is a link, which is always true. A file's kind is read from the file.
+  // The choice is still there under Edit -> More options for the rare person
+  // who wants a YouTube talk filed as audio.
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState('');
@@ -175,12 +273,20 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
   // rather than a browser confirm() dialog, which a phone renders as a system
   // box nobody reads and iOS sometimes suppresses entirely.
   const [confirming, setConfirming] = useState('');
-  // WHICH ROW HAS ITS "MORE" OPEN. Editing, the church shelf and removing are
-  // the rare errands, and they were drawn on every row, all the time: five
-  // controls stacked under each title, so four resources filled three phone
-  // screens. They live behind one button now, and the row shows the one thing
-  // people come here to do -- send it.
-  const [more, setMore] = useState('');
+  // FILES BEING ADDED, one line each, so somebody who dropped five sees five
+  // names go from "Adding" to done -- or which one was refused, and why --
+  // rather than one spinner that says nothing about which.
+  const [uploads, setUploads] = useState<{ name: string; state: 'adding' | 'done' | 'failed'; why?: string }[]>([]);
+  const uploading = uploads.some((u) => u.state === 'adding');
+  // A FILE BEING DRAGGED OVER THE CARD. The whole card takes a drop, not only
+  // the box inside "+ Add": on a computer, dragging a file at the shelf it is
+  // meant for is the most obvious thing a person can do with it.
+  const [dropping, setDropping] = useState(false);
+  // THE FILE, FETCHED WHILE THE SEND PANEL IS OPEN. A phone opens its share
+  // sheet only while the tap that asked is fresh, and a download in between can
+  // outlast that; fetched ahead, the file is in hand when "Share outside the
+  // app" is pressed. See sendOutMaterial.
+  const ready = useRef(new Map<string, File>());
   // Which row is open for correction, and the fields while it is. Editing in
   // place rather than in a dialog: the shelf is the context, and a dialog on a
   // phone covers the thing being described.
@@ -309,27 +415,72 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
     try {
       await live.addMaterial({ title, url, kind: kindFromUrl(url) ?? 'link', description: note });
       setTitle(''); setUrl(''); setNote(''); setOpen(false);
+      setFlash(`Added \u201c${title.trim()}\u201d. Tap Send to share it.`);
       await load();
     } catch (cause) { setError(message(cause)); }
     finally { setBusy(false); }
   };
 
+  /**
+   * Put files on the shelf: dropped on the card, dropped in the box, or chosen.
+   *
+   * ONE AT A TIME, IN ORDER, so the list underneath fills in the order the
+   * files were given and one refusal cannot take the others down with it. A
+   * file too big for the church's storage is refused here, by name, before any
+   * of it is sent: finding out after a slow upload on a phone is the worst
+   * time to find out.
+   */
+  const addFiles = async (files: File[]) => {
+    if (!files.length || uploading) return;
+    setError(''); setFlash('');
+    setUploads(files.map((f) => ({ name: f.name, state: 'adding' })));
+    const added: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      let outcome: { state: 'done' | 'failed'; why?: string };
+      if (f.size > live.MAX_RESOURCE_FILE) {
+        outcome = { state: 'failed', why: 'Over 10 MB. Share a link to it instead.' };
+      } else {
+        try {
+          await live.addMaterialFile(f);
+          outcome = { state: 'done' };
+          added.push(f.name);
+        } catch (cause) {
+          outcome = { state: 'failed', why: message(cause) };
+        }
+      }
+      setUploads((was) => was.map((u, at) => (at === i ? { ...u, ...outcome } : u)));
+    }
+    if (added.length > 0) {
+      setFlash(added.length === 1
+        ? `Added \u201c${added[0]}\u201d. Tap Send to share it.`
+        : `Added ${added.length} files. Tap Send on any of them to share it.`);
+      await load();
+    }
+    // Everything went: the list has said what it had to, and the form closes.
+    // Anything refused stays on screen with its reason.
+    if (added.length === files.length) { setUploads([]); setOpen(false); }
+  };
+
   const startEdit = (m: live.Material) => {
     setEditing(m.id);
-    setMore('');
+    setSharing('');
+    setConfirming('');
     setEditTitle(m.title);
-    setEditUrl(m.external_url);
+    setEditUrl(m.external_url ?? '');
     setEditNote(m.description ?? '');
     setEditKind(m.kind);
     setError(''); setFlash('');
   };
 
   const saveEdit = async (m: live.Material) => {
-    if (!editTitle.trim() || !editUrl.trim() || busy) return;
+    // A file has no link to correct, so only a link's box has to be filled.
+    const isFile = !!m.file_path;
+    if (!editTitle.trim() || (!isFile && !editUrl.trim()) || busy) return;
     setBusy(true); setError(''); setFlash('');
     try {
       await live.updateMaterial(m.id, {
-        title: editTitle, url: editUrl, kind: editKind, description: editNote,
+        title: editTitle, url: isFile ? undefined : editUrl, kind: editKind, description: editNote,
       });
       setEditing('');
       setFlash(`Saved the changes to \u201c${editTitle.trim()}\u201d.`);
@@ -347,7 +498,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
       // took it from one shelf, and whoever pressed the button is the person
       // who most needs to know which.
       setFlash(what === 'deleted'
-        ? `Removed \u201c${m.title}\u201d from the church library.`
+        ? `Deleted \u201c${m.title}\u201d from the church library.`
         : `Took \u201c${m.title}\u201d off your shelf. It is still there for everybody else.`);
       await load();
     } catch (cause) { setError(message(cause)); }
@@ -363,26 +514,21 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
     } catch (cause) { setError(message(cause)); }
   };
 
-  /**
-   * Send it out of the app: WhatsApp, Messenger, a text, another device.
-   *
-   * The library holds links, so this shares a link and needs no upload and no
-   * hosting. Where the device has no share sheet -- most desktops -- shareItem
-   * copies the address instead, and the person is TOLD that is what happened
-   * rather than left wondering whether the button did anything, which is the
-   * failure lib/share.ts exists to have fixed once.
-   */
+  /** Send it out of the app: WhatsApp, Messenger, a text, another device. See sendOutMaterial. */
   const sendOut = async (m: live.Material) => {
     setError(''); setFlash('');
-    const result = await shareItem({
-      title: m.title,
-      text: m.description || m.title,
-      url: m.external_url,
-    });
-    if (result === 'shared') setFlash(`Sent \u201c${m.title}\u201d.`);
-    else if (result === 'copied') setFlash('The address is copied. Paste it wherever you like.');
-    else if (result === 'cancelled') setFlash('');
-    else setError('This browser cannot share for you. Tap the title to open it, then share from there.');
+    const said = await sendOutMaterial(m, ready.current.get(m.id));
+    setFlash(said.flash ?? '');
+    setError(said.error ?? '');
+  };
+
+  /** Open the send panel, and start fetching a file so it is in hand for the share sheet. */
+  const openSend = (m: live.Material) => {
+    if (m.file_path && !ready.current.has(m.id)) {
+      live.materialFileForSharing(m)
+        .then((f) => { ready.current.set(m.id, f); })
+        .catch(() => { /* fetched again when pressed, and saved if the sheet refuses */ });
+    }
   };
 
   // WHOSE RESOURCE IT IS. A convenience, not a control: `materials_edit` and
@@ -392,14 +538,15 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
   // sentence and a screen that split them would drift from the database the
   // first time one of them changed.
   // WHAT THE SEARCH ACTUALLY MATCHES. The title, the description and the
-  // address, because all three are things a person remembers a resource by --
+  // address (or a file's name), because all three are things a person remembers a resource by --
   // "the one about baptism", "the Ellen White one", "that youtube video". A
   // search that only read titles would miss the two-thirds of those.
   const needle = find.trim().toLowerCase();
   const matchesText = (m: live.Material) => !needle
     || m.title.toLowerCase().includes(needle)
     || (m.description ?? '').toLowerCase().includes(needle)
-    || m.external_url.toLowerCase().includes(needle);
+    // A file has no address; its own name is what somebody remembers it by.
+    || (m.external_url ?? m.file_name ?? '').toLowerCase().includes(needle);
   // BOTH, NOT EITHER. A person who has typed a word and then tapped Videos is
   // narrowing twice on purpose; an OR would widen the list at the moment they
   // asked for less of it.
@@ -463,17 +610,44 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
 
   return (
     <Card className="overflow-hidden p-0">
+      {/* THE WHOLE CARD TAKES A DROP. Dragging a file from the desktop onto the
+          shelf is the most obvious thing a person can do with it, so the box
+          inside "+ Add" is not the only place that works. Only files: a link or
+          a piece of text dragged across is left alone. */}
+      <div
+        className="relative"
+        onDragEnter={(e) => { if (draggingFiles(e)) { e.preventDefault(); setDropping(true); } }}
+        onDragOver={(e) => { if (draggingFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropping(false);
+        }}
+        onDrop={(e) => {
+          if (!draggingFiles(e)) return;
+          e.preventDefault();
+          setDropping(false);
+          setOpen(true);
+          void addFiles(Array.from(e.dataTransfer.files ?? []));
+        }}
+      >
+      {dropping && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-2 z-10 grid place-items-center rounded-2xl border-2 border-dashed border-teal-600 bg-teal-50/90"
+        >
+          <p className="text-lg font-extrabold text-teal-800">Drop to add to the shelf</p>
+        </div>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 p-5 sm:p-6">
         <div className="flex min-w-0 items-start gap-3">
           <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal-700 text-xl shadow-sm">📚</span>
           <div className="min-w-0">
             <h2 className="text-xl font-extrabold text-navy">{heading ?? 'Resources'}</h2>
             <p className="mt-0.5 text-sm leading-relaxed text-gray-600">
-              {intro ?? 'Videos, readings and music to send to the people you walk with.'}
+              {intro ?? 'Videos, readings, music and files to send to the people you walk with.'}
             </p>
           </div>
         </div>
-        <Button onClick={() => setOpen((v) => !v)}>{open ? 'Close' : '+ Add a link'}</Button>
+        <Button onClick={() => setOpen((v) => !v)}>{open ? 'Close' : '+ Add'}</Button>
       </div>
       <div className="p-5 sm:p-6">
 
@@ -482,52 +656,62 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
 
       {open && (
         <div className="mb-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
+          {/* A FILE OR A LINK, IN ONE PLACE. The file box first, because
+              "I cannot even upload files in the resources" is why this form
+              changed: drag them in or choose them, and each one goes on the
+              shelf named after itself -- nothing to fill in. A better name, or
+              a line saying why, can be given afterwards under Edit. */}
+          <FileDrop id="mat-files" onFiles={(files) => void addFiles(files)} busy={uploading} />
+          {uploads.length > 0 && (
+            <ul className="mt-3 space-y-1 text-sm" aria-live="polite">
+              {uploads.map((u, i) => (
+                <li key={`${u.name}-${i}`} className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="min-w-0 truncate font-semibold text-navy">{u.name}</span>
+                  <span className={u.state === 'failed' ? 'font-semibold text-red-700' : u.state === 'done' ? 'font-semibold text-green-800' : 'text-gray-500'}>
+                    {u.state === 'adding' ? 'Adding…' : u.state === 'done' ? '✓ Added' : u.why}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <p className="my-4 text-center text-xs font-bold uppercase tracking-wide text-gray-400">or</p>
+
           {/* THE ADDRESS FIRST, because it is the thing in somebody's hand: they
-              have just copied it. The name comes second and the reason last,
-              and that is the whole form -- the kind is read from the address. */}
-          <label className="block text-sm font-semibold text-navy" htmlFor="mat-url">Paste the link</label>
+              have just copied it. The name and the reason appear once there is
+              a link to name -- until then they are two boxes in the way of
+              somebody who came to add a file. The kind is read from the
+              address. */}
+          <label className="block text-sm font-semibold text-navy" htmlFor="mat-url">Paste a link</label>
           <input id="mat-url" value={url}
             onChange={(e) => setUrl(e.target.value)}
             inputMode="url"
             placeholder="https://…"
             className="tap mt-1 w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
 
-          <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-title">What is it called</label>
-          <input id="mat-title" value={title} onChange={(e) => setTitle(e.target.value)}
-            className="tap mt-1 w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
+          {url.trim() && (
+            <>
+              <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-title">What is it called</label>
+              <input id="mat-title" value={title} onChange={(e) => setTitle(e.target.value)}
+                className="tap mt-1 w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
 
-          <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-note">
-            Why it helps <span className="font-normal text-gray-500">(optional)</span>
-          </label>
-          {/* OPTIONAL, AND WORTH ASKING FOR ANYWAY. Making it required would
-              stop somebody adding a link they are in a hurry about, and a link
-              with no note still beats no link. The placeholder shows the shape
-              of a useful answer rather than describing one. */}
-          <textarea id="mat-note" value={note} onChange={(e) => setNote(e.target.value)}
-            rows={2}
-            placeholder="One line. Who is it for, or why it helps."
-            className="tap mt-1 w-full rounded-xl bg-white px-4 py-2 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
+              <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-note">
+                Why it helps <span className="font-normal text-gray-500">(optional)</span>
+              </label>
+              {/* OPTIONAL, AND WORTH ASKING FOR ANYWAY. Making it required would
+                  stop somebody adding a link they are in a hurry about, and a
+                  link with no note still beats no link. The placeholder shows
+                  the shape of a useful answer rather than describing one. */}
+              <textarea id="mat-note" value={note} onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                placeholder="One line. Who is it for, or why it helps."
+                className="tap mt-1 w-full rounded-xl bg-white px-4 py-2 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
 
-          <div className="mt-4">
-            <Button onClick={add} disabled={!title.trim() || !url.trim() || busy}>Add it</Button>
-          </div>
-
-          {/* WHY THIS IS LINKS AND NOT UPLOADS. It was a paragraph above the
-              shelf that everybody had to read past on every visit; it matters
-              only to somebody holding a FILE, which is the moment they open
-              this form. So it sits here, one line, and opens if asked. */}
-          <details className="mt-3 text-sm text-gray-600">
-            <summary className="cursor-pointer font-semibold text-navy underline underline-offset-2">
-              Have a file instead of a link?
-            </summary>
-            <p className="mt-2 rounded-xl bg-sky-50 p-3 leading-relaxed text-slate-700 ring-1 ring-sky-100">
-              <strong>The library holds links, and files stay on your own device.</strong>{' '}
-              A file you save in <em>On this device</em> is passed straight from your phone to
-              theirs through your phone&rsquo;s own share sheet, so it never sits on a server and
-              costs the church nothing. That keeps this app free to run while it is small.
-              Storing files for everybody is on the list for when it can be paid for properly.
-            </p>
-          </details>
+              <div className="mt-4">
+                <Button onClick={add} disabled={!title.trim() || !url.trim() || busy}>Add the link</Button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -610,7 +794,9 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
       <div className="space-y-2">
         {items === null && <BeaconSpinner inline label="Loading the shelf" className="mt-2" />}
         {items?.length === 0 && !error && (
-          <p className="text-sm text-gray-500">Nothing here yet. Tap <strong>+ Add a link</strong> to put the first one on.</p>
+          <p className="text-sm text-gray-500">
+            Nothing here yet. Tap <strong>+ Add</strong>, or drag a file onto this card, to put the first one on.
+          </p>
         )}
         {shown.map((m) => (
           <Item key={m.id} m={m}>
@@ -703,6 +889,91 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
                   </button>
                 </div>
               </div>
+            ) : editing === m.id ? (
+              /* EDIT: the name and why it helps, and for a link the link. The
+                 rare settings -- how it is filed, and the church shelf -- are
+                 folded under "More options", so correcting a typo is three
+                 boxes and a Save, not a settings page. */
+              <div className="mt-1 w-full rounded-xl bg-white p-3 ring-1 ring-navy/10">
+                <label className="block text-xs font-semibold text-navy" htmlFor={`edit-title-${m.id}`}>
+                  What it is called
+                </label>
+                <input
+                  id={`edit-title-${m.id}`}
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
+                />
+                {/* A file has no link to correct: it IS the thing. */}
+                {!m.file_path && (
+                  <>
+                    <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-url-${m.id}`}>
+                      Link
+                    </label>
+                    <input
+                      id={`edit-url-${m.id}`}
+                      value={editUrl}
+                      onChange={(e) => setEditUrl(e.target.value)}
+                      inputMode="url"
+                      placeholder="https://…"
+                      className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
+                    />
+                  </>
+                )}
+                <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-note-${m.id}`}>
+                  Why it helps <span className="font-normal text-gray-500">(optional)</span>
+                </label>
+                <textarea
+                  id={`edit-note-${m.id}`}
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  rows={2}
+                  placeholder="One line. Who is it for, or why it helps."
+                  className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 py-2 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
+                />
+                <details className="mt-3 text-sm">
+                  <summary className="cursor-pointer font-semibold text-navy underline underline-offset-2">
+                    More options
+                  </summary>
+                  <div className="mt-2 space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-navy" htmlFor={`edit-kind-${m.id}`}>
+                        Show it as
+                      </label>
+                      <select
+                        id={`edit-kind-${m.id}`}
+                        value={editKind}
+                        onChange={(e) => setEditKind(e.target.value as live.MaterialKind)}
+                        className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
+                      >
+                        <option value="link">Link</option>
+                        <option value="video">Video</option>
+                        <option value="audio">Audio or music</option>
+                        <option value="pdf">PDF</option>
+                        <option value="image">Picture</option>
+                        {m.file_path && <option value="file">Document</option>}
+                      </select>
+                    </div>
+                    {canPublish && (
+                      /* Putting something in front of the whole church is
+                         leadership's, and the database refuses anybody else. */
+                      <button
+                        type="button"
+                        onClick={() => void publish(m, !m.is_published)}
+                        className="tap-sm text-sm font-semibold text-navy underline"
+                      >
+                        {m.is_published ? 'Take it off the church shelf' : 'Put it on the church shelf'}
+                      </button>
+                    )}
+                  </div>
+                </details>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button onClick={() => void saveEdit(m)} disabled={!editTitle.trim() || (!m.file_path && !editUrl.trim()) || busy}>
+                    {busy ? 'Saving…' : 'Save'}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setEditing('')}>Cancel</Button>
+                </div>
+              </div>
             ) : (
               <>
                 {pairings.length === 0 ? (
@@ -715,65 +986,49 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
                        closes: leaving it would carry the reason for one resource
                        onto the next, which is a wrong sentence on somebody
                        else's link. */
-                    onClick={() => { setSharing(m.id); setConfirming(''); setShareNote(''); setMore(''); }}
+                    onClick={() => { setSharing(m.id); setConfirming(''); setShareNote(''); openSend(m); }}
                     className="tap-sm rounded-full bg-teal-700 px-4 text-sm font-bold text-white"
                   >
-                    {/* The name, or the count. "Send" alone gives no hint whether
-                        there is anybody to send to; "Send to John" says it. */}
-                    Send to {pairings.length === 1 ? pairings[0].ds_name.split(' ')[0] : `${pairings.length} people`}
+                    {/* The name when there is one person: "Send to John" says
+                        who, where "Send" alone does not. With several it is
+                        "Send", and the panel names them -- "Send to 2 people"
+                        was too wide to share a phone's row with Edit and
+                        Delete, and pushed Delete onto a line of its own. The
+                        button is only drawn when there is somebody to send to. */}
+                    {pairings.length === 1 ? `Send to ${pairings[0].ds_name.split(' ')[0]}` : 'Send'}
                   </button>
                 )}
-                <button
-                  type="button"
-                  aria-expanded={more === m.id}
-                  onClick={() => { setMore(more === m.id ? '' : m.id); setConfirming(''); }}
-                  className="tap-sm rounded-full px-3 text-sm font-semibold text-gray-600 ring-1 ring-black/10"
-                >
-                  {more === m.id ? 'Less' : 'More'}
-                </button>
-              </>
-            )}
-
-            {/* THE RARE ERRANDS, BEHIND "MORE". Reversible first, the red one
-                last, so the control that cannot be undone is never the first a
-                thumb finds. */}
-            {more === m.id && sharing !== m.id && (
-              <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-white p-3 ring-1 ring-navy/10">
-                {canPublish && (
-                  /* Putting something in front of the whole church is
-                     leadership's, and the database refuses anybody else. */
+                {/* EVERY CONTROL SAYS WHAT IT DOES, ON THE ROW. They sat behind
+                    one "More" button, and "easy to add, easy to delete" is not
+                    a button that has to be found first. Three at most: Send,
+                    Edit, and the red one last, so the control that cannot be
+                    undone is never the first a thumb finds. */}
+                {canManage(m) && (
                   <button
-                    onClick={() => void publish(m, !m.is_published)}
-                    className="tap-sm text-sm font-semibold text-navy underline"
-                  >
-                    {m.is_published ? 'Take it off the church shelf' : 'Put it on the church shelf'}
-                  </button>
-                )}
-                {canManage(m) && editing !== m.id && (
-                  <button
+                    type="button"
                     onClick={() => startEdit(m)}
-                    className="tap-sm text-sm font-semibold text-navy underline"
+                    className="tap-sm px-2 text-sm font-semibold text-navy underline underline-offset-2"
                   >
                     Edit
                   </button>
                 )}
-                {/* REMOVE IS FOR EVERYBODY, and does two different things.
+                {/* DELETE, OR HIDE: the same button does two different things.
                     Leadership and whoever added it delete the row; anybody else
                     takes it off their OWN shelf and leaves it on everybody's.
                     deleteMaterial asks the database which it may do, and the
                     sentence below says which BEFORE the tap. */}
                 {confirming === m.id ? (
-                  <>
+                  <div className="flex w-full flex-wrap items-center gap-2 rounded-xl bg-white p-3 ring-1 ring-red-200">
                     <p className="w-full text-sm font-semibold text-gray-700">
                       {canManage(m)
-                        ? 'This takes it out of the church library, for everybody.'
+                        ? `This takes it out of the church library, for everybody${m.file_path ? ', and deletes the file' : ''}.`
                         : 'This takes it off your shelf only. Everybody else keeps it, and you can put it back.'}
                     </p>
                     <button
                       onClick={() => void remove(m)}
                       className="tap-sm rounded-full bg-white px-3 text-sm font-bold text-red-700 ring-1 ring-red-200"
                     >
-                      Yes, remove it
+                      {canManage(m) ? 'Yes, delete it' : 'Yes, hide it'}
                     </button>
                     <button
                       onClick={() => setConfirming('')}
@@ -781,72 +1036,17 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
                     >
                       Keep it
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <button
-                    onClick={() => setConfirming(m.id)}
-                    className="tap-sm text-sm font-semibold text-red-700 underline"
+                    type="button"
+                    onClick={() => { setConfirming(m.id); setSharing(''); }}
+                    className="tap-sm px-2 text-sm font-semibold text-red-700 underline underline-offset-2"
                   >
-                    {canManage(m) ? 'Remove from library' : 'Take it off my shelf'}
+                    {canManage(m) ? 'Delete' : 'Hide'}
                   </button>
                 )}
-              </div>
-            )}
-            {editing === m.id && (
-              <div className="mt-1 w-full rounded-xl bg-white p-3 ring-1 ring-navy/10">
-                <label className="block text-xs font-semibold text-navy" htmlFor={`edit-title-${m.id}`}>
-                  What it is called
-                </label>
-                <input
-                  id={`edit-title-${m.id}`}
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
-                />
-                <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-url-${m.id}`}>
-                  Link
-                </label>
-                <input
-                  id={`edit-url-${m.id}`}
-                  value={editUrl}
-                  onChange={(e) => setEditUrl(e.target.value)}
-                  inputMode="url"
-                  placeholder="https://…"
-                  className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
-                />
-                <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-note-${m.id}`}>
-                  Why it helps
-                </label>
-                <textarea
-                  id={`edit-note-${m.id}`}
-                  value={editNote}
-                  onChange={(e) => setEditNote(e.target.value)}
-                  rows={2}
-                  placeholder="One line. Who is it for, or why it helps."
-                  className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 py-2 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
-                />
-                <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-kind-${m.id}`}>
-                  Show it as
-                </label>
-                <select
-                  id={`edit-kind-${m.id}`}
-                  value={editKind}
-                  onChange={(e) => setEditKind(e.target.value as live.MaterialKind)}
-                  className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
-                >
-                  <option value="link">Link</option>
-                  <option value="video">Video</option>
-                  <option value="audio">Audio or music</option>
-                  <option value="pdf">PDF</option>
-                  <option value="image">Picture</option>
-                </select>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button onClick={() => void saveEdit(m)} disabled={!editTitle.trim() || !editUrl.trim() || busy}>
-                    {busy ? 'Saving…' : 'Save the changes'}
-                  </Button>
-                  <Button variant="ghost" onClick={() => setEditing('')}>Cancel</Button>
-                </div>
-              </div>
+              </>
             )}
           </Item>
         ))}
@@ -862,7 +1062,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
           >
             {showPutAway
               ? 'Hide these again'
-              : `You have taken ${putAway.length} off your shelf. Show ${putAway.length === 1 ? 'it' : 'them'}.`}
+              : `You have hidden ${putAway.length} from your shelf. Show ${putAway.length === 1 ? 'it' : 'them'}.`}
           </button>
           {showPutAway && (
             <div className="mt-3 space-y-2">
@@ -880,6 +1080,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
           )}
         </div>
       )}
+      </div>
       </div>
     </Card>
   );
@@ -921,15 +1122,9 @@ export function LiveSharedWithMe({ pairingId, heading, intro }: {
   // not paired yet is the one person who cannot pass anything on.
   const sendOut = async (m: live.Material) => {
     setError(''); setFlash('');
-    const result = await shareItem({
-      title: m.title,
-      text: m.description || m.title,
-      url: m.external_url,
-    });
-    if (result === 'shared') setFlash(`Sent \u201c${m.title}\u201d.`);
-    else if (result === 'copied') setFlash('The address is copied. Paste it wherever you like.');
-    else if (result === 'cancelled') setFlash('');
-    else setError('This browser cannot share for you. Tap the title to open it, then share from there.');
+    const said = await sendOutMaterial(m);
+    setFlash(said.flash ?? '');
+    setError(said.error ?? '');
   };
 
   useEffect(() => {

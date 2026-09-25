@@ -116,11 +116,15 @@ const data = strip(read('lib/live/data.ts'));
      'the picker knows who already has each resource');
   ok(/disabled=\{has\}/.test(ui), 'and does not offer a tap that would be refused');
 
-  // The count tells a Guide whether there is anybody to share with at all,
-  // which a bare "Share" does not.
-  ok(/pairings\.length === 1 \? pairings\[0\]/.test(ui),
+  // One person is named: "Send to John" says who. With several it says
+  // "Send" and the panel names them -- "Send to 2 people" was too wide to share
+  // a phone's row with Edit and Delete (25 September 2026). Whether there is
+  // anybody to send to at all is answered by the button existing: with nobody,
+  // the row offers "Share outside the app" instead.
+  ok(/pairings\.length === 1 \? `Send to \$\{pairings\[0\]/.test(ui),
      'one person is named rather than counted');
-  ok(/\$\{pairings\.length\} people/.test(ui), 'and more than one is counted');
+  ok(/\{pairings\.length === 0 \? \(\s*<SendOut/.test(ui),
+     'and with nobody to send to, the row offers the share sheet instead of a Send that goes nowhere');
 
   // Opening the share picker must not leave a half-finished delete underneath
   // it, which is how somebody taps Yes on the wrong thing.
@@ -144,7 +148,8 @@ const data = strip(read('lib/live/data.ts'));
   // "that youtube video" as often as by its title.
   ok(/m\.title\.toLowerCase\(\)\.includes\(needle\)/.test(ui), 'it matches the title');
   ok(/\(m\.description \?\? ''\)\.toLowerCase\(\)\.includes\(needle\)/.test(ui), 'and the description');
-  ok(/m\.external_url\.toLowerCase\(\)\.includes\(needle\)/.test(ui), 'and the address');
+  ok(/\(m\.external_url \?\? m\.file_name \?\? ''\)\.toLowerCase\(\)\.includes\(needle\)/.test(ui),
+    'and the address, or for a file its name');
 
   // A COUNT, so a search that finds nothing says so rather than looking broken.
   //

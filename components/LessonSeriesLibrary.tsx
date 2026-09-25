@@ -39,11 +39,14 @@ export function LessonSeriesLibrary() {
   const toggle = (id: string) =>
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
-  const canSave = title.trim() && topic.trim() && picked.length > 0;
+  // A NAME AND AT LEAST ONE LESSON. The topic only groups the shelf, so it is
+  // not a reason to refuse a series: left empty, it is filed under General --
+  // the same answer the live app gives.
+  const canSave = title.trim() && picked.length > 0;
 
   const save = () => {
     if (!canSave) return;
-    createSeries({ title, topic, description, lessonIds: picked });
+    createSeries({ title, topic: topic.trim() || 'General', description, lessonIds: picked });
     setSaved(title.trim());
     setTitle('');
     setTopic('');
@@ -91,7 +94,7 @@ export function LessonSeriesLibrary() {
             <input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Topic, which groups it (e.g. Prayer)"
+              placeholder="Topic, optional, groups it (e.g. Prayer)"
               aria-label="Topic"
               list="series-topics"
               className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10"

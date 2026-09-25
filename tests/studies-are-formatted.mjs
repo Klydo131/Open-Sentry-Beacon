@@ -262,9 +262,13 @@ const hrefs = (t) => richParts(t).filter((s) => s.href).map((s) => s.href);
 
   // THE SECOND HALF OF THE ASK: "Make sure those who are making those Lesson
   // studies (such as guides) are aware of this functions."
+  // EVERY box a study is written in: editing one, adding one to a series, and
+  // each study on the one-form new series (25 September 2026). Counted against
+  // the boxes, so a fourth box cannot arrive without its hint.
   const hints = (studies.match(/<WritingHints \/>/g) ?? []).length;
-  ok(hints === 2,
-     `the hint sits under BOTH boxes a study is written in (found ${hints})`);
+  const boxes = (studies.match(/id=\{`(?:study-body|new-study-body|draft-body)-\$\{/g) ?? []).length;
+  ok(boxes >= 3 && hints === boxes,
+     `the hint sits under every box a study is written in (${hints} hints, ${boxes} boxes)`);
   ok(/function WritingHints\(\)/.test(studies), 'and it is a real component');
   for (const shown of ['\\*\\*Read:\\*\\*', '\\*The Desire of Ages\\*', 'adventist\\.org/beliefs']) {
     ok(new RegExp(shown).test(studies), `the hint shows a real example: ${shown}`);

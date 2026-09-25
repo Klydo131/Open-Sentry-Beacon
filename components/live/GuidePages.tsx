@@ -745,7 +745,7 @@ export function LiveConversationPage() {
                 pairings={[{ id: pairing.id, ds_name: pairing.ds_name }]}
                 sharesShownFor={pairing.id}
                 heading={`Send ${pairing.ds_name.split(' ')[0]} something`}
-                intro="Pick from the church's resources, or add a link of your own."
+                intro="Pick from the church's resources, or add a file or a link of your own."
               />
             </div>
           )}
