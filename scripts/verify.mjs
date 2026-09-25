@@ -560,6 +560,9 @@ const staticChecks = [
   // The two ways a church installs the database -- one command, or every file
   // by hand -- read the folder differently. What each can trip over.
   ['a church can install it either way', 'tests/a-church-can-install-it-either-way.mjs'],
+  // The owner asked for Resources and Lesson studies to be simple rather than
+  // technical. What made them complicated, kept from coming back.
+  ['resources and studies stay simple', 'tests/resources-and-studies-stay-simple.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

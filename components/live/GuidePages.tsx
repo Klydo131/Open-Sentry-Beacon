@@ -715,7 +715,13 @@ export function LiveConversationPage() {
                   Director what it says. `may_see_reading()` lets the paired
                   Guide read it and nobody else's Guide. */}
               <MemberReading memberId={pairing.ds_id} name={pairing.ds_name} />
-              <LiveStudies />
+              {/* THE STUDIES THIS PERSON CAN READ, not the writing desk. A
+                  Guide here is looking at one Explorer; writing and changing
+                  studies is the Office's job, and it is one tap away. */}
+              <LiveStudies
+                readOnly
+                note={<>What {pairing.ds_name.split(' ')[0]} can read. To write or change a study, go to <Link href="/office?room=studies" className="font-semibold text-navy underline">the Office</Link>.</>}
+              />
             </div>
           )}
 
@@ -730,12 +736,16 @@ export function LiveConversationPage() {
                   is not. */}
               <LiveSharedWithMe
                 pairingId={pairing.id}
-                heading={`What ${pairing.ds_name.split(' ')[0]} has shared with you`}
-                intro={`Links ${pairing.ds_name.split(' ')[0]} has handed to you. Tap one to open it.`}
+                heading={`From ${pairing.ds_name.split(' ')[0]}`}
+                intro={`What ${pairing.ds_name.split(' ')[0]} has sent you. Tap one to open it.`}
               />
+              {/* THE SHELF, FOR SENDING. This tab is about one person, so the
+                  card says what it is for here: something for them. */}
               <LiveLibraryForGuide
                 pairings={[{ id: pairing.id, ds_name: pairing.ds_name }]}
                 sharesShownFor={pairing.id}
+                heading={`Send ${pairing.ds_name.split(' ')[0]} something`}
+                intro="Pick from the church's resources, or add a link of your own."
               />
             </div>
           )}

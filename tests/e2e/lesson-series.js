@@ -64,12 +64,15 @@ const bodyText = (page) => page.locator('body').innerText();
   await page.waitForTimeout(1200);
   await page.locator('[data-quest="tab-materials"]').first().click();
   await page.waitForTimeout(900);
+  // The builder opens when asked for; the shelf is what the page shows first.
+  await page.getByRole('button', { name: /^\+ New series$/ }).first().click();
+  await page.waitForTimeout(400);
 
   const builder = page.getByText(/Build a lesson series/i);
   ok((await builder.count()) > 0, 'the library has a series builder');
 
   await page.getByLabel('Series name').fill(SERIES);
-  await page.getByLabel('Area of interest').fill(TOPIC);
+  await page.getByLabel('Topic', { exact: true }).fill(TOPIC);
 
   // Tap two lessons. The order tapped is the order walked, which is the whole
   // interaction — no drag handles, no position numbers to keep in your head.

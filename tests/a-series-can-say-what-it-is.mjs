@@ -91,7 +91,12 @@ const data = strip(read('lib/live/data.ts'));
 {
   ok(!/placeholder="Area of interest"/.test(studies),
      'the grouping box no longer reads like a description');
-  ok((studies.match(/placeholder="Files it under/g) ?? []).length === 2,
+  // SAID ON A LABEL THAT STAYS, not in a placeholder that vanishes on the
+  // first keystroke. It was "Files it under… (e.g. Prayer)" in the box; on
+  // 25 September 2026 the owner asked for these screens to be less technical,
+  // and "files it under" is a filing clerk's phrase. The rule is the same:
+  // both forms say the box GROUPS the series, both give an example.
+  ok((studies.match(/>\s*Topic\s*<span[^>]*>\([^)]*groups it on the shelf\)<\/span>/g) ?? []).length === 2,
      'both forms say what that box actually does');
   // BOTH of them. A single loose match passes happily while one of the two
   // forms still asks the old, misreadable question -- and the form somebody

@@ -63,10 +63,13 @@ const anchors = (page) => page.evaluate(() =>
   await page.waitForTimeout(1200);
   await page.locator('[data-quest="tab-materials"]').first().click();
   await page.waitForTimeout(900);
+  // The builder opens when asked for; the shelf is what the page shows first.
+  await page.getByRole('button', { name: /^\+ New series$/ }).first().click();
+  await page.waitForTimeout(400);
 
   ok(await page.getByLabel('Description').count() > 0, 'the series builder takes a description');
   await page.getByLabel('Series name').fill(SERIES);
-  await page.getByLabel('Area of interest').fill(TOPIC);
+  await page.getByLabel('Topic', { exact: true }).fill(TOPIC);
   await page.getByLabel('Description').fill(DESC);
 
   const lessons = page.locator('button[aria-pressed]');

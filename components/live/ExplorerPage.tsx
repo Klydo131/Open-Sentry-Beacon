@@ -309,15 +309,21 @@ export function LiveExplorerPage() {
             finds something worth reading can put it in front of the person
             walking with them, which is a small thing and is most of what
             "a relationship, not a score" means in practice. */}
+        {/* WHAT WAS SENT TO THEM, THEN WHAT THEY READ, THEN THEIR OWN LINKS.
+            The folder opened on the library's add-and-share card, so an
+            Explorer's first sight of Study was a form, and the studies
+            themselves were at the very bottom. Reading comes first now. */}
         {room === 'study' && (
           <>
+            <LiveSharedWithMe />
+            <LiveStudies openSeries={openSeries} />
             {pairing && (
               <LiveLibraryForGuide
                 pairings={[{ id: pairing.id, ds_name: pairing.dm_name }]}
+                heading="Your links"
+                intro={`Found something good? Add it here and send it to ${pairing.dm_name.split(' ')[0]}.`}
               />
             )}
-            <LiveSharedWithMe />
-            <LiveStudies openSeries={openSeries} />
           </>
         )}
 

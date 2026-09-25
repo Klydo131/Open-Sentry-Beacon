@@ -68,6 +68,22 @@ function SendOut({ onSend }: { onSend: () => void }) {
   );
 }
 
+/**
+ * Where a link goes, in the words a person uses for it: "youtube.com", not
+ * "https://www.youtube.com/watch?v=…". The whole address was drawn under every
+ * title, which is where somebody deciding whether to tap a link looks -- and a
+ * row of grey query strings is the most technical thing on a screen meant for
+ * people who are not. The site answers "where does this go"; the rest of the
+ * address answers nothing they are asking. It is still searched in full.
+ */
+function siteOf(address: string): string {
+  try {
+    return new URL(address).hostname.replace(/^www\./, '');
+  } catch {
+    return address;
+  }
+}
+
 function Item({ m, children }: { m: live.Material; children?: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
@@ -83,9 +99,8 @@ function Item({ m, children }: { m: live.Material; children?: React.ReactNode })
             {m.title}
           </a>
           {m.description && <p className="mt-0.5 text-sm text-gray-600">{m.description}</p>}
-          {/* The address in plain sight. Somebody deciding whether to open a
-              link on their phone should be able to see where it goes. */}
-          <p className="mt-0.5 truncate text-xs text-gray-400">{m.external_url}</p>
+          {/* Where it goes, in plain sight -- as a site, see siteOf. */}
+          <p className="mt-0.5 truncate text-xs text-gray-400">{siteOf(m.external_url)}</p>
         </div>
       </div>
       {children && <div className="mt-2 flex flex-wrap gap-2">{children}</div>}
@@ -107,8 +122,16 @@ function Item({ m, children }: { m: live.Material; children?: React.ReactNode })
 //
 // The component keeps its old name because a dozen call sites use it and
 // renaming them would be a large diff to settle a comment.
-export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
+export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }: {
   pairings: { id: string; ds_name: string }[];
+  /**
+   * What this card is for ON THIS SCREEN. The same shelf is the church's
+   * Resources in the Office, "Send John something" on John's page and "Your
+   * links" on an Explorer's own; one heading for all three described none of
+   * them.
+   */
+  heading?: string;
+  intro?: string;
   /**
    * WHICH SHARES ARE DRAWN IN THE CARD NEXT TO THIS SHELF, if any.
    *
@@ -138,17 +161,12 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
   // hesitant, with nothing saying why it is worth their time, is a link nobody
   // taps. The field existed; the question was missing.
   const [note, setNote] = useState('');
-  const [kind, setKind] = useState<live.MaterialKind>('link');
-  // HAS THIS PERSON CHOSEN A KIND THEMSELVES, or is the box still showing what
-  // the address suggested? The whole value of reading the URL disappears if the
-  // reading also OVERRIDES somebody who has deliberately picked something else:
-  // a Guide who files a YouTube link as "Audio" because they want the
-  // congregation to listen to it has made a real choice, and having it silently
-  // flipped back on the next keystroke is the most annoying possible bug.
-  //
-  // So detection fills the box only while it is untouched. One flag, set the
-  // first time the dropdown is used, cleared when the form is.
-  const [kindTouched, setKindTouched] = useState(false);
+  // NO "KIND" QUESTION WHEN ADDING. The form asked Link, Video, Audio, PDF or
+  // Picture from a dropdown, which is a filing question somebody pasting a
+  // link has no reason to answer -- and the address already answers it:
+  // kindFromUrl reads youtube, .mp3, .pdf and the rest. Anything it is not sure
+  // about is a link, which is always true. The choice is still there under
+  // More -> Edit for the rare person who wants a YouTube talk filed as audio.
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState('');
@@ -157,6 +175,12 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
   // rather than a browser confirm() dialog, which a phone renders as a system
   // box nobody reads and iOS sometimes suppresses entirely.
   const [confirming, setConfirming] = useState('');
+  // WHICH ROW HAS ITS "MORE" OPEN. Editing, the church shelf and removing are
+  // the rare errands, and they were drawn on every row, all the time: five
+  // controls stacked under each title, so four resources filled three phone
+  // screens. They live behind one button now, and the row shows the one thing
+  // people come here to do -- send it.
+  const [more, setMore] = useState('');
   // Which row is open for correction, and the fields while it is. Editing in
   // place rather than in a dialog: the shelf is the context, and a dialog on a
   // phone covers the thing being described.
@@ -206,10 +230,8 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
   // folded into it: "video" typed into a search reads the WORD video in a title
   // and a description, which is a different question from "show me the videos"
   // and answers it wrong in both directions.
-  // Named for the shelf, not just `kind`: this component already has a `kind`,
-  // which is the kind of the resource being ADDED. Two states called kind, one
-  // meaning "what I am filing" and one "what I am looking for", is a rename
-  // waiting to go wrong in the wrong direction.
+  // Named for the shelf, not just `kind`: `kind` is what a resource IS, and
+  // this is what somebody is looking FOR.
   const [shelfKind, setShelfKind] = useState<live.MaterialKind | ''>('');
   // What this person has taken off their own shelf, and whether they are
   // looking at it. A hide with no way back is a trap, and an undo that lives
@@ -285,10 +307,8 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
     if (!title.trim() || !url.trim() || busy) return;
     setBusy(true); setError(''); setFlash('');
     try {
-      await live.addMaterial({ title, url, kind, description: note });
-      setTitle(''); setUrl(''); setNote(''); setKind('link'); setOpen(false);
-      // The next resource starts with the box listening to its address again.
-      setKindTouched(false);
+      await live.addMaterial({ title, url, kind: kindFromUrl(url) ?? 'link', description: note });
+      setTitle(''); setUrl(''); setNote(''); setOpen(false);
       await load();
     } catch (cause) { setError(message(cause)); }
     finally { setBusy(false); }
@@ -296,6 +316,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
 
   const startEdit = (m: live.Material) => {
     setEditing(m.id);
+    setMore('');
     setEditTitle(m.title);
     setEditUrl(m.external_url);
     setEditNote(m.description ?? '');
@@ -443,94 +464,79 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-2xl shadow-sm">📚</span>
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-700">Church library</p>
-            <h2 className="mt-0.5 text-2xl font-extrabold text-navy">Share a helpful next step.</h2>
-            <p className="mt-1 text-sm leading-relaxed text-gray-600">Links your church can send anybody. A link opens on any device.</p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal-700 text-xl shadow-sm">📚</span>
+          <div className="min-w-0">
+            <h2 className="text-xl font-extrabold text-navy">{heading ?? 'Resources'}</h2>
+            <p className="mt-0.5 text-sm leading-relaxed text-gray-600">
+              {intro ?? 'Videos, readings and music to send to the people you walk with.'}
+            </p>
           </div>
         </div>
-        <Button onClick={() => setOpen((v) => !v)}>{open ? 'Close' : 'Add a resource'}</Button>
+        <Button onClick={() => setOpen((v) => !v)}>{open ? 'Close' : '+ Add a link'}</Button>
       </div>
       <div className="p-5 sm:p-6">
 
       <Err msg={error} />
-      {flash && <p className="mt-3 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">{flash}</p>}
-
-      {/* WHY THIS IS LINKS AND NOT UPLOADS, said plainly rather than left for
-          somebody to discover by looking for an upload button that is not
-          there. The alternative to saying it is a person concluding the
-          feature is broken. */}
-      <p className="mt-4 rounded-xl bg-sky-50 p-3 text-sm leading-relaxed text-slate-700 ring-1 ring-sky-100">
-        <strong>The library holds links, and files stay on your own device.</strong>{' '}
-        A file you save in <em>On this device</em> is passed straight from your phone to
-        theirs through your phone&rsquo;s own share sheet, so it never sits on a server and
-        costs the church nothing. That keeps this app free to run while it is small.
-        Storing files for everybody is on the list for when it can be paid for properly.
-      </p>
+      {flash && <p className="mb-3 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">{flash}</p>}
 
       {open && (
-        <div className="mt-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
-          <label className="block text-sm font-semibold text-navy" htmlFor="mat-title">What is it called</label>
-          <input id="mat-title" value={title} onChange={(e) => setTitle(e.target.value)}
-            className="tap mt-1 w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
-
-          <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-url">Address</label>
-          {/* THE ADDRESS ANSWERS THE KIND QUESTION, so it is answered here rather
-              than asked again below. `kindFromUrl` returns null for anything it
-              is not sure about, and null leaves the box alone -- a half-typed
-              address on every keystroke is the normal case, not an error. */}
+        <div className="mb-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
+          {/* THE ADDRESS FIRST, because it is the thing in somebody's hand: they
+              have just copied it. The name comes second and the reason last,
+              and that is the whole form -- the kind is read from the address. */}
+          <label className="block text-sm font-semibold text-navy" htmlFor="mat-url">Paste the link</label>
           <input id="mat-url" value={url}
-            onChange={(e) => {
-              const next = e.target.value;
-              setUrl(next);
-              if (!kindTouched) {
-                const guessed = kindFromUrl(next);
-                if (guessed) setKind(guessed);
-              }
-            }}
+            onChange={(e) => setUrl(e.target.value)}
+            inputMode="url"
             placeholder="https://…"
             className="tap mt-1 w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
 
+          <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-title">What is it called</label>
+          <input id="mat-title" value={title} onChange={(e) => setTitle(e.target.value)}
+            className="tap mt-1 w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
+
           <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-note">
-            What is it for <span className="font-normal text-gray-500">(optional)</span>
+            Why it helps <span className="font-normal text-gray-500">(optional)</span>
           </label>
           {/* OPTIONAL, AND WORTH ASKING FOR ANYWAY. Making it required would
               stop somebody adding a link they are in a hurry about, and a link
-              with no note still beats no link. The placeholder does the
-              teaching instead: it shows the shape of a useful answer rather
-              than describing one. */}
+              with no note still beats no link. The placeholder shows the shape
+              of a useful answer rather than describing one. */}
           <textarea id="mat-note" value={note} onChange={(e) => setNote(e.target.value)}
             rows={2}
             placeholder="One line. Who is it for, or why it helps."
             className="tap mt-1 w-full rounded-xl bg-white px-4 py-2 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600" />
 
-          <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="mat-kind">Kind</label>
-          <select id="mat-kind" value={kind}
-            onChange={(e) => { setKind(e.target.value as live.MaterialKind); setKindTouched(true); }}
-            className="tap mt-1 w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600">
-            <option value="link">Link</option>
-            <option value="video">Video</option>
-            <option value="audio">Audio or music</option>
-            <option value="pdf">PDF</option>
-            <option value="image">Picture</option>
-          </select>
-
           <div className="mt-4">
-            <Button onClick={add} disabled={!title.trim() || !url.trim() || busy}>Add to the library</Button>
+            <Button onClick={add} disabled={!title.trim() || !url.trim() || busy}>Add it</Button>
           </div>
+
+          {/* WHY THIS IS LINKS AND NOT UPLOADS. It was a paragraph above the
+              shelf that everybody had to read past on every visit; it matters
+              only to somebody holding a FILE, which is the moment they open
+              this form. So it sits here, one line, and opens if asked. */}
+          <details className="mt-3 text-sm text-gray-600">
+            <summary className="cursor-pointer font-semibold text-navy underline underline-offset-2">
+              Have a file instead of a link?
+            </summary>
+            <p className="mt-2 rounded-xl bg-sky-50 p-3 leading-relaxed text-slate-700 ring-1 ring-sky-100">
+              <strong>The library holds links, and files stay on your own device.</strong>{' '}
+              A file you save in <em>On this device</em> is passed straight from your phone to
+              theirs through your phone&rsquo;s own share sheet, so it never sits on a server and
+              costs the church nothing. That keeps this app free to run while it is small.
+              Storing files for everybody is on the list for when it can be paid for properly.
+            </p>
+          </details>
         </div>
       )}
 
       {/* SEARCH, ONCE THERE IS SOMETHING TO SEARCH. Below six rows a box is one
           more thing to read on the way to the row already on screen; at forty
           it is the only way to reach one without scrolling past thirty-nine.
-          Same threshold and same wording as Approved accounts, because a
-          person who has learned one of these should not have to learn the
-          other. */}
+          Same threshold and same wording as Approved accounts. */}
       {(items?.length ?? 0) > 6 && (
-        <div className="mt-4">
+        <div className="mb-3">
           <input
             value={find}
             onChange={(e) => setFind(e.target.value)}
@@ -543,13 +549,12 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
         </div>
       )}
 
-      {/* THE PILES, ONLY WHERE THERE IS MORE THAN ONE.
-          A shelf that is all links gets no chips: a row of controls offering a
-          choice between one thing is furniture. This church's shelf has three
-          of the five kinds, and the counts say how many are in each so somebody
-          can see there are two videos before tapping and finding two videos. */}
-      {kindsPresent.length > 1 && (
-        <div className="thin-scroll -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+      {/* THE PILES, ONLY ON A SHELF LONG ENOUGH TO NEED THEM. Chips on a shelf
+          of four were a row of controls to read past to reach four things you
+          could already see; they arrive with the search box, at the same size,
+          for the same reason. And only for kinds the shelf actually holds. */}
+      {kindsPresent.length > 1 && (items?.length ?? 0) > 6 && (
+        <div className="thin-scroll -mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
           <button
             type="button"
             onClick={() => setShelfKind('')}
@@ -580,18 +585,15 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
         </div>
       )}
 
-      {/* WHAT THE TWO CONTROLS DID, TOGETHER.
-          One line for both, because a person who has typed a word AND tapped a
-          pile has narrowed twice and a count that only mentions one of them
-          leaves them wondering where the rest went. When it comes to nothing it
-          says which of the two emptied the shelf, and offers the way back --
-          an empty list with no explanation reads as a broken library. */}
+      {/* WHAT THE TWO CONTROLS DID, TOGETHER. When it comes to nothing it says
+          which of the two emptied the shelf, and offers the way back -- an
+          empty list with no explanation reads as a broken library. */}
       {(needle || shelfKind) && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className="text-sm text-gray-500">
             {shown.length} of {items?.length ?? 0}
-            {shelfKind && ` \u00b7 ${KIND_LABEL[shelfKind].toLowerCase()}`}
-            {needle && ` \u00b7 matching \u201c${find.trim()}\u201d`}
+            {shelfKind && ` · ${KIND_LABEL[shelfKind].toLowerCase()}`}
+            {needle && ` · matching “${find.trim()}”`}
           </p>
           {shown.length === 0 && (
             <button
@@ -605,58 +607,25 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
         </div>
       )}
 
-      <div className="mt-4 space-y-2">
+      <div className="space-y-2">
         {items === null && <BeaconSpinner inline label="Loading the shelf" className="mt-2" />}
         {items?.length === 0 && !error && (
-          <p className="text-sm text-gray-400">Nothing in the library yet.</p>
+          <p className="text-sm text-gray-500">Nothing here yet. Tap <strong>+ Add a link</strong> to put the first one on.</p>
         )}
         {shown.map((m) => (
           <Item key={m.id} m={m}>
-            {/* ONE CONTROL THAT OPENS THE LIST, RATHER THAN ONE BUTTON PER
-                PERSON. A Guide carrying five Explorers used to see five "Share
-                with ..." buttons on EVERY row, plus share-outside, plus edit,
-                plus remove: eight controls under every item. On a phone the
-                title somebody came to read was buried under the things they
-                might do with it, and it got worse as the church grew, which is
-                the wrong direction for a screen to move in.
-
-                Sharing is still one tap to start and one to finish. What is
-                gone is four things to read when you are not sharing at all. */}
-            {/* WHAT THIS PERSON ALREADY HAS, ON THE ROW. It was known only
-                inside the picker, so a Guide wanting to see what they had
-                already given somebody had to open every row in turn. On a
-                screen about one Explorer there is one answer per row and it
-                costs a chip. */}
-            {/* WHO ALREADY HAS IT, FOR A GUIDE WITH MORE THAN ONE EXPLORER.
-                This chip existed and was fenced behind `pairings.length === 1`,
-                so the only Guide it ever spoke to was one carrying a single
-                person. A Guide at the cap of five -- the ones who most need to
-                keep track -- saw nothing on the row and had to open the picker
-                on every item in turn to answer "have I given them this yet".
-                The answer was already in memory the whole time: `alreadyShared`
-                is loaded for every pairing on this screen, not just the first.
-
-                THIS IS THE GUIDE'S OWN HISTORY AND NOBODY ELSE'S. It is built
-                from `listShares` per pairing, which reads through the
-                `shares_read` policy -- `in_pairing(pairing_id)` -- so it can
-                only ever contain pairings this person is part of. That is why
-                this is safe where a church-wide "shared 7 times" count is not:
-                migration 0008 says a Director is shown that a Guide is active,
-                never what they sent to whom, and an aggregate across a small
-                church leaks exactly that. Counting your own is not a new
-                disclosure; it is arithmetic on what you already fetched. */}
+            {/* WHO ALREADY HAS IT, ON THE ROW. Built from this person's OWN
+                shares, pairing by pairing (`listShares` reads through the
+                `shares_read` policy, so it only ever holds pairings they are
+                in) -- which is why this is safe where a church-wide "shared 7
+                times" count is not. Silent at zero: a "not shared yet" badge on
+                a fresh shelf says nothing anybody cannot already see. */}
             {(() => {
               const haveIt = pairings.filter((p) => alreadyShared.get(m.id)?.has(p.id) ?? false);
-              // SILENT AT ZERO, on purpose. A "Not shared yet" chip on every row
-              // would put a badge on a whole fresh shelf to say nothing has
-              // happened yet, which is the state somebody can already see.
               if (haveIt.length === 0) return null;
 
               const first = (n: { ds_name: string }) => n.ds_name.split(' ')[0];
-              // NAMES WHILE THEY FIT, A COUNT WHEN THEY DO NOT. "Maria has
-              // this" answers the question; "1 of 5 have this" makes somebody
-              // open the picker to find out which one, which is the work this
-              // chip exists to remove.
+              // NAMES WHILE THEY FIT, A COUNT WHEN THEY DO NOT.
               const said =
                 haveIt.length === pairings.length
                   ? (pairings.length === 1
@@ -669,29 +638,29 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
                       : `${haveIt.length} of ${pairings.length} have this`;
 
               return (
-                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-800 ring-1 ring-green-200">
+                <span className="w-full text-xs font-semibold text-green-800">
                   &#10003; {said}
                 </span>
               );
             })()}
-            {pairings.length === 0 ? (
-              /* "In the app" earns its place now that the button beside it
-                 shares with people who are not. Without it the row reads
-                 "Nobody to share with" next to a working share control. */
-              <span className="text-xs text-gray-400">Nobody in the app to share with yet.</span>
-            ) : sharing === m.id ? (
-              <>
-                <span className="w-full text-xs font-semibold text-gray-500">Share with</span>
-                {/* THE NOTE, ABOVE THE NAMES ON PURPOSE. Below them it would be
-                    a box you notice after you have already tapped somebody and
-                    the share has gone. Above them it is read on the way to the
-                    name, which is the only moment it can still be used.
+            {/* WHO CAN SEE THIS BESIDES THE PEOPLE YOU GAVE IT TO, said only on
+                the rows where it is true -- as a line of text, not a lozenge that
+                looked like one more button. */}
+            {m.is_published && (
+              <span className="w-full text-xs font-semibold text-sky-800">On the church shelf</span>
+            )}
 
-                    The label says what to write rather than naming the field.
-                    "Note" is a word for a database column; "Say why, if you
-                    like" is the question somebody can actually answer. */}
-                <label className="sr-only" htmlFor={`share-note-${m.id}`}>
-                  Say why you are sharing this, if you like
+            {sharing === m.id ? (
+              /* THE SEND PANEL. Everything about sending, and nothing else:
+                 why (optional), who, or somewhere outside the app. It stays open
+                 while names are tapped, so several people can be given it, and
+                 somebody who already has it is shown as having it rather than
+                 offered a tap the database would refuse. */
+              <div className="w-full rounded-xl bg-white p-3 ring-1 ring-teal-700/20">
+                {/* THE NOTE, ABOVE THE NAMES ON PURPOSE: below them it is a box
+                    you notice after the share has already gone. */}
+                <label className="block text-xs font-semibold text-gray-600" htmlFor={`share-note-${m.id}`}>
+                  Say why, if you like
                 </label>
                 <input
                   id={`share-note-${m.id}`}
@@ -700,124 +669,128 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
                   /* The column's own limit, so a long note is stopped by the box
                      rather than by an error after the tap. */
                   maxLength={1000}
-                  placeholder="Say why, if you like. They will see it."
-                  className="tap w-full rounded-xl bg-white px-3 text-sm ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
+                  placeholder="They will see it."
+                  className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-sm ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
                 />
-                {/* THE PICKER STAYS OPEN, AND THAT IS THE BUG IT FIXES.
-                    It closed on the first tap, so a Guide with three Explorers
-                    shared with one, watched the list vanish, and had to find
-                    the row again for the second. Tapping the same person twice
-                    was refused with "That is already shared with them", so the
-                    whole control read as "sometimes it works, most of the time
-                    it doesn't" -- which is exactly how it was reported.
-                    Somebody who already has it is now shown as having it
-                    rather than being offered a tap that fails. */}
-                {pairings.map((p) => {
-                  const has = alreadyShared.get(m.id)?.has(p.id) ?? false;
-                  return (
-                    <button
-                      key={p.id}
-                      disabled={has}
-                      onClick={() => void share(m.id, p.id, p.ds_name)}
-                      className={has
-                        ? 'rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-800 ring-1 ring-green-200'
-                        : 'rounded-full bg-white px-3 py-1 text-xs font-semibold text-navy ring-1 ring-black/10'}
-                    >
-                      {has ? `✓ ${p.ds_name.split(' ')[0]} has it` : p.ds_name.split(' ')[0]}
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={() => { setSharing(''); setShareNote(''); }}
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-gray-600 underline"
-                >
-                  Done
-                </button>
-              </>
+                <p className="mt-3 text-xs font-semibold text-gray-600">Send to</p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {pairings.map((p) => {
+                    const has = alreadyShared.get(m.id)?.has(p.id) ?? false;
+                    return (
+                      <button
+                        key={p.id}
+                        disabled={has}
+                        onClick={() => void share(m.id, p.id, p.ds_name)}
+                        className={has
+                          ? 'tap-sm rounded-full bg-green-50 px-3 text-sm font-semibold text-green-800 ring-1 ring-green-200'
+                          : 'tap-sm rounded-full bg-teal-700 px-4 text-sm font-bold text-white'}
+                      >
+                        {has ? `✓ ${p.ds_name.split(' ')[0]} has it` : p.ds_name.split(' ')[0]}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/5 pt-3">
+                  {/* OUT OF THE APP: a mother, a neighbour, a group chat -- the
+                      people an Explorer actually wants to send a good link to,
+                      none of whom have accounts. */}
+                  <SendOut onSend={() => void sendOut(m)} />
+                  <button
+                    onClick={() => { setSharing(''); setShareNote(''); }}
+                    className="tap-sm ml-auto px-3 text-sm font-semibold text-gray-600 underline"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
             ) : (
-              <button
-                /* The note is cleared when the picker OPENS, not only when it
-                   closes. Leaving it behind would carry the reason for one
-                   resource onto the next one a Guide shares, which is a wrong
-                   sentence attached to somebody else's link. */
-                onClick={() => { setSharing(m.id); setConfirming(''); setShareNote(''); }}
-                className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-navy ring-1 ring-black/10"
-              >
-                {/* The count is the useful part. "Share" alone gives no hint
-                    whether there is anybody to share with; "Share with 5" does,
-                    and a Guide at their cap can see it at a glance. */}
-                Share with {pairings.length === 1 ? pairings[0].ds_name.split(' ')[0] : `${pairings.length} people`}
-              </button>
-            )}
-            {/* OUT OF THE APP, and on every row for every role. The buttons
-                above hand a resource to somebody the church has already paired
-                you with; this one hands it to a mother, a neighbour, a group
-                chat — the people an Explorer actually wants to send a good
-                link to, none of whom have accounts. */}
-            <SendOut onSend={() => void sendOut(m)} />
-            {/* WHO CAN SEE THIS BESIDES THE PEOPLE YOU GAVE IT TO. Silence used
-                to mean "the whole church", which is the wrong way round for a
-                thing nobody was asked about. It is said out loud now, and only
-                on the rows where it is true. */}
-            {m.is_published && (
-              <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800 ring-1 ring-sky-200">
-                On the church shelf
-              </span>
-            )}
-            {canPublish && (
-              <button
-                onClick={() => void publish(m, !m.is_published)}
-                className="rounded-full px-3 py-1 text-xs font-semibold text-navy underline"
-              >
-                {m.is_published ? 'Take it off the church shelf' : 'Put it on the church shelf'}
-              </button>
-            )}
-            {canManage(m) && editing !== m.id && (
-              /* Before the red one, and quiet. Correcting a typo is the far
-                 commoner errand and the reversible one. */
-              <button
-                onClick={() => startEdit(m)}
-                className="rounded-full px-3 py-1 text-xs font-semibold text-navy underline"
-              >
-                Edit
-              </button>
-            )}
-            {/* REMOVE IS FOR EVERYBODY, and does two different things.
-                Leadership and whoever added it delete the row; anybody else
-                takes it off their OWN shelf and leaves it on everybody's. That
-                asymmetry is not a UI trick — deleteMaterial asks the database
-                which of the two it is allowed to do — but a person is entitled
-                to know which one they are about to press, so the sentence
-                below says it BEFORE the tap and the flash repeats it after. */}
-            {confirming === m.id ? (
               <>
-                <p className="w-full text-xs font-semibold text-gray-600">
-                  {canManage(m)
-                    ? 'This takes it out of the church library, for everybody.'
-                    : 'This takes it off your shelf only. Everybody else keeps it, and you can put it back.'}
-                </p>
+                {pairings.length === 0 ? (
+                  /* Nobody in the app to hand it to yet, so the one way to send
+                     it is the one that works: the phone's own share sheet. */
+                  <SendOut onSend={() => void sendOut(m)} />
+                ) : (
+                  <button
+                    /* The note is cleared when the panel OPENS, not only when it
+                       closes: leaving it would carry the reason for one resource
+                       onto the next, which is a wrong sentence on somebody
+                       else's link. */
+                    onClick={() => { setSharing(m.id); setConfirming(''); setShareNote(''); setMore(''); }}
+                    className="tap-sm rounded-full bg-teal-700 px-4 text-sm font-bold text-white"
+                  >
+                    {/* The name, or the count. "Send" alone gives no hint whether
+                        there is anybody to send to; "Send to John" says it. */}
+                    Send to {pairings.length === 1 ? pairings[0].ds_name.split(' ')[0] : `${pairings.length} people`}
+                  </button>
+                )}
                 <button
-                  onClick={() => void remove(m)}
-                  className="rounded-full bg-white px-3 py-1 text-xs font-bold text-red-700 ring-1 ring-red-200"
+                  type="button"
+                  aria-expanded={more === m.id}
+                  onClick={() => { setMore(more === m.id ? '' : m.id); setConfirming(''); }}
+                  className="tap-sm rounded-full px-3 text-sm font-semibold text-gray-600 ring-1 ring-black/10"
                 >
-                  Yes, remove it
-                </button>
-                <button
-                  onClick={() => setConfirming('')}
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-gray-600 underline"
-                >
-                  Keep it
+                  {more === m.id ? 'Less' : 'More'}
                 </button>
               </>
-            ) : (
-              /* Last on the row and the only red thing on it, so the control
-                 that cannot be undone is never the first one a thumb finds. */
-              <button
-                onClick={() => setConfirming(m.id)}
-                className="rounded-full px-3 py-1 text-xs font-semibold text-red-700 underline"
-              >
-                {canManage(m) ? 'Remove from library' : 'Take it off my shelf'}
-              </button>
+            )}
+
+            {/* THE RARE ERRANDS, BEHIND "MORE". Reversible first, the red one
+                last, so the control that cannot be undone is never the first a
+                thumb finds. */}
+            {more === m.id && sharing !== m.id && (
+              <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-white p-3 ring-1 ring-navy/10">
+                {canPublish && (
+                  /* Putting something in front of the whole church is
+                     leadership's, and the database refuses anybody else. */
+                  <button
+                    onClick={() => void publish(m, !m.is_published)}
+                    className="tap-sm text-sm font-semibold text-navy underline"
+                  >
+                    {m.is_published ? 'Take it off the church shelf' : 'Put it on the church shelf'}
+                  </button>
+                )}
+                {canManage(m) && editing !== m.id && (
+                  <button
+                    onClick={() => startEdit(m)}
+                    className="tap-sm text-sm font-semibold text-navy underline"
+                  >
+                    Edit
+                  </button>
+                )}
+                {/* REMOVE IS FOR EVERYBODY, and does two different things.
+                    Leadership and whoever added it delete the row; anybody else
+                    takes it off their OWN shelf and leaves it on everybody's.
+                    deleteMaterial asks the database which it may do, and the
+                    sentence below says which BEFORE the tap. */}
+                {confirming === m.id ? (
+                  <>
+                    <p className="w-full text-sm font-semibold text-gray-700">
+                      {canManage(m)
+                        ? 'This takes it out of the church library, for everybody.'
+                        : 'This takes it off your shelf only. Everybody else keeps it, and you can put it back.'}
+                    </p>
+                    <button
+                      onClick={() => void remove(m)}
+                      className="tap-sm rounded-full bg-white px-3 text-sm font-bold text-red-700 ring-1 ring-red-200"
+                    >
+                      Yes, remove it
+                    </button>
+                    <button
+                      onClick={() => setConfirming('')}
+                      className="tap-sm px-2 text-sm font-semibold text-gray-600 underline"
+                    >
+                      Keep it
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setConfirming(m.id)}
+                    className="tap-sm text-sm font-semibold text-red-700 underline"
+                  >
+                    {canManage(m) ? 'Remove from library' : 'Take it off my shelf'}
+                  </button>
+                )}
+              </div>
             )}
             {editing === m.id && (
               <div className="mt-1 w-full rounded-xl bg-white p-3 ring-1 ring-navy/10">
@@ -831,7 +804,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
                   className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
                 />
                 <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-url-${m.id}`}>
-                  Address
+                  Link
                 </label>
                 <input
                   id={`edit-url-${m.id}`}
@@ -842,7 +815,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
                   className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
                 />
                 <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-note-${m.id}`}>
-                  What it is for
+                  Why it helps
                 </label>
                 <textarea
                   id={`edit-note-${m.id}`}
@@ -853,7 +826,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor }: {
                   className="tap mt-1 w-full rounded-xl bg-slate-50 px-3 py-2 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
                 />
                 <label className="mt-2 block text-xs font-semibold text-navy" htmlFor={`edit-kind-${m.id}`}>
-                  Kind
+                  Show it as
                 </label>
                 <select
                   id={`edit-kind-${m.id}`}
@@ -979,11 +952,10 @@ export function LiveSharedWithMe({ pairingId, heading, intro }: {
     <Card className="overflow-hidden p-0">
       <div className="border-b border-blue-800/10 bg-gradient-to-r from-sky-50 via-white to-teal-50 p-5 sm:p-6">
         <div className="flex items-start gap-3">
-          <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-blue-700 text-2xl shadow-sm">📚</span>
+          <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-700 text-xl shadow-sm">🎁</span>
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-700">Your library</p>
-            <h2 className="mt-0.5 text-2xl font-extrabold text-navy">{heading ?? 'Shared with you'}</h2>
-            <p className="mt-1 text-sm leading-relaxed text-gray-600">
+            <h2 className="text-xl font-extrabold text-navy">{heading ?? 'Shared with you'}</h2>
+            <p className="mt-0.5 text-sm leading-relaxed text-gray-600">
               {intro ?? 'Handed to you by somebody walking with you, for whenever you want it.'}
             </p>
           </div>

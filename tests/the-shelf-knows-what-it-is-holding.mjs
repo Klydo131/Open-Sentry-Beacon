@@ -107,24 +107,39 @@ const ok = (cond, msg) => {
 }
 
 // ---------------------------------------------------------------------------
-// 5. THE FORM ACTUALLY ASKS IT, AND RESPECTS A REAL CHOICE
+// 5. THE ADDRESS ANSWERS THE QUESTION, AND A REAL CHOICE IS NEVER OVERRIDDEN
 // ---------------------------------------------------------------------------
 //
 // Detection that OVERRIDES somebody is worse than no detection. A Guide who
 // files a YouTube link as Audio because they want it listened to has made a
-// decision, and having it flipped back on the next keystroke is the most
-// annoying possible version of this feature.
+// decision, and having it flipped back is the most annoying possible version
+// of this feature.
+//
+// Until 25 September 2026 the add form kept a Kind dropdown and remembered
+// whether it had been touched (`kindTouched`), so detection filled it only
+// while nobody had chosen. The owner then asked for these screens to be less
+// technical, and the dropdown went from the add form altogether: the address
+// answers it, and anything the reader is unsure of is a link. The one place a
+// person CHOOSES a kind is now More -> Edit, which is where this rule lives --
+// and nothing there ever runs the reader.
 {
   const lib = read('components/LiveLibrary.tsx');
-  ok(/kindFromUrl/.test(lib), 'the add form reads the address');
-  ok(/const \[kindTouched, setKindTouched\] = useState\(false\)/.test(lib),
-     'and remembers whether the person has chosen a kind themselves');
-  ok(/if \(!kindTouched\)/.test(lib),
-     'and only fills the box while they have not');
-  ok(/setKindTouched\(true\)/.test(lib),
-     'the dropdown records that it was used');
-  ok(/setKindTouched\(false\)/.test(lib),
-     'and the next resource starts listening to its address again');
+  ok(/kind: kindFromUrl\(url\) \?\? 'link'/.test(lib),
+     'adding reads the kind from the address, and calls anything unsure a link');
+  ok(!/id="mat-kind"/.test(lib),
+     'so the add form does not ask somebody to classify what the address already says');
+
+  const startEdit = lib.slice(lib.indexOf('const startEdit ='), lib.indexOf('const saveEdit ='));
+  const saveEdit = lib.slice(lib.indexOf('const saveEdit ='), lib.indexOf('const remove ='));
+  ok(/setEditKind\(m\.kind\)/.test(startEdit),
+     'editing opens on the kind the row already has');
+  ok(/kind: editKind/.test(saveEdit),
+     'and saves exactly the kind the person left in the box');
+  const editForm = lib.slice(lib.indexOf('{editing === m.id && ('), lib.indexOf('Save the changes'));
+  ok(/id=\{`edit-kind-\$\{m\.id\}`\}/.test(editForm),
+     'the edit form is where a kind is chosen');
+  ok(!/kindFromUrl/.test(startEdit + saveEdit + editForm),
+     'and the address reader never runs there, so a chosen kind is never overridden');
 }
 
 // ---------------------------------------------------------------------------

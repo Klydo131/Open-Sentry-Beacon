@@ -221,6 +221,12 @@ Before this, an online meeting had a title and a time and nowhere to put the add
 
 **The library holds links, and files stay on your own device.** A file saved under *On this device* is passed from your phone to theirs through your phone's own share sheet, so it never sits on a server. That is what keeps this app free to run while it is small, and storing files for everybody is on the list for when it can be paid for properly. The screen says so, so nobody hunts for an upload button that is not there.
 
+**Each resource has one thing to press: _Send to …_.** It opens a small panel: an optional line saying why, the people you walk with (anybody who already has it is ticked), and *Share outside the app* for WhatsApp, a text or anybody without an account. Everything else lives behind **More** on the same row: *Edit*, putting it on or taking it off the church shelf (leadership only), and *Remove*, which asks first and says whether it goes for everybody or only from your own shelf. A row shows the site a link goes to (*youtube.com*), not the whole address.
+
+**Adding one asks three things:** paste the link, what it is called, and why it helps (optional). The app works out from the link whether it is a video, music, a PDF or a picture. The note about files sits behind *Have a file instead of a link?* inside that form, where it is needed, rather than above the shelf on every visit.
+
+The card says what it is for where it appears: **Resources** in the Office, **Send John something** on one Explorer's page, and **Your links** in an Explorer's own Study folder, which opens on what was sent to them and their studies before their own links.
+
 #### What a Director sees, and what an Executive Director sees
 
 Freedom to share is not freedom from oversight, and the oversight is a record afterwards rather than a gate in front of every share.
@@ -262,7 +268,11 @@ A Guide's own screen puts the requests waiting for them at the top, before the r
 
 ### Lesson studies
 
-A Guide writes their own. Create a series, add studies to it, attach the handouts you already use, and publish it when it is ready. Until you publish, only you can see it. Anybody in the church can then open the series, read the studies and open the files.
+A Guide writes their own. Tap **+ New series**, give it a name (a topic and one line about it are optional), then open it and **+ Add a study**. Until you tap **Share with the church** at the foot of the series, it is a draft only you can see. Anybody in the church can then open the series, read the studies and open the files.
+
+**The shelf opens on the studies, not on a form.** A series row is just its name; tap it to open it. Inside, each study has **Mark as read**, and for writers **Edit this study**, which is also where you attach a handout or delete the study. **Rename**, **Share with the church** / **Hide from the church** and **Delete series** sit at the foot of an open series. Deleting a series or a study asks first and says what it takes with it: until 25 September 2026 deleting a series, with every study in it, was one tap on a red word beside *Rename*.
+
+On one Explorer's **Lessons** tab a Guide sees the studies the way that Explorer does, with how far they have read; writing and changing studies is in the Office, one tap away.
 
 Directors keep the same control over everything, which is what running the church means. A Guide may edit and delete only what they wrote.
 
