@@ -564,6 +564,11 @@ const staticChecks = [
   // technical. What made them complicated, kept from coming back.
   ['resources and studies stay simple', 'tests/resources-and-studies-stay-simple.mjs'],
   ['a resource can be a file', 'tests/a-resource-can-be-a-file.mjs'],
+  // Asked for the same day: "update policy and security to keep our app
+  // consistent and safe". No photo leaves with its location; what one person
+  // can upload is bounded, and handouts are for the people who write studies.
+  ['photos lose their location', 'tests/photos-lose-their-location.mjs'],
+  ['what one person can upload', 'tests/what-one-person-can-upload.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

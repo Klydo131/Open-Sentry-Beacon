@@ -170,11 +170,27 @@ export default function PrivacyPage() {
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Photos and files</h2>
           <p className="mt-2 text-gray-700">
-            A photo you send is made smaller first, and <strong>the location your camera
-            recorded in it is removed</strong> before it is stored. Files you save under
-            <em> On this device</em> in the library stay on your phone and are passed
-            straight to the other person; they never reach a server.
+            A photo you send or add is made smaller first, and <strong>the location your
+            camera recorded in it is removed</strong> before it is stored. That is true of a
+            photo in a conversation, your profile picture, a resource and a study handout.
+            The one exception: evidence attached to a safeguarding report is kept exactly
+            as you send it, because changing it could make it worth less, and only the
+            church&rsquo;s leadership handling the report can open it.
           </p>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            <li><strong>A file you add to Resources</strong> is kept by the church. Until
+              you send it to somebody, only you can open it; after that, so can the person
+              you sent it to. Directors see that something was added or shared, not the
+              file. Deleting the resource deletes the file.</li>
+            <li><strong>A handout on a study</strong> can be opened by anybody who can read
+              that study.</li>
+            <li><strong>Each file can be up to 10 MB</strong>, and each person can keep up
+              to 300 files or 200 MB of resources and handouts. Video is not kept; share a
+              link to it instead.</li>
+            <li><strong>Files you save under <em>On this device</em></strong> in My Files
+              stay on your phone and are passed straight to the other person; they never
+              reach a server.</li>
+          </ul>
         </Card>
 
         <Card className="p-5">

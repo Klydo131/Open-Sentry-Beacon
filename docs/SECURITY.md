@@ -80,6 +80,36 @@ is no screen that shows them. If you connect a backend, that boundary is now
 yours to enforce in your data rules. It is easy to lose by accident and hard to
 explain afterwards.
 
+### Files people upload
+
+The live app keeps every uploaded file in **one private storage bucket**, and a
+rule per folder decides who may put a file there and who may open it. Nothing in
+that bucket is public: a file is opened through a signed address that expires
+after an hour.
+
+| Folder | Who may upload | Who may open |
+|---|---|---|
+| `<pairing>/` | Either person in that conversation | The same two |
+| `avatars/<person>/` | That person | People in their church |
+| `library/<person>/` (Resources) | That person, if a Guide, Explorer or leader and not stopped from sharing | That person, and whoever can read a resource pointing at the file |
+| `lessons/<person>/` (study handouts) | That person, if they may write studies | Whoever can read the study |
+| `reports/<person>/` (safeguarding evidence) | That person | The church's leadership |
+
+Four rules apply across all of them:
+- **Every file is at most 10 MB**, and only pictures, PDFs, office documents,
+  audio and text are accepted. There is no video and no SVG, which can carry
+  script.
+- **Each person can keep up to 300 files or 200 MB** in their Resources and
+  handouts. That bounds what one stolen password, or one script driving an
+  account, can cost the church.
+- **A suspended account can neither upload nor open anything.**
+- **A photo loses the location its camera recorded** before it is sent. The
+  exception is safeguarding evidence, which is kept exactly as sent.
+
+These rules live in `supabase/migrations/`, and
+`tests/a-resource-can-be-a-file.mjs` and `tests/what-one-person-can-upload.mjs`
+fail if they are loosened.
+
 ---
 
 ## What is not protected, plainly
@@ -89,8 +119,9 @@ explain afterwards.
   real-world exposure.
 - **Anyone with a legitimate account.** Rules restrict what a role can retrieve.
   They cannot stop somebody reading their own records and repeating them.
-- **Content you choose to share.** If an administrator uploads a sensitive
-  document to the shared library, the app will faithfully share it.
+- **Content you choose to share.** If somebody uploads a sensitive document to
+  Resources and sends it, the app will faithfully share it, and the person who
+  receives it can save a copy that deleting the resource cannot take back.
 - **Your hosting provider.** Whoever runs your server and database can see what
   is on it.
 

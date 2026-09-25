@@ -55,16 +55,27 @@ const strip = (src) => src
   ok(/canvas\.toBlob/.test(shrink), 'the shrinker re-encodes through a canvas, which drops EXIF');
   ok(/imageOrientation: 'from-image'/.test(shrink),
      "and applies the camera's rotation first, or the photo arrives on its side");
-  ok(/if \(blob\.size >= file\.size\) return file/.test(shrink),
-     'it never returns something bigger than it was given');
-  ok(/catch \{[\s\S]{0,120}return file;/.test(shrink),
-     'and every failure sends the original rather than nothing');
+  // Never bigger than it was given -- UNLESS the photo says where it was taken:
+  // since 25 September 2026 losing the location outranks a few kilobytes.
+  ok(/if \(blob\.size >= file\.size && !located\) return file/.test(shrink),
+     'it never returns something bigger than it was given, unless that is the price of dropping a location');
+  ok(/catch \{[\s\S]{0,120}return fallback\(\);/.test(shrink)
+     && /const fallback = \(\) => \(located \? withoutLocation\(file\) : Promise\.resolve\(file\)\)/.test(shrink),
+     'and every failure sends the original rather than nothing -- with its location cut out, if it had one');
 
   const data = strip(readFileSync('lib/live/data.ts', 'utf8'));
   ok(/await shrinkImage\(original\)/.test(data),
      'a conversation attachment goes through it');
   ok(/await shrinkImage\(chosen\)/.test(data),
      'and so does a profile picture, which is the one most likely to be taken at home');
+  // And the two uploads added on 25 September 2026, which at first did not.
+  const fnBody = (name) => data.slice(data.indexOf(`export async function ${name}(`),
+    data.indexOf('\nexport ', data.indexOf(`export async function ${name}(`) + 10));
+  for (const [name, what] of [['addMaterialFile', 'a file added to Resources'], ['attachLessonFile', 'a study handout']]) {
+    const body = fnBody(name);
+    ok(body.indexOf('await shrinkImage(chosen)') !== -1 && body.indexOf('await shrinkImage(chosen)') < body.indexOf('.upload('),
+      `${what} goes through it before it is uploaded`);
+  }
 
   const notice = readFileSync('app/privacy/page.tsx', 'utf8');
   ok(/location your camera\s*\n?\s*recorded in it is removed/.test(notice.replace(/\s+/g, ' '))

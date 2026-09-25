@@ -1856,6 +1856,26 @@ export function kindFromFile(file: { type?: string | null; name?: string | null 
 }
 
 /**
+ * Why storage refused a file, in words the person can act on.
+ *
+ * Storage answers every rule it enforces with the same line -- "new row
+ * violates row-level security policy" -- whether the file went over the limit
+ * of what one person may keep (20260925120000), or their sharing has been
+ * paused by a Director. Both are said, because this side cannot tell which.
+ */
+function uploadRefused(raw: string, name: string): string {
+  if (/mime|type/i.test(raw)) {
+    return `\u201c${name}\u201d is not a kind of file the church keeps. Pictures, PDFs, documents and audio are.`;
+  }
+  if (/row-level security|policy|unauthorized|403/i.test(raw)) {
+    return `The church could not keep \u201c${name}\u201d. Each person can keep up to 300 files `
+      + 'or 200 MB of resources and handouts: delete some you no longer need and try again. '
+      + 'If you are well under that, your Director may have paused your sharing.';
+  }
+  return raw;
+}
+
+/**
  * Put a file on the shelf: upload it, then describe it.
  *
  * THE FILE FIRST, THEN THE ROW, and the file comes back out if the row cannot
@@ -1864,7 +1884,10 @@ export function kindFromFile(file: { type?: string | null; name?: string | null 
  * used to build addresses -- only the uploader's id, which the database checks
  * against who added the resource, and a random id.
  */
-export async function addMaterialFile(file: File, m: { title?: string; description?: string } = {}): Promise<string> {
+export async function addMaterialFile(chosen: File, m: { title?: string; description?: string } = {}): Promise<string> {
+  // A photo is made smaller and LOSES ITS LOCATION before it goes anywhere,
+  // as the privacy notice promises for every photo. See shrink-image.ts.
+  const file = await shrinkImage(chosen);
   if (file.size > MAX_RESOURCE_FILE) throw new Error(`\u201c${file.name}\u201d is over 10 MB. Share a link to it instead.`);
   const supabase = db();
   const me_id = await uid();
@@ -1875,11 +1898,7 @@ export async function addMaterialFile(file: File, m: { title?: string; descripti
   const path = `library/${me_id}/${uuid()}${ext ? '.' + ext : ''}`;
   const up = await supabase.storage.from('pairing-media')
     .upload(path, file, { upsert: false, contentType: file.type || undefined });
-  if (up.error) {
-    throw new Error(/mime|type/i.test(up.error.message)
-      ? `\u201c${file.name}\u201d is not a kind of file the church keeps. Pictures, PDFs, documents and audio are.`
-      : up.error.message);
-  }
+  if (up.error) throw new Error(uploadRefused(up.error.message, file.name));
 
   // A name somebody would recognise: what they typed, or the file's own name
   // without the extension.
@@ -3459,7 +3478,9 @@ export async function listLessonFiles(lessonIds: string[]): Promise<Record<strin
   return out;
 }
 
-export async function attachLessonFile(lessonId: string, file: File): Promise<void> {
+export async function attachLessonFile(lessonId: string, chosen: File): Promise<void> {
+  // A handout photographed on a phone loses its location like any other photo.
+  const file = await shrinkImage(chosen);
   if (file.size > 10 * 1024 * 1024) throw new Error('That file is over 10 MB.');
   const supabase = db();
   const me_id = await uid();
@@ -3471,7 +3492,7 @@ export async function attachLessonFile(lessonId: string, file: File): Promise<vo
   const path = `lessons/${me_id}/${lessonId}-${Date.now()}${ext ? '.' + ext : ''}`;
   const up = await supabase.storage.from('pairing-media')
     .upload(path, file, { upsert: false, contentType: file.type || undefined });
-  if (up.error) throw new Error(up.error.message);
+  if (up.error) throw new Error(uploadRefused(up.error.message, file.name));
   const { error } = await supabase.from('lesson_files').insert({
     lesson_id: lessonId, church_id: me.church_id, added_by: me_id,
     name: file.name.slice(0, 200), path, mime: file.type || null, size_bytes: file.size,

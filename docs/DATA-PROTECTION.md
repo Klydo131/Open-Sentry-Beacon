@@ -64,6 +64,8 @@ Structure read from the live database. No values were read.
 |---|---|---|
 | `messages` | the conversation between a Guide and an Explorer | Those two people, and a Director only inside a safeguarding report |
 | `pairing_media` + object storage | files sent in that conversation | The same two |
+| `materials` + object storage (`library/<person>/`) | a resource: a link, or a file somebody added (since 25 September 2026) | Whoever added it, and the people they send it to. Leadership sees a record that it was added or shared, not the file |
+| `lesson_files` + object storage (`lessons/<person>/`) | a study's handouts | Anybody who can read that study |
 | `prayer_requests` | what somebody asked prayer for, an Explorer or their Guide | The Explorer and their Guide; a Guide's request only to the one Explorer it was written to |
 | `guild_activity_posts` | a post on a guild board | Members of that guild, unsigned; leadership only when reported |
 | `posts` | blogs, at the audience the author chose | As chosen |
@@ -77,7 +79,7 @@ Structure read from the live database. No values were read.
 | `discipline_log` | approval, suspension, removal, by whom | **Outlives the person it describes, deliberately** |
 | `profile_changes` | a change to somebody's own details | Kept |
 | `security_audit_events` | account activity, by rank | Kept |
-| `library_activity` | who shared which link with whom | **30 days, then deleted** |
+| `library_activity` | who added or shared which link or file, with whom | **30 days, then deleted** |
 | `notifications` | alerts sent to one person | Kept |
 
 Two of those are deliberately permanent, and that is a decision with a legal
@@ -126,8 +128,20 @@ These are properties of the running system, not intentions:
   sign in.
 - **Consent is recorded** with a timestamp, and separately for a minor's
   guardian.
-- **Photographs are stripped of location** before they are stored. A phone
-  writes GPS coordinates into a picture; re-encoding drops them.
+- **Photographs are stripped of location** before they are stored: in a
+  conversation, a profile picture, a resource and a study handout. A phone
+  writes GPS coordinates into a picture; re-encoding drops them. Every JPEG is
+  checked for coordinates whatever its size (until 25 September 2026 a photo
+  under 400 KB was not re-encoded, and kept them). **Not covered:** HEIC
+  photos, which a browser cannot re-encode, and PNG or WebP metadata, which
+  phones do not normally put coordinates in. **The one deliberate exception:**
+  evidence attached to a safeguarding report is kept exactly as it was sent,
+  because re-encoding evidence changes it; only leadership handling the report
+  can open it, and the notice says so. See `lib/live/photo-location.ts`.
+- **What one person can upload is bounded.** Each file is at most 10 MB, and
+  each person can keep up to 300 files or 200 MB of resources and study
+  handouts (`private.room_to_upload`, 20260925120000). Conversation photos and
+  safeguarding evidence are not counted.
 - **A weekly backup is encrypted** before it leaves the machine.
 - **A member can download their own data**, from their Profile screen, without
   asking anybody. It is assembled in the browser from queries that person could
