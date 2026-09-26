@@ -80,6 +80,16 @@ is no screen that shows them. If you connect a backend, that boundary is now
 yours to enforce in your data rules. It is easy to lose by accident and hard to
 explain afterwards.
 
+### Place suggestions go through your server
+
+The meet-up place box suggests places from OpenStreetMap as somebody types. The
+browser never asks the map service itself: it asks `supabase/functions/places`,
+which checks the caller is signed in, approved and not suspended; limits
+them to the pace of a person typing; sends only the words and a town-level
+point; logs nothing; and holds no master key. The Content-Security-Policy
+therefore still allows the browser to talk to your backend and nothing else.
+`tests/place-search.mjs` fails if any of that changes.
+
 ### Nobody promotes themselves
 
 A signed-in person cannot change their own role, approval, church or a

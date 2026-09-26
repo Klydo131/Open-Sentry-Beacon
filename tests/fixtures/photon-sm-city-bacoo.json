@@ -1,0 +1,150 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 6160787430,
+    "osm_key": "highway",
+    "osm_value": "bus_stop",
+    "type": "house",
+    "name": "SM City Bacoor",
+    "street": "Tirona Highway",
+    "locality": "Dulong Habay",
+    "city": "Bacoor",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4102",
+    "countrycode": "PH"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9504084,
+     14.4459485
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "R",
+    "osm_id": 2523915,
+    "osm_key": "shop",
+    "osm_value": "mall",
+    "type": "house",
+    "name": "SM City Bacoor",
+    "street": "Aguinaldo Highway",
+    "locality": "Dulong Habay",
+    "city": "Bacoor",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4102",
+    "countrycode": "PH",
+    "extent": [
+     120.948379,
+     14.4473134,
+     120.9526032,
+     14.4432238
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9503333,
+     14.444592
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "W",
+    "osm_id": 1062241777,
+    "osm_key": "amenity",
+    "osm_value": "taxi",
+    "type": "house",
+    "name": "SM City Bacoor Tricycle Terminal",
+    "street": "Tirona Highway",
+    "locality": "Lorenzana",
+    "city": "Bacoor",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4102",
+    "countrycode": "PH",
+    "extent": [
+     120.9497228,
+     14.4458327,
+     120.9498968,
+     14.4455319
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9497996,
+     14.4456491
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 7576366591,
+    "osm_key": "highway",
+    "osm_value": "bus_stop",
+    "type": "house",
+    "name": "SM City Molino",
+    "street": "Molino Road",
+    "locality": "Ridge Crest Hills",
+    "district": "Molino",
+    "city": "Bacoor",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4102",
+    "countrycode": "PH"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9779671,
+     14.3838968
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "W",
+    "osm_id": 451510463,
+    "osm_key": "shop",
+    "osm_value": "mall",
+    "type": "house",
+    "name": "SM City Molino",
+    "street": "Molino Road",
+    "locality": "Ridge Crest Hills",
+    "district": "Molino",
+    "city": "Bacoor",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4102",
+    "countrycode": "PH",
+    "extent": [
+     120.9758791,
+     14.3850434,
+     120.9781931,
+     14.3829623
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9769691,
+     14.3840186
+    ]
+   }
+  }
+ ]
+}

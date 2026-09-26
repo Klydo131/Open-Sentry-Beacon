@@ -573,6 +573,10 @@ const staticChecks = [
   // themselves or moving church. In the database since the first migration,
   // and until 25 September 2026 held by no test at all.
   ['nobody promotes themselves', 'tests/nobody-promotes-themselves.mjs'],
+  // "I need to see the destination name, like auto name in google search, then
+  // just click or tap it to secure the location." The right place, one tap,
+  // and nothing more sent than the words.
+  ['place search', 'tests/place-search.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

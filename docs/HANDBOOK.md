@@ -201,7 +201,13 @@ A Guide and an Explorer arrange a time together on the same card, and both see i
 
 **The card sits with the conversation, on both sides.** On the Explorer's screen it always has. On the Guide's it used to sit under **Journey**, which is the one tab the Explorer never sees — it holds the six stages and the Advance button, and it is where a Guide records where somebody has got to. That put a thing the two of them do *together* inside the folder of things the Guide does *about* them: an Explorer proposed a time from their chat, and their Guide had to leave the conversation and know which tab to open before they could see it had been asked. It is beneath the thread on both screens now, in the same place on each.
 
-**In person asks where, and will not let you skip it.** The place becomes an **Open in Maps** button that opens whichever map app that person already has, signed in, with their own saved places. Give it a place and a street, for example *Church cafe, 12 Rizal St, Cavite*, because "Church hall" on its own maps to every church hall in the country.
+**In person asks where, and will not let you skip it.** Start typing a place and the box suggests where you might mean: places you two have met before first, then places from the map, each with its street, barangay, city and province. Type *jollibee imus* and you see each branch with its own street, so you can tell which one you mean. Tap one and it is pinned: the card says **Meeting here** with the name and address, and **Check it on the map** opens that exact spot before anybody is asked to go there. The other person's **Open in Maps** button opens the same spot in whichever map app they already use.
+
+You can still type an address yourself, for example *Church cafe, 12 Rizal St, Cavite*, or paste a map link someone shared; the list offers **Use "…" as typed**. A place too small to be on the map, or a search that is not answering, never stops two people meeting.
+
+> **NOTE** · What the place search sends
+>
+> Only the words typed, and the town you last met in rounded to about ten kilometres, go to the map search (Photon, over OpenStreetMap). They go from the church's server, not from the phone, so nobody's name, account or internet address goes with them, and nothing about the search is kept. The privacy notice says the same.
 
 > **NOTE** · A link, never an embedded map
 >

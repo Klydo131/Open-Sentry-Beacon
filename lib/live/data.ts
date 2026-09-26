@@ -43,6 +43,7 @@ import {
 } from '@/lib/supabase/client';
 import { uuid } from '@/lib/uuid';
 import { shrinkImage } from '@/lib/live/shrink-image';
+import type { PlaceSuggestion } from '@/lib/live/place-pin';
 import type { Session } from '@supabase/supabase-js';
 import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode } from '@/lib/types';
 import { STAGE_ORDER } from '@/lib/brand';
@@ -2760,6 +2761,41 @@ export async function listMeetings(pairingId: string): Promise<Meeting[]> {
     .order('starts_at', { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as Meeting[];
+}
+
+
+/**
+ * Places to meet, suggested as somebody types: "jollibee imus" becomes the
+ * five branches, each with its street and barangay, to tap one.
+ *
+ * Asked through the church's own `places` function rather than from the
+ * browser, so the only thing that leaves for the map service is the words and
+ * a point rounded to the nearest town -- never a name, an account or the
+ * member's own internet address. See supabase/functions/places/index.ts.
+ *
+ * Throws with a sentence a person can read when the search cannot answer; the
+ * place box then carries on as an ordinary box, because typing an address by
+ * hand always still works.
+ */
+export async function searchPlaces(
+  q: string,
+  near?: { lat: number; lon: number } | null,
+): Promise<PlaceSuggestion[]> {
+  const words = q.trim();
+  if (words.length < 3) return [];
+  const { data, error } = await db().functions.invoke('places', {
+    body: { q: words, ...(near ? { near } : {}) },
+  });
+  if (error) {
+    const response = (error as { context?: unknown }).context;
+    if (response instanceof Response) {
+      const said = await response.clone().json().catch(() => null) as { error?: string } | null;
+      if (said?.error) throw new Error(said.error);
+    }
+    throw new Error('Place search is not available right now.');
+  }
+  const places = (data as { places?: unknown } | null)?.places;
+  return Array.isArray(places) ? (places as PlaceSuggestion[]) : [];
 }
 
 /**

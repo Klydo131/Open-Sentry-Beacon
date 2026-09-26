@@ -1,29 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { Card, Button } from '@/components/ui';
 import type { Meeting } from '@/lib/types';
+import { PlaceSearch } from '@/components/PlaceSearch';
+import { searchSamplePlaces } from '@/lib/demo/sample-places';
+import { hasLink, placeLabel, placeUrl, wordsBesideLink } from '@/lib/live/meeting-link';
 
 // Shared scheduling card for a pairing — used by both the missionary and the
 // seeker. Schedule a call or an in-person study time, see what's coming up
 // (with a "Soon" flag for the next 24h), and cancel. Both sides are notified.
-// A Google Maps link for a place somebody typed.
+// Where an in-person meeting is, as one button.
 //
 // Deliberately a link, not an embedded map. An embed needs a Google Maps API
 // key, which means a billing account, a key in the hosting environment and a
-// key that leaks the moment it reaches the browser — a lot of moving parts for a
-// church, to show a picture of a place they already know. A link opens the map
-// app the person already has, already signed in, with their own saved places and
-// their own directions.
+// key that leaks the moment it reaches the browser -- a lot of moving parts for
+// a church, to show a picture of a place they already know. A link opens the
+// map app the person already has, with their own saved places and directions.
 //
-// `encodeURIComponent` is doing real work here: the location is free text typed
-// by a missionary, and it goes into a URL. Anything that is only whitespace
-// yields no link at all rather than a map of nowhere.
+// The SAME rule as the live app (lib/live/meeting-link.ts): a pinned place, or
+// a pasted map link, opens that exact spot; anything else becomes a map search
+// for the words. It used to be a search for the whole field, which turned a
+// pinned place's link into a search for the link itself.
 function mapsUrl(place: string | undefined): string | null {
-  const q = (place || '').trim();
-  if (!q) return null;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+  return placeUrl('in_person', place);
 }
 
 export function Meetings({ pairingId }: { pairingId: string }) {
@@ -32,6 +33,17 @@ export function Meetings({ pairingId }: { pairingId: string }) {
   const [when, setWhen] = useState('');
   const [mode, setMode] = useState<Meeting['mode']>('online');
   const [location, setLocation] = useState('');
+
+  // Places this pair met before, most recent first, offered back as you type.
+  const history = useMemo(() => {
+    const seen = new Set<string>();
+    return db.meetings
+      .filter((m) => m.pairing_id === pairingId && m.mode === 'in_person' && (m.location ?? '').trim())
+      .sort((a, b) => b.when.localeCompare(a.when))
+      .map((m) => (m.location as string).trim())
+      .filter((v) => { const k = v.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+      .slice(0, 8);
+  }, [db.meetings, pairingId]);
 
   const upcoming = db.meetings
     .filter(
@@ -62,7 +74,7 @@ export function Meetings({ pairingId }: { pairingId: string }) {
         Book a call or an in-person study time. You’ll both be notified.
       </p>
 
-      <div className="grid gap-2 rounded-xl bg-gray-50 p-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 rounded-xl bg-gray-50 p-3 sm:grid-cols-2">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -82,7 +94,7 @@ export function Meetings({ pairingId }: { pairingId: string }) {
             never reached: "I still dont see the location with the meetings".
             Two buttons show both choices at once. */}
         <div className="grid grid-cols-2 gap-2" role="group" aria-label="Online or in person">
-          {([['online', '💻 Online call'], ['in_person', '📍 In person']] as const).map(([m, label]) => (
+          {([['online', '💻 Online'], ['in_person', '📍 In person']] as const).map(([m, label]) => (
             <button
               key={m}
               type="button"
@@ -98,17 +110,16 @@ export function Meetings({ pairingId }: { pairingId: string }) {
         </div>
         {mode === 'in_person' && (
           <div className="sm:col-span-2">
-            <input
+            {/* The same place box as the live app. Here it searches a short list
+                of sample landmarks, because the sample app talks to nothing. */}
+            <PlaceSearch
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Church cafe, 12 Rizal St, Cavite"
-              aria-label="Where you are meeting"
-              className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-black/5"
+              onChange={setLocation}
+              search={searchSamplePlaces}
+              history={history}
+              source="sample"
+              hint={<>Type a place, then tap the right one. Try &ldquo;cathedral&rdquo;.</>}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              A place and a street. It becomes an Open in Maps button for both
-              of you.
-            </p>
           </div>
         )}
         <div className="sm:col-span-2">
@@ -157,10 +168,20 @@ export function Meetings({ pairingId }: { pairingId: string }) {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
-                    {m.mode === 'in_person' && m.location
-                      ? ` · ${m.location}`
-                      : ' · Online'}
+                    {m.mode === 'in_person' ? '' : ' · Online'}
                   </p>
+                  {/* The place on lines of its own: its name, then where it is,
+                      rather than run on after the date where nobody reads it. */}
+                  {m.mode === 'in_person' && m.location && (() => {
+                    const words = hasLink(m.location) ? wordsBesideLink(m.location) || 'Pinned place' : m.location;
+                    const [name, ...rest] = words.split(', ');
+                    return (
+                      <div className="mt-1" data-meeting-place="">
+                        <p className="break-words font-semibold leading-snug text-navy">{name}</p>
+                        {rest.length > 0 && <p className="break-words text-sm leading-snug text-gray-600">{rest.join(', ')}</p>}
+                      </div>
+                    );
+                  })()}
                   {m.mode === 'in_person' && mapsUrl(m.location) && (
                     <a
                       href={mapsUrl(m.location)!}
@@ -168,7 +189,7 @@ export function Meetings({ pairingId }: { pairingId: string }) {
                       rel="noopener noreferrer"
                       className="mt-1 inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/5 hover:bg-gray-100"
                     >
-                      <span aria-hidden>🗺️</span> Open in Maps
+                      <span aria-hidden>🗺️</span> {placeLabel(mapsUrl(m.location)!)}
                     </a>
                   )}
                 </div>

@@ -437,7 +437,24 @@ In **Edge Functions → Secrets**, add `BEACON_ALLOWED_ORIGINS` with your site's
 address, for example `https://your-church.vercel.app` (several can be listed,
 separated by commas). Without it the invitation sender answers any website that
 calls it -- it still refuses anybody who is not one of your Directors, but there
-is no reason to let other sites read its replies.
+is no reason to let other sites read its replies. The place search in Step 7b
+reads the same setting.
+
+### Step 7b — Place suggestions for meet-ups *(2 minutes, optional)*
+
+When two people arrange to meet in person, the place box suggests places as
+they type -- "jollibee imus" shows each branch with its street and barangay --
+and tapping one pins that exact spot. It uses Photon, a free place search over
+OpenStreetMap run by komoot; there is no account to make and nothing to pay.
+
+1. Deploy it: `npx supabase functions deploy places --project-ref YOUR_PROJECT_REF`
+2. *(Optional)* In **Edge Functions → Secrets**, add `PLACES_NEAR` with a point
+   near your church, as `latitude,longitude` (for example `14.4,120.9`), so
+   nearby places come first for people who have not pinned a place yet.
+
+Only the words typed and a town-level point leave your server; the privacy
+notice already says so. Without this step the place box is an ordinary box:
+typing an address or pasting a map link works exactly as before.
 
 ### Step 8 — Check your copy is the same app *(5 minutes, optional)*
 
@@ -751,6 +768,7 @@ npx supabase secrets set \
   SITE_URL=https://yourchurch.vercel.app \
   --project-ref <ref>
 npx supabase functions deploy invite --project-ref <ref>
+npx supabase functions deploy places --project-ref <ref>   # place suggestions (optional)
 
 # 7. Prove it before you trust it
 npm run verify:all

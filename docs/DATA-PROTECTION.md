@@ -102,6 +102,12 @@ than assumed**.
 - **Brevo**, which sends invitation and password email. It sees the recipient's
   address and the message.
 - **GitHub**, which holds the code and the weekly encrypted backup.
+- **komoot (Photon)**, since 26 September 2026: the place search behind the
+  meet-up box, over OpenStreetMap data, run in Germany. It receives the words
+  typed in the place box and, when there is one, a point rounded to about ten
+  kilometres -- sent from the church's server, so not the member's name,
+  account or internet address. Nothing is stored on the church's side.
+  `supabase/functions/places/`.
 
 Each of those is a processor, and RA 10173 §21 expects a contract with each one
 holding them to the same standard. Their standard terms may already do it; **it
@@ -162,7 +168,7 @@ Ordered by how much it matters, not by how hard it is.
 | ~~2~~ | ~~**No way for a member to get a copy of their own data.**~~ **Built, 1 September 2026.** *A copy of your information* on the Profile screen produces a JSON file with the profile, the conversation, prayer requests, meetings, posts, library shares, notifications and every change to their own details. | Nothing. See below for what it deliberately leaves out. | Done |
 | 3 | **No named Data Protection Officer.** Expected where sensitive personal information is processed. | A person, an email address, and the NPC filing if the church passes 1,000 members. | Owner |
 | 4 | **No breach procedure.** RA 10173 requires notification to the NPC and to affected people **within 72 hours** of knowing. There is no written procedure and no rehearsal. | One page: who decides it is a breach, who is told, in what order, and the wording. | Owner |
-| 5 | **Processor terms unchecked.** Supabase, Vercel, Brevo and GitHub all hold or see personal data. The hosting region is now recorded: Seoul. | Confirm each one's data-processing terms. | Owner |
+| 5 | **Processor terms unchecked.** Supabase, Vercel, Brevo and GitHub all hold or see personal data, and komoot sees the words typed into the meet-up place box. The hosting region is now recorded: Seoul. | Confirm each one's data-processing terms. | Owner |
 | 6 | **Retention is undefined** for everything except the library record. A message from four years ago is still there because nothing deletes it, not because anybody decided it should stay. | A retention period per table, written down, then enforced. | Owner decides, engineering enforces |
 | 7 | **Erasure conflicts with the safeguarding record**, and the conflict is unstated. | Write the lawful basis for the exception into the notice, and make the app say so when an account is deleted. | Owner, then engineering |
 | 8 | **No record of who read what.** A Director can open a reported conversation and nothing records that they did. | An access log for the one place where a third party reads a private thread. | Engineering |

@@ -1,0 +1,136 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 2093224505,
+    "osm_key": "amenity",
+    "osm_value": "fast_food",
+    "type": "house",
+    "name": "Jollibee",
+    "street": "Aguinaldo Highway",
+    "locality": "Anabu II-D",
+    "city": "Imus",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4103",
+    "countrycode": "PH"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9391575,
+     14.370575
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 2916727874,
+    "osm_key": "amenity",
+    "osm_value": "fast_food",
+    "type": "house",
+    "name": "Jollibee",
+    "street": "Aguinaldo Highway",
+    "locality": "Tanzang Luma I",
+    "city": "Imus",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4103",
+    "countrycode": "PH"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9418015,
+     14.4227638
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 1338026658,
+    "osm_key": "amenity",
+    "osm_value": "fast_food",
+    "type": "house",
+    "name": "Jollibee",
+    "street": "Nueno Avenue",
+    "locality": "Tanzang Luma I",
+    "city": "Imus",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4103",
+    "countrycode": "PH"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9405633,
+     14.4239178
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "W",
+    "osm_id": 550253513,
+    "osm_key": "amenity",
+    "osm_value": "fast_food",
+    "type": "house",
+    "name": "Jollibee",
+    "street": "Buhay na Tubig Road",
+    "locality": "Buhay na Tubig",
+    "city": "Imus",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4103",
+    "countrycode": "PH",
+    "extent": [
+     120.956362,
+     14.4068476,
+     120.9568796,
+     14.4065572
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9566136,
+     14.4067436
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 3730674391,
+    "osm_key": "amenity",
+    "osm_value": "fast_food",
+    "type": "house",
+    "name": "Jollibee",
+    "street": "Aguinaldo Highway",
+    "locality": "Anabu I-B",
+    "city": "Imus",
+    "state": "Cavite",
+    "country": "Philippines",
+    "postcode": "4103",
+    "countrycode": "PH"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.9395468,
+     14.3982083
+    ]
+   }
+  }
+ ]
+}

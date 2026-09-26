@@ -418,3 +418,52 @@ export function CalloutGlyph(props: GlyphProps) {
     </Svg>
   );
 }
+
+/** A place on a map: where two people are meeting. */
+export function PinGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </Svg>
+  );
+}
+
+/** Before: a place used last time. */
+export function ClockGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </Svg>
+  );
+}
+
+/** Done, and settled. */
+export function CheckGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </Svg>
+  );
+}
+
+/** Opens somewhere else: another app, or a new tab. */
+export function ExternalGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M14 4h6v6M20 4l-9 9" />
+      <path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />
+    </Svg>
+  );
+}
+
+/** Written by hand, just as it is. */
+export function PencilGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z" />
+      <path d="M14.5 6.5l3 3" />
+    </Svg>
+  );
+}

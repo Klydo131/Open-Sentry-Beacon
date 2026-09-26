@@ -123,6 +123,15 @@ export default function PrivacyPage() {
             The pages are served by Vercel. Email is sent through Brevo. A weekly backup
             is encrypted before it leaves.
           </p>
+          <p className="mt-2 text-gray-700">
+            <strong>When you arrange to meet somebody in person</strong>, the words you type
+            in the place box are sent to a place search so it can suggest where you mean.
+            It is Photon, run by komoot in Germany over OpenStreetMap data. The words go
+            from the church&rsquo;s server, not from your phone, and nothing else goes with
+            them: not your name, not your email, not your phone&rsquo;s internet address.
+            The only other thing sent is the town where you last met, rounded to about ten
+            kilometres, so nearby places come first. Nothing about the search is kept.
+          </p>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li><strong>The record of shared links: 30 days</strong>, then deleted
               automatically.</li>

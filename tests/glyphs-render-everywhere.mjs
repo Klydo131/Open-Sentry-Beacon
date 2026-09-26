@@ -69,8 +69,11 @@ const BANNED_BLOCKS = [
 
 // Punctuation and symbols with coverage broad enough to rely on. Arrows and the
 // ellipses are in every text font worth the name; the quotes and dashes are
-// ordinary typography.
-const KNOWN_SAFE = new Set([...'←↑→↓↗↩↺↻⇄⋮⋯›‹–—…·×°′″“”‘’•✓✕✖▲▴▼▾▶▸●○☰❚✦✝✍✉✈⚖⚙⚠⚡']);
+// ordinary typography. The copyright sign is Latin-1, in every text font there
+// is, and it is wanted AS TEXT: OpenStreetMap's credit under the place
+// suggestions reads "© OpenStreetMap contributors", and U+FE0F would turn it
+// into a coloured emoji badge in the middle of a line of small print.
+const KNOWN_SAFE = new Set([...'←↑→↓↗↩↺↻⇄⋮⋯›‹–—…·×°′″“”‘’•✓✕✖▲▴▼▾▶▸●○☰❚✦✝✍✉✈⚖⚙⚠⚡©']);
 
 const inBanned = (code) => BANNED_BLOCKS.find(([lo, hi]) => code >= lo && code <= hi);
 

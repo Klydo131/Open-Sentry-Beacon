@@ -6,18 +6,23 @@
 // online call, it will have some save files of links so that users can just
 // click it right away."
 //
-// THE LINK HALF IS EXACTLY THAT. The places half deliberately is NOT a search
-// service, and this file is where that decision is held rather than left to
-// memory. Predictions from one would mean every partial address a Guide types
-// about meeting an Explorer -- sometimes a minor, sometimes at their home --
-// leaving for a third party AS THEY TYPE. It would need a billed key in the
-// browser, a new origin in a connect-src built to refuse them, and a fourth
-// name in a privacy notice that lists three. That is a decision about members'
-// data and it belongs to the church, not to a convenience.
+// THE LINK HALF IS EXACTLY THAT. The places half was first deliberately NOT a
+// search service: predictions from one would mean every partial address a
+// Guide types about meeting an Explorer -- sometimes a minor, sometimes at
+// their home -- leaving for a third party AS THEY TYPE.
 //
-// What is here instead costs nothing and covers what recurs: a church meets at
-// the hall, that one cafe, somebody's front room, and calls on the same room
-// every week.
+// ON 26 SEPTEMBER 2026 THE CHURCH DECIDED OTHERWISE, and asked plainly: "I
+// need to see the destination name, like auto name in google search, then just
+// click or tap it to secure the location." What was built is the version that
+// sends the least, and this file now holds THAT promise instead:
+//
+//   * the browser never talks to a search service -- it asks the church's own
+//     server (supabase/functions/places), so a member's internet address, name
+//     and account never go with the words;
+//   * the Content-Security-Policy still names no lookup service;
+//   * the history still comes first, costs nothing and sends nothing.
+//
+// tests/place-search.mjs holds the search itself.
 //
 // TWO PROPERTIES WORTH PINNING:
 //
@@ -47,11 +52,14 @@ const ok = (cond, msg) => {
 
 const page = strip(read('components/LiveMeetings.tsx'));
 
-// Both fields, not just the one that was easy.
+// Both fields, not just the one that was easy. The link field through the
+// browser's own list; the place field through the place box, which puts the
+// places met before at the top of its suggestions.
 const lists = (page.match(/list="appointment-history"/g) ?? []).length;
-ok(lists === 2, `both the place and the link field offer the history (${lists} of 2)`);
-ok(/<datalist id="appointment-history">/.test(page),
-   'and there is a list for them to draw from');
+ok(lists === 1 && /<datalist id="appointment-history">/.test(page),
+   'the link field offers the links used before');
+ok(/<PlaceSearch[\s\S]{0,200}history=\{history\}/.test(page),
+   'and the place field offers the places met before');
 
 // The history itself.
 const src = /const history = useMemo\(([\s\S]*?)\n  \}, \[rows, mode\]\);/.exec(page);
@@ -65,16 +73,22 @@ ok(/seen\.has\(key\)/.test(body) && /toLowerCase\(\)/.test(body),
 ok(/starts_at/.test(body),
    'most recent first, because the last place used is the likeliest next one');
 
-// THE DECISION. No third-party lookup crept in beside it.
+// THE DECISION, AS IT NOW STANDS. The browser asks the church's own server and
+// nothing else; no search service's address appears in anything a browser runs.
 const whole = read('components/LiveMeetings.tsx');
-ok(!/googleapis|places\.googleapis|nominatim|mapbox|autocomplete\?/i.test(whole),
-   'and nothing is sent to a search service to do it');
+const box = read('components/PlaceSearch.tsx');
+for (const [file, src] of [['LiveMeetings', whole], ['PlaceSearch', box], ['the data layer', read('lib/live/data.ts')]]) {
+  ok(!/googleapis|nominatim|mapbox|photon|komoot/i.test(src),
+     `${file} names no search service -- the browser never talks to one`);
+}
+ok(/functions\.invoke\('places'/.test(read('lib/live/data.ts')),
+   'the search goes through the church\'s own places function');
 
 // The CSP guardrail is the other half of that promise, so it must still be
 // there to be read: a connect-src that admits a places API would pass every
 // check above while breaking the reason for them.
 const conf = read('next.config.mjs');
-ok(/connect-src/.test(conf) && !/googleapis/.test(conf),
+ok(/connect-src/.test(conf) && !/googleapis|photon|komoot|nominatim|mapbox/i.test(conf),
    'the connect-src still names no lookup service');
 
 console.log(bad ? `\nRESULT: ${bad} FAILURE(S)` : '\nRESULT: ALL OK');

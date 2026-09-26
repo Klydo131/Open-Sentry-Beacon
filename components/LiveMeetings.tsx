@@ -27,6 +27,9 @@ import {
   hasLink, joinLabel, joinUrl, placeLabel, placeUrl, wordsBesideLink,
 } from '@/lib/live/meeting-link';
 import { useKeepUp, KEEP_UP_MEETINGS } from '@/lib/live/keep-up';
+import { PlaceSearch } from '@/components/PlaceSearch';
+import { ExternalGlyph, PinGlyph } from '@/components/Glyph';
+import { nearOf, pinOf } from '@/lib/live/place-pin';
 
 function when(iso: string): string {
   const d = new Date(iso);
@@ -52,28 +55,23 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   const [mode, setMode] = useState<live.MeetingMode>('online');
   const [location, setLocation] = useState('');
 
-  // WHAT THIS PERSON HAS USED BEFORE, OFFERED BACK.
+  // WHAT THIS PERSON HAS USED BEFORE, OFFERED BACK -- and, since 26 September
+  // 2026, places from the map as well.
   //
-  // Asked for as a places dropdown "like Google earth can do", and as saved
-  // links for online calls. The link half is exactly that. The places half is
-  // deliberately NOT a search service: predictions from one would mean every
-  // partial address a Guide types about meeting an Explorer -- sometimes a
-  // minor, sometimes at their home -- leaving for a third party as they type,
-  // a new origin in a CSP built to refuse them, and a fourth name in a privacy
-  // notice that lists three. That is a decision about members' data, not a
-  // detail, so it is not switched on here.
+  // First asked for as a places dropdown "like Google earth can do". The
+  // history half shipped then and the map half did not, on the reasoning that
+  // every half-typed address would leave for a third party. Asked for again,
+  // more plainly: "I can't see my destination if it's really going to be that
+  // destination unless I already input the destination." The church decided;
+  // what is built is the version that sends the least. The words go through the
+  // church's own server (supabase/functions/places), so the member's address
+  // never does, and no new origin enters the Content-Security-Policy. The
+  // privacy notice says so.
   //
-  // This costs nothing and covers the cases that actually recur: a church meets
-  // at the hall, that one cafe, somebody's front room, and calls on the same
-  // Zoom room every week. After the first use each is one tap away.
-  //
-  // Drawn from the meetings ALREADY on this screen, so there is no extra read,
-  // nothing new stored, and nobody can be shown a place from a pairing they
-  // cannot already see -- the rows come through the same policy as the list.
-  //
-  // A native <datalist>: the browser does the filtering, the dropdown and the
-  // keyboard handling, and where one is not supported the input is simply an
-  // ordinary input. Nothing to break.
+  // The history is still first in the list: it costs nothing, it covers what
+  // recurs -- the hall, that one cafe, the same Zoom room every week -- and it
+  // is drawn from the meetings ALREADY on this screen, so nobody can be shown
+  // a place from a pairing they cannot already see.
   const history = useMemo(() => {
     const seen = new Set<string>();
     const out: string[] = [];
@@ -89,6 +87,16 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
     }
     return out;
   }, [rows, mode]);
+
+  // Where to prefer suggestions near: the last place this pair pinned, rounded
+  // to the nearest town inside nearOf before it goes anywhere.
+  const near = useMemo(() => nearOf(
+    [...(rows ?? [])]
+      .filter((m) => m.mode === 'in_person')
+      .sort((x, y) => y.starts_at.localeCompare(x.starts_at))
+      .map((m) => m.location),
+  ), [rows]);
+  const searchPlaces = useCallback((q: string) => live.searchPlaces(q, near), [near]);
   // WHAT TO BRING, OR WHAT IT IS FOR. `meetings.notes` has existed since
   // migration 0009, `scheduleMeeting` has accepted one since it was written,
   // `listMeetings` selects it and the Meeting type carries it. This screen
@@ -193,7 +201,13 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
         <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">{error}</p>
       )}
 
-      <div className="mt-5 grid gap-3 rounded-2xl bg-slate-50 p-3 sm:p-4">
+      {/* grid-cols-1: ONE COLUMN AS WIDE AS THE CARD, and no wider. Without it
+          the column grew to the date box's natural width, about fifty pixels
+          more than a phone has, and the card cut off the right-hand side of
+          the form -- half the "In person" button, the end of every line.
+          Found on 26 September 2026 when the place box was added; it was
+          there before it. */}
+      <div className="mt-5 grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-3 sm:p-4">
         <p className="text-sm font-bold text-navy">Plan an appointment</p>
         <input
           value={title}
@@ -217,7 +231,9 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
             reached. Two buttons show both choices at once, and pressing one is
             one tap rather than open-scroll-choose. */}
         <div className="grid grid-cols-2 gap-2" role="group" aria-label="Online or in person">
-          {([['online', '💻 Online call'], ['in_person', '📍 In person']] as const).map(([m, label]) => (
+          {/* "Online" rather than "Online call": the longer words wrapped onto
+              two lines of a phone-sized button. */}
+          {([['online', '💻 Online'], ['in_person', '📍 In person']] as const).map(([m, label]) => (
             <button
               key={m}
               type="button"
@@ -245,20 +261,18 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
             maps to every church hall in the country. */}
         {mode === 'in_person' && (
           <div>
-            <input
+            {/* TYPE, SEE, TAP. Suggestions arrive as you type, each with its
+                street and barangay, and tapping one pins that exact place.
+                Typing an address by hand, or pasting a map link, still works:
+                a suggestion is an offer, not a gate. */}
+            <PlaceSearch
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              list="appointment-history"
-              placeholder="Church cafe, 12 Rizal St, Cavite"
-              aria-label="Where you are meeting"
-              className="tap w-full rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-teal-600"
+              onChange={setLocation}
+              search={searchPlaces}
+              history={history}
+              source="openstreetmap"
+              hint={<>Type a place and its town, like &ldquo;Jollibee Imus&rdquo;, then tap the right one.</>}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              A place and a street, which becomes an Open in Maps button for both
-              of you. Or paste a map link and that exact pin is what opens, which
-              beats a search when the place is hard to find.
-              {history.length > 0 && ' Somewhere you have met before will be offered as you type.'}
-            </p>
           </div>
         )}
 
@@ -357,7 +371,10 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
           return (
             <div key={m.id} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
               <div className="flex flex-wrap items-center gap-3">
-                <div className="min-w-0 flex-1">
+                {/* AT LEAST 14rem FOR THE DETAILS, so on a phone the button
+                    wraps under them instead of squeezing the title, the time
+                    and the address into half the card. */}
+                <div className="min-w-[14rem] flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-navy">{m.title || 'A time together'}</p>
                     {soon(m.starts_at) && (
@@ -411,11 +428,23 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                   {/* THE PLACE ON ITS OWN LINE. Run into the date it was a tail
                       on a sentence nobody finished reading, which is half of
                       why the location looked like it was not there. */}
-                  {shown && (
+                  {shown && (m.mode === 'in_person' && pinOf(m.location) ? (
+                    /* A PINNED PLACE: its name, then where it is, so "Jollibee"
+                       says which Jollibee without anybody opening the map. */
+                    <div className="mt-1.5 flex items-start gap-2" data-meeting-place="">
+                      <PinGlyph size={18} className="mt-0.5 text-teal-700" />
+                      <div className="min-w-0">
+                        <p className="break-words font-semibold leading-snug text-navy">{shown.split(', ')[0]}</p>
+                        {shown.includes(', ') && (
+                          <p className="break-words text-sm leading-snug text-gray-600">{shown.split(', ').slice(1).join(', ')}</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
                     <p className="mt-0.5 break-words text-sm font-semibold text-navy">
                       {m.mode === 'online' ? '💻' : '📍'} {shown}
                     </p>
-                  )}
+                  ))}
                   {/* An online meeting whose "where" is NOT a link. Somebody
                       wrote how they are meeting rather than pasting an address,
                       and that is worth showing exactly as they wrote it. When
@@ -461,7 +490,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                     target="_blank"
                     rel="noopener noreferrer"
                     data-meeting-join
-                    className="tap-sm shrink-0 rounded-xl bg-navy px-4 text-sm font-bold text-white"
+                    className="tap-sm inline-flex shrink-0 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
                   >
                     {joinLabel(join)}
                   </a>
@@ -470,9 +499,9 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                     href={map}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="tap-sm shrink-0 rounded-xl bg-white px-4 text-sm font-semibold text-navy ring-1 ring-black/10"
+                    className="tap-sm inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-navy ring-1 ring-black/10"
                   >
-                    {placeLabel(map)}
+                    {placeLabel(map)} <ExternalGlyph size={16} />
                   </a>
                 ) : null}
               </div>
