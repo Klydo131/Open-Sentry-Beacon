@@ -577,6 +577,7 @@ const staticChecks = [
   // just click or tap it to secure the location." The right place, one tap,
   // and nothing more sent than the words.
   ['place search', 'tests/place-search.mjs'],
+  ['a folder does not say whose church', 'tests/a-folder-does-not-say-whose-church.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

@@ -2195,7 +2195,7 @@ export interface SharedWithMe {
  * filter -- see rule 1 at the top of this file. The database has already
  * decided which pairings this person may read. A Guide walks with up to five
  * people and their screen is one Explorer at a time, so a card headed "what
- * Esperanza has shared with you" must not quietly list what somebody else did.
+ * Ruth has shared with you" must not quietly list what somebody else did.
  * ---------------------------------------------------------------------------
  */
 /**

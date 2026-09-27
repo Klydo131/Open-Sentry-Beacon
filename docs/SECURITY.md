@@ -133,6 +133,18 @@ These rules live in `supabase/migrations/`, and
 `tests/a-resource-can-be-a-file.mjs` and `tests/what-one-person-can-upload.mjs`
 fail if they are loosened.
 
+**A folder does not say whose church it is.** The rules above find a file's
+church from the person's id at the start of its folder, through
+`public.uploader_church`. Until 27 September 2026 that helper could also be
+called on its own, and it told any signed-in member which church any person
+was in. It now answers only with a church the caller can already see into or
+leads. Checked on the live database before it was applied, for every account
+against every person's folder: all 1,849 pairs got the same answer from both
+storage tests as before, and the 42 answers that had crossed from one church
+into another became none. `tests/a-folder-does-not-say-whose-church.mjs` holds
+it, including that every rule keeps using the helper only inside those two
+tests.
+
 ---
 
 ## What is not protected, plainly
