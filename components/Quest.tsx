@@ -226,6 +226,23 @@ export function Quest() {
         return;
       }
 
+      // IS THE PAGE AT REST? Asked once, here, before anything decides to move
+      // it, because every scroll below must only ever START from rest.
+      //
+      // `measure` runs on a 350ms interval AND on every scroll event, so while a
+      // smooth scroll is under way it is called dozens of times with the target
+      // still on its way into place. Asking for the scroll again from inside
+      // that is harmless in Chromium, which folds a second smooth scroll into the
+      // one already running. WebKit does not: it abandons the running animation
+      // and starts a fresh one from wherever the page is, so the page crept
+      // towards the target a frame at a time and the ring, which was only
+      // redrawn once the scrolling stopped, sat for seconds where the target
+      // USED to be. That is the Safari run pointing at nothing, or at the church
+      // link that had scrolled underneath the ring, and it is what a person on
+      // an iPhone saw: a page that crawls and a highlight that lags behind it.
+      const settled = Math.abs(window.scrollY - lastY.current) < 1;
+      lastY.current = window.scrollY;
+
       const pinned = isPinned(el);
       const top = headerBottom();
       const vh = window.innerHeight;
@@ -277,25 +294,49 @@ export function Quest() {
       // on a 412px screen — off the side of the world, pointing at nothing —
       // and every check here measures only top and bottom, so nothing noticed.
       //
-      // `inline: 'nearest'` slides the strip the shortest distance that brings
-      // the tab into view; `block: 'nearest'` keeps it from also yanking the
-      // page up or down, which the placement below is responsible for. Once per
-      // target, so a strip that cannot move does not retry forever.
+      // Hidden inside its own strip counts too. On a 375px iPhone the
+      // church link is laid out at 167..211 while the strip it lives in ends
+      // near 180, so it is inside the viewport and still mostly not there.
+      // The ring was drawn around the whole 167..211 box, putting its centre
+      // at 189 — in the clipped-away part, on top of the pinned account
+      // button sitting behind the strip. The spotlight pointed at one control
+      // and a tap would have hit another.
+      //
+      // MOVED BY THE STRIP ITSELF, AND NOT ONLY ONCE. This used to be one
+      // `scrollIntoView({ inline: 'nearest' })`, latched so it was never tried
+      // again. Whether that call slides a sideways strip that is itself inside
+      // a scrolling page is up to the engine, and when it did not, the latch
+      // held: the ring stayed round a tab half outside its strip, its centre on
+      // nothing, for as long as the step lasted. The Explorer's "Open a lesson"
+      // pointed at the Study room that way on Safari for twelve seconds and
+      // more. Setting the strip's own scrollLeft is the same in every engine and
+      // instant, and it is repeated whenever the tab is clipped again. It cannot
+      // loop: a strip that did not move is a strip at its end, and then the ring
+      // is drawn where the tab actually is.
+      const strip = scrollParent(el);
+      const clip = strip?.getBoundingClientRect();
+      const clipped = !!clip && (r.right > clip.right + 1 || r.left < clip.left - 1);
+      if (strip && clip && clipped) {
+        const before = strip.scrollLeft;
+        strip.scrollLeft += r.right > clip.right + 1
+          ? r.right - clip.right + 8
+          : -(clip.left - r.left + 8);
+        if (strip.scrollLeft !== before) {
+          setRect(el.getBoundingClientRect());
+          return; // re-measure next tick, from where it now is
+        }
+      }
+
       if (slidFor.current !== placeKey) {
         const vw = document.documentElement.clientWidth;
         const offViewport = r.right > vw - 4 || r.left < 4;
 
-        // …and hidden inside its own strip counts too. On a 375px iPhone the
-        // church link is laid out at 167..211 while the strip it lives in ends
-        // near 180, so it is inside the viewport and still mostly not there.
-        // The ring was drawn around the whole 167..211 box, putting its centre
-        // at 189 — in the clipped-away part, on top of the pinned account
-        // button sitting behind the strip. The spotlight pointed at one control
-        // and a tap would have hit another.
-        const clip = scrollParent(el)?.getBoundingClientRect();
-        const clipped = !!clip && (r.right > clip.right + 1 || r.left < clip.left - 1);
-
-        if (offViewport || clipped) {
+        // Past the edge of the screen with no strip of its own to slide:
+        // `inline: 'nearest'` moves it the shortest distance into view, and
+        // `block: 'nearest'` keeps it from also yanking the page up or down,
+        // which the placement below is responsible for. Once per target, so
+        // something that cannot move does not retry forever.
+        if (offViewport && !clipped) {
           slidFor.current = placeKey;
           // Instant, not smooth. This is a few pixels of strip, so the animation
           // buys nothing visually and costs correctness: the ring is redrawn on
@@ -307,7 +348,9 @@ export function Quest() {
           return; // re-measure next tick, once it has slid
         }
       }
-      if (!pinned && placedFor.current !== placeKey && band > 40) {
+      // Only from rest (see `settled` above): a placement started while the
+      // page is still moving restarts WebKit's animation instead of joining it.
+      if (!pinned && settled && placedFor.current !== placeKey && band > 40) {
         placedFor.current = placeKey;
         placeTries.current = {
           key: placeKey,
@@ -317,6 +360,10 @@ export function Quest() {
         const delta = r.top - wantTop;
         if (Math.abs(delta) > 6 && canScroll(delta)) {
           window.scrollBy({ top: delta, behavior: 'smooth' });
+          // The ring goes where the target is NOW, and every scroll event
+          // from here moves it again, so it travels with the page instead of
+          // waiting at the old spot for the scroll to finish.
+          setRect(el.getBoundingClientRect());
           return; // re-measure next tick, once the scroll has landed
         }
       }
@@ -370,10 +417,8 @@ export function Quest() {
       // scroll into the middle of the first one and spends the whole allowance
       // before the page has finished moving — and how long that takes is
       // exactly the sort of thing that differs between Blink and WebKit. So the
-      // retry waits for two consecutive looks at the same scroll position.
-      const settled = Math.abs(window.scrollY - lastY.current) < 1;
-      lastY.current = window.scrollY;
-
+      // retry waits for two consecutive looks at the same scroll position
+      // (`settled`, measured at the top of this function).
       if (!pinned && settled
           && (r.bottom < top + 4 || r.top > vh - 4)
           && placedFor.current === placeKey
@@ -393,11 +438,18 @@ export function Quest() {
         r.top < vh &&
         (r.top < top - 2 ||
         (sameColumn && place !== 'mini' && pnl && r.bottom > pnl.top && r.top < pnl.bottom));
-      if (drifted && band > 40) {
+      //
+      // Only from rest. This is the call that used to fire on every scroll
+      // event of the scroll it had itself just started, which WebKit takes as
+      // "stop and begin again" -- the crawling page and the lagging ring.
+      // While the page is still moving the ring simply follows the target,
+      // below, and the correction waits for the page to stop.
+      if (drifted && settled && band > 40) {
         const wantTop = r.height >= band ? bandTop : bandTop + (band - r.height) / 2;
         const delta = r.top - wantTop;
         if (Math.abs(delta) > 8 && canScroll(delta)) {
           window.scrollBy({ top: delta, behavior: 'smooth' });
+          setRect(r);
           return;
         }
       }

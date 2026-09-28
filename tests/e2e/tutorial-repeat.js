@@ -21,6 +21,25 @@ const read = (p) => p.evaluate(() => {
     path:location.pathname};
 });
 
+// Wait for the tutorial to hold still before reading it, the way
+// quest-roles.js already does. A reading taken while the page is still scrolling
+// the target into place is a reading of the scroll, not of the route, and the
+// click that follows it lands on whatever happened to be under the ring. On
+// WebKit, whose smooth scrolls run longer, that alone made runs differ. Six
+// seconds is generous; a step that is still unsettled after it is recorded as
+// what it is, and the route check below fails on it.
+const settle=async(p,ms=6000)=>{
+  const until=Date.now()+ms; let prev=null; let st=await read(p);
+  while(Date.now()<until){
+    const decidable=st.none||st.hasFinish||!!st.tq||(st.hasRoute&&!st.hasRing);
+    const key=JSON.stringify([st.title,st.tq,st.hasRoute,st.hasFinish,!!st.none]);
+    if(decidable&&key===prev) return st;
+    prev=decidable?key:null;
+    await p.waitForTimeout(300); st=await read(p);
+  }
+  return st;
+};
+
 (async()=>{
   // ONE persistent context: the same browser, the same demo data, three runs.
   const ctx=await chromium.launchPersistentContext(`${OUT}/profile-repeat`,{
@@ -45,7 +64,7 @@ const read = (p) => p.evaluate(() => {
     if(await c.count()){await c.first().click().catch(()=>{});await page.waitForTimeout(600);}
     const seq=[]; let last='',rep=0;
     for(let i=0;i<12;i++){
-      const st=await read(page);
+      const st=await settle(page);
       if(st.none){seq.push('GONE');break;}
       if(st.hasFinish){seq.push('FINISH');await page.getByRole('button',{name:/Finish/i}).first().click();await page.waitForTimeout(1200);break;}
       const k=`${st.title}@${st.tq??(st.hasRoute?'ROUTE':'NOTHING')}`;

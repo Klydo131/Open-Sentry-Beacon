@@ -50,6 +50,24 @@ const readPanel = (page) => page.evaluate(() => {
   };
 });
 
+// Wait for the tutorial to hold still before judging it -- see settle() in
+// tutorial-repeat.js and quest-roles.js. A reading taken mid-scroll judged the
+// scroll, and the click after it pressed whatever sat under the ring.
+async function settle(page, ms = 6000) {
+  const until = Date.now() + ms;
+  let prev = null;
+  let st = await readPanel(page);
+  while (Date.now() < until) {
+    const decidable = st.none || st.hasFinish || !!st.targetQuest || (st.hasRouteBtn && !st.hasRing);
+    const key = JSON.stringify([st.title, st.targetQuest, st.hasRouteBtn, st.hasFinish, !!st.none]);
+    if (decidable && key === prev) return st;
+    prev = decidable ? key : null;
+    await page.waitForTimeout(300);
+    st = await readPanel(page);
+  }
+  return st;
+}
+
 async function startTutorial(page) {
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(700);
@@ -107,7 +125,7 @@ async function actOnStep(page, st) {
     await page.evaluate(() => localStorage.setItem('beacon-quest-v1', JSON.stringify({ completed: ['open'] })));
     await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(2200);
-    const st = await readPanel(page);
+    const st = await settle(page);
     console.log('\n=== reported case: on /dm, no seeker open, step "Send a message" ===');
     console.log('   ', JSON.stringify({ title: st.title, path: st.path, target: st.targetQuest, routeBtn: st.hasRouteBtn }));
     ok(!st.hasRouteBtn, 'no "Go to My Seekers" button while already on /dm');
@@ -128,7 +146,7 @@ async function actOnStep(page, st) {
     const seq = [];
     let repeats = 0, lastKey = '';
     for (let i = 0; i < 14; i++) {
-      const st = await readPanel(page);
+      const st = await settle(page);
       if (st.none) break;
       if (/Tutorial complete/i.test(st.title)) { seq.push('COMPLETE'); break; }
       if (st.hasFinish) {
