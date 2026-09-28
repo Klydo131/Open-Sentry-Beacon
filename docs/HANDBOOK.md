@@ -80,7 +80,7 @@ A person's role is chosen when they are approved, and it decides everything they
 
 ### What an Explorer's shelf opens with
 
-The starter shelf is the same twenty resources for everybody, but an Explorer is shown eight of them first, in this order:
+The starter shelf is the same nineteen resources for everybody, but an Explorer is shown eight of them first, in this order:
 
 > A Bible they can read on a phone · Jesus 101 · The Desire of Ages · Steps to Christ · BibleProject · Discover Bible Guides · What Seventh-day Adventists Believe · Sabbath School this quarter
 

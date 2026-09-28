@@ -51,7 +51,10 @@ const entries = [...src.matchAll(
   topics: [...m[6].matchAll(/'([^']+)'/g)].map((t) => t[1]),
 }));
 
-ok(entries.length >= 20, `the kit parses (${entries.length} resources)`);
+// Nineteen since 28 September 2026, when the KJV PDF left the shelf because its
+// address had been dead for two weeks. This is a check that the PARSE worked,
+// not a quota: a shelf read as three entries would pass nothing below.
+ok(entries.length >= 19, `the kit parses (${entries.length} resources)`);
 
 // ---------------------------------------------------------------- hygiene ---
 const ids = entries.map((e) => e.id);

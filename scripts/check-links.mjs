@@ -1,6 +1,6 @@
 // Does every resource on the shelf still open?
 //
-// WHY THIS EXISTS. The starter kit is twenty links to other people's websites.
+// WHY THIS EXISTS. The starter kit is nineteen links to other people's websites.
 // Nothing in this repository controls them. A publisher reorganises, a PDF moves,
 // a ministry lets a domain lapse — and the church finds out when an Explorer taps
 // a resource on their first day and gets a 404. That is the worst possible moment
@@ -99,6 +99,22 @@ export async function reach(url) {
   return { verdict: 'DEAD', detail: last };
 }
 
+// ONE MORE CHANCE FOR A SITE THAT DID NOT ANSWER AT ALL, and only for that.
+//
+// bibleinfo.com answered 200 on 21 September and timed out on the 28th, and the
+// whole shelf went red for it. A timeout or a dropped connection says nothing
+// about the address -- a busy server on a Monday morning looks the same -- so it
+// is asked again after a pause. A status code is an answer and is believed the
+// first time: a 404 is a wrong address however often it is asked, and a lapsed
+// domain fails to resolve twice. So this can only ever turn a slow site green,
+// never hide a wrong one.
+export async function verdictFor(url, { once = reach, wait = 5000 } = {}) {
+  const first = await once(url);
+  if (first.verdict !== 'DEAD' || typeof first.detail === 'number') return first;
+  await pause(wait);
+  return once(url);
+}
+
 // Importing this file must not fire twenty requests at other people's servers,
 // so the sweep runs only when the file is the thing that was executed. That is
 // what lets `tests/dead-is-not-refused.mjs` exercise `reach` against a local
@@ -114,7 +130,7 @@ console.log(`Checking ${links.length} links…\n`);
 const dead = [];
 const refused = [];
 for (const link of links) {
-  const { verdict, detail } = await reach(link.url);
+  const { verdict, detail } = await verdictFor(link.url);
   console.log(`${verdict.padEnd(7)} ${link.id.padEnd(24)} ${detail}  ${link.url}`);
   if (verdict === 'DEAD') dead.push({ ...link, detail });
   if (verdict === 'REFUSED') refused.push({ ...link, detail });

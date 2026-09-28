@@ -74,18 +74,38 @@ jobs:
           pg_dump --version
 
       - name: Dump and encrypt
+        id: dump
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          # Which repository this is running in, so the job can tell a fork
+          # (nothing to back up) from the real one (misconfigured). The same
+          # test keep-awake.yml makes, for the same reason.
+          UPSTREAM: Klydo131/Open-Sentry-Beacon
+          HERE: ${{ github.repository }}
         run: |
           set -euo pipefail
 
-          # A fork has no database of its own and nothing to back up. Say so and
-          # stop cleanly — a fork must never inherit a red tick for not having
-          # somebody else's credentials.
           if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            # ON THE REAL REPOSITORY, NO DATABASE URL MEANS NO BACKUPS, and that
+            # must be loud. Until 28 September 2026 this step said so in a line
+            # nobody reads and exited cleanly; the job went red only because the
+            # upload step then found no file, with "No files were found with
+            # the provided path" -- a message that reads like a bug in the
+            # workflow rather than "the church has no backup". Quiet is exactly
+            # wrong here: the point of the job is that nobody is watching.
+            if [ "${HERE}" = "${UPSTREAM}" ]; then
+              echo "::error::SUPABASE_DB_URL is not set on the live repository, so the database is NOT being backed up."
+              echo "::error::Add SUPABASE_DB_URL and BACKUP_PASSPHRASE under Settings → Secrets and variables → Actions."
+              exit 1
+            fi
+
+            # A fork has no database of its own and nothing to back up. Say so
+            # and stop cleanly — a fork must never inherit a red tick for not
+            # having somebody else's credentials. The upload step below runs
+            # only when a backup was made, so it is skipped too.
             echo "SUPABASE_DB_URL is not set — no database to back up here."
-            echo "If this is the live repository, add it under Settings → Secrets."
+            echo "This looks like a fork (${HERE}), so there is nothing to do."
             exit 0
           fi
 
@@ -133,10 +153,15 @@ jobs:
             exit 1
           fi
 
+          # Only now is there something to upload. The upload step reads this.
+          echo "made=true" >> "$GITHUB_OUTPUT"
+
       # Only *.sql.gpg is ever uploaded. Ninety days is the GitHub maximum and
-      # gives a full quarter of weekly restore points.
+      # gives a full quarter of weekly restore points. Only when a backup was
+      # made: on a fork the step above stops cleanly with nothing to send.
       - name: Upload encrypted backup
-        uses: actions/upload-artifact@v4
+        if: steps.dump.outputs.made == 'true'
+        uses: actions/upload-artifact@v7
         with:
           name: beacon-backup
           path: '*.sql.gpg'

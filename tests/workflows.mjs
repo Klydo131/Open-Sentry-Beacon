@@ -148,5 +148,35 @@ for (const file of files) {
   }
 }
 
+// NO ACTION ON A RUNTIME GITHUB HAS RETIRED. Every run of every workflow ended
+// with "Node.js 20 is deprecated ... actions/checkout@v4, actions/setup-node@v4"
+// until 28 September 2026. A warning today is a failed step on the day GitHub
+// stops forcing them onto Node 24, and nobody reads warnings on a green run.
+// These three majors (v5 and later) run on Node 24.
+for (const file of files) {
+  const text = fs.readFileSync(path.join(dir, file), 'utf8');
+  for (const m of text.matchAll(/uses:\s*actions\/(checkout|setup-node|upload-artifact|download-artifact|cache)@v(\d+)/g)) {
+    ok(Number(m[2]) >= 5, `${file}: actions/${m[1]}@v${m[2]} runs on Node 24${Number(m[2]) >= 5 ? '' : ' -- it does NOT; v4 and older run on the retired Node 20'}`);
+  }
+}
+
+// THE BACKUP SAYS SO WHEN THERE IS NO BACKUP. On the live repository a missing
+// database address used to exit cleanly and leave the upload step to fail with
+// "No files were found" -- red, but for a reason nobody would connect with
+// "the church's data is not being backed up". On a fork it must stay green.
+{
+  const backup = fs.readFileSync(path.join(dir, 'backup.yml'), 'utf8');
+  const noUrl = backup.slice(backup.indexOf('if [ -z "${SUPABASE_DB_URL:-}" ]; then'));
+  const upstreamBranch = noUrl.slice(0, noUrl.indexOf('fi\n'));
+  ok(/if \[ "\$\{HERE\}" = "\$\{UPSTREAM\}" \]; then[\s\S]*?::error::[\s\S]*?exit 1/.test(upstreamBranch),
+    'backup.yml: on the live repository, no database address is an error that says there is no backup');
+  ok(/UPSTREAM: Klydo131\/Open-Sentry-Beacon/.test(backup)
+     && /UPSTREAM: Klydo131\/Open-Sentry-Beacon/.test(fs.readFileSync(path.join(dir, 'keep-awake.yml'), 'utf8')),
+    'backup.yml and keep-awake.yml name the same live repository');
+  ok(/echo "made=true" >> "\$GITHUB_OUTPUT"/.test(backup)
+     && /- name: Upload encrypted backup\n\s+if: steps\.dump\.outputs\.made == 'true'/.test(backup),
+    'backup.yml: the upload runs only when a backup was made, so a fork is not red for having nothing to send');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

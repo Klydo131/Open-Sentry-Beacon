@@ -17,7 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { WORDS, entropyBits, firstPassword } from '../supabase/functions/invite/password.ts';
+import { WORDS, entropyBits, firstPassword, passwordAt } from '../supabase/functions/invite/password.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
@@ -187,9 +187,69 @@ ok(new Set(WORDS).size === WORDS.length, 'and none of them is in the list twice'
   }
   ok(first.size > usable.length * 0.95,
      `the whole list is reachable (${first.size} of ${usable.length} usable words seen)`);
+  // A five-letter word has ten times the numbers after it that a six-letter
+  // one has, so it is drawn ten times as often (section 6). "Dominates" is
+  // measured against what a five-letter word should get, with room to spare: a
+  // picker jammed on one word would give it all six thousand.
+  const total = 2 ** entropyBits();
+  const fairShare = 6000 * 90000 / total;
   const most = Math.max(...first.values());
-  ok(most < 6000 / usable.length * 3,
-     `and no single word dominates (most common appeared ${most} times in 6000)`);
+  ok(most < fairShare * 2,
+     `and no single word dominates (most common appeared ${most} times in 6000; a five-letter word expects about ${Math.round(fairShare)})`);
+}
+
+// ---------------------------------------------------------------------------
+// 6. Every password is as likely as every other
+// ---------------------------------------------------------------------------
+//
+// FOUND ON 28 SEPTEMBER 2026, BY THE REPEAT COUNT IN SECTION 2 FAILING ON ONE
+// RUNNER. The picker chose a word evenly and then its digits, so a password
+// after a six-letter word (9,000 numbers) was ten times as likely as one after
+// a five-letter word (90,000). The repeat count expected about 0.54 in three
+// thousand and the real rate was about 1.6; and the "23 bits" above was the
+// count of possibilities, which is only the strength when each is equally
+// likely. For the likeliest passwords it was about 20.6.
+{
+  const usable = WORDS.filter((w) => w.length === 5 || w.length === 6);
+  const total = 2 ** entropyBits();
+  ok(Number.isInteger(Math.round(total)) && Math.abs(total - Math.round(total)) < 1e-6,
+     `the strength is a count of real passwords (${Math.round(total).toLocaleString('en')})`);
+
+  // Walk the whole list by its runs: each word's first and last place hold that
+  // word with its smallest and largest number, and the runs add up to the
+  // count the strength is worked out from. So every password has one place,
+  // and one draw over the places is one draw over the passwords.
+  let at = 0;
+  let wrongRun = '';
+  for (const word of usable) {
+    const digits = 10 - word.length;
+    const run = 9 * 10 ** (digits - 1);
+    if (passwordAt(at) !== `${word}${10 ** (digits - 1)}`
+        || passwordAt(at + run - 1) !== `${word}${10 ** digits - 1}`) {
+      wrongRun = `${word}: ${passwordAt(at)} .. ${passwordAt(at + run - 1)}`;
+      break;
+    }
+    at += run;
+  }
+  ok(!wrongRun, wrongRun ? `a word's run of numbers is wrong (${wrongRun})` : 'every word owns a run of numbers, from its smallest to its largest');
+  ok(at === Math.round(total), `and the runs add up to the whole count (${at.toLocaleString('en')})`);
+  let past = false;
+  try { passwordAt(at); } catch { past = true; }
+  ok(past, 'and there is nothing past the last password');
+
+  const src = read('supabase/functions/invite/password.ts');
+  ok(/return passwordAt\(below\(allPasswords\(\)\)\);/.test(src),
+     'a password is ONE even draw over all of them, not a word and then digits');
+  ok(/limit > 65536 \? 4/.test(src), 'and the draw widens to four bytes to reach eight million');
+
+  // THE SAME THING, SEEN IN THE OUTPUT. When every password is equally likely,
+  // six-letter words carry their share of the count, about one in ten. The old
+  // picker gave them their share of the WORDS, about one in two.
+  const sixShare = usable.filter((w) => w.length === 6).length * 9000 / total;
+  const draws = Array.from({ length: 3000 }, () => firstPassword());
+  const six = draws.filter((p) => /^[a-z]{6}[0-9]/.test(p)).length / draws.length;
+  ok(Math.abs(six - sixShare) < 0.05,
+     `six-letter words come up at their share of the passwords (${(six * 100).toFixed(1)}%, expected ${(sixShare * 100).toFixed(1)}%)`);
 }
 
 console.log(bad ? `\n${bad} problem(s).` : '\nRESULT: ALL OK');

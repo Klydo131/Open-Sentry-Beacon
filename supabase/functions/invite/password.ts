@@ -117,30 +117,41 @@ const TOTAL = 10;
  */
 const USABLE = WORDS.filter((w) => w.length === 5 || w.length === 6);
 
+/** How many numbers can follow a word: first digit 1-9, the rest 0-9. */
+function numbersAfter(word: string): number {
+  return 9 * (10 ** (TOTAL - word.length - 1));
+}
+
+/** Every password this can make, counted over the real branches. */
+function allPasswords(): number {
+  let combinations = 0;
+  for (const word of USABLE) combinations += numbersAfter(word);
+  return combinations;
+}
+
 /**
  * How hard this is to guess, in bits, worked out rather than asserted.
  *
- * Three DISTINCT words from the list, then a three-digit number from 100-999.
- * The test prints this and fails if it drops, so shrinking the word list can
- * never quietly weaken every invitation the church sends.
+ * One word from the list, then enough digits to make ten characters. The test
+ * prints this and fails if it drops, so shrinking the word list can never
+ * quietly weaken every invitation the church sends.
  *
- * Roughly 34 bits at the sizes above. That is a TEMPORARY credential on a
- * rate-limited online sign-in, not a secret meant to stand up to somebody with
- * the password file and a month. The email says to change it and the app asks
- * again; this number is the floor under the few days in between.
+ * About 23 bits. That is a TEMPORARY credential on a rate-limited online
+ * sign-in, not a secret meant to stand up to somebody with the password file
+ * and a month. The email says to change it and the app asks again; this number
+ * is the floor under the few days in between.
+ *
+ * TRUE ONLY BECAUSE EVERY PASSWORD IS EQUALLY LIKELY (see firstPassword). A
+ * count of possibilities is the strength of a password only when each of them
+ * is as likely as the rest; until 28 September 2026 they were not, and this
+ * number said 23.0 while the likeliest passwords were about 20.6.
  */
 export function entropyBits(): number {
   // Summed over the real branches rather than assumed uniform: a five-letter
   // word leaves five digits and a six-letter word leaves four, and those are
   // very different sizes. Counting them separately is the only way this number
   // stays true when the word list changes.
-  let combinations = 0;
-  for (const word of USABLE) {
-    const digits = TOTAL - word.length;
-    // First digit 1-9, the rest 0-9.
-    combinations += 9 * (10 ** (digits - 1));
-  }
-  return Math.log2(combinations);
+  return Math.log2(allPasswords());
 }
 
 
@@ -160,33 +171,61 @@ export function entropyBits(): number {
  */
 function below(limit: number): number {
   if (limit < 1) throw new Error('below() needs a positive limit');
-  const wide = limit > 256;
-  const range = wide ? 65536 : 256;
+  if (limit > 2 ** 32) throw new Error('below() draws at most four bytes');
+  // One byte, two, or four: whichever is the smallest that can reach the limit.
+  // Four is for the whole-password draw below, which is about eight million.
+  const size = limit > 65536 ? 4 : limit > 256 ? 2 : 1;
+  const range = 2 ** (8 * size);
   const ceiling = Math.floor(range / limit) * limit;   // largest exact multiple
-  const bytes = new Uint8Array(wide ? 2 : 1);
+  const bytes = new Uint8Array(size);
   for (;;) {
     crypto.getRandomValues(bytes);
-    const draw = wide ? (bytes[0] << 8) | bytes[1] : bytes[0];
+    // Multiplied rather than shifted: `<< 24` on a byte over 127 goes negative.
+    let draw = 0;
+    for (const b of bytes) draw = draw * 256 + b;
     if (draw < ceiling) return draw % limit;
   }
+}
+
+/**
+ * The password at a given place in the list of every password, in order: the
+ * first word with its smallest number, through to the last word with its
+ * largest. Exported so the test can check the ends of every word's run without
+ * drawing millions of passwords to find them.
+ */
+export function passwordAt(index: number): string {
+  let rest = index;
+  for (const word of USABLE) {
+    const count = numbersAfter(word);
+    if (rest < count) {
+      // The smallest number with this many digits, plus how far along we are:
+      // 1000..9999 after a six-letter word, 10000..99999 after a five-letter one.
+      return `${word}${10 ** (TOTAL - word.length - 1) + rest}`;
+    }
+    rest -= count;
+  }
+  throw new Error('passwordAt() was given a place past the last password');
 }
 
 /**
  * A first password: one word and a number, exactly ten characters.
  *
  * Example shape: `harbor4821`
+ *
+ * ONE DRAW OVER EVERY PASSWORD, NOT A WORD AND THEN A NUMBER. It used to pick
+ * the word first, evenly, and then the digits. That made a six-letter word
+ * (9,000 numbers after it) exactly as likely as a five-letter one (90,000), so
+ * each password after a six-letter word was TEN TIMES as likely as the rest:
+ * somebody guessing those first needed about 20.6 bits of luck, not the 23
+ * entropyBits() reported. Found on 28 September 2026 because the test that
+ * counts repeats failed on one runner -- it expected about half a repeat in
+ * three thousand passwords and the real rate was about one and a half.
+ *
+ * Every password is now one place in a single list and each place is equally
+ * likely, so the 23 bits are true. The number still never starts with a zero
+ * (`047` gets typed as `47`), because the list only holds numbers that do not.
  */
 export function firstPassword(): string {
-  const word = USABLE[below(USABLE.length)];
-
-  let number = '';
-  const digits = TOTAL - word.length;
-  for (let i = 0; i < digits; i += 1) {
-    // The first digit is 1-9 so the number never reads as `047`, which people
-    // mistype as `47` and then cannot sign in.
-    number += i === 0 ? String(1 + below(9)) : String(below(10));
-  }
-
-  return `${word}${number}`;
+  return passwordAt(below(allPasswords()));
 }
 

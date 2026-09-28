@@ -45,18 +45,13 @@ export const STARTER_KIT: Material[] = [
     is_published: true,
     created_at: ADDED,
   },
-  {
-    id: 'kit-bible-kjv-pdf',
-    title: 'Holy Bible, King James Version (PDF)',
-    description:
-      'The complete KJV as a single PDF. The KJV text is public domain, so this can be kept, copied and shared freely.',
-    type: 'pdf',
-    external_url:
-      'https://www.holybooks.com/wp-content/uploads/2010/05/The-Holy-Bible-King-James-Version.pdf',
-    topics: ['Bible'],
-    is_published: true,
-    created_at: ADDED,
-  },
+  // THE KJV AS ONE PDF WAS HERE, and it is gone on purpose. Its publisher's
+  // address answered 400 on 21 and 28 September 2026 -- a dead end on the shelf
+  // for two weeks -- and a replacement could not be opened from the sandbox that
+  // made this change, which is exactly how four wrong addresses went out on
+  // 1 September (see above). The Bible is still first on the shelf, twice:
+  // YouVersion above, with its offline download, and King James Bible Online
+  // below. A PDF can come back once somebody has opened its address.
   {
     id: 'kit-bible-online',
     title: 'King James Bible Online',
@@ -282,8 +277,8 @@ export const KIT_TOPICS: string[] = Array.from(
 //
 // WHY THIS IS SHORTER RATHER THAN DIFFERENT. Everything an Explorer can see, a
 // Guide can see too; nothing is hidden from anybody who asks. What changes is
-// what is put in front of somebody on their first day. Twenty items, opening
-// with three editions of the Bible and closing with a lesson archive going back
+// what is put in front of somebody on their first day. Nineteen items, opening
+// with two editions of the Bible and closing with a lesson archive going back
 // decades, is a filing cabinet. It answers questions nobody has asked yet.
 //
 // So this list is ordered the way a first conversation goes: a Bible you can
