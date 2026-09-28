@@ -166,6 +166,13 @@ export interface LessonSeries {
   lesson_ids: string[];
   is_published: boolean;
   created_at: string;
+  /**
+   * A picture drawn for the series on the drawing board, as a data: URL of a
+   * PNG with the drawing inside it (lib/drawing-file.ts). Sample app only: it
+   * lives in this browser's storage with the rest of the sample church. The
+   * live app keeps a drawing as a file on the study it belongs to.
+   */
+  drawing?: string;
 }
 
 // A prayer request from a seeker. Always visible to their missionary; if

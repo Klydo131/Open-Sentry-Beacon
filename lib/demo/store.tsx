@@ -250,9 +250,13 @@ export interface Ctx {
     topic: string;
     description?: string;
     lessonIds: string[];
+    /** A drawing for the series, as a data: URL. */
+    drawing?: string;
   }) => string;
   /** Library: show it to missionaries, or take it back off the shelf. */
   setSeriesPublished: (seriesId: string, published: boolean) => void;
+  /** Library: put a drawing on a series, change it, or take it off (undefined). */
+  setSeriesDrawing: (seriesId: string, drawing: string | undefined) => void;
   /** Missionary: push a whole series to one seeker, in order. */
   startSeries: (pairingId: string, seriesId: string) => void;
 
@@ -868,11 +872,13 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       topic,
       description,
       lessonIds,
+      drawing,
     }: {
       title: string;
       topic: string;
       description?: string;
       lessonIds: string[];
+      drawing?: string;
     }) => {
       const id = uid();
       persistUpdate((prev) => ({
@@ -889,6 +895,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             lesson_ids: Array.from(new Set(lessonIds)),
             is_published: true,
             created_at: nowIso(),
+            // Only a PNG drawing is kept: this string is drawn as an <img>,
+            // and nothing else should ever reach that attribute.
+            ...(drawing?.startsWith('data:image/png;base64,') ? { drawing } : {}),
           },
         ],
       }));
@@ -904,6 +913,19 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       lesson_series: prev.lesson_series.map((s) =>
         s.id === seriesId ? { ...s, is_published: published } : s,
       ),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const setSeriesDrawing = useCallback((seriesId: string, drawing: string | undefined) => {
+    if (drawing !== undefined && !drawing.startsWith('data:image/png;base64,')) return;
+    persistUpdate((prev) => ({
+      ...prev,
+      lesson_series: prev.lesson_series.map((s) => {
+        if (s.id !== seriesId) return s;
+        const { drawing: _old, ...rest } = s;
+        return drawing ? { ...rest, drawing } : rest;
+      }),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2414,6 +2436,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     reportPrayerRequest,
     createSeries,
     setSeriesPublished,
+    setSeriesDrawing,
     startSeries,
     assignLesson,
     completeLesson,

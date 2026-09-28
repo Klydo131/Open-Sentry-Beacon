@@ -64,3 +64,7 @@ docs/handbook/pdf/
 # nothing anybody wrote; it appears the first time you run the CLI and is not
 # part of the project.
 supabase/.temp/
+
+# The drawing board's fonts, copied from node_modules before every build by
+# scripts/excalidraw-assets.mjs. Generated, and the package is the source.
+/public/excalidraw/

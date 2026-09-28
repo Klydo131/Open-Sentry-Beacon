@@ -72,6 +72,9 @@ const bodyText = (page) => page.locator('body').innerText();
   ok((await builder.count()) > 0, 'the library has a series builder');
 
   await page.getByLabel('Series name').fill(SERIES);
+  // The topic is on Advanced since 28 September 2026: Simple, where the form
+  // starts, is the name and the lessons.
+  await page.getByRole('radio', { name: 'Advanced' }).first().click();
   await page.getByLabel('Topic', { exact: true }).fill(TOPIC);
 
   // Tap two lessons. The order tapped is the order walked, which is the whole

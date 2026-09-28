@@ -36,6 +36,7 @@
 // in exactly the photos most likely to be passed around.
 
 import { HEAD_BYTES, jpegCarriesLocation, withoutJpegMetadata } from '@/lib/live/photo-location';
+import { isDrawingName, onlyTheDrawing } from '@/lib/drawing-file';
 
 /** Longest edge, in pixels. */
 const MAX_EDGE = 1600;
@@ -85,6 +86,21 @@ async function withoutLocation(file: File): Promise<File> {
  * fallback is the same file with its metadata cut out (withoutLocation).
  */
 export async function shrinkImage(file: File): Promise<File> {
+  // A DRAWING FROM A STUDY IS NOT RE-DRAWN. Re-drawing is what takes a location
+  // out of a photo, and it would take the shapes out of a drawing too, so
+  // "Change drawing" would open a flat picture. Instead it keeps the picture
+  // and the drawing's own chunk and loses every other chunk a PNG can carry,
+  // which is the same promise: nothing leaves but what is on the page. See
+  // lib/drawing-file.ts.
+  if (isDrawingName(file.name) && /^image\/png$/i.test(file.type ?? '')) {
+    try {
+      const clean = onlyTheDrawing(new Uint8Array(await file.arrayBuffer()));
+      if (clean) return new File([new Uint8Array(clean)], file.name, { type: 'image/png', lastModified: file.lastModified });
+    } catch {
+      // Not a whole PNG after all: treated like any other picture below.
+    }
+  }
+
   // ASKED OF EVERY JPEG, WHATEVER ITS SIZE. The size rule below decides what is
   // worth shrinking; it was also, until 25 September 2026, deciding which
   // photos kept their coordinates, and small ones did.

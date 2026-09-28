@@ -25,6 +25,9 @@ import { Button, Card } from '@/components/ui';
 import { Rich } from '@/components/Rich';
 import { humanError } from '@/lib/live/errors';
 import { DropArea, FileDrop } from '@/components/FileDrop';
+import { DrawButton, DrawingBoard, DrawingPicture, useFileUrl } from '@/components/draw/Draw';
+import { WritingModeNote, WritingModeSwitch, useWritingMode } from '@/components/WritingMode';
+import { drawingTitle, isDrawingName } from '@/lib/drawing-file';
 import { uuid } from '@/lib/uuid';
 import { useKeepUp, KEEP_UP_STUDIES } from '@/lib/live/keep-up';
 import { ReadingBar } from '@/components/live/ReadingProgress';
@@ -119,6 +122,12 @@ function WritingHints() {
       {children}
     </code>
   );
+  // ADVANCED ONLY (28 September 2026). Asterisks are a thing to learn, and a
+  // Guide on Simple has not asked to learn it: the box is a plain box, and what
+  // they type is what an Explorer reads. Every study box still carries this, so
+  // switching to Advanced shows the tips under all of them at once.
+  const mode = useWritingMode();
+  if (mode !== 'advanced') return null;
   // FOLDED, AND OPENED BY ASKING. The tips were an always-open grey box under
   // every study being written; the owner asked on 25 September 2026 for the
   // advanced parts to be optional. Still under the box, still one tap away.
@@ -139,6 +148,139 @@ function WritingHints() {
         </li>
       </ul>
     </details>
+  );
+}
+
+/**
+ * Handouts held on a form before the study exists. A drawing shows as the
+ * picture it is, with Change drawing; anything else by its name.
+ */
+function HeldFiles({ files, busy, onRemove, onReplace }: {
+  files: File[];
+  busy: boolean;
+  onRemove: (at: number) => void;
+  onReplace: (at: number, file: File) => void;
+}) {
+  if (!files.length) return null;
+  return (
+    <ul className="grid grid-cols-1 gap-2 text-sm">
+      {files.map((f, at) => (
+        <li key={`${f.name}-${at}`}>
+          {isDrawingName(f.name) ? (
+            <HeldDrawing file={f} busy={busy} onRemove={() => onRemove(at)} onReplace={(next) => onReplace(at, next)} />
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="min-w-0 flex-1 break-words font-semibold text-navy">📎 {f.name}</span>
+              <span className="text-xs text-gray-400">{kb(f.size)}</span>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onRemove(at)}
+                className="tap-sm px-2 text-xs font-semibold text-red-700 underline"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** A drawing made on a form that is not saved yet: shown, changeable, removable. */
+function HeldDrawing({ file, busy, onRemove, onReplace }: {
+  file: File; busy: boolean; onRemove: () => void; onReplace: (next: File) => void;
+}) {
+  const src = useFileUrl(file);
+  const [changing, setChanging] = useState(false);
+  return (
+    <>
+      <DrawingPicture src={src} name={file.name}>
+        <button type="button" disabled={busy} onClick={() => setChanging(true)} className="tap-sm font-semibold text-navy underline">
+          Change drawing
+        </button>
+        <button type="button" disabled={busy} onClick={onRemove} className="tap-sm font-semibold text-red-700 underline">
+          Remove
+        </button>
+      </DrawingPicture>
+      {changing && (
+        <DrawingBoard
+          name={file.name}
+          title={`Change ${drawingTitle(file.name)}`}
+          initial={file}
+          onClose={() => setChanging(false)}
+          onSave={(next) => { onReplace(next); setChanging(false); }}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * A drawing on a saved study. Everybody who can read the study sees the
+ * picture; whoever drew it can change it. Changing ADDS the new picture before
+ * it takes the old one away, so a failure half way leaves two, never none.
+ */
+function SavedDrawing({ file, canChange, busy, onReplace, onRemove }: {
+  file: live.LessonFile;
+  canChange: boolean;
+  busy: boolean;
+  onReplace?: (next: File) => Promise<void>;
+  onRemove?: () => void;
+}) {
+  const [src, setSrc] = useState('');
+  const [changing, setChanging] = useState<Blob | null>(null);
+  const [trouble, setTrouble] = useState('');
+  useEffect(() => {
+    let current = true;
+    live.lessonFileUrl(file.path).then((url) => { if (current) setSrc(url); }).catch(() => undefined);
+    return () => { current = false; };
+  }, [file.path]);
+  const openToChange = async () => {
+    setTrouble('');
+    try {
+      const res = await fetch(await live.lessonFileUrl(file.path));
+      if (!res.ok) throw new Error(String(res.status));
+      setChanging(await res.blob());
+    } catch {
+      setTrouble('The drawing could not be opened. Check the connection and try again.');
+    }
+  };
+  return (
+    <>
+      <DrawingPicture src={src} name={file.name}>
+        {src && (
+          <button
+            type="button"
+            onClick={() => window.open(src, '_blank', 'noopener,noreferrer')}
+            className="tap-sm font-semibold text-blue-700 underline"
+          >
+            Open full size
+          </button>
+        )}
+        {canChange && (
+          <>
+            <button type="button" disabled={busy} onClick={() => void openToChange()} className="tap-sm font-semibold text-navy underline">
+              Change drawing
+            </button>
+            <button type="button" disabled={busy} onClick={onRemove} className="tap-sm font-semibold text-red-700 underline">
+              Remove
+            </button>
+          </>
+        )}
+      </DrawingPicture>
+      {trouble && <p className="text-sm text-red-800">{trouble}</p>}
+      {changing && (
+        <DrawingBoard
+          name={file.name}
+          title={`Change ${drawingTitle(file.name)}`}
+          initial={changing}
+          onClose={() => setChanging(null)}
+          onSave={async (next) => { await onReplace?.(next); setChanging(null); }}
+        />
+      )}
+    </>
   );
 }
 
@@ -235,9 +377,17 @@ function SeriesBody({ series, mine, ownSeries }: {
                     <Rich text={lesson.body} />
                   </p>
                 )}
-                {(files[lesson.id] ?? []).length > 0 && (
+                {/* A DRAWING IS SHOWN, NOT LISTED. It was made to be looked at
+                    beside the words, so it sits under them as the picture it
+                    is; a handout is a file to open, so it stays a line. */}
+                {(files[lesson.id] ?? []).filter((f) => isDrawingName(f.name)).map((f) => (
+                  <div key={f.id} className="mt-2">
+                    <SavedDrawing file={f} canChange={false} busy={busy} />
+                  </div>
+                ))}
+                {(files[lesson.id] ?? []).some((f) => !isDrawingName(f.name)) && (
                   <ul className="mt-2 space-y-1">
-                    {files[lesson.id].map((f) => (
+                    {files[lesson.id].filter((f) => !isDrawingName(f.name)).map((f) => (
                       <FileRow
                         key={f.id}
                         file={f}
@@ -308,6 +458,10 @@ function SeriesBody({ series, mine, ownSeries }: {
                   for (const file of picked) await live.attachLessonFile(lesson.id, file);
                 })}
               >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-bold text-navy">Editing this study</p>
+                  <WritingModeSwitch />
+                </div>
                 <label className="text-xs font-semibold text-navy" htmlFor={`study-title-${lesson.id}`}>Title</label>
                 <input
                   id={`study-title-${lesson.id}`}
@@ -347,10 +501,24 @@ function SeriesBody({ series, mine, ownSeries }: {
                 </div>
 
                 <div className="mt-2 border-t border-black/5 pt-2">
-                  <p className="text-xs font-semibold text-gray-600">Handouts</p>
-                  {(files[lesson.id] ?? []).length > 0 && (
+                  <p className="text-xs font-semibold text-gray-600">Handouts and drawings</p>
+                  {(files[lesson.id] ?? []).filter((f) => isDrawingName(f.name)).map((f) => (
+                    <div key={f.id} className="mt-2">
+                      <SavedDrawing
+                        file={f}
+                        busy={busy}
+                        canChange={f.added_by === profile?.id}
+                        onRemove={() => void act(() => live.removeLessonFile(f.id))}
+                        onReplace={(next) => act(async () => {
+                          await live.attachLessonFile(lesson.id, next);
+                          await live.removeLessonFile(f.id);
+                        })}
+                      />
+                    </div>
+                  ))}
+                  {(files[lesson.id] ?? []).some((f) => !isDrawingName(f.name)) && (
                     <ul className="mt-1 space-y-1">
-                      {files[lesson.id].map((f) => (
+                      {files[lesson.id].filter((f) => !isDrawingName(f.name)).map((f) => (
                         <FileRow
                           key={f.id}
                           file={f}
@@ -371,6 +539,16 @@ function SeriesBody({ series, mine, ownSeries }: {
                       onFiles={(picked) => void act(async () => {
                         for (const file of picked) await live.attachLessonFile(lesson.id, file);
                       })}
+                    />
+                  </div>
+                  {/* DRAW IT, the tool asked for on 28 September 2026. The
+                      picture goes straight onto the study, like a handout. */}
+                  <div className="mt-2">
+                    <DrawButton
+                      busy={busy}
+                      title={`Drawing for ${editTitle.trim() || lesson.title}`}
+                      existing={(files[lesson.id] ?? []).map((f) => f.name)}
+                      onDrawn={(file) => act(() => live.attachLessonFile(lesson.id, file))}
                     />
                   </div>
                 </div>
@@ -437,6 +615,10 @@ function SeriesBody({ series, mine, ownSeries }: {
           className="mt-3 grid grid-cols-1 gap-2 rounded-xl bg-gray-50 p-3"
           onFiles={(picked) => addNewFiles(picked)}
         >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-bold text-navy">New study</p>
+            <WritingModeSwitch />
+          </div>
           <label className="text-xs font-semibold text-navy" htmlFor={`new-study-title-${series.id}`}>Title</label>
           <input
             id={`new-study-title-${series.id}`}
@@ -462,24 +644,18 @@ function SeriesBody({ series, mine, ownSeries }: {
             hint="Drag files here, or anywhere on this study, or choose them. Up to 10 MB each."
             onFiles={(picked) => addNewFiles(picked)}
           />
-          {newFiles.length > 0 && (
-            <ul className="space-y-1 text-sm">
-              {newFiles.map((f, at) => (
-                <li key={`${f.name}-${at}`} className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 break-words font-semibold text-navy">📎 {f.name}</span>
-                  <span className="text-xs text-gray-400">{kb(f.size)}</span>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => setNewFiles((was) => was.filter((_, x) => x !== at))}
-                    className="tap-sm px-2 text-xs font-semibold text-red-700 underline"
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <DrawButton
+            busy={busy}
+            title={`Drawing for ${title.trim() || 'this study'}`}
+            existing={newFiles.map((f) => f.name)}
+            onDrawn={(file) => setNewFiles((was) => [...was, file])}
+          />
+          <HeldFiles
+            files={newFiles}
+            busy={busy}
+            onRemove={(at) => setNewFiles((was) => was.filter((_, x) => x !== at))}
+            onReplace={(at, next) => setNewFiles((was) => was.map((f, x) => (x === at ? next : f)))}
+          />
           <div className="flex flex-wrap items-center gap-3">
             <Button
               disabled={busy || !title.trim()}
@@ -528,7 +704,10 @@ const blankStudy = (): DraftStudy => ({ key: uuid(), title: '', body: '', files:
  * Now it is one page: the series' name, then the studies written out under it
  * with their handouts dropped in beside them, then Save. What most people never
  * need -- the topic it is grouped under, the line shown under its name, how to
- * make text bold -- is folded away under "More options" and "Formatting tips".
+ * make text bold -- is shown only on Advanced (28 September 2026; it was
+ * folded under "More options" and "Formatting tips" before that). Simple, where
+ * everybody starts, is the name, the studies, their handouts and drawings, and
+ * Save.
  *
  * SAVED IN ORDER, AND NOTHING SHARED UNTIL ALL OF IT IS. The series is written
  * as a draft, then each study, then its files, and only then is it shared if
@@ -546,6 +725,7 @@ function NewSeries({ onSaved, onCancel }: {
   const [studies, setStudies] = useState<DraftStudy[]>([blankStudy()]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
+  const advanced = useWritingMode() === 'advanced';
   const [error, setError] = useState('');
 
   const change = (key: string, patch: Partial<DraftStudy>) =>
@@ -601,7 +781,13 @@ function NewSeries({ onSaved, onCancel }: {
 
   return (
     <div className="mb-5 grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
-      <p className="text-base font-extrabold text-navy">New series</p>
+      <div className="grid gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-base font-extrabold text-navy">New series</p>
+          <WritingModeSwitch />
+        </div>
+        <WritingModeNote />
+      </div>
       <div>
         <label className="text-sm font-semibold text-navy" htmlFor="new-series-title">Name of the series</label>
         <input
@@ -612,6 +798,37 @@ function NewSeries({ onSaved, onCancel }: {
           className="tap mt-1 w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
         />
       </div>
+
+      {/* WHERE IT SITS ON THE SHELF, on Advanced only. Beside the name because
+          that is what they describe; left empty, the series is filed under
+          General, which is the same answer the database gives. (Until 28
+          September 2026 these were folded under "More options" at the foot of
+          the form, below every study, which is a long way from the name.) */}
+      {advanced && (
+        <div className="grid gap-2 rounded-xl bg-white p-3 ring-1 ring-navy/5">
+          <label className="text-sm font-semibold text-navy" htmlFor="new-series-topic">
+            Topic <span className="font-normal text-gray-500">(optional, groups it on the shelf)</span>
+          </label>
+          <input
+            id="new-series-topic"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            list="series-topics"
+            placeholder="e.g. Prayer"
+            className="tap w-full min-w-0 rounded-xl bg-slate-50 px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <label className="text-sm font-semibold text-navy" htmlFor="new-series-desc">
+            One line about it <span className="font-normal text-gray-500">(optional)</span>
+          </label>
+          <input
+            id="new-series-desc"
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            placeholder="Shown under the name"
+            className="tap w-full min-w-0 rounded-xl bg-slate-50 px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
+          />
+        </div>
+      )}
 
       {/* THE STUDIES, WRITTEN HERE, not in a second form after this one. */}
       <ol className="grid grid-cols-1 gap-3">
@@ -661,24 +878,18 @@ function NewSeries({ onSaved, onCancel }: {
               hint="Drag files here, or anywhere on this study, or choose them. Up to 10 MB each."
               onFiles={(files) => addFiles(s.key, files)}
             />
-            {s.files.length > 0 && (
-              <ul className="space-y-1 text-sm">
-                {s.files.map((f, at) => (
-                  <li key={`${f.name}-${at}`} className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 break-words font-semibold text-navy">📎 {f.name}</span>
-                    <span className="text-xs text-gray-400">{kb(f.size)}</span>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => change(s.key, { files: s.files.filter((_, x) => x !== at) })}
-                      className="tap-sm px-2 text-xs font-semibold text-red-700 underline"
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <DrawButton
+              busy={busy}
+              title={`Drawing for ${s.title.trim() || `Study ${i + 1}`}`}
+              existing={s.files.map((f) => f.name)}
+              onDrawn={(file) => setStudies((list) => list.map((x) => (x.key === s.key ? { ...x, files: [...x.files, file] } : x)))}
+            />
+            <HeldFiles
+              files={s.files}
+              busy={busy}
+              onRemove={(at) => setStudies((list) => list.map((x) => (x.key === s.key ? { ...x, files: x.files.filter((_, n) => n !== at) } : x)))}
+              onReplace={(at, next) => setStudies((list) => list.map((x) => (x.key === s.key ? { ...x, files: x.files.map((f, n) => (n === at ? next : f)) } : x)))}
+            />
            </DropArea>
           </li>
         ))}
@@ -692,36 +903,9 @@ function NewSeries({ onSaved, onCancel }: {
         + Add another study
       </button>
 
-      {/* WHAT MOST PEOPLE NEVER NEED, folded away. (grid-cols-1 on the grids
-          above: a single track is minmax(0, 1fr), so a long file name that
-          will not wrap is cut with an ellipsis instead of widening the whole
-          form past the edge of a phone.) */}
-      <details className="text-sm">
-        <summary className="cursor-pointer font-semibold text-navy underline underline-offset-2">More options</summary>
-        <div className="mt-2 grid gap-2">
-          <label className="text-sm font-semibold text-navy" htmlFor="new-series-topic">
-            Topic <span className="font-normal text-gray-500">(optional, groups it on the shelf)</span>
-          </label>
-          <input
-            id="new-series-topic"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            list="series-topics"
-            placeholder="e.g. Prayer"
-            className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <label className="text-sm font-semibold text-navy" htmlFor="new-series-desc">
-            One line about it <span className="font-normal text-gray-500">(optional)</span>
-          </label>
-          <input
-            id="new-series-desc"
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            placeholder="Shown under the name"
-            className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
-          />
-        </div>
-      </details>
+      {/* (grid-cols-1 on the grids above: a single track is minmax(0, 1fr),
+          so a long file name that will not wrap is cut with an ellipsis
+          instead of widening the whole form past the edge of a phone.) */}
 
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">{error}</p>}
       {progress && <p className="text-sm font-semibold text-gray-600" aria-live="polite">{progress}</p>}
@@ -778,6 +962,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
   // database. A prop that four callers guess at is four chances to get a
   // permission wrong. `readOnly` can only take away.
   const canWrite = canWriteStudies(profile?.role) && !readOnly;
+  const advancedWriting = useWritingMode() === 'advanced';
   const [rows, setRows] = useState<live.LessonSeries[] | null>(null);
   // ARRIVING FROM "READ NEXT" OPENS THE RIGHT SERIES. Without this the card
   // would name a study and then drop somebody on a shelf of closed folders to
@@ -934,6 +1119,10 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
                       <div className="mt-4 border-t border-black/5 pt-3">
                         {renaming === s.id ? (
                           <div className="grid gap-2 rounded-xl bg-white p-3 ring-1 ring-navy/10">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-sm font-bold text-navy">This series</p>
+                              <WritingModeSwitch />
+                            </div>
                             <label className="text-xs font-semibold text-navy" htmlFor={`series-title-${s.id}`}>Name</label>
                             <input
                               id={`series-title-${s.id}`}
@@ -942,25 +1131,32 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
                               placeholder="Series title"
                               className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
                             />
-                            <label className="text-xs font-semibold text-navy" htmlFor={`series-topic-${s.id}`}>
-                              Topic <span className="font-normal text-gray-500">(groups it on the shelf)</span>
-                            </label>
-                            <input
-                              id={`series-topic-${s.id}`}
-                              value={newTopic}
-                              onChange={(e) => setNewTopic(e.target.value)}
-                              list="series-topics"
-                              placeholder="e.g. Prayer"
-                              className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
-                            />
-                            <label className="text-xs font-semibold text-navy" htmlFor={`series-desc-${s.id}`}>One line about it</label>
-                            <input
-                              id={`series-desc-${s.id}`}
-                              value={newDesc}
-                              onChange={(e) => setNewDesc(e.target.value)}
-                              placeholder="Shown under the name"
-                              className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
-                            />
+                            {/* The topic and the line under the name, on Advanced
+                                only -- the same split as the new-series form.
+                                Whatever they hold is saved either way. */}
+                            {advancedWriting && (
+                              <>
+                              <label className="text-xs font-semibold text-navy" htmlFor={`series-topic-${s.id}`}>
+                                Topic <span className="font-normal text-gray-500">(groups it on the shelf)</span>
+                              </label>
+                              <input
+                                id={`series-topic-${s.id}`}
+                                value={newTopic}
+                                onChange={(e) => setNewTopic(e.target.value)}
+                                list="series-topics"
+                                placeholder="e.g. Prayer"
+                                className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                              <label className="text-xs font-semibold text-navy" htmlFor={`series-desc-${s.id}`}>One line about it</label>
+                              <input
+                                id={`series-desc-${s.id}`}
+                                value={newDesc}
+                                onChange={(e) => setNewDesc(e.target.value)}
+                                placeholder="Shown under the name"
+                                className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                              </>
+                            )}
                             <div className="flex items-center gap-3">
                               <Button
                                 disabled={busy || !newTitle.trim()}

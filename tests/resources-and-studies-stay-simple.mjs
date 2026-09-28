@@ -127,12 +127,24 @@ const read = (f) => fs.readFileSync(f, 'utf8');
   ok(/id=\{`draft-body-\$\{s\.key\}`\}/.test(form) && /\+ Add another study/.test(form),
     'the studies are written in it, as many as are wanted');
   ok(/<FileDrop\b/.test(form), 'with their handouts dragged in beside them');
-  const more = form.indexOf('>More options<');
-  ok(more !== -1 && form.lastIndexOf('<details', more) !== -1
-     && form.indexOf('id="new-series-topic"') > more && form.indexOf('id="new-series-desc"') > more,
-    'the topic and the line under the name are folded under "More options"');
-  ok(/<details\b[^>]*>\s*<summary[^>]*>Formatting tips<\/summary>/.test(st.slice(st.indexOf('function WritingHints('))),
+  // ON ADVANCED ONLY, since 28 September 2026 ("there must be a simple and
+  // advance setting for it"). Until then they were folded under "More options"
+  // at the foot of the form; now Simple does not show them at all, and they
+  // sit beside the name on Advanced. Both fields inside the one block, and
+  // neither anywhere else in the form.
+  const advAt = form.indexOf('{advanced && (');
+  const advBlock = advAt === -1 ? '' : form.slice(advAt, form.indexOf('\n      )}', advAt));
+  ok(/const advanced = useWritingMode\(\) === 'advanced';/.test(form) && /<WritingModeSwitch \/>/.test(form),
+    'the new-series form has the Simple / Advanced switch, read from the one shared setting');
+  ok(/id="new-series-topic"/.test(advBlock) && /id="new-series-desc"/.test(advBlock)
+     && form.split('id="new-series-topic"').length === 2 && form.split('id="new-series-desc"').length === 2,
+    'the topic and the line under the name are shown on Advanced only');
+  const hintsFn = st.slice(st.indexOf('function WritingHints('), st.indexOf('function HeldFiles('));
+  ok(/<details\b[^>]*>\s*<summary[^>]*>Formatting tips<\/summary>/.test(hintsFn),
     'and the formatting tips are folded, not an open box under every study');
+  ok(/if \(mode !== 'advanced'\) return null;/.test(hintsFn)
+     && hintsFn.indexOf("if (mode !== 'advanced') return null;") < hintsFn.indexOf('<details'),
+    'and shown on Advanced only: on Simple the box is a plain box');
 
   const save = form.slice(form.indexOf('const save = async'));
   const series = save.indexOf('live.addLessonSeries(');

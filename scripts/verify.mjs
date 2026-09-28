@@ -580,6 +580,10 @@ const staticChecks = [
   ['a folder does not say whose church', 'tests/a-folder-does-not-say-whose-church.mjs'],
   ['the tutorial ring keeps up', 'tests/the-tutorial-ring-keeps-up.mjs'],
   ['a study takes files anywhere', 'tests/a-study-takes-files-anywhere.mjs'],
+  // A drawing board on every study being written (28 September 2026): Excalidraw,
+  // loaded only when asked for, talking to nobody else, and a saved drawing that
+  // carries the picture and the drawing and nothing else.
+  ['a study can have a drawing', 'tests/a-study-can-have-a-drawing.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

@@ -5,6 +5,53 @@ import { useDemo } from '@/lib/demo/store';
 import { Button, Card } from '@/components/ui';
 import { Linked } from '@/components/Linked';
 import { LESSONS, lessonById, offerableSeries } from '@/lib/lessons';
+import { DrawButton, DrawingBoard, DrawingPicture, useFileUrl } from '@/components/draw/Draw';
+import { WritingModeNote, WritingModeSwitch, useWritingMode } from '@/components/WritingMode';
+import { dataUrlToFile, fileToDataUrl } from '@/lib/drawing-file';
+
+/** What a series' drawing is called, here where a series holds only one. */
+const DRAWING_NAME = 'Drawing 1.excalidraw.png';
+
+/**
+ * A series' drawing, shown, and changed or taken off on the spot. The sample
+ * app's half of what the live app does with a drawing on a study.
+ */
+function SeriesDrawing({ src, onChange, onRemove }: {
+  src: string;
+  onChange?: (file: File) => void | Promise<void>;
+  onRemove?: () => void;
+}) {
+  const [changing, setChanging] = useState<File | null>(null);
+  return (
+    <>
+      <DrawingPicture src={src} name={DRAWING_NAME}>
+        {onChange && (
+          <button
+            type="button"
+            onClick={() => setChanging(dataUrlToFile(src, DRAWING_NAME))}
+            className="tap-sm font-semibold text-navy underline"
+          >
+            Change drawing
+          </button>
+        )}
+        {onRemove && (
+          <button type="button" onClick={onRemove} className="tap-sm font-semibold text-red-700 underline">
+            Remove
+          </button>
+        )}
+      </DrawingPicture>
+      {changing && onChange && (
+        <DrawingBoard
+          name={DRAWING_NAME}
+          title="Change the drawing"
+          initial={changing}
+          onClose={() => setChanging(null)}
+          onSave={async (next) => { await onChange(next); setChanging(null); }}
+        />
+      )}
+    </>
+  );
+}
 
 // The library's series shelf.
 //
@@ -25,7 +72,11 @@ import { LESSONS, lessonById, offerableSeries } from '@/lib/lessons';
 // order you want them walked, and the list underneath shows what you have built
 // so far. An admin in their forties, on a phone, can do that on the first try.
 export function LessonSeriesLibrary() {
-  const { db, createSeries, setSeriesPublished } = useDemo();
+  const { db, createSeries, setSeriesPublished, setSeriesDrawing } = useDemo();
+  const advanced = useWritingMode() === 'advanced';
+  // A picture drawn for the series before it is saved.
+  const [drawing, setDrawing] = useState<File | null>(null);
+  const drawingUrl = useFileUrl(drawing);
   const [title, setTitle] = useState('');
   const [topic, setTopic] = useState('');
   const [description, setDescription] = useState('');
@@ -44,14 +95,21 @@ export function LessonSeriesLibrary() {
   // the same answer the live app gives.
   const canSave = title.trim() && picked.length > 0;
 
-  const save = () => {
+  const save = async () => {
     if (!canSave) return;
-    createSeries({ title, topic: topic.trim() || 'General', description, lessonIds: picked });
+    createSeries({
+      title,
+      topic: topic.trim() || 'General',
+      description,
+      lessonIds: picked,
+      drawing: drawing ? await fileToDataUrl(drawing) : undefined,
+    });
     setSaved(title.trim());
     setTitle('');
     setTopic('');
     setDescription('');
     setPicked([]);
+    setDrawing(null);
     setBuilding(false);
     setTimeout(() => setSaved(''), 5000);
   };
@@ -82,15 +140,25 @@ export function LessonSeriesLibrary() {
 
       {building && (
         <div className="mb-5 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
-          <p className="mb-3 font-bold text-navy">Build a lesson series</p>
+          <div className="mb-3 grid gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-bold text-navy">Build a lesson series</p>
+              <WritingModeSwitch />
+            </div>
+            <WritingModeNote />
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Name (e.g. Learning to pray)"
               aria-label="Series name"
-              className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10"
+              className={`tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 ${advanced ? '' : 'sm:col-span-2'}`}
             />
+            {/* THE TOPIC AND THE LINE UNDER THE NAME, ON ADVANCED ONLY -- the
+                same split as the live app's new-series form. Left empty, the
+                series is filed under General. */}
+            {advanced && (<>
             <input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
@@ -113,6 +181,7 @@ export function LessonSeriesLibrary() {
               aria-label="Description"
               className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 sm:col-span-2"
             />
+            </>)}
           </div>
 
           <p className="mb-2 mt-4 text-sm font-semibold text-navy">
@@ -159,12 +228,29 @@ export function LessonSeriesLibrary() {
             })}
           </div>
 
+          {/* A PICTURE FOR THE SERIES, drawn on the same board the live app
+              uses. Optional, and it says so. */}
+          <div className="mt-4 grid gap-2">
+            <p className="text-sm font-semibold text-navy">
+              A picture for this series <span className="font-normal text-gray-500">(optional)</span>
+            </p>
+            {drawing ? (
+              <SeriesDrawing
+                src={drawingUrl}
+                onChange={(next) => setDrawing(next)}
+                onRemove={() => setDrawing(null)}
+              />
+            ) : (
+              <DrawButton title={`Drawing for ${title.trim() || 'this series'}`} onDrawn={(file) => setDrawing(file)} />
+            )}
+          </div>
+
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button variant="gold" disabled={!canSave} onClick={save}>
+            <Button variant="gold" disabled={!canSave} onClick={() => void save()}>
               Save series {picked.length > 0 ? `· ${picked.length} lessons` : ''}
             </Button>
             <button
-              onClick={() => { setBuilding(false); setPicked([]); }}
+              onClick={() => { setBuilding(false); setPicked([]); setDrawing(null); }}
               className="tap-sm rounded-xl px-3 text-sm font-semibold text-gray-600 underline"
             >
               Cancel
@@ -217,6 +303,23 @@ export function LessonSeriesLibrary() {
                 </div>
                 {s.description && (
                   <p className="mt-1 text-sm text-gray-500"><Linked text={s.description} /></p>
+                )}
+                {opened && s.drawing && (
+                  <div className="mt-3">
+                    <SeriesDrawing
+                      src={s.drawing}
+                      onChange={async (next) => setSeriesDrawing(s.id, await fileToDataUrl(next))}
+                      onRemove={() => setSeriesDrawing(s.id, undefined)}
+                    />
+                  </div>
+                )}
+                {opened && !s.drawing && (
+                  <div className="mt-3">
+                    <DrawButton
+                      title={`Drawing for ${s.title}`}
+                      onDrawn={async (file) => setSeriesDrawing(s.id, await fileToDataUrl(file))}
+                    />
+                  </div>
                 )}
                 {opened && (
                   <ol className="mt-3 space-y-1">

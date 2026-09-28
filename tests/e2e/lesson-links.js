@@ -66,6 +66,9 @@ const anchors = (page) => page.evaluate(() =>
   // The builder opens when asked for; the shelf is what the page shows first.
   await page.getByRole('button', { name: /^\+ New series$/ }).first().click();
   await page.waitForTimeout(400);
+  // The description and topic are on Advanced since 28 September 2026.
+  await page.getByRole('radio', { name: 'Advanced' }).first().click();
+  await page.waitForTimeout(200);
 
   ok(await page.getByLabel('Description').count() > 0, 'the series builder takes a description');
   await page.getByLabel('Series name').fill(SERIES);

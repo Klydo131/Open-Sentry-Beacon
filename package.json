@@ -23,6 +23,7 @@
   },
   "scripts": {
     "setup": "node scripts/setup.mjs",
+    "predev": "node scripts/excalidraw-assets.mjs",
     "dev": "node scripts/run-next.mjs dev",
     "build": "node scripts/run-next.mjs build",
     "start": "node scripts/run-next.mjs start",
@@ -30,12 +31,13 @@
     "test:all": "node scripts/verify.mjs --all",
     "icons": "node scripts/gen-icons.mjs",
     "lint": "node scripts/lint.mjs",
-    "prebuild": "node scripts/stamp-build.mjs",
+    "prebuild": "node scripts/stamp-build.mjs && node scripts/excalidraw-assets.mjs",
     "verify": "node scripts/verify.mjs",
     "verify:all": "node scripts/verify.mjs --all"
   },
   "dependencies": {
     "@blocksuite/affine": "^0.22.4",
+    "@excalidraw/excalidraw": "0.18.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "@vanilla-extract/next-plugin": "^2.5.2",
@@ -47,16 +49,24 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
-    "esbuild": "^0.28.2",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
+    "esbuild": "^0.28.2",
     "playwright": "^1.62.1",
     "postcss": "^8.5.10",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
   },
   "overrides": {
-    "postcss": "$postcss"
+    "postcss": "$postcss",
+    "lodash-es": "^4.18.1",
+    "@excalidraw/excalidraw": {
+      "nanoid": "^3.3.18"
+    },
+    "@excalidraw/mermaid-to-excalidraw": {
+      "nanoid": "^5.1.16",
+      "@mermaid-js/parser": "^1.2.1"
+    }
   }
 }

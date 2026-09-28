@@ -145,6 +145,26 @@ into another became none. `tests/a-folder-does-not-say-whose-church.mjs` holds
 it, including that every rule keeps using the helper only inside those two
 tests.
 
+**A drawing carries the picture and nothing else.** A drawing made on a study
+(Excalidraw, since 28 September 2026) is saved as a PNG with the drawing itself
+in one text chunk, so it can be reopened and changed. It goes through the same
+upload and the same 10 MB limit as any handout. Every other chunk a PNG can
+carry -- a camera's EXIF, where a location lives, a colour profile naming a
+device, free text -- is cut out before it is sent (`lib/drawing-file.ts`), so
+a photo renamed to look like a drawing still arrives with nothing but its
+pixels. Photos cannot be put inside a drawing at all: a photo there would skip
+the step that removes its location, so it is added as a handout instead.
+
+**The drawing board talks to nobody else.** Excalidraw is loaded only when
+somebody presses *Draw a picture*. Its fonts are copied out of the installed
+package into `public/excalidraw/` at build time and served by the app itself;
+its fallback to a public CDN is removed before the browser sees it, and the
+Content-Security-Policy was not widened for any of it. Its AI tools, web
+embeds, online library and file export are switched off.
+`tests/a-study-can-have-a-drawing.mjs` holds these, and
+`tests/e2e/a-study-can-have-a-drawing.js` draws in a real browser and fails if
+any request leaves the app or anything is refused by the policy.
+
 ---
 
 ## What is not protected, plainly

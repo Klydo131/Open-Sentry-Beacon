@@ -5,6 +5,7 @@ import { Card } from '@/components/ui';
 import { Linked } from '@/components/Linked';
 import { seriesProgress } from '@/lib/lessons';
 import { safeExternalUrl } from '@/lib/url';
+import { DrawingPicture } from '@/components/draw/Draw';
 
 // The seeker's half of a lesson series: the walking.
 //
@@ -68,6 +69,14 @@ export function MySeries() {
               {progress.finished ? '✓ Finished' : `${progress.done} of ${progress.total}`}
             </span>
           </div>
+
+          {/* THE PICTURE THE GUIDE DREW FOR IT, above the lessons, as the live
+              app shows a drawing above a study's handouts. */}
+          {series.drawing && (
+            <div className="mt-3">
+              <DrawingPicture src={series.drawing} name="Drawing 1.excalidraw.png" />
+            </div>
+          )}
 
           <div className="my-4 h-2 overflow-hidden rounded-full bg-gray-100">
             <div
