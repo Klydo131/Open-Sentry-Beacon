@@ -24,7 +24,7 @@ import { useLiveSession } from '@/lib/live/session';
 import { Button, Card } from '@/components/ui';
 import { Rich } from '@/components/Rich';
 import { humanError } from '@/lib/live/errors';
-import { FileDrop } from '@/components/FileDrop';
+import { DropArea, FileDrop } from '@/components/FileDrop';
 import { uuid } from '@/lib/uuid';
 import { useKeepUp, KEEP_UP_STUDIES } from '@/lib/live/keep-up';
 import { ReadingBar } from '@/components/live/ReadingProgress';
@@ -172,6 +172,16 @@ function SeriesBody({ series, mine, ownSeries }: {
   const [reads, setReads] = useState<Set<string>>(new Set());
   const { profile } = useLiveSession();
 
+  // A FILE TOO BIG IS REFUSED WHEN IT IS DROPPED, by name -- the same words the
+  // new-series form uses, so the two ways of writing a study agree.
+  const addNewFiles = (picked: File[]) => {
+    const tooBig = picked.filter((f) => f.size > live.MAX_RESOURCE_FILE);
+    setError(tooBig.length
+      ? `${tooBig.map((f) => `\u201c${f.name}\u201d`).join(', ')} ${tooBig.length === 1 ? 'is' : 'are'} over 10 MB. Share a link to it instead.`
+      : '');
+    setNewFiles((was) => [...was, ...picked.filter((f) => f.size <= live.MAX_RESOURCE_FILE)]);
+  };
+
   const load = useCallback(async () => {
     try {
       const rows = await live.listLessons(series.id);
@@ -284,8 +294,20 @@ function SeriesBody({ series, mine, ownSeries }: {
               /* EDITING IN PLACE, NOT ON ANOTHER SCREEN. The handouts stay
                  visible while the words are being changed, because the study
                  and the sheet that goes with it are one thing to the person
-                 teaching from them. */
-              <div className="grid grid-cols-1 gap-2">
+                 teaching from them.
+
+                 THE WHOLE CARD TAKES A DROPPED FILE, not only the small box
+                 at the bottom of it (28 September 2026). A file let go over
+                 the words, a few pixels from the box, used to be opened by the
+                 browser itself -- out of the app, and the edit with it. */
+              <DropArea
+                busy={busy}
+                label="Drop to add to this study"
+                className="grid grid-cols-1 gap-2 rounded-xl"
+                onFiles={(picked) => void act(async () => {
+                  for (const file of picked) await live.attachLessonFile(lesson.id, file);
+                })}
+              >
                 <label className="text-xs font-semibold text-navy" htmlFor={`study-title-${lesson.id}`}>Title</label>
                 <input
                   id={`study-title-${lesson.id}`}
@@ -345,7 +367,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                       compact
                       busy={busy}
                       title="Add handouts"
-                      hint="Drag files here, or choose them. Up to 10 MB each."
+                      hint="Drag files here, or anywhere on this study, or choose them. Up to 10 MB each."
                       onFiles={(picked) => void act(async () => {
                         for (const file of picked) await live.attachLessonFile(lesson.id, file);
                       })}
@@ -393,7 +415,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                     </button>
                   )}
                 </div>
-              </div>
+              </DropArea>
             )}
           </li>
         ))}
@@ -409,7 +431,12 @@ function SeriesBody({ series, mine, ownSeries }: {
         </button>
       )}
       {mine && adding && (
-        <div className="mt-3 grid grid-cols-1 gap-2 rounded-xl bg-gray-50 p-3">
+        <DropArea
+          busy={busy}
+          label="Drop to add to this study"
+          className="mt-3 grid grid-cols-1 gap-2 rounded-xl bg-gray-50 p-3"
+          onFiles={(picked) => addNewFiles(picked)}
+        >
           <label className="text-xs font-semibold text-navy" htmlFor={`new-study-title-${series.id}`}>Title</label>
           <input
             id={`new-study-title-${series.id}`}
@@ -432,12 +459,8 @@ function SeriesBody({ series, mine, ownSeries }: {
             compact
             busy={busy}
             title="Handouts"
-            hint="Drag files here, or choose them. Up to 10 MB each."
-            onFiles={(picked) => {
-              const fits = picked.filter((f) => f.size <= live.MAX_RESOURCE_FILE);
-              setError(fits.length < picked.length ? 'A file over 10 MB was left out. Share a link to it instead.' : '');
-              setNewFiles((was) => [...was, ...fits]);
-            }}
+            hint="Drag files here, or anywhere on this study, or choose them. Up to 10 MB each."
+            onFiles={(picked) => addNewFiles(picked)}
           />
           {newFiles.length > 0 && (
             <ul className="space-y-1 text-sm">
@@ -482,7 +505,7 @@ function SeriesBody({ series, mine, ownSeries }: {
               Cancel
             </button>
           </div>
-        </div>
+        </DropArea>
       )}
     </div>
   );
@@ -593,7 +616,13 @@ function NewSeries({ onSaved, onCancel }: {
       {/* THE STUDIES, WRITTEN HERE, not in a second form after this one. */}
       <ol className="grid grid-cols-1 gap-3">
         {studies.map((s, i) => (
-          <li key={s.key} className="grid grid-cols-1 gap-2 rounded-xl bg-white p-3 ring-1 ring-black/5">
+          <li key={s.key}>
+           <DropArea
+            busy={busy}
+            label={`Drop to add to Study ${i + 1}`}
+            className="grid grid-cols-1 gap-2 rounded-xl bg-white p-3 ring-1 ring-black/5"
+            onFiles={(files) => addFiles(s.key, files)}
+           >
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-bold text-navy">Study {i + 1}</p>
               {studies.length > 1 && (
@@ -629,7 +658,7 @@ function NewSeries({ onSaved, onCancel }: {
               compact
               busy={busy}
               title="Handouts"
-              hint="Drag files here, or choose them. Up to 10 MB each."
+              hint="Drag files here, or anywhere on this study, or choose them. Up to 10 MB each."
               onFiles={(files) => addFiles(s.key, files)}
             />
             {s.files.length > 0 && (
@@ -650,6 +679,7 @@ function NewSeries({ onSaved, onCancel }: {
                 ))}
               </ul>
             )}
+           </DropArea>
           </li>
         ))}
       </ol>

@@ -116,7 +116,11 @@ const MIGRATION = 'supabase/migrations/20260925100000_a_resource_can_be_a_file.s
 // ---------------------------------------------------------------------------
 {
   const drop = read('components/FileDrop.tsx');
-  ok(/onDrop=\{/.test(drop) && /dataTransfer\.files/.test(drop), 'the file box takes a drop');
+  // The box takes its drop through useFileDropArea, the same handler any card
+  // uses (28 September 2026): the handler reads the dropped files, and the box
+  // spreads it onto itself.
+  ok(/onDrop: \(e: React\.DragEvent\) => \{/.test(drop) && /dataTransfer\.files/.test(drop)
+     && /\{\.\.\.handlers\}\s*data-file-drop=""/.test(drop), 'the file box takes a drop');
   ok(/type="file"/.test(drop) && /accept=\{ATTACHMENT_ACCEPT\}/.test(drop),
     'and on a phone, where nothing can be dragged, it is a button that opens the picker');
   ok(/includes\('Files'\)/.test(drop), 'only files: text or a link dragged across is left alone');

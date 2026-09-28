@@ -3,6 +3,7 @@ import './globals.css';
 import { DemoProvider } from '@/lib/demo/store';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SelfHeal } from '@/components/SelfHeal';
+import { StrayFileDrops } from '@/components/StrayFileDrops';
 import { InstallPrompt } from '@/components/InstallPrompt';
 
 import { AutoUpdate } from '@/components/AutoUpdate';
@@ -94,6 +95,9 @@ export default function RootLayout({
             bundle is requested, because a bundle failing to load is the signal
             it exists to catch. */}
         <SelfHeal />
+        {/* A file let go where nothing takes files is ignored, rather than
+            opened by the browser in place of the app. */}
+        <StrayFileDrops />
         <LocaleProvider>
           <TutorialModeProvider>
             <DemoProvider>
