@@ -1,0 +1,373 @@
+{
+  "reviewed": "2026-09-29",
+  "note": "Opt-in only. Nothing here is switched on by cloning this repository. See docs/DEVELOPER-TOOLKIT.md.",
+  "tools": [
+    {
+      "id": "caveman",
+      "name": "Caveman",
+      "repo": "Klydo131/caveman",
+      "commit": "0bbd46c390319481c6c5a7a48de53fdf124b1aff",
+      "licence": "MIT",
+      "category": "cost",
+      "status": "already-ours",
+      "runs_on_its_own": "SessionStart, UserPromptSubmit (sets the mode)",
+      "why": "The project's token saver, from the owner's fork of JuliusBrussee/caveman. Rules for its use are in AGENTS.md section 0.1.",
+      "install": [
+        "claude plugin marketplace add Klydo131/caveman",
+        "claude plugin install caveman@caveman"
+      ]
+    },
+    {
+      "id": "ponytail",
+      "name": "Ponytail",
+      "repo": "Klydo131/ponytail",
+      "commit": "40e50d9e03242aa5dd53ac771950f9127362b25f",
+      "licence": "MIT",
+      "category": "cost",
+      "status": "already-ours",
+      "runs_on_its_own": "SessionStart, UserPromptSubmit (loads its rules, tracks its mode)",
+      "why": "The project's code minimiser, from the owner's fork of DietrichGebert/ponytail. Rules for its use are in AGENTS.md section 0.1.",
+      "install": [
+        "claude plugin marketplace add Klydo131/ponytail",
+        "claude plugin install ponytail@ponytail"
+      ]
+    },
+    {
+      "id": "superpowers",
+      "name": "Superpowers",
+      "repo": "obra/superpowers",
+      "commit": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+      "licence": "MIT",
+      "category": "harness",
+      "status": "recommended",
+      "runs_on_its_own": "SessionStart (loads its skills list)",
+      "why": "Planning, test-first and systematic debugging as skills the agent reaches for. One hook, at session start, that only adds text. Installed from Anthropic's official directory, as its own README says; the commit recorded is the one read on the day it was reviewed.",
+      "install": [
+        "claude plugin install superpowers@claude-plugins-official"
+      ]
+    },
+    {
+      "id": "anthropic-skills",
+      "name": "Anthropic skills",
+      "repo": "anthropics/skills",
+      "commit": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+      "licence": "per skill (some source-available, not open source)",
+      "category": "skills",
+      "status": "recommended",
+      "runs_on_its_own": "none",
+      "why": "Anthropic's own skills. document-skills makes the PDF and Word copies of the guides in docs/handbook without new code here. Read each skill's own licence before copying it into this AGPL repository: some may be used but not redistributed.",
+      "install": [
+        "claude plugin marketplace add anthropics/skills",
+        "claude plugin install document-skills@anthropic-agent-skills"
+      ]
+    },
+    {
+      "id": "codex-plugin",
+      "name": "Codex plugin for Claude Code",
+      "repo": "openai/codex-plugin-cc",
+      "commit": "db52e28f4d9ded852ab3942cea316258ae4ef346",
+      "licence": "Apache-2.0",
+      "category": "cost",
+      "status": "recommended",
+      "runs_on_its_own": "SessionStart, Stop, SessionEnd (starts and stops its helper)",
+      "why": "Claude and Codex already share this repository (AGENTS.md section 7). This lets one hand a review to the other without leaving the session. Needs the developer's own Codex sign-in.",
+      "install": [
+        "npm install -g @openai/codex@0.158.0",
+        "claude plugin marketplace add openai/codex-plugin-cc",
+        "claude plugin install codex@openai-codex"
+      ]
+    },
+    {
+      "id": "claude-hud",
+      "name": "Claude HUD",
+      "repo": "jarrodwatts/claude-hud",
+      "commit": "939eb66485832dead1b0a28a954f76f7aa2bdb06",
+      "licence": "MIT",
+      "category": "cost",
+      "status": "recommended",
+      "runs_on_its_own": "a status-line command, each time the line is drawn",
+      "why": "Shows how much of the context and the budget a session has used, which is the number Caveman is there to bring down.",
+      "install": [
+        "claude plugin marketplace add jarrodwatts/claude-hud",
+        "claude plugin install claude-hud@claude-hud"
+      ]
+    },
+    {
+      "id": "repomix",
+      "name": "Repomix",
+      "repo": "yamadashy/repomix",
+      "commit": "0b3f82b401bbc520fd1aca67c06d24e40a868d3e",
+      "licence": "MIT",
+      "category": "memory",
+      "status": "recommended",
+      "runs_on_its_own": "none",
+      "why": "Packs the repository into one file for a review or a second opinion. It follows .gitignore, so .env files and build output stay out. Run on demand, at a pinned version, never installed into package.json.",
+      "install": [
+        "npx repomix@1.18.1"
+      ]
+    },
+    {
+      "id": "codegraph",
+      "name": "CodeGraph",
+      "repo": "colbymchenry/codegraph",
+      "commit": "15a5d1d0cd8103dcf919cd8d20ce8bb9f8c2d1c5",
+      "licence": "MIT",
+      "category": "memory",
+      "status": "recommended",
+      "runs_on_its_own": "none",
+      "why": "A local index of the code that an agent can search instead of reading whole files: fewer tokens on a repository this size. Stays on the developer's machine.",
+      "install": [
+        "npx @colbymchenry/codegraph@1.6.0"
+      ]
+    },
+    {
+      "id": "taste-skill",
+      "name": "Taste",
+      "repo": "Leonxlnx/taste-skill",
+      "commit": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
+      "licence": "MIT",
+      "category": "skills",
+      "status": "recommended",
+      "runs_on_its_own": "none",
+      "why": "A design skill for pages that look finished. docs/VISUAL-LANGUAGE.md outranks it whenever they disagree: navy is the only press-me colour, drawn icons, nothing read under 13px.",
+      "install": [
+        "claude plugin marketplace add Leonxlnx/taste-skill",
+        "claude plugin install taste-skill@taste-skill"
+      ]
+    },
+    {
+      "id": "official-plugins",
+      "name": "Claude plugin directory",
+      "repo": "anthropics/claude-plugins-official",
+      "commit": "fbe07fb6ce7d51d8e86ca6efdf050059894cdb80",
+      "licence": "Apache-2.0 (each plugin its own)",
+      "category": "skills",
+      "status": "recommended",
+      "runs_on_its_own": "depends on the plugin chosen",
+      "why": "Anthropic's own directory. The place to find anything not listed here; whatever is taken from it is added to this list first, with what it runs.",
+      "install": [
+        "claude plugin marketplace add anthropics/claude-plugins-official"
+      ]
+    },
+    {
+      "id": "playwright-mcp",
+      "name": "Playwright MCP",
+      "repo": "microsoft/playwright-mcp",
+      "commit": "f183dad4a52965583e3cc1d59b88cdc279e2e57d",
+      "licence": "Apache-2.0",
+      "category": "tools",
+      "status": "already-have",
+      "runs_on_its_own": "none",
+      "why": "Every screen is already walked in a real browser by tests/e2e (Chromium here, WebKit in CI), and agents run those walks. A second way to drive a browser would be a second thing to trust."
+    },
+    {
+      "id": "github-mcp",
+      "name": "GitHub MCP server",
+      "repo": "github/github-mcp-server",
+      "commit": "85598ba6e1256f7ebf4867b95d63b833c4549264",
+      "licence": "MIT",
+      "category": "tools",
+      "status": "already-have",
+      "runs_on_its_own": "none",
+      "why": "Cloud sessions already have GitHub through their own connector, and a local developer has the gh command."
+    },
+    {
+      "id": "karpathy-skills",
+      "name": "Karpathy skills",
+      "repo": "forrestchang/andrej-karpathy-skills",
+      "commit": "2c606141936f1eeef17fa3043a72095b4765b9c2",
+      "licence": "no licence file",
+      "category": "harness",
+      "status": "already-have",
+      "runs_on_its_own": "none",
+      "why": "One CLAUDE.md of general rules. This project's AGENTS.md and CLAUDE.md are that, written from its own mistakes. There is also no licence to reuse it under."
+    },
+    {
+      "id": "learn-claude-code",
+      "name": "Learn Claude Code",
+      "repo": "shareAI-lab/learn-claude-code",
+      "commit": "ce8f9f186058939da54c9d6fead78dfb5d0fd6c3",
+      "licence": "MIT",
+      "category": "harness",
+      "status": "already-have",
+      "runs_on_its_own": "none",
+      "why": "A small harness to read and learn from. The project's harness is AGENTS.md plus the verify gate."
+    },
+    {
+      "id": "best-practice",
+      "name": "Claude Code best practice",
+      "repo": "shanraisshan/claude-code-best-practice",
+      "commit": "cca026c790efb80c3d2afd15e885b23b514bf74a",
+      "licence": "MIT",
+      "category": "cost",
+      "status": "already-have",
+      "runs_on_its_own": "nine hook events",
+      "why": "A guide, and a set of hooks on nine events. AGENTS.md is this project's practice, and nothing here needs hooks on nine events."
+    },
+    {
+      "id": "planning-with-files",
+      "name": "Planning with files",
+      "repo": "OthmanAdi/planning-with-files",
+      "commit": "51c1caa27f9fefe259e45a7cc92fa79ee8787cd7",
+      "licence": "MIT",
+      "category": "memory",
+      "status": "already-have",
+      "runs_on_its_own": "six hook events",
+      "why": "Plans that survive a restart are what the reports in reports/llm/ and AGENTS.md already do, without hooks on six events."
+    },
+    {
+      "id": "everything-claude-code",
+      "name": "Everything Claude Code (ECC)",
+      "repo": "affaan-m/everything-claude-code",
+      "commit": "d3b8a3e908904e242ed2dbe66af62cca71131419",
+      "licence": "MIT",
+      "category": "harness",
+      "status": "left-out",
+      "runs_on_its_own": "six hook events, plus its own MCP servers",
+      "why": "About 4,000 files and hooks on six events. Sessions here touch live pastoral data; a harness that size cannot be read before it is trusted."
+    },
+    {
+      "id": "gstack",
+      "name": "gstack",
+      "repo": "garrytan/gstack",
+      "commit": "65bfb0ce49da807698359ca033a05709e342c684",
+      "licence": "MIT",
+      "category": "harness",
+      "status": "left-out",
+      "runs_on_its_own": "none found in its plugin files",
+      "why": "Twenty-five opinionated tools in about 2,800 files, most of them overlapping the verify gate and AGENTS.md."
+    },
+    {
+      "id": "ui-ux-pro-max",
+      "name": "UI UX Pro Max",
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "commit": "09170eec67eefd46a7ae85de61b40c194020f997",
+      "licence": "MIT",
+      "category": "skills",
+      "status": "left-out",
+      "runs_on_its_own": "none (ships an MCP config)",
+      "why": "A second design skill beside Taste. One is enough, and docs/VISUAL-LANGUAGE.md outranks both."
+    },
+    {
+      "id": "claude-mem",
+      "name": "claude-mem",
+      "repo": "thedotmack/claude-mem",
+      "commit": "ade13f3067d3de486f41dbd8ed90ac5c854de718",
+      "licence": "Apache-2.0",
+      "category": "memory",
+      "status": "left-out",
+      "runs_on_its_own": "seven hook events",
+      "why": "It records every session into a memory store. Sessions here read live member data, so that would be a second copy of it on a laptop, outside the church's control. Not for this project."
+    },
+    {
+      "id": "graphify",
+      "name": "graphify",
+      "repo": "safishamsi/graphify",
+      "commit": "d6eaa8aae8df155874ebb1044302c055c286342a",
+      "licence": "Apache-2.0",
+      "category": "memory",
+      "status": "left-out",
+      "runs_on_its_own": "none",
+      "why": "A codebase map, the same job as CodeGraph. One index is enough."
+    },
+    {
+      "id": "wshobson-agents",
+      "name": "Agents marketplace",
+      "repo": "wshobson/agents",
+      "commit": "156b7a5e7a8b93642628a339ee4039c925b34c7f",
+      "licence": "MIT",
+      "category": "skills",
+      "status": "left-out",
+      "runs_on_its_own": "PreToolUse and PostToolUse in some plugins",
+      "why": "A marketplace of many agents. Take a single agent through the official directory if one is ever needed, and list it here first."
+    },
+    {
+      "id": "claude-code-router",
+      "name": "Claude Code Router",
+      "repo": "musistudio/claude-code-router",
+      "commit": "f2e01bfe0c01e0c7ea7a37077747473f69869048",
+      "licence": "MIT",
+      "category": "tools",
+      "status": "left-out",
+      "runs_on_its_own": "none",
+      "why": "Routes the session to other model providers, which sends whatever the session holds, live data included, to more companies."
+    },
+    {
+      "id": "cc-switch",
+      "name": "CC Switch",
+      "repo": "farion1231/cc-switch",
+      "commit": "846de29c13ac4d65f164db8c15dd5fd58e29f972",
+      "licence": "MIT",
+      "category": "tools",
+      "status": "left-out",
+      "runs_on_its_own": "none",
+      "why": "A personal desktop app that keeps API keys for several agents. A developer's own choice, not part of this project's setup."
+    },
+    {
+      "id": "multica",
+      "name": "Multica",
+      "repo": "multica-ai/multica",
+      "commit": "67d61a2073bad0fbb7140fd2000f1ab7ec0a4f25",
+      "licence": "Apache-2.0",
+      "category": "tools",
+      "status": "left-out",
+      "runs_on_its_own": "none found",
+      "why": "Sends one issue to many agents at once, in about 6,400 files. This project runs two agents on one branch by protocol (AGENTS.md section 7)."
+    },
+    {
+      "id": "vibe-kanban",
+      "name": "Vibe Kanban",
+      "repo": "BloopAI/vibe-kanban",
+      "commit": "d5cbb5380fa0b32e98ef9b8d987f63decce4be3a",
+      "licence": "Apache-2.0",
+      "category": "tools",
+      "status": "left-out",
+      "runs_on_its_own": "none found",
+      "why": "A board for many agents' work, in about 2,200 files. Nothing here runs enough agents at once to need one."
+    },
+    {
+      "id": "firecrawl",
+      "name": "Firecrawl",
+      "repo": "firecrawl/firecrawl",
+      "commit": "24b827e7d948c72fac1f9d6dd434e0b8cd76e812",
+      "licence": "AGPL-3.0",
+      "category": "tools",
+      "status": "left-out",
+      "runs_on_its_own": "none",
+      "why": "Web scraping through a hosted service and an API key. Nothing in this project scrapes the web."
+    },
+    {
+      "id": "awesome-mcp-servers",
+      "name": "Awesome MCP servers",
+      "repo": "punkpeye/awesome-mcp-servers",
+      "commit": "3c30195615095be4f22ac120a7cee82f215cf547",
+      "licence": "MIT",
+      "category": "tools",
+      "status": "left-out",
+      "runs_on_its_own": "nothing to install",
+      "why": "A list, not a tool. A place to look; anything found there comes through this page first."
+    },
+    {
+      "id": "awesome-claude-skills",
+      "name": "Awesome Claude skills",
+      "repo": "ComposioHQ/awesome-claude-skills",
+      "commit": "be2a406907dbc61b73e6827ded415c96139d13a2",
+      "licence": "no licence file",
+      "category": "skills",
+      "status": "left-out",
+      "runs_on_its_own": "nothing to install",
+      "why": "A list, not a tool. A place to look; anything found there comes through this page first."
+    },
+    {
+      "id": "system-prompts",
+      "name": "System prompts collection",
+      "repo": "x1xhlol/system-prompts-and-models-of-ai-tools",
+      "commit": "1e4203a7d88873c1b37ab2d1c07074fea498c274",
+      "licence": "no licence file",
+      "category": "cost",
+      "status": "left-out",
+      "runs_on_its_own": "nothing to install",
+      "why": "Other companies' system prompts, collected without a licence. Not something a public church project should build on."
+    }
+  ]
+}

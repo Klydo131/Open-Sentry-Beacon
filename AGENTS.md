@@ -27,6 +27,50 @@ a name, and it is not trying to. That part is yours.
 
 ---
 
+## 0.1 Working today first, then right: the first-day protocol
+
+The owner's standing instruction (29 September 2026): *"we always need a quick
+and reliable fix for at least a day to make it operational with optimized
+systems (including tools like Caveman for optimization of token use and
+Ponytail for optimization of codes and systems)."*
+
+When something is broken, or blocking the people who use the app:
+
+1. **Make it work today.** The first push is the smallest change that makes the
+   app usable and keeps it usable for at least a day on its own: nothing
+   half-migrated, nothing that needs a second push before it is safe. Switching
+   a feature off cleanly beats shipping a guess.
+2. **Reliable means checked, not hoped.** The same gate as always (section 5),
+   the new check broken on purpose, and the way back written in the commit
+   message: which commit to revert, and whether a migration or a function
+   deploy has to be undone with it.
+3. **Then make it right**, in its own commit, once the day is safe. The report
+   says which fix was the quick one and which the proper one.
+4. **Security is never the day-two part.** A quick fix that widens who can see
+   or do something is not quick; it is the next incident. So is one that locks
+   real people out: expiring every old invitation password at once would have
+   locked out 38 active members and the owner, which is why that change
+   applies to new invitations and waits for the owner for the rest.
+
+**The two tools every agent here works with**, because they make the work
+cheaper and the code smaller without changing what ships:
+
+| Tool | What it saves | Install in Claude Code (two prompts) | How it is used here |
+| --- | --- | --- | --- |
+| **Caveman** | Tokens: short agent prose | `claude plugin marketplace add Klydo131/caveman` then `claude plugin install caveman@caveman` | For chat, plans and notes between agents. **Never** in code comments, docs, commit messages, report files or anything a church member reads: those stay full sentences, as this file is. Security warnings and anything irreversible are always said in full. |
+| **Ponytail** | Code: the fewest lines that work | `claude plugin marketplace add Klydo131/ponytail` then `claude plugin install ponytail@ponytail` | The platform before a dependency (`<input type="date">` before a date library). A deliberately small choice is marked `// ponytail: why`, as the code already does. Never trade a safety check, a test or an accessibility rule for fewer lines. |
+
+Both are MIT-licensed and come from the owner's own forks of
+`JuliusBrussee/caveman` and `DietrichGebert/ponytail`, so a change upstream
+does not arrive here unannounced. Codex installs them from its `/plugins`
+screen; each README says how. Neither is needed to build, test or run the app:
+a contributor without them loses nothing but speed. Any other tool an agent
+wants to add goes through [`docs/DEVELOPER-TOOLKIT.md`](./docs/DEVELOPER-TOOLKIT.md),
+which lists what is vetted, what each one can touch, and what is deliberately
+left out.
+
+---
+
 ## 1. The app is two apps behind one door
 
 `useIsLive()` decides which. Almost every route renders one of two trees:

@@ -584,6 +584,12 @@ const staticChecks = [
   // loaded only when asked for, talking to nobody else, and a saved drawing that
   // carries the picture and the drawing and nothing else.
   ['a study can have a drawing', 'tests/a-study-can-have-a-drawing.mjs'],
+  // The password an invitation e-mails lasts seven days; choosing a password
+  // signs out every other device (29 September 2026).
+  ['an invitation password runs out', 'tests/an-invitation-password-runs-out.mjs'],
+  // The agent toolkit (docs/DEVELOPER-TOOLKIT.md): vetted, pinned, and switched
+  // on by nobody who clones the repository (29 September 2026).
+  ['the toolkit is opt-in', 'tests/the-toolkit-is-opt-in.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green
