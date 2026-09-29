@@ -87,10 +87,11 @@ from here, because this sandbox has no Codex.
   the hooks this project uses stay MIT upstream, but a sync would bring the
   rest into the owner's public fork. It stays on its all-MIT copy until
   somebody decides otherwise, having read upstream's `LICENSING.md`.
-- **Ponytail: safe to sync.** Upstream is 62 commits ahead: adapters for
-  more agents and documentation. It is still MIT, with the same three Claude
-  Code hooks, nothing new that reaches the network and no new dependencies.
-  A sync is a fast-forward; record the new commit here afterwards.
+- **Ponytail: synced, 29 September 2026.** Upstream was 62 commits ahead:
+  adapters for more agents and documentation. At its newest commit it was
+  still MIT, with the same three Claude Code hooks, nothing new that reaches
+  the network and no new dependencies, so the fork was fast-forwarded to it
+  (version 4.10.0). The commit in `tools/developer-toolkit.json` is that one.
 
 ## Recommended, opt-in
 
