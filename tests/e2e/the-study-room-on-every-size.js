@@ -21,7 +21,7 @@
 //
 //   node tests/e2e/the-study-room-on-every-size.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, isCancelledPrefetch } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, openPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
@@ -51,7 +51,11 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   const page = ctx.pages()[0] || await ctx.newPage();
 
   const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  page.on('pageerror', (e) => {
+    // WebKit's report of a prefetch the walk outran is not an error in the app.
+    if (isCancelledPrefetch(e)) return;
+    errors.push(String(e).slice(0, 160));
+  });
 
   await signInAsExplorer(page, BASE);
 

@@ -120,6 +120,25 @@ async function openRoom(page, label) {
   }
 }
 
+/**
+ * A page error that is WebKit reporting a cancelled prefetch, not a failure.
+ *
+ * Next.js fetches the pages a screen links to ahead of time. When the walk
+ * moves on before one of those arrives, WebKit cancels it and raises it as a
+ * page error: "Fetch API cannot load http://localhost:PORT/cases?_rsc=...
+ * due to access control checks." Nothing was refused and nothing broke; the
+ * safari run of 29 September 2026 failed `the-study-room-on-every-size` on
+ * exactly that line, at a size where the walk had passed the run before.
+ *
+ * ONLY THAT SHAPE IS FORGIVEN: this app's own address, a React Server
+ * Components prefetch (`_rsc=`), and WebKit's cancellation wording. A real
+ * refusal from anywhere else, or any other error, still fails the walk.
+ */
+function isCancelledPrefetch(message) {
+  return /Fetch API cannot load https?:\s?\/\/?(localhost|127\.0\.0\.1)(:\d+)?\/\S*[?&]_rsc=\S* due to access control checks/
+    .test(String(message));
+}
+
 module.exports = {
   // The selected engine. Named `chromium` because twenty-five suites already
   // destructure that name, and renaming them all to prove a point would be a
@@ -137,4 +156,5 @@ module.exports = {
   // lookup is decided in one place rather than repeated in every file.
   launchOptions: EXECUTABLE ? { executablePath: EXECUTABLE } : {},
   openRoom,
+  isCancelledPrefetch,
 };
