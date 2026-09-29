@@ -78,6 +78,20 @@ read what changed upstream, sync the fork, then record its new commit in
 steps are each fork's own README pointed at the fork. They have not been run
 from here, because this sandbox has no Codex.
 
+**Where the two forks stand (29 September 2026).**
+
+- **Caveman: stay on the fork for now.** Upstream is 622 commits ahead and
+  has moved parts of its repository (its engine, proxy, browser driver, MCP
+  server and more) to the Business Source License, which is not an
+  open-source licence; new engine-linked parts default to it. The skill and
+  the hooks this project uses stay MIT upstream, but a sync would bring the
+  rest into the owner's public fork. It stays on its all-MIT copy until
+  somebody decides otherwise, having read upstream's `LICENSING.md`.
+- **Ponytail: safe to sync.** Upstream is 62 commits ahead: adapters for
+  more agents and documentation. It is still MIT, with the same three Claude
+  Code hooks, nothing new that reaches the network and no new dependencies.
+  A sync is a fast-forward; record the new commit here afterwards.
+
 ## Recommended, opt-in
 
 Each is small enough to read and has a licence. None sends a session
