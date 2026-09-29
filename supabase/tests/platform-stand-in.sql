@@ -40,6 +40,22 @@ alter table storage.buckets add column if not exists owner_id text;
 alter table storage.objects add column if not exists version text;
 alter table storage.objects add column if not exists owner_id text;
 alter table storage.objects add column if not exists user_metadata jsonb;
+-- auth.jwt(), the request's claims. The image has auth.uid() and auth.role(),
+-- but this one is added by the sign-in service's own migrations when a real
+-- project starts. Copied from a live project on 29 September 2026; the first
+-- migration to use it (20260929130000_an_ended_session_ends_at_once) stopped a
+-- fresh install without it.
+create or replace function auth.jwt()
+returns jsonb
+language sql
+stable
+as $$
+  select
+    coalesce(
+        nullif(current_setting('request.jwt.claim', true), ''),
+        nullif(current_setting('request.jwt.claims', true), '')
+    )::jsonb
+$$;
 -- The realtime publication a new project is created with.
 do $$ begin
   if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
