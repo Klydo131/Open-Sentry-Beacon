@@ -287,7 +287,8 @@ export function inviteHtml(
           ${waitLine ? `<p style="margin:0 0 14px 0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#22272F;"><strong>${esc(waitLine)}</strong></p>` : ''}
 
           <p style="margin:0 0 6px 0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#22272F;">
-            Nothing here expires. You can open this e-mail again, on any device, whenever you are ready.
+            You can open this e-mail again, on any device. The button never expires; the password
+            works for seven days, or until you choose your own.
           </p>
           <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#5B6472;">
             ${esc(afterLine)} To add Hope&nbsp;Beacon to your Home Screen, open <strong>Settings</strong> inside the app.
@@ -373,8 +374,8 @@ export function inviteText(
     joinUrl.split('#')[0],
     '',
     ...(WAITS[role] ? [wrap(WAITS[role] as string), ''] : []),
-    wrap('Nothing here expires. You can open this e-mail again, on any device, '
-      + 'whenever you are ready.'),
+    wrap('You can open this e-mail again, on any device. The button never '
+      + 'expires; the password works for seven days, or until you choose your own.'),
     '',
     wrap(AFTER[role]),
     '',

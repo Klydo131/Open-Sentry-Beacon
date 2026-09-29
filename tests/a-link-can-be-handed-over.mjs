@@ -85,7 +85,12 @@ ok(!/only works\s*\n?\s*once/.test(screen) && !/works, and can be used once/.tes
    'the panel no longer claims the link works only once');
 ok(!/Do not open it yourself/.test(screen),
    'and no longer warns against opening something that is now harmless to open');
-ok(/Nothing here expires/.test(screen), 'and says plainly that nothing expires');
+// "Nothing here expires" until 29 September 2026, when the password an
+// invitation sets began to run out after seven days
+// (an_invitation_password_runs_out). The link still never does, and the
+// screen says both.
+ok(/The link never expires/.test(screen) && /The password works for seven\s+days/.test(screen),
+   'and says plainly that the link never expires and the password lasts seven days');
 ok(/handLink\.pass/.test(screen), 'and shows the password, which is what has to be passed on');
 
 console.log(bad ? `\n${bad} problem(s).` : '\nRESULT: ALL OK');
