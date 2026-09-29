@@ -173,12 +173,18 @@ const source = ['app', 'components', 'lib'].flatMap((d) => walk(d));
   ok(/canChange=\{f\.added_by === profile\?\.id\}/.test(studies), 'only whoever drew it is offered Change');
 
   const sample = code(read('components/LessonSeriesLibrary.tsx'));
-  ok(/<DrawButton\b/.test(sample) && /fileToDataUrl\(/.test(sample),
-    'the sample app draws with the same board, kept in its own storage');
+  ok(/<DrawButton\b/.test(sample) && /keepDrawing\(await fileToDataUrl\(/.test(sample),
+    'the sample app draws with the same board');
+  // NOT IN THE SAMPLE DATABASE, which is re-written to localStorage on every
+  // change (tests/realtime-and-media.mjs): the row holds an id, the picture is
+  // kept once, in the tab.
   const store = code(read('lib/demo/store.tsx'));
-  ok((store.match(/startsWith\('data:image\/png;base64,'\)/g) ?? []).length >= 2,
-    'and its store takes nothing but a PNG for a drawing, because it is drawn as an <img>');
-  ok(/series\.drawing && \(/.test(code(read('components/MySeries.tsx'))), 'an Explorer in the sample app sees it too');
+  ok(/drawing_id: drawingId/.test(store) && !/data:|base64/.test(store),
+    'and its database keeps only which drawing, never the picture');
+  const kept = code(read('lib/demo/drawings.ts'));
+  ok(/sessionStorage\.setItem\(PREFIX \+ id, url\)/.test(kept) && /if \(!isPngDataUrl\(url\)\) return '';/.test(kept),
+    'the picture is kept once in the tab, and nothing but a PNG, because it is drawn as an <img>');
+  ok(/drawingById\(series\.drawing_id\) && \(/.test(code(read('components/MySeries.tsx'))), 'an Explorer in the sample app sees it too');
 }
 
 console.log(bad === 0 ? '\nA study can have a drawing, and nothing else comes with it.' : `\n${bad} failed.`);

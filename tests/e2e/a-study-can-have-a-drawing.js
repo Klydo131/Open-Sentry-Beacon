@@ -98,8 +98,17 @@ async function drawWith(page, tool, from, to) {
 
 const saveButton = (page) => page.locator('[data-drawing-board] button', { hasText: /Save drawing|Saving/ }).first();
 
-async function storedSeries(page) {
-  return page.evaluate((title) => {
+/**
+ * The saved series' drawing, as a data: URL. The sample database holds only
+ * its id (lib/demo/drawings.ts keeps the picture in the tab), so the picture
+ * is read from the series once it is open: the <img> the Guide sees.
+ */
+async function savedDrawing(page) {
+  const row = page.locator('div.rounded-xl', { hasText: SERIES }).first();
+  const img = row.locator('[data-drawing-picture] img').first();
+  if (!(await img.count())) return null;
+  const src = await img.getAttribute('src');
+  const kept = await page.evaluate((title) => {
     for (let i = 0; i < localStorage.length; i++) {
       try {
         const db = JSON.parse(localStorage.getItem(localStorage.key(i)) || 'null');
@@ -109,6 +118,7 @@ async function storedSeries(page) {
     }
     return null;
   }, SERIES);
+  return { src, row: kept };
 }
 
 (async () => {
@@ -176,17 +186,19 @@ async function storedSeries(page) {
 
   await page.getByRole('button', { name: /Save series/ }).first().click();
   await page.waitForTimeout(800);
+  await page.getByRole('button', { name: new RegExp(SERIES) }).first().click();
+  await page.waitForTimeout(500);
 
-  const saved = await storedSeries(page);
-  ok(!!saved?.drawing && saved.drawing.startsWith('data:image/png;base64,'), 'the series is saved with its drawing, as a PNG');
-  const scene = saved?.drawing ? sceneOf(saved.drawing) : null;
+  const saved = await savedDrawing(page);
+  ok(!!saved?.row?.drawing_id && !/data:/.test(JSON.stringify(saved.row)),
+    'the series is saved pointing at its drawing, and the sample database does not hold the picture');
+  ok(/^data:image\/png;base64,/.test(saved?.src || ''), 'the opened series shows the drawing, as a PNG');
+  const scene = saved?.src ? sceneOf(saved.src) : null;
   const kinds = (scene?.elements ?? []).filter((e) => !e.isDeleted).map((e) => e.type);
   ok(kinds.includes('rectangle') && kinds.includes('text'),
     `the drawing itself is inside the picture (${kinds.join(', ') || 'nothing'})`);
 
   // ---- Change it --------------------------------------------------------------
-  await page.getByRole('button', { name: new RegExp(SERIES) }).first().click();
-  await page.waitForTimeout(500);
   await page.getByRole('button', { name: 'Change drawing' }).first().click();
   await page.locator('[data-drawing-board] canvas.interactive').first().waitFor({ timeout: 20000 });
   await page.waitForTimeout(1000);
@@ -215,7 +227,7 @@ async function storedSeries(page) {
   await saveButton(page).click();
   await page.locator('[data-drawing-board]').waitFor({ state: 'detached', timeout: 15000 });
   await page.waitForTimeout(500);
-  const changed = sceneOf((await storedSeries(page))?.drawing || '');
+  const changed = sceneOf((await savedDrawing(page))?.src || '');
   const after = (changed?.elements ?? []).filter((e) => !e.isDeleted).map((e) => e.type);
   ok(after.includes('rectangle') && after.includes('ellipse') && after.includes('text'),
     `the changed drawing keeps the old shapes and adds the new one (${after.join(', ') || 'nothing'})`);

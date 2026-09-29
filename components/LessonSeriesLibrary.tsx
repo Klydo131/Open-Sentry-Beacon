@@ -8,6 +8,7 @@ import { LESSONS, lessonById, offerableSeries } from '@/lib/lessons';
 import { DrawButton, DrawingBoard, DrawingPicture, useFileUrl } from '@/components/draw/Draw';
 import { WritingModeNote, WritingModeSwitch, useWritingMode } from '@/components/WritingMode';
 import { dataUrlToFile, fileToDataUrl } from '@/lib/drawing-file';
+import { drawingById, forgetDrawing, keepDrawing } from '@/lib/demo/drawings';
 
 /** What a series' drawing is called, here where a series holds only one. */
 const DRAWING_NAME = 'Drawing 1.excalidraw.png';
@@ -102,7 +103,7 @@ export function LessonSeriesLibrary() {
       topic: topic.trim() || 'General',
       description,
       lessonIds: picked,
-      drawing: drawing ? await fileToDataUrl(drawing) : undefined,
+      drawingId: drawing ? keepDrawing(await fileToDataUrl(drawing)) || undefined : undefined,
     });
     setSaved(title.trim());
     setTitle('');
@@ -234,6 +235,9 @@ export function LessonSeriesLibrary() {
             <p className="text-sm font-semibold text-navy">
               A picture for this series <span className="font-normal text-gray-500">(optional)</span>
             </p>
+            {/* SAID, because it differs from the live app: nothing in the sample
+                app is kept, and a picture is kept least of all (lib/demo/drawings.ts). */}
+            <p className="text-sm text-gray-500">In the sample app a drawing stays in this browser tab until it is closed.</p>
             {drawing ? (
               <SeriesDrawing
                 src={drawingUrl}
@@ -304,20 +308,28 @@ export function LessonSeriesLibrary() {
                 {s.description && (
                   <p className="mt-1 text-sm text-gray-500"><Linked text={s.description} /></p>
                 )}
-                {opened && s.drawing && (
+                {opened && drawingById(s.drawing_id) && (
                   <div className="mt-3">
                     <SeriesDrawing
-                      src={s.drawing}
-                      onChange={async (next) => setSeriesDrawing(s.id, await fileToDataUrl(next))}
-                      onRemove={() => setSeriesDrawing(s.id, undefined)}
+                      src={drawingById(s.drawing_id)}
+                      onChange={async (next) => {
+                        const id = keepDrawing(await fileToDataUrl(next));
+                        if (!id) return;
+                        forgetDrawing(s.drawing_id);
+                        setSeriesDrawing(s.id, id);
+                      }}
+                      onRemove={() => { forgetDrawing(s.drawing_id); setSeriesDrawing(s.id, undefined); }}
                     />
                   </div>
                 )}
-                {opened && !s.drawing && (
+                {opened && !drawingById(s.drawing_id) && (
                   <div className="mt-3">
                     <DrawButton
                       title={`Drawing for ${s.title}`}
-                      onDrawn={async (file) => setSeriesDrawing(s.id, await fileToDataUrl(file))}
+                      onDrawn={async (file) => {
+                        const id = keepDrawing(await fileToDataUrl(file));
+                        if (id) setSeriesDrawing(s.id, id);
+                      }}
                     />
                   </div>
                 )}

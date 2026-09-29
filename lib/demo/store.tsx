@@ -250,13 +250,13 @@ export interface Ctx {
     topic: string;
     description?: string;
     lessonIds: string[];
-    /** A drawing for the series, as a data: URL. */
-    drawing?: string;
+    /** A drawing for the series, by its id in lib/demo/drawings.ts. */
+    drawingId?: string;
   }) => string;
   /** Library: show it to missionaries, or take it back off the shelf. */
   setSeriesPublished: (seriesId: string, published: boolean) => void;
-  /** Library: put a drawing on a series, change it, or take it off (undefined). */
-  setSeriesDrawing: (seriesId: string, drawing: string | undefined) => void;
+  /** Library: point a series at a drawing (lib/demo/drawings.ts), or at none (undefined). */
+  setSeriesDrawing: (seriesId: string, drawingId: string | undefined) => void;
   /** Missionary: push a whole series to one seeker, in order. */
   startSeries: (pairingId: string, seriesId: string) => void;
 
@@ -872,13 +872,13 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       topic,
       description,
       lessonIds,
-      drawing,
+      drawingId,
     }: {
       title: string;
       topic: string;
       description?: string;
       lessonIds: string[];
-      drawing?: string;
+      drawingId?: string;
     }) => {
       const id = uid();
       persistUpdate((prev) => ({
@@ -895,9 +895,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             lesson_ids: Array.from(new Set(lessonIds)),
             is_published: true,
             created_at: nowIso(),
-            // Only a PNG drawing is kept: this string is drawn as an <img>,
-            // and nothing else should ever reach that attribute.
-            ...(drawing?.startsWith('data:image/png;base64,') ? { drawing } : {}),
+            // An id only: the picture itself is kept by lib/demo/drawings.ts.
+            ...(drawingId ? { drawing_id: drawingId } : {}),
           },
         ],
       }));
@@ -917,14 +916,13 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setSeriesDrawing = useCallback((seriesId: string, drawing: string | undefined) => {
-    if (drawing !== undefined && !drawing.startsWith('data:image/png;base64,')) return;
+  const setSeriesDrawing = useCallback((seriesId: string, drawingId: string | undefined) => {
     persistUpdate((prev) => ({
       ...prev,
       lesson_series: prev.lesson_series.map((s) => {
         if (s.id !== seriesId) return s;
-        const { drawing: _old, ...rest } = s;
-        return drawing ? { ...rest, drawing } : rest;
+        const { drawing_id: _old, ...rest } = s;
+        return drawingId ? { ...rest, drawing_id: drawingId } : rest;
       }),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
