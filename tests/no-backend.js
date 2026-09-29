@@ -432,6 +432,14 @@ const GUARDRAILS = new Set([
   // rule, so it is revoked from public and anon by name and granted to the
   // roles that evaluate rules -- the same shape as the read sets above.
   'supabase/migrations/20260925120000_what_one_person_can_upload.sql',
+  // An invitation password runs out. The clock is started by the invitation,
+  // which runs as the server role, and by nothing else: the migration revokes
+  // the start function from every browser role by name and grants it to the
+  // server role alone, and its test has to name that role to check exactly
+  // that. Naming the role is the security property of both files. The
+  // credential-shape scan above still applies to them.
+  'supabase/migrations/20260929100000_an_invitation_password_runs_out.sql',
+  'tests/an-invitation-password-runs-out.mjs',
   // The replica fingerprint compares the settings of the four database roles
   // Supabase creates, so it has to name them to select them. It reads the
   // catalogue only; it holds no key and no hostname.

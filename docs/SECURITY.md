@@ -224,6 +224,12 @@ any request leaves the app or anything is refused by the policy.
 - **A temporary password during its week.** Anybody who reads the invitation
   e-mail in the first seven days can sign in with it. Choosing a password ends
   that at once.
+- **The last hour of a session that was ended.** *Sign out everywhere else*,
+  choosing a password and an invitation's week running out all end the other
+  sessions at once, so no device can renew its sign-in. But the pass a device
+  already holds works until it expires: up to an hour, which is Supabase's
+  default. Closing that hour means checking the session on every request, and
+  that is not done yet.
 - **Anyone with a legitimate account.** Rules restrict what a role can retrieve.
   They cannot stop somebody reading their own records and repeating them.
 - **Content you choose to share.** If somebody uploads a sensitive document to
