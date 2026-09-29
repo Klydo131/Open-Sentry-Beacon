@@ -62,8 +62,10 @@ cheaper and the code smaller without changing what ships:
 
 Both are MIT-licensed and come from the owner's own forks of
 `JuliusBrussee/caveman` and `DietrichGebert/ponytail`, so a change upstream
-does not arrive here unannounced. Codex installs them from its `/plugins`
-screen; each README says how. Neither is needed to build, test or run the app:
+does not arrive here unannounced. In Codex, Ponytail installs with
+`codex plugin marketplace add Klydo131/ponytail` and Caveman from a clone of
+`Klydo131/caveman`; the toolkit page has the steps. Install both for yourself,
+never "for this project only". Neither is needed to build, test or run the app:
 a contributor without them loses nothing but speed. Any other tool an agent
 wants to add goes through [`docs/DEVELOPER-TOOLKIT.md`](./docs/DEVELOPER-TOOLKIT.md),
 which lists what is vetted, what each one can touch, and what is deliberately

@@ -72,3 +72,17 @@ supabase/.temp/
 # A developer's own Claude Code settings: which plugins they turned on or off for
 # this project. Personal, and never shared (docs/DEVELOPER-TOOLKIT.md).
 /.claude/settings.local.json
+
+# A tool installed "for this project only" writes its setup into these, and a
+# committed copy would switch the tool on for everybody who clones the
+# repository. A developer's own copy stays here, harmless and uncommitted
+# (docs/DEVELOPER-TOOLKIT.md, rule 6; tests/the-toolkit-is-opt-in.mjs).
+/.mcp.json
+/.claude/CLAUDE.md
+/.codex/
+/.cursor/mcp.json
+/.vscode/mcp.json
+/.gemini/settings.json
+/opencode.json
+/opencode.jsonc
+/.kiro/settings/mcp.json

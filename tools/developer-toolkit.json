@@ -11,10 +11,15 @@
       "category": "cost",
       "status": "already-ours",
       "runs_on_its_own": "SessionStart, UserPromptSubmit (sets the mode)",
+      "sends": "nothing",
       "why": "The project's token saver, from the owner's fork of JuliusBrussee/caveman. Rules for its use are in AGENTS.md section 0.1.",
       "install": [
         "claude plugin marketplace add Klydo131/caveman",
         "claude plugin install caveman@caveman"
+      ],
+      "install_codex": [
+        "git clone https://github.com/Klydo131/caveman",
+        "open Codex in that folder, then /plugins, search Caveman, Install"
       ]
     },
     {
@@ -25,11 +30,16 @@
       "licence": "MIT",
       "category": "cost",
       "status": "already-ours",
-      "runs_on_its_own": "SessionStart, UserPromptSubmit (loads its rules, tracks its mode)",
+      "runs_on_its_own": "SessionStart, SubagentStart, UserPromptSubmit (loads its rules, into subagents too, and tracks its mode)",
+      "sends": "nothing",
       "why": "The project's code minimiser, from the owner's fork of DietrichGebert/ponytail. Rules for its use are in AGENTS.md section 0.1.",
       "install": [
         "claude plugin marketplace add Klydo131/ponytail",
         "claude plugin install ponytail@ponytail"
+      ],
+      "install_codex": [
+        "codex plugin marketplace add Klydo131/ponytail",
+        "in Codex: /plugins, the Ponytail marketplace, Install; then /hooks to review and trust its hooks"
       ]
     },
     {
@@ -41,6 +51,7 @@
       "category": "harness",
       "status": "recommended",
       "runs_on_its_own": "SessionStart (loads its skills list)",
+      "sends": "nothing",
       "why": "Planning, test-first and systematic debugging as skills the agent reaches for. One hook, at session start, that only adds text. Installed from Anthropic's official directory, as its own README says; the commit recorded is the one read on the day it was reviewed.",
       "install": [
         "claude plugin install superpowers@claude-plugins-official"
@@ -55,6 +66,7 @@
       "category": "skills",
       "status": "recommended",
       "runs_on_its_own": "none",
+      "sends": "nothing",
       "why": "Anthropic's own skills. document-skills makes the PDF and Word copies of the guides in docs/handbook without new code here. Read each skill's own licence before copying it into this AGPL repository: some may be used but not redistributed.",
       "install": [
         "claude plugin marketplace add anthropics/skills",
@@ -69,8 +81,9 @@
       "licence": "Apache-2.0",
       "category": "cost",
       "status": "recommended",
-      "runs_on_its_own": "SessionStart, Stop, SessionEnd (starts and stops its helper)",
-      "why": "Claude and Codex already share this repository (AGENTS.md section 7). This lets one hand a review to the other without leaving the session. Needs the developer's own Codex sign-in.",
+      "runs_on_its_own": "SessionStart and SessionEnd (start and stop its helper); Stop, which does nothing unless its review gate is switched on, and then hands every finished answer to Codex",
+      "sends": "whatever it is handed, to OpenAI under the developer's own Codex account; with the review gate on, every finished answer",
+      "why": "Claude and Codex already share this repository (AGENTS.md section 7). This lets one hand a review to the other without leaving the session. Needs the developer's own Codex sign-in. Leave its review gate off in any session that has read live member data: with the gate on, every finished answer goes to Codex.",
       "install": [
         "npm install -g @openai/codex@0.158.0",
         "claude plugin marketplace add openai/codex-plugin-cc",
@@ -86,6 +99,7 @@
       "category": "cost",
       "status": "recommended",
       "runs_on_its_own": "a status-line command, each time the line is drawn",
+      "sends": "nothing",
       "why": "Shows how much of the context and the budget a session has used, which is the number Caveman is there to bring down.",
       "install": [
         "claude plugin marketplace add jarrodwatts/claude-hud",
@@ -101,6 +115,7 @@
       "category": "memory",
       "status": "recommended",
       "runs_on_its_own": "none",
+      "sends": "nothing: it writes one file on the developer's machine",
       "why": "Packs the repository into one file for a review or a second opinion. It follows .gitignore, so .env files and build output stay out. Run on demand, at a pinned version, never installed into package.json.",
       "install": [
         "npx repomix@1.18.1"
@@ -114,8 +129,9 @@
       "licence": "MIT",
       "category": "memory",
       "status": "recommended",
-      "runs_on_its_own": "none",
-      "why": "A local index of the code that an agent can search instead of reading whole files: fewer tokens on a repository this size. Stays on the developer's machine.",
+      "runs_on_its_own": "an MCP server the agent starts every session, and a UserPromptSubmit hook unless it is declined in the installer; the installer also adds a CodeGraph section to the agent's instructions file and allows its tools",
+      "sends": "anonymous usage counts (never code, paths, names or questions, by its own published list) until switched off, and a daily check with GitHub for a newer version",
+      "why": "A local index of the code that an agent can search instead of reading whole files: fewer tokens on a repository this size. When its installer asks, choose all your projects, never just this one (that writes .mcp.json, .claude/, .codex/ and a section of AGENTS.md into this repository), and switch usage statistics off, or set DO_NOT_TRACK=1, which also stops its version check.",
       "install": [
         "npx @colbymchenry/codegraph@1.6.0"
       ]
@@ -129,6 +145,7 @@
       "category": "skills",
       "status": "recommended",
       "runs_on_its_own": "none",
+      "sends": "nothing",
       "why": "A design skill for pages that look finished. docs/VISUAL-LANGUAGE.md outranks it whenever they disagree: navy is the only press-me colour, drawn icons, nothing read under 13px.",
       "install": [
         "claude plugin marketplace add Leonxlnx/taste-skill",
@@ -144,6 +161,7 @@
       "category": "skills",
       "status": "recommended",
       "runs_on_its_own": "depends on the plugin chosen",
+      "sends": "depends on the plugin chosen",
       "why": "Anthropic's own directory. The place to find anything not listed here; whatever is taken from it is added to this list first, with what it runs.",
       "install": [
         "claude plugin marketplace add anthropics/claude-plugins-official"
