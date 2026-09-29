@@ -165,6 +165,11 @@ function DemoAppShell({
     };
   });
 
+  const switchAccount = () => {
+    signOut();
+    router.replace('/login');
+  };
+
   return (
     <div className="room-surface min-h-screen" style={{ background: theme.bg }}>
       <header
@@ -180,13 +185,16 @@ function DemoAppShell({
             at that width either hides or shrinks, because the alternative is
             the row overflowing — which also drags the notification panel
             anchored inside it off the side of the screen. */}
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-4">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-2 px-3 py-3 max-sm:flex-wrap max-sm:gap-1 sm:gap-3 sm:px-4">
           {/* Below `sm` the mark stands alone. Six controls at a 44px tap
               target leave no room for a wordmark on a 360px phone, and a
               squeezed-to-nothing "Beacon" reads as a bug — an icon-only logo
               reads as a decision. The name comes back the moment there is
               room for it. */}
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {/* The tighter gap below `sm` is what lets the first row hold the
+              brand, the three pinned controls and the way out on a 360px
+              phone now that the rooms have a row of their own. */}
+          <div className="flex shrink-0 items-center gap-2 max-sm:gap-1 sm:gap-3">
             {/* An installed app has no browser Back on iOS, and none at all
                 until the manifest's minimal-ui request is honoured. This is
                 the one that works everywhere. */}
@@ -221,7 +229,20 @@ function DemoAppShell({
               So the row of features became a strip you can push sideways with a
               thumb, and the two controls nobody should ever have to hunt for —
               your own face, and the way out — stay pinned to the right of it. */}
-          <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
+          {/* A SECOND ROW FOR THE ROOMS, ON A PHONE (29 September 2026).
+              Beside the brand and the pinned controls the strip was left with
+              what was over: 45px at 412px wide, 23px at 390 and nothing at
+              360, so on most phones Church, Library, Office and Publish could
+              not be seen at all, and the tutorial's "See the journey chart"
+              pointed at a church link hidden in a strip narrower than itself
+              (it failed on WebKit, whose text is a few pixels wider). The live
+              header already gives the rooms a row of their own on a phone.
+              Here the group dissolves into the header row below `sm`
+              (`contents`), the spacer pushes the pinned controls right, and
+              the strip takes the whole next line. At `sm` and up it is one row
+              exactly as before. */}
+          <div className="flex min-w-0 flex-1 items-center gap-1 max-sm:contents sm:gap-3">
+            <div aria-hidden className="flex-1 sm:hidden" />
             {/* The scroller is sized by its own content, and the ROW around it
                 does the right-aligning.
                 The first attempt put `justify-end` on the scrolling content
@@ -232,7 +253,7 @@ function DemoAppShell({
                 a 360px screen. Sizing the scroller to its content instead means
                 the overflow goes off the END, which is reachable by thumb,
                 trackpad and keyboard. */}
-            <div className="relative min-w-0">
+            <div className="relative min-w-0 max-sm:order-last max-sm:basis-full">
               <div className="no-scrollbar min-w-0 overflow-x-auto">
                 <div className="flex w-max items-center gap-1 sm:gap-3">
             {/* Reachable on a phone, which it was not.
@@ -325,6 +346,18 @@ function DemoAppShell({
             >
               <span aria-hidden>⚙️</span>
             </Link>
+            {/* Phones only: the account switcher, last in the rooms row. It
+                opens no panel, so the strip clipping it is harmless (unlike the
+                controls pinned outside the strip for that reason). */}
+            <button
+              type="button"
+              onClick={switchAccount}
+              aria-label="Switch account"
+              title="Switch account"
+              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20 sm:hidden"
+            >
+              <span aria-hidden>⇄</span>
+            </button>
                 </div>
               </div>
               {/* Navy fading to nothing on the trailing edge, which is the side
@@ -380,17 +413,17 @@ function DemoAppShell({
                 onDark
               />
             </Link>
+            {/* Beside the account from `sm` up. Below it, the same button is the
+                last icon in the rooms row instead (see there): with the install
+                chip showing, the first row had no room left for it on a 390px
+                phone and it wrapped onto a row of its own. */}
             <button
-              onClick={() => {
-                signOut();
-                router.replace('/login');
-              }}
+              onClick={switchAccount}
               aria-label="Switch account"
               title="Switch account"
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 px-0 text-sm font-semibold hover:bg-white/20 sm:rounded-xl sm:px-3"
+              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 px-0 text-sm font-semibold hover:bg-white/20 max-sm:hidden sm:rounded-xl sm:px-3"
             >
-              <span aria-hidden className="sm:hidden">⇄</span>
-              <span className="hidden sm:inline">Switch</span>
+              <span>Switch</span>
             </button>
           </div>
         </div>
