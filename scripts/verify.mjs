@@ -587,6 +587,7 @@ const staticChecks = [
   // The password an invitation e-mails lasts seven days; choosing a password
   // signs out every other device (29 September 2026).
   ['an invitation password runs out', 'tests/an-invitation-password-runs-out.mjs'],
+  ['an ended session ends at once', 'tests/an-ended-session-ends-at-once.mjs'],
   // The agent toolkit (docs/DEVELOPER-TOOLKIT.md): vetted, pinned, and switched
   // on by nobody who clones the repository (29 September 2026).
   ['the toolkit is opt-in', 'tests/the-toolkit-is-opt-in.mjs'],

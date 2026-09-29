@@ -66,6 +66,18 @@ begin
     raise exception 'these tables have row security switched off: %', missing;
   end if;
 
+  -- 6. A session ended elsewhere is refused at once, and the signed-out role is
+  --    still let through the same check (20260929130000_an_ended_session_ends_at_once).
+  --    Replacing that function takes the signed-out role's grant away; without
+  --    it restated, every page anybody opens before signing in fails.
+  if pg_get_functiondef('public.refuse_suspended_requests()'::regprocedure) not like '%my_session_is_live()%'
+     or pg_get_functiondef('private.i_am_not_suspended()'::regprocedure) not like '%my_session_is_live()%' then
+    raise exception 'an ended session is not refused until its pass expires';
+  end if;
+  if not has_function_privilege('anon', 'public.refuse_suspended_requests()', 'execute') then
+    raise exception 'the signed-out role cannot pass the check before each request, so every signed-out page fails';
+  end if;
+
   raise notice 'a fresh install holds every checked protection';
 end
 $holds$;

@@ -12,6 +12,7 @@
 
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { IS_LIVE } from '@/lib/mode';
+import { shouldRecheckSession } from '@/lib/supabase/session-recheck';
 
 let cached: SupabaseClient<any> | null = null;
 let authCached: SupabaseClient<any> | null = null;
@@ -269,6 +270,31 @@ export async function liveAccessToken(): Promise<string | null> {
   return fresh?.access_token ?? session.access_token;
 }
 
+// ---------------------------------------------------------------------------
+// A SESSION ENDED ELSEWHERE ENDS HERE TOO, AT ONCE.
+// ---------------------------------------------------------------------------
+//
+// The database refuses a request whose session has been ended with a 401
+// (lib/supabase/session-recheck.ts says why and when). Without this, a device
+// signed out from somewhere else would sit on its own screen with every card
+// failing until its next scheduled refresh, up to an hour later. With it, the
+// first refused request asks the sign-in server once; the server's refusal
+// signs the device out by the ordinary path, and the front door appears.
+let lastRecheckAt = 0;
+
+const dataFetch: typeof fetch = async (input, init) => {
+  const res = await fetch(input, init);
+  const now = Date.now();
+  if (shouldRecheckSession(res.status, lastRecheckAt, now)) {
+    const session = readBrowserSession();
+    if (session) {
+      lastRecheckAt = now;
+      void refreshBrowserSession(session);
+    }
+  }
+  return res;
+};
+
 export function supabase() {
   if (!IS_LIVE) return null;
   if (cached) return cached;
@@ -281,7 +307,7 @@ export function supabase() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
     // Refreshes when needed. See liveAccessToken: handing over the STORED
     // token is what expired every session after exactly one hour.
-    { accessToken: liveAccessToken },
+    { accessToken: liveAccessToken, global: { fetch: dataFetch } },
   );
   return cached;
 }

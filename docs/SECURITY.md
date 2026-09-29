@@ -123,6 +123,14 @@ now **a way in for seven days and no longer** (since 29 September 2026):
   stopped the old one signing anybody in; now a phone or laptop already signed
   in with the letter is signed out too. The Password page also has **Sign out
   everywhere else**, for anybody who sees a sign-in they do not recognise.
+- **An ended session is refused at once** (since 29 September 2026). Before,
+  the pass a device already held kept working for up to an hour after its
+  session was ended. Now the database asks, on every request, whether the
+  session is still on record: the data API refuses an ended one with a 401,
+  and the live socket and the file store stop at the same moment. The app hears
+  the 401, asks the sign-in server once, and shows the front door. A signed-out
+  visitor, the server's own requests, and a token with no session id are let
+  through exactly as before.
 - **A re-send cannot take over an account.** It is refused for anybody who has
   ever signed in (since 7 September 2026), so an invitation can only ever set
   the password of an account nobody has used.
@@ -224,12 +232,6 @@ any request leaves the app or anything is refused by the policy.
 - **A temporary password during its week.** Anybody who reads the invitation
   e-mail in the first seven days can sign in with it. Choosing a password ends
   that at once.
-- **The last hour of a session that was ended.** *Sign out everywhere else*,
-  choosing a password and an invitation's week running out all end the other
-  sessions at once, so no device can renew its sign-in. But the pass a device
-  already holds works until it expires: up to an hour, which is Supabase's
-  default. Closing that hour means checking the session on every request, and
-  that is not done yet.
 - **Anyone with a legitimate account.** Rules restrict what a role can retrieve.
   They cannot stop somebody reading their own records and repeating them.
 - **Content you choose to share.** If somebody uploads a sensitive document to
