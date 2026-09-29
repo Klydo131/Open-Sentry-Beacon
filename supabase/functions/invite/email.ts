@@ -271,7 +271,8 @@ export function inviteHtml(
 
           <p style="margin:0 0 22px 0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#7A2A20;">
             <strong>This password is temporary. Please change it.</strong> Anybody who can read this
-            e-mail can use it. There is a page for exactly that:
+            e-mail can use it, so it stops working after seven days. Choose your own before then;
+            if you miss it, tap &ldquo;Forgot your password&rdquo; when you sign in. There is a page for exactly that:
             <a href="${app}/password" style="color:#7A2A20;font-weight:bold;">${app}/password</a>
           </p>
 
@@ -363,7 +364,9 @@ export function inviteText(
     'All small letters and numbers, ten characters, no spaces.',
     '',
     wrap('This password is temporary. Please change it. Anybody who can read '
-      + 'this e-mail can use it. There is a page for exactly that:'),
+      + 'this e-mail can use it, so it stops working after seven days. Choose your '
+      + 'own before then; if you miss it, tap "Forgot your password" when you sign '
+      + 'in. There is a page for exactly that:'),
     `${appUrl}/password`,
     '',
     'OPEN THE APP',

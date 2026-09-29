@@ -103,6 +103,54 @@ adopting it; the live half never loads it. `tests/nobody-promotes-themselves.mjs
 fails if any of that changes, including a later migration that drops the
 trigger.
 
+### An invitation is a way in for a week
+
+An invitation creates the account and e-mails a temporary password, because a
+one-time link is spent by mail scanners and strands people. That password is
+now **a way in for seven days and no longer** (since 29 September 2026):
+
+- **It runs out on the server, not in the app.** When the week is up the
+  database replaces it with a random password nobody knows and signs out every
+  device that used it (`end_expired_temporary_passwords`, hourly via pg_cron).
+  A letter found in an old inbox, a forwarded e-mail, or the Director's own
+  screen is useless after that.
+- **It can never touch a password somebody chose.** The database keeps the hash
+  the invitation set and acts only while the account still has exactly that
+  hash. A password changed by any door (the Password page, a reset e-mail, an
+  admin) has a different hash and is left alone. The reminder flag is not
+  trusted for this, because anybody signed in can clear it.
+- **Choosing a password signs out every other device.** A new password always
+  stopped the old one signing anybody in; now a phone or laptop already signed
+  in with the letter is signed out too. The Password page also has **Sign out
+  everywhere else**, for anybody who sees a sign-in they do not recognise.
+- **A re-send cannot take over an account.** It is refused for anybody who has
+  ever signed in (since 7 September 2026), so an invitation can only ever set
+  the password of an account nobody has used.
+- **None of it depends on the code being secret.** The table holding the clock
+  has row-level security with no policies and no grants: no browser can read or
+  change it. Only the invitation (the service role) starts a clock; nobody can
+  run the expiry from a browser; a member can ask only when their own runs out.
+  Knowing exactly how it works tells an attacker that an old letter is useless.
+
+**Accounts invited before 29 September are not on a clock** unless the owner
+starts one: on that day 40 accounts were still flagged as using their e-mailed
+password, including the owner's own, and locking the owner out of their own
+account is not a choice to make for them. To give every one of them seven days
+(anybody who has ever asked for a reset e-mail is left out, because their flag
+may be stale), run once in the SQL editor:
+
+```sql
+select public.start_temporary_password(p.id)
+from public.profiles p
+join auth.users u on u.id = p.id
+where p.password_is_temporary and u.recovery_sent_at is null;
+```
+
+`tests/an-invitation-password-runs-out.mjs` holds all of the above. The migration
+was run on the live database in a transaction that was thrown away, with two
+made-up accounts, before it was applied: the letter's password stopped working
+and its sessions ended; the account that had chosen its own was untouched.
+
 ### Files people upload
 
 The live app keeps every uploaded file in **one private storage bucket**, and a
@@ -171,7 +219,11 @@ any request leaves the app or anything is refused by the policy.
 
 - **An unlocked device that is signed in.** Whoever holds it sees what its owner
   sees. True of all software; worth saying because it is the most likely
-  real-world exposure.
+  real-world exposure. *Sign out everywhere else* on the Password page ends
+  every session but the one it is pressed on.
+- **A temporary password during its week.** Anybody who reads the invitation
+  e-mail in the first seven days can sign in with it. Choosing a password ends
+  that at once.
 - **Anyone with a legitimate account.** Rules restrict what a role can retrieve.
   They cannot stop somebody reading their own records and repeating them.
 - **Content you choose to share.** If somebody uploads a sensitive document to

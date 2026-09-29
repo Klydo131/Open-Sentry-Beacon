@@ -496,6 +496,19 @@ function PasswordCard() {
   const [done, setDone] = useState(false);
 
   const temporary = profile?.password_is_temporary === true;
+  // WHEN THE LETTER STOPS WORKING, from the database, which is the one that
+  // enforces it. Null for anybody who has chosen their own or was invited
+  // before invitations had an end date.
+  const [ends, setEnds] = useState<string | null>(null);
+  useEffect(() => {
+    if (!temporary) { setEnds(null); return; }
+    let current = true;
+    live.myTemporaryPasswordEnds().then((at) => { if (current) setEnds(at); }).catch(() => undefined);
+    return () => { current = false; };
+  }, [temporary]);
+  // Signing out everywhere else, on request: the person's own control over
+  // who is signed in as them.
+  const [elsewhere, setElsewhere] = useState<'' | 'busy' | 'done' | 'failed'>('');
   // Checked here so somebody is told before they press, rather than after. The
   // same rule is enforced in lib/live/data.ts, which is the one that counts.
   const tooShort = next.length > 0 && next.length < 10;
@@ -525,6 +538,15 @@ function PasswordCard() {
           You are still using the password from your invitation e-mail. Anybody who
           can read that e-mail can sign in as you, so it is worth changing to one
           only you know.
+          {ends && (
+            <>
+              {' '}It stops working on{' '}
+              <span className="whitespace-nowrap">
+                {new Date(ends).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+              </span>
+              ; after that, sign in with &ldquo;Forgot your password&rdquo;.
+            </>
+          )}
         </p>
       ) : (
         <p className="mt-1 text-sm leading-relaxed text-gray-600">
@@ -588,7 +610,8 @@ function PasswordCard() {
       )}
       {done && (
         <p className="mt-3 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">
-          Your password is changed. Use the new one from now on.
+          Your password is changed, and every other phone or computer signed in as
+          you has been signed out. Use the new password from now on.
         </p>
       )}
 
@@ -596,6 +619,34 @@ function PasswordCard() {
         <Button onClick={save} disabled={!ready}>
           {busy ? 'Saving\u2026' : 'Change my password'}
         </Button>
+      </div>
+
+      {/* WHO ELSE IS SIGNED IN AS ME is a question only the person can answer,
+          so the answer is theirs to act on: one button, no password needed,
+          because anybody holding this screen already is them. */}
+      <div className="mt-5 border-t border-black/5 pt-4">
+        <p className="text-sm font-semibold text-navy">Signed in somewhere you do not recognise?</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-600">
+          This signs you out on every other phone and computer. You stay signed in here.
+        </p>
+        <button
+          type="button"
+          disabled={elsewhere === 'busy'}
+          onClick={async () => {
+            setElsewhere('busy');
+            try { await live.signOutOtherDevices(); setElsewhere('done'); }
+            catch { setElsewhere('failed'); }
+          }}
+          className="tap-sm mt-2 rounded-full bg-white px-4 text-sm font-bold text-navy ring-1 ring-navy/20 disabled:opacity-50"
+        >
+          {elsewhere === 'busy' ? 'Signing out\u2026' : 'Sign out everywhere else'}
+        </button>
+        {elsewhere === 'done' && (
+          <p className="mt-2 text-sm font-semibold text-green-800">Done. Every other device is signed out.</p>
+        )}
+        {elsewhere === 'failed' && (
+          <p className="mt-2 text-sm font-semibold text-red-700">That did not work. Check the connection and try again.</p>
+        )}
       </div>
     </Card>
   );

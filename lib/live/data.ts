@@ -219,12 +219,51 @@ export async function changeMyPassword(next: string): Promise<void> {
     if (fresh?.session) saveBrowserSession(fresh.session as Session);
   } catch { /* the change stands; the session refreshes on its own */ }
 
+  // EVERY OTHER DEVICE IS SIGNED OUT (29 September 2026). A new password stops
+  // the old one signing anybody in, but a phone or laptop already signed in
+  // with it -- the invitation letter's, or one somebody saw -- used to stay
+  // signed in regardless. Choosing a password is the person taking the
+  // account back, so it now ends every session but this one. A failure is
+  // swallowed like the flag's: the password changed, which is the point, and
+  // "Sign out everywhere else" on the Password page can be pressed again.
+  await signOutOtherDevices().catch(() => undefined);
+
   const me = data?.user?.id;
   if (me) {
     try {
       await db().from('profiles').update({ password_is_temporary: false }).eq('id', me);
     } catch { /* see above: the password changed, which is the point */ }
   }
+}
+
+/**
+ * Sign this account out on every device except this one.
+ *
+ * The person's own control over who is signed in as them, on the Password page
+ * and after every password change. It ends the other sessions' refresh tokens,
+ * so each of those devices is signed out within the hour its current access
+ * token has left, and cannot sign back in without the password.
+ */
+export async function clearTemporaryPasswordReminder(): Promise<void> {
+  const me = await uid();
+  await db().from('profiles').update({ password_is_temporary: false }).eq('id', me);
+}
+
+export async function signOutOtherDevices(): Promise<void> {
+  const client = supabaseAuth();
+  if (!client) throw new NotLive();
+  const { error } = await client.auth.signOut({ scope: 'others' });
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * When the password an invitation e-mailed stops working, or null once the
+ * person has chosen their own (by any door) or was never given one.
+ */
+export async function myTemporaryPasswordEnds(): Promise<string | null> {
+  const { data, error } = await db().rpc('my_temporary_password_ends');
+  if (error) return null;
+  return typeof data === 'string' && data ? data : null;
 }
 
 // ---------------------------------------------------------------------------

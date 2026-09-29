@@ -440,6 +440,19 @@ async function handle(req: Request): Promise<Response> {
         .update({ password_is_temporary: true })
         .eq('id', personId);
       if (flagErr) console.log(JSON.stringify({ at: 'invite', warn: 'flag', why: flagErr.message }));
+
+      // AND IT RUNS OUT (29 September 2026). The password in this letter now
+      // lasts seven days: after that the database replaces it with one nobody
+      // knows and signs out every device that used it, unless the person has
+      // chosen their own first. It keeps the hash set a moment ago, so it can
+      // never touch a password somebody chose. See
+      // supabase/migrations/20260929100000_an_invitation_password_runs_out.sql.
+      //
+      // A FAILURE HERE IS LOGGED, NOT FATAL, for the same reason as the flag:
+      // the person can get in, and a letter without an end date is what every
+      // invitation was until today, not a new danger.
+      const { error: clockErr } = await admin.rpc('start_temporary_password', { p_user: personId });
+      if (clockErr) console.log(JSON.stringify({ at: 'invite', warn: 'clock', why: clockErr.message }));
     }
   }
 
