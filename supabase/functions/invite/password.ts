@@ -10,15 +10,20 @@
 // stuck at the same moment, each holding an account with no password and a
 // link that had already been used.
 //
-// A password does not expire, is not consumed by being read, and survives being
-// forwarded, re-opened, or tapped twice. The person can also read it out loud
-// to somebody helping them, which is how an older member actually gets set up.
+// A password is not consumed by being read, survives being forwarded,
+// re-opened, or tapped twice, and lasts a week rather than an hour. The person
+// can also read it out loud to somebody helping them, which is how an older
+// member actually gets set up.
 //
 // WHAT THIS COSTS, SAID PLAINLY. A password sitting in an inbox is weaker than
-// a link that dies in an hour: anybody who can read that mailbox can sign in,
-// and it stays true until the password is changed. That is the trade, it was
-// made deliberately, and the answer to it is the wording in the email and the
-// nudge inside the app -- not pretending the trade is not there.
+// a link that dies in an hour: anybody who can read that mailbox can sign in
+// until the person chooses their own password or the week runs out. Since 29
+// September 2026 the database ends it after seven days and signs out every
+// device that used it (supabase/migrations/20260929100000_an_invitation_
+// password_runs_out.sql); before that it stayed true until changed. That is the
+// trade, it was made deliberately, and the answer to it is the week, the
+// wording in the email and the nudge inside the app -- not pretending the trade
+// is not there.
 //
 // THE SHAPE, AND WHY IT IS THIS SHAPE.
 //
