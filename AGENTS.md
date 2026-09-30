@@ -71,6 +71,34 @@ wants to add goes through [`docs/DEVELOPER-TOOLKIT.md`](./docs/DEVELOPER-TOOLKIT
 which lists what is vetted, what each one can touch, and what is deliberately
 left out.
 
+## 0.2 The owner sees it before it ships
+
+The owner's standing instruction (30 September 2026): *"If you see something to
+improve more, please help me plan and see it so we can improve this app more and
+better for modern use. Just remember to test, polish, and before pushing I
+should be aware. Same principle for the developers who will participate in this
+open source project with their AI tools."*
+
+It applies to every change, whoever or whatever writes it:
+
+1. **Plan it, and show the plan.** What changes, why, what it costs, and what
+   you are unsure of, before building anything larger than a fix. When there is
+   a choice about how the app behaves, it is the owner's: set out the options,
+   recommend one, and do not pick for them.
+2. **Test it.** The gate (section 5), a new check that goes red when the thing
+   it guards is broken on purpose, and, for anything somebody sees, the walks at
+   phone, pad and desktop sizes.
+3. **Polish it.** Look at it rendered, at the sizes it was checked at, and fix
+   what looks wrong before anybody is asked to look.
+4. **The owner is aware before it is pushed.** Say exactly what would reach
+   `main`: the commits, what they change, what passed, and what was **not**
+   verified (Safari, a real phone, the signed-in live app). Then wait for a go.
+   `main` is what churches run.
+
+Outside contributors meet step 4 through the pull request, which the owner
+merges and nobody else does. An AI tool works on a branch, opens a pull request,
+and never pushes to `main` itself, whoever is driving it.
+
 ---
 
 ## 1. The app is two apps behind one door

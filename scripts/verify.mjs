@@ -598,6 +598,9 @@ const staticChecks = [
   // A failing browser walk prints what the browser saw, so a WebKit failure in
   // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],
+  // Plan and show, test, polish, and the owner is aware before anything
+  // reaches main, for people and AI tools alike (30 September 2026).
+  ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

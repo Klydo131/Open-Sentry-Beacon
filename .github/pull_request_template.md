@@ -8,12 +8,19 @@ phone".
 
 ## What changed
 
+## What I could not check
+
+<!-- Say it plainly: "not seen on Safari", "not tried on a real phone", "the
+     signed-in live screen was not opened". Nothing should be left to assume. -->
+
 ## Checks
 
 - [ ] `npm test` passes
 - [ ] `npm run test:all` passes, if this touches anything somebody clicks
 - [ ] A new test fails when the fix is reverted
+- [ ] Screenshots at a phone, a pad and a desktop size are attached, if this changes anything somebody sees
 - [ ] No real people's details anywhere in the diff
+- [ ] If an AI tool wrote any of this: it worked on a branch, and "What I could not check" is filled in
 
 ## Licence
 

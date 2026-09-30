@@ -31,6 +31,33 @@ between the code that ships and the code that is checked.
 
 ---
 
+## How a change travels
+
+Every change here, yours or your AI tool's, goes the same way. It is the
+owner's rule, in their words: "test, polish, and before pushing I should be
+aware".
+
+1. **Plan it and show it.** For anything bigger than a small fix, open an issue
+   (the "idea" template) or a draft pull request that says what you mean to
+   change and why, before you build it. If it changes how the app behaves for
+   people, the owner decides.
+2. **Test it.** See below. Break your new check on purpose and watch it go red.
+3. **Polish it.** Run it and look at it. For anything somebody sees, attach
+   screenshots at a phone, a pad and a desktop size.
+4. **The owner is told, and merges.** Your pull request says what changed, what
+   passed, and what you could not check. Nothing reaches `main` except through a
+   pull request the owner merges.
+
+**Using an AI tool?** The same four steps, and three more lines:
+
+- it works on a branch and opens a pull request; it never pushes to `main`;
+- its pull request lists what it could **not** verify (a browser it did not
+  have, a signed-in screen it could not open), in so many words;
+- it reads [`AGENTS.md`](./AGENTS.md) first, whatever tool you use; section 0.2
+  is this same rule.
+
+---
+
 ## Before you open a pull request
 
 ```bash
