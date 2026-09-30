@@ -145,15 +145,23 @@ async function openAndProbe(page, buttonName, marker) {
     if (await bell.count()) {
       await bell.click();
       await sleep(600);
-      const reachable = await page.evaluate(() => {
+      const probe = await page.evaluate(() => {
         const panel = document.querySelector('[role="dialog"], [data-panel="notifications"]');
         if (!panel) return null;
         const r = panel.getBoundingClientRect();
         const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        return !!(hit && panel.contains(hit));
+        // What was measured and what was found there, so a failure on a
+        // browser nobody here can open says more than "no".
+        const name = (n) => (n ? `${n.tagName.toLowerCase()}${n.getAttribute('aria-label') ? `[${n.getAttribute('aria-label')}]` : ''}.${String(n.className || '').split(/\s+/).slice(0, 4).join('.')}` : 'nothing');
+        return {
+          reachable: !!(hit && panel.contains(hit)),
+          seen: `measured ${name(panel)} at ${[r.left, r.top, r.width, r.height].map(Math.round).join(',')}; `
+            + `${document.querySelectorAll('[role="dialog"]').length} dialog(s) open; at its middle: ${name(hit)}`,
+        };
       });
-      if (reachable !== null) {
-        ok(reachable, `${label}: the notification panel is reachable too`);
+      if (probe !== null) {
+        ok(probe.reachable, `${label}: the notification panel is reachable too`);
+        if (!probe.reachable) console.log(`    ${probe.seen}`);
       }
     }
 

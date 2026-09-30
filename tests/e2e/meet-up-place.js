@@ -104,6 +104,13 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.waitForTimeout(900);
   const asTyped = page.getByRole('button', { name: /as typed/ });
   ok(await asTyped.count() > 0, 'an address typed by hand can be used just as it is');
+  if (!(await asTyped.count())) {
+    // What the box held and what it offered instead, so a failure on a
+    // browser nobody here can open says more than "no".
+    const held = await box.inputValue().catch(() => '(unreadable)');
+    const offered = (await page.getByRole('option').allInnerTexts().catch(() => [])).map((t) => t.replace(/\s+/g, ' ').slice(0, 60));
+    console.log(`    the box held "${held}"; ${offered.length} option(s): ${offered.join(' | ') || 'none'}`);
+  }
 
   const wide = await page.evaluate(() => document.documentElement.scrollWidth);
   ok(wide <= 390, `nothing is wider than the phone (${wide}px)`);

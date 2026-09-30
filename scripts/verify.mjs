@@ -595,6 +595,9 @@ const staticChecks = [
   // Menu that lists every room the rail has (30 September 2026). The browser
   // half is tests/e2e/the-rooms-fit-a-phone.js.
   ['the bottom bar', 'tests/the-bottom-bar.mjs'],
+  // A failing browser walk prints what the browser saw, so a WebKit failure in
+  // CI can be read from the log (30 September 2026).
+  ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

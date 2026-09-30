@@ -87,6 +87,84 @@ const EXECUTABLE =
       (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined)
     : undefined;
 
+// WHAT THE BROWSER SAW, SAID IN WORDS WHEN A WALK FAILS.
+//
+// The Safari walks run on a Mac in CI, and the only record they kept of a
+// failure was a folder of screenshots uploaded as an artifact. Nobody working
+// in a sandbox can open that folder, so a WebKit failure could be counted but
+// not explained: for a week an Explorer's page failed to open on WebKit and the
+// log said only which check went red.
+//
+// So every page a walk opens is watched, quietly, and the last things it saw
+// are printed to the log if -- and only if -- the walk exits with a failure:
+// where it navigated, what the page threw, what the console called an error,
+// and which requests failed. A green walk prints nothing extra. Nothing is sent
+// anywhere; it is the job's own log.
+//
+// Next.js cancels a prefetch when the walk moves on, and WebKit reports each
+// one; those are left out, or they would fill the record with noise.
+const TRAIL = [];
+const TRAIL_MAX = 80;
+function note(kind, text) {
+  const at = new Date().toISOString().slice(11, 23);
+  TRAIL.push(`${at} ${kind}: ${String(text).replace(/\s+/g, ' ').slice(0, 300)}`);
+  if (TRAIL.length > TRAIL_MAX) TRAIL.shift();
+}
+const cancelledPrefetch = (url, why) => /[?&]_rsc=/.test(url) && /cancel|abort/i.test(why || '');
+
+function watchPage(page) {
+  if (!page || page.__beaconWatched) return page;
+  page.__beaconWatched = true;
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) note('page', frame.url());
+  });
+  page.on('pageerror', (err) => {
+    if (isCancelledPrefetch(err)) return;
+    note('threw', (err && err.message) || err);
+  });
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') note('console error', msg.text());
+  });
+  page.on('requestfailed', (req) => {
+    const why = (req.failure() && req.failure().errorText) || '';
+    if (cancelledPrefetch(req.url(), why)) return;
+    note('request failed', `${req.method()} ${req.url()} ${why}`);
+  });
+  page.on('crash', () => note('crashed', page.url()));
+  return page;
+}
+
+function watchContext(context) {
+  if (!context || context.__beaconWatched) return context;
+  context.__beaconWatched = true;
+  context.on('page', watchPage);
+  for (const page of context.pages()) watchPage(page);
+  return context;
+}
+
+function watchBrowser(browser) {
+  const newContext = browser.newContext.bind(browser);
+  browser.newContext = async (...args) => watchContext(await newContext(...args));
+  const newPage = browser.newPage.bind(browser);
+  browser.newPage = async (...args) => watchPage(await newPage(...args));
+  return browser;
+}
+
+// Patched on this engine object only, so a suite that asks for `chromium` or
+// `browser` gets watched pages without changing a line.
+{
+  const launch = engine.launch.bind(engine);
+  engine.launch = async (...args) => watchBrowser(await launch(...args));
+  const persistent = engine.launchPersistentContext.bind(engine);
+  engine.launchPersistentContext = async (...args) => watchContext(await persistent(...args));
+}
+
+process.on('exit', (code) => {
+  if (code === 0 || TRAIL.length === 0) return;
+  console.log(`\n--- what the browser saw (${ENGINE}, last ${TRAIL.length} events) ---`);
+  for (const line of TRAIL) console.log(`  ${line}`);
+});
+
 /**
  * Choose a room or subroom before looking for what it holds.
  *

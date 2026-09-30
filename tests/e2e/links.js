@@ -57,7 +57,18 @@ const anchors = (page) => page.evaluate(() => {
   await page.waitForTimeout(1500);
 
   ok(await box(page).count() > 0, 'a conversation is open');
-  if (!(await box(page).count())) { console.log('\nRESULT: cannot continue'); await browser.close(); process.exit(1); }
+  if (!(await box(page).count())) {
+    // Where it ended up instead, so a failure on a browser nobody here can
+    // open says more than "no".
+    const at = await page.evaluate(() => ({
+      path: location.pathname + location.search,
+      cards: document.querySelectorAll('[data-quest="seeker-card"]').length,
+      composers: document.querySelectorAll('[data-quest="chat-send"]').length,
+      textareas: document.querySelectorAll('textarea').length,
+    }));
+    console.log(`    at ${at.path}: ${at.cards} Explorer card(s), ${at.composers} composer(s), ${at.textareas} textarea(s)`);
+    console.log('\nRESULT: cannot continue'); await browser.close(); process.exit(1);
+  }
 
   // ---- 1. A real link becomes a real anchor -------------------------------
   await send(page, 'Have a read of https://adventist.org/study before Sabbath');

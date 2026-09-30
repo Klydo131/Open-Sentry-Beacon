@@ -77,6 +77,21 @@ const where = (page) => page.evaluate(() => {
     ok(sent.max > 0, `and it really is taller than the box (${sent.max}px of scroll)`);
     ok(sent.fromBottom <= 48,
       `after sending, the newest message is in view (${sent.fromBottom}px from the bottom)`);
+    if (sent.fromBottom > 48) {
+      // Where the thread and the page stood, so a failure on a browser nobody
+      // here can open says more than "no". Safari read 19px here on every run
+      // until the bar began to step aside in a conversation, then 53px.
+      const stood = await page.evaluate(() => {
+        const el = [...document.querySelectorAll('div')].find(
+          (d) => d.scrollHeight > d.clientHeight + 8 && /overflow-y-auto/.test(d.className || ''),
+        );
+        const r = el.getBoundingClientRect();
+        const bar = document.querySelector('.tab-bar');
+        return `thread ${Math.round(r.top)}..${Math.round(r.bottom)} of ${innerHeight}, page scrolled ${Math.round(scrollY)}; `
+          + `bar ${bar ? getComputedStyle(bar).display : 'absent'}, --tab-bar ${getComputedStyle(document.documentElement).getPropertyValue('--tab-bar') || 'unset'}`;
+      });
+      console.log(`    ${stood}`);
+    }
   }
 
   // The message just sent must be ON SCREEN, not merely in the DOM.
