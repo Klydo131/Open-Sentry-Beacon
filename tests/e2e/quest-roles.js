@@ -161,7 +161,10 @@ async function settle(page, ms = 12_000) {
 // had simply moved on into a 30-second hang and then an uncaught rejection that
 // killed the whole run mid-track.
 async function act(page, target) {
-  const el = page.locator(`[data-quest="${target}"]`).first();
+  // THE ONE A PERSON CAN SEE. Since the bottom bar, the church link is in the
+  // desktop header (hidden below 1280px) and in the Menu; `.first()` alone
+  // picked the hidden one and pressed nothing. A person taps what is on screen.
+  const el = page.locator(`[data-quest="${target}"]:visible`).first();
   try {
     await el.waitFor({ state: 'attached', timeout: 5000 });
   } catch {

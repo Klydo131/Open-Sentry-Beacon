@@ -701,6 +701,14 @@ export function InstallPrompt() {
   // consent dialog, it covered the "I understand" button, so consent was never
   // dismissed and every later click was swallowed by the overlay. An install
   // prompt must never be able to block a dialog the person has to answer.
+  //
+  // ON TOP OF THE BOTTOM BAR, like every other floating thing (30 September
+  // 2026), so Menu, People and My Files can still be pressed while it is up.
+  // It was tried standing IN FRONT of the bar instead, covering it, and the
+  // full gate showed what that costs: the Menu could not be reached until the
+  // prompt was dismissed, which the old header row never did to anybody. The
+  // room it needs comes from its ceiling instead (`.install-bar-ceiling`,
+  // below): half of what is left ABOVE the bottom bar, not half the screen.
   return (
     <div
       ref={barRef}
@@ -717,12 +725,14 @@ export function InstallPrompt() {
           exposed it.
 
           Half the visible height, and the steps scroll inside what is left.
+          Since the bottom bar: half of the height ABOVE the bar, because the
+          bar is part of what the page has already given up.
           NOT collapsed behind the button: somebody who opened this from a
           Messenger link has to be told to leave Messenger without pressing
           anything, and tests/e2e/in-app-browser.js fails the build if that is
           ever gated again. Scrolling is not gating; the steps are still there
           and still on screen. */}
-      <div className="animate-drop flex max-h-[50dvh] w-full max-w-md flex-col overflow-y-auto overscroll-contain rounded-2xl bg-white p-3 lift-3 ring-1 ring-black/10">
+      <div className="install-bar-ceiling animate-drop flex w-full max-w-md flex-col overflow-y-auto overscroll-contain rounded-2xl bg-white p-3 lift-3 ring-1 ring-black/10">
         <div className="flex items-center gap-3">
           <SentryBeaconMark size={40} />
           <div className="min-w-0 flex-1">

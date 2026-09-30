@@ -46,19 +46,20 @@ const page = strip(read('app/cases/page.tsx'));
 // 1. THE DOOR IS GONE FROM A GUIDE AND AN EXPLORER
 // ---------------------------------------------------------------------------
 {
-  // Leadership may keep it; nobody else. Asserted by requiring the nav entry to
-  // sit behind a role test naming admin or executive, rather than by counting
-  // occurrences -- a count passes the day somebody adds it back somewhere else.
-  const entry = /\.\.\.\(role === 'admin' \|\| role === 'executive'[\s\S]{0,200}?href: '\/cases'/.test(shell);
-  ok(entry, 'the header offers Admin Reports to leadership only');
-
-  // MATCHED AT THE START OF A LINE, because the gated entry above legitimately
-  // contains the same characters -- `? [{ href: '/cases'` -- and forbidding the
-  // substring outright failed the very arrangement it is meant to require. An
-  // UNCONDITIONAL entry is one that opens its own line in the list; a gated one
-  // is preceded by the spread and the ternary.
-  ok(!/^\s*\{ href: '\/cases'/m.test(shell),
-     'and not as a plain entry every role gets');
+  // Leadership may keep it; nobody else.
+  //
+  // THE HEADER HAD ITS OWN LIST OF ROOMS until 30 September 2026, and this
+  // asserted that its Admin Reports entry sat behind a role test. The list is
+  // gone: a phone and a pad reach rooms through the Menu, and the Menu draws
+  // exactly the rail's groups (railGroupsFor). So the rule now lives in one
+  // place, the rail blocks below, and what must hold here is that nothing
+  // brings back a second, unguarded door: the live header names no /cases at
+  // all, and the Menu takes its rooms from the rail and nowhere else.
+  const menu = strip(read('app/menu/page.tsx'));
+  ok(!/href: '\/cases'/.test(shell),
+     'the live header carries no Admin Reports entry of its own to get wrong');
+  ok(/railGroupsFor\(profile\.role/.test(menu) && !/href: '\/cases'/.test(menu),
+     'and the Menu offers exactly the rail\'s rooms, so Admin Reports only where the rail has it');
 
   // The rails: leadership's list may hold it, the member lists may not. The two
   // member lists are the ones inside a `role === 'ds'` or `role === 'dm'` block.

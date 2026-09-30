@@ -110,21 +110,44 @@ async function run(browser, label, device) {
   //
   // Asserting on the RENDERED, VISIBLE link rather than on the class list: what
   // matters is whether a finger can reach it, not which utility produced it.
+  //
+  // OR TWO TAPS AWAY, THROUGH THE MENU (30 September 2026). Below 1280px the
+  // rooms are no longer icons in the header: the bottom bar's Menu tab lists
+  // them. That counts only when it is SEEN to work here: the Menu tab on
+  // screen and big enough to hit, and the room's row on screen when the Menu
+  // opens (in a second tab, so this page stays where it is for the checks
+  // below). A Menu that silently lost the room fails exactly as a missing
+  // header link did.
+  const tappable = async (loc) => {
+    const n = await loc.count();
+    for (let i = 0; i < n; i++) {
+      if (await loc.nth(i).isVisible().catch(() => false)) {
+        const box = await loc.nth(i).boundingBox().catch(() => null);
+        // On screen, and big enough to hit. A 4px sliver is not a link.
+        if (box && box.width >= 24 && box.height >= 24) return true;
+      }
+    }
+    return false;
+  };
+  const menuTab = await tappable(page.locator('nav[aria-label="Main"] a[href="/menu"]'));
+  let menuRows = null;
+  if (menuTab) {
+    const side = await page.context().newPage();
+    await side.goto(`${BASE}/menu`, { waitUntil: 'networkidle' }).catch(() => {});
+    await side.locator('main a.menu-row').first().waitFor({ timeout: 10000 }).catch(() => {});
+    menuRows = {};
+    for (const href of ['/church', '/settings']) {
+      menuRows[href] = await tappable(side.locator(`main a.menu-row[href="${href}"]`));
+    }
+    await side.close();
+  }
   for (const [href, what] of [['/church', 'the church page'], ['/settings', 'settings']]) {
     const link = page.locator(`a[href="${href}"], a[href^="${href}?"]`);
     const count = await link.count();
-    let reachable = false;
-    for (let i = 0; i < count; i++) {
-      if (await link.nth(i).isVisible().catch(() => false)) {
-        const box = await link.nth(i).boundingBox().catch(() => null);
-        // On screen, and big enough to hit. A 4px sliver is not a link.
-        if (box && box.width >= 24 && box.height >= 24) {
-          reachable = true;
-          break;
-        }
-      }
-    }
-    ok(reachable, `${label}: ${what} is reachable by tapping (${count} link(s) in the DOM)`);
+    const direct = await tappable(link);
+    const viaMenu = !!menuRows && menuRows[href];
+    ok(direct || viaMenu,
+       `${label}: ${what} is reachable by tapping (${direct ? 'on screen' : viaMenu ? 'Menu, then its row' : `${count} link(s) in the DOM, none reachable`})`);
   }
 
   const composer = page.locator('[data-quest="chat-send"]');

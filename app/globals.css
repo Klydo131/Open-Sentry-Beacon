@@ -64,8 +64,12 @@ body {
 
      InstallPrompt publishes the bar's real measured height as `--install-bar`
      while it is on screen and removes it when it goes, so this is exactly zero
-     the rest of the time and on every device that never sees the bar. */
-  padding-bottom: var(--install-bar, 0px);
+     the rest of the time and on every device that never sees the bar.
+
+     The bottom bar (Menu | People | My Files) is fixed too, and publishes
+     `--tab-bar` the same way; the install bar stands on top of it, so the page
+     makes room for both. Each is 0px wherever it is not drawn. */
+  padding-bottom: calc(var(--install-bar, 0px) + var(--tab-bar, 0px));
 }
 
 /* Visible focus for keyboard + low-vision users.
@@ -518,7 +522,7 @@ html {
      scrolled-to control comes to REST. Without it, `scrollIntoView` on anything
      near the bottom parks it in the covered strip — technically on screen and
      impossible to press. */
-  scroll-padding-bottom: var(--install-bar, 0px);
+  scroll-padding-bottom: calc(var(--install-bar, 0px) + var(--tab-bar, 0px));
 
   /* And the same at the top, for the same reason. The header is sticky and the
      tutorial bar is fixed, so both sit outside the flow and a scrolled-to
@@ -557,8 +561,8 @@ html {
   /* `vh` first for anything too old to know `dvh`; the second wins where it is
      understood. `dvh` is the part actually visible, which is what shrinks when
      a phone opens its keyboard. */
-  max-height: calc(100vh - var(--beacon-chrome-top, 0px) - var(--app-header, 0px) - var(--install-bar, 0px) - 1rem);
-  max-height: calc(100dvh - var(--beacon-chrome-top, 0px) - var(--app-header, 0px) - var(--install-bar, 0px) - 1rem);
+  max-height: calc(100vh - var(--beacon-chrome-top, 0px) - var(--app-header, 0px) - var(--install-bar, 0px) - var(--tab-bar, 0px) - 1rem);
+  max-height: calc(100dvh - var(--beacon-chrome-top, 0px) - var(--app-header, 0px) - var(--install-bar, 0px) - var(--tab-bar, 0px) - 1rem);
 }
 
 /* Only the thread gives up space. Without this the heading, the note and the
@@ -1015,4 +1019,227 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
    margin moves them up without changing how they are drawn. */
 .safe-bottom {
   margin-bottom: env(safe-area-inset-bottom, 0px);
+  /* ABOVE THE BOTTOM BAR, where there is one. The bar already clears the home
+     indicator itself (its own padding is the inset), so whichever is taller
+     wins rather than the two adding up. `--tab-bar` is only set on a phone or
+     a pad, so a desktop is exactly as before. The line above stays as the
+     fallback for an engine without max(). */
+  margin-bottom: max(env(safe-area-inset-bottom, 0px), var(--tab-bar, 0px));
+}
+
+/* The install prompt's ceiling: half of the height left ABOVE the bottom bar.
+   It stands on the bar (it is `.safe-bottom` like everything else floating),
+   so on a phone held sideways half of the whole screen plus the bar left the
+   page almost nothing to tap. `vh` first for engines without `dvh`. */
+.install-bar-ceiling {
+  max-height: 50vh;
+  max-height: calc((100dvh - var(--tab-bar, 0px)) * 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   THE BOTTOM BAR: Menu | People | My Files. components/TabBar.tsx.
+
+   Drawn to docs/VISUAL-LANGUAGE.md: a white surface the page scrolls under,
+   one hairline, the system font, navy only on the tab you are in. The label
+   is never hidden and never below 15px, because these are the three words a
+   person steers the whole app by. Nothing here sets `display` on the bar
+   itself, so Tailwind's `xl:hidden` on the element still wins (the trap
+   recorded in VISUAL-LANGUAGE.md).
+   ------------------------------------------------------------------------ */
+.tab-bar {
+  background: rgb(255 255 255 / 0.96);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-top: 0.5px solid rgb(26 34 51 / 0.14);
+  /* The home indicator is drawn over the bottom of the glass on a modern
+     phone. The bar reaches the edge; its tabs sit above the indicator. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tab-bar-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 6px 4px;
+  /* Secondary ink: 64% of the body ink, about 4.6:1 on white. */
+  color: rgb(26 34 51 / 0.64);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-bar-label {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.tab-bar-pill {
+  display: grid;
+  place-items: center;
+  height: 32px;
+  width: 64px;
+  border-radius: 999px;
+  transition: background-color 150ms ease;
+}
+
+/* The tab you are in: navy, and a pill behind the icon, so it is not told by
+   colour alone. */
+.tab-bar-tab[aria-current] {
+  color: #1e2a4a;
+  font-weight: 800;
+}
+
+.tab-bar-tab[aria-current] .tab-bar-pill {
+  background: rgb(30 42 74 / 0.12);
+}
+
+@media (hover: hover) {
+  .tab-bar-tab:hover .tab-bar-pill {
+    background: rgb(26 34 51 / 0.06);
+  }
+  .tab-bar-tab[aria-current]:hover .tab-bar-pill {
+    background: rgb(30 42 74 / 0.16);
+  }
+}
+
+/* A pad has the width for the word beside the icon, as iPadOS draws its own
+   tab bars; the bar stays centred rather than spreading three tabs across a
+   kilometre of glass. */
+@media (min-width: 768px) {
+  .tab-bar-tab {
+    flex-direction: row;
+    gap: 8px;
+    min-height: 60px;
+  }
+  .tab-bar-pill {
+    width: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-bar-pill {
+    transition: none;
+  }
+}
+
+/* A PHONE HELD SIDEWAYS has width to spare and almost no height, so the bar
+   goes compact the way a phone's own tab bars do in landscape: the word
+   beside the icon, and 44px tall, which is still a full-size target. */
+@media (max-height: 500px) {
+  .tab-bar-tab {
+    flex-direction: row;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 4px;
+  }
+  .tab-bar-pill {
+    height: 28px;
+    width: 44px;
+  }
+
+  /* AND IN A CONVERSATION IT STEPS ASIDE, as a messaging app's tab bar does
+     inside a chat. On a phone held sideways the bar cost the thread 65px of
+     412 and left 18px of messages (tests/e2e/conversation-fits-the-glass.js).
+     Only on a short screen and only while a conversation is on it; the
+     header's Back and its home link are still there, and turning the phone
+     upright brings the bar back. `:has()` is new enough that an old engine
+     simply keeps the bar, which is the behaviour before this rule. */
+  body:has([data-live-conversation]) .tab-bar {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   THE MENU: every room, written out. app/menu/page.tsx, components/MenuList.
+
+   An inset grouped list, the Study Room's `.sr-group` vocabulary brought to
+   the rest of the app: white rows, hairlines inset to the text, 14px corners,
+   each row a whole-width target at least 56px tall.
+   ------------------------------------------------------------------------ */
+.menu-group {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1a2233;
+  box-shadow: 0 0 0 0.5px rgb(26 34 51 / 0.12);
+}
+
+/* The hairline starts where the words do, not under the icon. */
+.menu-group > li + li {
+  position: relative;
+}
+
+.menu-group > li + li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 62px;
+  right: 0;
+  border-top: 0.5px solid rgb(26 34 51 / 0.12);
+  pointer-events: none;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 14px;
+  color: #1a2233;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+.menu-row:hover {
+  background: rgb(26 34 51 / 0.04);
+}
+
+.menu-icon {
+  display: grid;
+  place-items: center;
+  height: 34px;
+  width: 34px;
+  flex: none;
+  border-radius: 999px;
+  background: rgb(30 42 74 / 0.08);
+  font-size: 18px;
+}
+
+.menu-group-head {
+  margin: 0 0 6px 14px;
+  color: var(--room-ink-soft, rgb(26 34 51 / 0.64));
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   THE TUTORIAL'S PANEL, when it sits at the bottom. components/Quest.tsx.
+
+   Its home is the bottom of the glass, and the bottom bar lives there now. A
+   panel over the bar would hide the very tab a step points at (Menu, on the
+   way to Home), so the panel stands on top of the bar instead. Where there is
+   no bar it reaches the edge as before, and only its content clears the home
+   indicator. On a wider screen it is a card in the corner, lifted the same way.
+   ------------------------------------------------------------------------ */
+.quest-dock {
+  bottom: var(--tab-bar, 0px);
+  padding-bottom: calc(0.75rem + max(0px, env(safe-area-inset-bottom, 0px) - var(--tab-bar, 0px)));
+}
+
+@media (min-width: 640px) {
+  .quest-dock {
+    bottom: calc(1rem + var(--tab-bar, 0px));
+    padding-bottom: 1rem;
+  }
 }

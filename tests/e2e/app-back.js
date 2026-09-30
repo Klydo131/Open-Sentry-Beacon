@@ -60,9 +60,14 @@ const back = (page) => page.getByRole('button', { name: /Go back/i });
 
   // Go one level in, staying inside the app shell. /library deliberately runs
   // outside it and has its own way back, so it is the wrong screen to test with.
-  await page.getByRole('link', { name: /^Mail$/i }).first().click();
-  await page.waitForTimeout(1400);
-  ok(/\/mail/.test(page.url()), 'moved to a second screen inside the shell');
+  //
+  // Through the Menu tab since 30 September 2026: at 412px the rooms are no
+  // longer icons in the header but rows in the Menu, and the Menu is itself a
+  // screen inside the shell, one tap in from home.
+  await page.locator('nav[aria-label="Main"]').getByRole('link', { name: 'Menu', exact: true }).click();
+  await page.waitForURL(/\/menu/, { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(600);
+  ok(/\/menu/.test(page.url()), 'moved to a second screen inside the shell');
   ok(await back(page).count() > 0, 'Back appears once there is somewhere to go back to');
 
   await back(page).first().click();

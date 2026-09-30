@@ -591,6 +591,10 @@ const staticChecks = [
   // The agent toolkit (docs/DEVELOPER-TOOLKIT.md): vetted, pinned, and switched
   // on by nobody who clones the repository (29 September 2026).
   ['the toolkit is opt-in', 'tests/the-toolkit-is-opt-in.mjs'],
+  // Menu | People | My Files along the bottom of a phone and a pad, and the
+  // Menu that lists every room the rail has (30 September 2026). The browser
+  // half is tests/e2e/the-rooms-fit-a-phone.js.
+  ['the bottom bar', 'tests/the-bottom-bar.mjs'],
   // Boots `npm run dev` and looks at the page. Everything else in this list
   // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
   // first command the README gives a newcomer — survived with thirty green

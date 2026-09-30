@@ -27,7 +27,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 // pages are covered by the other suites.
 const ROUTES = [
   '/church', '/admin', '/dm', '/ds', '/library', '/settings', '/profile',
-  '/mail', '/cases', '/office', '/publish',
+  '/mail', '/cases', '/office', '/publish', '/menu',
 ];
 
 // Two widths: the narrowest phone still in use, and a common Android.

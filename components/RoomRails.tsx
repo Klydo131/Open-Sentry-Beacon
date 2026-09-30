@@ -22,8 +22,9 @@ import { Pocket } from '@/components/Pocket';
 // with the work: what is on the desk today, and one tap to each place they go.
 // Same customisation, different furniture.
 //
-// THE LEFT RAIL IS DESKTOP ONLY (`xl` and up); below that the shells draw a
-// horizontal section strip instead, so navigation still reaches everywhere.
+// THE LEFT RAIL IS DESKTOP ONLY (`xl` and up); below that the bottom bar
+// (Menu | People | My Files) is the navigation, and its Menu draws these same
+// groups from railGroupsFor, so a phone reaches every room the rail does.
 // THE RIGHT RAIL IS NOT. It used to be, and everything personal in it -- the
 // study timer, the theme, the line you write for yourself -- was therefore
 // missing on every phone and tablet. It now stacks under the main column below
@@ -338,10 +339,18 @@ export function RightRail({
   // full-width block falling under the main column, because the parent stacks
   // there; from xl it is the sticky 288px column it always was. One instance,
   // one timer, every width.
+  //
+  // AND BELOW xl IT IS THE LAST THING ON THE PAGE, so it takes the deep floor
+  // <main> has (`pb-28`, see the shells) rather than main's. Things float over
+  // the bottom of a phone -- the sample-data pill, the chat bubble, the install
+  // bar -- and they now stand on top of the bottom bar. With 24px under it, the
+  // player at the end of this rail sat behind the pill on every phone and pad
+  // (tests/e2e/the-rooms-fit-a-phone.js found it). From xl the rail is a
+  // column beside the page and keeps its 24px.
   return (
     <aside
       aria-label={seeker ? 'My room' : 'My office'}
-      className="compact-ui thin-scroll w-full space-y-3 pb-6 xl:sticky xl:top-[76px] xl:max-h-[calc(100vh-96px)] xl:w-72 xl:shrink-0 xl:overflow-y-auto xl:[max-height:calc(100dvh-96px)]"
+      className="compact-ui thin-scroll w-full space-y-3 pb-28 xl:pb-6 xl:sticky xl:top-[76px] xl:max-h-[calc(100vh-96px)] xl:w-72 xl:shrink-0 xl:overflow-y-auto xl:[max-height:calc(100dvh-96px)]"
     >
       <RoomCard
         seeker={seeker}

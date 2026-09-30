@@ -28,21 +28,20 @@ let bad = 0;
 const ok = (cond, msg) => { if (!cond) bad++; console.log(`${cond ? 'OK ' : 'BAD'} ${msg}`); };
 
 // 1. A way home that reads as a button. The logo has always linked home, but a
-//    logo is not a button to somebody who has never used the app.
-ok(/icon="🏠"\s+label="Home"|label="Home"/.test(shell),
-   'the live header has an explicit Home link');
+//    logo is not a button to somebody who has never used the app. Since 30
+//    September 2026 that button is People on the bottom bar, which opens each
+//    role's own home and is on every screen of a phone or a pad.
+ok(/<TabBar role=\{profile\.role\} \/>/.test(shell),
+   'the live shell draws the bottom bar, whose People tab is the way home');
 
-// 2. The section strip must be able to scroll inside itself, so a long list can
-//    never again push the page sideways.
-ok(/overflow-x-auto/.test(shell),
-   'the section nav scrolls within itself rather than widening the page');
-
-// 3. The room links do not compete with the account controls. Below `xl` they
-//    have a separate scrolling row; at `xl`, the left rail takes over.
-ok((shell.match(/aria-label="Sections"/g) ?? []).length === 1,
-   'the account row does not repeat the complete room navigation');
-ok(/overflow-x-auto[^\n]*xl:hidden/.test(shell),
-   'the separate room row stays available until the desktop rail appears');
+// 2 and 3. THE HEADER HOLDS NO ROOMS. It used to hold every room in a second
+//    row that scrolled sideways, which is what made the header too wide for an
+//    iPhone in the first place. The rooms are in the Menu now, so the header is
+//    the brand and the person, and nothing in it can grow with the room count.
+ok(!/aria-label="Sections"/.test(shell) && !/const SECTIONS/.test(shell),
+   'the header has no row of rooms to overflow a phone');
+ok(!/href:\s*'\//.test(shell.replace(/\/\/[^\n]*/g, '')),
+   'and no list of rooms of its own to drift from the rail');
 
 // 4. "Sign out" is the widest single word in that row and it lives nowhere else
 //    in the app, so it must survive as a symbol rather than be dropped.
@@ -65,7 +64,7 @@ ok(/@supports not \(overflow: clip\)\s*\{\s*html\s*\{\s*overflow-x:\s*hidden/s.t
    'the fallback puts `hidden` on html, not body, so sticky headers keep sticking');
 
 // ---------------------------------------------------------------------------
-// EVERY ROOM ON THE RAILS IS ALSO IN THE HEADER.
+// EVERY ROOM ON THE RAILS IS ALSO REACHABLE ON A PHONE.
 // ---------------------------------------------------------------------------
 // THE BUG THIS EXISTS FOR: "I need the lesson study editing features for guides
 // to make their own lesson studies too, not just in mac or desktop."
@@ -76,31 +75,36 @@ ok(/@supports not \(overflow: clip\)\s*\{\s*html\s*\{\s*overflow-x:\s*hidden/s.t
 // Church, Library, Profile and Settings. Office, Publish and Cases were rooms
 // added after that list was written and never added to it.
 //
-// Nothing about the feature was missing; the door was. And nothing could have
-// caught it, because the two lists are written in different files and neither
-// knows the other exists. This is that check.
+// The fix that stuck (30 September 2026) was to stop having two lists. Below
+// 1280px the navigation is the bottom bar, and its Menu draws the rail's own
+// groups. So this now holds the three joints that make "every rail room is on
+// a phone" true by construction rather than by two people remembering:
+//   - both halves of the Menu page take their groups from railGroupsFor;
+//   - the Menu drops nothing from those groups except Profile, which is the
+//     card at its top;
+//   - the bar that opens the Menu is in both shells and on My Files.
 {
-  const rails = readFileSync('components/RoomRails.tsx', 'utf8');
+  const menuPage = readFileSync('app/menu/page.tsx', 'utf8');
+  const menuList = readFileSync('components/MenuList.tsx', 'utf8');
+  const demoShell = readFileSync('components/AppShell.tsx', 'utf8');
+  const library = readFileSync('app/library/page.tsx', 'utf8');
 
-  // The rooms the rail offers, taken from its own link definitions.
-  const railRooms = new Set(
-    [...rails.matchAll(/href:\s*'(\/[a-z]+)'/g)].map((m) => m[1]),
-  );
-  // The rail's own dashboards are role-specific and the header reaches them
-  // through its Home link, which uses homeFor(role).
-  for (const own of ['/ds', '/dm', '/admin']) railRooms.delete(own);
+  ok(/railGroupsFor\(profile\.role, \{\}, \{ mail: leadsChurch \}\)/.test(menuPage),
+     'the live Menu draws the same groups as the live rail');
+  ok(/useDemoRooms\(\)/.test(menuPage)
+     && /export function useDemoRooms[\s\S]*?railGroupsFor\(currentUser\.role/.test(demoShell)
+     && /useDemoRooms\(\)/.test(demoShell.slice(demoShell.indexOf('function DemoAppShell'))),
+     'the sample Menu and the sample rail share one source of rooms');
 
-  const headerRooms = new Set(
-    [...shell.slice(shell.indexOf('const SECTIONS'), shell.indexOf('function ShellLink'))
-      .matchAll(/href:\s*'(\/[a-z]+)'/g)].map((m) => m[1]),
-  );
+  const filters = [...menuList.matchAll(/links\.filter\(\(l\) => ([^)]*)\)/g)].map((m) => m[1]);
+  ok(filters.length === 1 && /^l\.href !== '\/profile'$/.test(filters[0].trim()),
+     `the Menu leaves out nothing but Profile (${filters.join(' | ') || 'no filter found'})`);
+  ok(/href="\/profile"/.test(menuList),
+     'and Profile is the card at the top of it instead');
 
-  const missing = [...railRooms].filter((r) => !headerRooms.has(r));
-  ok(missing.length === 0,
-    missing.length
-      ? `these rooms are on the rails and NOT in the header, so they cannot be `
-        + `reached on a phone or a tablet: ${missing.join(', ')}`
-      : `every room on the rails is in the header too (${railRooms.size} rooms)`);
+  ok(/<TabBar role=\{currentUser\.role\} \/>/.test(demoShell)
+     && /<TabBar role=\{barRole\} \/>/.test(library),
+     'the bar that opens the Menu is on the sample side and on My Files too');
 }
 
 console.log(`\n${bad === 0 ? 'RESULT: ALL OK' : `RESULT: ${bad} FAILED`}`);

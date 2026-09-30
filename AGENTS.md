@@ -92,10 +92,12 @@ return <AppShell allow={...}>…</AppShell>;
 **A change to one side is usually a bug on the other.** Somebody learns the app
 on the sample side and then signs in; if a room is in one header and not the
 other, they were taught a layout that does not exist. When you add a room, add
-it to `SECTIONS` in `LiveAppShell`, to `railGroupsFor` in `RoomRails`, and to
-the sample header. `tests/live-header-fits.mjs` fails if the rail and the header
-disagree, and it exists because, for several weeks, three rooms were reachable
-only on a screen wider than 1280px.
+it to `railGroupsFor` in `RoomRails`: that one list is the desktop rail on both
+sides AND the Menu tab on every phone and pad (`app/menu/page.tsx`), so there is
+no second list to forget. On the sample side, add it to the desktop header's
+row of icons too. `tests/live-header-fits.mjs` fails if the Menu stops drawing
+the rail's rooms, and it exists because, for several weeks, three rooms were
+reachable only on a screen wider than 1280px.
 
 ---
 
@@ -285,8 +287,13 @@ shipped:
   render as a blank box on Android while looking perfect on a Mac. Controls are
   drawn in `components/Glyph.tsx` as inline SVG. `tests/glyphs-render-everywhere.mjs`
   refuses the rest.
-- **The rails are `xl:block`.** Below 1280px the scrolling header row is the
-  entire navigation. That includes every phone and an iPad in portrait.
+- **The rails are `xl:block`.** Below 1280px the bottom bar is the entire
+  navigation: **Menu | People | My Files** (`components/TabBar.tsx`,
+  `lib/tab-bar.ts`), and Menu lists every room. That includes every phone and
+  every iPad, upright or on its side. The bar is fixed, so it publishes its
+  height as `--tab-bar`; anything else pinned to the bottom uses `.safe-bottom`,
+  which stands it on top of the bar. `tests/the-bottom-bar.mjs` and
+  `tests/e2e/the-rooms-fit-a-phone.js` hold it.
 - **Every `<button>` is 56px tall** from `globals.css`. Padding cannot make one
   smaller; only `.tap-sm` (44px) can, and the `danger` variant is the only thing
   that uses it. That is the point: the most damaging control on a screen is never

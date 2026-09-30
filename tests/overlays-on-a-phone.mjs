@@ -108,6 +108,16 @@ const NO_FALLBACK_POSSIBLE = ['app/global-error.tsx'];
 // A fixed element positioned from the bottom, with no safe-area handling of its
 // own, is one sitting under the home indicator.
 {
+  // ONE MORE CLASS CLEARS IT, since the bottom bar (30 September 2026): the
+  // bar itself (`tab-bar`, which reaches the edge and pads its tabs above the
+  // indicator). Accepted only while the stylesheet says so, so it cannot
+  // become an exemption that no longer does anything.
+  const css = readFileSync('app/globals.css', 'utf8');
+  const clears = (cls) =>
+    new RegExp(`\\.${cls}\\s*\\{[^}]*(padding|margin)-bottom:[^;}]*env\\(safe-area-inset-bottom`).test(css);
+  const ALSO = ['tab-bar'].filter(clears);
+  ok(ALSO.length === 1, `the bottom bar clears the home indicator in globals.css (${ALSO.join(', ') || 'it does not'})`);
+
   const offenders = [];
   for (const file of files) {
     const src = readFileSync(file, 'utf8');
@@ -117,6 +127,7 @@ const NO_FALLBACK_POSSIBLE = ['app/global-error.tsx'];
       if (!/\bbottom-(0|1|2|3|4|5|6)\b/.test(line)) return;
       if (/safe-bottom/.test(line)) return;
       if (/safe-area-inset-bottom/.test(line)) return;
+      if (ALSO.some((cls) => new RegExp(`(^|["\\s])${cls}(["\\s]|$)`).test(line))) return;
       // The line may set the padding a line or two below, as the coach panel
       // does inside a template string.
       const near = lines.slice(i, i + 6).join('\n');

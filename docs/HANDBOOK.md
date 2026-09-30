@@ -286,7 +286,7 @@ On one Explorer's **Lessons** tab a Guide sees the studies the way that Explorer
 
 Directors keep the same control over everything, which is what running the church means. A Guide may edit and delete only what they wrote.
 
-**This works on a phone, and for a while it did not.** The writing desk is in the Office, the Office was only ever linked from the left column, and the left column does not exist below the width of a laptop. So a Guide on a phone or an iPad held upright could read studies but never write one, with nothing on screen to suggest the room existed. Three rooms were in that state (Office, Publish and Cases) and the fix was to put them in the header row that a phone actually has. There is a check now that fails the build if a room is added to one list and not the other.
+**This works on a phone, and for a while it did not.** The writing desk is in the Office, the Office was only ever linked from the left column, and the left column does not exist below the width of a laptop. So a Guide on a phone or an iPad held upright could read studies but never write one, with nothing on screen to suggest the room existed. Three rooms were in that state (Office, Publish and Cases) and the fix was to put them in the header row that a phone had at the time. Since 30 September 2026 a phone and an iPad steer by the bar at the bottom instead, and its **Menu** is built from the same list as the left column, so there is no second list for a room to be missing from.
 
 ### Publish
 
@@ -651,11 +651,15 @@ Home, your own screen, the **Guild Room**, the library, **Publish** and **Cases*
 
 Six of those rooms have **subrooms** inside them, offered as a row across the top when you open one. See *Rooms and subrooms* in Part 4.
 
-> **IMPORTANT** · On a phone there is no left column
+> **IMPORTANT** · On a phone or an iPad there is no left column
 >
-> The column appears only on a screen at least 1280 points wide, which is a laptop. On every phone, and on an iPad held upright, the scrolling row of icons under the header **is** the navigation. It is not a shortcut to some of it.
+> The column appears only on a screen at least 1280 points wide, which is a laptop. On every phone and every iPad, upright or on its side, the bar along the bottom **is** the navigation, and it has three words on it:
 >
-> So the two lists have to hold the same rooms, and for a while they did not: Office, Publish and Cases were added to the column and never to the row, and were unreachable on a phone. There is a check that fails the build when they disagree. If you add a room, add it to both.
+> - **Menu** lists every room you have, written out, with your profile at the top and the way out (Sign out) at the bottom.
+> - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
+> - **My Files** opens your own files.
+>
+> Menu is not a shortcut to some of the rooms. It is built from the same list as the left column, so a room is in both or in neither. That was not always so: for a while the phone had its own row of icons, and Office, Publish and Cases were added to the column and never to the row, so they could not be reached on a phone. There is a check that fails the build if the Menu stops drawing the column's rooms.
 
 **Tutorial, What's new and Feedback are cards inside Settings**, not rows in the column. On a live church that was half true for a while: only the tutorial made the move, so What's new and Feedback existed in the sample-data build and nowhere else. Both are now on a **Help and feedback** card in Settings, on both. They were rows for a while, put there because each had been reported as missing when it was only reachable by scrolling Settings. That fixed the wrong half: it made the column six entries long for three things somebody uses about once a month, and the column is what people look at all day. The unread mark for a new release sits on Settings itself, so it is still visible from every screen.
 
@@ -1088,7 +1092,7 @@ The two largest gaps today:
 | "You do not have permission to do that" when adding to the library | Fixed on 1 September 2026, and it was never about permission. The app saved the resource and asked the database for it back in the same breath, and the read rule could not recognise a row that did not exist a moment ago. It is the same fault as the blog error in Part 9. | Nothing to do. Anybody in the church can add a link now, Explorers included. |
 | A card I used to scroll to has disappeared | Nothing was removed. Six rooms now open in folders, and the card is in one of them: the row of choices is across the top of the room. | Tap the folder it belongs to. The room remembers your choice, so it will open there next time. |
 | A link took me to a room but not to the card I pressed for | Fixed on 31 August 2026. Links that pointed at a card by name were pointing at something a folder might not be drawing. | Nothing to do. Those links now name the folder as well, and old ones are translated. |
-| A study cannot be written on a phone or an iPad | Fixed on 28 August 2026. The Office was reachable only from the left column, which does not exist below laptop width. | Nothing to do. Office, Publish and Cases are in the header row on every size. |
+| A study cannot be written on a phone or an iPad | Fixed on 28 August 2026. The Office was reachable only from the left column, which does not exist below laptop width. | Nothing to do. Office, Publish and Cases are in the Menu, on the bar at the bottom of every phone and iPad. |
 
 ### Where the code lives
 

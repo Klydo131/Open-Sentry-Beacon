@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-09-30-menu-people-my-files',
+    date: '2026-09-30',
+    title: 'Menu, People and My Files, along the bottom',
+    items: [
+      'On a phone or an iPad, three buttons along the bottom of the screen now take you everywhere: Menu, People and My Files.',
+      'Menu lists every room you have in words, with your profile at the top and the way out at the bottom. The small pictures that used to sit under the top bar are gone.',
+      'People opens your own people: your Explorers if you are a Guide, your Guide if you are walking with one.',
+      'My Files opens the files you keep on this device.',
+      'On a computer nothing has moved. The column down the left side is still where it was.',
+    ],
+  },
+  {
     id: '2026-08-16-live-invitations',
     date: '2026-08-16',
     title: 'Invitation e-mails and live church accounts',

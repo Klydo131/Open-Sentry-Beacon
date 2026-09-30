@@ -23,6 +23,7 @@ import { InstallChip } from '@/components/InstallChip';
 import { LiveAppShell, LiveUnsupported } from '@/components/LiveAppShell';
 import { useScrollToHash } from '@/lib/scroll-to-hash';
 import { useUrlKey } from '@/lib/url-signal';
+import { TabBar } from '@/components/TabBar';
 
 const NAV: Record<Role, { href: string; label: string }[]> = {
   executive: [{ href: '/admin', label: 'Admin' }],
@@ -53,6 +54,47 @@ export function AppShell({
   return <DemoAppShell allow={allow}>{children}</DemoAppShell>;
 }
 
+/**
+ * The sample side's rooms, with their counts, for whoever is signed in.
+ *
+ * One place, because two screens draw them: the left rail on a desktop, and
+ * the Menu tab on a phone or a pad (app/menu/page.tsx). Computed twice, they
+ * would be two lists that agree today.
+ *
+ * A hook because the update badge reads the service worker's state and this
+ * device's unread release notes; it must run on every render, above any early
+ * return, which is why DemoAppShell calls it before its guard.
+ */
+export function useDemoRooms() {
+  const { db, currentUser } = useDemo();
+  // localStorage does not exist during the server render, so the note count is
+  // read after mount rather than during it.
+  const appUpdate = useUpdateState();
+  const [unseenNotes, setUnseenNotes] = useState(0);
+  useEffect(() => setUnseenNotes(unseenCount()), []);
+
+  const unreadMail = currentUser
+    ? db.emails.filter((e) => e.to_user_id === currentUser.id && !e.opened_at).length
+    : 0;
+  const pendingApprovals = db.profiles.filter((p) => !p.is_approved).length;
+  const mySeekers = currentUser
+    ? db.pairings.filter((p) => p.dm_id === currentUser.id && p.status === 'active').length
+    : 0;
+
+  // An update waiting to be applied outranks unread notes: it is the one that
+  // needs an action rather than a read.
+  const groups = currentUser
+    ? railGroupsFor(currentUser.role, {
+        mail: unreadMail,
+        approvals: pendingApprovals,
+        seekers: mySeekers,
+        updates: appUpdate.state === 'ready' ? 1 : unseenNotes,
+      })
+    : [];
+
+  return { groups, unreadMail, pendingApprovals, mySeekers };
+}
+
 function DemoAppShell({
   allow,
   children,
@@ -79,11 +121,8 @@ function DemoAppShell({
   // hooks must run on every render, and putting these below the `return null`
   // makes the hook count change the moment someone signs in, which React reports
   // as "rendered more hooks than during the previous render" and then unmounts
-  // the tree. localStorage does not exist during the server render, so the note
-  // count is read after mount rather than during it.
-  const appUpdate = useUpdateState();
-  const [unseenNotes, setUnseenNotes] = useState(0);
-  useEffect(() => setUnseenNotes(unseenCount()), []);
+  // the tree.
+  const { groups, unreadMail, pendingApprovals, mySeekers } = useDemoRooms();
 
   useEffect(() => {
     // Signed out is the only reason to send someone to /login. Being signed in
@@ -97,24 +136,43 @@ function DemoAppShell({
     }
   }, [currentUser, allow, router]);
 
-  if (!currentUser || !allow.includes(currentUser.role)) return null;
-
-  const unreadMail = db.emails.filter(
-    (e) => e.to_user_id === currentUser.id && !e.opened_at,
-  ).length;
-  const pendingApprovals = db.profiles.filter((p) => !p.is_approved).length;
-  const mySeekers = db.pairings.filter(
-    (p) => p.dm_id === currentUser.id && p.status === 'active',
-  ).length;
-
-  // An update waiting to be applied outranks unread notes: it is the one that
-  // needs an action rather than a read.
-  const groups = railGroupsFor(currentUser.role, {
-    mail: unreadMail,
-    approvals: pendingApprovals,
-    seekers: mySeekers,
-    updates: appUpdate.state === 'ready' ? 1 : unseenNotes,
+  // WHAT THE STICKY HEADER STANDS ON.
+  //
+  // The header is sticky, so it is out of the document's flow at the top the
+  // same way the install bar is at the bottom, and anything scrolled to lands
+  // UNDERNEATH it. Reserving room below the install bar surfaced this: with
+  // the bottom fixed, WebKit scrolled the sign-in list up and parked a name
+  // behind the header instead. One overlay was hiding the other.
+  //
+  // Publishing the measured height lets `scroll-padding-top` in globals.css
+  // add it to `--beacon-chrome-top` (the tutorial bar, when there is one), so
+  // a scrolled-to control comes to rest below BOTH rather than behind either.
+  //
+  // Above the guard, like every other hook here. It sat below the early return,
+  // so a sign-out on a screen inside this shell (Switch account, which is in
+  // the Menu now) rendered fewer hooks than the render before it, which React
+  // treats as an error. With no header drawn the effect simply finds no
+  // element and does nothing.
+  const headerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () =>
+      document.documentElement.style.setProperty(
+        '--app-header',
+        `${Math.ceil(el.getBoundingClientRect().height)}px`,
+      );
+    publish();
+    // The row rewraps at `sm`, so the height is not a constant.
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--app-header');
+    };
   });
+
+  if (!currentUser || !allow.includes(currentUser.role)) return null;
 
   // What a staff member sees on their desk. A seeker gets a study timer here
   // instead — their room is not a work queue.
@@ -134,36 +192,6 @@ function DemoAppShell({
     });
     today.push({ label: 'Unread mail', value: String(unreadMail) });
   }
-
-  // WHAT THE STICKY HEADER STANDS ON.
-  //
-  // The header is sticky, so it is out of the document's flow at the top the
-  // same way the install bar is at the bottom, and anything scrolled to lands
-  // UNDERNEATH it. Reserving room below the install bar surfaced this: with
-  // the bottom fixed, WebKit scrolled the sign-in list up and parked a name
-  // behind the header instead. One overlay was hiding the other.
-  //
-  // Publishing the measured height lets `scroll-padding-top` in globals.css
-  // add it to `--beacon-chrome-top` (the tutorial bar, when there is one), so
-  // a scrolled-to control comes to rest below BOTH rather than behind either.
-  const headerRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const publish = () =>
-      document.documentElement.style.setProperty(
-        '--app-header',
-        `${Math.ceil(el.getBoundingClientRect().height)}px`,
-      );
-    publish();
-    // The row rewraps at `sm`, so the height is not a constant.
-    const ro = new ResizeObserver(publish);
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      document.documentElement.style.removeProperty('--app-header');
-    };
-  });
 
   const switchAccount = () => {
     signOut();
@@ -241,8 +269,16 @@ function DemoAppShell({
               (`contents`), the spacer pushes the pinned controls right, and
               the strip takes the whole next line. At `sm` and up it is one row
               exactly as before. */}
+          {/* AND BELOW `xl` THERE IS NO ROOMS ROW AT ALL (30 September 2026).
+              The bottom bar -- Menu, People, My Files -- is the navigation on
+              a phone and a pad now, and Menu lists every room in words. What
+              is left up here is the brand and the four things that are about
+              the person rather than a place: the role switcher, the bell, their
+              own face, and (on a desktop) the way out. The spacer, which used
+              to stand aside only on a phone, now pushes those right at every
+              width the rooms are hidden. */}
           <div className="flex min-w-0 flex-1 items-center gap-1 max-sm:contents sm:gap-3">
-            <div aria-hidden className="flex-1 sm:hidden" />
+            <div aria-hidden className="flex-1 xl:hidden" />
             {/* The scroller is sized by its own content, and the ROW around it
                 does the right-aligning.
                 The first attempt put `justify-end` on the scrolling content
@@ -253,7 +289,7 @@ function DemoAppShell({
                 a 360px screen. Sizing the scroller to its content instead means
                 the overflow goes off the END, which is reachable by thumb,
                 trackpad and keyboard. */}
-            <div className="relative min-w-0 max-sm:order-last max-sm:basis-full">
+            <div className="relative min-w-0 max-xl:hidden">
               <div className="no-scrollbar min-w-0 overflow-x-auto">
                 <div className="flex w-max items-center gap-1 sm:gap-3">
             {/* Reachable on a phone, which it was not.
@@ -346,18 +382,6 @@ function DemoAppShell({
             >
               <span aria-hidden>⚙️</span>
             </Link>
-            {/* Phones only: the account switcher, last in the rooms row. It
-                opens no panel, so the strip clipping it is harmless (unlike the
-                controls pinned outside the strip for that reason). */}
-            <button
-              type="button"
-              onClick={switchAccount}
-              aria-label="Switch account"
-              title="Switch account"
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20 sm:hidden"
-            >
-              <span aria-hidden>⇄</span>
-            </button>
                 </div>
               </div>
               {/* Navy fading to nothing on the trailing edge, which is the side
@@ -413,15 +437,13 @@ function DemoAppShell({
                 onDark
               />
             </Link>
-            {/* Beside the account from `sm` up. Below it, the same button is the
-                last icon in the rooms row instead (see there): with the install
-                chip showing, the first row had no room left for it on a 390px
-                phone and it wrapped onto a row of its own. */}
+            {/* Beside the account on a desktop. Below `xl` it is the last row
+                of the Menu, where a messaging app keeps its own way out. */}
             <button
               onClick={switchAccount}
               aria-label="Switch account"
               title="Switch account"
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 px-0 text-sm font-semibold hover:bg-white/20 max-sm:hidden sm:rounded-xl sm:px-3"
+              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 px-0 text-sm font-semibold hover:bg-white/20 max-xl:hidden sm:rounded-xl sm:px-3"
             >
               <span>Switch</span>
             </button>
@@ -466,6 +488,8 @@ function DemoAppShell({
           />
         )}
       </div>
+
+      <TabBar role={currentUser.role} />
     </div>
   );
 }

@@ -467,3 +467,15 @@ export function PencilGlyph(props: GlyphProps) {
     </Svg>
   );
 }
+
+/** People: the bottom bar's middle tab. Two heads, the nearer one whole. */
+export function PeopleGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <path d="M15.5 4.7a3.5 3.5 0 0 1 0 6.6" />
+      <path d="M18 14.3a6.5 6.5 0 0 1 3.5 5.7" />
+    </Svg>
+  );
+}

@@ -85,6 +85,16 @@ function scrollParent(el: Element): Element | null {
   return null;
 }
 
+// How much of the bottom of the glass the bottom bar (Menu | People | My Files)
+// takes, as TabBar publishes it; 0 on a desktop, where there is no bar. The
+// panel stands on top of the bar (`.quest-dock` in globals.css), so everything
+// below measures the screen as ending where the bar begins.
+function tabBarHeight(): number {
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--tab-bar');
+  const n = parseFloat(v);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
 // Where the page's own sticky header ends, so we never scroll a target under it.
 function headerBottom(): number {
   const h = document.querySelector('header');
@@ -175,10 +185,13 @@ export function Quest() {
       return;
     }
 
-    const find = (name: string) => {
-      const el = document.querySelector(`[data-quest="${name}"]`);
-      return el && isVisible(el) ? el : null;
-    };
+    // THE FIRST ONE THAT CAN BE SEEN, not the first one in the page. The
+    // church link is in two places now: the desktop header, hidden below
+    // 1280px, and the Menu. Taking the first match found the hidden one on a
+    // phone, called the step unreachable, and offered the Menu tab to somebody
+    // already standing in the Menu -- a button that goes where you are.
+    const find = (name: string) =>
+      Array.from(document.querySelectorAll(`[data-quest="${name}"]`)).find(isVisible) ?? null;
 
     // Can the page actually move that way, or is it already against the end?
     //
@@ -223,6 +236,14 @@ export function Quest() {
       if (!el) {
         setRect(null); // not on this screen; the panel says where to go
         setOffScreen(null);
+        // AND IT OPENS TO SAY IT. The panel's placement is decided from where
+        // the target sits, and with no target it kept whatever the last one
+        // decided. Home in the Menu sits mid-screen on a phone, which leaves no
+        // room either side, so the panel shrank to a line; tapping Home then
+        // carried that shrunk panel onto the church home, where the next step
+        // has nothing to point at and its "Go to Admin" button is only drawn in
+        // the open panel. Nothing to avoid means room to open.
+        setPlace('bottom');
         return;
       }
 
@@ -245,7 +266,7 @@ export function Quest() {
 
       const pinned = isPinned(el);
       const top = headerBottom();
-      const vh = window.innerHeight;
+      const vh = window.innerHeight - tabBarHeight();
       const pnl = panelRef.current?.getBoundingClientRect();
       if (pnl && place !== 'mini') expandedH.current = pnl.height;
       // Bounded, for two reasons that compound into a latch.
@@ -458,7 +479,13 @@ export function Quest() {
       // may not be where we asked for it. Derived purely from the rect, so it
       // settles instead of oscillating.
       let next: 'bottom' | 'top' | 'mini';
-      if (pinned) next = 'bottom';
+      // A pinned target in the HEADER leaves the bottom free; a pinned target
+      // in the BOTTOM BAR (a tab: Menu, on the way to Home) is exactly where
+      // the panel lives. Standing on the bar was not enough: the ring is drawn
+      // 6px outside the tab and the arrow 40px above it, so both went under the
+      // panel and a person saw half a ring and no arrow. So the panel goes to
+      // the top for anything pinned in the lower half of the screen.
+      if (pinned) next = r.top > vh / 2 ? 'top' : 'bottom';
       else if (!sameColumn) next = 'bottom';
       else if (r.bottom + 12 <= vh - hExp) next = 'bottom';
       else if (r.top - 12 >= top + hExp) next = 'top';
@@ -578,7 +605,7 @@ export function Quest() {
         className={`fixed z-[60] mx-auto w-full max-w-md bg-white p-3 lift-3 ring-1 ring-black/10 sm:inset-x-auto sm:right-4 sm:w-96 sm:rounded-2xl sm:p-4 ${
           place === 'top'
             ? 'inset-x-0 top-0 rounded-b-2xl sm:top-4'
-            : 'inset-x-0 bottom-0 rounded-t-2xl pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-4 sm:pb-4'
+            : 'quest-dock inset-x-0 rounded-t-2xl'
         }`}
         role="dialog"
         aria-label="Beacon tutorial"

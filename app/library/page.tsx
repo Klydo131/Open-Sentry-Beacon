@@ -34,6 +34,8 @@ import { useRoom } from '@/lib/room-theme';
 import { saveFilesFromInput, savedMessage } from '@/lib/save-media';
 import { useDemo } from '@/lib/demo/store';
 import { homeFor, useLiveSession } from '@/lib/live/session';
+import { TabBar } from '@/components/TabBar';
+import { useIsLive } from '@/lib/tutorial';
 import { STARTER_KIT, starterKitFor } from '@/lib/starter-kit';
 import type { Material } from '@/lib/types';
 import { PlayGlyph } from '@/components/Glyph';
@@ -239,6 +241,11 @@ export default function LibraryPage() {
   const { theme } = useRoom(currentUser?.id ?? null, currentUser?.role ?? 'ds');
   const { profile } = useLiveSession();
   const backHome = profile ? homeFor(profile.role) : currentUser ? DEMO_HOME[currentUser.role] : '/';
+  // The bar's role comes from the half that is actually running. On the live
+  // app a sample person left in this browser from an old tutorial is not who
+  // is here, and neither is anybody while the sign-in is still loading.
+  const live = useIsLive();
+  const barRole = live ? profile?.role : currentUser?.role;
 
   // What this person's shelf opens with. An Explorer gets a short, Jesus-first
   // list; everybody else gets the whole kit. Works on both halves, because the
@@ -624,6 +631,13 @@ export default function LibraryPage() {
           </div>
         </section>}
       </main>
+
+      {/* MY FILES IS A TAB, SO THE BAR IS HERE TOO. This page runs outside
+          both shells on purpose (its own header and its own way back), which
+          would have made it the one screen where the bar vanished -- tapping
+          My Files and losing Menu and People with it. Whoever is signed in,
+          on either half; nobody signed in, no bar. */}
+      {barRole && <TabBar role={barRole} />}
     </div>
   );
 }

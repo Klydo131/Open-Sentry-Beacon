@@ -297,8 +297,14 @@ const EXEC_STEPS: QuestStep[] = [
     learn:
       'The journey chart shows how many people are at each of the six stages. It never names anyone. An Explorer looking at this same screen does not see the chart at all, because a stage is a note the church keeps about a person, not a thing that person is.',
     title: 'See the journey chart',
-    hint: 'Tap the highlighted church name to go Home. The journey chart is below the activity board.',
+    hint: 'Tap the highlighted Home link. The journey chart is below the activity board.',
     target: 'church-link',
+    // ON A PHONE OR A PAD HOME IS IN THE MENU. The header's church link is a
+    // desktop control now; below 1280px the bottom bar is the navigation and
+    // the Menu lists Home first. One hop back: the Menu tab, then Home in it.
+    fallbacks: [
+      { target: 'tab-menu', hint: 'Tap Menu at the bottom of the screen. Home is the first room in it.' },
+    ],
     route: '/church',
     routeLabel: 'Go Home',
     events: ['beacon:open-church'],

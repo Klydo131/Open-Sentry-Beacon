@@ -18,127 +18,25 @@ import { ModeSwitch } from '@/components/ModeSwitch';
 import { PowerGlyph } from '@/components/Glyph';
 import { useScrollToHash } from '@/lib/scroll-to-hash';
 import { useUrlKey } from '@/lib/url-signal';
+import { TabBar } from '@/components/TabBar';
 
-/** One header link. Icon on a phone, icon and word once there is room. */
-/**
- * The sections live in one scrolling header row below `xl`. At `xl`, the left
- * room rail is visible and becomes the desktop navigation, so repeating every
- * room beside the account controls only crowds out the brand, LIVE state,
- * notification bell and member name.
- */
-// MAIL IS FOR LEADERSHIP ONLY, and it used to be for everybody.
+// THE HEADER CARRIES NO LIST OF ROOMS ANY MORE (30 September 2026).
 //
-// /mail is the Invitations screen: who has been invited, who is still on the
-// doorstep, and the button to send their link again. A Guide or an Explorer
-// has none of that, so the page rendered a card telling them there was nothing
-// for them to read. That is a navigation item whose entire content is an
-// apology for existing, on every screen, for most of the church.
+// Below 1280px this file used to hold SECTIONS, a second list of every room,
+// drawn as a row of emoji under the header because the rail is `xl:block` and
+// that row was the only way around a phone or a pad. Keeping two lists in step
+// was its own defect: for several weeks the Office, Publish and Cases were on
+// the rail and missing from the row, so a Guide could write lesson studies on a
+// Mac and nowhere else.
 //
-// The route still refuses them on its own; this only stops advertising it.
-// EVERY ROOM THIS ROLE HAS, because below `xl` this header is the ONLY way
-// around the app.
-//
-// THE BUG: "I need the lesson study editing features for guides to make their
-// own lesson studies too, not just in mac or desktop."
-//
-// A Guide writes their own studies in the Office. The Office is on the rails —
-// and the rails are `xl:block`, hidden below 1280px. This list was the entire
-// navigation on every phone and tablet, and it held Church, Library, Profile
-// and Settings. So the Office was reachable on a Mac and reachable nowhere
-// else, along with Publish and Cases, all three of them rooms added after this
-// list was written and never added to it.
-//
-// Nothing about the feature was missing. The door was.
-//
-// The row scrolls inside itself (`overflow-x-auto` below), which is why a
-// longer list is safe — see the note on that element.
-const SECTIONS = (role: Role) => [
-  // TALK IS NOT IN THIS ROW ANY MORE, AND THAT IS THE POINT OF THE BUBBLE.
-  //
-  // It used to be first here, for a good reason at the time: the chat should
-  // not be a card people scroll a page to reach. But an icon in the navigation
-  // is still a PLACE YOU GO -- tapping it left whatever you were reading, threw
-  // away where you had scrolled to, and put the conversation on a page of its
-  // own. Reported with the icon circled in red: "you can take out the chat room
-  // now since we already have the bubble."
-  //
-  // The bubble is on every screen size now and opens over the page rather than
-  // instead of it, so the room in the navigation was a second, worse way in to
-  // the same conversation -- and the one that cost somebody their place.
-  //
-  // /talk IS STILL A ROUTE. It is where "Open full" goes on a desktop, where a
-  // 22rem corner panel genuinely is small, and it still works if somebody has
-  // it bookmarked. What is gone is the standing invitation to leave the page.
-  { href: '/church',   icon: '⛪', label: 'Church' },
-  // THE GUILD ROOM IS ARCHIVED, NOT DELETED. Asked for plainly: "Take out the
-  // Guild Room feature, archive it for now since most users dont like it."
-  //
-  // A door, a rail entry and the room's contents were the three things that
-  // made it a place people went. The first two are gone; the third is not.
-  // Every post, every amen and every guild still exists, `list_guild_activity`
-  // still redacts exactly as it did, and -- the part that would have been an
-  // accident -- LiveSafeguarding can still take down a reported guild post,
-  // because a report about something said in that room outlives the room. The
-  // three guild checks all test the database rather than the doorway, so they
-  // stay green and stay meaningful.
-  //
-  // Putting it back is putting these lines back.
-  // Not for Explorers: none of the work in it is theirs to do, and an empty
-  // room tells somebody they are missing something. Same rule as the rail.
-  ...(role !== 'ds'
-    ? [{ href: '/office', icon: '🗂️', label: 'Office' }]
-    : []),
-  // Explorers only, matching the rail. See railGroupsFor.
-  ...(role === 'ds' ? [{ href: '/study', icon: '📖', label: 'Study' }] : []),
-  { href: '/publish',  icon: '✍️', label: 'Publish' },
-  { href: '/library',  icon: '📚', label: 'Library' },
-  // THE APPS ROOM IS RETIRED, AND THE POCKET REPLACES IT. "let's remove the
-  // apps room. Instead let's develop a pocket, micro-app."
-  //
-  // The room asked a Director to curate a list for the whole church. The pocket
-  // asks nothing of anybody: each person keeps their own handful of addresses
-  // on their own desk, which is how people actually use Spotify, YouTube and
-  // the office suite. See components/Pocket.tsx.
-  // CASES IS LEADERSHIP'S ROOM NOW, AND IT IS CALLED ADMIN REPORTS.
-  //
-  // "Take out the cases in both Guide and Explorer, rebrand it and put it on
-  // settings and make a sub room called 'Admin Reports'."
-  //
-  // A Guide or an Explorer had a scales-of-justice door in their sidebar at all
-  // times, on every screen, when the overwhelming majority of them will never be
-  // party to a proceeding. It reads as an accusation waiting to happen.
-  //
-  // THE HALF THAT CANNOT BE LOST WITH IT. An Explorer summoned to a case is the
-  // person in it with the least standing, and their answer has to be reachable
-  // without anybody telling them where to look -- they can post even while
-  // suspended, because suspending somebody pending a hearing must not take away
-  // their side of it. Deleting the door and stopping there would have quietly
-  // removed that. So Settings carries an Admin Reports folder for EVERY role,
-  // and tests/a-case-is-reachable-by-whoever-is-in-it.mjs fails the build if it
-  // ever stops being reachable for the people a case is about.
-  ...(role === 'admin' || role === 'executive'
-    ? [{ href: '/cases', icon: '⚖️', label: 'Admin Reports' }]
-    : []),
-  ...(role === 'admin' || role === 'executive'
-    ? [{ href: '/mail', icon: '✉️', label: 'Mail' }]
-    : []),
-  { href: '/profile',  icon: '🙂', label: 'Profile' },
-  { href: '/settings', icon: '⚙️', label: 'Settings' },
-];
-
-function ShellLink({ href, icon, label }: { href: string; icon: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      title={label}
-      className="tap-sm grid shrink-0 place-items-center gap-1 rounded-full bg-white/10 px-2.5 hover:bg-white/20 lg:flex lg:px-3"
-    >
-      <span aria-hidden>{icon}</span>
-      <span className="hidden text-sm font-semibold lg:inline">{label}</span>
-    </Link>
-  );
-}
+// The row is gone, and so is the second list. A phone and a pad steer by the
+// bottom bar (components/TabBar.tsx): Menu, People, My Files. Menu draws every
+// room from railGroupsFor() in RoomRails.tsx, the same list the desktop rail
+// draws, so there is one list and it cannot disagree with itself. Everything
+// the old notes here decided still holds, because it was decided in that list
+// too: Talk is the bubble and not a room, the Guild Room is archived, Mail and
+// Admin Reports are for leadership, the Apps room became the pocket.
+// tests/the-bottom-bar.mjs holds that the header stays this short.
 
 export function LiveAppShell({
   allow,
@@ -309,11 +207,23 @@ export function LiveAppShell({
           <ModeSwitch onDark />
           <LiveBell me={profile} />
 
-          <div className="hidden min-w-0 text-right sm:block">
-            <p className="max-w-48 truncate text-sm font-semibold">{profile.full_name}</p>
-            <p className="text-xs text-white/60">{roleLabel(profile.role, profile.role)}</p>
-          </div>
-          <Avatar name={profile.full_name || session.user.email || 'Member'} size={36} onDark />
+          {/* YOUR OWN FACE IS THE WAY TO YOUR PROFILE, as it is on the sample
+              side and in every app people already use. It was a picture that
+              did nothing, and Profile was an icon in the row of rooms; with
+              the row gone, this and the card at the top of Menu are the two
+              ways in. */}
+          <Link
+            href="/profile"
+            className="flex min-w-0 shrink-0 items-center gap-3 rounded-full sm:rounded-xl sm:px-2 sm:py-1 sm:hover:bg-white/10"
+            title="Your profile"
+            aria-label="Your profile"
+          >
+            <div className="hidden min-w-0 text-right sm:block">
+              <p className="max-w-48 truncate text-sm font-semibold">{profile.full_name}</p>
+              <p className="text-xs text-white/60">{roleLabel(profile.role, profile.role)}</p>
+            </div>
+            <Avatar name={profile.full_name || session.user.email || 'Member'} size={36} onDark />
+          </Link>
           <button
             className="tap-sm shrink-0 rounded-xl bg-white/10 px-3 hover:bg-white/20"
             aria-label="Sign out"
@@ -335,32 +245,6 @@ export function LiveAppShell({
           </button>
         </div>
 
-        {/* THE ROOM LINKS, ON THEIR OWN ROW, BELOW `xl`.
-            //
-            All of this used to be one row. On a 390px iPhone that row needed
-            about 600px — six 44px controls, an avatar, and a "Sign out" button,
-            almost all of them `shrink-0` — so it ran off the side and took the
-            whole page with it. What an iOS user saw was a tall empty strip down
-            the right of every screen: the page had become wider than the phone,
-            and that strip was the empty part of it.
-
-            It scrolls inside itself (`overflow-x-auto`) rather than pushing the
-            page, so even a longer list of sections can never do this again. At
-            `xl`, the left room rail appears and this duplicate row disappears.
-
-            HOME IS FIRST, and it is new. The header logo has always linked
-            home, but a logo does not read as a button to somebody who has never
-            used the app — several people had no way back to where they started
-            and no reason to think the picture was one. */}
-        <nav
-          className="thin-scroll mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-3 pb-2 sm:px-4 xl:hidden"
-          aria-label="Sections"
-        >
-          <ShellLink href={homeFor(profile.role)} icon="🏠" label="Home" />
-          {SECTIONS(profile.role).map((s) => (
-            <ShellLink key={s.href} href={s.href} icon={s.icon} label={s.label} />
-          ))}
-        </nav>
       </header>
 
       {/* Three columns from xl up, one column below it — the same breakpoint
@@ -416,6 +300,8 @@ export function LiveAppShell({
       <footer className="border-t border-black/5 py-5 text-center text-xs text-gray-400">
         Invitation-only. Access is enforced by the church database.
       </footer>
+
+      <TabBar role={profile.role} />
     </div>
   );
 }
