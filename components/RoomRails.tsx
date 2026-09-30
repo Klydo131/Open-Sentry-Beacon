@@ -1,11 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { Role } from '@/lib/types';
 import { roleLabel } from '@/lib/brand';
-import { useRoom, type RoomTheme, type RoomPrefs, inkOn } from '@/lib/room-theme';
+import { useRoom, type RoomTheme, type RoomPrefs } from '@/lib/room-theme';
 import { PlayerStrip } from '@/components/PlayerBar';
 import { Pocket } from '@/components/Pocket';
 
@@ -22,9 +20,10 @@ import { Pocket } from '@/components/Pocket';
 // with the work: what is on the desk today, and one tap to each place they go.
 // Same customisation, different furniture.
 //
-// THE LEFT RAIL IS DESKTOP ONLY (`xl` and up); below that the bottom bar
-// (Menu | People | My Files) is the navigation, and its Menu draws these same
-// groups from railGroupsFor, so a phone reaches every room the rail does.
+// THE ROOMS ARE LISTED HERE AND DRAWN BY THE MENU. The bottom bar (Menu |
+// People | My Files) is the navigation at every width, and its Menu draws the
+// groups railGroupsFor returns. There used to be a left rail drawing them too,
+// on a desktop; see the note where it was.
 // THE RIGHT RAIL IS NOT. It used to be, and everything personal in it -- the
 // study timer, the theme, the line you write for yourself -- was therefore
 // missing on every phone and tablet. It now stacks under the main column below
@@ -207,88 +206,13 @@ export function railGroupsFor(
 }
 
 // ---------------------------------------------------------------- left rail
-
-export function LeftRail({
-  groups,
-  theme,
-}: {
-  groups: RailGroup[];
-  theme: RoomTheme;
-}) {
-  const path = usePathname();
-
-  return (
-    <nav
-      aria-label="Workspace"
-      className="compact-ui thin-scroll sticky top-[76px] hidden max-h-[calc(100vh-96px)] w-56 shrink-0 overflow-y-auto pb-6 [max-height:calc(100dvh-96px)] xl:block"
-    >
-      <div className="space-y-5">
-        {groups.map((g) => (
-          <div key={g.title}>
-            <p
-              className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider"
-              style={{ color: theme.inkSoft }}
-            >
-              {g.title}
-            </p>
-            <div className="space-y-0.5">
-              {g.links.map((l) => {
-                const on = path === l.href || path.startsWith(`${l.href}/`);
-                return (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    aria-current={on ? 'page' : undefined}
-                    // The chip reads "Beta"; the whole sentence lives here, so
-                    // hovering or listening gives the warning in full rather
-                    // than one word somebody has to interpret.
-                    title={l.beta ? `${l.label}, still on beta` : undefined}
-                    aria-label={l.beta ? `${l.label}, still on beta` : undefined}
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold"
-                    style={{
-                      backgroundColor: on ? theme.accent : 'transparent',
-                      // Not always white: four palettes have an accent light
-                      // enough that white on it is unreadable, and the
-                      // selected item is the page you are already on.
-                      color: on ? inkOn(theme.accent) : theme.ink,
-                    }}
-                  >
-                    <span aria-hidden className="text-base">
-                      {l.icon}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{l.label}</span>
-                    {l.beta && (
-                      <span
-                        className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                        style={{
-                          backgroundColor: on ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.07)',
-                          color: on ? inkOn(theme.accent) : theme.inkSoft,
-                        }}
-                      >
-                        Beta
-                      </span>
-                    )}
-                    {!!l.badge && (
-                      <span
-                        className="grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold"
-                        style={{
-                          backgroundColor: on ? 'rgba(255,255,255,0.25)' : theme.accent,
-                          color: on ? inkOn(theme.accent) : inkOn(theme.accent),
-                        }}
-                      >
-                        {l.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </nav>
-  );
-}
+//
+// THERE IS NO LEFT RAIL ANY MORE (30 September 2026). It was the navigation
+// from 1280px up, drawn from railGroupsFor above. The bottom bar -- Menu,
+// People, My Files -- is the navigation at every width now, asked for as "the
+// same dropdown and UI with Desktops", and its Menu (components/MenuList.tsx)
+// draws these same groups. The list stays here because it is still the one
+// list of rooms; only its second drawing is gone.
 
 // --------------------------------------------------------------- right rail
 
@@ -345,12 +269,17 @@ export function RightRail({
   // the bottom of a phone -- the sample-data pill, the chat bubble, the install
   // bar -- and they now stand on top of the bottom bar. With 24px under it, the
   // player at the end of this rail sat behind the pill on every phone and pad
-  // (tests/e2e/the-rooms-fit-a-phone.js found it). From xl the rail is a
-  // column beside the page and keeps its 24px.
+  // (tests/e2e/the-rooms-fit-a-phone.js found it).
+  //
+  // FROM xl IT IS A STICKY COLUMN THAT SCROLLS ITSELF, and since the bottom bar
+  // is on a desktop too it has to end ABOVE the bar, with the same deep floor
+  // inside it. Its height was the window less 96px, which put its last 40px
+  // (the player again) under the bar however far it was scrolled. The height
+  // is `.desk-rail` in globals.css, because it spends `--tab-bar`.
   return (
     <aside
       aria-label={seeker ? 'My room' : 'My office'}
-      className="compact-ui thin-scroll w-full space-y-3 pb-28 xl:pb-6 xl:sticky xl:top-[76px] xl:max-h-[calc(100vh-96px)] xl:w-72 xl:shrink-0 xl:overflow-y-auto xl:[max-height:calc(100dvh-96px)]"
+      className="desk-rail compact-ui thin-scroll w-full space-y-3 pb-28 xl:sticky xl:top-[76px] xl:w-72 xl:shrink-0 xl:overflow-y-auto"
     >
       <RoomCard
         seeker={seeker}

@@ -39,6 +39,9 @@ const SIZES = [
   { name: '412 phone', width: 412, height: 915, mobile: true },
   { name: 'pad upright', width: 820, height: 1180, mobile: true },
   { name: 'pad on its side', width: 1194, height: 834, mobile: true },
+  // AND A DESKTOP, since "Can we have the same dropdown and UI with Desktops
+  // please?" (30 September 2026). The same checks, with a mouse.
+  { name: 'desktop', width: 1440, height: 900, mobile: false },
 ];
 
 async function signIn(page, who) {
@@ -59,10 +62,12 @@ async function litTab(page) {
     [...document.querySelectorAll('nav[aria-label="Main"] a[aria-current]')].map((a) => a.textContent.trim()).join(','));
 }
 
-// Tap, then wait for the address rather than a fixed pause: a slow machine
-// taking a second longer is not the app being wrong.
+// Tap (or click, on a desktop), then wait for the address rather than a fixed
+// pause: a slow machine taking a second longer is not the app being wrong.
 async function go(page, locator, url) {
-  await locator.tap({ timeout: 8000 });
+  const touch = await page.evaluate(() => matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0);
+  if (touch) await locator.tap({ timeout: 8000 });
+  else await locator.click({ timeout: 8000 });
   await page.waitForURL(url, { timeout: 15000 }).catch(() => {});
   await page.waitForTimeout(500);
 }
@@ -74,7 +79,7 @@ async function go(page, locator, url) {
     const at = `${size.name} (${size.width}px)`;
     const ctx = await browser.newContext({
       viewport: { width: size.width, height: size.height },
-      isMobile: size.mobile, hasTouch: true, deviceScaleFactor: 2, serviceWorkers: 'block',
+      isMobile: size.mobile, hasTouch: size.mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
     });
     const page = await ctx.newPage();
     await signIn(page, /Maria Santos/i);
@@ -96,13 +101,18 @@ async function go(page, locator, url) {
       });
       const brand = document.querySelector('header a[aria-label$=" home"]');
       const bell = document.querySelector('header [aria-label*="otification" i]');
-      const church = [...document.querySelectorAll('header [data-quest="church-link"]')]
-        .some((el) => el.getBoundingClientRect().width > 0);
+      // Any link in the header to a room is the old row coming back. The
+      // Install chip's `/settings#install` is a way to a card, not a room.
+      const church = [...document.querySelectorAll('header a[href]')]
+        .some((el) => /^\/(church|office|publish|cases|mail|settings|library|menu)(\?|$)/.test(el.getAttribute('href'))
+          && el.getBoundingClientRect().width > 0);
+      const rail = !!document.querySelector('nav[aria-label="Workspace"]');
       return {
         atBottom: Math.abs(n.bottom - window.innerHeight) < 1,
         tabs,
         headerOneRow: !!brand && !!bell && Math.abs(bell.getBoundingClientRect().top - brand.getBoundingClientRect().top) < 24,
         roomsInHeader: church,
+        rail,
         reserved: getComputedStyle(document.documentElement).getPropertyValue('--tab-bar').trim(),
       };
     });
@@ -116,6 +126,7 @@ async function go(page, locator, url) {
     ok(m.tabs.every((t) => !t.clipped), `${at}: no label is cut off`);
     ok(/^\d+px$/.test(m.reserved), `${at}: the page makes room for it (${m.reserved || 'nothing'})`);
     ok(m.headerOneRow && !m.roomsInHeader, `${at}: the header is one row, with no rooms in it`);
+    ok(!m.rail, `${at}: and there is no left column drawing the rooms a second time`);
     ok((await litTab(page)) === 'People', `${at}: a Guide's home lights People (${await litTab(page)})`);
 
     // 2. MENU, AND HOME IN IT.
@@ -166,8 +177,13 @@ async function go(page, locator, url) {
       stand.setAttribute('data-stand-in', '');
       document.body.appendChild(stand);
     });
+    //
+    // And a third, found on the desktop: from 1280px the desk beside the page
+    // is a sticky column that scrolls ITSELF, so scrolling the window never
+    // reaches its last line. Every <aside> is scrolled to its own end too.
     const clear = await page.evaluate(async () => {
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
+      document.querySelectorAll('aside').forEach((a) => { a.scrollTop = a.scrollHeight; });
       await new Promise((r) => setTimeout(r, 400));
       const vh = window.innerHeight;
       const column = document.querySelector('main')?.parentElement ?? document.body;
@@ -254,21 +270,48 @@ async function go(page, locator, url) {
     await ctx.close();
   }
 
-  // A DESKTOP: the rail is the navigation, and the bar is not drawn.
-  {
-    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
+  // INSIDE A CONVERSATION THE BAR STEPS ASIDE, on a phone and on a desktop.
+  // "Hide the bar inside conversations too." A Guide opening one Explorer
+  // lands on the Talk tab, which is the conversation: no bar, nothing reserved
+  // for it, and a Back button to leave by. Another tab of the same page brings
+  // the bar back. An Explorer's home keeps it, although their chat is on it.
+  for (const [label, w, h, mobile] of [['phone', 390, 844, true], ['desktop', 1440, 900, false]]) {
+    const ctx = await browser.newContext({
+      viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
+    });
     const page = await ctx.newPage();
     await signIn(page, /Maria Santos/i);
-    const d = await page.evaluate(() => {
+    await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
+    await page.locator('[data-conversation-screen]').first().waitFor({ state: 'attached', timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    const inTalk = await page.evaluate(() => {
       const nav = document.querySelector('nav[aria-label="Main"]');
       return {
+        marked: !!document.querySelector('[data-conversation-screen]'),
         hidden: !nav || getComputedStyle(nav).display === 'none',
         reserved: getComputedStyle(document.documentElement).getPropertyValue('--tab-bar').trim(),
-        church: [...document.querySelectorAll('header [data-quest="church-link"]')].some((el) => el.getBoundingClientRect().width > 0),
+        back: !!document.querySelector('header [aria-label="Go back"]'),
       };
     });
-    ok(d.hidden && !d.reserved, `desktop (1440px): no bottom bar, and nothing reserved for one (${d.reserved || 'none'})`);
-    ok(d.church, 'desktop (1440px): the header keeps its rooms, as before');
+    ok(inTalk.marked, `conversation (${label}): the Talk tab is marked as a conversation`);
+    ok(inTalk.hidden && !inTalk.reserved,
+       `conversation (${label}): the bar steps aside and nothing is reserved for it (${inTalk.reserved || 'none'})`);
+    ok(inTalk.back, `conversation (${label}): and the header has a Back button to leave by`);
+    const journey = page.getByRole('tab', { name: /Journey/ }).first();
+    if (mobile) await journey.tap({ timeout: 8000 }).catch(() => {}); else await journey.click({ timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    ok(await bar(page).isVisible(), `conversation (${label}): another tab of the same page brings the bar back`);
+    await ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({
+      viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, serviceWorkers: 'block',
+    });
+    const page = await ctx.newPage();
+    await signIn(page, /John Reyes/i);
+    await page.goto(`${BASE}/ds?room=guide`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(600);
+    ok(await bar(page).isVisible(), "Explorer: their home keeps the bar, though the chat with their Guide is on it");
     await ctx.close();
   }
 

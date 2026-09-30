@@ -590,6 +590,10 @@ export function LiveConversationPage() {
 
           {tab === 'talk' && (
             <>
+              {/* THIS TAB IS A CONVERSATION, so the bottom bar steps aside
+                  while it is open (TabBar.tsx, globals.css). The other tabs
+                  of this Explorer's page keep it. */}
+              <span hidden data-conversation-screen />
               <Conversation
                 messages={messages}
                 files={files}

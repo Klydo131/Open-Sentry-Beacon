@@ -1128,6 +1128,19 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   }
 }
 
+/* INSIDE A CONVERSATION THE BAR STEPS ASIDE, at every width. Asked for in
+   those words: "Hide the bar inside conversations too." A screen that IS a
+   conversation (a Guide's Talk tab with one Explorer, /talk) marks itself
+   `data-conversation-screen`. An Explorer's home is not marked, though the
+   chat with their Guide is on it: it is also their study, the church's
+   notices and what People opens, and a bar that vanished the moment somebody
+   tapped People would be a bar nobody could trust. The header's Back and its
+   home link are the way out. `:has()` is new enough that an old engine simply
+   keeps the bar, which is the behaviour before this rule. */
+body:has([data-conversation-screen]) .tab-bar {
+  display: none;
+}
+
 /* A PHONE HELD SIDEWAYS has width to spare and almost no height, so the bar
    goes compact the way a phone's own tab bars do in landscape: the word
    beside the icon, and 44px tall, which is still a full-size target. */
@@ -1152,6 +1165,17 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
      simply keeps the bar, which is the behaviour before this rule. */
   body:has([data-live-conversation]) .tab-bar {
     display: none;
+  }
+}
+
+/* The person's own desk (RoomRails' right rail), where it is a sticky column
+   beside the page: as tall as the window less the header above it AND the
+   bottom bar below it, so scrolled to its end its last line is above the bar.
+   `vh` first for engines without `dvh`. */
+@media (min-width: 1280px) {
+  .desk-rail {
+    max-height: calc(100vh - 96px - var(--tab-bar, 0px));
+    max-height: calc(100dvh - 96px - var(--tab-bar, 0px));
   }
 }
 

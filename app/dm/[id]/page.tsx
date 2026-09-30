@@ -210,7 +210,9 @@ function Detail() {
 
       {/* ---------------------------------------------------------- Talk ---- */}
       {tab === 'talk' && (
-        <div className="space-y-5">
+        // A CONVERSATION, so the bottom bar steps aside while this tab is
+        // open, as it does on the live side (TabBar.tsx, globals.css).
+        <div className="space-y-5" data-conversation-screen>
           <Chat pairingId={pairingId} />
           <Meetings pairingId={pairingId} />
         </div>

@@ -22,11 +22,11 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-09-30',
     title: 'Menu, People and My Files, along the bottom',
     items: [
-      'On a phone or an iPad, three buttons along the bottom of the screen now take you everywhere: Menu, People and My Files.',
-      'Menu lists every room you have in words, with your profile at the top and the way out at the bottom. The small pictures that used to sit under the top bar are gone.',
+      'On a phone, an iPad or a computer, three buttons along the bottom of the screen now take you everywhere: Menu, People and My Files.',
+      'Menu lists every room you have in words, with your profile at the top and the way out at the bottom. The small pictures under the top bar, and the column down the left side of a computer screen, are gone.',
       'People opens your own people: your Explorers if you are a Guide, your Guide if you are walking with one.',
       'My Files opens the files you keep on this device.',
-      'On a computer nothing has moved. The column down the left side is still where it was.',
+      'Inside a conversation the buttons step aside to give the messages room. The arrow at the top left takes you back.',
     ],
   },
   {

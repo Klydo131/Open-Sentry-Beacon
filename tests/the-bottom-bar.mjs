@@ -127,10 +127,17 @@ const ok = (cond, msg) => {
   const live = strip(read('components/LiveAppShell.tsx'));
   const library = strip(read('app/library/page.tsx'));
 
+  const demoSrc = strip(read('components/AppShell.tsx'));
+  const liveSrc = strip(read('components/LiveAppShell.tsx'));
   const labels = [...bar.matchAll(/\{ key: '(\w+)', label: '([^']+)'/g)].map((m) => `${m[1]}:${m[2]}`);
   ok(labels.join(' | ') === 'menu:Menu | people:People | files:My Files',
      `three tabs, in the order asked for (${labels.join(' | ')})`);
-  ok(/xl:hidden/.test(bar), 'the bar steps aside at 1280px, where the rail is the navigation');
+  // AT EVERY WIDTH since "the same dropdown and UI with Desktops": no
+  // breakpoint hides the bar, and neither shell mounts a left rail any more.
+  ok(!/\b(sm|md|lg|xl|2xl):hidden\b/.test(bar) && !/className="[^"]*\bhidden\b/.test(bar),
+     'the bar is on a desktop too; no breakpoint hides it');
+  ok(!/LeftRail/.test(demoSrc) && !/LeftRail/.test(liveSrc) && !/export function LeftRail/.test(read('components/RoomRails.tsx')),
+     'and there is no left rail drawing the rooms a second time');
   ok(/data-quest=\{`tab-\$\{key\}`\}/.test(bar), 'each tab carries a tutorial anchor (tab-menu, tab-people, tab-files)');
   ok(/aria-current=\{on \?/.test(bar), 'the lit tab is announced, not only coloured');
   ok(/import \{ FolderGlyph, MenuGlyph, PeopleGlyph \} from '@\/components\/Glyph'/.test(bar)
@@ -184,6 +191,12 @@ const ok = (cond, msg) => {
      'on a phone held sideways the bar goes compact and stays a full-size target');
   ok(/body:has\(\[data-live-conversation\]\) \.tab-bar\s*\{\s*display:\s*none;\s*\}/.test(short),
      'and steps aside while a conversation is on that short screen');
+  // The desk beside the page on a desktop scrolls itself; it must end above
+  // the bar, or its last line (the player) is under the bar however far it is
+  // scrolled.
+  ok(/\.desk-rail\s*\{[^}]*max-height:\s*calc\(100dvh - 96px - var\(--tab-bar, 0px\)\)/.test(css)
+     && /className="desk-rail /.test(read('components/RoomRails.tsx')),
+     'the desk beside the page on a desktop ends above the bar');
   ok(/\.tab-bar-tab\s*\{[^}]*min-height:\s*60px[^}]*font-size:\s*15px/.test(css),
      'each tab is a tall target with a label no smaller than 15px');
 }
@@ -218,10 +231,14 @@ const ok = (cond, msg) => {
 {
   const demo = read('components/AppShell.tsx');
   const live = strip(read('components/LiveAppShell.tsx'));
-  ok(/<div className="relative min-w-0 max-xl:hidden">/.test(demo),
-     'the sample header shows its row of rooms on a desktop only');
-  ok(/max-xl:hidden sm:rounded-xl sm:px-3"\s*>\s*<span>Switch<\/span>/.test(demo),
-     'and Switch moves into the Menu below a desktop');
+  const demoCode = strip(demo);
+  ok(!/data-quest="church-link"/.test(demoCode) && !/overflow-x-auto/.test(demoCode)
+     && !/href="\/(church|office|publish|cases|mail|settings|library)"/.test(demoCode),
+     'the sample header has no row of rooms at any width');
+  ok(!/<span>Switch<\/span>/.test(demoCode),
+     'and Switch account is in the Menu, not the header');
+  ok(/<BackButton home=\{homeFor\(profile\.role\)\} \/>/.test(live),
+     'the live header has a Back button, as the sample one always has');
   ok(!/aria-label="Sections"/.test(live), 'the live header has no row of rooms at all');
   ok(/<Link\s+href="\/profile"[\s\S]{0,300}?aria-label="Your profile"/.test(live),
      'the live header picture opens the profile, as the sample one always has');
@@ -238,6 +255,33 @@ const ok = (cond, msg) => {
   const page = strip(read('app/menu/page.tsx'));
   ok(/Sign out/.test(page) && /Switch account/.test(page),
      'the Menu ends with the way out: Sign out live, Switch account in the sample');
+}
+
+// ---------------------------------------------------------------------------
+// 7. INSIDE A CONVERSATION THE BAR STEPS ASIDE
+// ---------------------------------------------------------------------------
+// "Hide the bar inside conversations too." A screen that IS a conversation
+// marks itself; the stylesheet hides the bar while one is on the page. The
+// Explorer's home is deliberately not marked: the chat with their Guide is on
+// it, but it is also their studies and what People opens, and a bar that went
+// away the moment somebody pressed People would be a bar nobody trusts.
+{
+  const css = read('app/globals.css');
+  const outside = css.replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '');
+  ok(/body:has\(\[data-conversation-screen\]\) \.tab-bar\s*\{\s*display:\s*none;\s*\}/.test(outside),
+     'the bar is hidden while a conversation screen is on the page, at every width');
+  const marked = [
+    ['components/live/GuidePages.tsx', /tab === 'talk' && \([\s\S]{0,400}?data-conversation-screen/, "a Guide's Talk tab (live)"],
+    ['app/dm/[id]/page.tsx', /tab === 'talk' && \([\s\S]{0,300}?data-conversation-screen/, "a Guide's Talk tab (sample)"],
+    ['app/talk/page.tsx', /data-conversation-screen/, '/talk'],
+  ];
+  for (const [file, re, what] of marked) {
+    ok(re.test(read(file)), `${what} is marked as a conversation`);
+  }
+  for (const file of ['components/live/ExplorerPage.tsx', 'app/ds/page.tsx', 'components/live/TalkSurface.tsx', 'components/live/TalkDock.tsx']) {
+    ok(!/data-conversation-screen/.test(read(file)),
+       `${file} is not marked (the Explorer's home keeps the bar; the chat panel over a desktop page must not hide it)`);
+  }
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

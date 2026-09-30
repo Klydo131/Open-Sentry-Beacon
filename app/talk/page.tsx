@@ -35,13 +35,15 @@ function TalkPage() {
     // BOTH SIDES OF A PAIRING, and nobody else. A Director has no conversation
     // to be in and would land on an empty room wondering what they had missed.
     <LiveAppShell allow={['ds', 'dm']}>
+      {/* A CONVERSATION AND NOTHING ELSE, so the bottom bar steps aside here
+          (TabBar.tsx, globals.css). */}
       {/* Tall enough to be the screen rather than a card on one. The header and
           the shell's own padding are the difference between this and 100vh. */}
       {/* dvh AS WELL AS vh. On iOS Safari 100vh is the tallest the viewport ever
           gets, not the part you can see, so a chat sized in vh puts its composer
           under the browser chrome — which is the one control the whole room
           exists for. vh stays as the fallback for anything without dvh. */}
-      <div className="h-[calc(100vh-11rem)] [height:calc(100dvh-11rem)] min-h-[24rem] overflow-hidden rounded-2xl bg-white ring-1 ring-black/10">
+      <div className="h-[calc(100vh-11rem)] [height:calc(100dvh-11rem)] min-h-[24rem] overflow-hidden rounded-2xl bg-white ring-1 ring-black/10" data-conversation-screen>
         <TalkSurface
           openWith={openWith}
           onOpenWith={(id) =>

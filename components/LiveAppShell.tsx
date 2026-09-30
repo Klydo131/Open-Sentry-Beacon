@@ -9,7 +9,7 @@ import { homeFor, useLiveSession } from '@/lib/live/session';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { BeaconSplash } from '@/components/BeaconLoader';
 import { Avatar, Button, Card } from '@/components/ui';
-import { LeftRail, RightRail, railGroupsFor } from '@/components/RoomRails';
+import { RightRail } from '@/components/RoomRails';
 import { LiveDesk } from '@/components/LiveDesk';
 import { useRoom } from '@/lib/room-theme';
 import { LiveBell } from '@/components/LiveBell';
@@ -19,6 +19,7 @@ import { PowerGlyph } from '@/components/Glyph';
 import { useScrollToHash } from '@/lib/scroll-to-hash';
 import { useUrlKey } from '@/lib/url-signal';
 import { TabBar } from '@/components/TabBar';
+import { BackButton } from '@/components/BackButton';
 
 // THE HEADER CARRIES NO LIST OF ROOMS ANY MORE (30 September 2026).
 //
@@ -49,7 +50,7 @@ export function LiveAppShell({
   const router = useRouter();
 
   // The office. These are the same rails the sample-data shell has used all
-  // along — LeftRail, RightRail, the themes, the note, the ambient player.
+  // along — the right rail, the themes, the note, the ambient player.
   // They were never ported here, which is why the live app felt like a
   // different, smaller product than the one people were shown. Same components,
   // same hook, so the two cannot drift again without both drifting.
@@ -153,13 +154,6 @@ export function LiveAppShell({
 
   if (!allow.includes(profile.role)) return null;
 
-  // `{}` meant mail: undefined, which the rail reads as "not true" only by
-  // accident of the default. Said explicitly, and for the same reason as
-  // SECTIONS above: /mail is the Invitations screen, and a Guide or an
-  // Explorer opening it got a card explaining there was nothing there.
-  const leadsChurch = profile.role === 'admin' || profile.role === 'executive';
-  const groups = railGroupsFor(profile.role, {}, { mail: leadsChurch });
-
   return (
     // THE THEME PAINTS THE PAGE, WHICH IS WHAT MAKES IT A THEME.
     //
@@ -192,6 +186,14 @@ export function LiveAppShell({
         style={{ backgroundColor: NAVY, top: 'var(--beacon-chrome-top, 0px)' }}
       >
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-3 py-3 sm:px-4">
+          {/* A WAY BACK THAT READS AS ONE. The sample header has always had
+              it; this one had only the logo, and a logo does not read as a
+              button to somebody who has never used the app. It matters more
+              now that the bottom bar steps aside inside a conversation: an
+              installed app on an iPhone has no browser Back, so without this a
+              Guide in a conversation had no labelled way out. It is not drawn
+              on the home screen, or when there is nowhere to go back to. */}
+          <BackButton home={homeFor(profile.role)} />
           <Link
             href={homeFor(profile.role)}
             className="flex min-w-0 flex-1 items-center gap-3"
@@ -247,12 +249,11 @@ export function LiveAppShell({
 
       </header>
 
-      {/* Three columns from xl up, one column below it — the same breakpoint
-          the sample-data shell uses, so a phone and a tablet get the identical
-          layout there and here. The rails hide themselves; nothing about the
-          page underneath changes. */}
+      {/* The page, and the person's own desk beside it from xl up (below xl
+          it stacks under the page) -- the same breakpoint the sample-data
+          shell uses. There is no left column any more: the bottom bar is the
+          navigation at every width. */}
       <div className="mx-auto flex max-w-[1600px] flex-col items-stretch gap-6 px-4 xl:flex-row xl:items-start">
-        {room.prefs.leftRail && <LeftRail groups={groups} theme={room.theme} />}
 
         {/* pb-28 rather than pb-24, matching the demo. Several things float
             over the bottom of the screen — the install prompt, the feedback

@@ -11,10 +11,9 @@ import type { Role } from '@/lib/types';
 import { Avatar } from './ui';
 import { NotificationBell } from './NotificationBell';
 import { RoleSwitcher } from './RoleSwitcher';
-import { LeftRail, RightRail, railGroupsFor } from './RoomRails';
+import { RightRail, railGroupsFor } from './RoomRails';
 import { useRoom } from '@/lib/room-theme';
 import { emitQuest } from '@/lib/quest';
-import { useLocale } from '@/lib/i18n';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { BackButton } from '@/components/BackButton';
 import { useIsLive } from '@/lib/tutorial';
@@ -102,8 +101,7 @@ function DemoAppShell({
   allow: Role[];
   children: React.ReactNode;
 }) {
-  const { db, currentUser, signOut } = useDemo();
-  const { t } = useLocale();
+  const { db, currentUser } = useDemo();
   const router = useRouter();
 
   // Room prefs are per-person and per-device. Hooks must run unconditionally,
@@ -122,7 +120,7 @@ function DemoAppShell({
   // makes the hook count change the moment someone signs in, which React reports
   // as "rendered more hooks than during the previous render" and then unmounts
   // the tree.
-  const { groups, unreadMail, pendingApprovals, mySeekers } = useDemoRooms();
+  const { unreadMail, pendingApprovals, mySeekers } = useDemoRooms();
 
   useEffect(() => {
     // Signed out is the only reason to send someone to /login. Being signed in
@@ -193,11 +191,6 @@ function DemoAppShell({
     today.push({ label: 'Unread mail', value: String(unreadMail) });
   }
 
-  const switchAccount = () => {
-    signOut();
-    router.replace('/login');
-  };
-
   return (
     <div className="room-surface min-h-screen" style={{ background: theme.bg }}>
       <header
@@ -245,155 +238,16 @@ function DemoAppShell({
             </Link>
           </div>
 
-          {/* The feature icons scroll; who you are and the way out do not.
-              A phone header cannot hold eight 44px controls. They used to be
-              `shrink-0` in a row that could not shrink either, so the row simply
-              overflowed and the first icon came to rest ON TOP of the logo —
-              which is what a church director photographed and sent back. Making
-              the icons smaller would have been the wrong answer: they are tap
-              targets on a phone, and the whole point of them is being easy to
-              hit.
-
-              So the row of features became a strip you can push sideways with a
-              thumb, and the two controls nobody should ever have to hunt for —
-              your own face, and the way out — stay pinned to the right of it. */}
-          {/* A SECOND ROW FOR THE ROOMS, ON A PHONE (29 September 2026).
-              Beside the brand and the pinned controls the strip was left with
-              what was over: 45px at 412px wide, 23px at 390 and nothing at
-              360, so on most phones Church, Library, Office and Publish could
-              not be seen at all, and the tutorial's "See the journey chart"
-              pointed at a church link hidden in a strip narrower than itself
-              (it failed on WebKit, whose text is a few pixels wider). The live
-              header already gives the rooms a row of their own on a phone.
-              Here the group dissolves into the header row below `sm`
-              (`contents`), the spacer pushes the pinned controls right, and
-              the strip takes the whole next line. At `sm` and up it is one row
-              exactly as before. */}
-          {/* AND BELOW `xl` THERE IS NO ROOMS ROW AT ALL (30 September 2026).
-              The bottom bar -- Menu, People, My Files -- is the navigation on
-              a phone and a pad now, and Menu lists every room in words. What
-              is left up here is the brand and the four things that are about
-              the person rather than a place: the role switcher, the bell, their
-              own face, and (on a desktop) the way out. The spacer, which used
-              to stand aside only on a phone, now pushes those right at every
-              width the rooms are hidden. */}
-          <div className="flex min-w-0 flex-1 items-center gap-1 max-sm:contents sm:gap-3">
-            <div aria-hidden className="flex-1 xl:hidden" />
-            {/* The scroller is sized by its own content, and the ROW around it
-                does the right-aligning.
-                The first attempt put `justify-end` on the scrolling content
-                itself. That does not scroll: in a flex container aligned to the
-                end, the overflow goes off the START edge and no browser will let
-                you reach it. It measured as "no overflow" while two controls —
-                the church link and the account switcher — were simply gone from
-                a 360px screen. Sizing the scroller to its content instead means
-                the overflow goes off the END, which is reachable by thumb,
-                trackpad and keyboard. */}
-            <div className="relative min-w-0 max-xl:hidden">
-              <div className="no-scrollbar min-w-0 overflow-x-auto">
-                <div className="flex w-max items-center gap-1 sm:gap-3">
-            {/* Reachable on a phone, which it was not.
-                This link was `lg:inline-flex`, the left rail that also links
-                here is `xl:block`, and there is no other route to /church
-                anywhere in the signed-in app. So on a 412px screen the church
-                home — the activity board, the prayer wall, the journey chart —
-                simply could not be opened. Found while anchoring a tutorial
-                step at it, which is the only reason anybody noticed.
-
-                Now it behaves like the library and mail buttons beside it: an
-                icon on a phone, the full label from lg up. */}
-            <Link
-              href="/church"
-              aria-label={t('church')}
-              title={t('church')}
-              data-quest="church-link"
-              onClick={() => emitQuest('beacon:open-church')}
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 px-0 font-semibold hover:bg-white/20 lg:inline-flex lg:h-auto lg:w-auto lg:items-center lg:gap-1 lg:rounded-xl lg:px-3 lg:text-sm"
-            >
-              <span aria-hidden>⛪</span>
-              <span className="hidden lg:inline">{t('church')}</span>
-            </Link>
-            <Link
-              href="/library"
-              aria-label="My Library"
-              title="My Library"
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20"
-            >
-              <span aria-hidden>📚</span>
-            </Link>
-            {/* OFFICE, PUBLISH AND CASES, which were on the rails and nowhere
-                else below `xl`. Same gap the church link had, recorded in the
-                note above it, and the same cause: rooms added after this strip
-                was written and never added to it. A Guide writes their own
-                lesson studies in the Office, so on a phone they could not.
-
-                The strip scrolls, so length is not the constraint it once was.
-                Explorers get no Office: none of the work in it is theirs. */}
-            {currentUser.role !== 'ds' && (
-              <Link
-                href="/office"
-                aria-label="Office"
-                title="Office"
-                className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20"
-              >
-                <span aria-hidden>🗂️</span>
-              </Link>
-            )}
-            <Link
-              href="/publish"
-              aria-label="Publish"
-              title="Publish"
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20"
-            >
-              <span aria-hidden>✍️</span>
-            </Link>
-            <Link
-              href="/cases"
-              aria-label="Cases"
-              title="Cases"
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20"
-            >
-              <span aria-hidden>⚖️</span>
-            </Link>
-            <Link
-              href="/mail"
-              aria-label="Mail"
-              title="Mail"
-              className="tap-sm relative grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20"
-            >
-              <span aria-hidden>✉️</span>
-              {unreadMail > 0 && (
-                <span
-                  className="absolute right-0 top-0.5 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold text-navy"
-                  style={{ backgroundColor: '#E8B84B' }}
-                >
-                  {unreadMail}
-                </span>
-              )}
-            </Link>
-            {/* Settings was hidden below `lg` to make room for Mail. The strip
-                scrolls now, so there is room, and a setting nobody can find is
-                a setting nobody changes. */}
-            <Link
-              href="/settings"
-              aria-label={t('settings')}
-              title={t('settings')}
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20"
-            >
-              <span aria-hidden>⚙️</span>
-            </Link>
-                </div>
-              </div>
-              {/* Navy fading to nothing on the trailing edge, which is the side
-                  icons hide behind. Over a navy header it is invisible until
-                  something slides under it: free when everything fits, and a
-                  "there is more this way" cue when it does not. */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 right-0 w-7"
-                style={{ background: `linear-gradient(to left, ${NAVY}, transparent)` }}
-              />
-            </div>
+          {/* NO ROOMS UP HERE AT ANY WIDTH (30 September 2026). This header
+              used to carry every room as a strip of icons that scrolled
+              sideways, and its notes recorded what that cost: icons resting on
+              the logo, the church link hidden in a sliver narrower than itself,
+              two controls simply gone from a 360px screen. The bottom bar
+              (Menu, People, My Files) is the navigation on a phone, a pad and a
+              desktop alike, asked for in those words: "the same dropdown and UI
+              with Desktops". What stays up here is the brand and what is about
+              the person: the role switcher, the bell, and their own face. */}
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
             {/* Pinned, and it HAS to be pinned — this is not a preference.
                 It used to sit inside the scrolling strip above, and a strip is
                 `overflow-x: auto`, which makes it a clipping box. The button
@@ -437,25 +291,14 @@ function DemoAppShell({
                 onDark
               />
             </Link>
-            {/* Beside the account on a desktop. Below `xl` it is the last row
-                of the Menu, where a messaging app keeps its own way out. */}
-            <button
-              onClick={switchAccount}
-              aria-label="Switch account"
-              title="Switch account"
-              className="tap-sm grid shrink-0 place-items-center rounded-full bg-white/10 px-0 text-sm font-semibold hover:bg-white/20 max-xl:hidden sm:rounded-xl sm:px-3"
-            >
-              <span>Switch</span>
-            </button>
           </div>
         </div>
       </header>
 
-      {/* Three columns from `xl` up; a single column everywhere else. The rails
-          never appear on a phone or tablet — there is no room for them, and the
-          page they flank is the one that matters. */}
+      {/* The page, and the person's own desk beside it from `xl` up; below
+          that the desk stacks under the page. There is no left column any
+          more: the bottom bar is the navigation at every width. */}
       <div className="mx-auto flex max-w-[1600px] flex-col items-stretch gap-6 px-4 xl:flex-row xl:items-start">
-        {prefs.leftRail && <LeftRail groups={groups} theme={theme} />}
 
         {/* The floor is deliberately deep.
             Beacon floats several things over the bottom of the screen: the

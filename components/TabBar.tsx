@@ -20,9 +20,14 @@
 // it can be tested on its own: People is the role's own home opened on its
 // people, My Files is /library, Menu is /menu.
 //
-// NOT ON A DESKTOP. At 1280px the left rail is on screen and is the navigation,
-// so the bar steps aside (`xl:hidden`) rather than offering the same rooms a
-// second time.
+// ON A DESKTOP TOO (30 September 2026): "Can we have the same dropdown and UI
+// with Desktops please?" There was a left rail at 1280px and up, drawing the
+// same rooms; it is gone, and this bar is the navigation at every width.
+//
+// NOT INSIDE A CONVERSATION. Asked for as "Hide the bar inside conversations
+// too": a screen that IS a conversation (the Guide's Talk tab, /talk) marks
+// itself `data-conversation-screen`, and globals.css hides the bar while one is
+// on the page, as a messaging app does inside a chat.
 // ---------------------------------------------------------------------------
 
 import Link from 'next/link';
@@ -57,8 +62,8 @@ export function TabBar({ role }: { role: Role }) {
   // rest, and `.safe-bottom`, which lifts every floating thing (the chat
   // bubble, the install bar, the feedback nudge, the update toast) above it.
   //
-  // Hidden at `xl`, the element measures 0 and the variable is removed, so a
-  // desktop reserves nothing.
+  // Hidden inside a conversation, the element measures 0 and the variable is
+  // removed, so the conversation gets the room back.
   useBeforePaint(() => {
     const el = ref.current;
     if (!el) return;
@@ -84,7 +89,7 @@ export function TabBar({ role }: { role: Role }) {
     <nav
       ref={ref}
       aria-label="Main"
-      className="tab-bar no-print fixed inset-x-0 bottom-0 z-30 xl:hidden"
+      className="tab-bar no-print fixed inset-x-0 bottom-0 z-30"
     >
       <ul className="mx-auto grid max-w-2xl grid-cols-3">
         {TABS.map(({ key, label, Icon }) => {

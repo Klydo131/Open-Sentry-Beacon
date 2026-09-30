@@ -183,8 +183,12 @@ export function TalkDock() {
     // -- without the margin below, the corner panel sits under it. Below xl
     // the sheet covers the whole screen on purpose and pads its own content
     // instead, which is what .talk-sheet does.
+    //
+    // AND ON A DESKTOP IT STANDS ON THE BOTTOM BAR, which is there at every
+    // width now: the taller of the home indicator and the bar, exactly as
+    // `.safe-bottom` does for the closed bubble.
     return (
-      <div className="fixed inset-0 z-50 xl:inset-auto xl:bottom-4 xl:right-4 xl:z-40 xl:[margin-bottom:env(safe-area-inset-bottom,0px)]">
+      <div className="fixed inset-0 z-50 xl:inset-auto xl:bottom-4 xl:right-4 xl:z-40 xl:[margin-bottom:max(env(safe-area-inset-bottom,0px),var(--tab-bar,0px))]">
         <div className={`talk-sheet ${leaving ? 'talk-panel-out' : 'talk-panel-in'} flex h-full w-full flex-col overflow-hidden bg-white ring-1 ring-black/10 xl:h-[32rem] xl:w-[22rem] xl:rounded-2xl xl:lift-3`}>
           <div className="flex items-center gap-2 border-b border-black/5 bg-navy px-3 py-2 text-white">
             <span className="flex-1 text-sm font-bold">Talk</span>

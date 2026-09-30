@@ -78,6 +78,13 @@ const roomIds = new Set();
 for (const file of FILES) {
   const src = strip(read(file));
   for (const m of src.matchAll(/data-quest=["']([a-z0-9-]+)["']/g)) literal.add(m[1]);
+  // WRITTEN OUT, BUT ON ONE ROW OF A LIST: `data-quest={home ? 'church-link'
+  // : undefined}`. The Menu draws every room from one list and marks only
+  // Home, so the marker is a literal behind a condition. Since the header's
+  // church link went (30 September 2026) this is the only place the journey
+  // chart step's target is written, and without this form the check read it
+  // as gone.
+  for (const m of src.matchAll(/data-quest=\{[^{}]*?\?\s*'([a-z0-9-]+)'\s*:/g)) literal.add(m[1]);
   for (const m of src.matchAll(/\bkey:\s*'([a-z0-9-]+)'\s*,\s*label:/g)) tabKeys.add(m[1]);
   for (const m of src.matchAll(/\bid:\s*'([a-z0-9-]+)'\s*,\s*label:/g)) roomIds.add(m[1]);
 }

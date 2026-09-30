@@ -123,8 +123,10 @@ const code = dock.replace(/\/\*[\s\S]*?\*\/|\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*/g,
   // AN iPAD PRO IN LANDSCAPE IS 1366 CSS PIXELS. It takes the xl branch and it
   // has a home indicator, so the corner panel needs the inset that the sheet
   // does not.
-  ok(/xl:\[margin-bottom:env\(safe-area-inset-bottom/.test(code),
-     'and the corner panel still clears the home indicator on a large pad');
+  // Since the bottom bar is on a desktop too (30 September 2026), the corner
+  // panel stands on it: the taller of the inset and the bar.
+  ok(/xl:\[margin-bottom:max\(env\(safe-area-inset-bottom,0px\),var\(--tab-bar,0px\)\)\]/.test(code),
+     'and the corner panel still clears the home indicator on a large pad, and stands on the bottom bar');
 }
 
 // ---------------------------------------------------------------------------

@@ -299,9 +299,10 @@ const EXEC_STEPS: QuestStep[] = [
     title: 'See the journey chart',
     hint: 'Tap the highlighted Home link. The journey chart is below the activity board.',
     target: 'church-link',
-    // ON A PHONE OR A PAD HOME IS IN THE MENU. The header's church link is a
-    // desktop control now; below 1280px the bottom bar is the navigation and
-    // the Menu lists Home first. One hop back: the Menu tab, then Home in it.
+    // HOME IS IN THE MENU, at every width. The header's church link is gone
+    // (30 September 2026): the bottom bar is the navigation on a phone, a pad
+    // and a desktop, and the Menu lists Home first, as the church link the
+    // step waits for. One hop back: the Menu tab, then Home in it.
     fallbacks: [
       { target: 'tab-menu', hint: 'Tap Menu at the bottom of the screen. Home is the first room in it.' },
     ],

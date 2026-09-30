@@ -109,12 +109,16 @@ const rails = strip(read('components/RoomRails.tsx'));
     // max width. It reported the layout row as unstacked while the row was
     // already correct. The container that matters is the one the rails are
     // mounted inside, so it is located by the rail mount itself.
-    const at = src.search(/\{\s*(?:room\.)?prefs\.leftRail\s*&&/);
+    //
+    // By the RIGHT rail's mount since 30 September 2026: the left rail is gone
+    // (the bottom bar is the navigation at every width), and the right rail is
+    // the one this whole file is about.
+    const at = src.search(/\{\s*(?:room\.)?prefs\.rightRail\s*&&/);
     ok(at > 0, `${shell} mounts the rails`);
     const before = src.slice(0, at);
     const row = [...before.matchAll(/<div className="([^"]+)"/g)].pop()?.[1] ?? '';
 
-    ok(/max-w-\[1600px\]/.test(row), `${shell} has the three-column container`);
+    ok(/max-w-\[1600px\]/.test(row), `${shell} has the page-and-desk container`);
     ok(/(^|\s)flex-col(\s|$)/.test(row) && /xl:flex-row/.test(row),
        `${shell} stacks below xl, so the rail falls under the page`);
   }

@@ -47,18 +47,14 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   //    This is the part that was wrong first time and is worth asserting: the
   //    room was a card at the bottom of My Journey's Study tab, which is not
   //    what a room is here.
-  //    CHECKED AT DESKTOP WIDTH, because that is where the tutorial HAS
-  //    navigation: AppShell draws only the left rail, which is `xl:block`, and
-  //    unlike the live shell it has no horizontal strip below that. A phone
-  //    walking the demo therefore has no room navigation at all -- pre-existing,
-  //    worth its own fix, and not something to assert away here by pretending
-  //    the link is missing when it is the navigation that is.
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${BASE}/ds`, { waitUntil: 'networkidle' });
+  //    IN THE MENU, which is the navigation at every width since 30 September
+  //    2026 (the bottom bar's first tab). This used to be checked at desktop
+  //    width against the left rail, the only navigation the sample app had
+  //    then; there is no rail any more, and a phone has the same Menu.
+  await page.goto(`${BASE}/menu`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
-  const doorway = page.getByRole('link', { name: /Study Room/i }).first();
-  ok(await doorway.count() > 0, 'the Study Room is a room in the navigation');
-  await page.setViewportSize({ width: 412, height: 915 });
+  const doorway = page.locator('main a.menu-row[href="/study"]').first();
+  ok(await doorway.isVisible().catch(() => false), 'the Study Room is a room in the navigation (the Menu)');
 
   // 2. AND IT OPENS ON ARRIVAL, because walking in is the asking.
   await openStudyRoom(page, BASE);

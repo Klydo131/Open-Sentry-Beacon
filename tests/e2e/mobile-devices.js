@@ -129,9 +129,16 @@ async function run(browser, label, device) {
     }
     return false;
   };
+  //
+  // INSIDE A CONVERSATION THE BAR STEPS ASIDE (asked for on 30 September
+  // 2026), and this page is one: a Guide on an Explorer's Talk tab. There the
+  // way to a room is Back, then Menu, then the row. That counts only when the
+  // Back button is on screen and big enough to hit.
   const menuTab = await tappable(page.locator('nav[aria-label="Main"] a[href="/menu"]'));
+  const inConversation = await page.locator('[data-conversation-screen]').count() > 0;
+  const backOut = inConversation && await tappable(page.locator('header [aria-label="Go back"]'));
   let menuRows = null;
-  if (menuTab) {
+  if (menuTab || backOut) {
     const side = await page.context().newPage();
     await side.goto(`${BASE}/menu`, { waitUntil: 'networkidle' }).catch(() => {});
     await side.locator('main a.menu-row').first().waitFor({ timeout: 10000 }).catch(() => {});
@@ -147,7 +154,9 @@ async function run(browser, label, device) {
     const direct = await tappable(link);
     const viaMenu = !!menuRows && menuRows[href];
     ok(direct || viaMenu,
-       `${label}: ${what} is reachable by tapping (${direct ? 'on screen' : viaMenu ? 'Menu, then its row' : `${count} link(s) in the DOM, none reachable`})`);
+       `${label}: ${what} is reachable by tapping (${direct ? 'on screen'
+         : viaMenu ? (menuTab ? 'Menu, then its row' : 'Back out of the conversation, then Menu, then its row')
+         : `${count} link(s) in the DOM, none reachable`})`);
   }
 
   const composer = page.locator('[data-quest="chat-send"]');
