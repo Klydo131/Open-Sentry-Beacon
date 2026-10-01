@@ -242,6 +242,24 @@ any request leaves the app or anything is refused by the policy.
 
 ---
 
+## Known advisories in what the app installs
+
+`npm audit --omit=dev` lists what the app installs for production. What it
+reports, and what was done about each, so nobody has to rediscover it:
+
+| Reported | Reached through | What was done | Why |
+|---|---|---|---|
+| **dompurify** 3.4.13–3.4.15, low: an `afterSanitize` hook that removes nodes can leave event handlers armed | The page editor (BlockSuite) and the diagram tool (Mermaid, inside Excalidraw) | **Fixed 1 October 2026:** updated to 3.4.16 with `npm update dompurify`, inside the range both already allowed. | The app never calls DOMPurify or adds hooks to it, so it was not reachable here. It was a one-line, non-breaking fix anyway. |
+| **vitest** / **@vitest/mocker**, moderate: a path traversal in the test runner's mock server (`npm audit` counts it 11 times, once for each BlockSuite package it passes through) | `@blocksuite/data-view` lists the test runner as a runtime dependency | **Left, on purpose.** | Nothing in the app runs vitest. BlockSuite's own code never imports it, and a production build contains no file that mentions it (checked on 1 October 2026). The only fix on offer is moving the editor back to 0.21.0, an older release, which would trade a test tool nobody runs for an editor change nobody has tested. Revisit when BlockSuite drops the dependency. |
+
+**`npm audit fix` itself fails in this repository** with "Unable to resolve
+reference $postcss". That comes from the `"postcss": "$postcss"` override in
+`package.json`, which `npm install` and `npm ci` both handle and the fix
+command does not. Update a single package with `npm update <name>`, then run
+`npm audit --omit=dev` again to confirm.
+
+---
+
 ## Search engines
 
 **Your deployment is invisible to search by default, and a church should leave

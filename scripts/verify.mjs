@@ -477,6 +477,9 @@ const staticChecks = [
   // Every animation stops for somebody who asked their device for less
   // movement, after it starts; one motion scale in CSS and code (1 October 2026).
   ['every animation can be stilled', 'tests/every-animation-can-be-stilled.mjs'],
+  // A fixed security advisory stays fixed in the lockfile, and one left on
+  // purpose stays written down in docs/SECURITY.md (1 October 2026).
+  ['fixed advisories stay fixed', 'tests/fixed-advisories-stay-fixed.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],
   ['the browser writes only what the app writes', 'tests/the-browser-writes-only-what-the-app-writes.mjs'],
