@@ -491,6 +491,7 @@ const staticChecks = [
   ['every dependency is under a licence we can ship', 'tests/dependency-licences.mjs'],
   // The research agents in .claude/agents read and report, keep real data
   // out, put security first, and name only files that exist (1 October 2026).
+  ['the research agents only read', 'tests/the-research-agents-only-read.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],
   ['the browser writes only what the app writes', 'tests/the-browser-writes-only-what-the-app-writes.mjs'],
