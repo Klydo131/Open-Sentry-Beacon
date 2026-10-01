@@ -207,13 +207,14 @@ function isFade(name, keyframes) {
 // ---- 3. What a stylesheet cannot reach --------------------------------------
 
 {
-  const strip = (src) => src.replace(/<style>\{`[\s\S]*?`\}<\/style>/g, '');
+  // The <style> blocks were read as CSS above; what is left is the code.
+  const withoutStyleBlocks = (src) => src.replace(/<style>\{`[\s\S]*?`\}<\/style>/g, '');
   const inline = [];
   const tailwind = [];
   const smooth = [];
   const animate = [];
   for (const file of code) {
-    const src = strip(read(file));
+    const src = withoutStyleBlocks(read(file));
     // `style={{ animation: '...' }}`: beyond every stylesheet rule.
     if (/\banimation(?:Name)?\s*:\s*['"`]/.test(src)) inline.push(file);
     for (const m of src.matchAll(/(\S*)\banimate-(spin|bounce|ping)\b/g)) {

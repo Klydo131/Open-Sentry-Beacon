@@ -394,6 +394,15 @@ const GUARDRAILS = new Set([
   // so naming a key stays allowed and carrying one is still caught.
   'docs/START-HERE.md',
   'docs/AI-SETUP-GUIDE.md',
+  // The deployment guide (1 October 2026), for the same reason and under the
+  // same limits as START-HERE.md, which it points into: it has to say where
+  // SITE_URL goes and where the service_role key must never go, on every host.
+  // Its own check, tests/the-deploy-guide-matches-the-app.mjs, asserts both
+  // names are the ones the code reads, so it has to say them too. Every
+  // address in the guide is a placeholder; the credential-shape scan still
+  // applies to both files.
+  'docs/DEPLOY-ANYWHERE.md',
+  'tests/the-deploy-guide-matches-the-app.mjs',
   // The setup script's ONE job is refusing the privileged key, and it now has
   // to handle both formats Supabase issues — the JWT carrying a role, and the
   // sb_secret_ prefix. It cannot check for a thing it is not allowed to name,
@@ -445,16 +454,33 @@ const GUARDRAILS = new Set([
   // catalogue only; it holds no key and no hostname.
   'supabase/tests/fingerprint.sql',
 ]);
+// AN EXEMPTION IS FOR NAMING, NOT FOR CARRYING. Until 1 October 2026 a file on
+// the list above skipped every term, the live-hostname patterns included, so a
+// setup guide could have held a church's real project address and nothing
+// here would have said so. Only the three scanners, which must spell out what
+// they look for, skip everything now. The documents and functions on the list
+// may NAME a setting or a key, and must still carry no real address: a
+// hostname in them passes only when it is plainly a placeholder
+// (`YOUR_PROJECT_REF.supabase.co`, `your-church.vercel.app`, `<ref>`).
+const SCANNERS = new Set(['tests/no-backend.js', 'tests/no-secrets.js', 'tests/security-invariants.mjs']);
+const NAMING_ONLY = new Set(['a private deployment setting', 'a privileged database key']);
+const HOSTS = /([A-Za-z0-9_<>-]+)\.(?:pooler\.supabase\.com|supabase\.co|vercel\.app)\b/g;
+const PLACEHOLDER = /your|example|[<>]|project[_-]?ref|-xyz$/i;
 for (const f of textFiles) {
-  if (GUARDRAILS.has(f)) continue;
+  if (SCANNERS.has(f)) continue;
+  const exempt = GUARDRAILS.has(f);
   read(f)
     .split('\n')
     .forEach((line, i) => {
       for (const [re, what] of FORBIDDEN_TERMS) {
-        if (re.test(line)) {
-          ok(false, `${f}:${i + 1} mentions ${what}`);
-          terms++;
-        }
+        if (!re.test(line)) continue;
+        if (exempt && NAMING_ONLY.has(what)) continue;
+        // Every address on the line must be a placeholder: one real one next
+        // to an example is still a real one.
+        const hosts = [...line.matchAll(HOSTS)].map((m) => m[1]);
+        if (exempt && hosts.length > 0 && hosts.every((h) => PLACEHOLDER.test(h))) continue;
+        ok(false, `${f}:${i + 1} mentions ${what}`);
+        terms++;
       }
     });
 }

@@ -1134,8 +1134,8 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
    A menu, the bell's list, the role and mode switchers. Each comes OUT OF THE
    THING THAT WAS PRESSED: a short drop and a fade from the button's corner, so
    it reads as part of that button rather than as a card appearing over the
-   page. And each goes back the same way, a little quicker, instead of
-   vanishing mid-blink. Asked for on 1 October 2026: "smooth animations in
+   page. And each goes back the same way, on the `leave` curve that speeds up
+   as it goes, instead of vanishing mid-blink. Asked for on 1 October 2026: "smooth animations in
    transitions ... subtle and quick". */
 @keyframes beaconMenuIn {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
