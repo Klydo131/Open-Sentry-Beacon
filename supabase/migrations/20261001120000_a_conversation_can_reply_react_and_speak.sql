@@ -272,7 +272,8 @@ set search_path to 'public', 'private', 'pg_temp'
 as $$ select private.react_to(p_message, p_media, p_emoji); $$;
 
 revoke all on function private.react_to(uuid, uuid, text) from public, anon;
-grant execute on function private.react_to(uuid, uuid, text) to authenticated, service_role;
+-- Signed-in people only: nothing on the server reacts on anybody's behalf.
+grant execute on function private.react_to(uuid, uuid, text) to authenticated;
 revoke all on function public.react_to(uuid, uuid, text) from public, anon;
 grant execute on function public.react_to(uuid, uuid, text) to authenticated;
 

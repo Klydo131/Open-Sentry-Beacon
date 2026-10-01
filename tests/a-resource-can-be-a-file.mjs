@@ -105,7 +105,9 @@ const MIGRATION = 'supabase/migrations/20260925100000_a_resource_can_be_a_file.s
     'deleting a resource deletes its file, first, while the resource still says whose it is');
 
   const url = code(data.slice(data.indexOf('export async function materialFileUrl'), data.indexOf('export async function materialFileForSharing')));
-  ok(/createSignedUrl\(path, 60 \* 60/.test(url), 'a file is opened by a short-lived signed address');
+  // The path goes through safeStoragePath() first (lib/live/storage-path.ts,
+  // 1 October 2026): a stored path is never trusted to build a URL.
+  ok(/createSignedUrl\(safeStoragePath\(path\), 60 \* 60/.test(url), 'a file is opened by a short-lived signed address');
   const upd = code(data.slice(data.indexOf('export async function updateMaterial'), data.indexOf('export async function', data.indexOf('export async function updateMaterial') + 10)));
   ok(/url !== undefined \? \{ external_url: url \} : \{\}/.test(upd),
     'editing a file never writes a link onto it');
