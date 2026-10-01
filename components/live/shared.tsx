@@ -53,6 +53,7 @@ export function Conversation({
   onEditMessage,
   onDeleteMessage,
   onReact,
+  extras = true,
 }: {
   emptyLine?: string;
   messages: Message[];
@@ -78,6 +79,13 @@ export function Conversation({
   attachError?: string;
   /** React through react_to(): one per person per thing, from the six. */
   onReact?: (target: ReactionTarget, emoji: string | null) => Promise<void>;
+  /**
+   * Whether this database has replies and voice (migration 20261001120000).
+   * False on one that has not been updated yet: the conversation is then the
+   * words and the files, exactly as before, and nothing is offered that the
+   * database would refuse. See NotOnThisDatabaseYet in lib/live/data.ts.
+   */
+  extras?: boolean;
 }) {
   const entries: ChatEntry[] = [
     ...messages.map((m): ChatEntry => ({
@@ -127,7 +135,8 @@ export function Conversation({
       onRemoveFile={onRemoveFile
         ? (id) => { const file = files.find((f) => f.id === id); if (file) onRemoveFile(file); }
         : undefined}
-      voice
+      replies={extras}
+      voice={extras}
       attachError={attachError}
     />
   );

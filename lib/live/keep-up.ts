@@ -167,10 +167,18 @@ export const KEEP_UP_MY_PAIRING = ['pairings', 'pairing_media', 'profiles'] as c
  * Guide's OTHER threads, so the list's counts move; and it never watched
  * `pairing_media` at all, so a file arriving did not reload the thread it
  * arrived in. Realtime evaluates the same policy either way, so this is more
- * traffic and not a wider disclosure. `message_reactions` since 1 October
- * 2026, so a reaction appears on the other phone without a refresh.
+ * traffic and not a wider disclosure.
  */
-export const KEEP_UP_TALK = ['messages', 'pairing_media', 'message_reactions'] as const;
+export const KEEP_UP_TALK = ['messages', 'pairing_media'] as const;
+/**
+ * Reactions, so one appears on the other phone without a refresh. ITS OWN SET,
+ * watched only by the open conversation and only once a reaction list has been
+ * read. On a database without the table (migration 20261001120000 not yet
+ * run) a subscription naming it is at best useless and may be refused, and on
+ * the messages' shared channel a refusal would take their live refresh down
+ * with it. Kept apart, the messages' channel never names it.
+ */
+export const KEEP_UP_REACTIONS = ['message_reactions'] as const;
 
 /**
  * Follow-ups and names put forward: the Guide's working list.

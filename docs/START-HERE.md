@@ -294,6 +294,12 @@ Answer **Y** when it lists the files. It runs every file in
 the app later (`git pull`), run exactly the same command: it runs only the new
 files, and says *"Remote database is up to date"* when there are none.
 
+**If the site updates before the database does** -- the push reaches Vercel in
+minutes, and you run this command when you get to it -- the app keeps working.
+A newer feature whose tables are not there yet is simply not offered: the chat,
+for example, keeps its messages, photos and live refresh, and Reply, reactions
+and voice messages appear once this command has run. Nothing is lost either way.
+
 > **One line it prints is expected:** *"Skipping migration
 > 0001a_fix_policy_recursion.sql"*. That early fix was later rewritten by the
 > files after it, so the database is the same with or without it. That is not a

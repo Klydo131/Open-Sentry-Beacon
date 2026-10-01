@@ -135,6 +135,7 @@ export function ChatView({
   onAttach,
   attachAccept,
   onRemoveFile,
+  replies = true,
   voice = false,
   attachError,
 }: {
@@ -167,6 +168,12 @@ export function ChatView({
   onRemoveFile?: (id: string) => Promise<void> | void;
   /** Offer the microphone (a voice message goes out through onAttach). */
   voice?: boolean;
+  /**
+   * Offer Reply, in the menu and by swiping. Off on a live database that does
+   * not have replies yet (components/live/shared.tsx), where a reply would be
+   * refused; everything else in the conversation works as it did.
+   */
+  replies?: boolean;
   attachError?: string;
 }) {
   const [showPrivacy, hidePrivacy] = useKeepable('hb-note-private');
@@ -387,7 +394,7 @@ export function ChatView({
       g.el.style.transition = 'transform 160ms ease-out';
       g.el.style.transform = '';
       window.setTimeout(() => { g.el.style.transition = ''; }, 170);
-      if (apply && g.dx >= SWIPE_REPLY) {
+      if (apply && replies && g.dx >= SWIPE_REPLY) {
         const e = timeline.find((x) => keyOf(x) === g.key);
         if (e?.kind === 'message' && !e.deletedAt) beginReply(e);
       }
@@ -423,7 +430,9 @@ export function ChatView({
     const dy = event.clientY - g.y;
     if (!g.swiping && (Math.abs(dy) > 10 || Math.abs(dx) > 10)) window.clearTimeout(g.timer);
     if (!g.swiping && Math.abs(dy) > 12) { gesture.current = null; return; }
-    if (dx > 12 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    // No swipe at all where Reply is not offered: a bubble that follows the
+    // thumb promises something will happen.
+    if (replies && dx > 12 && Math.abs(dx) > Math.abs(dy) * 1.5) {
       g.swiping = true;
       g.dx = Math.min(dx, SWIPE_REPLY + 24);
       g.el.style.transform = `translateX(${g.dx}px)`;
@@ -449,7 +458,7 @@ export function ChatView({
     const mine = e.who === me;
     const list: MenuAction[] = [];
     if (e.kind === 'message') {
-      list.push({ key: 'reply', label: 'Reply', icon: MENU_ICONS.reply, run: () => { setMenuFor(''); beginReply(e); } });
+      if (replies) list.push({ key: 'reply', label: 'Reply', icon: MENU_ICONS.reply, run: () => { setMenuFor(''); beginReply(e); } });
       list.push({
         key: 'copy', label: 'Copy', icon: MENU_ICONS.copy,
         // Through copyText(), the one place the clipboard is touched: it works

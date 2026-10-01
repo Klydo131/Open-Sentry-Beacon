@@ -34,7 +34,7 @@ import * as live from '@/lib/live/data';
 import type { Message } from '@/lib/types';
 import type { Reaction, ReactionTarget } from '@/lib/talk/reactions';
 import { useLiveSession } from '@/lib/live/session';
-import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_TALK } from '@/lib/live/keep-up';
+import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_REACTIONS, KEEP_UP_TALK } from '@/lib/live/keep-up';
 import { useDraft, clearDraft } from '@/lib/drafts';
 import { Conversation, Notice, errorText } from '@/components/live/shared';
 import { LiveReportForm } from '@/components/LiveSafeguarding';
@@ -70,6 +70,10 @@ export function TalkSurface({
   const [messages, setMessages] = useState<Message[]>([]);
   const [files, setFiles] = useState<live.PairingFile[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
+  // Whether this database has replies, reactions and voice (migration
+  // 20261001120000). Unknown until the first reaction list is read, and off
+  // until then, so nothing is offered that the database would refuse.
+  const [extras, setExtras] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [attachError, setAttachError] = useState('');
@@ -107,8 +111,16 @@ export function TalkSurface({
       setMessages(await live.listMessages(id));
       setFiles(await live.listPairingFiles(id).catch(() => [] as live.PairingFile[]));
       // Reactions are decoration on a conversation, never a reason for one not
-      // to open: if they cannot be read, the thread still is.
-      setReactions(await live.listReactions(id).catch(() => [] as Reaction[]));
+      // to open: if they cannot be read, the thread still is. Reading them is
+      // also how the app learns whether this database has replies, reactions
+      // and voice at all (lib/live/data.ts, NotOnThisDatabaseYet).
+      try {
+        setReactions(await live.listReactions(id));
+        setExtras(true);
+      } catch (cause) {
+        setReactions([]);
+        if (cause instanceof live.NotOnThisDatabaseYet) setExtras(false);
+      }
       // OPENING IT IS READING IT. The badge has to fall the moment somebody
       // looks, or it becomes a number people learn to ignore.
       await live.markRead(id);
@@ -126,6 +138,7 @@ export function TalkSurface({
   // move rather than going stale behind the conversation being read.
   useKeepUp(KEEP_UP_TALK, loadThread);
   useKeepUp(KEEP_UP_TALK, loadThreads);
+  useKeepUp(KEEP_UP_REACTIONS, loadThread, extras);
 
   // Throws on failure, so the chat keeps the words and what they answered.
   const send = async (text: string, replyTo: string | null) => {
@@ -268,7 +281,10 @@ export function TalkSurface({
               onRemoveFile={(file) => void dropFile(file)}
               attachError={attachError}
               reactions={reactions}
-              onReact={react}
+              // Offered once this database is known to have them; until then
+              // the conversation is the words and the files, as it was.
+              onReact={extras ? react : undefined}
+              extras={extras}
               onEditMessage={async (id, text) => { await live.editMessage(id, text); await loadThread(); }}
               onDeleteMessage={async (id) => { await live.deleteMessage(id); await loadThread(); }}
             />

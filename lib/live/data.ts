@@ -44,6 +44,7 @@ import {
 import { uuid } from '@/lib/uuid';
 import { shrinkImage } from '@/lib/live/shrink-image';
 import { isSafeStoragePath, safeStoragePath } from '@/lib/live/storage-path';
+import { NotOnThisDatabaseYet, isMissingFromDatabase } from '@/lib/live/not-yet';
 import type { PlaceSuggestion } from '@/lib/live/place-pin';
 import type { Session } from '@supabase/supabase-js';
 import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode } from '@/lib/types';
@@ -1423,6 +1424,10 @@ export async function sendMessage(pairingId: string, body: string, replyTo?: str
 }
 
 /** Every reaction in one conversation. Read under the pairing's own rule. */
+// Replies, reactions and voice may not be on this database yet: see
+// lib/live/not-yet.ts. Re-exported so the screens can tell the two apart.
+export { NotOnThisDatabaseYet } from '@/lib/live/not-yet';
+
 export async function listReactions(pairingId: string): Promise<Reaction[]> {
   // A reaction taken back stays as a row with no emoji: an UPDATE reaches only
   // the two people on the realtime feed, a DELETE reaches everybody (migration
@@ -1432,7 +1437,7 @@ export async function listReactions(pairingId: string): Promise<Reaction[]> {
     .select('id, pairing_id, message_id, media_id, person_id, emoji, created_at')
     .eq('pairing_id', pairingId)
     .not('emoji', 'is', null);
-  if (error) throw new Error(error.message);
+  if (error) throw isMissingFromDatabase(error) ? new NotOnThisDatabaseYet(error.message) : new Error(error.message);
   return (data ?? []) as Reaction[];
 }
 
