@@ -49,12 +49,12 @@ node docs/handbook/build-pdf.js HANDBOOK.md DO-THIS-NEXT.md WHAT-IT-COSTS.md \
                                 BACKEND-MAP.md BUILD-BRIEF.md
 node docs/handbook/build-pdf.js --combine "IT and AI Guide" \
      START-HERE.md AI-SETUP-GUIDE.md EMAIL.md SECURITY.md
-cp docs/handbook/pdf/Open-Hope-Beacon-HANDBOOK.pdf      docs/Hope-Beacon-Handbook.pdf
-cp docs/handbook/pdf/Open-Hope-Beacon-BACKEND-MAP.pdf   docs/Hope-Beacon-Architecture.pdf
-cp docs/handbook/pdf/Open-Hope-Beacon-BUILD-BRIEF.pdf   docs/Hope-Beacon-Engineering-Brief.pdf
-cp docs/handbook/pdf/Open-Hope-Beacon-IT-and-AI-Guide.pdf docs/Hope-Beacon-IT-and-AI-Guide.pdf
-cp docs/handbook/pdf/Open-Hope-Beacon-DO-THIS-NEXT.pdf  docs/Do-This-Next.pdf
-cp docs/handbook/pdf/Open-Hope-Beacon-WHAT-IT-COSTS.pdf docs/What-It-Costs.pdf
+cp docs/handbook/pdf/Open-Sentry-Beacon-HANDBOOK.pdf      docs/Hope-Beacon-Handbook.pdf
+cp docs/handbook/pdf/Open-Sentry-Beacon-BACKEND-MAP.pdf   docs/Hope-Beacon-Architecture.pdf
+cp docs/handbook/pdf/Open-Sentry-Beacon-BUILD-BRIEF.pdf   docs/Hope-Beacon-Engineering-Brief.pdf
+cp docs/handbook/pdf/Open-Sentry-Beacon-IT-and-AI-Guide.pdf docs/Hope-Beacon-IT-and-AI-Guide.pdf
+cp docs/handbook/pdf/Open-Sentry-Beacon-DO-THIS-NEXT.pdf  docs/Do-This-Next.pdf
+cp docs/handbook/pdf/Open-Sentry-Beacon-WHAT-IT-COSTS.pdf docs/What-It-Costs.pdf
 ```
 
 > **Checking a built PDF actually contains your change.** `pdftotext` is not
@@ -94,7 +94,7 @@ node build-ai-guide.js
 To preview without Word:
 
 ```bash
-soffice --headless --convert-to pdf Open-Hope-Beacon-Handbook.docx
+soffice --headless --convert-to pdf Open-Sentry-Beacon-Handbook.docx
 ```
 
 The generated `.docx` files are deliberately **not** committed — they are build

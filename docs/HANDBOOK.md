@@ -2,13 +2,15 @@
 
 Everything needed to run Hope Beacon, move it to a new project, and keep it working. Written for the people who run a church, and for the AI tools that will be asked to continue the work.
 
-**Version:** 1 September 2026 (evening) · **Applies to:** migrations through `20260901140000` · **Licence:** AGPL-3.0 · **Source:** `github.com/Klydo131/Open-Sentry-Beacon`
+**Version:** 1 October 2026 · **Applies to:** migrations through `20261001120000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
 
 > **NOTE** · How to read this
 >
 > **Running a church?** Parts 1 to 5 are yours. They assume no technical knowledge and nothing needs installing.
 >
 > **Setting the app up, or moving it?** Parts 6 to 12. Follow them in order; each one checks the one before it.
+>
+> **Copying it for your own church?** Part 7 opens with what a copy gets, how to stand it up, and the one thing the licence asks of it.
 >
 > **An AI tool picking this up?** Part 13 is written for you and states the invariants you must not break.
 >
@@ -53,9 +55,17 @@ What an Explorer says to their Guide is readable by those two and nobody else. N
 >
 > The rule that lets a recipient mark a message as read was written in a way that also permitted editing the whole message, including one you did not write, with nothing shown on screen. Nobody appears to have used it. It is closed, and the conversation is now the one thing in this app that only its author can change.
 
+### A reply, a reaction, a voice message
+
+Since 1 October 2026 a conversation does what the messaging apps people already use do. **Reply** to one message so the answer carries a quote of it, **react** with one of six (praying first, because "I'm praying for you" is the reaction a Guide and an Explorer reach for most), and **speak** a voice message of up to two minutes. Part 4, *The conversation*, says how. The same rule covers all three: they belong to the two people in the conversation and nobody else.
+
+All three need the database update that came with them (migration `20261001120000`). On a database without it the conversation is exactly what it was, the words, the photos and the live refresh, and the three are simply not offered. Part 9 says why that matters.
+
 ### Nobody can flood a room
 
 **One account can send forty messages a minute and no more**, across the conversation, the Guild wall and the Guides' room. That is two a second held for a full minute, which nobody types; it is set to stop a script rather than a person, and somebody who somehow reaches it is told plainly to wait a moment rather than shown an error code.
+
+**Files and reactions have their own ceilings.** Ten files a minute into a conversation, because forty ten-megabyte photos a minute is not a limit, it is a storage bill. Thirty reaction changes a minute, because a reaction is one tap and every change wakes the other person's screen.
 
 **It bounds the machine, not the behaviour.** Forty unkind messages a minute is still forty unkind messages, and the answer to that is the report route and a Director — the same answer as everywhere else in this app. No counter substitutes for a person whose job it is to look.
 
@@ -200,6 +210,36 @@ Three things about it are worth knowing before you use it on twenty people.
 > **NOTE** · Who may delete whom
 >
 > Decided by the database, not the screen. An Executive Director may act on anyone in a church they oversee. A Director may act on Guides and Explorers only, never another Director. Nobody may act on themselves, and nobody at all may act on the Head Executive Director. If an action is refused you are told why, in a sentence.
+
+### The conversation
+
+**Open it with Message** on a Guide's page for one Explorer or on an Explorer's own screen, or with the round **Talk** bubble in the corner of every screen, which carries a number when somebody has written. On a phone it fills the screen; on a computer it opens beside the page. **Report** is in its header, in words, far from Send.
+
+**What you see.** Your messages on the right in a soft blue, theirs on the left in a warm sand. Messages sent close together sit together, with the day written between days and the time inside each bubble. **Seen** appears once, under your own latest message, when the other person has opened it: once, and never beside every line, because a receipt on everything is pressure on whoever has not answered yet. There is deliberately no "typing..." and no "online now": nobody here should feel watched, or watched for a reply.
+
+**Tap a message for what you can do with it.** Holding it, right-clicking it on a computer, or the **⋯** beside it on a computer do the same. A panel rises from the bottom with the message quoted at the top, the six reactions, and then:
+
+| Choice | What it does |
+| --- | --- |
+| **Reply** | The message box shows what you are answering. Send, and your message carries a quote of it; tapping the quote takes you to the original. **Swiping a message to the right** does the same. |
+| **Copy** | Copies the words, and says so. |
+| **Edit** | Your own messages only. The words go back into the box; Save, and the message shows **edited**. |
+| **Delete** | Your own only, after asking. A line remains saying the message was deleted, never a gap. |
+| **Open**, **Remove** | For a photo or a file: open it, or (if you sent it) take it back. |
+
+**Reactions.** Praying, love, like, haha, wow and sad, in that order. One each per message: choosing another replaces yours, and choosing yours again takes it back. They sit on the lower edge of the bubble; tapping them opens the same panel.
+
+**Photos and files.** The paper clip beside the box sends one. A photo is made smaller and loses where it was taken before it leaves the phone (Part 9), and arrives as the picture: tap it for the full size, with **Save** in the corner. Anything else arrives as its name and size.
+
+**Voice messages.** With nothing typed, the button beside the box is a microphone. Tap it to start; the browser asks for the microphone the first time, and only then. A red dot and a clock show it is recording; **Cancel** throws it away and **Send** sends it. It stops at two minutes and waits for you; it never sends on its own. Tap, not hold, on purpose: holding a button for a minute is hard on an older hand, and a slipping thumb sends something half said. The microphone is let go of the moment recording stops, so the phone's microphone light goes off when it should.
+
+**It follows Text size.** Settings → Language and size changes the conversation's words as well as every other screen's. Until 1 October 2026 the chat was drawn in fixed sizes and did not.
+
+**The tutorial teaches it.** Both the Guide's walk and the Explorer's have a step that points at a message and asks for a reaction or a reply.
+
+> **NOTE** · If Reply, reactions and the microphone are not there
+>
+> The church's database has not had the update that brings them (migration `20261001120000`). Nothing is wrong: the conversation keeps its words, photos and live refresh, and the three appear on their own once the update has run. See *When the code is newer than the database* in Part 9.
 
 ### Meetings
 
@@ -713,6 +753,12 @@ Anywhere the app is fetching something smaller, it shows the same mark turning w
 
 A device set to reduce motion gets the same message without the spin.
 
+### Movement
+
+**Things move a little, quickly, and never for their own sake.** A panel unfolds from the button that opened it and folds back into it; a new subroom fades in where the old one was; a conversation slides in. Every movement in the app uses one of three lengths, 160, 220 and 280 thousandths of a second, so nothing drifts.
+
+**Reduce motion turns all of it off.** Phones have that setting for people whom movement on a screen makes dizzy or sick, and the app honours it everywhere: nothing slides, fades or bobs, and panels simply appear. A check fails the build if any animation in the app cannot be stilled.
+
 ### Notifications
 
 The bell in the header holds both the list and its switch. Alerts in the app are **on by default**.
@@ -800,6 +846,31 @@ Brevo templates are supported as an alternative but not recommended: they put th
 
 ## 7. Moving to a new project
 
+### A church's own copy, from GitHub
+
+**Anybody can copy this app and run it for their own church, and the copy is the whole app.** The repository is public, and copying it ("forking") gives a church or a developer:
+
+| What | Where it is |
+| --- | --- |
+| Every feature in this handbook, Explorer to Executive Director | The code |
+| The whole database: every table, every security rule, the conversation's replies, reactions and voice | `supabase/migrations/`, 138 files that build an empty database from nothing, in order |
+| The server functions: invitations, notifications to phones, place suggestions | `supabase/functions/` |
+| A setup guide that assumes no technical knowledge | `docs/START-HERE.md` |
+| Four ways to run it: on a computer with no accounts, on Vercel and Supabase, on a computer with a real database, and on other hosts, plus moving off Supabase entirely | `docs/DEPLOY-ANYWHERE.md` |
+| A tutorial mode with invented people, which needs no setup and no database at all | Built into the app |
+| Proof it still works: every change to the repository builds an empty database from those files and runs the checks against it | `.github/workflows/`, and `npm run verify` on any computer |
+| Three research agents to review a change for security, design and licences, with any AI tool | `.claude/agents/`, explained in `docs/agents/README.md` |
+
+**None of this church's people come with it.** Nothing about a member is in the repository, and checks fail the build if a key, a password or the live project's own address is ever added to it. A migration file is a blueprint: it tells an empty database what tables and rules to make. The copy starts empty and invites its own people.
+
+**Updating a copy later** is `git pull` for the code and `npx supabase db push` for the database, in either order. A site that updates before its database keeps working: anything new that needs the database is simply not offered until the database has it (Part 9).
+
+> **IMPORTANT** · The one thing the licence asks
+>
+> The app is free software under the AGPL-3.0-only. Run it unchanged and you owe nothing. **Change it (renaming it counts) and let your congregation use it, and you must offer them the source of your version.** The app already does that from Settings → About and from its front page; point both at your own repository by changing `SOURCE_URL` in `lib/brand.ts`. Settings → About also links **Code from other projects**: the licence of every open-source package inside the app, written at each build, which those packages ask for and you do not have to do anything about.
+
+### Moving the project you already run
+
 This is the part to read twice. Moving the app means moving three separate things, and they have different consequences for the people already using it.
 
 | What moves | Effect on people already using it |
@@ -834,11 +905,11 @@ In this order. Each step is checkable, and a step that cannot be checked has not
 
 **Step 1.** **Create the new Supabase project.** Note its URL and its publishable (anon) key from *Project Settings → API*. The anon key is not a secret and ships to every browser by design; the service role key never leaves the server.
 
-**Step 2.** **Run every migration, in filename order**, from `supabase/migrations/`. They build on one another, so the order is not optional. Migration `0001` through `0035` plus the dated one. Paste each into the SQL editor, or use the Supabase CLI.
+**Step 2.** **Run every migration, in filename order**, from `supabase/migrations/`: 138 files as of 1 October 2026. They build on one another, so the order is not optional. `npx supabase db push --db-url "<the connection string>"` runs them all in order and remembers which ran (`docs/START-HERE.md`, Step 3); pasting each into the SQL editor in filename order works too.
 
    *Check:* the `profiles`, `pairings`, `invites` and `app_settings` tables exist, and row level security is on for all of them.
 
-**Step 3.** **Deploy the invite function.** Deploy `supabase/functions/invite` to the new project. It is the only piece holding the service role key, and it is what sends every invitation.
+**Step 3.** **Deploy the edge functions.** `supabase/functions/invite` is required: it sends every invitation. `notify` (alerts on a phone when the app is closed) and `places` (place suggestions for a meeting in person) are optional, and each has its step in `docs/START-HERE.md`. `invite` and `notify` run with the service role key, which Supabase hands to every function on the server; it never leaves the server.
 
    *Check:* the function appears in *Edge Functions* and its version is the one you just deployed, not an older one that happened to be there.
 
@@ -900,6 +971,24 @@ on conflict (key) do update set value = excluded.value;
 
 Any of these may instead be set as a secret on the invite function; the function checks its own secrets first and the table second. The table is easier to change without a redeploy.
 
+### In the edge functions' secrets
+
+*Edge Functions → Secrets* in Supabase. `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are put there by Supabase itself.
+
+| Name | For | What it is |
+| --- | --- | --- |
+| `BEACON_ALLOWED_ORIGINS` | `invite`, `places` | Your site's address. Both functions then refuse requests from any other site. Recommended. |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | `notify` | Only for alerts on a phone when the app is closed. The public key also goes on the website host as `NEXT_PUBLIC_VAPID_PUBLIC_KEY`; the private one never does. |
+| `PLACES_NEAR` | `places` | Optional. A point near the church, `latitude,longitude`, so nearby places come first. |
+| `PLACES_USER_AGENT` | `places` | Recommended. Your app's name and a contact address, so the place search knows who is asking. Without it every copy of the app sends the same name, and one heavy user could get that name refused for all of them. |
+| `PLACES_PHOTON_URL` | `places` | Only for heavy use: the `https://` address of your own Photon server instead of the public one. |
+
+### In the code
+
+| Where | What |
+| --- | --- |
+| `lib/brand.ts` | `APP_NAME` and `APP_SHORT_NAME`, the app's name everywhere a member reads it; `SOURCE_URL`, where its source is, which the licence requires a changed copy to offer (Part 7). |
+
 ### DNS, at whoever sells you the domain
 
 | Purpose | What to add |
@@ -934,6 +1023,16 @@ Every privacy promise this app makes is kept by the database, not by the screens
 | Only leadership of that church can take a post down. | `leads_church`, which also covers an Executive Director set over several congregations. |
 | The security audit is leadership only. | A definer function that refuses anybody else. The table has row-level security on and every grant revoked, so the function is the only way in. |
 | An unapproved account cannot approve itself. | The same trigger that pins roles. The one exception it allows, claiming an invitation, cannot set approval, only church and role, and only from an unexpired invitation addressed to that account's own email. |
+| A reply can only quote a message from the same conversation. | A key on a message and its conversation together, so the database itself refuses a quote from anywhere else. |
+| Nobody sends a message already marked edited, read or deleted, or a file with a made-up time. | Column grants: a browser may write only the columns the app writes. Everything else is set by the database. |
+| Only the two people in a conversation see its reactions, and nobody writes one directly. | Row level security on `message_reactions`, no write grant at all, and `react_to()` checking the person, the conversation and the six in one place. |
+| Taking a reaction back tells only the two people. | It empties the row rather than deleting it: the live feed sends a deletion to every signed-in subscriber in every church, and an update only to the two. |
+| A file's stored path cannot become a different request. | The database accepts only `<conversation>/<random id>`, and `lib/live/storage-path.ts` refuses an unsafe path in the browser before any link is made. |
+| Nobody sends more than ten files, or changes thirty reactions, a minute. | Pace rules inside the database, beside the forty-messages one. |
+
+> **IMPORTANT** · The last six rows come with migration `20261001120000`
+>
+> A database without it does not have them, and that includes this church's own database, by the owner's choice on 1 October 2026. Its conversation does not offer replies or reactions, so those rows have nothing to protect there yet. Three of the six do matter on it: the columns a browser may write, the shape of a file's path, and the ten-files ceiling. The path is the serious one, and it is still covered on that database, because the browser's own check ships with the code rather than with the migration. The other two are not, until the migration runs. Running it moves no data: it adds empty tables and rules.
 
 ### The blog error, and what it actually was
 
@@ -972,6 +1071,10 @@ So a photo is made smaller before it is sent: sixteen hundred pixels on its long
 >
 > A phone writes the exact coordinates into a photograph, usually somebody's home. Sending a picture of a Bible page to a Guide should not tell them where you live. Re-drawing the image keeps the pixels and drops every tag, so the privacy fix and the saving are the same line of code. The conversation says so above the message box, and so does the privacy notice.
 
+> **IMPORTANT** · And from PNG and WebP pictures too, since 1 October 2026
+>
+> A small picture is not worth re-drawing, so until then a PNG or WebP under 400 KB went out exactly as it was, location and all. Their metadata is now cut out at the byte level, whatever their size, and the picture itself is untouched (checked by opening a stripped picture in Chromium). A HEIC photo still goes as it is. Safari on an iPhone is thought to convert one to JPEG before sending, which would remove the location, but that has not been checked here; what to do about HEIC is one of the owner's open decisions.
+
 **A photograph is shown, not named.** A picture sent into a conversation draws as the picture, tappable for the full size; a voice note draws as a player. Anything else is a filename, which is right for a study sheet. The sample side had done this for months and the live conversation had not, so somebody who learned the app in the tutorial signed in, sent their Guide a photo, and got `20260901_110714.jpg`.
 
 Pictures further up a thread are not fetched until they are scrolled to, and a voice note downloads nothing until it is played. That is not politeness: a private file is fetched through a signed link no cache keeps, so a conversation with thirty photographs in it would otherwise download all thirty to show today's message.
@@ -983,6 +1086,16 @@ Pictures further up a thread are not fetched until they are scrolled to, and a v
 > **This is under review and the cost has been worked out.** At this church's size video turns out to be affordable, and it stops being affordable at about ten churches sharing one instance. [What it costs](./WHAT-IT-COSTS.md) has the numbers, the three arguments against that are not about money, and the recommendation: allow it with a short cap, and measure for a month before widening it.
 
 **Files reach the server in three places, all within the same 10 MB limit and none of them video:** a **conversation**, because the two people are rarely holding their phones at the same moment and the file has to wait somewhere; a **study handout**; and, since 25 September 2026, a **resource**, because the owner asked for files in Resources to be easy to add and easy to share. A file saved under *On this device* in My Files still never leaves the phone that saved it, unless its owner shares it through the phone's own share sheet.
+
+**A voice message is a file like any other**, kept in the same private store under the same rules, and recorded in the first of `.m4a`, `.webm` or `.ogg` that the browser can make. A phone that cannot play the format it arrives in, such as an older iPhone given a `.webm`, is offered the file instead.
+
+### When the code is newer than the database
+
+The website and the database are updated separately. A push reaches the site in minutes; the database changes only when somebody runs the new migration, and a church may choose not to. So **a screen that needs something new from the database must keep working without it.**
+
+The conversation is the example. Without migration `20261001120000` it keeps its words, photos and live refresh exactly as before, and Reply, reactions and the microphone are not offered, rather than offered and refused. Once the migration has run they appear by themselves. `lib/live/not-yet.ts` tells "that table is not here yet" apart from a real failure such as a dropped signal, which is still reported, and `tests/the-chat-works-before-its-database-update.mjs` holds it.
+
+This church's own database has not had that migration, by the owner's choice on 1 October 2026; the code went out so that every copy of the app gets the whole thing. A copy built from the repository has it from the start.
 
 ### Backups
 
@@ -1008,6 +1121,8 @@ So the signed-out role now holds no table privilege at all, every policy names t
 ### The bytes get the same boundary as the rows
 
 Two storage rules matched on the folder name alone, so any signed-in account could list and download every lesson file and every avatar in the instance, whatever church it belonged to. The table describing those files was correctly scoped by church the whole time; only the files were not. Both are now scoped through `can_access_church`, which still lets an Executive Director see the churches they oversee.
+
+**A path one person writes must not become a request in another person's browser.** To show a photo, the viewer's app asks the file store to sign the file's path, with the viewer's own sign-in, and the storage library puts that path into the address as it is. The path is written by whoever sent the file. Until 1 October 2026 nothing checked it, so a crafted path such as `../../auth/v1/logout` could have signed the other person out of every device each time they opened the conversation. The security review of that day found it. The database now accepts only the shape the app writes, and every link the app makes to a stored file, in every bucket, refuses a path that a browser would read as anything more than a name.
 
 > **IMPORTANT** · A deleted account and its pictures
 >
@@ -1051,6 +1166,12 @@ Somebody will eventually ask what the law requires of a church running this, and
 That raises the standard in four ways: consent has to be **express** rather than implied, a **Data Protection Officer** is expected, the church must **register with the National Privacy Commission** once it passes a thousand members, and the penalties for getting it wrong are higher.
 
 **[docs/DATA-PROTECTION.md](./DATA-PROTECTION.md) is the map**: every table that holds anything about a person, why it is there, who can read it, how long it stays, and which company holds it. It also lists what is still missing, and the list is the point of the document.
+
+### What the conversation added, 1 October 2026
+
+- **A voice message** is a recording, kept and protected exactly like a photo in the conversation: only the two people can play it, and it goes when its sender removes it. The microphone is asked for only when somebody taps to record, and released when they stop.
+- **A reaction** is seen by the two people, like the conversation itself.
+- **Playing a shared YouTube or Facebook video** loads that company's player, and only when Play is tapped. From that tap the company sees the browser play the video, as on its own site. The privacy notice now says so, and `docs/DATA-PROTECTION.md` lists them as separate controllers rather than processors.
 
 ### Asking for a copy of your own information
 
@@ -1101,6 +1222,11 @@ The two largest gaps today:
 | A card I used to scroll to has disappeared | Nothing was removed. Six rooms now open in folders, and the card is in one of them: the drop-down at the top of the room lists them all. | Tap the drop-down and choose the folder it belongs to. The room remembers your choice, so it will open there next time. |
 | A link took me to a room but not to the card I pressed for | Fixed on 31 August 2026. Links that pointed at a card by name were pointing at something a folder might not be drawing. | Nothing to do. Those links now name the folder as well, and old ones are translated. |
 | A study cannot be written on a phone or an iPad | Fixed on 28 August 2026. The Office was reachable only from the left column, which does not exist below laptop width. | Nothing to do. Office, Publish and Cases are in the Menu, on the bar at the bottom of every screen. |
+| Reply, reactions and the microphone are not in the conversation | The database has not had migration `20261001120000`. Working as designed: the conversation keeps everything else. | Nothing, or run that migration to switch them on (Part 9). |
+| No microphone, on a database that does have the update | The browser cannot record here: the page is not on its real `https://` address, or the browser is too old to record. | Open the real address in a current browser. Typing still works, and so does attaching a recording. |
+| "The microphone is switched off for this app" | The browser was once told no, and remembers. | Allow the microphone for this site in the browser's settings, then tap the microphone again. |
+| "You are reacting faster than the app allows" or "sending faster than the app allows" | A pace rule: thirty reaction changes, ten files or forty messages a minute. Set to stop a script, not a person. | Wait a minute. |
+| A voice message offers a file instead of playing | It was recorded in a format this phone cannot play, such as a `.webm` on an older iPhone. | Open the file, or update the phone. |
 
 ### Where the code lives
 
@@ -1132,10 +1258,12 @@ Read this section before making a change. It states what is true, what must stay
 
 ### The shape of it
 
-- Next.js App Router, TypeScript, Tailwind. Supabase for database and authentication. One edge function, `invite`, holding the only service role key.
+- Next.js App Router, TypeScript, Tailwind. Supabase for database and authentication. Three edge functions: `invite` and `notify`, which run with the service role key on the server, and `places`, which needs none.
 - The app runs with **no backend at all**, on sample data in the browser. That is not a fallback, it is a supported mode with tests that fail if it breaks. Never write code that requires the database to exist.
 - The security model lives in `supabase/migrations/`. Contracts evolve by adding a migration, never by editing one that has already been applied. **New files are named `YYYYMMDDHHMMSS_`; the `00NN_` series is closed at 0049 and a new number in it would sort first and run before the tables it needs.**
 - Anything privileged is a `security definer` function in the `private` schema doing its own check, with a thin `public` wrapper, every grant revoked from `anon`, and the table itself carrying row-level security **and** no grants at all. The function is the only way in.
+- The code and the database are updated separately, and a screen that needs a new table keeps working until it exists (`lib/live/not-yet.ts`, Part 9).
+- `.claude/agents/` holds three read-only reviewers, for security, design and licences; `docs/agents/README.md` says how to run them with any tool. Their first run, on the conversation, is recorded in `docs/CHAT-RESEARCH.md`.
 
 ### Invariants you must not break
 
@@ -1151,12 +1279,18 @@ Read this section before making a change. It states what is true, what must stay
 10. `dvh` for anything measured against a phone's screen, with a `vh` line beneath it for old browsers, and `env(safe-area-inset-bottom)` on anything pinned to the bottom.
 11. A panel lives in exactly one subroom, and the first subroom in the list is what the room is for, because that is the one that opens when nothing is remembered. Never move an Explorer's report control out of the folder holding the conversation, and never put a Guide's church notices inside a folder.
 12. One full-screen waiting state, `BeaconSplash`, drawing the app's own mark. A second one written next to the screen that needs it is how this app ended up with three.
+13. A stored file path becomes part of an address only through `safeStoragePath()` or `isSafeStoragePath()` in `lib/live/storage-path.ts`. The path was written by somebody else.
+14. Reactions are written only through `react_to()`, and taken back by emptying the row, never by deleting it.
+15. No file carries an invisible character that reverses or hides text. Write them as `\u` escapes; `tests/no-hidden-characters.mjs` refuses the real thing.
+16. A dependency under a licence not on the allowlist in `tests/dependency-licences.mjs` fails the build until somebody has read it. The third-party notices are written at each build and never committed.
+17. A screen that needs a new table, column or function keeps working without it, until the migration that adds it has run.
 
 ### Prove it before you claim it
 
 ```
-npm run verify        # 37 checks: types, build, security, copy, email, install,
-                      # phones, sessions, safeguarding
+npm run verify        # 165 checks: types, build, security, privacy, licences,
+                      # copy, email, install, phones, sessions, safeguarding
+npm run verify:all    # the same, plus 61 browser walks: 226 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1178,6 +1312,11 @@ CI runs the same command on **Ubuntu, macOS and Windows**. A green run on Linux 
 - **Shipping a room before asking who is protected in it.** The guild board went out with no report route, no leadership visibility and no way for anyone but the author to delete a post, in a room that includes children. Nothing about it looked wrong on screen.
 - **Trusting a filename.** The version a migration is recorded under in the database is not the name of the file it came from, and a `00NN_` name added today sorts before every timestamped one.
 - **Editing a migration that had already run.** It changes nothing in the database and makes a fresh environment differ from production. Add a corrective migration.
+- **Running only the checks you think are relevant.** The first full run on 1 October 2026 failed three checks. One reads committed files only, so it could not see a new migration until it was committed; the other two had simply not been run. Stage the change and run every check.
+- **Trusting a tool with characters you cannot see.** Writing the code that strips text-reversing characters from file names, the tool turned the `\u` escapes into the characters themselves, and did it again in the test written to forbid them. Check the bytes.
+- **Writing down how a platform behaves without checking.** A migration comment said the live feed would apply the read rule to a deletion. It does not, and a reaction taken back would have been announced to every church.
+- **Treating a value one person writes as safe in another person's browser.** A file's path was checked for who may read the row, never for what the path would make the other person's app do.
+- **Planning around a word the owner uses differently.** "Migration" meant *copies of the app get everything* to the owner and *change the live database* to the plan. Ask what outcome is wanted before planning steps around a term.
 
 ## 14. What is not finished
 
@@ -1200,6 +1339,11 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | The one-tap Safari handoff on a real device | Tested against simulated iPhone browsers. Never run on a physical iPhone. |
 | Publishing a post, from a real sign-in | The rules were proved against the live database as a real Explorer, Guide, Director and Executive Director, including that a draft never reaches anybody else. It has not been done through the app by a person with a password. |
 | "Active" as a count of visits | Not built and deliberately so. Beacon does not record when somebody opens the app, and the screen says what the number does mean instead of implying otherwise. |
+| Reply, reactions and voice on this church's own site | Built and shipped. Switched off here, because this church's database has not had migration `20261001120000`, by the owner's choice; every copy built from the repository has them. |
+| The conversation without its update, on the live site | Held by tests. Never seen running from here, because this sandbox cannot sign in to the live site. |
+| The new conversation on a real iPhone, and with a screen reader | Not tried. Checked in Chromium at phone and computer sizes, with a pretend microphone. |
+| What else other open-source chats do well | A "New messages" line, "Not sent: try again", an offline line and more, each traced to the file it would change, in `docs/CHAT-RESEARCH.md`. |
+| Nine decisions for the owner | Keeping removed files for safeguarding, a daily size cap, HEIC photos, read-only ended pairings, lock-screen previews, a copyright line, the sample church's name, a trademark search on "Sentry", and AI-written code. Listed with reasons in `docs/CHAT-RESEARCH.md`. |
 
 ### Bulk invitations, as built
 
@@ -1215,4 +1359,4 @@ Inviting twenty-five people one form at a time is not a workflow. The design was
 >
 > The app's limit is not servers, it is Guides. Everything about running this well follows from that: recruit a Guide, train them, pair them with up to five people, and watch the number of Explorers waiting for one.
 
-Open Sentry Beacon is free software under the AGPL-3.0. This handbook contains no keys, no passwords and no member details, and is safe to share.
+Open Sentry Beacon is free software under the AGPL-3.0-only. This handbook contains no keys, no passwords and no member details, and is safe to share.
