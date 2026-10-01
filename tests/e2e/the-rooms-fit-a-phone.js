@@ -26,7 +26,7 @@
 //   node tests/e2e/the-rooms-fit-a-phone.js 4382
 // ---------------------------------------------------------------------------
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat } = require('./_playwright');
 const PORT = process.argv[2] || '4382';
 const BASE = `http://localhost:${PORT}`;
 
@@ -155,9 +155,11 @@ async function go(page, locator, url) {
     //
     // Two things this got wrong the first time, both of them about measuring:
     // the page scrolls smoothly, so 400ms after asking it was still moving
-    // and the "last line" was wherever it happened to be; and below `xl` the
-    // person's own rail (the note, the timer, the pocket) stacks UNDER the
-    // page, so the last line is in the column, not in <main>.
+    // and the "last line" was wherever it happened to be; and the person's own
+    // desk (the note, the timer, the pocket) is beside <main>, not in it. Below
+    // `xl` the desk is a closed drawer off the right edge (30 September 2026):
+    // still laid out, so still measurable, and not on the screen -- so what is
+    // hidden or off the screen is left out of "the last line".
     //
     // A STAND-IN FLOATER, because the real ones come and go: the sample-data
     // pill flashes on a timer, the chat bubble is live-only, the install bar and
@@ -189,8 +191,9 @@ async function go(page, locator, url) {
       const column = document.querySelector('main')?.parentElement ?? document.body;
       const leaves = [...column.querySelectorAll('*')].filter((el) => {
         if (el.children.length || !(el.textContent || '').trim()) return false;
+        if (getComputedStyle(el).visibility === 'hidden') return false;
         const r = el.getBoundingClientRect();
-        return r.width > 0 && r.height > 0;
+        return r.width > 0 && r.height > 0 && r.left < window.innerWidth && r.right > 0;
       });
       if (!leaves.length) return null;
       const lowest = leaves.reduce((a, b) => (b.getBoundingClientRect().bottom > a.getBoundingClientRect().bottom ? b : a));
@@ -244,7 +247,8 @@ async function go(page, locator, url) {
     const u = new URL(page.url());
     ok(u.pathname === '/dm' && u.searchParams.get('room') === 'people',
        `${at}: People opens My Explorers (${u.pathname}${u.search})`);
-    ok(await page.getByRole('tab', { name: /My Explorers/ }).first().getAttribute('aria-selected') === 'true',
+    // The subrooms are a drop-down (30 September 2026); its button names the one you are in.
+    ok(/My Explorers/.test((await page.locator('[data-subroom-toggle]').first().getAttribute('aria-label')) || ''),
        `${at}: on the My Explorers subroom`);
 
     const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -270,11 +274,10 @@ async function go(page, locator, url) {
     await ctx.close();
   }
 
-  // INSIDE A CONVERSATION THE BAR STEPS ASIDE, on a phone and on a desktop.
-  // "Hide the bar inside conversations too." A Guide opening one Explorer
-  // lands on the Talk tab, which is the conversation: no bar, nothing reserved
-  // for it, and a Back button to leave by. Another tab of the same page brings
-  // the bar back. An Explorer's home keeps it, although their chat is on it.
+  // THE CONVERSATION IS IN THE TALK BUBBLE (30 September 2026). A Guide
+  // opening one Explorer lands on Appointments, which is not a conversation and
+  // keeps the bar. Message opens the bubble: on a phone it covers the whole
+  // screen, bar and all; on a desktop it is a panel standing on the bar.
   for (const [label, w, h, mobile] of [['phone', 390, 844, true], ['desktop', 1440, 900, false]]) {
     const ctx = await browser.newContext({
       viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
@@ -282,25 +285,40 @@ async function go(page, locator, url) {
     const page = await ctx.newPage();
     await signIn(page, /Maria Santos/i);
     await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
-    await page.locator('[data-conversation-screen]').first().waitFor({ state: 'attached', timeout: 10000 }).catch(() => {});
-    await page.waitForTimeout(400);
-    const inTalk = await page.evaluate(() => {
-      const nav = document.querySelector('nav[aria-label="Main"]');
+    await page.waitForTimeout(600);
+    ok(!(await page.locator('[data-conversation-screen]').count()), `Appointments (${label}): is not marked as a conversation`);
+    ok(await bar(page).isVisible(), `Appointments (${label}): and keeps the bar`);
+    ok(/Appointments/.test((await page.locator('[data-subroom-toggle]').first().getAttribute('aria-label')) || ''),
+       `Appointments (${label}): it is the section the page opens on`);
+
+    ok(await openChat(page), `bubble (${label}): Message opens the conversation`);
+    const geo = await page.evaluate(() => {
+      const sheet = document.querySelector('[data-talk-sheet] .talk-sheet')?.getBoundingClientRect();
+      const nav = document.querySelector('nav[aria-label="Main"]')?.getBoundingClientRect();
+      const box = document.querySelector('[data-quest="chat-send"]')?.getBoundingClientRect();
+      const report = document.querySelector('[data-talk-report]')?.getBoundingClientRect();
       return {
-        marked: !!document.querySelector('[data-conversation-screen]'),
-        hidden: !nav || getComputedStyle(nav).display === 'none',
-        reserved: getComputedStyle(document.documentElement).getPropertyValue('--tab-bar').trim(),
-        back: !!document.querySelector('header [aria-label="Go back"]'),
+        vh: innerHeight, vw: innerWidth,
+        sheet: sheet && { top: Math.round(sheet.top), bottom: Math.round(sheet.bottom), left: Math.round(sheet.left), right: Math.round(sheet.right) },
+        barTop: nav ? Math.round(nav.top) : null,
+        composerBottom: box ? Math.round(box.bottom) : null,
+        reportTop: report ? Math.round(report.top) : null,
       };
     });
-    ok(inTalk.marked, `conversation (${label}): the Talk tab is marked as a conversation`);
-    ok(inTalk.hidden && !inTalk.reserved,
-       `conversation (${label}): the bar steps aside and nothing is reserved for it (${inTalk.reserved || 'none'})`);
-    ok(inTalk.back, `conversation (${label}): and the header has a Back button to leave by`);
-    const journey = page.getByRole('tab', { name: /Journey/ }).first();
-    if (mobile) await journey.tap({ timeout: 8000 }).catch(() => {}); else await journey.click({ timeout: 8000 }).catch(() => {});
+    if (mobile) {
+      ok(!!geo.sheet && geo.sheet.left <= 0 && geo.sheet.right >= geo.vw && geo.sheet.bottom >= geo.vh - 1,
+         `bubble (${label}): it covers the screen, bar and all (${JSON.stringify(geo.sheet)})`);
+    } else {
+      ok(!!geo.sheet && geo.barTop !== null && geo.sheet.bottom <= geo.barTop + 1,
+         `bubble (${label}): the panel stands on the bar (${geo.sheet?.bottom} <= ${geo.barTop})`);
+    }
+    ok(geo.composerBottom !== null && geo.composerBottom <= geo.vh, `bubble (${label}): the box to type in is on the screen (${geo.composerBottom} <= ${geo.vh})`);
+    ok(geo.reportTop !== null && geo.reportTop >= 0 && geo.reportTop < geo.vh / 3,
+       `bubble (${label}): Report is at the top of it (${geo.reportTop}px)`);
+    await page.getByRole('button', { name: 'Close the chat' }).first().click();
     await page.waitForTimeout(500);
-    ok(await bar(page).isVisible(), `conversation (${label}): another tab of the same page brings the bar back`);
+    ok(!(await page.locator('[data-talk-sheet]').count()) && await bar(page).isVisible(),
+       `bubble (${label}): closing it puts the page and the bar back`);
     await ctx.close();
   }
   {
@@ -311,7 +329,52 @@ async function go(page, locator, url) {
     await signIn(page, /John Reyes/i);
     await page.goto(`${BASE}/ds?room=guide`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(600);
-    ok(await bar(page).isVisible(), "Explorer: their home keeps the bar, though the chat with their Guide is on it");
+    ok(await bar(page).isVisible(), 'Explorer: their home keeps the bar');
+    ok((await page.locator('[data-message-button]').count()) > 0, 'Explorer: and Message is on it, for the conversation with their Guide');
+    await ctx.close();
+  }
+
+  // THE DESK IS A DRAWER BELOW 1280px (30 September 2026): a tab on the right
+  // edge opens it, ››› puts it away, and nothing of it is on the page until
+  // then. From 1280px it is the column beside the page, with no tab.
+  for (const [label, w, h, mobile] of [['phone', 390, 844, true], ['pad', 820, 1180, true], ['desktop', 1440, 900, false]]) {
+    const ctx = await browser.newContext({
+      viewport: { width: w, height: h }, isMobile: mobile && w < 700, hasTouch: mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
+    });
+    const page = await ctx.newPage();
+    await signIn(page, /Maria Santos/i);
+    await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(600);
+    const tabShown = await page.locator('[data-desk-tab]').isVisible();
+    const deskShown = await page.locator('[data-desk-drawer] aside').first().isVisible();
+    if (w >= 1280) {
+      ok(!tabShown && deskShown, `desk (${label}): beside the page, with no tab`);
+      const beside = await page.evaluate(() => {
+        const aside = document.querySelector('[data-desk-drawer] aside')?.getBoundingClientRect();
+        const main = document.querySelector('main')?.getBoundingClientRect();
+        return aside && main ? aside.left >= main.right - 1 : false;
+      });
+      ok(beside, `desk (${label}): and it is the column to the right of the page`);
+    } else {
+      ok(tabShown && !deskShown, `desk (${label}): a tab on the edge, and the desk out of the way until asked for`);
+      await page.locator('[data-desk-tab]').click();
+      await page.waitForTimeout(500);
+      const open = await page.evaluate(async () => {
+        const d = document.querySelector('[data-desk-drawer]');
+        d.scrollTop = d.scrollHeight;
+        await new Promise((r) => setTimeout(r, 400));
+        const r = d.getBoundingClientRect();
+        const leaves = [...d.querySelectorAll('*')].filter((el) => !el.children.length && (el.textContent || '').trim()
+          && el.getBoundingClientRect().height > 0);
+        const lowest = Math.max(...leaves.map((el) => el.getBoundingClientRect().bottom));
+        return { left: Math.round(r.left), right: Math.round(r.right), lowest: Math.round(lowest), vw: innerWidth, vh: innerHeight };
+      });
+      ok(open.left >= 0 && open.right <= open.vw + 1, `desk (${label}): opened, it is inside the screen (${open.left}..${open.right})`);
+      ok(open.lowest <= open.vh, `desk (${label}): and its last line can be scrolled to (${open.lowest} <= ${open.vh})`);
+      await page.locator('[data-desk-close]').click();
+      await page.waitForTimeout(500);
+      ok(!(await page.locator('[data-desk-drawer] aside').first().isVisible()), `desk (${label}): ››› puts it away`);
+    }
     await ctx.close();
   }
 

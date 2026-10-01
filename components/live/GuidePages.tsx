@@ -4,17 +4,15 @@ import Link from 'next/link';
 import { MinorBadge } from '@/components/MinorBadge';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_ROSTER, KEEP_UP_PRAYER } from '@/lib/live/keep-up';
+import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_ROSTER, KEEP_UP_PRAYER, KEEP_UP_TALK } from '@/lib/live/keep-up';
 import { stageInfo, previousStage, STAGES, nextStage } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
 import * as live from '@/lib/live/data';
-import { LiveReportControl } from '@/components/LiveSafeguarding';
-import type { Message, Profile, Stage } from '@/lib/types';
+import type { Profile, Stage } from '@/lib/types';
 import { LiveAppShell } from '@/components/LiveAppShell';
 import { LiveBlogFeed } from '@/components/LiveBlog';
 import { LivePrayerForGuide } from '@/components/LivePrayer';
 import { LiveMeetings } from '@/components/LiveMeetings';
-import { useDraft, clearDraft } from '@/lib/drafts';
 import { MemberReading } from '@/components/live/ReadingProgress';
 import { LiveLibraryForGuide, LiveSharedWithMe } from '@/components/LiveLibrary';
 import { LiveFollowUps, LiveNotes } from '@/components/LiveMinistry';
@@ -22,7 +20,9 @@ import { LiveStudies } from '@/components/LiveStudies';
 import { NewBadge } from '@/components/NewBadge';
 import { Avatar, Button, Card, Tabs } from '@/components/ui';
 import { JourneyPath } from '@/components/JourneyPath';
-import { Conversation, Notice, errorText } from '@/components/live/shared';
+import { Notice, errorText } from '@/components/live/shared';
+import { MessageButton, ProfileButton } from '@/components/talk/MessageButton';
+import { useFaces, faceOf } from '@/components/live/Face';
 import { LiveAnnouncements } from '@/components/LiveAnnouncements';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { MemberProfile } from '@/components/live/MemberProfile';
@@ -48,6 +48,8 @@ function greeting(): string {
 export function LiveGuidePage() {
   const { profile } = useLiveSession();
   const [rows, setRows] = useState<live.PairingView[]>([]);
+  // Every Explorer's face, in one request.
+  const faces = useFaces(rows.map((r) => r.ds_photo_path));
   const [error, setError] = useState('');
   // LOADED, FAILED AND GENUINELY EMPTY ARE THREE DIFFERENT THINGS.
   //
@@ -202,7 +204,8 @@ export function LiveGuidePage() {
             <Link key={row.id} href={`/dm/${row.id}`} className="block">
               <Card className="p-4 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <Avatar name={row.ds_name} />
+                  {/* THEIR FACE, when they chose one. Initials otherwise. */}
+                  <Avatar name={row.ds_name} photo={faceOf(faces, row.ds_photo_path)} avatar={row.ds_avatar ?? undefined} />
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -349,13 +352,19 @@ function DetailChanges({ personId, firstName }: { personId: string; firstName: s
  * is asking something of them and a silent tab is how it got missed before.
  */
 
-type GuideTab = 'talk' | 'journey' | 'care' | 'lessons' | 'resources';
+type GuideTab = 'appointments' | 'journey' | 'care' | 'lessons' | 'resources';
 
 
 export function LiveConversationPage() {
-  const [tab, setTab] = useState<GuideTab>('talk');
-  // Their profile, folded away until asked for. The conversation is what this
-  // screen is for, so the details sit above it and start shut.
+  // APPOINTMENTS FIRST. This tab was Talk, with the conversation on it and the
+  // appointments underneath, so arranging a time meant scrolling past the whole
+  // thread. Asked for on 30 September 2026: "take out the chat in 'talk' room
+  // and rename talk to just appointments ... It's annoying for the users to
+  // scroll down for appointments usually." The conversation is in the bubble,
+  // one tap away on the Message button above the tabs.
+  const [tab, setTab] = useState<GuideTab>('appointments');
+  // Their profile, folded away until asked for, so the details sit above the
+  // tabs and start shut.
   const [openProfile, setOpenProfile] = useState(false);
   const [theirProfile, setTheirProfile] = useState<Profile | null>(null);
 
@@ -364,13 +373,11 @@ export function LiveConversationPage() {
   const pairingId = String(params.id);
   const { profile } = useLiveSession();
   const [pairing, setPairing] = useState<live.PairingView | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [files, setFiles] = useState<live.PairingFile[]>([]);
-  // Unsent text survives leaving this screen, and is never sent anywhere until
-  // the person presses Send. See lib/drafts.ts.
-  const [body, setBody] = useDraft(pairingId);
+  const faces = useFaces([pairing?.ds_photo_path]);
+  // What is waiting from them, on the Message button. The bubble reads and
+  // marks the conversation; this only counts it.
+  const [waiting, setWaiting] = useState(0);
   const [error, setError] = useState('');
-  const [attachError, setAttachError] = useState('');
   const [busy, setBusy] = useState(false);
 
   // Fetched when it is first opened rather than on every visit to the screen:
@@ -383,18 +390,9 @@ export function LiveConversationPage() {
 
   const load = useCallback(async () => {
     try {
-      const [pairs, nextMessages, nextFiles] = await Promise.all([
-        live.listPairings(),
-        live.listMessages(pairingId),
-        // Never allowed to take the conversation down with it: a church whose
-        // storage is misconfigured must still be able to talk.
-        live.listPairingFiles(pairingId).catch(() => [] as live.PairingFile[]),
-      ]);
+      const pairs = await live.listPairings();
       const mine = pairs.find((pair) => pair.id === pairingId) ?? null;
       setPairing(mine);
-      setMessages(nextMessages);
-      setFiles(nextFiles);
-      await live.markRead(pairingId);
 
       // THE COUNT ON THE CARE TAB. Without it the tab is silent about a
       // request waiting, and a silent tab is exactly how prayer requests went
@@ -416,56 +414,24 @@ export function LiveConversationPage() {
     }
   }, [pairingId]);
 
-  const attach = useCallback(async (chosen: File) => {
-    setAttachError('');
-    setBusy(true);
+  // THE COUNT ON THE MESSAGE BUTTON. One call for every conversation's
+  // count (the same one the bubble makes), filtered to this one. Failing must
+  // never take the page down: the button simply draws without a number.
+  const loadWaiting = useCallback(async () => {
     try {
-      await live.sendPairingFile(pairingId, chosen);
-      await load();
-    } catch (cause) {
-      setAttachError(errorText(cause));
-    } finally {
-      setBusy(false);
+      const threads = await live.listMyThreads();
+      setWaiting(Number(threads.find((t) => t.pairing_id === pairingId)?.unread) || 0);
+    } catch {
+      setWaiting(0);
     }
-  }, [pairingId, load]);
+  }, [pairingId]);
 
-  const dropFile = useCallback(async (file: live.PairingFile) => {
-    setAttachError('');
-    try {
-      await live.removePairingFile(file);
-      await load();
-    } catch (cause) {
-      setAttachError(errorText(cause));
-    }
-  }, [load]);
-
-  useEffect(() => {
-    void load();
-    return live.subscribeToMessages(pairingId, () => void load());
-  }, [pairingId, load]);
-  // Everything around the conversation: files, the pairing, their profile.
+  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void loadWaiting(); }, [loadWaiting]);
+  // The pairing, their stage and the Care count.
   useKeepUp(KEEP_UP_MY_PAIRING, load);
-
-  const send = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!body.trim()) return;
-    setBusy(true);
-    setError('');
-    try {
-      await live.sendMessage(pairingId, body);
-      // Clear the stored draft NOW rather than leaving it to the debounce. A
-      // Guide who sends and immediately taps back unmounts the composer inside
-      // the debounce window, which cancels the pending write — and the draft of
-      // the message they just sent would still be sitting there next time.
-      clearDraft(pairingId);
-      setBody('');
-      await load();
-    } catch (cause) {
-      setError(errorText(cause));
-    } finally {
-      setBusy(false);
-    }
-  };
+  // A message arriving, or being read in the bubble, moves the count.
+  useKeepUp(KEEP_UP_TALK, loadWaiting);
 
   const advance = async () => {
     setBusy(true);
@@ -511,7 +477,7 @@ export function LiveConversationPage() {
           <Link href="/dm" className="text-navy underline">← My Explorers</Link>
           <Card className="p-5">
             <div className="flex flex-wrap items-center gap-3">
-              <Avatar name={pairing.ds_name} size={52} />
+              <Avatar name={pairing.ds_name} size={52} photo={faceOf(faces, pairing.ds_photo_path)} avatar={pairing.ds_avatar ?? undefined} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   {/* THE NAME OPENS THEM. A Guide is the person actually
@@ -535,8 +501,7 @@ export function LiveConversationPage() {
                   <MinorBadge person={{ birthday: pairing.ds_birthday, guardian_consent_at: pairing.ds_guardian_consent_at }} />
                 </div>
                 <p className="text-sm text-gray-500">
-                  Private conversation
-                  <span className="text-gray-400"> · tap their name to see their profile</span>
+                  Tap their name to see their profile
                 </p>
               </div>
               {/* THE STAGE, READ ONLY, HERE. The buttons that change it moved
@@ -552,6 +517,13 @@ export function LiveConversationPage() {
                   {pairing.track} track
                 </p>
               </div>
+            </div>
+            {/* THE CONVERSATION AND THE PERSON, EACH ONE TAP AWAY, ON EVERY
+                TAB. Message opens the bubble at them (components/talk/Dock.tsx).
+                Profile says in a word what tapping their name always did. */}
+            <div className="mt-4 flex gap-2">
+              <MessageButton className="flex-1 sm:flex-none" pairingId={pairing.id} name={pairing.ds_name} waiting={waiting} />
+              <ProfileButton open={openProfile} onToggle={() => setOpenProfile((was) => !was)} />
             </div>
           </Card>
 
@@ -578,7 +550,7 @@ export function LiveConversationPage() {
               already several screens down. */}
           <Tabs<GuideTab>
             tabs={[
-              { key: 'talk', label: 'Talk', icon: '💬' },
+              { key: 'appointments', label: 'Appointments', icon: '📅' },
               { key: 'journey', label: 'Journey', icon: '🎯' },
               { key: 'care', label: 'Care', icon: '🙌', badge: prayerWaiting || undefined },
               { key: 'lessons', label: 'Lessons', icon: '📖' },
@@ -588,55 +560,14 @@ export function LiveConversationPage() {
             onChange={setTab}
           />
 
-          {tab === 'talk' && (
-            <>
-              {/* THIS TAB IS A CONVERSATION, so the bottom bar steps aside
-                  while it is open (TabBar.tsx, globals.css). The other tabs
-                  of this Explorer's page keep it. */}
-              <span hidden data-conversation-screen />
-              <Conversation
-                messages={messages}
-                files={files}
-                myId={profile?.id ?? ''}
-                myName={profile?.full_name}
-                theirName={pairing.ds_name}
-                body={body}
-                setBody={setBody}
-                send={send}
-                busy={busy}
-                onAttach={(chosen) => void attach(chosen)}
-                onRemoveFile={(file) => void dropFile(file)}
-                attachError={attachError}
-                onEditMessage={live.editMessage}
-                onDeleteMessage={live.deleteMessage}
-              />
-              {/* Reporting runs BOTH ways. A Guide receiving something they
-                  should not have received needs this as much as an Explorer
-                  does, and a route only the junior party can use is one nobody
-                  uses. It stays with the conversation it is about. */}
-              <LiveReportControl
-                subjectId={pairing.ds_id}
-                subjectName={pairing.ds_name}
-                pairingId={pairing.id}
-              />
-              {/* ARRANGING A TIME IS PART OF THE RELATIONSHIP, so it sits with
-                  the conversation on BOTH sides -- the same card, the same
-                  meetings, in the same place on each screen.
-
-                  IT USED TO SIT UNDER JOURNEY, and that was the mistake. Journey
-                  is the one tab on this screen the Explorer never sees: it holds
-                  the six stages, the Advance button and the stage history, and
-                  it exists for the Guide to record where somebody has got to.
-                  Putting the shared diary in there filed a thing the two of them
-                  DO TOGETHER inside the folder of things the Guide does ABOUT
-                  them -- so the Explorer proposed a time in their chat and the
-                  Guide had to leave the conversation, and know which tab to go
-                  to, before they could see it had been asked.
-
-                  The Explorer's screen has always had it beneath the thread.
-                  This is the Guide's screen catching up, not a new feature. */}
-              <LiveMeetings pairingId={pairing.id} withName={pairing.ds_name} />
-            </>
+          {tab === 'appointments' && (
+            // ARRANGING A TIME, AND NOTHING TO SCROLL PAST TO REACH IT. The
+            // same card, the same meetings and the same place on both sides of
+            // a pairing: the Explorer's home has it too, where their chat used
+            // to be. Journey is still the wrong home for it -- it is the one
+            // tab the Explorer never sees, and this is a thing the two of them
+            // do together.
+            <LiveMeetings pairingId={pairing.id} withName={pairing.ds_name} />
           )}
 
           {tab === 'journey' && (

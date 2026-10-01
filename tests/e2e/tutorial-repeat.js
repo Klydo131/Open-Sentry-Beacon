@@ -79,7 +79,7 @@ const settle=async(p,ms=6000)=>{
       // fell through to the generic click, which pressed Send on an empty box
       // and reported the tutorial as stuck when it was not.
       if(st.tq==='chat-send'){
-        const ta=page.getByLabel('Message').first();
+        const ta=page.locator('[data-quest="chat-send"] textarea').first() /* not getByLabel('Message'): the Message button matches that too (30 September 2026) */;
         if(await ta.count()){await ta.fill('hello');await page.waitForTimeout(200);
           const s=page.getByRole('button',{name:/^send$/i}).first();
           if(await s.count())await s.click();await page.waitForTimeout(1300);continue;}

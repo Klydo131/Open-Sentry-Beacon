@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { AppShell } from '@/components/AppShell';
-import { Chat } from '@/components/Chat';
+import { MessageButton, ProfileButton } from '@/components/talk/MessageButton';
 import { JourneyPath } from '@/components/JourneyPath';
 import { SeekerNotes } from '@/components/SeekerNotes';
 import { FollowUps } from '@/components/FollowUps';
@@ -24,7 +24,7 @@ import { ReportDialog } from '@/components/ReportDialog';
 import { prayerAuthor } from '@/lib/types';
 import { LiveConversationPage } from '@/components/LiveCorePages';
 
-type TabKey = 'talk' | 'journey' | 'care' | 'resources';
+type TabKey = 'appointments' | 'journey' | 'care' | 'resources';
 
 export default function SeekerDetail() {
   if (useIsLive()) return <LiveConversationPage />;
@@ -53,7 +53,13 @@ function Detail() {
   const me = currentUser!;
   const pairingId = String(params.id);
   const available = offerableSeries(db.lesson_series);
-  const [tab, setTab] = useState<TabKey>('talk');
+  // APPOINTMENTS FIRST, and the conversation in the bubble: the live page's
+  // shape (components/live/GuidePages.tsx), asked for on 30 September 2026 --
+  // "take out the chat in 'talk' room and rename talk to just appointments".
+  const [tab, setTab] = useState<TabKey>('appointments');
+  // Their details, folded under their name as on the live page, so the tabs
+  // are on the first screen instead of under a page of profile.
+  const [openProfile, setOpenProfile] = useState(false);
   const [askText, setAskText] = useState('');
   const [reportingPrayer, setReportingPrayer] = useState('');
 
@@ -123,7 +129,15 @@ function Detail() {
           <Avatar name={ds.full_name} size={56} photo={ds.photo} avatar={ds.avatar} />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-xl font-extrabold text-navy sm:text-2xl">
-              {ds.full_name}
+              {/* THE NAME OPENS THEM, as it does on the live page. */}
+              <button
+                type="button"
+                onClick={() => setOpenProfile((was) => !was)}
+                aria-expanded={openProfile}
+                className="truncate text-left underline underline-offset-4"
+              >
+                {ds.full_name}
+              </button>
             </h1>
             <p className="truncate text-sm text-gray-500 sm:text-base">
               {[ds.city_of_residence, ds.work_industry].filter(Boolean).join(' · ') ||
@@ -141,50 +155,64 @@ function Detail() {
           </div>
         </div>
 
-        {/* Contact and personal details — on the profile all along, but the
-            room never showed them, so a missionary had to guess how to reach
-            someone or when their birthday was. */}
-        {(ds.preferred_contact || ds.birthday || ds.gender || ds.status) && (
-          <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-black/5 pt-4 text-sm sm:grid-cols-2">
-            {ds.preferred_contact && (
-              <Detail_ label="Best way to reach them" value={ds.preferred_contact} />
-            )}
-            {ds.birthday && (
-              <Detail_
-                label="Birthday"
-                value={new Date(`${ds.birthday}T00:00:00`).toLocaleDateString([], {
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              />
-            )}
-            {ds.status && <Detail_ label="Status" value={ds.status} />}
-            {ds.gender && <Detail_ label="Gender" value={ds.gender} />}
-          </dl>
-        )}
-
-        {ds.topics_of_interest.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {ds.topics_of_interest.map((t) => (
-              <span
-                key={t}
-                className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Engagement. These were one wrapping line of "<value> <label>" pairs,
-            which on a phone ran together into "Active today last active 2
-            messages 1 resources opened". Labelled tiles again. */}
-        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-black/5 pt-4 sm:grid-cols-4">
-          <Stat label="Last active" value={activeShort(eng.daysSince)} />
-          <Stat label="Messages" value={String(eng.messagesSent)} />
-          <Stat label="Resources" value={String(eng.materialsOpened)} />
-          <Stat label="Lessons" value={String(eng.lessonsDone)} />
+        {/* THE CONVERSATION IS ONE TAP AWAY, ON EVERY TAB. It lives in the
+            bubble now (components/talk/Dock.tsx); this opens it at them. */}
+        <div className="mt-4 flex gap-2">
+          <MessageButton className="flex-1 sm:flex-none" pairingId={pairingId} name={ds.full_name} waiting={urg.unread} />
+          <ProfileButton open={openProfile} onToggle={() => setOpenProfile((was) => !was)} />
         </div>
+
+        {/* BEHIND PROFILE (and their name). Contact, interests and the four
+            tiles were always on screen here and pushed the tabs below the first
+            screen of a phone; the live page folds them the same way. */}
+        {openProfile && (
+          <>
+            {/* Contact and personal details — on the profile all along, but the
+                room never showed them, so a missionary had to guess how to reach
+                someone or when their birthday was. */}
+            {(ds.preferred_contact || ds.birthday || ds.gender || ds.status) && (
+              <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-black/5 pt-4 text-sm sm:grid-cols-2">
+                {ds.preferred_contact && (
+                  <Detail_ label="Best way to reach them" value={ds.preferred_contact} />
+                )}
+                {ds.birthday && (
+                  <Detail_
+                    label="Birthday"
+                    value={new Date(`${ds.birthday}T00:00:00`).toLocaleDateString([], {
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  />
+                )}
+                {ds.status && <Detail_ label="Status" value={ds.status} />}
+                {ds.gender && <Detail_ label="Gender" value={ds.gender} />}
+              </dl>
+            )}
+
+            {ds.topics_of_interest.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {ds.topics_of_interest.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Engagement. These were one wrapping line of "<value> <label>" pairs,
+                which on a phone ran together into "Active today last active 2
+                messages 1 resources opened". Labelled tiles again. */}
+            <div className="mt-4 grid grid-cols-2 gap-2 border-t border-black/5 pt-4 sm:grid-cols-4">
+              <Stat label="Last active" value={activeShort(eng.daysSince)} />
+              <Stat label="Messages" value={String(eng.messagesSent)} />
+              <Stat label="Resources" value={String(eng.materialsOpened)} />
+              <Stat label="Lessons" value={String(eng.lessonsDone)} />
+            </div>
+          </>
+        )}
 
         {eng.quiet && (
           <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-amber-800 ring-1 ring-amber-200">
@@ -201,22 +229,17 @@ function Detail() {
         active={tab}
         onChange={setTab}
         tabs={[
-          { key: 'talk', label: 'Talk', icon: '💬', badge: urg.unread },
+          { key: 'appointments', label: 'Appointments', icon: '📅' },
           { key: 'journey', label: 'Journey', icon: '🎯' },
           { key: 'care', label: 'Care', icon: '🤲', badge: openFollowUps },
           { key: 'resources', label: 'Resources', icon: '📚' },
         ]}
       />
 
-      {/* ---------------------------------------------------------- Talk ---- */}
-      {tab === 'talk' && (
-        // A CONVERSATION, so the bottom bar steps aside while this tab is
-        // open, as it does on the live side (TabBar.tsx, globals.css).
-        <div className="space-y-5" data-conversation-screen>
-          <Chat pairingId={pairingId} />
-          <Meetings pairingId={pairingId} />
-        </div>
-      )}
+      {/* -------------------------------------------------- Appointments ---- */}
+      {/* Arranging a time, with nothing to scroll past to reach it. The same
+          card on both sides of a pairing: the Explorer's home has it too. */}
+      {tab === 'appointments' && <Meetings pairingId={pairingId} />}
 
       {/* ------------------------------------------------------- Journey ---- */}
       {tab === 'journey' && (

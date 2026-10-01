@@ -566,6 +566,7 @@ export function InstallPrompt() {
     return (
       <div
         data-install-prompt="card"
+        data-steps-aside-for-chat
         className="no-print safe-bottom fixed bottom-4 right-4 z-[66] w-[22rem] max-w-[calc(100vw-2rem)]"
       >
         <div className="animate-drop overflow-hidden rounded-2xl bg-white lift-3 ring-1 ring-black/10">
@@ -713,6 +714,7 @@ export function InstallPrompt() {
     <div
       ref={barRef}
       data-install-prompt="bar"
+      data-steps-aside-for-chat
       className="no-print safe-bottom fixed inset-x-0 bottom-0 z-[66] flex justify-center p-3"
     >
       {/* A CEILING, BECAUSE THE BAR RESERVES WHATEVER IT IS TALL.

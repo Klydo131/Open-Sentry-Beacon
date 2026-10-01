@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { emitQuest } from '@/lib/quest';
 import type { Message, PairingMedia } from '@/lib/types';
 import { Attachment } from './Attachment';
-import { ReportDialog } from './ReportDialog';
 import { Button } from './ui';
+import { PaperclipGlyph } from './Glyph';
 import { MessageBox } from '@/components/MessageBox';
 import { useDraft, clearDraft } from '@/lib/drafts';
 import { Linked } from '@/components/Linked';
@@ -32,13 +32,16 @@ type Entry =
 // Private 1:1 thread scoped to a single pairing. In the demo, messages live in
 // the store; in production this is the `messages` table with Realtime and RLS
 // that only lets the two participants read or write.
+//
+// IT LIVES IN THE BUBBLE NOW (components/DemoTalkDock.tsx), filling it, as the
+// live conversation fills the live one. The Report link that sat beside Attach
+// moved up into the bubble's header with the live one: the part of a chat
+// furthest from Send, in words, always there (components/talk/Dock.tsx).
 export function Chat({ pairingId }: { pairingId: string }) {
-  const { db, userId, sendMessage, markMessagesRead, attachMedia, removeMedia, mediaFor,
-    reportPerson } = useDemo();
+  const { db, userId, sendMessage, markMessagesRead, attachMedia, removeMedia, mediaFor } = useDemo();
   // Unsent text survives leaving the room, keyed to this pairing so a draft
   // for one person can never appear in the box open to another.
   const [text, setText] = useDraft(pairingId);
-  const [reporting, setReporting] = useState(false);
   const newestEl = useRef<HTMLDivElement>(null);
   /** Whether the reader is at the bottom now. A ref, so scrolling is free. */
   const following = useRef(true);
@@ -112,34 +115,21 @@ export function Chat({ pairingId }: { pairingId: string }) {
   const nameOf = (id: string) =>
     db.profiles.find((p) => p.id === id)?.full_name ?? 'Unknown';
 
-  // The other person in this pairing — the only person this conversation's
-  // Report control can be about, which is why it takes no "who" step.
-  const pairing = db.pairings.find((p) => p.id === pairingId);
-  const otherId =
-    pairing && userId
-      ? (pairing.dm_id === userId ? pairing.ds_id : pairing.dm_id)
-      : '';
-
-  if (reporting && otherId) {
-    return (
-      <ReportDialog
-        subjectName={nameOf(otherId)}
-        onCancel={() => setReporting(false)}
-        onSubmit={(reason, detail) =>
-          reportPerson({ subjectId: otherId, reason, detail, pairingId })
-        }
-      />
-    );
-  }
-
   return (
-    <div className="flex h-[26rem] flex-col rounded-2xl bg-white ring-1 ring-black/5">
+    <div className="flex h-full min-h-0 flex-col bg-white">
+      {/* THE PROMISE, IN ONE LINE, as the live conversation carries it. */}
+      <p className="border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 px-4 py-2 text-[13px] leading-tight text-gray-600">
+        <span className="font-extrabold text-navy">Private conversation.</span>{' '}
+        Only the two people walking together can read this.
+      </p>
       <div
         onScroll={(e) => {
           const el = e.currentTarget;
           following.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
         }}
-        className="flex-1 space-y-3 overflow-y-auto p-4"
+        // ONE SCROLLPORT, AND IT IS THE MESSAGES, as in the live bubble:
+        // the promise above and the composer below keep their height.
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4"
       >
         {timeline.length === 0 && (
           <p className="mt-8 text-center text-gray-400">
@@ -157,7 +147,7 @@ export function Chat({ pairingId }: { pairingId: string }) {
               // the attribute reaches the DOM — Button would have dropped it.
               data-chat-entry={entry.kind}
               ref={isNewest ? newestEl : undefined}
-              className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}
+              className={`flex flex-col ${mine ? 'items-end' : 'items-start'} ${isNewest ? 'talk-message-in' : ''}`}
             >
               {entry.kind === 'message' ? (
                 <div
@@ -223,7 +213,9 @@ export function Chat({ pairingId }: { pairingId: string }) {
         So the whole attach control lives out here. That region contains exactly
         one input and one button, and it should stay that way.
       */}
-      <div className="flex items-center gap-2 border-t border-black/5 px-3 pt-2">
+      {/* ONE ROW, AS IN THE LIVE CHAT: a paperclip beside the box, where the
+          sample had a whole line for "Attach a file" above it. */}
+      <div className="flex items-end gap-2 border-t border-black/5 p-3">
         <input
           ref={fileRef}
           type="file"
@@ -242,12 +234,13 @@ export function Chat({ pairingId }: { pairingId: string }) {
             if (file) attachMedia(pairingId, file);
           }}
         />
-        {/* Plain text label, no aria-label: Button takes a fixed prop list and
-            would drop one silently — see the comment in ui.tsx. */}
-        <Button
+        {/* A plain button, so the words can be there for a screen reader
+            (and for the suites that ask for "Attach a file" by name) while the
+            eye sees the paperclip. Button takes a fixed prop list and would
+            drop them -- see the comment in ui.tsx. */}
+        <button
           type="button"
-          variant="ghost"
-          className="px-3 text-base"
+          className="tap grid shrink-0 place-items-center rounded-xl bg-white px-3 text-gray-600 ring-1 ring-black/10 hover:bg-gray-50"
           onClick={() => {
             // Clear on the way IN, so picking the same file twice still fires a
             // change event, without touching the File after it is chosen.
@@ -255,51 +248,40 @@ export function Chat({ pairingId }: { pairingId: string }) {
             fileRef.current?.click();
           }}
         >
-          Attach a file
-        </Button>
-        {/* A plain link, not a button, and pushed to the far end. Reporting
-            somebody must be reachable without hunting for it and must never be
-            hit by a thumb aiming at Send or Attach. */}
-        {otherId && (
-          <button
-            type="button"
-            onClick={() => setReporting(true)}
-            className="ml-auto shrink-0 px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
-          >
-            Report
-          </button>
-        )}
-      </div>
+          <PaperclipGlyph size={22} />
+          <span className="sr-only">Attach a file</span>
+        </button>
 
-      <form
-        // The tutorial says "type in the highlighted box and send", so the
-        // highlight has to cover the box as well as the button — it used to
-        // ring only Send, which pointed at the wrong half of the instruction.
-        data-quest="chat-send"
-        // items-end so Send stays level with the bottom of a box that grows.
-        className="flex items-end gap-2 border-t border-black/5 p-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!text.trim()) return;
-          sendMessage(pairingId, text);
-          emitQuest('beacon:message');
-          // Now, not on the debounce — see the note in the live conversation.
-          clearDraft(pairingId);
-          setText('');
-        }}
-      >
-        <MessageBox
-          value={text}
-          onChange={setText}
-          placeholder="Type a message…"
-          className="text-lg"
-        />
-        <span className="shrink-0 self-end">
-          <Button type="submit" disabled={!text.trim()} className="px-4 sm:px-5">
-            Send
-          </Button>
-        </span>
-      </form>
+        <form
+          // The tutorial says "type in the highlighted box and send", so the
+          // highlight has to cover the box as well as the button — it used to
+          // ring only Send, which pointed at the wrong half of the instruction.
+          data-quest="chat-send"
+          // items-end so Send stays level with the bottom of a box that grows.
+          className="flex min-w-0 flex-1 items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!text.trim()) return;
+            sendMessage(pairingId, text);
+            emitQuest('beacon:message');
+            // Now, not on the debounce — see the note in the live conversation.
+            clearDraft(pairingId);
+            setText('');
+          }}
+        >
+          <MessageBox
+            value={text}
+            onChange={setText}
+            placeholder="Type a message…"
+            className="text-lg"
+          />
+          <span className="shrink-0 self-end">
+            <Button type="submit" disabled={!text.trim()} className="px-4 sm:px-5">
+              Send
+            </Button>
+          </span>
+        </form>
+      </div>
     </div>
   );
 }

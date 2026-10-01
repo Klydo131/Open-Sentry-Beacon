@@ -224,16 +224,27 @@ for (const [file, fn, label] of ROOMS_WITH_SUBROOMS) {
 // An Explorer's route out of a conversation has to be on the same screen as the
 // conversation. Putting the report control in a different folder from the
 // thread would be the single worst thing this refactor could do.
+//
+// THE CONVERSATION MOVED INTO THE BUBBLE on 30 September 2026, asked for by the
+// owner, and the report went WITH it: it is in the bubble's header, in words,
+// on the same screen as the thread, never beside Send -- on both halves of the
+// app. What stays on the Explorer's home is the order that was asked for: the
+// Guide, then the church's notices, then the way into the conversation.
 {
   const src = sources.get('components/live/ExplorerPage.tsx');
   const guideRoom = src.slice(src.indexOf("{room === 'guide' && ("), src.indexOf("{room === 'study'"));
-  ok(/<Conversation/.test(guideRoom) && /<LiveReportControl/.test(guideRoom),
-     'the conversation and the way out of it are in the same folder');
+  const surface = readFileSync('components/live/TalkSurface.tsx', 'utf8');
+  const demo = readFileSync('components/DemoTalkDock.tsx', 'utf8');
+  ok(/<TalkHeader[\s\S]{0,600}onReport=\{current \?/.test(surface) && /<LiveReportForm/.test(surface)
+     && /<TalkHeader[\s\S]{0,700}onReport=\{current \?/.test(demo) && /<ReportDialog/.test(demo),
+     'the conversation and the way out of it are on the same screen: the bubble, on both halves');
+  ok(!/<Conversation/.test(guideRoom) && /<MessageButton/.test(guideRoom),
+     'and the Explorer\'s home opens that conversation rather than keeping a second one');
   ok(/<GuideCard/.test(guideRoom) && /<LiveAnnouncements/.test(guideRoom),
      "and the church's notices still sit after the Guide's card, where they were asked to be");
   ok(guideRoom.indexOf('<GuideCard') < guideRoom.indexOf('<LiveAnnouncements')
-     && guideRoom.indexOf('<LiveAnnouncements') < guideRoom.indexOf('<Conversation'),
-     'in that order: the Guide, then the notices, then the talking');
+     && guideRoom.indexOf('<LiveAnnouncements') < guideRoom.indexOf('<MessageButton'),
+     'in that order: the Guide, then the notices, then the way to talk');
 }
 
 // ---------------------------------------------------------------------------

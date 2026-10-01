@@ -16,7 +16,7 @@
 //
 //   node tests/e2e/update-typing.js <port>
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat } = require('./_playwright');
 
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
@@ -46,6 +46,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1800);
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
 
   // The composer. If this is not here the rest of the suite is meaningless, so
   // say so loudly rather than passing a test of nothing.

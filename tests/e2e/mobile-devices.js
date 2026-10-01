@@ -13,7 +13,7 @@
 // in tests/realtime-and-media.mjs and by the CI matrix, and where neither can
 // reach, they are listed honestly as untested rather than assumed.
 
-const { chromium, devices, launchOptions } = require('./_playwright');
+const { chromium, devices, launchOptions, openChat } = require('./_playwright');
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
 
@@ -131,9 +131,10 @@ async function run(browser, label, device) {
   };
   //
   // INSIDE A CONVERSATION THE BAR STEPS ASIDE (asked for on 30 September
-  // 2026), and this page is one: a Guide on an Explorer's Talk tab. There the
-  // way to a room is Back, then Menu, then the row. That counts only when the
-  // Back button is on screen and big enough to hit.
+  // 2026). This page is not one any more -- a Guide's page for an Explorer
+  // opens on Appointments, and the chat is in the bubble -- but /talk still
+  // is, and there the way to a room is Back, then Menu, then the row. That
+  // counts only when the Back button is on screen and big enough to hit.
   const menuTab = await tappable(page.locator('nav[aria-label="Main"] a[href="/menu"]'));
   const inConversation = await page.locator('[data-conversation-screen]').count() > 0;
   const backOut = inConversation && await tappable(page.locator('header [aria-label="Go back"]'));
@@ -159,6 +160,8 @@ async function run(browser, label, device) {
          : `${count} link(s) in the DOM, none reachable`})`);
   }
 
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
   const composer = page.locator('[data-quest="chat-send"]');
   ok(await composer.count() > 0, `${label}: the conversation composer is reachable`);
 

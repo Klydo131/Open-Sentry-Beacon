@@ -20,7 +20,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4402
 //   node tests/e2e/tutorial-leaves-nothing-behind.js 4402
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openRoom } = require('./_playwright');
 const BASE = `http://localhost:${process.argv[2] || '4402'}`;
 
 let bad = 0;
@@ -74,8 +74,8 @@ const readDemo = (page) => page.evaluate(() => ({
   // Change something inside the tutorial, so a leak would be visible.
   await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);
-  const journey = page.getByRole('tab', { name: /Journey/i }).first();
-  if (await journey.count()) { await journey.click(); await page.waitForTimeout(800); }
+  // The sections of this page are a drop-down (30 September 2026).
+  await openRoom(page, /Journey/i);
   const advance = page.getByRole('button', { name: /Advance to/i }).first();
   const changed = await advance.count() > 0;
   if (changed) { await advance.click(); await page.waitForTimeout(1300); }

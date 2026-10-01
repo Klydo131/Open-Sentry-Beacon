@@ -300,6 +300,44 @@ export function PlusGlyph(props: GlyphProps) {
   );
 }
 
+/** A speech bubble: the chat, and every button that opens it. */
+export function ChatGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M20 12a7.5 7 0 0 1-10.7 6.3L4 20l1.6-4.3A7 7 0 0 1 4.5 12 7.5 7 0 0 1 20 12z" />
+    </Svg>
+  );
+}
+
+/** One person: their profile. */
+export function PersonGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </Svg>
+  );
+}
+
+/** A paperclip: attach a file to a conversation. */
+export function PaperclipGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9" />
+    </Svg>
+  );
+}
+
+/** A flag: reporting somebody. Drawn, so it reads the same on every phone. */
+export function FlagGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 21V4" />
+      <path d="M5 4h11l-2 4 2 4H5" />
+    </Svg>
+  );
+}
+
 /** Back, the chevron Apple puts before the name of where you came from. */
 export function ChevronLeftGlyph(props: GlyphProps) {
   return (

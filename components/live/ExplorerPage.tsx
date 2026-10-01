@@ -1,20 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_PRAYER } from '@/lib/live/keep-up';
+import { useCallback, useEffect, useState } from 'react';
+import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_PRAYER, KEEP_UP_TALK } from '@/lib/live/keep-up';
 import { NAVY } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
 import * as live from '@/lib/live/data';
-import { LiveReportControl } from '@/components/LiveSafeguarding';
-import type { Message, Profile } from '@/lib/types';
+import type { Profile } from '@/lib/types';
 import { LiveAppShell } from '@/components/LiveAppShell';
 import { LiveAskForPrayer } from '@/components/LivePrayer';
 import { LiveMeetings } from '@/components/LiveMeetings';
-import { useDraft, clearDraft } from '@/lib/drafts';
 import { LiveSharedWithMe, LiveLibraryForGuide } from '@/components/LiveLibrary';
 import { LiveStudies } from '@/components/LiveStudies';
 import { Avatar, Card } from '@/components/ui';
-import { Conversation, Notice, errorText } from '@/components/live/shared';
+import { Notice, errorText } from '@/components/live/shared';
+import { MessageButton } from '@/components/talk/MessageButton';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { NextStudy } from '@/components/live/NextStudy';
 import { StudyRoom } from '@/components/study/StudyRoom';
@@ -35,88 +34,36 @@ import { LiveBlogFeed } from '@/components/LiveBlog';
 export function LiveExplorerPage() {
   const { profile } = useLiveSession();
   const [pairing, setPairing] = useState<live.MyPairing | null>(null);
-  const [files, setFiles] = useState<live.PairingFile[]>([]);
-  const [attachError, setAttachError] = useState('');
-  // The attach handler is created once and would otherwise capture whatever
-  // `pairing` was at that render — null, on the first one. A ref reads the
-  // current value at the moment the file is chosen.
-  const pairingRef = useRef<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  // `pairing` is null until it loads, so the draft has nothing to key on for the
-  // first render or two. useDraft handles that: the box is simply unsaved until
-  // the id arrives, and the draft appears the moment it does.
-  const [body, setBody] = useDraft(pairing?.id ?? null);
-  const [busy, setBusy] = useState(false);
+  // What is waiting from their Guide, on the Message button. The bubble reads
+  // the conversation and marks it read; this only counts it.
+  const [waiting, setWaiting] = useState(0);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const mine = await live.getMyPairing();
-      setPairing(mine);
-      if (mine) {
-        setMessages(await live.listMessages(mine.id));
-        // The Explorer sends files too. A route only the Guide can use turns a
-        // conversation into a broadcast.
-        setFiles(await live.listPairingFiles(mine.id).catch(() => [] as live.PairingFile[]));
-        await live.markRead(mine.id);
-      }
+      setPairing(await live.getMyPairing());
     } catch (cause) {
       setError(errorText(cause));
     }
   }, []);
 
-  const attach = useCallback(async (chosen: File) => {
-    const id = pairingRef.current;
-    if (!id) return;
-    setAttachError('');
-    setBusy(true);
+  // One call for every conversation's count, the same one the bubble makes.
+  // Failing must never take the page down: the button draws without a number.
+  const loadWaiting = useCallback(async () => {
     try {
-      await live.sendPairingFile(id, chosen);
-      await load();
-    } catch (cause) {
-      setAttachError(errorText(cause));
-    } finally {
-      setBusy(false);
+      const threads = await live.listMyThreads();
+      setWaiting(threads.reduce((sum, t) => sum + (Number(t.unread) || 0), 0));
+    } catch {
+      setWaiting(0);
     }
-  }, [load]);
-
-  const dropFile = useCallback(async (file: live.PairingFile) => {
-    setAttachError('');
-    try {
-      await live.removePairingFile(file);
-      await load();
-    } catch (cause) {
-      setAttachError(errorText(cause));
-    }
-  }, [load]);
+  }, []);
 
   useEffect(() => { void load(); }, [load]);
-  // A file arriving, or the Guide changing, without a reload. The messages
-  // have their own subscription two lines below.
+  useEffect(() => { void loadWaiting(); }, [loadWaiting]);
+  // The Guide changing, without a reload.
   useKeepUp(KEEP_UP_MY_PAIRING, load);
-  const pairingId = pairing?.id;
-  useEffect(() => { pairingRef.current = pairingId ?? null; }, [pairingId]);
-  useEffect(
-    () => pairingId ? live.subscribeToMessages(pairingId, () => void load()) : undefined,
-    [pairingId, load],
-  );
-
-  const send = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!pairing || !body.trim()) return;
-    setBusy(true);
-    setError('');
-    try {
-      await live.sendMessage(pairing.id, body);
-      clearDraft(pairing.id);
-      setBody('');
-      await load();
-    } catch (cause) {
-      setError(errorText(cause));
-    } finally {
-      setBusy(false);
-    }
-  };
+  // A message arriving, or being read in the bubble, moves the count.
+  useKeepUp(KEEP_UP_TALK, loadWaiting);
 
   // FOUR FOLDERS, BECAUSE THIS SCREEN RAN TO NEARLY SEVEN ON A PHONE.
   //
@@ -192,7 +139,7 @@ export function LiveExplorerPage() {
           <p className="mt-3 text-white/80">Your journey is a relationship, not a score.</p>
         </div>
 
-        <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
+        <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} quest="journey-rooms" />
 
         {error && <Notice tone="error">{error}</Notice>}
 
@@ -262,39 +209,16 @@ export function LiveExplorerPage() {
               </Card>
             ) : (
               <>
-                <Conversation
-                  // THE THIRD WAITING SCREEN. An Explorer whose Guide has not
-                  // written yet was told to "start with a welcome", which is the
-                  // Guide's job. This says the true thing instead: nothing is
-                  // wrong, and they are allowed to go first.
-                  emptyLine="No messages yet. Your Guide will write, and you can write first if you would like to."
-                  messages={messages}
-                  files={files}
-                  myId={profile?.id ?? ''}
-                  myName={profile?.full_name}
-                  theirName={pairing.dm_name}
-                  body={body}
-                  setBody={setBody}
-                  send={send}
-                  busy={busy}
-                  onAttach={(chosen) => void attach(chosen)}
-                  onRemoveFile={(file) => void dropFile(file)}
-                  attachError={attachError}
-                  onEditMessage={live.editMessage}
-                  onDeleteMessage={live.deleteMessage}
-                />
-                {/* THE ONE THAT MATTERS MOST. The Explorer is the person with
-                    the least standing in this relationship and the most reason
-                    to stay silent, so their route out has to be on the same
-                    screen as the conversation itself. It is in this folder for
-                    that reason and must not be moved to another one. */}
-                <LiveReportControl
-                  subjectId={pairing.dm_id}
-                  subjectName={pairing.dm_name}
-                  pairingId={pairing.id}
-                />
-                {/* ARRANGING A TIME IS PART OF THE RELATIONSHIP, so it sits
-                    with the conversation rather than in a folder of its own. */}
+                {/* THE CONVERSATION IS IN THE BUBBLE NOW, and this opens it.
+                    Asked for on 30 September 2026, for both sides of a pairing:
+                    the chat sat here above the appointments, so arranging a
+                    time meant scrolling past the whole thread. The way to
+                    report their Guide went with it -- it is in the bubble's
+                    header, on the same screen as the conversation, in words,
+                    and nowhere near Send (components/talk/Dock.tsx). */}
+                <MessageButton className="w-full" pairingId={pairing.id} name={pairing.dm_name} waiting={waiting} />
+                {/* ARRANGING A TIME IS PART OF THE RELATIONSHIP, and nothing
+                    stands between it and the top of the screen now. */}
                 <LiveMeetings pairingId={pairing.id} withName={pairing.dm_name} />
               </>
             )}

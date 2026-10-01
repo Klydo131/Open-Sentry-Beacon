@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SubroomMenu } from '@/components/SubroomMenu';
 import { useDemo } from '@/lib/demo/store';
 import { Analytics } from '@/components/DemoAnalytics';
 import { emitQuest } from '@/lib/quest';
@@ -64,31 +65,29 @@ function AdminBody() {
         Approve members, pair Guides with Explorers, and manage the library.
       </p>
 
-      <div className="mb-6 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            data-quest={`tab-${t.key}`}
-            onClick={() => {
-              setTab(t.key);
-              // The tutorial listens rather than the tabs knowing about it.
-              emitQuest(`beacon:tab-${t.key}`);
-            }}
-            className="tap flex min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold sm:px-4 sm:text-base"
-            style={
-              tab === t.key
-                ? { backgroundColor: '#1E2A4A', color: '#fff' }
-                : { backgroundColor: '#fff', color: '#1E2A4A' }
-            }
-          >
-            <span className="truncate">{t.label}</span>
-            {t.badge ? (
-              <span className="shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
-                {t.badge}
-              </span>
-            ) : null}
-          </button>
-        ))}
+      {/* THE ROOMS OF ADMIN, AS ONE DROP-DOWN, like every other set of
+          sub-rooms since 30 September 2026 (components/SubroomMenu.tsx) and
+          like the live Admin page. The counts stay red: they are things to
+          clear, and the closed button carries the ones in other rooms. */}
+      <div className="mb-6">
+        <SubroomMenu
+          label="Rooms"
+          quest="admin-rooms"
+          active={tab}
+          onChoose={(key) => {
+            setTab(key as Tab);
+            // The tutorial listens rather than the tabs knowing about it.
+            emitQuest(`beacon:tab-${key}`);
+          }}
+          items={tabs.map((t) => ({
+            id: t.key,
+            label: t.label,
+            text: t.label,
+            badge: t.badge,
+            tone: 'urgent',
+            quest: `tab-${t.key}`,
+          }))}
+        />
       </div>
 
       {tab === 'approvals' && (

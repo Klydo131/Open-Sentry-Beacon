@@ -14,7 +14,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4402
 //   node tests/e2e/thread-follows-the-newest.js 4402
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat } = require('./_playwright');
 const PORT = process.argv[2] || '4402';
 const BASE = `http://localhost:${PORT}`;
 
@@ -57,6 +57,8 @@ const where = (page) => page.evaluate(() => {
   ok(await first.count() > 0, 'there is an Explorer to open');
   await first.click();
   await page.waitForTimeout(1800);
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
 
   const boxSel = 'textarea, input[placeholder*="message" i]';
   const write = page.locator(boxSel).first();
@@ -113,6 +115,9 @@ const where = (page) => page.evaluate(() => {
   // ARRIVING AT A LONG THREAD lands at the bottom, not the top.
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1800);
+  // Opening it again, in the bubble, is what "opening a long conversation" is now.
+  await openChat(page);
+  await page.waitForTimeout(600);
   const arrived = await where(page);
   ok(arrived !== null, 'the reloaded thread still scrolls');
   if (arrived) {

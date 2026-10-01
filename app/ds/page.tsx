@@ -6,7 +6,7 @@ import { emitQuest } from '@/lib/quest';
 import { AppShell } from '@/components/AppShell';
 import { StudyRoom } from '@/components/study/StudyRoom';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
-import { Chat } from '@/components/Chat';
+import { MessageButton } from '@/components/talk/MessageButton';
 import { Avatar, Button, Card, EmptyState } from '@/components/ui';
 import { NAVY } from '@/lib/brand';
 import { safeExternalUrl } from '@/lib/url';
@@ -107,7 +107,7 @@ function Home() {
           had written to them. No stage appears here, and none ever should — a
           priority strip is exactly where "you are ready for the next step"
           would creep back in. */}
-      <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
+      <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} quest="journey-rooms" />
 
       {/* THE SAME FOUR FOLDERS THE LIVE JOURNEY HAS, in the same order, with
           the same one open first. Somebody learns the job here and then signs
@@ -480,23 +480,33 @@ function Paired({ pairingId }: { pairingId: string }) {
           to be hidden from them, and they were right: a stage is a note the
           church keeps about a person, not a thing that person is. What is
           left is who is walking with them and what they are studying. */}
-      <Card className="flex items-center gap-4 p-5">
-        <Avatar name={dm.full_name} size={56} photo={dm.photo} avatar={dm.avatar} />
-        <div className="flex-1">
-          <p className="text-sm text-gray-500">Walking with you</p>
-          <p className="text-xl font-bold text-navy">{dm.full_name}</p>
-          <p className="text-sm text-gray-500">
-            Message them any time. This conversation is only between the two of you.
-          </p>
+      <Card className="p-5">
+        <div className="flex items-center gap-4">
+          <Avatar name={dm.full_name} size={56} photo={dm.photo} avatar={dm.avatar} />
+          <div className="flex-1">
+            <p className="text-sm text-gray-500">Walking with you</p>
+            <p className="text-xl font-bold text-navy">{dm.full_name}</p>
+            <p className="text-sm text-gray-500">
+              Message them any time. This conversation is only between the two of you.
+            </p>
+          </div>
         </div>
+        {/* THE CONVERSATION IS IN THE BUBBLE NOW, and this opens it. It sat
+            below the appointments, so an Explorer scrolled past it to reach
+            anything else. Asked for on 30 September 2026, for both sides of a
+            pairing. The way to report their Guide went with it, into the
+            bubble's header (components/talk/Dock.tsx). */}
+        <MessageButton
+          className="mt-4 w-full"
+          pairingId={pairing.id}
+          name={dm.full_name}
+          waiting={db.messages.filter(
+            (m) => m.pairing_id === pairing.id && m.sender_id === dm.id && !m.read_at,
+          ).length}
+        />
       </Card>
 
       <Meetings pairingId={pairing.id} />
-
-      <div>
-        <h2 className="mb-3 text-xl font-bold text-navy">💬 Talk with {dm.full_name.split(' ')[0]}</h2>
-        <Chat pairingId={pairing.id} />
-      </div>
 
       <Card className="p-5">
         <h2 className="mb-3 text-xl font-bold text-navy">📚 Shared with me</h2>

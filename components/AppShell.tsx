@@ -23,6 +23,8 @@ import { LiveAppShell, LiveUnsupported } from '@/components/LiveAppShell';
 import { useScrollToHash } from '@/lib/scroll-to-hash';
 import { useUrlKey } from '@/lib/url-signal';
 import { TabBar } from '@/components/TabBar';
+import { DemoTalkDock } from '@/components/DemoTalkDock';
+import { DeskDrawer } from '@/components/DeskDrawer';
 
 const NAV: Record<Role, { href: string; label: string }[]> = {
   executive: [{ href: '/admin', label: 'Admin' }],
@@ -296,7 +298,7 @@ function DemoAppShell({
       </header>
 
       {/* The page, and the person's own desk beside it from `xl` up; below
-          that the desk stacks under the page. There is no left column any
+          that the desk is a drawer from the right edge (DeskDrawer). There is no left column any
           more: the bottom bar is the navigation at every width. */}
       <div className="mx-auto flex max-w-[1600px] flex-col items-stretch gap-6 px-4 xl:flex-row xl:items-start">
 
@@ -320,6 +322,8 @@ function DemoAppShell({
         </main>
 
         {prefs.rightRail && (
+          // A DRAWER BELOW 1280px, the column beside the page above it.
+          <DeskDrawer label={currentUser.role === 'ds' ? 'My room' : 'My office'}>
           <RightRail
             role={currentUser.role}
             name={currentUser.full_name}
@@ -329,10 +333,15 @@ function DemoAppShell({
             update={update}
             today={today}
           />
+          </DeskDrawer>
         )}
       </div>
 
       <TabBar role={currentUser.role} />
+
+      {/* The chat, as a bubble, for the two people who have conversations: the
+          live shell's TalkDock, drawn from the sample store. */}
+      <DemoTalkDock />
     </div>
   );
 }

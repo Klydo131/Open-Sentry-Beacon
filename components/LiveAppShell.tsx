@@ -10,6 +10,7 @@ import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { BeaconSplash } from '@/components/BeaconLoader';
 import { Avatar, Button, Card } from '@/components/ui';
 import { RightRail } from '@/components/RoomRails';
+import { DeskDrawer } from '@/components/DeskDrawer';
 import { LiveDesk } from '@/components/LiveDesk';
 import { useRoom } from '@/lib/room-theme';
 import { LiveBell } from '@/components/LiveBell';
@@ -250,8 +251,8 @@ export function LiveAppShell({
       </header>
 
       {/* The page, and the person's own desk beside it from xl up (below xl
-          it stacks under the page) -- the same breakpoint the sample-data
-          shell uses. There is no left column any more: the bottom bar is the
+          it is a drawer from the right edge, components/DeskDrawer.tsx) --
+          the same breakpoint the sample-data shell uses. There is no left column any more: the bottom bar is the
           navigation at every width. */}
       <div className="mx-auto flex max-w-[1600px] flex-col items-stretch gap-6 px-4 xl:flex-row xl:items-start">
 
@@ -281,6 +282,8 @@ export function LiveAppShell({
         <TalkDock />
 
         {room.prefs.rightRail && (
+          // A DRAWER BELOW 1280px, the column beside the page above it.
+          <DeskDrawer label={profile.role === 'ds' ? 'My room' : 'My office'}>
           <RightRail
             role={profile.role}
             name={profile.full_name}
@@ -295,6 +298,7 @@ export function LiveAppShell({
             // loads what is coming up and what is outstanding.
             desk={<LiveDesk me={profile} theme={room.theme} />}
           />
+          </DeskDrawer>
         )}
       </div>
 

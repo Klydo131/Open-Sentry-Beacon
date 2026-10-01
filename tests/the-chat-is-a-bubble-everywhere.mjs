@@ -43,11 +43,22 @@ const ok = (cond, msg) => {
 };
 
 const dock = read('components/live/TalkDock.tsx');
+// THE BUBBLE'S FRAME IS SHARED NOW (30 September 2026): the bubble, the sheet
+// and the header are components/talk/Dock.tsx, drawn by the live bubble and by
+// the sample app's (components/DemoTalkDock.tsx). The shape rules below read
+// the frame; who gets a bubble, and where not, is still TalkDock's.
+const frame = read('components/talk/Dock.tsx');
+const demo = read('components/DemoTalkDock.tsx');
 const css  = read('app/globals.css');
 
 /** The source with comments stripped, so prose about a rule is not the rule. */
-const code = dock.replace(/\/\*[\s\S]*?\*\/|\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*/g,
+const blank = (src) => src.replace(/\/\*[\s\S]*?\*\/|\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*/g,
                           (m) => ' '.repeat(m.length));
+const code = blank(frame);
+const who = blank(dock);
+
+ok(/<TalkSheet\b/.test(who) && /<TalkBubble\b/.test(who) && /<TalkSheet\b/.test(blank(demo)) && /<TalkBubble\b/.test(blank(demo)),
+   'both halves of the app draw the same bubble and the same sheet');
 
 // ---------------------------------------------------------------------------
 // 1. THE FENCE IS GONE
@@ -133,9 +144,9 @@ const code = dock.replace(/\/\*[\s\S]*?\*\/|\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*/g,
 // 4. THE THINGS THAT WERE ALREADY RIGHT, STILL RIGHT
 // ---------------------------------------------------------------------------
 {
-  ok(/if \(path === '\/talk'\) return null;/.test(code),
+  ok(/if \(path === '\/talk'\) return null;/.test(who),
      'no bubble on the chat’s own page, which would be a second copy of it');
-  ok(/profile\.role !== 'ds' && profile\.role !== 'dm'/.test(code),
+  ok(/profile\.role !== 'ds' && profile\.role !== 'dm'/.test(who),
      'and only for the two roles that have a conversation at all');
 
   // THE COUNT IS WHY THE BUBBLE IS WORTH ITS SPACE. Without it this is a button

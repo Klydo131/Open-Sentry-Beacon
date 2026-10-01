@@ -174,9 +174,14 @@ the tool they came for. `components/Rooms.tsx` is the mechanism and it is
 already written: `useRoom` remembers the subroom per role, `?room=` in the
 address beats the memory so a link can still send somebody somewhere exact, a
 third argument translates an old `#card` anchor to the folder that draws that
-card, and the strip scrolls sideways inside itself on a phone. Admin, the
-Office, the Library, Settings, the Church, a Guide's home and an Explorer's
-journey all use it, on both the live and the sample side.
+card, and the subrooms are ONE DROP-DOWN at every size
+(`components/SubroomMenu.tsx`, asked for on 30 September 2026: people did not
+know to swipe the strip it replaced). Closed, it names the subroom you are in,
+says "2 of 4", and shows the count waiting in the others, which is what the
+strip showed at a glance; the tabs on one person's page and the sample Admin
+page use the same drop-down. Admin, the Office, the Library, Settings, the
+Church, a Guide's home and an Explorer's journey all use it, on both the live
+and the sample side. `tests/sub-rooms-are-a-drop-down.mjs` holds it.
 
 Two rules when you add one. **A panel lives in exactly one subroom**: one that
 appears in two is in neither, as far as the person hunting for it is concerned.
@@ -188,7 +193,9 @@ every room that has them. `tests/e2e/office-subrooms.js` walks them all in a
 real browser at eight device sizes, and runs on WebKit in CI.
 
 Two things must not move into a folder of their own. **An Explorer's report
-control belongs on the same screen as the conversation it is about**, and **a
+control belongs on the same screen as the conversation it is about** (since 30
+September 2026 the conversation lives in the Talk bubble on both halves, so
+Report is in the bubble's header, in words, never beside Send), and **a
 Guide sees the church's notices above the row rather than inside a folder** —
 both were asked for in those terms and both are checked.
 
@@ -318,12 +325,20 @@ shipped:
 - **The bottom bar is the navigation, at every width.** **Menu | People | My
   Files** (`components/TabBar.tsx`, `lib/tab-bar.ts`), on a phone, a pad and a
   desktop alike, and Menu lists every room. There is no left rail; the right
-  rail (the person's own desk) sits beside the page from `xl` and under it
-  below. The bar is fixed, so it publishes its height as `--tab-bar`; anything
-  else pinned to the bottom uses `.safe-bottom`, which stands it on top of the
-  bar. Inside a conversation it steps aside: a screen that is one carries
-  `data-conversation-screen`. `tests/the-bottom-bar.mjs` and
-  `tests/e2e/the-rooms-fit-a-phone.js` hold it.
+  rail (the person's own desk) sits beside the page from `xl`, and below `xl`
+  it is a drawer behind a small tab on the right edge
+  (`components/DeskDrawer.tsx`, `tests/the-desk-is-a-drawer.mjs`). The bar is
+  fixed, so it publishes its height as `--tab-bar`; anything else pinned to the
+  bottom uses `.safe-bottom`, which stands it on top of the bar. On /talk, the
+  one screen that is a conversation, it steps aside (`data-conversation-screen`).
+  `tests/the-bottom-bar.mjs` and `tests/e2e/the-rooms-fit-a-phone.js` hold it.
+- **The conversation lives in the Talk bubble**, on both halves and for both
+  sides of a pairing: `components/talk/Dock.tsx` is the frame (bubble, sheet,
+  the one header with Report in it, the list), filled by the live database in
+  `components/live/TalkDock.tsx` and by the sample store in
+  `components/DemoTalkDock.tsx`. Pages about one person carry **Message**,
+  which opens the bubble at them (`lib/talk-open.ts`); a Guide's page opens on
+  **Appointments**. `tests/appointments-first-the-chat-in-the-bubble.mjs`.
 - **Every `<button>` is 56px tall** from `globals.css`. Padding cannot make one
   smaller; only `.tap-sm` (44px) can, and the `danger` variant is the only thing
   that uses it. That is the point: the most damaging control on a screen is never

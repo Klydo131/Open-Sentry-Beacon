@@ -54,15 +54,18 @@ const ok = (cond, msg) => {
 // The whole point of this file.
 {
   const surface = read('components/live/TalkSurface.tsx');
-  ok(/LiveReportControl/.test(surface),
-     'the report control is in the chat room, not left behind on the old page');
+  ok(/<LiveReportForm/.test(surface) && /onReport=\{current \?/.test(surface),
+     'the report is in the chat room, in its header, not left behind on the old page');
   ok(/subjectId=\{current\.other_id\}/.test(surface),
      'and it reports the person you are actually talking to');
 
-  // It must also still be where it was, because home keeps its conversation.
+  // HOME GAVE ITS CONVERSATION TO THE BUBBLE on 30 September 2026, and the
+  // report went with it rather than staying behind beside nothing. A report
+  // link on a page with no conversation on it would be a way out of a room
+  // that is not there.
   const explorer = read('components/live/ExplorerPage.tsx');
-  ok(/LiveReportControl/.test(explorer),
-     'and it is still on the Explorer page, which also still has the thread');
+  ok(!/<Conversation/.test(explorer) && !/<LiveReportControl/.test(explorer),
+     'and the Explorer page keeps neither the thread nor a report link without one');
 }
 
 // ---------------------------------------------------------------------------

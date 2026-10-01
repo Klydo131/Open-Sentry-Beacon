@@ -8,7 +8,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4370
 //   node tests/e2e/safeguarding.js 4370
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat, openByQuest } = require('./_playwright');
 const PORT = process.argv[2] || '4370';
 const BASE = `http://localhost:${PORT}`;
 
@@ -48,6 +48,8 @@ async function signInAs(page, who) {
   await page.waitForTimeout(1600);
   const card = page.locator('[data-quest="seeker-card"]').first();
   if (await card.count()) { await card.click(); await page.waitForTimeout(1600); }
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
 
   const reportLink = page.getByRole('button', { name: /^Report$/ });
   ok(await reportLink.count() > 0, 'a conversation offers a Report control');
@@ -104,9 +106,16 @@ async function signInAs(page, who) {
   await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
 
+  // ADMIN'S ROOMS ARE A DROP-DOWN (30 September 2026). Closed, it carries the
+  // count waiting in the rooms you are not in; open, Safeguarding has its own.
+  const toggle = page.locator('[data-subroom-toggle]').first();
+  ok(/1/.test(await toggle.innerText().catch(() => '')),
+     `the closed list says something is waiting (${(await toggle.innerText().catch(() => '')).replace(/\n/g, ' ')})`);
+  await toggle.click();
+  await page.waitForTimeout(300);
   const tab = page.locator('[data-quest="tab-reports"]');
-  ok(await tab.count() > 0, 'the Director has a Safeguarding tab');
-  ok(/1/.test(await tab.innerText()), `the tab carries an unread count (${(await tab.innerText()).replace(/\n/g, ' ')})`);
+  ok(await tab.count() > 0, 'the Director has a Safeguarding room');
+  ok(/1/.test(await tab.innerText()), `the room carries an unread count (${(await tab.innerText()).replace(/\n/g, ' ')})`);
 
   await tab.click();
   await page.waitForTimeout(900);

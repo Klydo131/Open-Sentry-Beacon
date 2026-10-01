@@ -19,6 +19,7 @@
 // "not given" rather than left as an empty row, because a Director should be
 // able to tell "did not answer" from "the screen is broken".
 
+import { useFaces, faceOf } from '@/components/live/Face';
 import { useEffect, useState } from 'react';
 import { Avatar, Button, Card } from '@/components/ui';
 import { roleNoun } from '@/lib/brand';
@@ -93,6 +94,11 @@ export function MemberProfile({
 }) {
   const years = age(person.birthday);
   const theirYears = pairedWith ? age(pairedWith.birthday) : null;
+  // THEIR FACE, LARGE. The panel drew initials for somebody who had chosen a
+  // photo, which is most of what "seeing somebody's profile" means to the
+  // person opening it. Asked for on 30 September 2026.
+  const faces = useFaces([person.photo_path]);
+  const face = faceOf(faces, person.photo_path);
 
   // Escape closes it. A panel that can only be dismissed by finding a small
   // button is one people leave open and then read the wrong person from.
@@ -122,7 +128,7 @@ export function MemberProfile({
   return (
     <Card className="p-5 ring-2 ring-navy/15">
       <div className="flex items-start gap-3">
-        <Avatar name={person.full_name} size={52} />
+        <Avatar name={person.full_name} size={72} photo={face} avatar={person.avatar ?? undefined} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-xl font-extrabold text-navy">{person.full_name || 'No name given'}</h3>
           <p className="text-sm text-gray-500">

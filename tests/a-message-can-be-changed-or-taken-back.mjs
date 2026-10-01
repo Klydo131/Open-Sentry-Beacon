@@ -159,14 +159,20 @@ const mine = migrations.find((m) => m.name.includes('changed_or_taken_back'));
   ok(updates.every((u) => /read_at/.test(u)),
      `the only direct update to messages is the read receipt (${updates.length} found)`);
 
-  const explorer = read('components/live/ExplorerPage.tsx');
-  const guide = read('components/live/GuidePages.tsx');
-  ok(/onEditMessage=\{live\.editMessage\}/.test(explorer)
-     && /onDeleteMessage=\{live\.deleteMessage\}/.test(explorer),
-     'the Explorer\'s conversation offers both');
-  ok(/onEditMessage=\{live\.editMessage\}/.test(guide)
-     && /onDeleteMessage=\{live\.deleteMessage\}/.test(guide),
-     'and the Guide\'s does too, because a control only one side has is not a rule');
+  // ONE CONVERSATION FOR BOTH SIDES NOW. On 30 September 2026 the chat left
+  // the Explorer's home and the Guide's Talk tab for the bubble, so the place
+  // both of them edit and take back messages is TalkSurface, which the bubble
+  // (TalkDock) and /talk draw for a Guide and an Explorer alike.
+  const surface = read('components/live/TalkSurface.tsx');
+  ok(/onEditMessage=\{live\.editMessage\}/.test(surface)
+     && /onDeleteMessage=\{live\.deleteMessage\}/.test(surface),
+     'the conversation in the bubble offers both');
+  ok(/role !== 'ds' && profile\.role !== 'dm'/.test(read('components/live/TalkDock.tsx')),
+     'and it is the same conversation for the Guide and the Explorer, because a control only one side has is not a rule');
+  // And nowhere else draws a conversation that could quietly lack them.
+  const drawers = ['components/live/ExplorerPage.tsx', 'components/live/GuidePages.tsx']
+    .filter((f) => /<Conversation\b/.test(read(f)));
+  ok(drawers.length === 0, `no page draws a second conversation beside the bubble's (${drawers.join(', ') || 'none'})`);
 }
 
 // ---------------------------------------------------------------------------

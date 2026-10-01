@@ -45,29 +45,15 @@ export function LiveReportControl({
   pairingId?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState('');
 
   if (open) {
     return (
       <div className="mt-3">
-        {error && (
-          <p className="mb-2 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">
-            {error}
-          </p>
-        )}
-        <ReportDialog
+        <LiveReportForm
+          subjectId={subjectId}
           subjectName={subjectName}
-          onCancel={() => { setOpen(false); setError(''); }}
-          onSubmit={(reason, detail, evidence) => {
-            // Fired without awaiting on purpose: the dialog has already told the
-            // person it is done, and making somebody watch a spinner after the
-            // hardest button in the app is a cruelty. A failure surfaces here.
-            void live
-              .reportPerson({ subjectId, reason, detail, pairingId, evidence })
-              .catch((cause) => setError(
-                humanError(cause, 'That could not be sent.'),
-              ));
-          }}
+          pairingId={pairingId}
+          onDone={() => setOpen(false)}
         />
       </div>
     );
@@ -83,6 +69,49 @@ export function LiveReportControl({
         Report {subjectName}
       </button>
     </div>
+  );
+}
+
+/**
+ * The report itself, without the link that opens it: what the chat bubble's
+ * header opens (components/talk/Dock.tsx, TalkHeader), and what the link above
+ * opens. One form, so a report raised from the bubble reaches the Directors by
+ * exactly the road a report raised anywhere else does.
+ */
+export function LiveReportForm({
+  subjectId,
+  subjectName,
+  pairingId,
+  onDone,
+}: {
+  subjectId: string;
+  subjectName: string;
+  pairingId?: string;
+  onDone: () => void;
+}) {
+  const [error, setError] = useState('');
+  return (
+    <>
+      {error && (
+        <p className="mb-2 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">
+          {error}
+        </p>
+      )}
+      <ReportDialog
+        subjectName={subjectName}
+        onCancel={() => { setError(''); onDone(); }}
+        onSubmit={(reason, detail, evidence) => {
+          // Fired without awaiting on purpose: the dialog has already told the
+          // person it is done, and making somebody watch a spinner after the
+          // hardest button in the app is a cruelty. A failure surfaces here.
+          void live
+            .reportPerson({ subjectId, reason, detail, pairingId, evidence })
+            .catch((cause) => setError(
+              humanError(cause, 'That could not be sent.'),
+            ));
+        }}
+      />
+    </>
   );
 }
 

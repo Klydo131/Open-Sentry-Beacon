@@ -11,7 +11,7 @@
 // different partitions and the live-sync check would fail for a reason that has
 // nothing to do with the app.
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat } = require('./_playwright');
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
 
@@ -43,6 +43,9 @@ async function openFirstSeekerRoom(page) {
   const card = page.locator('[data-quest="seeker-card"]').first();
   if (await card.count()) {
     await card.click();
+    await page.waitForTimeout(1200);
+    // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+    await openChat(page);
     await page.waitForTimeout(1600);
   }
   return page.locator('[data-quest="chat-send"]').count();

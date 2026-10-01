@@ -460,7 +460,20 @@ const staticChecks = [
   // that dismissing a NOTE is not removing the PROMISE: the privacy page must
   // still say both things.
   ['a note read once can be put away', 'tests/a-note-read-once-can-be-put-away.mjs'],
-  ['the diary sits with the conversation', 'tests/the-diary-sits-with-the-conversation.mjs'],
+  // Appointments first on the page and the conversation in the bubble, with
+  // its Report in the bubble's header, on both halves (30 September 2026).
+  // Replaces "the diary sits with the conversation", whose rule the owner
+  // reversed; the parts of it that still hold are carried over.
+  ['appointments first, the chat in the bubble', 'tests/appointments-first-the-chat-in-the-bubble.mjs'],
+  // Every set of sub-rooms is one drop-down, on every device, and the closed
+  // button still says how many rooms and what is waiting (30 September 2026).
+  ['sub-rooms are a drop-down', 'tests/sub-rooms-are-a-drop-down.mjs'],
+  // The desk is a drawer from the right edge on a phone or a pad, and the
+  // column beside the page on a desktop (30 September 2026).
+  ['the desk is a drawer', 'tests/the-desk-is-a-drawer.mjs'],
+  // A Guide and a Director can see an Explorer's profile and face
+  // (30 September 2026).
+  ['explorer profiles can be seen', 'tests/explorer-profiles-can-be-seen.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],
   ['the browser writes only what the app writes', 'tests/the-browser-writes-only-what-the-app-writes.mjs'],

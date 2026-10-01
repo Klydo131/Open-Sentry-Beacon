@@ -90,7 +90,7 @@ async function startTutorial(page) {
 async function actOnStep(page, st) {
   // Key on the quest target, not the panel text — see tutorial-repeat.js.
   if (st.targetQuest === 'chat-send') {
-    const ta = page.getByLabel('Message').first();
+    const ta = page.locator('[data-quest="chat-send"] textarea').first() /* not getByLabel('Message'): the Message button matches that too (30 September 2026) */;
     if (await ta.count()) {
       await ta.fill('Thinking of you this week.');
       await page.waitForTimeout(250);

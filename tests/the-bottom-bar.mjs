@@ -175,7 +175,8 @@ const ok = (cond, msg) => {
   // gate showed the cost: the Menu could not be pressed while the prompt was
   // up, which the old header row never did to anybody.
   const prompt = read('components/InstallPrompt.tsx');
-  const barLine = /data-install-prompt="bar"\s*className="([^"]*)"/.exec(prompt)?.[1] ?? '';
+  // Other attributes may sit between the two (data-steps-aside-for-chat).
+  const barLine = /data-install-prompt="bar"[^>]*?className="([^"]*)"/.exec(prompt)?.[1] ?? '';
   ok(/\bsafe-bottom\b/.test(barLine) && /className="install-bar-ceiling /.test(prompt)
      && !/max-h-\[50dvh\]/.test(prompt)
      && /\.install-bar-ceiling\s*\{[^}]*max-height:\s*calc\(\(100dvh - var\(--tab-bar, 0px\)\) \* 0\.5\)/.test(css),
@@ -270,17 +271,16 @@ const ok = (cond, msg) => {
   const outside = css.replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '');
   ok(/body:has\(\[data-conversation-screen\]\) \.tab-bar\s*\{\s*display:\s*none;\s*\}/.test(outside),
      'the bar is hidden while a conversation screen is on the page, at every width');
-  const marked = [
-    ['components/live/GuidePages.tsx', /tab === 'talk' && \([\s\S]{0,400}?data-conversation-screen/, "a Guide's Talk tab (live)"],
-    ['app/dm/[id]/page.tsx', /tab === 'talk' && \([\s\S]{0,300}?data-conversation-screen/, "a Guide's Talk tab (sample)"],
-    ['app/talk/page.tsx', /data-conversation-screen/, '/talk'],
-  ];
-  for (const [file, re, what] of marked) {
-    ok(re.test(read(file)), `${what} is marked as a conversation`);
-  }
-  for (const file of ['components/live/ExplorerPage.tsx', 'app/ds/page.tsx', 'components/live/TalkSurface.tsx', 'components/live/TalkDock.tsx']) {
-    ok(!/data-conversation-screen/.test(read(file)),
-       `${file} is not marked (the Explorer's home keeps the bar; the chat panel over a desktop page must not hide it)`);
+  // THE ONE CONVERSATION SCREEN LEFT IS /talk. On 30 September 2026 the chat
+  // left the Guide's Talk tab (now Appointments) and the Explorer's home for
+  // the bubble, which covers the whole screen below 1280px and stands on the
+  // bar above it. A page of appointments is not a conversation: it keeps the
+  // bar, as every other page does.
+  ok(/data-conversation-screen/.test(read('app/talk/page.tsx')), '/talk is marked as a conversation');
+  for (const file of ['components/live/GuidePages.tsx', 'app/dm/[id]/page.tsx', 'components/live/ExplorerPage.tsx',
+    'app/ds/page.tsx', 'components/live/TalkSurface.tsx', 'components/live/TalkDock.tsx', 'components/talk/Dock.tsx']) {
+    ok(!/data-conversation-screen/.test(strip(read(file))),
+       `${file} is not marked (appointments and homes keep the bar; the bubble covers it or stands on it)`);
   }
 }
 

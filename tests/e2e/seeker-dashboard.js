@@ -4,7 +4,7 @@
 // to find out their missionary had written to them. This walks the real path —
 // the missionary sends a message, then the seeker signs in — and asserts the
 // strip tells them so, without ever naming a journey stage.
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat } = require('./_playwright');
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 // Screenshots and browser profiles go somewhere writable that is not the
 // repo. Overridable so CI can collect them as artifacts.
@@ -33,8 +33,8 @@ const signInAs = async (page, name) => {
   await signInAs(page, 'Maria Santos');
   await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
-  const talk = page.getByRole('tab', { name: /Talk/i }).or(page.getByRole('button', { name: /Talk/i })).first();
-  if (await talk.count()) { await talk.click(); await page.waitForTimeout(900); }
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
   const box = page.locator('[data-quest="chat-send"] input, [data-quest="chat-send"] textarea').first();
   ok(await box.count() > 0, 'the missionary can reach the message box');
   const MSG = 'Would this Thursday evening suit you for a study?';

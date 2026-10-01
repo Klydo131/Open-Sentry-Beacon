@@ -21,7 +21,7 @@
 //   2. a collection present but the wrong type is treated as missing,
 //   3. and with lesson_series absent from the save, all three screens that read
 //      it still render — and the feature is actually there, not silently empty.
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openByQuest } = require('./_playwright');
 
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
@@ -153,7 +153,8 @@ async function open(page, route) {
   ok(await signInAs(page, 'Pastor Ramos'), 'an admin can sign in on an old save');
   r = await open(page, '/admin');
   ok(!r.crashed && r.hasMain, "the admin's screen opens too");
-  await page.locator('[data-quest="tab-materials"]').first().click().catch(() => {});
+  // Admin's rooms are a drop-down (30 September 2026): open it, then Materials.
+  await openByQuest(page, 'tab-materials');
   await page.waitForTimeout(900);
   let text = await page.locator('body').innerText();
   ok(!CRASH.test(text), 'including the Materials tab, where the series library lives');

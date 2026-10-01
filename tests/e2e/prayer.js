@@ -50,7 +50,12 @@ const REQUEST = 'Please pray for my sister, she starts a new job on Monday.';
   await page.goto(`${BASE}/ds`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
 
-  ok(await page.getByText('🙏 Prayer').count() > 0, 'the Explorer has a prayer card');
+  // The rooms are a drop-down (30 September 2026): Prayer is one of them.
+  await page.locator('[data-subroom-toggle]').first().click();
+  await page.waitForTimeout(300);
+  ok(await page.getByRole('option', { name: /🙏 Prayer/ }).count() > 0, 'the Explorer has a prayer room');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
 
   // Prayer is a room now, not a stretch of the same scroll, so the card is not
   // rendered until its tab is the chosen one.
@@ -81,10 +86,9 @@ const REQUEST = 'Please pray for my sister, she starts a new job on Monday.';
   const card = page.locator('[data-quest="seeker-card"]').first();
   if (await card.count()) { await card.click(); await page.waitForTimeout(1600); }
 
-  const care = page.locator('button', { hasText: /^\s*(🤲\s*)?Care/ }).first();
-  ok(await care.count() > 0, 'the Care tab exists');
-  await care.click();
-  await page.waitForTimeout(1300);
+  // The sections of this page are a drop-down (30 September 2026).
+  ok(await openRoom(page, /Care/), 'the Care section exists');
+  await page.waitForTimeout(900);
 
   ok(new RegExp(REQUEST.slice(0, 24), 'i').test(await page.locator('body').innerText()),
     'the Guide can read the request');
@@ -114,6 +118,8 @@ const REQUEST = 'Please pray for my sister, she starts a new job on Monday.';
   // ---- The church wall, anonymously ---------------------------------------
   await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);
+  // The Church's rooms are a drop-down (30 September 2026): open the wall.
+  await openRoom(page, /Prayer wall/i);
   ok(await page.getByText('🙏 Prayer wall').count() > 0, 'the church has a prayer wall');
 
   // Scoped to the wall itself, not "everything below the heading". The first
@@ -146,7 +152,7 @@ const REQUEST = 'Please pray for my sister, she starts a new job on Monday.';
   const johnCard = page.locator('[data-quest="seeker-card"]', { hasText: 'John' }).first();
   await johnCard.click();
   await page.waitForTimeout(1500);
-  await page.locator('button', { hasText: /^\s*(🤲\s*)?Care/ }).first().click();
+  await openRoom(page, /Care/); // the sections are a drop-down (30 September 2026)
   await page.waitForTimeout(1100);
 
   const askBox = page.getByLabel(/What would you like John to pray for/i);
@@ -177,7 +183,7 @@ const REQUEST = 'Please pray for my sister, she starts a new job on Monday.';
   await page.waitForTimeout(1400);
   await page.locator('[data-quest="seeker-card"]', { hasText: 'John' }).first().click();
   await page.waitForTimeout(1500);
-  await page.locator('button', { hasText: /^\s*(🤲\s*)?Care/ }).first().click();
+  await openRoom(page, /Care/); // the sections are a drop-down (30 September 2026)
   await page.waitForTimeout(1100);
   ok(/John is praying for this/i.test(
     await page.locator('[data-my-ask]', { hasText: GUIDE_ASK.slice(0, 24) }).innerText()),

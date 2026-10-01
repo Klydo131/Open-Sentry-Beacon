@@ -12,7 +12,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4341
 //   node tests/e2e/long-message.js 4341
 
-const { chromium, devices, launchOptions } = require('./_playwright');
+const { chromium, devices, launchOptions, openChat } = require('./_playwright');
 const PORT = process.argv[2] || '4341';
 const BASE = `http://localhost:${PORT}`;
 
@@ -52,6 +52,9 @@ const LONG = [
   await page.waitForTimeout(1600);
   const card = page.locator('[data-quest="seeker-card"]').first();
   if (await card.count()) await card.click();
+  await page.waitForTimeout(1200);
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
   await page.waitForTimeout(1600);
 
   const box = page.locator('[data-quest="chat-send"] textarea').first();

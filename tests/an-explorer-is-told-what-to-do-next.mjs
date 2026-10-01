@@ -116,7 +116,9 @@ const shared = strip(read('components/live/shared.tsx'));
   // the Guide's job, and an Explorer was being told to do it.
   ok(/emptyLine/.test(shared),
      'an empty conversation can say different things to different readers');
-  ok(/emptyLine=/.test(explorer),
+  // The empty thread is in the bubble now (30 September 2026), and it keeps
+  // the Explorer's own line there: the surface picks it by who is reading.
+  ok(/emptyLine=\{profile\?\.role === 'ds'[\s\S]{0,40}'No messages yet\. Your Guide will write/.test(read('components/live/TalkSurface.tsx')),
      'and the Explorer gets their own line rather than the Guide\'s instruction');
 }
 

@@ -15,7 +15,7 @@
 // names nobody. That last one is the one that matters. A screen built to be read
 // aloud in a church meeting is exactly where a name would do the most damage,
 // and it is the sort of thing that leaks back in months later.
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openByQuest } = require('./_playwright');
 
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
@@ -44,10 +44,9 @@ async function signInAs(page, name) {
 async function openAnalytics(page) {
   await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
-  const tab = page.locator('[data-quest="tab-analytics"]').first();
-  if ((await tab.count()) === 0) return false;
-  await tab.click();
-  await page.waitForTimeout(900);
+  // Admin's rooms are a drop-down (30 September 2026): open it, then Analytics.
+  if (!(await openByQuest(page, 'tab-analytics'))) return false;
+  await page.waitForTimeout(500);
   // The board panel and the trend charts live in the anonymous rollup, which is
   // the correct place for them and is not the tab's default scope.
   const global = page.getByRole('button', { name: /Global/i }).first();

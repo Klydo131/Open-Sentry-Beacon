@@ -14,7 +14,7 @@
 //
 // It also checks the in-person meeting map link, because that lives one tab away
 // and a suite that has already signed in as a missionary may as well.
-const { chromium, launchOptions, openRoom } = require('./_playwright');
+const { chromium, launchOptions, openRoom, openByQuest } = require('./_playwright');
 
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
@@ -62,7 +62,8 @@ const bodyText = (page) => page.locator('body').innerText();
   ok(await signInAs(page, 'Pastor Ramos'), 'an admin can sign in');
   await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
-  await page.locator('[data-quest="tab-materials"]').first().click();
+  // Admin's rooms are a drop-down (30 September 2026): open it, then Materials.
+  await openByQuest(page, 'tab-materials');
   await page.waitForTimeout(900);
   // The builder opens when asked for; the shelf is what the page shows first.
   await page.getByRole('button', { name: /^\+ New series$/ }).first().click();
@@ -103,17 +104,12 @@ const bodyText = (page) => page.locator('body').innerText();
   await page.locator('[data-quest="seeker-card"]').first().click();
   await page.waitForTimeout(1400);
 
-  const lessonsTab = page.getByRole('tab', { name: /Lesson|Resource|Study/i }).first();
-  if (await lessonsTab.count()) {
-    await lessonsTab.click();
-    await page.waitForTimeout(800);
-  }
+  // The sections of this page are a drop-down (30 September 2026).
+  await openRoom(page, /Lesson|Resource|Study/i);
   // Some builds put lessons under the Resources tab; find the card either way.
   if (!(await page.getByText(/Lesson series/i).count())) {
-    const tabs = page.getByRole('tab');
-    for (let i = 0; i < (await tabs.count()); i++) {
-      await tabs.nth(i).click();
-      await page.waitForTimeout(600);
+    for (const name of [/Resource/i, /Journey/i, /Care/i, /Appointments/i]) {
+      await openRoom(page, name);
       if (await page.getByText(/Lesson series/i).count()) break;
     }
   }
@@ -136,11 +132,8 @@ const bodyText = (page) => page.locator('body').innerText();
   await page.screenshot({ path: `${OUT}/series-2-missionary.png` });
 
   // ------------------------- in-person meetings carry a map link, same visit --
-  const meetTab = page.getByRole('tab', { name: /Meet|Plan|Talk/i }).first();
-  if (await meetTab.count()) {
-    await meetTab.click();
-    await page.waitForTimeout(700);
-  }
+  // Arranging a time is the Appointments section now (30 September 2026).
+  await openRoom(page, /Appointments|Meet|Plan/i);
   const modeSelect = page.locator('select').filter({ hasText: /In person/i }).first();
   if ((await modeSelect.count()) > 0) {
     await modeSelect.selectOption('in_person').catch(() => {});

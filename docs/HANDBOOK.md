@@ -136,6 +136,12 @@ Raising it is a decision, not a drift. Five is the number the design is built ar
 
 **The one number worth watching is unpaired Explorers.** An Explorer with no Guide has been invited into an app where nothing happens. Your dashboard opens on that number for exactly this reason.
 
+### Seeing an Explorer's profile
+
+A Guide opens an Explorer from **People**, and their page has **Profile** beside **Message**: what that person chose to say about themselves, with their picture. A Director opens anybody from the rooms of people in **Admin**, where every row has **Profile** too. Faces are shown wherever a Guide or a Director reads a list of names, when the person has chosen one; everybody else is two initials on a circle.
+
+Nothing new is shown to anybody by this. A Guide sees the profile of the people they walk with and nobody else's, and the address somebody was invited at and the day they arrived stay with the Directors, as they always did.
+
 ### Your Guide is a real person
 
 An Explorer's screen opens with the person walking with them: their picture, their name, their city and what they said they care about. All of it is what that Guide typed on their own profile.
@@ -199,7 +205,7 @@ Three things about it are worth knowing before you use it on twenty people.
 
 A Guide and an Explorer arrange a time together on the same card, and both see it. Either may propose one: a title, a date and time, and online or in person. The other person confirms it, and either can cancel. Nobody else in the church sees any of it.
 
-**The card sits with the conversation, on both sides.** On the Explorer's screen it always has. On the Guide's it used to sit under **Journey**, which is the one tab the Explorer never sees — it holds the six stages and the Advance button, and it is where a Guide records where somebody has got to. That put a thing the two of them do *together* inside the folder of things the Guide does *about* them: an Explorer proposed a time from their chat, and their Guide had to leave the conversation and know which tab to open before they could see it had been asked. It is beneath the thread on both screens now, in the same place on each.
+**The card is the first thing you reach, on both sides.** A Guide's page for one Explorer opens on **Appointments**, and an Explorer's own screen has the card right after their Guide and the church's notices. Until 30 September 2026 the card sat under the conversation, so arranging a time meant scrolling past the whole thread; the conversation now lives in the **Talk** bubble, and **Message** on either screen opens it. The card has never lived under **Journey**, the one tab the Explorer never sees, and must not: it is a thing the two of them do *together*, not something the Guide does *about* them.
 
 **In person asks where, and will not let you skip it.** Start typing a place and the box suggests where you might mean: places you two have met before first, then places from the map, each with its street, barangay, city and province. Type *jollibee imus* and you see each branch with its own street, so you can tell which one you mean. Tap one and it is pinned: the card says **Meeting here** with the name and address, and **Check it on the map** opens that exact spot before anybody is asked to go there. The other person's **Open in Maps** button opens the same spot in whichever map app they already use.
 
@@ -313,7 +319,7 @@ A notice pinned where the church will see it: an icon, a title, a line of detail
 **Where a notice appears depends on whose screen it is**, because the two jobs are different:
 
 - **Guides, Directors and Executive Directors** see notices first, under the greeting. Their job is the church, and a Guide in particular carries the notices onward to the people they walk with.
-- **An Explorer** sees them after their Guide's card and before the conversation. An Explorer opening their journey is looking for their person, not for the church; putting the church's notices above that answered a question they had not asked. Put below the conversation, they would never have been scrolled to at all.
+- **An Explorer** sees them after their Guide's card and before **Message** and their appointments. An Explorer opening their journey is looking for their person, not for the church; putting the church's notices above that answered a question they had not asked.
 
 Nothing is drawn at all when nothing is pinned, so an ordinary day costs no space on any screen.
 
@@ -382,7 +388,7 @@ The screen a Guide lands on opens with their own figures: how many Explorers the
 
 ### Rooms and subrooms
 
-**A room is a folder, and a subroom is a folder inside it.** Open a room and a row of subrooms sits across the top; tap one and you are in it. Nothing else is drawn, so there is nothing to scroll past.
+**A room is a folder, and a subroom is a folder inside it.** Open a room and a drop-down at the top names the subroom you are in; tap it to see them all, and tap one to go in. Nothing else is drawn, so there is nothing to scroll past.
 
 Six rooms work this way now. Measured on a phone, with the sample church in them:
 
@@ -395,7 +401,7 @@ Six rooms work this way now. Measured on a phone, with the sample church in them
 | **My Explorers**, a Guide's home | 4 screens | 4 folders: My Explorers, Follow-ups, Prayer, Church |
 | **The Office** | 3 screens, and nine cards | 5 or 6 folders, below |
 
-Publish, Cases, the Guild Room, Mail and Profile are left alone. They are one or two screens and mostly one thing; a row of choices above a single card is furniture, not navigation.
+Publish, Cases, the Guild Room, Mail and Profile are left alone. They are one or two screens and mostly one thing; a list of choices above a single card is furniture, not navigation.
 
 ### The Office
 
@@ -419,7 +425,7 @@ The count beside **Pairing requests** is how many Guides are waiting on an answe
 
 > **NOTE** · Two things that did not move
 >
-> **An Explorer's way out of a conversation is on the same screen as the conversation.** Report sits in the My Guide folder with the thread, the Guide's card and the meetings, because the journey is a relationship and splitting it across folders would be the worst thing this change could do.
+> **An Explorer's way out of a conversation is on the same screen as the conversation.** The conversation is in the **Talk** bubble, and **Report** is in the bubble's own header, in words, at the top, far from Send, on both sides of every pairing.
 >
 > **A Guide still sees the church's notices before choosing a folder.** They sit above the row, not inside one, because a Guide carries the notices onward to the people they walk with and was told to see them first.
 
@@ -653,15 +659,15 @@ On a phone, an iPad and a computer alike, a bar along the bottom of the screen h
 - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
 - **My Files** opens your own files.
 
-Six of those rooms have **subrooms** inside them, offered as a row across the top when you open one. See *Rooms and subrooms* in Part 4.
+Six of those rooms have **subrooms** inside them, offered as **one drop-down** at the top when you open one. Closed, it names the subroom you are in, says how many there are (*2 of 4*), and shows a count when something is waiting in another one; tap it and every subroom is listed. It is a drop-down on every screen size, because people did not know to swipe the row it replaced. The sections of one person's page (Appointments, Journey, Care and the rest) open the same way. See *Rooms and subrooms* in Part 4.
 
 > **IMPORTANT** · There is no left column any more
 >
 > Until 30 September 2026 a laptop had a column of rooms down the left side, and a phone had a row of small icons under the header instead. Two lists of the same rooms drifted apart: Office, Publish and Cases were added to the column and never to the row, so for several weeks they could not be reached on a phone. Now there is one list, and the Menu draws it at every size. There is a check that fails the build if the Menu stops drawing it.
 >
-> **Inside a conversation the bar steps aside** to give the messages room, as a messaging app does in a chat. The arrow at the top left goes back. An Explorer's own screen keeps the bar, even though the chat with their Guide is on it, because that screen is also their studies and what People opens.
+> **The conversation is a bubble**, the round **Talk** button in the corner of every screen, with a number on it when somebody has written. On a phone or an iPad it opens to the whole screen; on a computer it opens beside the page. **Report** is at the top of it.
 >
-> The panels that belong to you (the study timer, your note, the pocket, the player) sit beside the page on a wide screen and under it on a narrow one.
+> **Your desk** (the study timer, your note, the pocket, the player) sits beside the page on a wide screen. On a phone or an iPad it is a drawer: tap the small cabinet with **‹‹‹** on the right edge, or swipe in from that edge, and it slides in; tap **›››** to put it away.
 
 **Tutorial, What's new and Feedback are cards inside Settings**, not rows in the Menu. On a live church that was half true for a while: only the tutorial made the move, so What's new and Feedback existed in the sample-data build and nowhere else. Both are now on a **Help and feedback** card in Settings, on both. They were rows for a while, put there because each had been reported as missing when it was only reachable by scrolling Settings. That fixed the wrong half: it made the column six entries long for three things somebody uses about once a month, and the column is what people look at all day. The unread mark for a new release sits on Settings itself, so it is still visible from every screen.
 
@@ -1092,7 +1098,7 @@ The two largest gaps today:
 | A pop-up runs off the bottom or the side, but only in portrait | Fixed on 28 August 2026. | Nothing to do. |
 | An invitation was accepted but the person never appeared in Approvals | Fixed on 29 August 2026. Somebody who already had an account got a recovery link instead of an invitation link, and a recovery link does not carry the church and role across. They existed with no church, visible to nobody. | Nothing to do for new ones. Anybody already stuck in that state was repaired when the fix was applied. |
 | "You do not have permission to do that" when adding to the library | Fixed on 1 September 2026, and it was never about permission. The app saved the resource and asked the database for it back in the same breath, and the read rule could not recognise a row that did not exist a moment ago. It is the same fault as the blog error in Part 9. | Nothing to do. Anybody in the church can add a link now, Explorers included. |
-| A card I used to scroll to has disappeared | Nothing was removed. Six rooms now open in folders, and the card is in one of them: the row of choices is across the top of the room. | Tap the folder it belongs to. The room remembers your choice, so it will open there next time. |
+| A card I used to scroll to has disappeared | Nothing was removed. Six rooms now open in folders, and the card is in one of them: the drop-down at the top of the room lists them all. | Tap the drop-down and choose the folder it belongs to. The room remembers your choice, so it will open there next time. |
 | A link took me to a room but not to the card I pressed for | Fixed on 31 August 2026. Links that pointed at a card by name were pointing at something a folder might not be drawing. | Nothing to do. Those links now name the folder as well, and old ones are translated. |
 | A study cannot be written on a phone or an iPad | Fixed on 28 August 2026. The Office was reachable only from the left column, which does not exist below laptop width. | Nothing to do. Office, Publish and Cases are in the Menu, on the bar at the bottom of every screen. |
 

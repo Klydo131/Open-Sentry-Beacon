@@ -598,6 +598,31 @@ html {
   height: 100%;
 }
 
+/* WHILE THE CHAT (OR THE DESK DRAWER) COVERS A PHONE OR A PAD, WHAT FLOATS
+   ABOVE IT STEPS ASIDE.
+   Below 1280px the Talk bubble opens to the whole screen, and several small
+   things float at a higher layer than it on purpose -- the install invitation,
+   the sample app's DEMO pill, the feedback nudge, the tutorial's Resume pill,
+   the update toast. Over a page they are fine. Over a full-screen chat they sat
+   on Attach and Send: seen on 30 September 2026, the DEMO pill across "Attach
+   a file" on a 390px phone. Each is back the moment the chat closes. Marked
+   `data-steps-aside-for-chat` where it is drawn.
+
+   AND THE SHEET STARTS UNDER THE TUTORIAL BAR. That bar is fixed at the top at
+   a higher layer, and the sheet's own header -- the name, Report and close --
+   was underneath it: Report could not be pressed in the sample app. The bar
+   publishes its height as `--beacon-chrome-top`, zero without it.
+   `div[data-talk-sheet]` outweighs the sheet's `inset-0` utility. */
+@media (max-width: 1279px) {
+  body:has([data-talk-sheet]) [data-steps-aside-for-chat],
+  body:has([data-desk-drawer][data-open='true']) [data-steps-aside-for-chat] {
+    display: none !important;
+  }
+  div[data-talk-sheet] {
+    top: var(--beacon-chrome-top, 0px);
+  }
+}
+
 /* THE CONVERSATION AND THE INSTALL INVITATION CANNOT BOTH OWN THE BOTTOM OF A
    SHORT SCREEN, SO THE INVITATION STANDS DOWN.
 
@@ -736,7 +761,10 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
      invisible for somebody who asked for stillness. */
   .talk-panel-in,
   .talk-panel-out,
-  .talk-message-in {
+  .talk-message-in,
+  .talk-view-forward,
+  .talk-view-back,
+  .talk-count-pop {
     animation: none;
   }
   .talk-bubble {
@@ -891,9 +919,11 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
-/* The sheet comes from the bottom edge, not from the middle of the screen. */
+/* The sheet comes from the bottom edge, not from the middle of the screen,
+   and settles rather than stops: the curve below decelerates hard at the end,
+   which is what reads as smooth rather than as a slide that hit a wall. */
 @keyframes talkSheetIn {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -906,7 +936,7 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   /* TRANSFORM-ORIGIN AT THE CORNER IT CAME FROM, which is what makes this read
      as the bubble opening rather than as a card fading in over the page. */
   transform-origin: bottom right;
-  animation: talkSheetIn 200ms ease-out;
+  animation: talkSheetIn 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (min-width: 1280px) {
@@ -916,7 +946,43 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 }
 
 .talk-message-in {
-  animation: talkMessageIn 140ms ease-out;
+  animation: talkMessageIn 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* THE LIST AND A CONVERSATION SLIDE PAST EACH OTHER, the way you went.
+   Asked for on 30 September 2026: "improve talk to our bubble chat with smooth
+   animations too and smooth UI design in our chat system". Opening a person
+   brings their conversation in from the right; going back brings the list in
+   from the left. A short distance and a fade, so it says "you moved" without
+   making anybody wait to read. components/talk/Dock.tsx, TalkView. */
+@keyframes talkViewForward {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes talkViewBack {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.talk-view-forward {
+  animation: talkViewForward 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.talk-view-back {
+  animation: talkViewBack 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* THE COUNT POPS WHEN IT GOES UP: something arrived. Only then -- the bubble
+   re-keys the badge on a rise, never on a fall. */
+@keyframes talkCountPop {
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.talk-count-pop {
+  animation: talkCountPop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* LEAVING IS AS MUCH A MOVEMENT AS ARRIVING.
@@ -966,6 +1032,130 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 
 .talk-bubble:active:not(:disabled) {
   transform: scale(0.93);
+}
+
+/* THE DESK AS A DRAWER BELOW 1280px. components/DeskDrawer.tsx.
+   Asked for on 30 September 2026: the desk stacked under every page on a
+   phone, a second page nobody had asked for. Below 1280px it waits off the
+   right edge behind a small tab and slides in over the page; from 1280px it is
+   the column beside the page it always was, and the drawer box steps out of
+   the layout with `display: contents`, so the desk is the flex child again.
+
+   `visibility` IS RESET AT 1280px ON PURPOSE. It is inherited, and a box with
+   `display: contents` still passes it to its children: a closed drawer's
+   `hidden` would otherwise hide the desktop's desk. */
+.desk-tab {
+  top: 42%;
+  transform: translateY(-50%);
+  transition: transform 160ms ease-out;
+}
+
+.desk-tab:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.desk-backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease-out;
+}
+
+.desk-backdrop-on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.desk-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  width: min(24rem, 88vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #eef1f6;
+  box-shadow: -12px 0 32px rgba(15, 23, 42, 0.18);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--beacon-chrome-top, 0px) + 12px) 12px
+    calc(env(safe-area-inset-bottom, 0px) + 12px);
+  transform: translateX(105%);
+  visibility: hidden;
+  /* Hidden only once it has finished sliding out, so the way out is seen. */
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 280ms;
+}
+
+.desk-drawer[data-open='true'] {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+}
+
+.desk-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 1280px) {
+  .desk-drawer {
+    display: contents;
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desk-drawer,
+  .desk-drawer[data-open='true'],
+  .desk-backdrop,
+  .desk-tab {
+    transition: none;
+  }
+}
+
+/* THE SUB-ROOM LIST OPENS DOWNWARDS FROM ITS BUTTON: a short drop and a fade,
+   so it reads as coming out of the thing that was pressed.
+   components/SubroomMenu.tsx. */
+@keyframes subroomMenuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.subroom-menu-in {
+  transform-origin: top left;
+  animation: subroomMenuIn 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subroom-menu-in {
+    animation: none;
+  }
+}
+
+/* THE CHAT'S MOTION OFF, HERE, AFTER IT IS SWITCHED ON. The block near the top
+   of this file that names these classes under prefers-reduced-motion comes
+   BEFORE the rules that set them, and a media query adds no weight: two rules
+   of equal specificity, the later one wins. So every one of these animations
+   still played for somebody who had asked their phone for less movement --
+   found on 30 September 2026 while adding the two below. Switching them off
+   after they are switched on is what makes the switch-off stick.
+   tests/the-chat-is-the-bubble-and-it-moves.mjs now checks the order. */
+@media (prefers-reduced-motion: reduce) {
+  .talk-panel-in,
+  .talk-panel-out,
+  .talk-message-in,
+  .talk-view-forward,
+  .talk-view-back,
+  .talk-count-pop {
+    animation: none;
+  }
+  .talk-bubble {
+    transition: none;
+  }
+  .talk-bubble:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 /* THE CHAT, COVERING THE WHOLE SCREEN ON A PHONE OR A PAD.
@@ -1130,12 +1320,11 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 
 /* INSIDE A CONVERSATION THE BAR STEPS ASIDE, at every width. Asked for in
    those words: "Hide the bar inside conversations too." A screen that IS a
-   conversation (a Guide's Talk tab with one Explorer, /talk) marks itself
-   `data-conversation-screen`. An Explorer's home is not marked, though the
-   chat with their Guide is on it: it is also their study, the church's
-   notices and what People opens, and a bar that vanished the moment somebody
-   tapped People would be a bar nobody could trust. The header's Back and its
-   home link are the way out. `:has()` is new enough that an old engine simply
+   conversation marks itself `data-conversation-screen`. Since the chat moved
+   into the Talk bubble (30 September 2026) that is /talk alone: a Guide's page
+   opens on Appointments, an Explorer's home is their studies and their Guide,
+   and neither is a conversation any more. The header's Back and its home link
+   are the way out. `:has()` is new enough that an old engine simply
    keeps the bar, which is the behaviour before this rule. */
 body:has([data-conversation-screen]) .tab-bar {
   display: none;

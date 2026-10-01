@@ -59,6 +59,7 @@ export function FeedbackNudge({ suppressed = false }: { suppressed?: boolean }) 
 
   return (
     <div
+      data-steps-aside-for-chat
       className="no-print safe-bottom fixed inset-x-0 bottom-0 z-[70] flex justify-center p-3"
       role="status"
     >

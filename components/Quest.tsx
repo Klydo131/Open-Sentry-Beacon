@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { closeTalk } from '@/lib/talk-open';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDemo, QUEST_KEY } from '@/lib/demo/store';
 import { NAVY, GOLD } from '@/lib/brand';
@@ -230,6 +231,14 @@ export function Quest() {
         }
       }
       setAltHint(hint);
+
+      // THE CHAT IS NOT THE PAGE. The conversation lives in the Talk bubble,
+      // and on a phone its sheet covers the whole page -- so after "Send a
+      // message" the next step's tab was under it: pointed at, and impossible
+      // to see or press. When what comes next is outside an open chat, the
+      // chat is put down first, as a person would.
+      const sheet = document.querySelector('[data-talk-sheet]');
+      if (el && sheet && !sheet.contains(el)) closeTalk();
 
       targetEl.current = el;
 
@@ -551,6 +560,7 @@ export function Quest() {
     return (
       <button
         onClick={() => setDismissed(false)}
+        data-steps-aside-for-chat
         className="safe-bottom fixed bottom-4 right-4 z-[60] rounded-full px-4 py-2 text-xs font-bold shadow-lg"
         style={{ backgroundColor: GOLD, color: NAVY }}
       >

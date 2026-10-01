@@ -12,7 +12,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4370
 //   node tests/e2e/links.js 4370
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat } = require('./_playwright');
 const PORT = process.argv[2] || '4370';
 const BASE = `http://localhost:${PORT}`;
 
@@ -55,6 +55,8 @@ const anchors = (page) => page.evaluate(() => {
   const card = page.locator('[data-quest="seeker-card"]').first();
   if (await card.count()) await card.click();
   await page.waitForTimeout(1500);
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
 
   ok(await box(page).count() > 0, 'a conversation is open');
   if (!(await box(page).count())) {

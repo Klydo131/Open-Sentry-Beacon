@@ -1,6 +1,7 @@
 'use client';
 
 import { NAVY } from '@/lib/brand';
+import { SubroomMenu } from '@/components/SubroomMenu';
 
 // Small, dependency-free building blocks. Senior-friendly by default:
 // big text, big tap targets, high contrast.
@@ -240,13 +241,13 @@ export function Badge({
 // The tab strip. Kept here (rather than in the seeker room) because the demo
 // and live rooms both use it and must not drift apart.
 //
-// On a phone the tabs share the width evenly, icon above label, so all of them
-// are visible at once. They used to be a row that scrolled sideways, which
-// hides whatever does not fit — and a tab you have to go looking for is a tab
-// most people never open. From `sm` up there is room for a normal row.
+// A drop-down at every size since 30 September 2026. The row before it shared
+// the width of a phone evenly, and a fifth tab cut "Appointments" to
+// "Appointm…"; the owner asked for every set of sub-rooms to open as a list.
 //
 // `badge` puts a count on a tab so a missionary can see there is something
-// waiting without opening it.
+// waiting without opening it -- on the closed button too, when it is in a tab
+// they are not on.
 export function Tabs<T extends string>({
   tabs,
   active,
@@ -256,46 +257,26 @@ export function Tabs<T extends string>({
   active: T;
   onChange: (key: T) => void;
 }) {
+  // A DROP-DOWN, like every other set of sub-rooms (components/SubroomMenu.tsx,
+  // 30 September 2026). The count keeps its gold: something there for you.
   return (
-    <div
-      role="tablist"
-      className="no-print grid gap-1 sm:flex sm:flex-wrap"
-      style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
-    >
-      {tabs.map((t) => {
-        const on = t.key === active;
-        return (
-          <button
-            key={t.key}
-            role="tab"
-            aria-selected={on}
-            // Lets the tutorial point at a tab when the control it really wants
-            // is behind that tab and therefore not yet in the DOM.
-            data-quest={`tab-${t.key}`}
-            onClick={() => onChange(t.key)}
-            className={`tap relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[11px] font-semibold transition sm:flex-row sm:gap-2 sm:px-4 sm:text-base ${
-              on ? 'text-white' : 'bg-gray-100 text-navy/70 hover:bg-gray-200'
-            }`}
-            style={on ? { backgroundColor: NAVY } : undefined}
-          >
-            {t.icon && (
-              <span aria-hidden className="text-base sm:text-inherit">
-                {t.icon}
-              </span>
-            )}
-            <span className="max-w-full truncate">{t.label}</span>
-            {!!t.badge && (
-              <span
-                className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold text-navy sm:static sm:h-6 sm:min-w-6 sm:px-1.5 sm:text-xs"
-                style={{ backgroundColor: '#E8B84B' }}
-              >
-                {t.badge}
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </div>
+    <SubroomMenu
+      label="Sections"
+      quest="sections-menu"
+      active={active}
+      onChoose={(id) => onChange(id as T)}
+      items={tabs.map((t) => ({
+        id: t.key,
+        label: t.label,
+        text: t.label,
+        icon: t.icon,
+        badge: t.badge,
+        tone: 'waiting',
+        // Lets the tutorial point at a tab when the control it really wants
+        // is behind that tab and therefore not yet in the DOM.
+        quest: `tab-${t.key}`,
+      }))}
+    />
   );
 }
 

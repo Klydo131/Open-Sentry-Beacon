@@ -49,6 +49,9 @@ const dock    = strip(read('components/live/TalkDock.tsx'));
 const surface = strip(read('components/live/TalkSurface.tsx'));
 const thread  = strip(read('components/live/shared.tsx'));
 const css     = read('app/globals.css');
+// The bubble, the sheet, the header and the list are one shared frame since
+// 30 September 2026, drawn by both halves of the app.
+const frame   = strip(read('components/talk/Dock.tsx'));
 
 // ---------------------------------------------------------------------------
 // 1. ONE WAY IN
@@ -81,17 +84,17 @@ const css     = read('app/globals.css');
      'a thread opens by itself ONLY when there is exactly one of them');
 
   ok(/const several = threads\.length > 1;/.test(surface)
-     && /\{several && active &&/.test(surface),
+     && /onBack=\{several && active \?/.test(surface),
      'and with more than one there is a way back to the list');
 
-  ok(/!active \? \([\s\S]{0,120}<ThreadList/.test(surface),
+  ok(/!active \? \([\s\S]{0,160}<ThreadList/.test(surface),
      'the list is what a Guide sees before they have chosen anybody');
 
   // THE COUNT PER PERSON is what makes the list worth opening: a Guide at the
   // cap can see WHICH of the five is waiting without opening all five.
-  ok(/t\.unread > 0 && \(/.test(surface),
+  ok(/t\.unread > 0 && \(/.test(frame),
      'each person in the list carries their own waiting count');
-  ok(/aria-label=\{`\$\{t\.unread\} waiting`\}/.test(surface),
+  ok(/aria-label=\{`\$\{t\.unread\} waiting`\}/.test(frame),
      'and the count is announced, not only coloured');
 }
 
@@ -99,14 +102,21 @@ const css     = read('app/globals.css');
 // 3. IT MOVES WHEN YOU TOUCH IT
 // ---------------------------------------------------------------------------
 {
-  for (const name of ['talkPanelIn', 'talkSheetIn', 'talkMessageIn']) {
+  for (const name of ['talkPanelIn', 'talkSheetIn', 'talkMessageIn', 'talkViewForward', 'talkViewBack', 'talkCountPop']) {
     ok(new RegExp(`@keyframes ${name}`).test(css), `there is a ${name} animation`);
   }
 
-  ok(/\.talk-panel-in/.test(dock) || /talk-panel-in/.test(dock),
-     'the panel animates as it opens');
-  ok(/talk-bubble/.test(dock),
+  ok(/talk-panel-in/.test(frame) && /talk-panel-out/.test(frame),
+     'the panel animates as it opens, and as it closes');
+  ok(/talk-bubble/.test(frame),
      'and the bubble dips under the finger');
+  // Asked for on 30 September 2026: "smooth animations too".
+  ok(/talk-view-\$\{direction\}/.test(frame) && /key=\{view\}/.test(frame),
+     'the list and a conversation slide past each other, the way you went');
+  ok(/total > before\.current/.test(frame) && /talk-count-pop/.test(frame),
+     'and the count on the bubble pops when it goes up, and only then');
+  ok(/<TalkSheet\b/.test(dock) && /<TalkBubble\b/.test(dock),
+     'the live bubble is drawn by that frame');
 
   // ONLY THE NEWEST ROW. This thread reloads wholesale, so animating every
   // entry would flicker the whole conversation whenever anything changed.
@@ -135,11 +145,35 @@ const css     = read('app/globals.css');
 // this was written on, so a missing rule here is invisible until it reaches
 // somebody who gets motion sick from it.
 {
-  const reduced = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
-  for (const cls of ['.talk-panel-in', '.talk-message-in', '.talk-bubble']) {
-    ok(reduced.includes(cls), `${cls} is switched off under prefers-reduced-motion`);
+  // AFTER THE RULE IT SWITCHES OFF, NOT MERELY SOMEWHERE. A media query adds no
+  // weight, so of two rules with the same selector the LATER one wins -- and
+  // until 30 September 2026 the only block that stopped these sat above the
+  // rules that start them, so every one of them still played for people who
+  // had asked for less movement. This check read "somewhere in a reduced-motion
+  // block" and stayed green throughout. It now asks for the order that works.
+  const reducedBlocks = [...css.matchAll(/@media \(prefers-reduced-motion: reduce\)\s*\{/g)].map((m) => {
+    let i = m.index + m[0].length;
+    let depth = 1;
+    while (i < css.length && depth > 0) {
+      if (css[i] === '{') depth += 1;
+      else if (css[i] === '}') depth -= 1;
+      i += 1;
+    }
+    return { at: m.index, body: css.slice(m.index, i) };
+  });
+  for (const cls of ['.talk-panel-in', '.talk-panel-out', '.talk-message-in', '.talk-view-forward', '.talk-view-back', '.talk-count-pop']) {
+    const esc = cls.replace(/[.-]/g, (c) => `\\${c}`);
+    // The last place it is switched ON: `.cls {` ... `animation:`, not inside a reduced block.
+    const ons = [...css.matchAll(new RegExp(`(^|\\n)\\s*${esc}\\s*\\{[^}]*animation:\\s*(?!none)`, 'g'))]
+      .map((m) => m.index)
+      .filter((at) => !reducedBlocks.some((b) => at > b.at && at < b.at + b.body.length));
+    const lastOn = Math.max(...ons, -1);
+    const offAfter = reducedBlocks.some((b) => b.at > lastOn && b.body.includes(cls) && /animation:\s*none/.test(b.body));
+    ok(lastOn >= 0 && offAfter, `${cls} is switched off under prefers-reduced-motion, after it is switched on`);
   }
-  ok(/\.talk-bubble:active:not\(:disabled\)\s*\{\s*transform: none;/.test(reduced),
+  const lastPress = css.lastIndexOf('.talk-bubble:active:not(:disabled) {\n  transform: scale(');
+  ok(reducedBlocks.some((b) => b.at > lastPress
+       && /\.talk-bubble:active:not\(:disabled\)\s*\{\s*transform: none;/.test(b.body)),
      'including the press, which is a transition rather than an animation');
 }
 

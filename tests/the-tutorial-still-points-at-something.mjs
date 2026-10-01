@@ -85,6 +85,12 @@ for (const file of FILES) {
   // chart step's target is written, and without this form the check read it
   // as gone.
   for (const m of src.matchAll(/data-quest=\{[^{}]*?\?\s*'([a-z0-9-]+)'\s*:/g)) literal.add(m[1]);
+  // HANDED TO THE DROP-DOWN THAT WRITES IT: `<RoomTabs ... quest="journey-rooms"`
+  // or `<SubroomMenu ... quest="admin-rooms"`. Every set of sub-rooms became
+  // one drop-down on 30 September 2026 (components/SubroomMenu.tsx), which
+  // writes `data-quest={quest}` on its button, so the name is written where
+  // the drop-down is used rather than where the attribute is.
+  for (const m of src.matchAll(/<(?:SubroomMenu|RoomTabs)\b[^>]*?\bquest=["']([a-z0-9-]+)["']/g)) literal.add(m[1]);
   for (const m of src.matchAll(/\bkey:\s*'([a-z0-9-]+)'\s*,\s*label:/g)) tabKeys.add(m[1]);
   for (const m of src.matchAll(/\bid:\s*'([a-z0-9-]+)'\s*,\s*label:/g)) roomIds.add(m[1]);
 }

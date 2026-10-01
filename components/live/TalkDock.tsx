@@ -62,22 +62,18 @@ import * as live from '@/lib/live/data';
 import { useLiveSession } from '@/lib/live/session';
 import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_TALK } from '@/lib/live/keep-up';
 import { TalkSurface } from '@/components/live/TalkSurface';
+import { TalkBubble, TalkSheet, useTalkDock } from '@/components/talk/Dock';
 import { showLocalNotification } from '@/lib/push';
 import { APP_SHORT_NAME } from '@/lib/brand';
-
-/** Remembered per device, so the dock opens the way you left it. */
-const OPEN_KEY = 'beacon:talk-dock-open';
 
 export function TalkDock() {
   const { profile } = useLiveSession();
   const router = useRouter();
   const path = usePathname();
   const [threads, setThreads] = useState<live.Thread[]>([]);
-  const [open, setOpen] = useState(false);
-  // ON ITS WAY OUT. Closing used to be an unmount, so the panel vanished
-  // between one frame and the next with nothing saying where it had gone. It
-  // now stays on screen for the length of the exit and leaves afterwards.
-  const [leaving, setLeaving] = useState(false);
+  // Open, on its way out, and which conversation a Message button asked for.
+  // The same hook the sample app's bubble uses (components/talk/Dock.tsx).
+  const { open, leaving, target, show, close } = useTalkDock();
   // What was already waiting when this device last looked, so arriving is told
   // apart from having-been-there-all-along. Without it, opening the app with
   // three unread pops three notifications for messages you already knew about.
@@ -120,9 +116,6 @@ export function TalkDock() {
     }
   }, [path]);
 
-  useEffect(() => {
-    try { setOpen(localStorage.getItem(OPEN_KEY) === '1'); } catch { /* private mode */ }
-  }, []);
   useEffect(() => { void refresh(); }, [refresh]);
   useKeepUp(KEEP_UP_MY_PAIRING, refresh);
   // EVERY CONVERSATION, AND DEBOUNCED. This was a raw channel calling `refresh`
@@ -134,116 +127,25 @@ export function TalkDock() {
   // screen in the app has always done.
   useKeepUp(KEEP_UP_TALK, refresh);
 
-  const setOpenAndRemember = (next: boolean) => {
-    setOpen(next);
-    try { localStorage.setItem(OPEN_KEY, next ? '1' : '0'); } catch { /* private mode */ }
-  };
-
   // Only the two people who have conversations, and never on the chat's own
   // page -- a dock floating over the room it opens is a second copy of it.
   if (!profile || (profile.role !== 'ds' && profile.role !== 'dm')) return null;
   if (path === '/talk') return null;
 
   // OPEN: the whole screen on a phone or a pad, the corner panel on a desktop.
-  // CLOSED: a bubble, at every size, which is the change.
-  //
-  // The two states need different positioning, so the wrapper is not shared.
-  // Squeezing both into one set of classes is how a fixed overlay ends up
-  // inheriting `bottom-4 right-4` and sitting in the corner at full width.
-  /**
-   * Put the panel down rather than deleting it.
-   *
-   * REDUCED MOTION CLOSES AT ONCE, and this is the half that would have been a
-   * real bug rather than a missing nicety: with `animation: none` no
-   * animationend event ever fires, so a close that waited for one would leave
-   * the panel open for ever for exactly the people who asked for less movement.
-   * The timer is the authority, and it is zero for them.
-   */
-  const close = () => {
-    let still = false;
-    try {
-      still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    } catch {
-      // An old browser that cannot answer gets the animation; it is harmless.
-    }
-    if (still) {
-      setOpenAndRemember(false);
-      return;
-    }
-    setLeaving(true);
-    window.setTimeout(() => {
-      setLeaving(false);
-      setOpenAndRemember(false);
-    }, 170);
-  };
-
+  // CLOSED: a bubble, at every size. Both drawn by components/talk/Dock.tsx.
   if (open) {
-    // THE HOME INDICATOR STILL EXISTS ABOVE 1280px. An iPad Pro in landscape
-    // is 1366 CSS pixels, so it takes the xl branch AND has a home indicator
-    // -- without the margin below, the corner panel sits under it. Below xl
-    // the sheet covers the whole screen on purpose and pads its own content
-    // instead, which is what .talk-sheet does.
-    //
-    // AND ON A DESKTOP IT STANDS ON THE BOTTOM BAR, which is there at every
-    // width now: the taller of the home indicator and the bar, exactly as
-    // `.safe-bottom` does for the closed bubble.
     return (
-      <div className="fixed inset-0 z-50 xl:inset-auto xl:bottom-4 xl:right-4 xl:z-40 xl:[margin-bottom:max(env(safe-area-inset-bottom,0px),var(--tab-bar,0px))]">
-        <div className={`talk-sheet ${leaving ? 'talk-panel-out' : 'talk-panel-in'} flex h-full w-full flex-col overflow-hidden bg-white ring-1 ring-black/10 xl:h-[32rem] xl:w-[22rem] xl:rounded-2xl xl:lift-3`}>
-          <div className="flex items-center gap-2 border-b border-black/5 bg-navy px-3 py-2 text-white">
-            <span className="flex-1 text-sm font-bold">Talk</span>
-            {/* NOT ON A PHONE, because there it would do nothing: the sheet is
-                already the whole screen, so "Open full" would swap a covering
-                overlay for a page that looks the same and throws away the
-                screen underneath it. It stays where it still means something. */}
-            <button
-              type="button"
-              onClick={() => router.push('/talk')}
-              className="tap-sm hidden px-2 text-xs font-semibold underline xl:inline-block"
-            >
-              Open full
-            </button>
-            <button
-              type="button"
-              onClick={close}
-              className="tap-sm px-2 text-xs font-semibold underline"
-              aria-label="Close the chat panel"
-            >
-              Exit
-            </button>
-          </div>
-          <div className="min-h-0 flex-1">
-            <TalkSurface compact />
-          </div>
-        </div>
-      </div>
+      <TalkSheet leaving={leaving}>
+        <TalkSurface
+          compact
+          openWith={target}
+          onExit={close}
+          onFull={() => router.push('/talk')}
+        />
+      </TalkSheet>
     );
   }
 
-  return (
-    <div className="safe-bottom fixed bottom-4 right-4 z-40">
-      <button
-        type="button"
-        onClick={() => setOpenAndRemember(true)}
-        /* THE WORD GOES, THE BUBBLE STAYS, on a narrow screen. A pill reading
-           "Talk" sits over the bottom-right corner of whatever somebody is
-           reading; the round bubble is the smallest thing that can still be hit
-           reliably with a thumb. The count stays at every size -- it is the
-           whole reason the bubble is worth the space it takes. */
-        className="talk-bubble tap flex items-center gap-2 rounded-full bg-navy px-4 text-white lift-3 sm:px-5"
-        /* WITHOUT THIS THE PHONE BUTTON IS UNREADABLE. The visible word is what
-           names this control, and it is hidden below `sm` -- which would leave
-           somebody on a screen reader an emoji and a bare number. */
-        aria-label={total > 0 ? `Talk, ${total} waiting` : 'Talk'}
-      >
-        <span aria-hidden>💬</span>
-        <span className="hidden font-bold sm:inline">Talk</span>
-        {total > 0 && (
-          <span aria-hidden className="rounded-full bg-gold px-2 py-0.5 text-xs font-bold text-navy">
-            {total > 99 ? '99+' : total}
-          </span>
-        )}
-      </button>
-    </div>
-  );
+  return <TalkBubble total={total} onOpen={() => show()} />;
 }

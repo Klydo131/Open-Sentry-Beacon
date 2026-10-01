@@ -44,6 +44,7 @@ import { Field, Notice, SelectPerson, emailLooksValid, errorText } from '@/compo
 import { humanError } from '@/lib/live/errors';
 import { LiveAnnouncements } from '@/components/LiveAnnouncements';
 import { MemberProfile } from '@/components/live/MemberProfile';
+import { useFaces, faceOf } from '@/components/live/Face';
 
 // SPLIT OUT OF components/LiveCorePages.tsx, which had grown to three thousand
 // lines holding nineteen components: the signed-out door, the Director's whole
@@ -58,6 +59,8 @@ import { MemberProfile } from '@/components/live/MemberProfile';
 export function LiveAdminPage() {
   const { profile } = useLiveSession();
   const [members, setMembers] = useState<Profile[]>([]);
+  // Faces for the approval lists, in one request.
+  const faces = useFaces(members.map((m) => m.photo_path));
   const [pairings, setPairings] = useState<live.PairingView[]>([]);
   const [church, setChurch] = useState<live.Church | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1010,7 +1013,7 @@ export function LiveAdminPage() {
                       ? [...prev, member.id]
                       : prev.filter((id) => id !== member.id)))}
                   />
-                  <Avatar name={member.full_name || 'Member'} />
+                  <Avatar name={member.full_name || 'Member'} photo={faceOf(faces, member.photo_path)} avatar={member.avatar ?? undefined} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="truncate font-semibold text-navy">{member.full_name || 'Member'}</p>
@@ -1126,7 +1129,7 @@ export function LiveAdminPage() {
               <p className="text-gray-400">Nobody is waiting.</p>
             ) : pending.map((member) => (
               <div key={member.id} className="flex flex-col gap-3 rounded-xl bg-gray-50 px-4 py-3 sm:flex-row sm:items-center">
-                <Avatar name={member.full_name || 'Member'} />
+                <Avatar name={member.full_name || 'Member'} photo={faceOf(faces, member.photo_path)} avatar={member.avatar ?? undefined} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-navy">{member.full_name || 'Invited member'}</p>
                   <p className="text-sm text-gray-500">Invited as {roleNoun(member.role)}</p>
@@ -1531,6 +1534,8 @@ function PeopleRoom({
   const guideOf = (explorerId: string) =>
     active.find((p) => p.ds_id === explorerId)?.dm_name ?? null;
 
+  // Everybody's face in this room, in one request.
+  const faces = useFaces(people.map((p) => p.photo_path));
   const title = kind === 'guides' ? 'Guides' : kind === 'explorers' ? 'Explorers' : 'Directors';
   const empty =
     kind === 'guides' ? 'No Guides yet. Invite one from Approvals.'
@@ -1553,7 +1558,10 @@ function PeopleRoom({
             const walking = kind === 'explorers' ? guideOf(person.id) : null;
             return (
               <div key={person.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 text-sm">
-                <Avatar name={person.full_name || 'Member'} />
+                {/* THE FACE OPENS THEM TOO: it is the biggest thing on the row. */}
+                <button type="button" onClick={() => onOpen(person.id)} className="shrink-0 rounded-full" aria-label={`Open ${person.full_name || 'this person'}'s profile`}>
+                  <Avatar name={person.full_name || 'Member'} photo={faceOf(faces, person.photo_path)} avatar={person.avatar ?? undefined} />
+                </button>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <button
@@ -1598,6 +1606,18 @@ function PeopleRoom({
                     {load}/{cap}
                   </span>
                 )}
+                {/* SAID IN A WORD. The underlined name always opened the
+                    profile; nothing on the row said so. Asked for on 30
+                    September 2026: "I still can't see anyway to see the
+                    Explorers profile or their image display". */}
+                <button
+                  type="button"
+                  onClick={() => onOpen(person.id)}
+                  data-profile-button
+                  className="tap-sm shrink-0 rounded-full bg-white px-3 text-xs font-bold text-navy ring-1 ring-navy/15 hover:bg-gray-100"
+                >
+                  Profile
+                </button>
               </div>
             );
           })}

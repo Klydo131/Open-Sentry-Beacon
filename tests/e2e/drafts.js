@@ -15,7 +15,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4360
 //   node tests/e2e/drafts.js 4360
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openChat } = require('./_playwright');
 const PORT = process.argv[2] || '4360';
 const BASE = `http://localhost:${PORT}`;
 
@@ -47,6 +47,8 @@ async function openRoom(page, index) {
   if (n <= index) return null;
   await cards.nth(index).click();
   await page.waitForTimeout(1500);
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
   return page.url();
 }
 
@@ -69,6 +71,7 @@ async function openRoom(page, index) {
   await page.waitForTimeout(800);
   await page.goto(roomA, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
+  await openChat(page);
 
   ok(await box(page).inputValue() === DRAFT_A,
      'the draft is still in the box after leaving and coming back');
@@ -76,6 +79,7 @@ async function openRoom(page, index) {
   // ---- 2. It survives a full reload, not just client-side navigation -------
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
+  await openChat(page);
   ok(await box(page).inputValue() === DRAFT_A, 'the draft survives a reload');
 
   // ---- 3. A draft belongs to ONE conversation ------------------------------
@@ -91,11 +95,13 @@ async function openRoom(page, index) {
 
     await page.goto(roomA, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1500);
+    await openChat(page);
     ok(await box(page).inputValue() === DRAFT_A,
        'going back to the first conversation shows ITS draft, not the second one');
 
     await page.goto(roomB, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1500);
+    await openChat(page);
     ok(await box(page).inputValue() === DRAFT_B,
        'and the second conversation still has its own');
 
@@ -109,6 +115,7 @@ async function openRoom(page, index) {
   // ---- 4. Deleting every character removes the draft -----------------------
   await page.goto(roomA, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
+  await openChat(page);
   ok(await box(page).inputValue() === DRAFT_A, 'the draft is there before deleting it');
 
   await box(page).fill('');
@@ -116,6 +123,7 @@ async function openRoom(page, index) {
 
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
+  await openChat(page);
   ok(await box(page).inputValue() === '', 'after deleting all the text the draft is gone');
 
   // Whitespace is not a draft either — select-all-and-type-space is a delete.
@@ -123,6 +131,7 @@ async function openRoom(page, index) {
   await page.waitForTimeout(600);
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
+  await openChat(page);
   ok(await box(page).inputValue() === '', 'a box holding only spaces is not kept as a draft');
 
   // ---- 5. Sending clears the draft ----------------------------------------
@@ -135,6 +144,7 @@ async function openRoom(page, index) {
 
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
+  await openChat(page);
   ok(await box(page).inputValue() === '',
      'and the sent message is not left behind as a draft');
 

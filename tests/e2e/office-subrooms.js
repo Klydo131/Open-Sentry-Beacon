@@ -76,32 +76,46 @@ const settle = (page) => page.waitForTimeout(2600);
   await page.waitForTimeout(1200);
   await settle(page);
 
-  const tabs = page.locator('[role="tablist"][aria-label="Rooms"] [role="tab"]');
-  const count = await tabs.count();
+  // THE SUBROOMS ARE A DROP-DOWN since 30 September 2026 (asked for: people did
+  // not know to swipe the strip). Its button names the subroom you are in;
+  // opening it lists every one of them.
+  const toggle = page.locator('[data-subroom-toggle]').first();
+  const opts = page.locator('[data-subroom-menu] [role="option"]');
+  const openList = async (pg = page) => {
+    if ((await pg.locator('[data-subroom-menu] [role="option"]').count()) === 0) {
+      await pg.locator('[data-subroom-toggle]').first().click();
+      await pg.waitForTimeout(300);
+    }
+  };
+  const named = async (pg = page) => (await pg.locator('[data-subroom-toggle]').first().getAttribute('aria-label')) || '';
+
+  await openList();
+  const count = await opts.count();
   ok(count >= 2, `the Office offers subrooms to choose from (${count})`);
 
-  // The strip must not widen the page. It scrolls inside itself.
+  // Opening the list must not widen the page.
   const doc = await page.evaluate(() => ({
     scrollW: document.documentElement.scrollWidth,
     clientW: document.documentElement.clientWidth,
   }));
   ok(doc.scrollW <= doc.clientW + 1,
-     `the subroom strip does not push the page sideways (${doc.scrollW} <= ${doc.clientW})`);
+     `the open list does not push the page sideways (${doc.scrollW} <= ${doc.clientW})`);
 
-  // Every subroom is reachable, and choosing one shows something.
+  // Every subroom is listed, and choosing one shows something.
   const labels = [];
-  for (let i = 0; i < count; i += 1) labels.push((await tabs.nth(i).innerText()).trim());
+  for (let i = 0; i < count; i += 1) labels.push((await opts.nth(i).innerText()).replace(/\s+/g, ' ').trim());
+  const ids = [];
+  for (let i = 0; i < count; i += 1) ids.push(await opts.nth(i).getAttribute('data-room'));
   console.log(`    subrooms: ${labels.join(' | ')}`);
 
   const studies = labels.findIndex((l) => /lesson studies/i.test(l));
   ok(studies > -1, 'one of them is Lesson studies, which is the one that was reported');
 
   if (studies > -1) {
-    await tabs.nth(studies).click();
+    await opts.nth(studies).click();
     await page.waitForTimeout(700);
 
-    ok(await tabs.nth(studies).getAttribute('aria-selected') === 'true',
-       'pressing a subroom selects it');
+    ok(/lesson studies/i.test(await named()), 'pressing a subroom selects it, and the button now names it');
 
     // THE MEASUREMENT. The panel has to be on the first screen, not below it.
     const top = await page.evaluate(() => {
@@ -121,7 +135,8 @@ const settle = (page) => page.waitForTimeout(2600);
   // not hide the others is a page with tabs drawn on it.
   const other = labels.findIndex((l, i) => i !== studies);
   if (other > -1 && studies > -1) {
-    await tabs.nth(other).click();
+    await openList();
+    await opts.nth(other).click();
     await page.waitForTimeout(600);
     const stillThere = await page.evaluate(() => {
       const heads = [...document.querySelectorAll('h1, h2, h3')];
@@ -133,14 +148,14 @@ const settle = (page) => page.waitForTimeout(2600);
   // THE CHOICE IS REMEMBERED. Coming back tomorrow should land where the work
   // is, which is the other half of not having to hunt.
   if (studies > -1) {
-    await tabs.nth(studies).click();
+    await openList();
+    await opts.nth(studies).click();
     await page.waitForTimeout(500);
     await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(600);
     await page.goto(`${BASE}/office`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1000);
-    const back = page.locator('[role="tablist"][aria-label="Rooms"] [role="tab"]').nth(studies);
-    ok(await back.getAttribute('aria-selected') === 'true',
+    ok(/lesson studies/i.test(await named()),
        'and coming back to the Office lands on the subroom you were last in');
   }
 
@@ -148,12 +163,11 @@ const settle = (page) => page.waitForTimeout(2600);
   // rail needs: `?room=` beats the remembered choice.
   const wanted = labels.findIndex((l, i) => i !== studies);
   if (wanted > -1) {
-    const id = await page.locator('[role="tablist"][aria-label="Rooms"] [role="tab"]')
-      .nth(wanted).getAttribute('data-room');
+    const id = ids[wanted];
     await page.goto(`${BASE}/office?room=${id}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1000);
-    const sel = await page.locator(`[role="tab"][data-room="${id}"]`).getAttribute('aria-selected');
-    ok(sel === 'true', `?room=${id} beats the remembered subroom`);
+    const said = await named();
+    ok(said.includes(labels[wanted].replace(/\s*\d+$/, '')), `?room=${id} beats the remembered subroom (${said})`);
   }
 
   await context.close();
@@ -206,18 +220,24 @@ const settle = (page) => page.waitForTimeout(2600);
       await pg.waitForTimeout(900);
       await settle(pg);
 
-      const strip = pg.locator('[role="tablist"][aria-label="Rooms"]');
-      const t = strip.locator('[role="tab"]');
+      // THE DROP-DOWN (30 September 2026): its button, and the list it opens.
+      const button = pg.locator('[data-subroom-toggle]').first();
+      const hasButton = (await button.count()) > 0;
+      if (hasButton) { await button.click(); await pg.waitForTimeout(300); }
+      const t = pg.locator('[data-subroom-menu] [role="option"]');
       const n = await t.count();
 
       const m = await pg.evaluate(() => {
-        const el = document.querySelector('[role="tablist"][aria-label="Rooms"]');
-        const r = el ? el.getBoundingClientRect() : null;
+        const btn = document.querySelector('[data-subroom-toggle]');
+        const list = document.querySelector('[data-subroom-menu] [role="listbox"]');
+        const b = btn ? btn.getBoundingClientRect() : null;
+        const l = list ? list.getBoundingClientRect() : null;
         return {
           pageScrollW: document.documentElement.scrollWidth,
           pageClientW: document.documentElement.clientWidth,
-          stripLeft: r ? Math.round(r.left) : null,
-          stripRight: r ? Math.round(r.right) : null,
+          left: Math.round(Math.min(b ? b.left : 0, l ? l.left : 0)),
+          right: Math.round(Math.max(b ? b.right : 0, l ? l.right : 0)),
+          found: Boolean(b),
         };
       });
 
@@ -228,12 +248,11 @@ const settle = (page) => page.waitForTimeout(2600);
       ok(m.pageScrollW <= m.pageClientW + 1,
          `${tag}: no sideways scroll (${m.pageScrollW} <= ${m.pageClientW})`);
 
-      // 2. The strip's negative margin must not hang off the viewport.
-      ok(m.stripLeft !== null && m.stripLeft >= -8 && m.stripRight <= m.pageClientW + 8,
-         `${tag}: the strip is inside the screen`);
+      // 2. The button and the list it opens are inside the screen.
+      ok(m.found && m.left >= -1 && m.right <= m.pageClientW + 1,
+         `${tag}: the list is inside the screen`);
 
-      // 3. Apple's floor for a touch target is 44 points, and `.tap-sm` is
-      //    exactly that; a rounding error making it 43 is a control people miss.
+      // 3. Apple's floor for a touch target is 44 points.
       let smallest = 999;
       for (let i = 0; i < n; i += 1) {
         const box = await t.nth(i).boundingBox();
@@ -242,12 +261,14 @@ const settle = (page) => page.waitForTimeout(2600);
       ok(smallest >= 44, `${tag}: every subroom is a 44pt target (${smallest})`);
 
       // 4. THE LAST CHOICE IS REACHABLE, and opening it does not widen the page.
-      const last = t.nth(n - 1);
-      await last.scrollIntoViewIfNeeded();
-      await last.click();
-      await pg.waitForTimeout(500);
-      ok(await last.getAttribute('aria-selected') === 'true',
-         `${tag}: the last subroom opens`);
+      if (n > 0) {
+        const lastLabel = (await t.nth(n - 1).innerText()).replace(/\s+/g, ' ').replace(/\s*\d+$/, '').trim();
+        await t.nth(n - 1).scrollIntoViewIfNeeded();
+        await t.nth(n - 1).click();
+        await pg.waitForTimeout(500);
+        const said = (await button.getAttribute('aria-label')) || '';
+        ok(said.includes(lastLabel), `${tag}: the last subroom opens`);
+      }
 
       const after = await pg.evaluate(() => ({
         w: document.documentElement.scrollWidth,

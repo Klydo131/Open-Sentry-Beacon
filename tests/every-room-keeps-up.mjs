@@ -136,6 +136,11 @@ const READS_ONCE_ON_PURPOSE = new Set([
   'components/live/DoorPages.tsx',
   // Resolves one signed URL for one attachment. A URL builder, not a feed.
   'components/live/shared.tsx',
+  // Signs the photos of people another screen already listed (30 September
+  // 2026). A URL builder, not a feed: the screen that lists the people is the
+  // one that listens, and a new photo reaches this as a new path from it.
+  // It re-signs on a timer so a page left open does not outlive its links.
+  'components/live/Face.tsx',
 ]);
 
 {

@@ -102,17 +102,21 @@ const DM_STEPS: QuestStep[] = [
     events: ['beacon:open-seeker'],
   },
   {
+    // THE CONVERSATION MOVED INTO THE BUBBLE on 30 September 2026, asked for
+    // by the owner, so this step follows it there: Message on the Explorer's
+    // page opens the bubble at them, and the tab this used to point at is
+    // Appointments now.
     id: 'message',
-    where: 'My Explorers \u203a an Explorer \u203a Talk',
+    where: 'My Explorers \u203a an Explorer \u203a Message',
     learn:
-      'Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it. The number on the Talk tab counts messages you have not opened yet.',
+      'Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it. It lives in the Talk bubble in the corner, and the number on it counts messages you have not opened yet.',
     title: 'Send a message',
     hint: 'Type in the highlighted box and send. This conversation is private. Only the two of you can ever read it.',
     target: 'chat-send',
     fallbacks: [
       {
-        target: 'tab-talk',
-        hint: 'Open the Talk tab. That is where the conversation lives.',
+        target: 'message-button',
+        hint: 'Tap Message. Your conversation with them opens in the Talk bubble.',
       },
       OPEN_A_SEEKER,
     ],
@@ -133,6 +137,9 @@ const DM_STEPS: QuestStep[] = [
         target: 'tab-journey',
         hint: 'Open the Journey tab. The path and the Advance button are in there.',
       },
+      // THE TABS ARE A DROP-DOWN NOW (30 September 2026), so Journey is in a
+      // closed list until it is opened: point at the list first.
+      { target: 'sections-menu', hint: 'Tap the list under their name and choose Journey.' },
       OPEN_A_SEEKER,
     ],
     route: '/dm',
@@ -152,6 +159,7 @@ const DM_STEPS: QuestStep[] = [
         target: 'tab-resources',
         hint: 'Open the Resources tab. Everything you can share is in there.',
       },
+      { target: 'sections-menu', hint: 'Tap the list under their name and choose Resources.' },
       OPEN_A_SEEKER,
     ],
     route: '/dm',
@@ -192,6 +200,11 @@ const ADMIN_STEPS: QuestStep[] = [
     title: 'See who is waiting',
     hint: 'Tap the highlighted Approvals tab. Anyone who has asked to join is listed there.',
     target: 'tab-approvals',
+    // ADMIN'S ROOMS ARE A DROP-DOWN NOW (30 September 2026): a room is in a
+    // closed list until it is opened, so the list is pointed at first.
+    fallbacks: [
+      { target: 'admin-rooms', hint: 'Tap the list of rooms under Admin and choose Approvals.' },
+    ],
     route: '/admin',
     routeLabel: 'Go to Admin',
     events: ['beacon:tab-approvals'],
@@ -209,6 +222,7 @@ const ADMIN_STEPS: QuestStep[] = [
         target: 'tab-approvals',
         hint: 'Open the Approvals tab first. The people waiting are in there.',
       },
+      { target: 'admin-rooms', hint: 'Tap the list of rooms under Admin and choose Approvals.' },
     ],
     route: '/admin',
     routeLabel: 'Go to Admin',
@@ -227,6 +241,7 @@ const ADMIN_STEPS: QuestStep[] = [
         target: 'tab-approvals',
         hint: 'Open the Approvals tab. Recommendations from Guides are listed under the people waiting.',
       },
+      { target: 'admin-rooms', hint: 'Tap the list of rooms under Admin and choose Approvals.' },
     ],
     route: '/admin',
     routeLabel: 'Go to Admin',
@@ -245,6 +260,7 @@ const ADMIN_STEPS: QuestStep[] = [
         target: 'tab-pairing',
         hint: 'Open the People & pairing tab. The pairing card is at the top.',
       },
+      { target: 'admin-rooms', hint: 'Tap the list of rooms under Admin and choose People & pairing.' },
     ],
     route: '/admin',
     routeLabel: 'Go to Admin',
@@ -258,6 +274,9 @@ const ADMIN_STEPS: QuestStep[] = [
     title: 'Stock the library',
     hint: 'Open the highlighted Materials tab. Readings and videos you add here are what Guides can share.',
     target: 'tab-materials',
+    fallbacks: [
+      { target: 'admin-rooms', hint: 'Tap the list of rooms under Admin and choose Materials.' },
+    ],
     route: '/admin',
     routeLabel: 'Go to Admin',
     events: ['beacon:tab-materials'],
@@ -287,6 +306,9 @@ const EXEC_STEPS: QuestStep[] = [
     title: 'Read the church at a glance',
     hint: 'Tap the highlighted Analytics tab. This is the whole church in numbers.',
     target: 'tab-analytics',
+    fallbacks: [
+      { target: 'admin-rooms', hint: 'Tap the list of rooms under Admin and choose Analytics.' },
+    ],
     route: '/admin',
     routeLabel: 'Go to Admin',
     events: ['beacon:tab-analytics'],
@@ -318,6 +340,9 @@ const EXEC_STEPS: QuestStep[] = [
     title: 'See who is waiting to join',
     hint: 'Tap the highlighted Approvals tab. Nobody joins your church without passing through here.',
     target: 'tab-approvals',
+    fallbacks: [
+      { target: 'admin-rooms', hint: 'Tap the list of rooms under Admin and choose Approvals.' },
+    ],
     route: '/admin',
     routeLabel: 'Go to Admin',
     events: ['beacon:tab-approvals'],
@@ -340,12 +365,21 @@ const EXEC_STEPS: QuestStep[] = [
 const DS_STEPS: QuestStep[] = [
   {
     id: 's-message',
-    where: 'My Journey › Talk with your Guide',
+    where: 'My Journey › Message your Guide',
     learn:
-      'This conversation is only between you and the person walking with you. Church leaders cannot read it. Nobody else in the church can read it.',
+      'This conversation is only between you and the person walking with you. Church leaders cannot read it. Nobody else in the church can read it. It lives in the Talk bubble in the corner, so it is there on every screen.',
     title: 'Say hello',
     hint: 'Type in the highlighted box and send. Only the two of you can ever read this.',
     target: 'chat-send',
+    fallbacks: [
+      {
+        target: 'message-button',
+        hint: 'Tap Message. The conversation with your Guide opens in the Talk bubble.',
+      },
+      // Message is in My Guide; from another room, the list of rooms first.
+      { target: 'room-guide', hint: 'Open My Guide. Message is in there.' },
+      { target: 'journey-rooms', hint: 'Tap the list of rooms at the top and choose My Guide.' },
+    ],
     route: '/ds',
     routeLabel: 'Go to My Journey',
     events: ['beacon:message'],
@@ -361,9 +395,11 @@ const DS_STEPS: QuestStep[] = [
     // A target inside a room the person has not opened is not on the screen at
     // all, so the spotlight has nothing to land on. Falling back to the room's
     // own tab points at the thing that reveals it, which is exactly what the
-    // Guide's steps already do with `tab-talk`.
+    // Guide's steps already do with `tab-journey`.
     fallbacks: [
       { target: 'room-study', hint: 'Open Study. Your lessons are kept in there.' },
+      // The rooms are a drop-down now (30 September 2026).
+      { target: 'journey-rooms', hint: 'Tap the list of rooms at the top and choose Study.' },
     ],
     route: '/ds',
     routeLabel: 'Go to My Journey',
@@ -379,6 +415,7 @@ const DS_STEPS: QuestStep[] = [
     target: 'ds-prayer',
     fallbacks: [
       { target: 'room-prayer', hint: 'Open Prayer. That is where you write your request.' },
+      { target: 'journey-rooms', hint: 'Tap the list of rooms at the top and choose Prayer.' },
     ],
     route: '/ds',
     routeLabel: 'Go to My Journey',

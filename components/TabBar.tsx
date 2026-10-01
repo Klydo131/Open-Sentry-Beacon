@@ -25,9 +25,11 @@
 // same rooms; it is gone, and this bar is the navigation at every width.
 //
 // NOT INSIDE A CONVERSATION. Asked for as "Hide the bar inside conversations
-// too": a screen that IS a conversation (the Guide's Talk tab, /talk) marks
-// itself `data-conversation-screen`, and globals.css hides the bar while one is
-// on the page, as a messaging app does inside a chat.
+// too": a screen that IS a conversation marks itself `data-conversation-screen`,
+// and globals.css hides the bar while one is on the page, as a messaging app
+// does inside a chat. Since the chat moved into the bubble (30 September 2026)
+// that is /talk alone; the bubble covers the bar on a phone and stands on it on
+// a desktop.
 // ---------------------------------------------------------------------------
 
 import Link from 'next/link';

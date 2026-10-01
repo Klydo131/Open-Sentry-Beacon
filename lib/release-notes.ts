@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-01-talk-appointments-desk',
+    date: '2026-10-01',
+    title: 'Talk in the bubble, appointments first, and less scrolling',
+    items: [
+      'Your conversations are in the Talk bubble in the corner of every screen. Message on a person\'s page opens it straight at them, and Report is at the top of it.',
+      'A Guide\'s page for an Explorer opens on Appointments, and an Explorer\'s own screen has their appointments near the top, so arranging a time takes no scrolling.',
+      'Rooms with several parts now open them from one list at the top: tap it to see them all. It says which one you are in and how many there are.',
+      'On a phone or an iPad your desk (your note, the pocket and the player) waits behind a small tab on the right edge. Tap it, or swipe in from that edge, to open it.',
+      'Guides and Directors can see an Explorer\'s profile and picture: Profile is next to Message, and faces are shown in the lists of people.',
+    ],
+  },
+  {
     id: '2026-09-30-menu-people-my-files',
     date: '2026-09-30',
     title: 'Menu, People and My Files, along the bottom',

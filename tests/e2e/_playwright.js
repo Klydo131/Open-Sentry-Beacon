@@ -187,16 +187,125 @@ process.on('exit', (code) => {
  */
 async function openRoom(page, label) {
   try {
+    // A page that still draws a strip of tabs.
     const tab = page.getByRole('tab', { name: label }).first();
-    if ((await tab.count()) === 0) return false;
-    if ((await tab.getAttribute('aria-selected')) === 'true') return true;
-    await tab.click({ timeout: 5000 });
-    await page.waitForTimeout(400);
-    return true;
+    if ((await tab.count()) > 0) {
+      if ((await tab.getAttribute('aria-selected')) === 'true') return true;
+      await tab.click({ timeout: 5000 });
+      await page.waitForTimeout(400);
+      return true;
+    }
+    // EVERY SET OF SUB-ROOMS IS A DROP-DOWN since 30 September 2026
+    // (components/SubroomMenu.tsx). Its button names the room you are in; the
+    // rooms themselves are options in a list that is only there once it is
+    // opened. A page can have two of them (a room's, and one person's
+    // sections), so each is tried in turn and closed again if it is not the
+    // one holding `label`.
+    const toggles = page.locator('[data-subroom-toggle]');
+    const n = await toggles.count();
+    for (let i = 0; i < n; i += 1) {
+      const toggle = toggles.nth(i);
+      if (!(await toggle.isVisible())) continue;
+      const said = ((await toggle.getAttribute('aria-label')) || '').replace(/^[^:]*:\s*/, '').replace(/, \d+ of \d+\. Show all$/, '');
+      if (typeof label === 'string' ? said.includes(label) : label.test(said)) return true;
+      await toggle.click({ timeout: 5000 });
+      await page.waitForTimeout(250);
+      const option = page.getByRole('option', { name: label }).first();
+      if ((await option.count()) > 0) {
+        await option.click({ timeout: 5000 });
+        await page.waitForTimeout(400);
+        return true;
+      }
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(150);
+    }
+    return false;
   } catch {
     return false;
   }
 }
+
+/**
+ * Press the thing the tutorial calls `quest` (`tab-materials`, `room-study`),
+ * opening the drop-down it lives in first when it is not on the screen.
+ *
+ * Since 30 September 2026 every tab and sub-room is an option in a closed list
+ * (components/SubroomMenu.tsx), so `[data-quest="tab-materials"]` is simply not
+ * in the page until its list is opened. Returns whether it was pressed.
+ */
+async function openByQuest(page, quest) {
+  const target = () => page.locator(`[data-quest="${quest}"]`).first();
+  try {
+    if ((await target().count()) > 0 && (await target().isVisible())) {
+      await target().click({ timeout: 5000 });
+      await page.waitForTimeout(400);
+      return true;
+    }
+    const toggles = page.locator('[data-subroom-toggle]');
+    for (let i = 0; i < (await toggles.count()); i += 1) {
+      const toggle = toggles.nth(i);
+      if (!(await toggle.isVisible())) continue;
+      await toggle.click({ timeout: 5000 });
+      await page.waitForTimeout(250);
+      if ((await target().count()) > 0) {
+        await target().click({ timeout: 5000 });
+        await page.waitForTimeout(400);
+        return true;
+      }
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(150);
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Open the conversation: the typing box, wherever it is.
+ *
+ * THE CHAT LIVES IN THE TALK BUBBLE since 30 September 2026. A page about one
+ * person carries Message, which opens the bubble at them; anywhere else the
+ * bubble itself does, and with several conversations and none named it opens
+ * on the list, so the first one is chosen. Tolerant like openRoom: returns
+ * whether a box to type in is now on the screen.
+ */
+async function openChat(page) {
+  const box = page.locator(COMPOSER).first();
+  try {
+    const message = page.locator('[data-message-button]');
+    // THE BUBBLE REMEMBERS BEING OPEN, so after moving to another page it can
+    // already be up, on somebody else's conversation, and covering the very
+    // Message button that would open the right one. Put it down first when
+    // there is a Message button to press.
+    if ((await page.locator('[data-talk-sheet]').count()) > 0 && (await message.count()) > 0) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(350);
+    } else if ((await box.count()) > 0 && (await box.isVisible())) {
+      return true;
+    }
+    let pressed = false;
+    for (let i = 0; i < (await message.count()); i += 1) {
+      if (await message.nth(i).isVisible()) { await message.nth(i).click({ timeout: 5000 }); pressed = true; break; }
+    }
+    if (!pressed) {
+      const bubble = page.locator('[data-talk-bubble]').first();
+      if ((await bubble.count()) === 0) return false;
+      await bubble.click({ timeout: 5000 });
+    }
+    await page.waitForTimeout(500);
+    if ((await box.count()) === 0) {
+      const thread = page.locator('[data-talk-thread]').first();
+      if ((await thread.count()) > 0) { await thread.click({ timeout: 5000 }); await page.waitForTimeout(400); }
+    }
+    return (await box.count()) > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** The box a message is typed into, in the sample chat or the live one. */
+const COMPOSER = '[data-quest="chat-send"] textarea, [data-live-composer] textarea';
 
 /**
  * A page error that is WebKit reporting a cancelled prefetch, not a failure.
@@ -218,6 +327,9 @@ function isCancelledPrefetch(message) {
 }
 
 module.exports = {
+  openChat,
+  openByQuest,
+  COMPOSER,
   // The selected engine. Named `chromium` because twenty-five suites already
   // destructure that name, and renaming them all to prove a point would be a
   // large diff for no behaviour. `browser` is the honest name; prefer it in

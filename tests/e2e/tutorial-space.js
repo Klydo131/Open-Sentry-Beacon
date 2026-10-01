@@ -1,4 +1,4 @@
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openRoom } = require('./_playwright');
 // Takes the port as an argument, like every other suite. Hardcoding it meant
 // running against a server on any other port failed with a connection error
 // that reads exactly like a broken app.
@@ -27,8 +27,7 @@ const stages = (p) => p.evaluate(() => {
   if(await c.count()){await c.first().click().catch(()=>{});await page.waitForTimeout(600);}
   await page.goto(`${BASE}/dm/pair-grace`,{waitUntil:'networkidle'});
   await page.waitForTimeout(1500);
-  const jt=page.getByRole('tab',{name:/Journey/i}).first();
-  if(await jt.count()){await jt.click();await page.waitForTimeout(900);}
+  await openRoom(page,/Journey/i); // the sections are a drop-down (30 September 2026)
   const adv=page.getByRole('button',{name:/Advance to/i}).first();
   if(await adv.count()){await adv.click();await page.waitForTimeout(1400);}
   const mine = await stages(page);
@@ -66,8 +65,7 @@ const stages = (p) => p.evaluate(() => {
   // Advance inside the tutorial, then finish.
   await page.goto(`${BASE}/dm/pair-john`,{waitUntil:'networkidle'});
   await page.waitForTimeout(1400);
-  const jt2=page.getByRole('tab',{name:/Journey/i}).first();
-  if(await jt2.count()){await jt2.click();await page.waitForTimeout(800);}
+  await openRoom(page,/Journey/i); // the sections are a drop-down (30 September 2026)
   const adv2=page.getByRole('button',{name:/Advance to/i}).first();
   if(await adv2.count()){await adv2.click();await page.waitForTimeout(1300);}
   const mutated = await stages(page);

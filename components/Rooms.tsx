@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useUrlKey } from '@/lib/url-signal';
+import { SubroomMenu } from '@/components/SubroomMenu';
 
 // Rooms, not a scroll.
 //
@@ -16,9 +17,12 @@ import { useUrlKey } from '@/lib/url-signal';
 // default they have to walk past again. It is stored per role, so a Director
 // and an Executive keep their own places.
 //
-// WHY IT IS NOT A DROPDOWN. Every room is on screen at once, so the shape of
-// the job is visible without opening anything. A dropdown hides how many rooms
-// exist and makes the second visit no faster than the first.
+// IT IS A DROP-DOWN NOW, by the owner's decision on 30 September 2026: the
+// strip scrolled sideways, and people did not know to swipe it to find the
+// rooms past the edge of a phone. This file used to say why it was NOT a
+// drop-down -- a closed menu hides how many rooms exist and what is waiting in
+// them -- and that is answered on the closed button instead: "2 of 4", and the
+// count waiting elsewhere. components/SubroomMenu.tsx.
 
 export interface Room {
   id: string;
@@ -123,56 +127,31 @@ export function RoomTabs({
   rooms,
   room,
   onChoose,
+  quest = 'rooms-menu',
 }: {
   rooms: Room[];
   room: string;
   onChoose: (id: string) => void;
+  /** The tutorial's name for this page's drop-down, when a step points at it. */
+  quest?: string;
 }) {
   return (
-    // Scrolls sideways on a narrow phone rather than wrapping into a block that
-    // pushes the room itself off the screen. The page never scrolls sideways;
-    // this strip does, inside its own box.
-    <div
-      role="tablist"
-      aria-label="Rooms"
-      className="no-print -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1"
-    >
-      {rooms.map((r) => {
-        const on = r.id === room;
-        return (
-          <button
-            key={r.id}
-            role="tab"
-            aria-selected={on}
-            data-room={r.id}
-            // So the tutorial can point at a room the way it already points at a
-            // tab. A step whose target lives inside a room that is not open finds
-            // nothing at all, and the spotlight lands on empty screen — which is
-            // what happened to the Explorer's "Open a lesson" the day rooms landed.
-            data-quest={`room-${r.id}`}
-            onClick={() => onChoose(r.id)}
-            className={`tap-sm flex shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-bold transition ${
-              on ? 'text-white shadow' : 'bg-white text-navy ring-1 ring-black/5 hover:bg-gray-50'
-            }`}
-            style={on ? { backgroundColor: '#1E2A4A' } : undefined}
-          >
-            {r.label}
-            {typeof r.badge === 'number' && r.badge > 0 && (
-              // Urgent counts are drawn as something to clear, not as a total.
-              // "3 waiting" and "3 members" should never look the same.
-              <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${
-                  r.urgent
-                    ? 'bg-red-500 text-white'
-                    : on ? 'bg-white/20 text-white' : 'bg-navy/10 text-navy'
-                }`}
-              >
-                {r.badge}
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </div>
+    <SubroomMenu
+      label="Rooms"
+      quest={quest}
+      active={room}
+      onChoose={onChoose}
+      items={rooms.map((r) => ({
+        id: r.id,
+        label: r.label,
+        text: r.label,
+        badge: r.badge,
+        tone: r.urgent ? 'urgent' : undefined,
+        // So the tutorial can point at a room the way it already points at a
+        // tab, and so the walks and the desk's `?room=` links can find it.
+        quest: `room-${r.id}`,
+        room: r.id,
+      }))}
+    />
   );
 }

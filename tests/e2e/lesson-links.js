@@ -16,7 +16,7 @@
 //
 //   npm run build && node scripts/run-next.mjs start -p 4371
 //   node tests/e2e/lesson-links.js 4371
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openByQuest } = require('./_playwright');
 
 const PORT = process.argv[2] || '4371';
 const BASE = `http://localhost:${PORT}`;
@@ -61,8 +61,9 @@ const anchors = (page) => page.evaluate(() =>
   ok(await signInAs(page, 'Pastor Ramos'), 'an admin can sign in');
   await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
-  await page.locator('[data-quest="tab-materials"]').first().click();
-  await page.waitForTimeout(900);
+  // Admin's rooms are a drop-down (30 September 2026): open it, then Materials.
+  await openByQuest(page, 'tab-materials');
+  await page.waitForTimeout(500);
   // The builder opens when asked for; the shelf is what the page shows first.
   await page.getByRole('button', { name: /^\+ New series$/ }).first().click();
   await page.waitForTimeout(400);

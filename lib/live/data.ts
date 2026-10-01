@@ -707,6 +707,14 @@ export interface PairingView extends Pairing {
   // leadership for their own church. Nothing new is exposed by asking for them.
   ds_birthday: string | null;
   ds_guardian_consent_at: string | null;
+  // THEIR FACE, for the cards and the page a Guide or a Director opens. The
+  // same row, the same rule: only what that row already lets the reader see.
+  // The picture itself is loaded through avatarUrls, whose storage policy lets
+  // anybody signed in read a face and nobody write one but its owner.
+  ds_photo_path?: string | null;
+  ds_avatar?: string | null;
+  dm_photo_path?: string | null;
+  dm_avatar?: string | null;
 }
 
 /** What an Explorer is allowed to know about their own pairing. */
@@ -723,10 +731,10 @@ export async function listPairings(): Promise<PairingView[]> {
   const [{ data: pairs, error }, { data: people }] = await Promise.all([
     client.from('pairings').select('*').order('created_at', { ascending: false }),
     // signup_completed_at rides along for the "New" badge on a Guide's cards.
-    client.from('profiles').select('id, full_name, birthday, guardian_consent_at, signup_completed_at'),
+    client.from('profiles').select('id, full_name, birthday, guardian_consent_at, signup_completed_at, photo_path, avatar'),
   ]);
   if (error) throw new Error(error.message);
-  type Row = { id: string; full_name: string | null; birthday: string | null; guardian_consent_at: string | null; signup_completed_at: string | null };
+  type Row = { id: string; full_name: string | null; birthday: string | null; guardian_consent_at: string | null; signup_completed_at: string | null; photo_path: string | null; avatar: string | null };
   const by = new Map((people ?? []).map((p: Row) => [p.id, p]));
   return (pairs ?? []).map((p: Pairing) => ({
     ...p,
@@ -735,6 +743,10 @@ export async function listPairings(): Promise<PairingView[]> {
     ds_birthday: by.get(p.ds_id)?.birthday ?? null,
     ds_guardian_consent_at: by.get(p.ds_id)?.guardian_consent_at ?? null,
     ds_signup_completed_at: by.get(p.ds_id)?.signup_completed_at ?? null,
+    ds_photo_path: by.get(p.ds_id)?.photo_path ?? null,
+    ds_avatar: by.get(p.ds_id)?.avatar ?? null,
+    dm_photo_path: by.get(p.dm_id)?.photo_path ?? null,
+    dm_avatar: by.get(p.dm_id)?.avatar ?? null,
   }));
 }
 
@@ -2744,6 +2756,23 @@ export async function avatarUrl(path: string | null | undefined): Promise<string
   if (!path) return '';
   const { data } = await db().storage.from(AVATAR_BUCKET).createSignedUrl(path, 60 * 60);
   return data?.signedUrl ?? '';
+}
+
+/**
+ * Every face on a screen in ONE request, keyed by path. A Guide's list or a
+ * Director's roster signing each picture separately is one round trip per
+ * person, on a phone, before anybody's face appears. A path the caller may not
+ * read, or one that no longer exists, is simply absent: the initials stay.
+ */
+export async function avatarUrls(paths: (string | null | undefined)[]): Promise<Record<string, string>> {
+  const unique = [...new Set(paths.filter((p): p is string => Boolean(p)))];
+  if (unique.length === 0) return {};
+  const { data } = await db().storage.from(AVATAR_BUCKET).createSignedUrls(unique, 60 * 60);
+  const out: Record<string, string> = {};
+  for (const row of data ?? []) {
+    if (row.path && row.signedUrl) out[row.path] = row.signedUrl;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------

@@ -36,84 +36,18 @@ import { useLiveSession } from '@/lib/live/session';
 import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_TALK } from '@/lib/live/keep-up';
 import { useDraft, clearDraft } from '@/lib/drafts';
 import { Conversation, Notice, errorText } from '@/components/live/shared';
-import { LiveReportControl } from '@/components/LiveSafeguarding';
+import { LiveReportForm } from '@/components/LiveSafeguarding';
 import { BeaconSpinner } from '@/components/BeaconLoader';
-import { Avatar, Button } from '@/components/ui';
+import { TalkHeader, TalkView, ThreadList } from '@/components/talk/Dock';
 
-function shortWhen(iso: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const today = new Date();
-  const sameDay = d.toDateString() === today.toDateString();
-  return sameDay
-    ? d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    : d.toLocaleDateString([], { day: 'numeric', month: 'short' });
-}
-
-/**
- * The list of conversations. Only drawn when there is more than one, because a
- * list of one is a screen somebody has to get past to reach the only thing on
- * it — which is exactly the complaint this whole change is about.
- */
-function ThreadList({
-  threads, onOpen, compact,
-}: {
-  threads: live.Thread[];
-  onOpen: (id: string) => void;
-  compact?: boolean;
-}) {
-  return (
-    <ul className="divide-y divide-black/5">
-      {threads.map((t) => (
-        <li key={t.pairing_id}>
-          <button
-            type="button"
-            onClick={() => onOpen(t.pairing_id)}
-            className="flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-black/[0.03]"
-          >
-            <Avatar name={t.other_name} />
-            <span className="min-w-0 flex-1">
-              <span className="flex items-baseline gap-2">
-                <span className="truncate font-bold text-navy">{t.other_name}</span>
-                <span className="ml-auto shrink-0 text-xs text-gray-400">{shortWhen(t.last_at)}</span>
-              </span>
-              <span className="mt-0.5 flex items-center gap-2">
-                <span className={`min-w-0 flex-1 truncate text-sm ${
-                  t.unread > 0 ? 'font-semibold text-navy' : 'text-gray-500'}`}
-                >
-                  {t.last_preview
-                    ? `${t.last_is_mine ? 'You: ' : ''}${t.last_preview}`
-                    : 'No messages yet'}
-                </span>
-                {/* THE COUNT, and it is the reason the list is worth having.
-                    A Guide with five Explorers could not previously tell which
-                    of them was waiting without opening all five. */}
-                {t.unread > 0 && (
-                  <span
-                    className="shrink-0 rounded-full bg-[#1F7A8C] px-2 py-0.5 text-xs font-bold text-white"
-                    aria-label={`${t.unread} waiting`}
-                  >
-                    {t.unread > 99 ? '99+' : t.unread}
-                  </span>
-                )}
-              </span>
-            </span>
-          </button>
-        </li>
-      ))}
-      {threads.length === 0 && (
-        <li className={`text-center text-sm text-gray-500 ${compact ? 'p-4' : 'p-8'}`}>
-          You have no conversations yet. Your church arranges those.
-        </li>
-      )}
-    </ul>
-  );
-}
+// The list, the header and the sliding between them are drawn by
+// components/talk/Dock.tsx, which the sample app's bubble draws too.
 
 export function TalkSurface({
   openWith,
   onOpenWith,
   onExit,
+  onFull,
   compact = false,
 }: {
   /** Which conversation to show. Undefined means "decide from the list". */
@@ -121,9 +55,16 @@ export function TalkSurface({
   onOpenWith?: (pairingId: string) => void;
   /** Drawn only when given, because a surface with no way out is a trap. */
   onExit?: () => void;
+  /** "Open full", from the bubble on a desktop. */
+  onFull?: () => void;
   compact?: boolean;
 }) {
   const { profile } = useLiveSession();
+  // REPORTING TAKES THE PANEL, and the header stays: the person can see who
+  // they are reporting and go back to the conversation from the same place.
+  const [reporting, setReporting] = useState(false);
+  // Which way the last move went, so the next view slides in from that side.
+  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [threads, setThreads] = useState<live.Thread[] | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [files, setFiles] = useState<live.PairingFile[]>([]);
@@ -225,8 +166,17 @@ export function TalkSurface({
   };
 
   const openThread = (id: string) => {
+    setDirection('forward');
+    setReporting(false);
     setActive(id);
     onOpenWith?.(id);
+  };
+
+  const backToList = () => {
+    setDirection('back');
+    setReporting(false);
+    setActive('');
+    onOpenWith?.('');
   };
 
   if (threads === null) {
@@ -238,33 +188,21 @@ export function TalkSurface({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* THE BAR. It carries who you are talking to, the way back to the list
-          when there is one, and the way out. */}
-      <div className="flex items-center gap-2 border-b border-black/5 px-3 py-2">
-        {several && active && (
-          <button
-            type="button"
-            onClick={() => { setActive(''); onOpenWith?.(''); }}
-            className="tap-sm px-1 text-sm font-semibold text-gray-500"
-            aria-label="Back to your conversations"
-          >
-            ‹ All
-          </button>
-        )}
-        <p className="min-w-0 flex-1 truncate font-bold text-navy">
-          {current ? current.other_name : 'Talk'}
-        </p>
-        {onExit && (
-          <button
-            type="button"
-            onClick={onExit}
-            className="tap-sm px-2 text-sm font-semibold text-gray-500"
-            aria-label="Close the chat"
-          >
-            Exit
-          </button>
-        )}
-      </div>
+      {/* THE ONE BAR: back to the list when there is one, who you are
+          talking to, Report, and the way out. components/talk/Dock.tsx. */}
+      <TalkHeader
+        title={current ? current.other_name : 'Talk'}
+        avatarName={current?.other_name}
+        onBack={several && active ? backToList : undefined}
+        // IT TRAVELS WITH THE CONVERSATION. The Explorer's way out of a
+        // relationship has always had to be on the same screen as the
+        // relationship, and the bubble is that screen now. In the header, in
+        // words, at every size: the part of a chat furthest from Send.
+        onReport={current ? () => { setDirection(reporting ? 'back' : 'forward'); setReporting((was) => !was); } : undefined}
+        reporting={reporting}
+        onFull={onFull}
+        onClose={onExit}
+      />
 
       {error && <div className="px-3 pt-2"><Notice tone="error">{error}</Notice></div>}
 
@@ -275,17 +213,37 @@ export function TalkSurface({
           conversation manages its own height (globals.css gives the thread the
           space left after the heading and composer have theirs), so here it is
           given a definite height and told not to scroll. The LIST still scrolls,
-          because a list of threads is exactly the thing that should. */}
-      <div className={`min-h-0 flex-1 ${
-        active ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'
-      }`}>
-        {!active ? (
+          because a list of threads is exactly the thing that should, and so
+          does the report form, which is a page of questions. */}
+      {!active ? (
+        <TalkView view="list" direction={direction} scroll>
           <ThreadList threads={threads} onOpen={openThread} compact={compact} />
-        ) : (
+        </TalkView>
+      ) : reporting && current ? (
+        <TalkView view={`report-${active}`} direction={direction} scroll>
+          <div className="p-3">
+            <LiveReportForm
+              subjectId={current.other_id}
+              subjectName={current.other_name}
+              pairingId={current.pairing_id}
+              onDone={() => { setDirection('back'); setReporting(false); }}
+            />
+          </div>
+        </TalkView>
+      ) : (
+        <TalkView view={active} direction={direction}>
           <div className={compact
             ? 'flex min-h-0 flex-1 flex-col'
-            : 'space-y-3 overflow-y-auto p-3'}>
+            : 'min-h-0 flex-1 space-y-3 overflow-y-auto p-3'}>
             <Conversation
+              // THE WAITING LINE CAME WITH THE CHAT. On an Explorer's home the
+              // empty thread said the true thing -- nothing is wrong, their
+              // Guide will write, and they may go first -- instead of "start
+              // with a welcome", which is the Guide's job. It is the bubble's
+              // job now.
+              emptyLine={profile?.role === 'ds'
+                ? 'No messages yet. Your Guide will write, and you can write first if you would like to.'
+                : undefined}
               messages={messages}
               files={files}
               myId={profile?.id ?? ''}
@@ -301,20 +259,9 @@ export function TalkSurface({
               onEditMessage={live.editMessage}
               onDeleteMessage={live.deleteMessage}
             />
-            {/* IT TRAVELS WITH THE CONVERSATION. The Explorer's way out of a
-                relationship has always had to be on the same screen as the
-                relationship, and moving the conversation to its own room is
-                exactly the change that could have quietly left it behind. */}
-            {current && !compact && (
-              <LiveReportControl
-                subjectId={current.other_id}
-                subjectName={current.other_name}
-                pairingId={current.pairing_id}
-              />
-            )}
           </div>
-        )}
-      </div>
+        </TalkView>
+      )}
     </div>
   );
 }

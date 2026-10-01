@@ -117,6 +117,7 @@ export function BuildNotice({
   // feedback nudge both live bottom-right.
   return (
     <div
+      data-steps-aside-for-chat
       className={
         pinned
           ? 'no-print pointer-events-none fixed inset-x-0 z-[65] flex justify-end px-3'

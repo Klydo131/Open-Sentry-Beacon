@@ -95,13 +95,17 @@ ok(/<Card className="overflow-hidden" data-live-conversation>/.test(conversation
    'and the conversation card still carries the attribute all of this hangs on');
 
 // Both roles must use this shared implementation. A one-off phone fix in either
-// screen would leave the other role behind.
-ok(/import \{ Conversation, Notice, errorText \} from '@\/components\/live\/shared';/.test(guide)
-   && /<Conversation/.test(guide),
-   'Guide conversations use the shared responsive component');
-ok(/import \{ Conversation, Notice, errorText \} from '@\/components\/live\/shared';/.test(explorer)
-   && /<Conversation/.test(explorer),
-   'Explorer conversations use the shared responsive component');
+// screen would leave the other role behind. Since 30 September 2026 both roles
+// meet it in ONE place: the bubble's surface, drawn for a Guide and an Explorer
+// alike (TalkDock lets exactly those two in).
+const surface = read('components/live/TalkSurface.tsx');
+ok(/import \{ Conversation, Notice, errorText \} from '@\/components\/live\/shared';/.test(surface)
+   && /<Conversation/.test(surface),
+   'the conversation in the bubble uses the shared responsive component');
+ok(/role !== 'ds' && profile\.role !== 'dm'/.test(read('components/live/TalkDock.tsx')),
+   'and the bubble is the Guide\'s and the Explorer\'s alike');
+ok(!/<Conversation/.test(guide) && !/<Conversation/.test(explorer),
+   'and neither page draws a conversation of its own that a phone fix could miss');
 
 console.log(`\n${bad === 0 ? 'RESULT: ALL OK' : `RESULT: ${bad} FAILED`}`);
 process.exit(bad === 0 ? 0 : 1);

@@ -23,7 +23,7 @@
 //
 //   node tests/e2e/the-pairing-form-stays-in-one-line.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, openRoom } = require('./_playwright');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -49,7 +49,8 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
   await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2000);
-  await page.getByRole('button', { name: /People & Pairing/i }).first().click();
+  // Admin's rooms are a drop-down (30 September 2026).
+  await openRoom(page, /People & Pairing/i);
   await page.waitForTimeout(2000);
 
   const measure = () => page.evaluate(() => {
