@@ -270,6 +270,7 @@ screens at all. Put the permission rules with the data, not in the interface.
 |---|---|
 | **[docs/BUILD-YOUR-OWN.md](docs/BUILD-YOUR-OWN.md)** | **Start here.** Front end and backend, end to end: the tables with real SQL, accounts and invitations, the permission rules, wiring it up, deploying, and a checklist to work through before real people are in it. No backend experience assumed. |
 | [docs/BACKENDS.md](docs/BACKENDS.md) | The two seams in more detail, and the fifteen-minute feedback warm-up. |
+| [docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md) | Four worked ways to run it: your computer with no accounts, Vercel and Supabase, your computer with a real database, and other hosts. Each says what has been tested. |
 | [docs/EMAIL.md](docs/EMAIL.md) | Sending invitations by mail. Any provider, or none. |
 | [docs/SECURITY.md](docs/SECURITY.md) | What you become responsible for the day you connect one. |
 
@@ -292,6 +293,7 @@ instead of the database, and putting a key somewhere the browser can read it.
 | **[docs/BUILD-YOUR-OWN.md](docs/BUILD-YOUR-OWN.md)** | Build your own Beacon with a real backend, end to end: tables, accounts, permission rules, wiring, deploying, and the checklist before real people. No backend experience assumed. |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | How it is built, and where everything lives. Start here if you are about to change something. |
 | **[docs/BACKENDS.md](docs/BACKENDS.md)** | The two seams in detail, and the fifteen-minute feedback warm-up. |
+| **[docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md)** | Run it on Vercel and Supabase, on your own computer, or on another host, with what has been tested for each. |
 | **[docs/EMAIL.md](docs/EMAIL.md)** | Sending invitations by mail. Any provider, or none, since the app works without it. |
 | **[docs/ONBOARDING.md](docs/ONBOARDING.md)** | How a church actually uses it: who does what, in what order. |
 | **[docs/SECURITY.md](docs/SECURITY.md)** | Read before you put real people in it. |

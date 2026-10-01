@@ -480,6 +480,9 @@ const staticChecks = [
   // A fixed security advisory stays fixed in the lockfile, and one left on
   // purpose stays written down in docs/SECURITY.md (1 October 2026).
   ['fixed advisories stay fixed', 'tests/fixed-advisories-stay-fixed.mjs'],
+  // docs/DEPLOY-ANYWHERE.md names only files, settings and secrets that exist,
+  // and every scenario says whether it has been run (1 October 2026).
+  ['the deploy guide matches the app', 'tests/the-deploy-guide-matches-the-app.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],
   ['the browser writes only what the app writes', 'tests/the-browser-writes-only-what-the-app-writes.mjs'],

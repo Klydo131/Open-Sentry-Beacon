@@ -98,7 +98,8 @@ minute, with HTTPS already set up and a real address you can give to people.
 Netlify, on Cloudflare, on your own server. Vercel is the shortest path from
 "code on GitHub" to "my church can open this on their phones", and for a church
 volunteer doing this on a Saturday, shortest path is the right criterion.
-[PLATFORMS.md](PLATFORMS.md) covers the others.
+[DEPLOY-ANYWHERE.md](DEPLOY-ANYWHERE.md) covers the others, and running it
+on your own computer.
 
 ### Why Brevo
 
@@ -992,7 +993,8 @@ Step 7.
 | [SETUP.md](SETUP.md) | The short version of Part 3 |
 | [BUILD-YOUR-OWN.md](BUILD-YOUR-OWN.md) | Why the backend is shaped this way |
 | [BACKENDS.md](BACKENDS.md) | Using something other than Supabase |
-| [PLATFORMS.md](PLATFORMS.md) | Hosting somewhere other than Vercel |
+| [DEPLOY-ANYWHERE.md](DEPLOY-ANYWHERE.md) | Hosting somewhere other than Vercel, or on your own computer |
+| [PLATFORMS.md](PLATFORMS.md) | Which phones, tablets and browsers it is tested on |
 | [EMAIL.md](EMAIL.md) | Using something other than Brevo |
 | [BACKEND-MAP.md](BACKEND-MAP.md) | Every table, who may read it, and where the rule lives |
 | [SECURITY.md](SECURITY.md) | The rules, and how to check them yourself |

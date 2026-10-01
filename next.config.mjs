@@ -63,14 +63,26 @@ const DEV = process.env.NODE_ENV === 'development';
 // it arrives on a signed, cross-origin URL, and a player that renders, sits at
 // 0:00 and never says why is exactly the bug this same policy caused in the
 // sibling app. Naming the origin now costs nothing and removes the trap.
+//
+// PLAIN http IS ALLOWED FOR ONE KIND OF ADDRESS: THIS COMPUTER. The Supabase
+// CLI's local stack (`npx supabase start`) serves at http://127.0.0.1:54321,
+// and refusing it meant a developer running the whole thing on their own
+// machine had every call blocked by this policy, silently, in the console only
+// (docs/DEPLOY-ANYWHERE.md, "On your computer, with a real database"). A
+// request to the loopback address never leaves the machine, so there is no
+// network for a password to be read on. Any other http address still fails
+// closed to 'self', and the hostname must match exactly: localhost.evil.test
+// is not this computer.
+const THIS_COMPUTER = new Set(['localhost', '127.0.0.1', '[::1]']);
 const connectSources = ["'self'"];
 const mediaSources = ["'self'", 'blob:', 'data:'];
 const imageSources = ["'self'", 'data:', 'blob:'];
 if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   try {
     const backend = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
-    if (backend.protocol === 'https:') {
-      connectSources.push(backend.origin, `wss://${backend.host}`);
+    const local = backend.protocol === 'http:' && THIS_COMPUTER.has(backend.hostname);
+    if (backend.protocol === 'https:' || local) {
+      connectSources.push(backend.origin, `${local ? 'ws' : 'wss'}://${backend.host}`);
       mediaSources.push(backend.origin);
       imageSources.push(backend.origin);
     }

@@ -86,5 +86,25 @@ const halfway = await cspFor(
 );
 ok(halfway['connect-src']?.join(' ') === "'self'", 'a URL without a key does not widen the policy');
 
+// A DATABASE ON THIS COMPUTER. The Supabase CLI's local stack serves over plain
+// http on the loopback address, which never leaves the machine. That one case
+// is allowed; every other http address still fails closed, and "localhost" has
+// to be the whole hostname, not the start of somebody else's.
+const KEY = { NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon-key-for-the-test' };
+const local = await cspFor({ NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321', ...KEY }, 'local');
+ok(local['connect-src']?.includes('http://127.0.0.1:54321'), 'local: a database on this computer may be reached');
+ok(local['connect-src']?.includes('ws://127.0.0.1:54321'), 'local: and its real-time feed');
+ok(!local['connect-src']?.some((s) => s.startsWith('wss://')), 'local: no secure-socket origin is invented for it');
+const named = await cspFor({ NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321', ...KEY }, 'named');
+ok(named['connect-src']?.includes('http://localhost:54321'), 'local: by name as well as by number');
+for (const [url, tag] of [
+  ['http://backend.example.test', 'plainremote'],
+  ['http://localhost.example.test', 'lookalike'],
+  ['http://127.0.0.1.example.test', 'lookalike2'],
+]) {
+  const csp = await cspFor({ NEXT_PUBLIC_SUPABASE_URL: url, ...KEY }, tag);
+  ok(csp['connect-src']?.join(' ') === "'self'", `plain http anywhere else fails closed: ${url}`);
+}
+
 console.log(bad === 0 ? '\nbackend CSP: all good' : `\nbackend CSP: ${bad} problem(s)`);
 process.exit(bad === 0 ? 0 : 1);
