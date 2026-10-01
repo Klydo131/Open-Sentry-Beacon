@@ -16,6 +16,7 @@
 // genuinely is not on this screen should fail quietly rather than hang.
 
 import { useEffect } from 'react';
+import { scrollMotion } from '@/lib/motion';
 
 /**
  * Scroll to `location.hash` once the element it names actually exists.
@@ -38,7 +39,7 @@ export function useScrollToHash(deps: unknown[] = []) {
         // `start` and not `center`: the heading of the card should be at the
         // top of the screen, the way arriving at a page feels, rather than the
         // card floating in the middle with its heading cut off above.
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.scrollIntoView({ behavior: scrollMotion(), block: 'start' });
         // A visible mark, briefly. Somebody who followed a link into the middle
         // of a long page needs to be told which card answered it.
         el.classList.add('beacon-landed');

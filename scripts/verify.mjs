@@ -474,6 +474,9 @@ const staticChecks = [
   // A Guide and a Director can see an Explorer's profile and face
   // (30 September 2026).
   ['explorer profiles can be seen', 'tests/explorer-profiles-can-be-seen.mjs'],
+  // Every animation stops for somebody who asked their device for less
+  // movement, after it starts; one motion scale in CSS and code (1 October 2026).
+  ['every animation can be stilled', 'tests/every-animation-can-be-stilled.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],
   ['the browser writes only what the app writes', 'tests/the-browser-writes-only-what-the-app-writes.mjs'],

@@ -68,14 +68,14 @@ const admin = read('app/admin/page.tsx');
   ok(/event\.key === 'Escape'/.test(menu) && /pointerdown/.test(menu),
      'Escape or a tap outside closes it');
   ok(/ArrowDown/.test(menu) && /ArrowUp/.test(menu), 'the arrow keys move through it');
-  ok(/onChoose\(item\.id\); setOpen\(false\)/.test(menu), 'choosing a room closes it');
+  ok(/onChoose\(item\.id\);\s*setOpen\(false\)/.test(menu), 'choosing a room closes it');
   ok(/data-room=\{item\.room\}/.test(menu) && /room: r\.id/.test(rooms),
      'each room still carries data-room, which the desk\'s ?room= links and the walks use');
 }
 
 // 4. Every option is a full-size target, and the list stays on the screen.
 {
-  ok(/role="option"[\s\S]{0,300}className=\{`tap /.test(menu), 'every room in the list is a full-size target');
+  ok(/role="option"[\s\S]{0,900}className=\{`tap /.test(menu), 'every room in the list is a full-size target');
   ok(/absolute left-0 right-0/.test(menu) && !/min-w-\[20rem\]/.test(menu),
      'the list is as wide as its own button, so it cannot run off the screen');
   ok(/70vh[\s\S]{0,120}70dvh/.test(menu), 'and no taller than the part of the screen a phone shows');

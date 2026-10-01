@@ -44,6 +44,14 @@ export interface AnchoredPanelProps {
   width?: number;
   /** For screen readers, since this has no visible heading of its own. */
   label: string;
+  /**
+   * On its way out. The caller keeps it mounted for the length of the exit
+   * with `usePresence` (lib/motion.ts):
+   *
+   *   const panel = usePresence(open);
+   *   {panel.mounted && <AnchoredPanel leaving={panel.leaving} ... />}
+   */
+  leaving?: boolean;
   className?: string;
   children: React.ReactNode;
 }
@@ -53,6 +61,7 @@ export function AnchoredPanel({
   onClose,
   width = 320,
   label,
+  leaving = false,
   className = '',
   children,
 }: AnchoredPanelProps) {
@@ -140,8 +149,11 @@ export function AnchoredPanel({
       role="dialog"
       aria-label={label}
       data-anchored-panel
+      data-leaving={leaving ? 'true' : undefined}
       style={style}
-      className={`z-40 rounded-2xl bg-white text-left lift-3 ring-1 ring-black/10 ${className}`}
+      // In from the button's corner and back into it: globals.css, "Things
+      // that hang off a button".
+      className={`${leaving ? 'anchored-out' : 'anchored-in'} z-40 rounded-2xl bg-white text-left lift-3 ring-1 ring-black/10 ${className}`}
     >
       {children}
     </div>

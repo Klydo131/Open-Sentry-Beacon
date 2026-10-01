@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-01-smoother-motion',
+    date: '2026-10-01',
+    title: 'Smoother, calmer movement',
+    items: [
+      'Menus, the bell and the account switchers now open out of the button you pressed and fold back into it when you close them, instead of popping in and vanishing.',
+      'Choosing another part of a room fades it in where the last one was, and a person\'s profile eases open under Profile.',
+      'If your phone, tablet or computer is set to reduce motion, the app now honours it everywhere, including the tutorial\'s arrow, which used to keep bouncing.',
+    ],
+  },
+  {
     id: '2026-10-01-talk-appointments-desk',
     date: '2026-10-01',
     title: 'Talk in the bubble, appointments first, and less scrolling',

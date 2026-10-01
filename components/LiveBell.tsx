@@ -17,6 +17,7 @@ import { permission, requestPermission, showLocalNotification } from '@/lib/push
 import { onOpenBell } from '@/lib/open-bell';
 import { planAnnouncement } from '@/lib/live/announce-plan';
 import { AnchoredPanel } from '@/components/AnchoredPanel';
+import { usePresence } from '@/lib/motion';
 import { useKeepUp, KEEP_UP_BELL } from '@/lib/live/keep-up';
 
 
@@ -75,6 +76,8 @@ function routeFor(type: string, role: Role): string {
 export function LiveBell({ me }: { me: Profile }) {
   const [rows, setRows] = useState<live.AppNotification[]>([]);
   const [open, setOpen] = useState(false);
+  // Kept on the screen while it goes back into the button (lib/motion.ts).
+  const panel = usePresence(open);
   // THE SWITCH LIVES WHERE THE BELL IS.
   //
   // It was in Settings, three taps away, and the panel itself had no control
@@ -252,8 +255,9 @@ export function LiveBell({ me }: { me: Profile }) {
         )}
       </button>
 
-      {open && (
+      {panel.mounted && (
         <AnchoredPanel
+          leaving={panel.leaving}
           anchor={anchor}
           onClose={() => setOpen(false)}
           label="Notifications"

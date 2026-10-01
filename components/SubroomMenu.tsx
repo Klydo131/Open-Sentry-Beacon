@@ -27,6 +27,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronGlyph, CheckGlyph } from '@/components/Glyph';
+import { fadeInAfter } from '@/lib/motion';
 
 export interface SubroomItem {
   id: string;
@@ -183,7 +184,16 @@ export function SubroomMenu({
                 aria-selected={on}
                 data-room={item.room}
                 data-quest={item.quest}
-                onClick={() => { onChoose(item.id); setOpen(false); toggle.current?.focus(); }}
+                onClick={() => {
+                  onChoose(item.id);
+                  setOpen(false);
+                  toggle.current?.focus();
+                  // THE NEW ROOM FADES IN where the old one was, instead of
+                  // swapping in a single frame. A frame later, so it is the new
+                  // room that fades and not the one that is leaving.
+                  const from = wrap.current;
+                  if (!on) requestAnimationFrame(() => fadeInAfter(from));
+                }}
                 className={`tap flex w-full items-center gap-3 rounded-xl px-3 text-left font-bold transition-colors ${
                   on ? 'bg-navy/[0.07] text-navy' : 'text-navy hover:bg-black/[0.04]'}`}
               >

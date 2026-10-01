@@ -5,6 +5,7 @@ import * as live from '@/lib/live/data';
 import type { Message, Profile } from '@/lib/types';
 import { MessageBox } from '@/components/MessageBox';
 import { Linked } from '@/components/Linked';
+import { scrollMotion } from '@/lib/motion';
 import { Button, Card } from '@/components/ui';
 import { humanError } from '@/lib/live/errors';
 import { ATTACHMENT_ACCEPT } from '@/lib/live/attachments';
@@ -365,7 +366,7 @@ export function Conversation({
     if (!el || !newestKey || newestKey === lastId.current) return;
     lastId.current = newestKey;
     if (newestIsMine || following.current) {
-      const behavior = landed.current ? 'smooth' : 'auto';
+      const behavior = landed.current ? scrollMotion() : 'auto';
       el.scrollTo({ top: el.scrollHeight, behavior });
       // The page as well, because the composer taking focus drags it away.
       newestEl.current?.scrollIntoView({ block: 'nearest', behavior });

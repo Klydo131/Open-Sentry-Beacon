@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useDemo } from '@/lib/demo/store';
 import { useNotificationPrefs } from '@/lib/notification-prefs';
 import { AnchoredPanel } from '@/components/AnchoredPanel';
+import { usePresence } from '@/lib/motion';
 import type { AppNotification, Role } from '@/lib/types';
 import {
   permission as pushPermission,
@@ -41,6 +42,8 @@ export function NotificationBell() {
   const { prefs, update: updatePrefs } = useNotificationPrefs();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // Kept on the screen while it goes back into the button (lib/motion.ts).
+  const panel = usePresence(open);
   const [perm, setPerm] = useState<NotificationPermission>('default');
   const wrapRef = useRef<HTMLDivElement>(null);
   const seen = useRef<Set<string> | null>(null);
@@ -114,8 +117,9 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
+      {panel.mounted && (
         <AnchoredPanel
+          leaving={panel.leaving}
           anchor={wrapRef}
           onClose={() => setOpen(false)}
           width={352}

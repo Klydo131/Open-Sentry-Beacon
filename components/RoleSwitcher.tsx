@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useDemo } from '@/lib/demo/store';
 import { roleNoun } from '@/lib/brand';
 import { AnchoredPanel } from '@/components/AnchoredPanel';
+import { usePresence } from '@/lib/motion';
 import { Avatar } from '@/components/ui';
 import type { Role } from '@/lib/types';
 
@@ -44,6 +45,8 @@ export function RoleSwitcher() {
   const { db, currentUser, userId, setMyRole, signInAs } = useDemo();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // Kept on the screen while it goes back into the button (lib/motion.ts).
+  const panel = usePresence(open);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   // Tapping elsewhere and Escape both close this. Both live in AnchoredPanel
@@ -81,8 +84,9 @@ export function RoleSwitcher() {
         <span className="hidden lg:inline">Try an account</span>
       </button>
 
-      {open && (
+      {panel.mounted && (
         <AnchoredPanel
+          leaving={panel.leaving}
           anchor={wrapRef}
           onClose={() => setOpen(false)}
           width={384}

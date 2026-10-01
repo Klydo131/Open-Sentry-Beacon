@@ -126,7 +126,8 @@ export function MemberProfile({
     && pairedWith.preferred_language.trim().toLowerCase() === person.preferred_language.trim().toLowerCase();
 
   return (
-    <Card className="p-5 ring-2 ring-navy/15">
+    // Folds down under what opened it: globals.css .fold-in.
+    <Card className="fold-in p-5 ring-2 ring-navy/15">
       <div className="flex items-start gap-3">
         <Avatar name={person.full_name} size={72} photo={face} avatar={person.avatar ?? undefined} />
         <div className="min-w-0 flex-1">

@@ -37,12 +37,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Avatar } from '@/components/ui';
 import { ChatGlyph, ChevronLeftGlyph, CloseGlyph, FlagGlyph } from '@/components/Glyph';
 import { TALK_CLOSE_EVENT, TALK_OPEN_EVENT, type TalkOpenDetail } from '@/lib/talk-open';
+import { MOTION } from '@/lib/motion';
 
 /** Remembered per device, so the bubble opens the way it was left. */
 const OPEN_KEY = 'beacon:talk-dock-open';
 
-/** How long the sheet takes to leave; globals.css `.talk-panel-out`. */
-const LEAVE_MS = 170;
+/** How long the sheet takes to leave: `.talk-panel-out` runs for
+ *  --motion-quick, and this waits a hair longer so the last frame is seen. */
+const LEAVE_MS = MOTION.quick + 10;
 
 function prefersStill(): boolean {
   try {

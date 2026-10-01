@@ -166,7 +166,7 @@ function Detail() {
             tiles were always on screen here and pushed the tabs below the first
             screen of a phone; the live page folds them the same way. */}
         {openProfile && (
-          <>
+          <div className="fold-in">
             {/* Contact and personal details — on the profile all along, but the
                 room never showed them, so a missionary had to guess how to reach
                 someone or when their birthday was. */}
@@ -211,7 +211,7 @@ function Detail() {
               <Stat label="Resources" value={String(eng.materialsOpened)} />
               <Stat label="Lessons" value={String(eng.lessonsDone)} />
             </div>
-          </>
+          </div>
         )}
 
         {eng.quiet && (

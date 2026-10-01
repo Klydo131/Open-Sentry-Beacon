@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { closeTalk } from '@/lib/talk-open';
+import { scrollMotion } from '@/lib/motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDemo, QUEST_KEY } from '@/lib/demo/store';
 import { NAVY, GOLD } from '@/lib/brand';
@@ -389,7 +390,7 @@ export function Quest() {
         const wantTop = r.height >= band ? bandTop : bandTop + (band - r.height) / 2;
         const delta = r.top - wantTop;
         if (Math.abs(delta) > 6 && canScroll(delta)) {
-          window.scrollBy({ top: delta, behavior: 'smooth' });
+          window.scrollBy({ top: delta, behavior: scrollMotion() });
           // The ring goes where the target is NOW, and every scroll event
           // from here moves it again, so it travels with the page instead of
           // waiting at the old spot for the scroll to finish.
@@ -478,7 +479,7 @@ export function Quest() {
         const wantTop = r.height >= band ? bandTop : bandTop + (band - r.height) / 2;
         const delta = r.top - wantTop;
         if (Math.abs(delta) > 8 && canScroll(delta)) {
-          window.scrollBy({ top: delta, behavior: 'smooth' });
+          window.scrollBy({ top: delta, behavior: scrollMotion() });
           setRect(r);
           return;
         }
@@ -589,13 +590,14 @@ export function Quest() {
             }}
           />
           <div
-            className="absolute -translate-x-1/2 text-3xl"
+            /* The bob is a class (globals.css .quest-arrow) so the
+               reduced-motion rule can stop it; an inline style cannot be. */
+            className="quest-arrow absolute -translate-x-1/2 text-3xl"
             style={{
               left: arrowX,
               top: below ? rect.bottom + 8 : rect.top - 40,
               color: GOLD,
               filter: 'drop-shadow(0 2px 3px rgba(0,0,0,.5))',
-              animation: 'beaconBob 1s ease-in-out infinite',
             }}
           >
             {below ? '▲' : '▼'}
@@ -754,7 +756,7 @@ export function Quest() {
                   <button
                     onClick={() => {
                       targetEl.current?.scrollIntoView({
-                        behavior: 'smooth',
+                        behavior: scrollMotion(),
                         block: 'center',
                       });
                     }}

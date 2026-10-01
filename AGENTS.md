@@ -376,6 +376,12 @@ branch can never produce anything but a preview.
 | `app/` | Routes, one folder per room. |
 | `components/` | Everything visual. |
 | `components/live/` | The signed-in screens: door, admin, guide, explorer, shared. |
+| `components/talk/` | The chat bubble's frame, drawn by both halves (`Dock.tsx`), and the Message and Profile buttons. `lib/talk-open.ts` opens it from anywhere. |
+| `components/SubroomMenu.tsx` | The one drop-down every set of sub-rooms and tabs uses. |
+| `components/DeskDrawer.tsx` | The desk: a drawer below 1280px, the column beside the page above it. |
+| `components/AnchoredPanel.tsx` | A panel hanging off a button that stays on the screen: the bell, the switchers. |
+| `components/live/Face.tsx` | Members' photos, signed in one request and re-signed before they expire. |
+| `lib/motion.ts` | The motion scale for code, and the three things CSS cannot do alone. The rest of motion is in `app/globals.css`; the rules are in `docs/VISUAL-LANGUAGE.md`. |
 | `lib/live/data.ts` | **Every** live database call. Nothing else talks to Supabase. |
 | `lib/live/session.tsx` | Who is signed in, and the rules for deciding they are not. |
 | `lib/live/errors.ts` | `humanError()`. The one place a database error becomes a sentence. |

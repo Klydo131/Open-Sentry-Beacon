@@ -10,6 +10,7 @@ import { PaperclipGlyph } from './Glyph';
 import { MessageBox } from '@/components/MessageBox';
 import { useDraft, clearDraft } from '@/lib/drafts';
 import { Linked } from '@/components/Linked';
+import { scrollMotion } from '@/lib/motion';
 
 /**
  * One thing in the conversation, whichever kind it is.
@@ -99,7 +100,7 @@ export function Chat({ pairingId }: { pairingId: string }) {
     if (first || newestIsMine || following.current) {
       newestEl.current?.scrollIntoView({
         block: 'nearest',
-        behavior: first ? 'auto' : 'smooth',
+        behavior: first ? 'auto' : scrollMotion(),
       });
       following.current = true;
     }

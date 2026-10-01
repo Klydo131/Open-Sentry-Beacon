@@ -23,9 +23,12 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTutorialMode } from '@/lib/tutorial';
 import { AnchoredPanel } from '@/components/AnchoredPanel';
+import { usePresence } from '@/lib/motion';
 
 export function ModeSwitch({ onDark = false }: { onDark?: boolean }) {
   const [open, setOpen] = useState(false);
+  // Kept on the screen while it goes back into the button (lib/motion.ts).
+  const panel = usePresence(open);
   const { tutorial, hasDatabase, enterTutorial, leaveTutorial } = useTutorialMode();
   const router = useRouter();
   const anchor = useRef<HTMLDivElement>(null);
@@ -57,8 +60,9 @@ export function ModeSwitch({ onDark = false }: { onDark?: boolean }) {
         </span>
       </button>
 
-      {open && (
+      {panel.mounted && (
         <AnchoredPanel
+          leaving={panel.leaving}
           anchor={anchor}
           onClose={() => setOpen(false)}
           width={288}

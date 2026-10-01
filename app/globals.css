@@ -16,6 +16,22 @@
   --lift-1: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
   --lift-2: 0 2px 4px -1px rgba(16, 24, 40, 0.05), 0 6px 16px -3px rgba(16, 24, 40, 0.09);
   --lift-3: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 16px 40px -8px rgba(16, 24, 40, 0.16);
+
+  /* MOTION, AS A SCALE RATHER THAN A GUESS. Asked for on 1 October 2026,
+     "subtle and quick": three lengths and two curves, so a menu, a panel and a
+     drawer all move like one app. lib/motion.ts carries the same three
+     numbers for the few places JavaScript has to know them, and
+     tests/every-animation-can-be-stilled.mjs keeps the two in step.
+       quick  160ms  a menu, a panel, a fade between rooms, anything leaving
+       base   220ms  a view sliding across inside the chat, the chat arriving
+       slow   280ms  something crossing a good part of the screen: the drawer
+     `settle` arrives fast and eases to rest, which is what reads as smooth;
+     `leave` speeds up as it goes, because nobody waits to watch a thing go. */
+  --motion-quick: 160ms;
+  --motion-base: 220ms;
+  --motion-slow: 280ms;
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-leave: cubic-bezier(0.4, 0, 1, 1);
 }
 
 html {
@@ -906,8 +922,8 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
  *   PRESSING  the bubble dips under the finger. A control that big with no
  *             press state reads as an image until it happens to work.
  *
- * ALL OF IT IS SHORT. 140-220ms: long enough to be seen as movement, too short
- * to be waited for. Anything slower puts a delay between somebody deciding to
+ * ALL OF IT IS SHORT. 160-220ms (--motion-quick and --motion-base): long enough
+ * to be seen as movement, too short to be waited for. Anything slower puts a delay between somebody deciding to
  * read a message and being able to.
  *
  * AND ALL OF IT STOPS UNDER prefers-reduced-motion, at the bottom of this file,
@@ -936,17 +952,17 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   /* TRANSFORM-ORIGIN AT THE CORNER IT CAME FROM, which is what makes this read
      as the bubble opening rather than as a card fading in over the page. */
   transform-origin: bottom right;
-  animation: talkSheetIn 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: talkSheetIn var(--motion-base) var(--ease-settle);
 }
 
 @media (min-width: 1280px) {
   .talk-panel-in {
-    animation: talkPanelIn 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: talkPanelIn var(--motion-quick) var(--ease-settle);
   }
 }
 
 .talk-message-in {
-  animation: talkMessageIn 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: talkMessageIn var(--motion-quick) var(--ease-settle);
 }
 
 /* THE LIST AND A CONVERSATION SLIDE PAST EACH OTHER, the way you went.
@@ -966,11 +982,11 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 }
 
 .talk-view-forward {
-  animation: talkViewForward 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: talkViewForward var(--motion-base) var(--ease-settle);
 }
 
 .talk-view-back {
-  animation: talkViewBack 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: talkViewBack var(--motion-base) var(--ease-settle);
 }
 
 /* THE COUNT POPS WHEN IT GOES UP: something arrived. Only then -- the bubble
@@ -1012,7 +1028,7 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 
 .talk-panel-out {
   transform-origin: bottom right;
-  animation: talkSheetOut 160ms ease-in forwards;
+  animation: talkSheetOut var(--motion-quick) var(--ease-leave) forwards;
   /* Nothing can be pressed while it is on its way out, so a second tap cannot
      land on a control that is already half gone. */
   pointer-events: none;
@@ -1020,7 +1036,7 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 
 @media (min-width: 1280px) {
   .talk-panel-out {
-    animation: talkPanelOut 140ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    animation: talkPanelOut var(--motion-quick) var(--ease-leave) forwards;
   }
 }
 
@@ -1057,7 +1073,7 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 .desk-backdrop {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 220ms ease-out;
+  transition: opacity var(--motion-base) ease-out;
 }
 
 .desk-backdrop-on {
@@ -1081,13 +1097,13 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   transform: translateX(105%);
   visibility: hidden;
   /* Hidden only once it has finished sliding out, so the way out is seen. */
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 280ms;
+  transition: transform var(--motion-slow) var(--ease-settle), visibility 0s linear var(--motion-slow);
 }
 
 .desk-drawer[data-open='true'] {
   transform: translateX(0);
   visibility: visible;
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+  transition: transform var(--motion-slow) var(--ease-settle), visibility 0s;
 }
 
 .desk-drawer-head {
@@ -1114,23 +1130,63 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   }
 }
 
-/* THE SUB-ROOM LIST OPENS DOWNWARDS FROM ITS BUTTON: a short drop and a fade,
-   so it reads as coming out of the thing that was pressed.
-   components/SubroomMenu.tsx. */
-@keyframes subroomMenuIn {
+/* ---- Things that hang off a button ----
+   A menu, the bell's list, the role and mode switchers. Each comes OUT OF THE
+   THING THAT WAS PRESSED: a short drop and a fade from the button's corner, so
+   it reads as part of that button rather than as a card appearing over the
+   page. And each goes back the same way, a little quicker, instead of
+   vanishing mid-blink. Asked for on 1 October 2026: "smooth animations in
+   transitions ... subtle and quick". */
+@keyframes beaconMenuIn {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.subroom-menu-in {
-  transform-origin: top left;
-  animation: subroomMenuIn 160ms cubic-bezier(0.22, 1, 0.36, 1);
+@keyframes beaconMenuOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-4px) scale(0.98); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .subroom-menu-in {
-    animation: none;
-  }
+/* The sub-room list opens downwards from its button, which sits at its left.
+   components/SubroomMenu.tsx. */
+.subroom-menu-in {
+  transform-origin: top left;
+  animation: beaconMenuIn var(--motion-quick) var(--ease-settle);
+}
+
+/* A panel is right-aligned to its button (components/AnchoredPanel.tsx), so it
+   grows from the top right. Leaving, nothing in it can be pressed: a second tap
+   must not land on a control that is half gone. */
+.anchored-in {
+  transform-origin: top right;
+  animation: beaconMenuIn var(--motion-quick) var(--ease-settle);
+}
+
+.anchored-out {
+  transform-origin: top right;
+  animation: beaconMenuOut var(--motion-quick) var(--ease-leave) forwards;
+  pointer-events: none;
+}
+
+/* ---- Something that folds open under what was pressed ----
+   A person's profile under Profile; the Report form in the chat. It eases down
+   a few pixels into place: enough to show where it came from. */
+@keyframes beaconFoldIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fold-in {
+  animation: beaconFoldIn var(--motion-base) var(--ease-settle);
+}
+
+/* ---- The tutorial's arrow ----
+   It bobbed from an inline style, and an inline style is beyond the reach of
+   every stylesheet rule, so it kept bobbing for people who had asked their
+   device for less movement. A class can be switched off; components/Quest.tsx
+   wears this one. */
+.quest-arrow {
+  animation: beaconBob 1s ease-in-out infinite;
 }
 
 /* THE CHAT'S MOTION OFF, HERE, AFTER IT IS SWITCHED ON. The block near the top
@@ -1140,8 +1196,17 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
    still played for somebody who had asked their phone for less movement --
    found on 30 September 2026 while adding the two below. Switching them off
    after they are switched on is what makes the switch-off stick.
-   tests/the-chat-is-the-bubble-and-it-moves.mjs now checks the order. */
+   tests/every-animation-can-be-stilled.mjs checks that order for every
+   animation in the app, and the-chat-is-the-bubble-and-it-moves.mjs for the
+   chat's. */
 @media (prefers-reduced-motion: reduce) {
+  .subroom-menu-in,
+  .anchored-in,
+  .anchored-out,
+  .fold-in,
+  .quest-arrow {
+    animation: none;
+  }
   .talk-panel-in,
   .talk-panel-out,
   .talk-message-in,

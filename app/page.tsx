@@ -11,6 +11,7 @@ import { useLocale } from '@/lib/i18n';
 import type { Role } from '@/lib/types';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { useIsLive } from '@/lib/tutorial';
+import { scrollMotion } from '@/lib/motion';
 import { LiveHomePage } from '@/components/LiveCorePages';
 
 // The front door, in the order a person actually needs it.
@@ -48,7 +49,7 @@ function DemoHome() {
   const [showPasswordNote, setShowPasswordNote] = useState(false);
 
   const scrollTo = (id: string) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById(id)?.scrollIntoView({ behavior: scrollMotion(), block: 'start' });
 
   const HOME: Record<Role, string> = {
     executive: '/admin',

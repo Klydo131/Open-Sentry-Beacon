@@ -64,6 +64,54 @@ grows (−0.022em at 34px), as SF does.
 Radii: **14** grouped lists · **12** fields and segmented tracks · **10** bar
 and tool buttons · **999** capsules.
 
+## Motion
+
+Asked for on 1 October 2026: smooth transitions "so users can appreciate the
+little things", chosen as **subtle and quick**. Motion says where something
+came from and where it went; it never makes anybody wait to read.
+
+**The scale**, app-wide on `:root` in `app/globals.css`, mirrored for code in
+`lib/motion.ts`:
+
+| Token | Value | Use |
+|---|---|---|
+| `--motion-quick` | 160ms | A menu or panel opening, a fade between rooms, anything leaving. |
+| `--motion-base` | 220ms | A view sliding across inside the chat; the chat arriving. |
+| `--motion-slow` | 280ms | Something crossing a good part of the screen: the desk drawer. |
+| `--ease-settle` | `cubic-bezier(0.22, 1, 0.36, 1)` | Arriving: fast, then easing to rest. |
+| `--ease-leave` | `cubic-bezier(0.4, 0, 1, 1)` | Leaving: speeding up as it goes. |
+
+**The vocabulary.** Reuse one of these before inventing another.
+
+| Gesture | Class or helper | Where |
+|---|---|---|
+| Hangs off a button: drops from it, goes back into it | `.anchored-in` / `.anchored-out`, `.subroom-menu-in` | The bell, the switchers, the sub-room list |
+| Folds open under what was pressed | `.fold-in` | A person's profile under Profile |
+| The new room fades in where the old one was | `fadeInAfter()` | `components/SubroomMenu.tsx` |
+| Kept on screen long enough to be seen leaving | `usePresence()` | Every `AnchoredPanel` caller |
+| The chat sheet: settles in, slides the way you went | `.talk-*` | `components/talk/Dock.tsx` |
+| The drawer slides in from the edge it lives on | `.desk-drawer` | `components/DeskDrawer.tsx` |
+| A page fades up as it arrives | `.page-in` | Both shells' `<main>` |
+
+**The rules:**
+
+- **Under 300ms**, and only `transform` and `opacity`. Both are moved by the
+  graphics chip without redrawing the page. A loop that animates anything else
+  is refused by `tests/an-animation-that-loops-does-not-repaint.mjs`.
+- **Every animation stops for anybody who asks for less motion**, and the rule
+  that stops it comes **after** the rule that starts it. A media query adds no
+  weight, so a switch-off placed above loses. A pure fade (only opacity) may
+  stay, because a fade is light changing, not anything moving.
+- **Never `style={{ animation }}`.** An inline style is out of reach of every
+  stylesheet rule. Give it a class.
+- **A scroll started from code uses `scrollMotion()`**, never
+  `behavior: 'smooth'`. A stylesheet cannot reach it, so it has to ask.
+- **Room switches fade, they do not slide.** A finger already on its way to a
+  button in the new room lands where it was going.
+
+`tests/every-animation-can-be-stilled.mjs` holds all of this, for every
+stylesheet and every component.
+
 ## Components that exist now
 
 All in `components/study/study-shell.css`.
