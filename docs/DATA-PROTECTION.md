@@ -63,7 +63,8 @@ Structure read from the live database. No values were read.
 | Where | What | Who can read it |
 |---|---|---|
 | `messages` | the conversation between a Guide and an Explorer | Those two people, and a Director only inside a safeguarding report |
-| `pairing_media` + object storage | files sent in that conversation | The same two |
+| `pairing_media` + object storage | files sent in that conversation, including **voice messages** (since 1 October 2026: recorded in the browser, at most two minutes, stored like any other file) | The same two |
+| `message_reactions` | a reaction (one of six) to a message or file in that conversation | The same two; written only through `react_to()` |
 | `materials` + object storage (`library/<person>/`) | a resource: a link, or a file somebody added (since 25 September 2026) | Whoever added it, and the people they send it to. Leadership sees a record that it was added or shared, not the file |
 | `lesson_files` + object storage (`lessons/<person>/`) | a study's handouts | Anybody who can read that study |
 | `prayer_requests` | what somebody asked prayer for, an Explorer or their Guide | The Explorer and their Guide; a Guide's request only to the one Explorer it was written to |

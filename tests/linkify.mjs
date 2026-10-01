@@ -162,5 +162,19 @@ ok(safeLinkHref('//evil.example/x') === null, 'a protocol-relative URL is refuse
 ok(safeLinkHref('https://adventist.org@evil.example') === null,
    'and it inherits the user-info refusal');
 
+// A LOOK-ALIKE HOST (security review, 1 October 2026). `\u0430` is Cyrillic,
+// and on screen `\u0430pple.com` is indistinguishable from the real name.
+{
+  const lookalike = linkifyParts('see https://\u0430pple.com/login now').find((p) => typeof p !== 'string');
+  ok(lookalike && lookalike.href === 'https://xn--pple-43d.com/login' && lookalike.label === 'https://xn--pple-43d.com/login',
+     'a host in another alphabet is shown as the address the tap really opens');
+  const accented = linkifyParts('https://iglesia-espa\u00f1a.org/caf\u00e9').find((p) => typeof p !== 'string');
+  ok(accented && accented.label === 'https://xn--iglesia-espaa-tkb.org/caf\u00e9',
+     'only the host changes: the rest of the address keeps the words as written');
+  const plain = linkifyParts('https://adventist.org/x and www.adventist.org').filter((p) => typeof p !== 'string');
+  ok(plain.length === 2 && plain[0].label === 'https://adventist.org/x' && plain[1].label === 'www.adventist.org',
+     'and an ordinary address is shown exactly as it was written');
+}
+
 console.log(`\n${bad === 0 ? 'RESULT: ALL OK' : `RESULT: ${bad} FAILED`}`);
 process.exit(bad === 0 ? 0 : 1);

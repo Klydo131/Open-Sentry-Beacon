@@ -43,9 +43,12 @@ import {
 } from '@/lib/supabase/client';
 import { uuid } from '@/lib/uuid';
 import { shrinkImage } from '@/lib/live/shrink-image';
+import { isSafeStoragePath, safeStoragePath } from '@/lib/live/storage-path';
 import type { PlaceSuggestion } from '@/lib/live/place-pin';
 import type { Session } from '@supabase/supabase-js';
 import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode } from '@/lib/types';
+import type { Reaction, ReactionTarget } from '@/lib/talk/reactions';
+import { plainTitle } from '@/lib/talk/thread';
 import { STAGE_ORDER } from '@/lib/brand';
 
 /** Thrown when a live call is made with no database configured. */
@@ -1374,23 +1377,79 @@ export async function listJourney(pairingId: string): Promise<JourneyEvent[]> {
 // change to what this app is, not a feature.
 // ---------------------------------------------------------------------------
 
+/**
+ * The NEWEST thousand messages, oldest first.
+ *
+ * Asked for newest first and turned round here. The API returns at most a
+ * thousand rows, and this used to ask for the OLDEST first, so the
+ * conversation that reached a thousand and one stopped showing anything new --
+ * the very message just sent was the one left out. Found by the design review
+ * of 1 October 2026. "Show earlier messages" is a later piece of work; the
+ * thousand most recent is a long way back for two people.
+ */
+export const THREAD_LIMIT = 1000;
+
 export async function listMessages(pairingId: string): Promise<Message[]> {
   const { data, error } = await db()
     .from('messages')
     .select('*')
     .eq('pairing_id', pairingId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .limit(THREAD_LIMIT);
   if (error) throw new Error(error.message);
-  return (data ?? []) as Message[];
+  return ((data ?? []) as Message[]).reverse();
 }
 
-export async function sendMessage(pairingId: string, body: string): Promise<void> {
+/**
+ * Send a message, optionally as a reply to an earlier one.
+ *
+ * These four columns are the only ones the browser may write on the way in
+ * (migration 20261001120000). `reply_to` is held to the same conversation by
+ * the database, so a reply cannot quote a message from somebody else's.
+ */
+export async function sendMessage(pairingId: string, body: string, replyTo?: string | null): Promise<void> {
   const text = body.trim();
   if (!text) return;
   if (text.length > 4000) throw new Error('That message is too long.');
   const { error } = await db()
     .from('messages')
-    .insert({ pairing_id: pairingId, sender_id: await uid(), body: text });
+    .insert({
+      pairing_id: pairingId,
+      sender_id: await uid(),
+      body: text,
+      ...(replyTo ? { reply_to: replyTo } : {}),
+    });
+  if (error) throw new Error(error.message);
+}
+
+/** Every reaction in one conversation. Read under the pairing's own rule. */
+export async function listReactions(pairingId: string): Promise<Reaction[]> {
+  // A reaction taken back stays as a row with no emoji: an UPDATE reaches only
+  // the two people on the realtime feed, a DELETE reaches everybody (migration
+  // 20261001120000, section 4). Those rows are nothing to show.
+  const { data, error } = await db()
+    .from('message_reactions')
+    .select('id, pairing_id, message_id, media_id, person_id, emoji, created_at')
+    .eq('pairing_id', pairingId)
+    .not('emoji', 'is', null);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Reaction[];
+}
+
+/**
+ * React to a message or attachment, change the reaction, or take it away
+ * (`emoji` null).
+ *
+ * THROUGH A FUNCTION, NOT A WRITE. The browser may read reactions and nothing
+ * else; react_to() checks the person, the conversation, that the message was
+ * not taken back, and that the emoji is one of the six (lib/talk/reactions.ts).
+ */
+export async function reactTo(target: ReactionTarget, emoji: string | null): Promise<void> {
+  const { error } = await db().rpc('react_to', {
+    p_message: 'message' in target ? target.message : null,
+    p_media: 'media' in target ? target.media : null,
+    p_emoji: emoji,
+  });
   if (error) throw new Error(error.message);
 }
 
@@ -1984,7 +2043,7 @@ export async function addMaterialFile(chosen: File, m: { title?: string; descrip
  */
 export async function materialFileUrl(path: string, saveAs?: string): Promise<string> {
   const { data, error } = await db().storage.from('pairing-media')
-    .createSignedUrl(path, 60 * 60, saveAs ? { download: saveAs } : undefined);
+    .createSignedUrl(safeStoragePath(path), 60 * 60, saveAs ? { download: saveAs } : undefined);
   if (error || !data?.signedUrl) throw new Error('That file could not be opened. It may have been removed.');
   return data.signedUrl;
 }
@@ -1992,7 +2051,7 @@ export async function materialFileUrl(path: string, saveAs?: string): Promise<st
 /** The file itself, for handing to the phone's share sheet. */
 export async function materialFileForSharing(m: Material): Promise<File> {
   if (!m.file_path) throw new Error('This resource is a link, not a file.');
-  const { data, error } = await db().storage.from('pairing-media').download(m.file_path);
+  const { data, error } = await db().storage.from('pairing-media').download(safeStoragePath(m.file_path));
   if (error || !data) throw new Error('That file could not be fetched to share.');
   return new File([data], m.file_name || m.title, { type: m.file_type || data.type });
 }
@@ -2753,7 +2812,8 @@ export async function pairedProfile(id: string | null | undefined): Promise<Prof
  * Called at render time rather than stored, for the reason above.
  */
 export async function avatarUrl(path: string | null | undefined): Promise<string> {
-  if (!path) return '';
+  // An unsafe path is no picture: the initials stay (lib/live/storage-path.ts).
+  if (!path || !isSafeStoragePath(path)) return '';
   const { data } = await db().storage.from(AVATAR_BUCKET).createSignedUrl(path, 60 * 60);
   return data?.signedUrl ?? '';
 }
@@ -3609,6 +3669,7 @@ export async function attachLessonFile(lessonId: string, chosen: File): Promise<
 }
 
 export async function lessonFileUrl(path: string): Promise<string> {
+  if (!isSafeStoragePath(path)) return '';
   const { data } = await db().storage.from('pairing-media').createSignedUrl(path, 60 * 60);
   return data?.signedUrl ?? '';
 }
@@ -3878,6 +3939,7 @@ export async function listReportFiles(reportIds: string[]): Promise<Record<strin
 
 /** A short-lived link to one piece of evidence. Never stored. */
 export async function reportFileUrl(path: string): Promise<string> {
+  if (!isSafeStoragePath(path)) return '';
   const { data } = await db().storage.from('pairing-media').createSignedUrl(path, 60 * 60);
   return data?.signedUrl ?? '';
 }
@@ -4017,7 +4079,9 @@ export async function sendPairingFile(pairingId: string, original: File): Promis
     .insert({
       pairing_id: pairingId,
       owner_id: me,
-      title: file.name || 'Attachment',
+      // Short and plain: the database refuses more than 200 characters and the
+      // invisible characters that reverse a name (lib/talk/thread.ts).
+      title: plainTitle(file.name) || 'Attachment',
       mime: file.type || '',
       size: file.size,
       path,
@@ -4041,7 +4105,9 @@ export async function sendPairingFile(pairingId: string, original: File): Promis
  * group chat stops working.
  */
 export async function pairingFileUrl(path: string): Promise<string> {
-  const { data, error } = await db().storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600);
+  // The path was written by the other person in the conversation, and this
+  // runs with YOUR sign-in the moment a picture is drawn. lib/live/storage-path.ts.
+  const { data, error } = await db().storage.from(MEDIA_BUCKET).createSignedUrl(safeStoragePath(path), 3600);
   if (error) throw new Error(error.message);
   return data.signedUrl;
 }

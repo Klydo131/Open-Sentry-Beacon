@@ -73,6 +73,7 @@ verify gate fails if a new one arrives without it.
 | `pairing_requests` | the Guide who asked, or `leads_church` | ● |
 | `messages` | `in_pairing` | ● |
 | `pairing_media` | `in_pairing` | ● |
+| `message_reactions` | `my_pairing_ids()`; written only through `react_to()`; a suspended account sees none | ● |
 | `meetings` | `in_pairing` | ● |
 | `journey_events` | the Guide, or `manages_church` | ● |
 | `seeker_notes` | **the author alone** | |

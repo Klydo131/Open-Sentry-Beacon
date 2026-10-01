@@ -128,19 +128,24 @@ const mine = migrations.find((m) => m.name.includes('changed_or_taken_back'));
 // "If it's deleted there must be a message or note 'user X has deleted a
 // message'." A deletion that leaves a gap reads as a message never sent.
 {
-  const ui = read('components/live/shared.tsx');
+  // Drawn by components/talk/ChatView.tsx for both halves since 1 October 2026.
+  const ui = read('components/talk/ChatView.tsx');
   ok(/deleted a message/.test(ui), 'a deleted message says so, rather than leaving a gap');
   ok(/You deleted a message/.test(ui), 'your own says You');
-  ok(/deleted a message`/.test(ui) && /theirName/.test(ui),
+  ok(/deleted a message`/.test(ui) && /theirFirst/.test(ui),
      'and the other person\'s is named');
 
   // It must be drawn INSTEAD of the body, not beside it.
-  const branch = ui.slice(ui.indexOf('entry.message.deleted_at'), ui.indexOf('editingId === entry.message.id'));
-  ok(!/<Linked text=\{entry\.message\.body\}/.test(branch),
+  const branch = ui.slice(ui.indexOf(') : entry.deletedAt ? ('), ui.indexOf('<Linked text={entry.body} />'));
+  ok(branch.length > 0 && /deleted a message/.test(branch) && !/<Linked/.test(branch),
      'the deleted branch does not also render the body');
 
-  ok(/entry\.message\.edited_at &&/.test(ui),
+  ok(/entry\.kind === 'message' && entry\.editedAt && !entry\.deletedAt \? 'edited'/.test(ui),
      'an edited message says it was edited, so a quiet rewrite is not possible');
+
+  // TAKING BACK ASKS FIRST, and says what the other person will see.
+  ok(/confirm: 'Delete this message\?'/.test(ui) && /will see that a message was deleted/.test(ui),
+     'deleting asks first, and says the other person will see it was deleted');
 }
 
 // ---------------------------------------------------------------------------
@@ -164,9 +169,9 @@ const mine = migrations.find((m) => m.name.includes('changed_or_taken_back'));
   // both of them edit and take back messages is TalkSurface, which the bubble
   // (TalkDock) and /talk draw for a Guide and an Explorer alike.
   const surface = read('components/live/TalkSurface.tsx');
-  ok(/onEditMessage=\{live\.editMessage\}/.test(surface)
-     && /onDeleteMessage=\{live\.deleteMessage\}/.test(surface),
-     'the conversation in the bubble offers both');
+  ok(/onEditMessage=\{async \(id, text\) => \{ await live\.editMessage\(id, text\)/.test(surface)
+     && /onDeleteMessage=\{async \(id\) => \{ await live\.deleteMessage\(id\)/.test(surface),
+     'the conversation in the bubble offers both'); 
   ok(/role !== 'ds' && profile\.role !== 'dm'/.test(read('components/live/TalkDock.tsx')),
      'and it is the same conversation for the Guide and the Explorer, because a control only one side has is not a rule');
   // And nowhere else draws a conversation that could quietly lack them.

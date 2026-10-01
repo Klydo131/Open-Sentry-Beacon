@@ -100,7 +100,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.keyboard.type('John 11:35');
   await page.waitForTimeout(900);
 
-  const written = (await page.locator('editor-host').innerText()).replace(/​/g, '');
+  const written = (await page.locator('editor-host').innerText()).replace(/\u200B/g, '');
   ok(/Jesus wept\./.test(written), 'what was typed is on the page');
   ok(/John 11:35/.test(written), 'and Enter started a second block rather than swallowing it');
 

@@ -1189,6 +1189,57 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   animation: beaconBob 1s ease-in-out infinite;
 }
 
+/* ---- The conversation's own pieces (components/talk/ChatView.tsx) ----
+   Asked for on 1 October 2026: a chat that feels like the ones people already
+   use. The menu for a message rises from the bottom of the conversation, a
+   picture fades in full screen, and the dot beside a recording breathes while
+   it records. Each is switched off under reduced motion in the block below. */
+@keyframes menuSheetIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.menu-sheet-in {
+  animation: menuSheetIn var(--motion-base) var(--ease-settle);
+}
+
+@keyframes viewerIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.viewer-in {
+  animation: viewerIn var(--motion-quick) ease-out;
+}
+
+@keyframes voiceDot {
+  0%,
+  100% { opacity: 1; }
+  50%  { opacity: 0.3; }
+}
+
+.voice-dot {
+  animation: voiceDot 1.2s ease-in-out infinite;
+}
+
+/* HOLD A MESSAGE FOR ITS MENU, on a touch screen. The browser has its own
+   long-press -- select the words, or iOS's call-out -- and both would open on
+   top of ours. Copy is in our menu, so selecting is not lost. `pan-y` keeps
+   the thread scrolling under a thumb while a sideways drag is ours: swipe a
+   message right to reply. The ⋯ beside each message is for a mouse and a
+   keyboard; a phone holds instead. */
+@media (pointer: coarse) {
+  .chat-bubble {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: pan-y;
+  }
+  .chat-more {
+    display: none;
+  }
+}
+
 /* THE CHAT'S MOTION OFF, HERE, AFTER IT IS SWITCHED ON. The block near the top
    of this file that names these classes under prefers-reduced-motion comes
    BEFORE the rules that set them, and a media query adds no weight: two rules
@@ -1204,7 +1255,9 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   .anchored-in,
   .anchored-out,
   .fold-in,
-  .quest-arrow {
+  .quest-arrow,
+  .menu-sheet-in,
+  .voice-dot {
     animation: none;
   }
   .talk-panel-in,

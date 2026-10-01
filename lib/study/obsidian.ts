@@ -194,7 +194,7 @@ export function parseVaultFile(text: string): {
   extra: string[];
 } {
   const out = { title: '', tags: [] as string[], journalDate: '', body: String(text ?? ''), extra: [] as string[] };
-  const m = /^﻿?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(out.body);
+  const m = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(out.body);
   if (!m) return out;
 
   out.body = out.body.slice(m[0].length);

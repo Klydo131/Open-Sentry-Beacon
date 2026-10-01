@@ -46,7 +46,9 @@ const ok = (cond, msg) => {
   if (!cond) bad++;
 };
 
-const src   = read('components/live/shared.tsx');
+// The thread, and its one receipt, are drawn by components/talk/ChatView.tsx
+// for both halves since 1 October 2026.
+const src   = read('components/talk/ChatView.tsx');
 const code  = strip(src);
 const data  = strip(read('lib/live/data.ts'));
 const dock  = read('components/live/TalkDock.tsx');
@@ -79,18 +81,19 @@ const dockProse = dock.replace(/^\s*\/\/ ?/gm, '').replace(/\s+/g, ' ');
   ok(/const lastMine = \(\(\) => \{/.test(code),
      'the thread finds the most recent message you sent');
 
-  ok(/entry\.id === lastMine\.id/.test(code),
+  ok(/const isLastMine = entry\.kind === 'message' && lastMine && entry\.id === lastMine\.id/.test(code)
+     && /const receipt = isLastMine/.test(code),
      'and the receipt is drawn only against that one');
 
   // NOT PER RUN, NOT PER MESSAGE. `endsRun` is right beside this in the source
   // and is the obvious thing to reach for by mistake.
-  const receipt = code.slice(code.indexOf('lastMine &&'));
-  ok(!/endsRun &&[\s\S]{0,80}read_at/.test(receipt),
+  const receipt = code.slice(code.indexOf('const receipt'), code.indexOf('const metaParts'));
+  ok(receipt.length > 0 && !/endsRun/.test(receipt),
      'not one per run, which would be a column of Seen down the whole thread');
 
   // YOUR OWN ONLY. A receipt on THEIR message announces that you read it, which
   // is the same fact from the other side and is not yours to publish.
-  ok(/e\.who === myId/.test(code),
+  ok(/e\.who === me\b/.test(code),
      'and only your own messages carry one');
 }
 
@@ -104,7 +107,7 @@ const dockProse = dock.replace(/^\s*\/\/ ?/gm, '').replace(/\s+/g, ' ');
 {
   ok(/'Sent'/.test(code),
      'a message that has not been read says so');
-  ok(/read_at \? `Seen/.test(code) || /`Seen \$\{/.test(code),
+  ok(/readAt\s*\?\s*`Seen/.test(code) || /`Seen \$\{/.test(code),
      'and one that has says when');
 }
 
@@ -116,7 +119,7 @@ const dockProse = dock.replace(/^\s*\/\/ ?/gm, '').replace(/\s+/g, ' ');
 // somebody their deletion was witnessed, which is the opposite of what taking
 // something back is for.
 {
-  ok(/!e\.message\.deleted_at/.test(code),
+  ok(/e\.kind === 'message' && e\.who === me && !e\.deletedAt/.test(code),
      'a message you took back does not carry a receipt');
 }
 

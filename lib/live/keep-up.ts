@@ -167,9 +167,10 @@ export const KEEP_UP_MY_PAIRING = ['pairings', 'pairing_media', 'profiles'] as c
  * Guide's OTHER threads, so the list's counts move; and it never watched
  * `pairing_media` at all, so a file arriving did not reload the thread it
  * arrived in. Realtime evaluates the same policy either way, so this is more
- * traffic and not a wider disclosure.
+ * traffic and not a wider disclosure. `message_reactions` since 1 October
+ * 2026, so a reaction appears on the other phone without a refresh.
  */
-export const KEEP_UP_TALK = ['messages', 'pairing_media'] as const;
+export const KEEP_UP_TALK = ['messages', 'pairing_media', 'message_reactions'] as const;
 
 /**
  * Follow-ups and names put forward: the Guide's working list.

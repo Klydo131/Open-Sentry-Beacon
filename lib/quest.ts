@@ -125,6 +125,33 @@ const DM_STEPS: QuestStep[] = [
     events: ['beacon:message'],
   },
   {
+    // REACT OR REPLY, added with the new chat on 1 October 2026. DYNAMIC IN
+    // TWO WAYS: the arrow follows what the person does -- their newest message
+    // first, then, once its menu is open, the 🙏 in it -- and the step is done
+    // by EITHER reacting or replying, whichever they reach for.
+    id: 'react',
+    where: 'My Explorers \u203a an Explorer \u203a Message',
+    learn:
+      'Tap any message for its menu: react with 🙏 to say you are praying, Reply to answer that one message, Copy, or change and delete your own. With nothing typed, the round button records a voice message instead, for when speaking is easier than typing.',
+    title: 'React or reply',
+    hint: 'Tap 🙏 to tell them you are praying for them. Or choose Reply to answer that message.',
+    target: 'chat-react',
+    fallbacks: [
+      {
+        target: 'chat-message',
+        hint: 'Tap their newest message. A menu opens with reactions and Reply.',
+      },
+      {
+        target: 'message-button',
+        hint: 'Tap Message. Your conversation opens in the Talk bubble.',
+      },
+      OPEN_A_SEEKER,
+    ],
+    route: '/dm',
+    routeLabel: 'Go to My Explorers',
+    events: ['beacon:react', 'beacon:reply'],
+  },
+  {
     id: 'advance',
     where: 'My Explorers \u203a an Explorer \u203a Journey',
     learn:
@@ -383,6 +410,31 @@ const DS_STEPS: QuestStep[] = [
     route: '/ds',
     routeLabel: 'Go to My Journey',
     events: ['beacon:message'],
+  },
+  {
+    // The same new step as a Guide's 'react', from the Explorer's side.
+    id: 's-react',
+    where: 'My Journey \u203a My Guide \u203a Message',
+    learn:
+      'Tap any message for its menu: react with a heart or 🙏, Reply to answer that one message, or Copy it. With nothing typed, the round button records a voice message, if speaking is easier than typing.',
+    title: 'React or reply',
+    hint: 'Tap a reaction to answer without typing. Or choose Reply to answer that one message.',
+    target: 'chat-react',
+    fallbacks: [
+      {
+        target: 'chat-message',
+        hint: 'Tap your Guide\'s newest message. A menu opens with reactions and Reply.',
+      },
+      {
+        target: 'message-button',
+        hint: 'Tap Message. The conversation with your Guide opens in the Talk bubble.',
+      },
+      { target: 'room-guide', hint: 'Open My Guide. Message is in there.' },
+      { target: 'journey-rooms', hint: 'Tap the list of rooms at the top and choose My Guide.' },
+    ],
+    route: '/ds',
+    routeLabel: 'Go to My Journey',
+    events: ['beacon:react', 'beacon:reply'],
   },
   {
     id: 's-lesson',

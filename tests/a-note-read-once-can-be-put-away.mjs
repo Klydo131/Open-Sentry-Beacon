@@ -40,7 +40,9 @@ const ok = (cond, msg) => {
   if (!cond) bad++;
 };
 
-const shared = strip(read('components/live/shared.tsx'));
+// Both notes are drawn by the one conversation both halves share
+// (components/talk/ChatView.tsx) since 1 October 2026.
+const shared = strip(read('components/talk/ChatView.tsx'));
 
 // Both notes, not just the one that was easy to reach.
 const puts = (shared.match(/<PutAway\b/g) ?? []).length;

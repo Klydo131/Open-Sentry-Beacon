@@ -16,7 +16,10 @@ const store = read('lib/demo/store.tsx');
 const types = read('lib/types.ts');
 const seed = read('lib/demo/seed.ts');
 const chat = read('components/Chat.tsx');
-const attachment = read('components/Attachment.tsx');
+// Since 1 October 2026 both halves draw attachments through one component
+// (components/talk/ChatAttachment.tsx); the sample half supplies the bytes from
+// this device and frees the URL it made (components/Chat.tsx).
+const attachment = read('components/talk/ChatAttachment.tsx') + '\n' + read('components/Chat.tsx');
 
 let failures = 0;
 function ok(condition, message) {
@@ -137,7 +140,9 @@ ok(
 // written. So the count below moved from <input> to <MessageBox>, and the
 // no-raw-<input> rule that replaced it is the stronger of the two: it forbids
 // the file picker by construction rather than by a separate check.
-const chatCode = stripComments(chat);
+// The form lives in the shared composer since 1 October 2026
+// (components/talk/Composer.tsx), which both halves draw.
+const chatCode = stripComments(read('components/talk/Composer.tsx'));
 const afterAnchor = chatCode.slice(chatCode.indexOf('data-quest="chat-send"'));
 const formEnd = afterAnchor.indexOf('</form>');
 const inForm = formEnd === -1 ? afterAnchor : afterAnchor.slice(0, formEnd);
@@ -148,8 +153,13 @@ ok(
   'the chat-send region holds exactly one message box and no raw <input>',
 );
 ok(
-  (inForm.match(/<Button/g) || []).length === 1 && /type="submit"/.test(inForm),
-  'the chat-send region holds exactly one button, and it is Send',
+  // ONE button, which is Send whenever something is typed (and the
+  // microphone only when the box is empty, so a walk that types first and
+  // presses the first button always presses Send).
+  (inForm.match(/<button/g) || []).length === 1
+    && /type=\{action === 'record' \? 'button' : 'submit'\}/.test(inForm)
+    && /'send' \| 'save' \| 'record' \| 'idle' =\s*editing \? 'save' : typed \? 'send'/.test(chatCode),
+  'the chat-send region holds exactly one button, and it is Send once anything is typed',
 );
 ok(
   !/type="file"/.test(inForm),
@@ -234,7 +244,8 @@ ok(
 // ---- The object-URL leak -------------------------------------------------
 
 ok(
-  /URL\.revokeObjectURL/.test(attachment),
+  /release: \(url\) => URL\.revokeObjectURL\(url\)/.test(attachment)
+    && /if \(made\) releaser\.current\?\.\(made\)/.test(attachment),
   'object URLs are revoked on unmount, so a long thread does not leak blobs',
 );
 

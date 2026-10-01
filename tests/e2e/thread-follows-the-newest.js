@@ -98,7 +98,10 @@ const where = (page) => page.evaluate(() => {
 
   // The message just sent must be ON SCREEN, not merely in the DOM.
   const lastVisible = await page.evaluate(() => {
-    const nodes = [...document.querySelectorAll('p, div')].filter(
+    // [data-message-text] is the words alone. The bubble's paragraph also holds
+    // an invisible copy of the time, to reserve its room (1 October 2026), so an
+    // exact match on the paragraph no longer finds the message.
+    const nodes = [...document.querySelectorAll('[data-message-text]')].filter(
       (n) => n.textContent && n.textContent.trim() === 'Filling the thread, message 14',
     );
     const el = nodes[nodes.length - 1];

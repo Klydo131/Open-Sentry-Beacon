@@ -517,3 +517,66 @@ export function PeopleGlyph(props: GlyphProps) {
     </Svg>
   );
 }
+
+// ---- The conversation (1 October 2026) ------------------------------------
+// The chat's own small vocabulary: answer a message, copy it, speak one, send
+// it, jump to the newest, and add a reaction. Same box and stroke as the rest.
+
+/** A curved arrow back: answering one particular message. */
+export function ReplyGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 14L4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5V20" />
+    </Svg>
+  );
+}
+
+/** Two sheets: copy the words. */
+export function CopyGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
+    </Svg>
+  );
+}
+
+/** A microphone: record a voice message. */
+export function MicGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+    </Svg>
+  );
+}
+
+/** A paper plane, pointing right: send. */
+export function SendGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4.5 12L3 4.5l18 7.5-18 7.5z" />
+      <path d="M4.5 12H12" />
+    </Svg>
+  );
+}
+
+/** Down to the newest message. */
+export function ArrowDownGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 5v14M6 13l6 6 6-6" />
+    </Svg>
+  );
+}
+
+/** A face with a plus: add a reaction. */
+export function ReactGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M20.5 12.5A8.5 8.5 0 1 1 11.5 3.5" />
+      <path d="M8.5 14.5a4 4 0 0 0 6 0M9 9.5h.01M14 9.5h.01M19 2.5v5M16.5 5h5" />
+    </Svg>
+  );
+}

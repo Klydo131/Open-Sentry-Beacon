@@ -106,6 +106,64 @@ export function withoutJpegMetadata(bytes: Uint8Array): Uint8Array | null {
   return null;
 }
 
+/**
+ * A PNG with its words and dates cut out and its picture untouched, or null if
+ * the bytes are not a PNG this can walk.
+ *
+ * FOUND BY THE SECURITY REVIEW OF 1 OCTOBER 2026. A PNG or WebP under 400 KB
+ * is not re-drawn, so whatever it carried went out with it. A PNG keeps EXIF
+ * (with its GPS block) in an `eXIf` chunk, and XMP -- which can name the place
+ * too -- in an `iTXt` one. Every chunk that holds text or metadata goes; the
+ * ones that hold the picture and its colours stay, byte for byte.
+ */
+const PNG_METADATA = new Set(['eXIf', 'tEXt', 'zTXt', 'iTXt', 'tIME']);
+const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+
+export function pngWithoutMetadata(bytes: Uint8Array): Uint8Array | null {
+  if (bytes.length < 8 || PNG_SIGNATURE.some((b, i) => bytes[i] !== b)) return null;
+  const kept: Uint8Array[] = [bytes.subarray(0, 8)];
+  let i = 8;
+  while (i + 12 <= bytes.length) {
+    const length = ((bytes[i] << 24) >>> 0) + (bytes[i + 1] << 16) + (bytes[i + 2] << 8) + bytes[i + 3];
+    const end = i + 12 + length;
+    if (end > bytes.length) return null;
+    const type = ascii(bytes, i + 4, i + 8);
+    if (!PNG_METADATA.has(type)) kept.push(bytes.subarray(i, end));
+    i = end;
+    if (type === 'IEND') return join(kept);
+  }
+  return null;
+}
+
+/**
+ * A WebP with its EXIF and XMP chunks cut out, or null if the bytes are not a
+ * WebP this can walk. The extended header's flags say which of the two the
+ * file has, so they are cleared as well; the container's length is rewritten.
+ */
+export function webpWithoutMetadata(bytes: Uint8Array): Uint8Array | null {
+  if (bytes.length < 12 || ascii(bytes, 0, 4) !== 'RIFF' || ascii(bytes, 8, 12) !== 'WEBP') return null;
+  const kept: Uint8Array[] = [new Uint8Array(bytes.subarray(0, 12))];
+  let i = 12;
+  while (i + 8 <= bytes.length) {
+    const type = ascii(bytes, i, i + 4);
+    const size = (bytes[i + 4] | (bytes[i + 5] << 8) | (bytes[i + 6] << 16) | (bytes[i + 7] << 24)) >>> 0;
+    const end = i + 8 + size + (size % 2);
+    if (i + 8 + size > bytes.length) return null;
+    if (type === 'VP8X') {
+      const chunk = new Uint8Array(bytes.subarray(i, Math.min(end, bytes.length)));
+      chunk[8] &= ~(0x08 | 0x04); // the EXIF and XMP flags
+      kept.push(chunk);
+    } else if (type !== 'EXIF' && type !== 'XMP ') {
+      kept.push(bytes.subarray(i, Math.min(end, bytes.length)));
+    }
+    i = end;
+  }
+  const out = join(kept);
+  const riff = out.length - 8;
+  out[4] = riff & 0xff; out[5] = (riff >> 8) & 0xff; out[6] = (riff >> 16) & 0xff; out[7] = (riff >>> 24) & 0xff;
+  return out;
+}
+
 function isExif(b: Uint8Array, at: number): boolean {
   return b[at] === 0x45 && b[at + 1] === 0x78 && b[at + 2] === 0x69 && b[at + 3] === 0x66
     && b[at + 4] === 0 && b[at + 5] === 0;

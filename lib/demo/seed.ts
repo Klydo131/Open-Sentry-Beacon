@@ -361,6 +361,7 @@ export function makeSeed(): DB {
     // never written to IndexedDB, which renders as a permanently broken file
     // that nobody can explain. Attachments only exist once somebody adds one.
     pairing_media: [],
+    message_reactions: [],
     seeker_media: [
       {
         id: 'sm1',

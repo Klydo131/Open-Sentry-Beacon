@@ -1,6 +1,8 @@
 // Domain types — the shape of everything the app stores. The demo store keeps
 // to these exactly, so the screens don't care where the data comes from.
 
+import type { Reaction } from '@/lib/talk/reactions';
+
 // The Church Board is deliberately NOT a role here.
 //
 // The client was explicit: "CB has no account in the system. Their approval
@@ -298,6 +300,11 @@ export interface Message {
    */
   deleted_at?: string | null;
   deleted_by?: string | null;
+  /**
+   * The earlier message, in the same conversation, that this one answers. The
+   * database holds it to the same pairing (messages_reply_in_same_pairing).
+   */
+  reply_to?: string | null;
 }
 
 export interface Material {
@@ -587,6 +594,8 @@ export interface DB {
   analytics: AnalyticsEvent[];
   seeker_media: SeekerMedia[];
   pairing_media: PairingMedia[];
+  /** Reactions in conversations: lib/talk/reactions.ts. */
+  message_reactions: Reaction[];
   prayer_requests: PrayerRequest[];
   lesson_assignments: LessonAssignment[];
   lesson_series: LessonSeries[];

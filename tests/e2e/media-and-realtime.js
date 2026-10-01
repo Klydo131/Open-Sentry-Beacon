@@ -71,14 +71,20 @@ async function openFirstSeekerRoom(page) {
   });
   await a.waitForTimeout(1800);
 
-  const shown = await a.getByText(/prayer-notes\.png/i).count();
+  // A picture shows as the picture now, not its file name (1 October 2026), so
+  // it is found by its label: the open button says "Open the picture <name>".
+  const shown = await a.locator('[data-chat-entry="media"] [aria-label*="prayer-notes.png"]').count();
   ok(shown > 0, 'the attachment appears in the conversation after choosing it');
 
-  // The bytes must have reached IndexedDB, not the row. If the blob write had
-  // failed, the store removes the row again and the caption above disappears —
-  // so this also proves the failure path did not fire.
-  const notBroken = await a.getByText(/file not on this device/i).count();
-  ok(notBroken === 0, 'the attachment resolves to real bytes, not a missing file');
+  // The bytes must have reached IndexedDB, not the row. Proven by the picture
+  // DECODING, not by the absence of an error line: a missing file falls back to
+  // a plain file card, so "no error text" would pass with nothing to see.
+  const decoded = await a.waitForFunction(
+    () => [...document.querySelectorAll('[data-chat-image] img[alt="prayer-notes.png"]')]
+      .some((img) => img.complete && img.naturalWidth > 0),
+    null, { timeout: 5000 },
+  ).then(() => true, () => false);
+  ok(decoded, 'the attachment resolves to real bytes and draws as a picture');
 
   // And it must NOT have been inlined into the saved database, which is the
   // whole reason bytes live in IndexedDB. localStorage would blow its ~5 MB
@@ -93,7 +99,7 @@ async function openFirstSeekerRoom(page) {
 
   // The second window must already show the attachment made in the first.
   ok(
-    (await b.getByText(/prayer-notes\.png/i).count()) > 0,
+    (await b.locator('[data-chat-entry="media"] [aria-label*="prayer-notes.png"]').count()) > 0,
     'the second window sees the attachment the first one made',
   );
 

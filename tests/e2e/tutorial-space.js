@@ -77,7 +77,7 @@ const stages = (p) => p.evaluate(() => {
   // the Finish button never appeared, the tutorial was never finished, and the
   // three restore assertions below failed for a reason that had nothing to do
   // with restoring.
-  await page.evaluate(()=>localStorage.setItem('beacon-quest-v1-dm',JSON.stringify({completed:['open','message','advance','share','profile','done']})));
+  await page.evaluate(()=>localStorage.setItem('beacon-quest-v1-dm',JSON.stringify({completed:['open','message','react','advance','share','profile','done']})));
   await page.reload({waitUntil:'networkidle'});
   await page.waitForTimeout(1600);
   const fin=page.getByRole('button',{name:/^Done$|Finish/i}).first();

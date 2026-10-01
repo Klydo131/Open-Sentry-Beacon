@@ -47,7 +47,7 @@ const ok = (cond, msg) => {
 const shell   = strip(read('components/LiveAppShell.tsx'));
 const dock    = strip(read('components/live/TalkDock.tsx'));
 const surface = strip(read('components/live/TalkSurface.tsx'));
-const thread  = strip(read('components/live/shared.tsx'));
+const thread  = strip(read('components/talk/ChatView.tsx'));
 const css     = read('app/globals.css');
 // The bubble, the sheet, the header and the list are one shared frame since
 // 30 September 2026, drawn by both halves of the app.

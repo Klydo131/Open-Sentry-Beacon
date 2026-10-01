@@ -47,6 +47,8 @@ function welcomeLine(role: string): string {
 import { publishDb, subscribeDb } from '../realtime';
 import { deleteMedia, newMediaId, putMedia, typeFromMime } from '../localMedia';
 import { makeSeed } from './seed';
+import { REACTIONS, type ReactionTarget } from '../talk/reactions';
+import { plainTitle } from '../talk/thread';
 import { prayerAuthor } from '../types';
 
 // -------------------------------------------------------------------------
@@ -201,7 +203,21 @@ export interface Ctx {
   signOut: () => void;
   resetDemo: () => void;
   advanceStage: (pairingId: string) => void;
-  sendMessage: (pairingId: string, body: string) => void;
+  /** Send a message, optionally answering an earlier one in the same thread. */
+  sendMessage: (pairingId: string, body: string, replyTo?: string | null) => void;
+  /**
+   * Change or take back your OWN message, as the live app does through
+   * edit_message() and delete_message(). Taking back empties the words and
+   * marks it, so the thread can say a message was there.
+   */
+  editMessage: (messageId: string, body: string) => void;
+  deleteMessage: (messageId: string) => void;
+  /**
+   * React to a message or attachment in your own conversation, change the
+   * reaction, or take it away (null). One per person per thing, from the six
+   * in lib/talk/reactions.ts -- the rules react_to() keeps on the live half.
+   */
+  reactTo: (target: ReactionTarget, emoji: string | null) => void;
   shareMaterial: (pairingId: string, materialId: string, note?: string) => void;
   approveUser: (userId: string, role: Role) => void;
   createPairing: (dmId: string, dsId: string, track: Track) => void;
@@ -483,12 +499,16 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   );
 
   const sendMessage = useCallback(
-    (pairingId: string, body: string) => {
+    (pairingId: string, body: string, replyTo?: string | null) => {
       const text = body.trim();
       if (!text || !userId) return;
       setDb((prev) => {
         const pairing = prev.pairings.find((p) => p.id === pairingId);
         if (!pairing) return prev;
+        // A reply stays in its own conversation, as the database holds it.
+        const answers = replyTo
+          && prev.messages.some((m) => m.id === replyTo && m.pairing_id === pairingId)
+          ? replyTo : undefined;
         const recipient =
           pairing.dm_id === userId ? pairing.ds_id : pairing.dm_id;
         const next: DB = {
@@ -501,6 +521,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
               sender_id: userId,
               body: text,
               created_at: nowIso(),
+              ...(answers ? { reply_to: answers } : {}),
             },
           ],
           notifications: [
@@ -1164,6 +1185,79 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   // chat is opened. Without this `read_at` is never written outside the seed,
   // so the unread dot on the seeker list stays lit forever and the "unread"
   // triage count is meaningless.
+  // CHANGING AND TAKING BACK YOUR OWN WORDS, as edit_message() and
+  // delete_message() do on the live half: only the author, never an empty
+  // message, and a taken-back message keeps its place with no words in it.
+  const editMessage = useCallback(
+    (messageId: string, body: string) => {
+      const text = body.trim();
+      if (!userId || !text || text.length > 4000) return;
+      persistUpdate((prev) => ({
+        ...prev,
+        messages: prev.messages.map((m) =>
+          m.id === messageId && m.sender_id === userId && !m.deleted_at && m.body !== text
+            ? { ...m, body: text, edited_at: nowIso() }
+            : m,
+        ),
+      }));
+    },
+    [userId],
+  );
+
+  const deleteMessage = useCallback(
+    (messageId: string) => {
+      if (!userId) return;
+      persistUpdate((prev) => ({
+        ...prev,
+        messages: prev.messages.map((m) =>
+          m.id === messageId && m.sender_id === userId && !m.deleted_at
+            ? { ...m, body: '', deleted_at: nowIso(), deleted_by: userId }
+            : m,
+        ),
+        // Nothing is left to react to.
+        message_reactions: prev.message_reactions.filter((r) => r.message_id !== messageId),
+      }));
+    },
+    [userId],
+  );
+
+  // REACTIONS, under the rules react_to() keeps live: your own conversation,
+  // one per person per thing, one of the six, never on a taken-back message.
+  const reactTo = useCallback(
+    (target: ReactionTarget, emoji: string | null) => {
+      if (!userId) return;
+      if (emoji !== null && !REACTIONS.some((r) => r.emoji === emoji)) return;
+      persistUpdate((prev) => {
+        const messageId = 'message' in target ? target.message : null;
+        const mediaId = 'media' in target ? target.media : null;
+        const pairingId = messageId
+          ? prev.messages.find((m) => m.id === messageId && !m.deleted_at)?.pairing_id
+          : prev.pairing_media.find((m) => m.id === mediaId)?.pairing_id;
+        const pairing = prev.pairings.find((p) => p.id === pairingId);
+        if (!pairing || (pairing.dm_id !== userId && pairing.ds_id !== userId)) return prev;
+        const others = prev.message_reactions.filter((r) =>
+          !(r.person_id === userId && r.message_id === messageId && r.media_id === mediaId));
+        if (emoji === null) return { ...prev, message_reactions: others };
+        return {
+          ...prev,
+          message_reactions: [
+            ...others,
+            {
+              id: uid(),
+              pairing_id: pairing.id,
+              message_id: messageId,
+              media_id: mediaId,
+              person_id: userId,
+              emoji,
+              created_at: nowIso(),
+            },
+          ],
+        };
+      });
+    },
+    [userId],
+  );
+
   const markMessagesRead = useCallback(
     (pairingId: string) => {
       if (!userId) return;
@@ -1210,7 +1304,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         pairing_id: pairingId,
         owner_id: userId,
         kind,
-        title: file.name || 'Attachment',
+        title: plainTitle(file.name) || 'Attachment',
         mime: file.type || undefined,
         size: file.size,
         created_at: nowIso(),
@@ -1270,6 +1364,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       persistUpdate((prev) => ({
         ...prev,
         pairing_media: prev.pairing_media.filter((m) => m.id !== id),
+        message_reactions: prev.message_reactions.filter((r) => r.media_id !== id),
       }));
       void deleteMedia(id).catch(() => {
         // The row is gone from the app either way; an orphaned blob is a
@@ -2411,6 +2506,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     resetDemo,
     advanceStage,
     sendMessage,
+    editMessage,
+    deleteMessage,
+    reactTo,
     shareMaterial,
     approveUser,
     createPairing,

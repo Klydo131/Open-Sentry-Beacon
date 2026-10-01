@@ -32,6 +32,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as live from '@/lib/live/data';
 import type { Message } from '@/lib/types';
+import type { Reaction, ReactionTarget } from '@/lib/talk/reactions';
 import { useLiveSession } from '@/lib/live/session';
 import { useKeepUp, KEEP_UP_MY_PAIRING, KEEP_UP_TALK } from '@/lib/live/keep-up';
 import { useDraft, clearDraft } from '@/lib/drafts';
@@ -68,6 +69,7 @@ export function TalkSurface({
   const [threads, setThreads] = useState<live.Thread[] | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [files, setFiles] = useState<live.PairingFile[]>([]);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [attachError, setAttachError] = useState('');
@@ -100,10 +102,13 @@ export function TalkSurface({
   // and a subscription firing with a stale id reloads the wrong conversation.
   const loadThread = useCallback(async () => {
     const id = activeRef.current;
-    if (!id) { setMessages([]); setFiles([]); return; }
+    if (!id) { setMessages([]); setFiles([]); setReactions([]); return; }
     try {
       setMessages(await live.listMessages(id));
       setFiles(await live.listPairingFiles(id).catch(() => [] as live.PairingFile[]));
+      // Reactions are decoration on a conversation, never a reason for one not
+      // to open: if they cannot be read, the thread still is.
+      setReactions(await live.listReactions(id).catch(() => [] as Reaction[]));
       // OPENING IT IS READING IT. The badge has to fall the moment somebody
       // looks, or it becomes a number people learn to ignore.
       await live.markRead(id);
@@ -122,22 +127,28 @@ export function TalkSurface({
   useKeepUp(KEEP_UP_TALK, loadThread);
   useKeepUp(KEEP_UP_TALK, loadThreads);
 
-  const send = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!active || !body.trim() || busy) return;
+  // Throws on failure, so the chat keeps the words and what they answered.
+  const send = async (text: string, replyTo: string | null) => {
+    if (!active || !text.trim() || busy) return;
     setBusy(true);
     setError('');
     try {
-      await live.sendMessage(active, body);
+      await live.sendMessage(active, text, replyTo);
       clearDraft(active);
       setBody('');
       await loadThread();
       await loadThreads();
     } catch (cause) {
       setError(errorText(cause));
+      throw cause;
     } finally {
       setBusy(false);
     }
+  };
+
+  const react = async (target: ReactionTarget, emoji: string | null) => {
+    await live.reactTo(target, emoji);
+    await loadThread();
   };
 
   const attach = async (chosen: File) => {
@@ -256,8 +267,10 @@ export function TalkSurface({
               onAttach={(chosen) => void attach(chosen)}
               onRemoveFile={(file) => void dropFile(file)}
               attachError={attachError}
-              onEditMessage={live.editMessage}
-              onDeleteMessage={live.deleteMessage}
+              reactions={reactions}
+              onReact={react}
+              onEditMessage={async (id, text) => { await live.editMessage(id, text); await loadThread(); }}
+              onDeleteMessage={async (id) => { await live.deleteMessage(id); await loadThread(); }}
             />
           </div>
         </TalkView>

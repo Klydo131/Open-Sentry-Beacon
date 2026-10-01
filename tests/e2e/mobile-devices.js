@@ -203,17 +203,21 @@ async function run(browser, label, device) {
       buffer: PNG,
     });
     await page.waitForTimeout(1900);
-    const showed = (await page.getByText(/from-phone\.png/i).count()) > 0;
+    // Found by its label: a picture shows as the picture, not its name (1 October 2026).
+    const showed = (await page.locator('[data-chat-entry="media"] [aria-label*="from-phone.png"]').count()) > 0;
     ok(showed, `${label}: a file attached from a phone appears in the conversation`);
     // Only meaningful once the attachment actually rendered. As a bare check
     // for the absence of an error string it passed vacuously -- nothing on
     // screen means no error on screen -- and it reported OK through the whole
     // WebKit failure it was supposed to describe.
     if (showed) {
-      ok(
-        (await page.getByText(/file not on this device/i).count()) === 0,
-        `${label}: the attachment resolves to real bytes`,
-      );
+      // The picture decodes: real bytes, not a fallback file card.
+      const decoded = await page.waitForFunction(
+        () => [...document.querySelectorAll('[data-chat-image] img[alt="from-phone.png"]')]
+          .some((img) => img.complete && img.naturalWidth > 0),
+        null, { timeout: 5000 },
+      ).then(() => true, () => false);
+      ok(decoded, `${label}: the attachment resolves to real bytes`);
     } else {
       console.log(`     (bytes check skipped for ${label}: nothing rendered to check)`);
       if (problems.length) {

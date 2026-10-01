@@ -42,7 +42,9 @@ const ok = (cond, msg) => {
   if (!cond) bad++;
 };
 
-const src = read('components/live/shared.tsx');
+// The thread is drawn by ONE component for both halves since 1 October 2026
+// (components/talk/ChatView.tsx), with its time rules in lib/talk/thread.ts.
+const src = read('components/talk/ChatView.tsx') + '\n' + read('lib/talk/thread.ts');
 /** Comments blanked, so prose describing a rule is never mistaken for the rule.
  *  The same lesson tests/live-conversation-mobile.mjs states at the top of its
  *  own file -- and then failed to apply to one of its own assertions, which is
@@ -57,10 +59,15 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
   ok(/const startsRun =/.test(code) && /const endsRun =/.test(code),
      'the thread knows where somebody starts and stops talking');
 
-  ok(/\{startsRun && \(mine \? myName : theirName\)/.test(code),
-     'the name is on the first message of a run, not on all four');
+  // THE NAME IS SAID ONCE PER RUN, AND ONLY TO A SCREEN READER. In a
+  // conversation between two people the side a bubble sits on says who is
+  // speaking, and the header names the other person (owner's choice, 1 October
+  // 2026). A screen reader cannot see sides, so it is told at the start of
+  // each run -- never on all four messages.
+  ok(/\{startsRun && <span className="sr-only">\{mine \? 'You:'/.test(code),
+     'the speaker is said on the first message of a run, not on all four');
 
-  ok(/\{endsRun && \(/.test(code),
+  ok(/endsRun \? clockTime\(entry\.at\)/.test(code),
      'and the time is on the last, where the run actually ended');
 
   // THE GAP MATTERS AS WELL AS THE SPEAKER. Two messages from one person three
@@ -74,7 +81,7 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
   // same mistake as the one that pinned a chip's spelling instead of its
   // behaviour, and it is the third time in two days. So the comparison itself
   // is what gets asserted.
-  ok(/runsOn\s*=[\s\S]{0,400}getTime\(\)[\s\S]{0,120}SAME_BREATH_MS/.test(code),
+  ok(/function runsOn[\s\S]{0,400}getTime\(\)[\s\S]{0,120}SAME_BREATH_MS/.test(code),
      'a long gap breaks a run even when the same person is talking');
 
   // A NEW DAY ALWAYS BREAKS A RUN. 23:59 and 00:02 are four minutes apart and
@@ -123,7 +130,7 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
   // is what gets asserted; further `&&` conditions may only take the note away
   // sooner. The alternation stays spelled out, so a condition joined with `||`
   // -- which could put the note back without the paperclip -- still fails.
-  ok(/\{onAttach && (?:[A-Za-z][\w.]* && )*\(attaching \|\| files\.length > 0\) && \(/.test(code),
+  ok(/\{onAttach && (?:[A-Za-z][\w.]* && )*(?:attaching|\(attaching \|\| files\.length > 0\)) && \(/.test(code),
      'the photo guidance waits until somebody reaches for the paperclip');
 
   ok(/setAttaching\(true\)/.test(code),
@@ -150,8 +157,38 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
      'the promise is still there');
   ok(!/hidden sm:block[^>]*>\s*Only the two people/.test(src),
      'and is not hidden on a phone, which is where it matters most');
-  ok(/<h2 className="text-\[13px\] font-extrabold leading-tight text-navy sm:text-base">/.test(code),
+  // In rem since 1 October 2026, so it follows the Text size setting (13px at normal).
+  ok(/<h2 className="text-\[0\.722rem\] font-extrabold leading-tight text-navy sm:text-base">/.test(code),
      'it is made smaller on a narrow screen rather than removed from it');
+}
+
+// ---- Readable by everybody who uses it (design review, 1 October 2026) ------
+//
+// The chat set its sizes in pixels, so Settings -> Text size, which scales the
+// rem every other screen uses, left the messages exactly as small as they were.
+// And its smallest print -- the time, "Seen", the empty line -- was 11px at
+// about 4:1, or paler. These hold the fixes: sizes in rem, nothing read below
+// 13px at normal size, the secondary text dark enough for AA, the controls
+// people tap given 44px to land in, and the message field never under 16px,
+// which is what makes an iPhone zoom the page when it is tapped.
+{
+  const talk = ['ChatView', 'ChatAttachment', 'Composer', 'MessageMenu']
+    .map((n) => [n, read(`components/talk/${n}.tsx`)]);
+  const px = talk.flatMap(([n, t]) => [...t.matchAll(/text-\[([0-9.]+)px\]/g)].map((m) => `${n}: ${m[0]}`));
+  ok(px.length === 0, px.length ? `font sizes still in pixels: ${px.join(', ')}` : 'every chat font size is in rem, so Text size reaches it');
+  const tiny = talk.flatMap(([n, t]) => [...t.matchAll(/text-\[([0-9.]+)rem\]/g)]
+    .filter((m) => Number(m[1]) < 0.72).map((m) => `${n}: ${m[0]}`));
+  ok(tiny.length === 0, tiny.length ? `below 13px: ${tiny.join(', ')}` : 'and nothing is smaller than 13px at normal size');
+  const composer = talk.find(([n]) => n === 'Composer')[1];
+  ok(/text-\[length:max\(16px,/.test(composer), 'the message field never drops under 16px');
+  const faint = talk.filter(([n]) => n !== 'Composer')
+    .flatMap(([n, t]) => [...t.matchAll(/text-(?:slate|gray)-(?:300|400)\b/g)].map((m) => `${n}: ${m[0]}`));
+  ok(faint.length === 0, faint.length ? `text too pale to read: ${faint.join(', ')}` : 'no chat text is slate-400 or paler');
+  ok(/text-\[#9A5A1C\]/.test(src) && !/text-\[#C2762B\]/.test(src), 'their name on a quoted reply is a dark enough amber (5.2:1)');
+  ok(/chat-more grid h-11 min-h-0 w-11/.test(src), 'the ⋯ button is 44px');
+  ok(/before:-inset-y-2\.5/.test(src) && /data-reactions/.test(src), 'the reaction pill has a 44px hit area round it');
+  ok(/type="range"[\s\S]{0,400}className="block h-11 w-full/.test(talk.find(([n]) => n === 'ChatAttachment')[1]),
+     'and the voice message\'s position bar is 44px tall to grab');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

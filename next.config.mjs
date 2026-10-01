@@ -136,7 +136,12 @@ const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  // THE MICROPHONE FOR THIS SITE ONLY, for voice messages (1 October 2026,
+  // lib/talk/voice.ts). `(self)`, not `*`: no embedded frame -- the YouTube and
+  // Facebook players frame-src allows -- can ask for it. It is requested on the
+  // tap that starts a recording and released when it stops. Camera and
+  // location stay off: nothing in the app uses them.
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
   ...(indexable ? [] : [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }]),
 ];
 

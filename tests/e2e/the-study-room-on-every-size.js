@@ -117,7 +117,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     await page.waitForTimeout(300);
     await page.keyboard.type('Nagbasa ako ngayon.');
     await page.waitForTimeout(600);
-    const written = (await page.locator('editor-host').innerText()).replace(/​/g, '');
+    const written = (await page.locator('editor-host').innerText()).replace(/\u200B/g, '');
     ok(/Nagbasa ako ngayon\./.test(written), `${at}: what was typed is on the page`);
 
     // 6. A LONG NAME IS READ IN FULL. The title was a one-line input and a

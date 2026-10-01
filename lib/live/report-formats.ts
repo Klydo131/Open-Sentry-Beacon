@@ -129,7 +129,7 @@ function documentHtml(r: Report, opts: { plain?: boolean } = {}): string {
 
 export function downloadCsv(r: Report) {
   downloadBlob(
-    new Blob(['﻿' + reportToCsv(r)], { type: 'text/csv;charset=utf-8' }),
+    new Blob(['\uFEFF' + reportToCsv(r)], { type: 'text/csv;charset=utf-8' }),
     fileName(r, 'csv'),
   );
 }
@@ -143,7 +143,7 @@ export function downloadCsv(r: Report) {
  */
 export function downloadSheet(r: Report) {
   downloadBlob(
-    new Blob(['﻿' + documentHtml(r, { plain: true })], {
+    new Blob(['\uFEFF' + documentHtml(r, { plain: true })], {
       type: 'application/vnd.ms-excel;charset=utf-8',
     }),
     fileName(r, 'xls'),
@@ -152,7 +152,7 @@ export function downloadSheet(r: Report) {
 
 export function downloadDoc(r: Report) {
   downloadBlob(
-    new Blob(['﻿' + documentHtml(r)], {
+    new Blob(['\uFEFF' + documentHtml(r)], {
       type: 'application/msword;charset=utf-8',
     }),
     fileName(r, 'doc'),

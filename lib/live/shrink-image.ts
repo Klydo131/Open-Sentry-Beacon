@@ -35,7 +35,7 @@
 // 25 September 2026 and at first did not, which would have kept the location
 // in exactly the photos most likely to be passed around.
 
-import { HEAD_BYTES, jpegCarriesLocation, withoutJpegMetadata } from '@/lib/live/photo-location';
+import { HEAD_BYTES, jpegCarriesLocation, pngWithoutMetadata, webpWithoutMetadata, withoutJpegMetadata } from '@/lib/live/photo-location';
 import { isDrawingName, onlyTheDrawing } from '@/lib/drawing-file';
 
 /** Longest edge, in pixels. */
@@ -77,6 +77,26 @@ async function withoutLocation(file: File): Promise<File> {
 }
 
 /**
+ * A PNG or WebP with its metadata cut out at the byte level, or the original.
+ * Every PNG and WebP goes through this, whatever its size: the ones too small
+ * to be re-drawn below would otherwise keep whatever location they carry.
+ * Found by the security review of 1 October 2026.
+ */
+async function withoutChunkMetadata(file: File): Promise<File> {
+  const png = /^image\/png$/i.test(file.type ?? '');
+  const webp = /^image\/webp$/i.test(file.type ?? '');
+  if (!png && !webp) return file;
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const clean = png ? pngWithoutMetadata(bytes) : webpWithoutMetadata(bytes);
+    if (!clean || clean.length === bytes.length) return file;
+    return new File([new Uint8Array(clean)], file.name, { type: file.type, lastModified: file.lastModified });
+  } catch {
+    return file;
+  }
+}
+
+/**
  * A smaller version of a photo, or the original when that is the better answer
  * -- except that a photo which says where it was taken never goes out saying so.
  *
@@ -100,6 +120,10 @@ export async function shrinkImage(file: File): Promise<File> {
       // Not a whole PNG after all: treated like any other picture below.
     }
   }
+
+  // PNG AND WEBP LOSE THEIR METADATA FIRST, whatever their size; a big one is
+  // then re-drawn below as well, which drops anything left.
+  file = await withoutChunkMetadata(file);
 
   // ASKED OF EVERY JPEG, WHATEVER ITS SIZE. The size rule below decides what is
   // worth shrinking; it was also, until 25 September 2026, deciding which

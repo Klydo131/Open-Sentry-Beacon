@@ -99,6 +99,14 @@ fi
 psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/fresh-install-holds.sql"
 
+# THE CONVERSATION'S RULES, EXERCISED AS PEOPLE rather than read from the
+# catalogue: replies stay in their conversation, reactions are the two people's
+# alone, a suspended account and a signed-out visitor get nothing. As the
+# superuser, because it plants invented sign-ins in auth.users; inside one
+# transaction that is rolled back, so the fingerprint below is unaffected.
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-conversation-can-reply-react-and-speak.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

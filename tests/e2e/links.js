@@ -29,8 +29,10 @@ async function send(page, text) {
 
 /** Every anchor in the message thread, with what it points at. */
 const anchors = (page) => page.evaluate(() => {
-  const scroller = document.querySelector('[data-quest="chat-send"]')?.closest('div')?.parentElement;
-  const root = scroller || document.body;
+  // The whole conversation card. It used to be "the composer's grandparent",
+  // which stopped being the thread when the composer gained its own wrapper
+  // (1 October 2026) and then found no links at all.
+  const root = document.querySelector('[data-live-conversation]') || document.body;
   return [...root.querySelectorAll('a[href]')]
     .filter((a) => !a.closest('nav') && !a.closest('header'))
     .map((a) => ({ href: a.getAttribute('href'), rel: a.getAttribute('rel'), target: a.getAttribute('target'), text: a.textContent }));

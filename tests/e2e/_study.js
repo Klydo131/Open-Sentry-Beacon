@@ -77,7 +77,7 @@ async function backToShelf(page) {
 
 /** What the open editor currently holds, with the zero-width marks taken out. */
 async function writtenOnPage(page) {
-  return (await page.locator('editor-host').innerText()).replace(/​/g, '');
+  return (await page.locator('editor-host').innerText()).replace(/\u200B/g, '');
 }
 
 module.exports = {

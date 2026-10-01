@@ -17,7 +17,7 @@
 //   node tests/photos-lose-their-location.mjs
 // ---------------------------------------------------------------------------
 import { readFileSync } from 'node:fs';
-import { jpegCarriesLocation, withoutJpegMetadata } from '../lib/live/photo-location.ts';
+import { jpegCarriesLocation, pngWithoutMetadata, webpWithoutMetadata, withoutJpegMetadata } from '../lib/live/photo-location.ts';
 
 let bad = 0;
 const ok = (cond, msg) => {
@@ -115,6 +115,51 @@ ok(!jpegCarriesLocation(new Uint8Array([])), 'an empty file');
 }
 
 // ---------------------------------------------------------------------------
+// 4b. PNG AND WEBP (security review, 1 October 2026)
+// ---------------------------------------------------------------------------
+// A small PNG or WebP is not re-drawn, so its metadata used to go out with it.
+{
+  const be32 = (n) => [(n >>> 24) & 0xff, (n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+  const le32 = (n) => [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >>> 24) & 0xff];
+  const chunk = (type, data) => [...be32(data.length), ...ascii(type), ...data, 0, 0, 0, 0];
+  const gps = ascii('Exif GPSLatitude 14.42 GPSLongitude 120.94');
+  const png = new Uint8Array([
+    137, 80, 78, 71, 13, 10, 26, 10,
+    ...chunk('IHDR', new Array(13).fill(1)),
+    ...chunk('eXIf', gps),
+    ...chunk('iTXt', ascii('XML:com.adobe.xmp <exif:GPSLatitude>14.42</exif:GPSLatitude>')),
+    ...chunk('tEXt', ascii('Comment taken at home')),
+    ...chunk('sRGB', [0]),
+    ...chunk('IDAT', [9, 9, 9, 9]),
+    ...chunk('IEND', []),
+  ]);
+  const cleanPng = pngWithoutMetadata(png);
+  const text = (b) => String.fromCharCode(...b);
+  ok(cleanPng && !/eXIf|iTXt|tEXt|GPS|home/.test(text(cleanPng)), 'a PNG loses its EXIF, XMP and text chunks');
+  ok(cleanPng && /IHDR[\s\S]*sRGB[\s\S]*IDAT[\s\S]*IEND/.test(text(cleanPng)) && cleanPng.length === 8 + 25 + 13 + 16 + 12,
+    'and keeps the picture and its colour, in order, byte for byte');
+  ok(pngWithoutMetadata(png.subarray(0, 40)) === null, 'a cut-off PNG is not guessed at');
+  ok(pngWithoutMetadata(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9])) === null, 'and a file that is not a PNG is left alone');
+
+  const riff = (type, data) => [...ascii(type), ...le32(data.length), ...data, ...(data.length % 2 ? [0] : [])];
+  const body = [
+    ...ascii('WEBP'),
+    ...riff('VP8X', [0x0c | 0x10, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    ...riff('VP8 ', [7, 7, 7, 7, 7]),
+    ...riff('EXIF', gps),
+    ...riff('XMP ', ascii('<exif:GPSLongitude>120.94</exif:GPSLongitude>')),
+  ];
+  const webp = new Uint8Array([...ascii('RIFF'), ...le32(body.length), ...body]);
+  const cleanWebp = webpWithoutMetadata(webp);
+  const flags = cleanWebp ? cleanWebp[12 + 8] : -1;
+  ok(cleanWebp && !/EXIF|XMP |GPS/.test(text(cleanWebp)), 'a WebP loses its EXIF and XMP chunks');
+  ok(flags === 0x10, `its header no longer says it has them, and keeps the rest (flags ${flags})`);
+  ok(cleanWebp && (cleanWebp[4] | (cleanWebp[5] << 8)) === cleanWebp.length - 8 && /VP8 /.test(text(cleanWebp)),
+    'and its length is rewritten around the picture, which is kept');
+  ok(webpWithoutMetadata(new Uint8Array(ascii('RIFF....WAVEfmt '))) === null, 'a file that is not a WebP is left alone');
+}
+
+// ---------------------------------------------------------------------------
 // 5. EVERY PHOTO GOES THROUGH IT
 // ---------------------------------------------------------------------------
 {
@@ -128,6 +173,9 @@ ok(!jpegCarriesLocation(new Uint8Array([])), 'an empty file');
   ok(/jpegCarriesLocation\(new Uint8Array\(await file\.slice\(0, HEAD_BYTES\)\.arrayBuffer\(\)\)\)/.test(shrink),
     'reading only the front of the file, where a JPEG keeps its metadata');
   ok(/withoutJpegMetadata\(/.test(shrink), 'and cuts the metadata out itself when a canvas cannot help');
+  const pngWebp = body.indexOf('file = await withoutChunkMetadata(file);');
+  ok(pngWebp !== -1 && pngWebp < body.indexOf('if (!isShrinkable(file) && !located) return file;'),
+    'and every PNG and WebP loses its metadata before the size rule too');
 
   // Every function in the data layer that uploads a file, found by its
   // `.upload(` call rather than listed by hand, so a sixth one cannot arrive

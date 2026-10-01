@@ -32,7 +32,7 @@ export const ATTACHMENT_ACCEPT = [
   'application/vnd.oasis.opendocument.presentation', '.odp',
   'application/rtf', 'text/rtf', '.rtf',
   // Voice notes.
-  'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav',
+  'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/webm',
   '.mp3', '.m4a', '.ogg', '.wav',
   // Text.
   'text/plain', '.txt', 'text/csv', '.csv',

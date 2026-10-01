@@ -10,7 +10,8 @@ const liveLibrary = read('components/LiveLibrary.tsx');
 const prayer = read('components/LivePrayer.tsx');
 const meetings = read('components/LiveMeetings.tsx');
 const studies = read('components/LiveStudies.tsx');
-const conversation = read('components/live/shared.tsx');
+// Drawn by components/talk/ChatView.tsx and its Composer for both halves.
+const conversation = read('components/talk/ChatView.tsx') + '\n' + read('components/talk/Composer.tsx');
 
 let failed = 0;
 const ok = (condition, label) => {

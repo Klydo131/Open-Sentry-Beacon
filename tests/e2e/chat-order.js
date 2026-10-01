@@ -83,7 +83,10 @@ async function openFirstSeekerRoom(page) {
   await send('THIRD message');
   await attach('fourth-file.png');
 
-  const entries = await page.locator('[data-chat-entry]').allInnerTexts();
+  // Each entry's words AND its labels: a picture shows as the picture, and its
+  // name is only in "Open the picture <name>" (1 October 2026).
+  const entries = await page.locator('[data-chat-entry]').evaluateAll((nodes) => nodes.map((n) =>
+    [n.innerText, ...[...n.querySelectorAll('[aria-label]')].map((e) => e.getAttribute('aria-label'))].join('\n')));
   const text = entries.join('\n');
   console.log('\n--- rendered order ---');
   entries.forEach((e, i) => console.log(`${i + 1}. ${e.split('\n')[0]}`));

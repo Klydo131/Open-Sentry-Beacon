@@ -50,7 +50,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.waitForSelector('affine-paragraph', { timeout: 60_000 });
   await page.waitForTimeout(1500);
 
-  const written = (await page.locator('editor-host').innerText()).replace(/​/g, '');
+  const written = (await page.locator('editor-host').innerText()).replace(/\u200B/g, '');
   for (const named of ['Journal', 'Whiteboard', 'tag', 'Bin']) {
     ok(new RegExp(named, 'i').test(written), `it tells somebody about ${named}`);
   }

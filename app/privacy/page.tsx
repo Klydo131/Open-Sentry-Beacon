@@ -193,6 +193,12 @@ export default function PrivacyPage() {
               file. Deleting the resource deletes the file.</li>
             <li><strong>A handout on a study</strong> can be opened by anybody who can read
               that study.</li>
+            <li><strong>A voice message</strong> is a recording kept like a photo in the
+              conversation: only the two of you can play it, and it goes when either of you
+              removes it. The app asks to use your microphone only when you tap to record,
+              and lets go of it when you stop. Recordings are at most two minutes.</li>
+            <li><strong>A reaction</strong> to a message (🙏, a heart and four others) is
+              seen by the two of you, like the conversation itself.</li>
             <li><strong>Each file can be up to 10 MB</strong>, and each person can keep up
               to 300 files or 200 MB of resources and handouts. Video is not kept; share a
               link to it instead.</li>

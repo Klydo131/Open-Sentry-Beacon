@@ -169,6 +169,28 @@ export function safeHref(candidate: string): string | null {
 }
 
 /**
+ * The words a link is shown with: what was written, except a host written in
+ * letters outside plain ASCII, which is shown the way the browser will reach
+ * it.
+ *
+ * FOUND BY THE SECURITY REVIEW OF 1 OCTOBER 2026. `https://\u0430pple.com`,
+ * with a Cyrillic \u0430, looks exactly like the real name on screen and opens
+ * somewhere else entirely. The address the tap opens is `xn--pple-43d.com`,
+ * so that is what the reader is shown. A genuine name with an accent in it
+ * shows in the same form; it is less pretty, and it is honest about where the
+ * link goes, which is what the underline promises.
+ */
+function shownLabel(written: string, href: string): string {
+  const host = /^(?:https?:\/\/)?([^/?#:]+)/i.exec(written)?.[1] ?? '';
+  if (!/[^\u0000-\u007f]/.test(host)) return written;
+  try {
+    return written.replace(host, new URL(href).hostname);
+  } catch {
+    return href;
+  }
+}
+
+/**
  * Split text into plain strings and anchors.
  *
  * Exported for the tests, which check the pieces rather than a rendered blob.
@@ -211,7 +233,7 @@ export function linkifyParts(text: string): Array<string | { href: string; label
 
     if (href) {
       if (match.index > cursor) parts.push(text.slice(cursor, match.index));
-      parts.push({ href, label: url });
+      parts.push({ href, label: shownLabel(url, href) });
       if (tail) parts.push(tail);
       cursor = match.index + match[0].length;
     }

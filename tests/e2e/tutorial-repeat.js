@@ -63,7 +63,7 @@ const settle=async(p,ms=6000)=>{
     const c=page.getByRole('button',{name:/I understand|Continue|Got it/i});
     if(await c.count()){await c.first().click().catch(()=>{});await page.waitForTimeout(600);}
     const seq=[]; let last='',rep=0;
-    for(let i=0;i<12;i++){
+    for(let i=0;i<16;i++){ // 16, not 12: the walk gained a react step on 1 October 2026
       const st=await settle(page);
       if(st.none){seq.push('GONE');break;}
       if(st.hasFinish){seq.push('FINISH');await page.getByRole('button',{name:/Finish/i}).first().click();await page.waitForTimeout(1200);break;}

@@ -134,10 +134,15 @@ export function useTalkDock() {
     return () => window.removeEventListener(TALK_CLOSE_EVENT, onClose);
   }, [open, close]);
 
-  // Escape closes it, as it closes every other layer in the app.
+  // Escape closes it, as it closes every other layer in the app -- unless
+  // something inside it has already answered that Escape (the emoji list, a
+  // reply being written, a message's menu, a picture full screen). One press
+  // puts away one thing.
   useEffect(() => {
     if (!open) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') close(); };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) close();
+    };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [open, close]);

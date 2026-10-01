@@ -82,7 +82,7 @@ const strip = (src) => src
      || /location your camera recorded/.test(notice.replace(/\s+/g, ' ')),
      'and the notice tells people it happens');
 
-  const composer = strip(readFileSync('components/live/shared.tsx', 'utf8'));
+  const composer = strip(readFileSync('components/talk/ChatView.tsx', 'utf8'));
   ok(/location your camera recorded is removed/.test(composer.replace(/\s+/g, ' ')),
      'as does the composer, where the decision is actually made');
 }

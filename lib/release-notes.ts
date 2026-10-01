@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-01-a-better-chat',
+    date: '2026-10-01',
+    title: 'A friendlier chat: reactions, replies and voice messages',
+    items: [
+      'Tap any message to react with 🙏 or a heart, to reply to that one message, to copy it, or to change or delete your own. You can also hold it, or swipe it to the right to reply.',
+      'With nothing typed, the round button records a voice message: tap to start, then send it or delete it. Up to two minutes. The app only uses your microphone while you are recording.',
+      'Photos open full screen inside the app, the time sits inside each message, and a button takes you back to the newest message when you have scrolled up.',
+      'The tutorial shows you how, and moves along when you have done it.',
+    ],
+  },
+  {
     id: '2026-10-01-smoother-motion',
     date: '2026-10-01',
     title: 'Smoother, calmer movement',

@@ -24,7 +24,9 @@
 import { readFileSync } from 'node:fs';
 
 const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
-const conversation = read('components/live/shared.tsx');
+// The conversation both halves draw (components/talk/ChatView.tsx) and its
+// composer, since 1 October 2026. components/live/shared.tsx feeds it.
+const conversation = read('components/talk/ChatView.tsx') + '\n' + read('components/talk/Composer.tsx');
 const ui = read('components/ui.tsx');
 const css = read('app/globals.css');
 const guide = read('components/live/GuidePages.tsx');
@@ -89,9 +91,12 @@ ok(!/min-h-48|sm:min-h-72/.test(code),
 // in the file.
 ok(/data-live-thread[\s\S]{0,700}overflow-y-auto/.test(code),
    'message history still scrolls inside its own thread');
-ok(/data-live-composer[\s\S]{0,500}safe-area-inset-bottom/.test(conversation),
+// The bar around the form carries the padding, on the same element as its
+// marker, so the class cannot drift onto something else.
+ok(/className="[^"]*pb-\[calc\(0\.5rem\+env\(safe-area-inset-bottom,0px\)\)\][^"]*"\s*data-chat-composer/.test(conversation)
+   && /data-chat-composer[\s\S]{0,8000}data-live-composer/.test(conversation),
    'the composer still clears an installed phone’s home indicator');
-ok(/<Card className="overflow-hidden" data-live-conversation>/.test(conversation),
+ok(/<Card className="relative overflow-hidden" data-live-conversation>/.test(conversation),
    'and the conversation card still carries the attribute all of this hangs on');
 
 // Both roles must use this shared implementation. A one-off phone fix in either

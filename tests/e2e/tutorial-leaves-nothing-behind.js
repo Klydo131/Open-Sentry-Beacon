@@ -86,7 +86,7 @@ const readDemo = (page) => page.evaluate(() => ({
   // ---- Finish it ----------------------------------------------------------
   await page.evaluate(() => localStorage.setItem(
     'beacon-quest-v1-dm',
-    JSON.stringify({ completed: ['open', 'message', 'advance', 'share', 'profile', 'done'] }),
+    JSON.stringify({ completed: ['open', 'message', 'react', 'advance', 'share', 'profile', 'done'] }),
   ));
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
