@@ -391,7 +391,7 @@ Read those together and the practical rule is short:
 
 | What you are doing | What you owe |
 |---|---|
-| Running this repo unmodified for your church | **Nothing.** Section 13 speaks to modified versions. |
+| Running this repo unmodified for your church | **Nothing.** Section 13 speaks to modified versions. Renaming the app in `lib/brand.ts` *is* a modification, so it puts you on the next line |
 | Changing it, running it for your congregation | Offer your congregation your source |
 | Changing it, hosting it for other churches | Offer those churches your source |
 | Selling hosting, support or setup | Nothing extra. Charging money is fine, AGPL is not "non-commercial" |
@@ -400,10 +400,16 @@ Read those together and the practical rule is short:
 ### How this repo satisfies section 13, and how to copy it
 
 The app carries a **"view and contribute on GitHub"** link on its front door and
-in **Settings → About**. If you deploy a modified version, change that link to
-point at *your* source, not this one. That one edit is the whole obligation for
-most deployments, and leaving it pointing here while your version differs is the
-one way an honest church accidentally breaches the licence.
+in **Settings → About**. Both read one setting, `SOURCE_URL` in `lib/brand.ts`.
+If you deploy a modified version, point it at *your* source, not this one. That
+one edit is the whole obligation for most deployments, and leaving it pointing
+here while your version differs is the one way an honest church accidentally
+breaches the licence.
+
+Settings → About also links **"Code from other projects"**: the licence of every
+open-source package the app is built from, written at each build by
+`scripts/third-party-notices.mjs`. Most of those licences ask that their notice
+go with every copy, and a browser that opens the app receives one.
 
 ### If your organisation cannot accept AGPL
 

@@ -22,7 +22,11 @@ Part 8 is doing on their behalf.
 
 **Cost: all four services have a free tier**, and a single church is normally
 well inside them. None of them asks for a card to begin. Limits change, so check
-each provider's own pricing page before you commit.
+each provider's own pricing page before you commit. One condition worth knowing
+now: **Vercel's free (Hobby) tier is for non-commercial, personal use**. A church
+running the app for its own members is the usual case; a business hosting it
+for churches, or charging for it, needs Vercel's paid tier or another host
+(`docs/DEPLOY-ANYWHERE.md`).
 
 **Total time: about an hour**, most of it waiting for things to start.
 
@@ -447,11 +451,19 @@ When two people arrange to meet in person, the place box suggests places as
 they type -- "jollibee imus" shows each branch with its street and barangay --
 and tapping one pins that exact spot. It uses Photon, a free place search over
 OpenStreetMap run by komoot; there is no account to make and nothing to pay.
+komoot offers it free **for fair use**: one church typing a meet-up place now
+and then is exactly that; a company hosting many churches on it is not.
 
 1. Deploy it: `npx supabase functions deploy places --project-ref YOUR_PROJECT_REF`
 2. *(Optional)* In **Edge Functions → Secrets**, add `PLACES_NEAR` with a point
    near your church, as `latitude,longitude` (for example `14.4,120.9`), so
    nearby places come first for people who have not pinned a place yet.
+3. *(Recommended)* Add `PLACES_USER_AGENT` with your app's name and a contact
+   address, for example `Grace Chapel app (admin@yourchurch.org)`. Photon asks
+   callers to say who they are. Without it every copy of this app sends the same
+   name, and one heavy user could get that name blocked for all of them.
+4. *(Only for heavy use)* If you host many churches, run your own Photon and put
+   its `https://` address in `PLACES_PHOTON_URL`.
 
 Only the words typed and a town-level point leave your server; the privacy
 notice already says so. Without this step the place box is an ordinary box:

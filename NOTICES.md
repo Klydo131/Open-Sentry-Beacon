@@ -1,8 +1,15 @@
 # Notices
 
 Third-party code and content in Open Sentry Beacon, and the terms it is used
-under. Open Sentry Beacon itself is licensed under the AGPL-3.0 — see
+under. Open Sentry Beacon itself is licensed under the AGPL-3.0-only — see
 [LICENSE](LICENSE).
+
+**The complete list ships with the app.** Every open-source package the app is
+built from, with its licence text, is written at each build by
+`scripts/third-party-notices.mjs` and linked from Settings → About as "Code from
+other projects". The drawing board's fonts carry theirs beside them, in
+`/excalidraw/fonts/LICENSES.txt`. `tests/dependency-licences.mjs` fails the
+build if a dependency arrives under a licence nobody here has read.
 
 ---
 
@@ -41,13 +48,46 @@ that already lives in `lib/localMedia.ts`.
 
 ## Fonts
 
-Inter and JetBrains Mono are used under the SIL Open Font License 1.1.
+The app itself loads no web fonts: it uses each device's own system fonts.
+
+The drawing board (Excalidraw) draws with its own fonts, which are copied out
+of the `@excalidraw/excalidraw` package and served by the app
+(`scripts/excalidraw-assets.mjs`): Excalifont, Virgil, Assistant, Nunito and
+Lilita One under the SIL Open Font License 1.1, Cascadia Code under Microsoft's
+licence based on it, and Comic Shanns under MIT. Each one's copyright and
+licence, read out of the font files themselves, is in
+`/excalidraw/fonts/LICENSES.txt`.
+
+Two are not served. Xiaolai, for its size. And Liberation Sans 1.05, whose
+licence is Red Hat's agreement for the 1.x Liberation fonts (GPL-2.0 with a
+font exception), not the Open Font License of later versions; the drawing
+board's old "Helvetica" style uses the device's own sans-serif instead.
+
+---
+
+## BlockSuite — the study room's editor
+
+`components/study/StudyRoomEditor.tsx` assembles BlockSuite's editor following
+the BlockSuite project's own playground (MIT, <https://github.com/toeverything/blocksuite>).
+Its theme package, `@toeverything/theme`, is under the Mozilla Public License
+2.0; it is used unmodified, and its source is at
+<https://github.com/toeverything/design>.
 
 ---
 
 ## Everything else
 
-The remaining dependencies are listed in `package.json` with their own licences,
-all permissive (MIT, ISC, Apache-2.0, BSD). Permissive terms are compatible with
-the AGPL-3.0 in this direction: a permissively licensed library can be included
-in a copyleft work, and each keeps its own notice.
+The remaining dependencies are listed in `package.json`. Almost all are
+permissive (MIT, ISC, Apache-2.0, BSD and a few others), which is compatible
+with the AGPL-3.0 in this direction: a permissively licensed library can be
+included in a copyleft work, and each keeps its own notice. Three are not
+permissive, and each is accounted for:
+
+- `@toeverything/theme`, MPL-2.0 (above).
+- `dompurify` offers MPL-2.0 or Apache-2.0; it is used under Apache-2.0.
+- `@img/sharp-libvips-*`, LGPL-3.0-or-later: the image library under Next.js's
+  image optimiser. It runs on the server, is never sent to anybody's browser,
+  and is linked dynamically as the LGPL asks.
+
+`caniuse-lite` (CC-BY-4.0) is browser-support data read while building; it is
+not part of the app.

@@ -97,7 +97,10 @@ const source = ['app', 'components', 'lib'].flatMap((d) => walk(d));
   ok(/node scripts\/excalidraw-assets\.mjs/.test(pkg.scripts.predev ?? ''), 'and so does every dev server');
   ok(/^\/public\/excalidraw\/$/m.test(read('.gitignore')), 'and the copies are not kept in git: the package is the source');
   const script = read('scripts/excalidraw-assets.mjs');
-  ok(/SKIPPED = \['Xiaolai'\]/.test(script), 'the thirteen-megabyte CJK face is left out');
+  ok(/SKIPPED = \['Xiaolai', 'Liberation'\]/.test(script),
+     'the thirteen-megabyte CJK face is left out, and so is Liberation Sans 1.05, whose licence we do not ship');
+  ok(/woff2Names\(/.test(script) && /'LICENSES\.txt'/.test(script) && /is not served/.test(script),
+     'every font served goes with its licence, read from the font itself, or is not served');
   const config = read('next.config.mjs');
   ok(/"font-src 'self' data:"/.test(config) && !/esm\.sh|unpkg/.test(config),
     "the Content-Security-Policy still allows fonts from 'self' only");

@@ -28,14 +28,19 @@ const MATERIAL_ICON: Record<string, string> = {
   link: '🔗',
 };
 
+// THE KING JAMES WORDING, which is in the public domain. The first list mixed
+// in the NIV, NKJV and ESV word for word, without naming them, and each of
+// those is under copyright; a single verse is within their free-use allowance
+// only with the translation credited. Checked against a KJV text on
+// 1 October 2026 (licence audit).
 const VERSES = [
-  ['“Come to me, all who are weary… and I will give you rest.”', 'Matthew 11:28'],
-  ['“Your word is a lamp to my feet and a light to my path.”', 'Psalm 119:105'],
-  ['“Be still, and know that I am God.”', 'Psalm 46:10'],
-  ['“I can do all things through Christ who strengthens me.”', 'Philippians 4:13'],
-  ['“The Lord is my shepherd; I shall not want.”', 'Psalm 23:1'],
-  ['“Cast all your anxiety on him because he cares for you.”', '1 Peter 5:7'],
-  ['“Trust in the Lord with all your heart.”', 'Proverbs 3:5'],
+  ['“Come unto me, all ye that labour and are heavy laden, and I will give you rest.”', 'Matthew 11:28, KJV'],
+  ['“Thy word is a lamp unto my feet, and a light unto my path.”', 'Psalm 119:105, KJV'],
+  ['“Be still, and know that I am God.”', 'Psalm 46:10, KJV'],
+  ['“I can do all things through Christ which strengtheneth me.”', 'Philippians 4:13, KJV'],
+  ['“The LORD is my shepherd; I shall not want.”', 'Psalm 23:1, KJV'],
+  ['“Casting all your care upon him; for he careth for you.”', '1 Peter 5:7, KJV'],
+  ['“Trust in the LORD with all thine heart.”', 'Proverbs 3:5, KJV'],
 ];
 
 // The seeker's home: a warm, quiet room to study the Word, keep their own study

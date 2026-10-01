@@ -86,6 +86,16 @@ export const APP_DESCRIPTION =
   'Walking with Jesus, one step at a time. And never on your own. ' +
   'Someone from your church walks it with you.';
 
+/**
+ * Where this app's source code is. The licence (AGPL-3.0-only, section 13)
+ * requires a modified copy run for other people to offer THEM its source, so a
+ * church that changes anything -- renaming the app above included -- points
+ * this at its own repository. One place: Settings and the front page both read
+ * it (components/SourceCard.tsx, components/live/DoorPages.tsx), and the
+ * third-party notices name it too.
+ */
+export const SOURCE_URL = 'https://github.com/Klydo131/Open-Sentry-Beacon';
+
 /** The two ends of the logo gradient, left to right. */
 export const BRAND_FROM = '#2F80ED';
 export const BRAND_TO = '#3EB489';

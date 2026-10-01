@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { NAVY, roleNoun, APP_SHORT_NAME } from '@/lib/brand';
+import { NAVY, roleNoun, APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
 import { homeFor, useLiveSession } from '@/lib/live/session';
 import * as live from '@/lib/live/data';
 import { clearBrowserSession, saveBrowserSession, supabaseAuth } from '@/lib/supabase/client';
@@ -141,7 +141,7 @@ export function LiveHomePage() {
         </div>
 
         <a
-          href="https://github.com/Klydo131/Open-Sentry-Beacon"
+          href={SOURCE_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-9 text-sm text-white/65 underline underline-offset-4"

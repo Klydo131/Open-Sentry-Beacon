@@ -109,6 +109,14 @@ than assumed**.
   kilometres -- sent from the church's server, so not the member's name,
   account or internet address. Nothing is stored on the church's side.
   `supabase/functions/places/`.
+- **Google (YouTube) and Meta (Facebook)**, only when a member taps Play on a
+  video somebody shared from one of them. The player is not loaded until that
+  tap (`components/MediaPlayer.tsx`), and YouTube is embedded in its
+  privacy-enhanced mode. From the tap on, that company sees the member's
+  browser play the video, as on its own site. Named in the privacy notice on
+  1 October 2026, after the licence audit found it missing. These two are
+  separate controllers rather than processors: the member is using their
+  service, not the church's.
 
 Each of those is a processor, and RA 10173 §21 expects a contract with each one
 holding them to the same standard. Their standard terms may already do it; **it

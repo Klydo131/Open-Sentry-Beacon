@@ -68,6 +68,8 @@ supabase/.temp/
 # The drawing board's fonts, copied from node_modules before every build by
 # scripts/excalidraw-assets.mjs. Generated, and the package is the source.
 /public/excalidraw/
+# scripts/third-party-notices.mjs. Written at every build from what is installed.
+/public/third-party-notices.txt
 
 # A developer's own Claude Code settings: which plugins they turned on or off for
 # this project. Personal, and never shared (docs/DEVELOPER-TOOLKIT.md).

@@ -116,6 +116,8 @@ export default function PrivacyPage() {
 
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Where it is kept, and for how long</h2>
+          {/* A CHURCH RUNNING ITS OWN COPY: the providers and the region below are
+              this deployment's. Replace them with yours (docs/DEPLOY-ANYWHERE.md). */}
           <p className="mt-2 text-gray-700">
             The database and files are hosted by Supabase in <strong>Seoul, South
             Korea</strong>, so information about you leaves the Philippines. That is
@@ -131,6 +133,14 @@ export default function PrivacyPage() {
             them: not your name, not your email, not your phone&rsquo;s internet address.
             The only other thing sent is the town where you last met, rounded to about ten
             kilometres, so nearby places come first. Nothing about the search is kept.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>When you play a YouTube or Facebook video</strong> that somebody shared,
+            the video comes from that company, and its player is loaded only when you tap
+            Play. From then on, YouTube (Google) or Facebook (Meta) can see that your
+            browser played it, as they would on their own site. YouTube videos use its
+            privacy-enhanced mode, which sets no tracking cookie until you play. Nothing is
+            loaded from either company before you tap.
           </p>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li><strong>The record of shared links: 30 days</strong>, then deleted

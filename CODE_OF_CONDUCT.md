@@ -48,4 +48,5 @@ messages, and code comments.
 ---
 
 Adapted from the [Contributor Covenant](https://www.contributor-covenant.org),
-version 2.1, and deliberately shortened.
+version 2.1, and deliberately shortened. The Contributor Covenant is licensed
+under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

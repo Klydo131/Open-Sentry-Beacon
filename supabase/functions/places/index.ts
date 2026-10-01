@@ -17,7 +17,7 @@
 // NO BACKSLASHES in this directory; see photon.ts.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { cleanQuery, nearFrom, photonUrl, shape } from './photon.ts';
+import { callerName, cleanQuery, nearFrom, photonBase, photonUrl, shape } from './photon.ts';
 
 // Who may read the reply from a browser. The same setting, and the same
 // fallback, as the invite function: see its comment for why a wildcard is only
@@ -95,11 +95,12 @@ async function handle(req: Request): Promise<Response> {
 
   let answer: Response;
   try {
-    answer = await fetch(photonUrl(q, near), {
+    answer = await fetch(photonUrl(q, near, photonBase(Deno.env.get('PLACES_PHOTON_URL'))), {
       headers: {
         'Accept': 'application/json',
-        // The service asks callers to say who they are.
-        'User-Agent': 'OpenSentryBeacon/1 (church app; place suggestions)',
+        // The service asks callers to say who they are; a church can name
+        // itself (photon.ts, callerName).
+        'User-Agent': callerName(Deno.env.get('PLACES_USER_AGENT')),
       },
       signal: AbortSignal.timeout(5000),
     });

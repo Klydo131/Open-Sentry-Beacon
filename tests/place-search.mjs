@@ -22,7 +22,7 @@
 //   node tests/place-search.mjs
 // ---------------------------------------------------------------------------
 import { readFileSync, readdirSync } from 'node:fs';
-import { cleanQuery, nearFrom, photonUrl, shape, MAX_PLACES } from '../supabase/functions/places/photon.ts';
+import { cleanQuery, nearFrom, photonUrl, shape, MAX_PLACES, callerName, photonBase, PHOTON, DEFAULT_CALLER } from '../supabase/functions/places/photon.ts';
 import { pinFor, pinOf, nearOf, pinUrl, matchedParts } from '../lib/live/place-pin.ts';
 import { placeUrl, placeLabel, wordsBesideLink } from '../lib/live/meeting-link.ts';
 import { searchSamplePlaces, SAMPLE_PLACES } from '../lib/demo/sample-places.ts';
@@ -126,6 +126,22 @@ const code = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/[^\n
   ok(url.searchParams.get('q') === 'a&lat=0#b' && !url.searchParams.has('lat'),
     'nothing typed can add to the request: it is always the search words and nothing else');
   ok(!new URL(photonUrl('imus', null)).searchParams.has('lat'), 'no point is sent when there is none');
+
+  // A CHURCH CAN NAME ITSELF, and run its own Photon (licence audit, 1 October
+  // 2026): every copy sending one shared name risks one busy user getting that
+  // name blocked for all of them.
+  ok(callerName('Grace Chapel app (admin@chapel.example)') === 'Grace Chapel app (admin@chapel.example)'
+     && callerName(undefined) === DEFAULT_CALLER && callerName('   ') === DEFAULT_CALLER,
+    'the place search says who is asking: the church\'s own name when it sets one, the default otherwise');
+  ok(!/[^ -~]/.test(callerName('evil' + String.fromCharCode(13, 10) + 'X-Injected: 1')) && callerName('a'.repeat(500)).length === 200,
+    'and a name cannot carry a line break into the request, or run on');
+  ok(photonBase('https://photon.chapel.example/api/') === 'https://photon.chapel.example/api/'
+     && photonBase('http://photon.chapel.example/api/') === PHOTON
+     && photonBase('https://user:pw@photon.chapel.example/') === PHOTON
+     && photonBase('') === PHOTON && photonBase(undefined) === PHOTON,
+    'its own Photon is used only at an https address; anything else falls back to komoot\'s');
+  ok(new URL(photonUrl('imus', null, 'https://photon.chapel.example/api/')).host === 'photon.chapel.example',
+    'and the search goes there');
 
   const dir = 'supabase/functions/places';
   const files = readdirSync(dir).filter((f) => f.endsWith('.ts')).sort();

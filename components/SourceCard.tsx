@@ -9,18 +9,15 @@
 // enough on its own: most people who use this app never see that page again
 // after their first visit.
 //
-// IF YOU FORK THIS AND CHANGE ANYTHING, CHANGE THE URL BELOW to point at your
-// own repository. Leaving it pointing upstream while your deployment differs is
+// IF YOU FORK THIS AND CHANGE ANYTHING, CHANGE SOURCE_URL in lib/brand.ts to
+// point at your own repository. Leaving it pointing upstream while your deployment differs is
 // the single likeliest way an honest church ends up in breach — it tells your
 // congregation "here is the code you are running" and then shows them somebody
 // else's.
 
 import Link from 'next/link';
-import { APP_SHORT_NAME } from '@/lib/brand';
+import { APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
 import { Card } from '@/components/ui';
-
-/** Change this if you deploy a modified version. See the note above. */
-const SOURCE_URL = 'https://github.com/Klydo131/Open-Sentry-Beacon';
 
 export function SourceCard() {
   return (
@@ -73,6 +70,19 @@ export function SourceCard() {
           className="tap inline-flex items-center rounded-xl px-4 font-semibold text-navy underline underline-offset-4"
         >
           Read the licence ↗
+        </a>
+        {/* THE OTHER PEOPLE'S CODE INSIDE THIS APP, with their licences. Most of
+            them ask that their notice go with every copy, and a copy is what
+            every browser that opens this app receives. Written at each build
+            by scripts/third-party-notices.mjs. */}
+        <a
+          href="/third-party-notices.txt"
+          target="_blank"
+          rel="noopener"
+          className="tap inline-flex items-center rounded-xl px-4 font-semibold text-navy underline underline-offset-4"
+          data-third-party-notices
+        >
+          Code from other projects ↗
         </a>
       </div>
     </Card>

@@ -23,7 +23,7 @@
   },
   "scripts": {
     "setup": "node scripts/setup.mjs",
-    "predev": "node scripts/excalidraw-assets.mjs",
+    "predev": "node scripts/excalidraw-assets.mjs && node scripts/third-party-notices.mjs",
     "dev": "node scripts/run-next.mjs dev",
     "build": "node scripts/run-next.mjs build",
     "start": "node scripts/run-next.mjs start",
@@ -31,7 +31,7 @@
     "test:all": "node scripts/verify.mjs --all",
     "icons": "node scripts/gen-icons.mjs",
     "lint": "node scripts/lint.mjs",
-    "prebuild": "node scripts/stamp-build.mjs && node scripts/excalidraw-assets.mjs",
+    "prebuild": "node scripts/stamp-build.mjs && node scripts/excalidraw-assets.mjs && node scripts/third-party-notices.mjs",
     "verify": "node scripts/verify.mjs",
     "verify:all": "node scripts/verify.mjs --all"
   },

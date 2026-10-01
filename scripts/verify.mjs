@@ -488,6 +488,7 @@ const staticChecks = [
   ['a conversation can reply, react and speak', 'tests/a-conversation-can-reply-react-and-speak.mjs'],
   ['a stored path cannot leave its folder', 'tests/a-stored-path-cannot-leave-its-folder.mjs'],
   ['no hidden characters in the code', 'tests/no-hidden-characters.mjs'],
+  ['every dependency is under a licence we can ship', 'tests/dependency-licences.mjs'],
   // The research agents in .claude/agents read and report, keep real data
   // out, put security first, and name only files that exist (1 October 2026).
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],

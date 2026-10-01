@@ -24,6 +24,38 @@
 
 export const PHOTON = 'https://photon.komoot.io/api/';
 
+/**
+ * WHO IS ASKING, AND WHICH PHOTON. komoot's public Photon is free for fair use,
+ * and asks callers to say who they are. Every copy of this app used to send the
+ * same name, so one busy church -- or a company hosting many -- could get that
+ * name blocked for everybody. PLACES_USER_AGENT lets a church name itself
+ * (with a contact address), and PLACES_PHOTON_URL points a heavy user at its
+ * own Photon. Found by the licence audit of 1 October 2026; see
+ * docs/START-HERE.md, step 7b.
+ */
+export const DEFAULT_CALLER = 'OpenSentryBeacon/1 (church app; place suggestions)';
+
+/** The User-Agent to send: the configured one in printable ASCII, or the default. */
+export function callerName(configured: string | undefined | null): string {
+  const kept = [...(configured ?? '')]
+    .filter((c) => c.charCodeAt(0) >= 32 && c.charCodeAt(0) < 127)
+    .join('')
+    .trim()
+    .slice(0, 200);
+  return kept || DEFAULT_CALLER;
+}
+
+/** The Photon to ask: a configured https address, or komoot's. */
+export function photonBase(configured: string | undefined | null): string {
+  try {
+    const url = new URL(configured ?? '');
+    if (url.protocol === 'https:' && !url.username && !url.password) return url.toString();
+  } catch {
+    // Not an address: the public one.
+  }
+  return PHOTON;
+}
+
 /** One suggestion, as the app draws it and stores it. */
 export interface Place {
   /** What the place is called: "Jollibee", "SM City Bacoor". */
@@ -86,8 +118,8 @@ export function nearFrom(raw: unknown): { lat: number; lon: number } | null {
 }
 
 /** The request to Photon. Built with URL, so nothing typed can break out of it. */
-export function photonUrl(q: string, near: { lat: number; lon: number } | null): string {
-  const url = new URL(PHOTON);
+export function photonUrl(q: string, near: { lat: number; lon: number } | null, base: string = PHOTON): string {
+  const url = new URL(base);
   url.searchParams.set('q', q);
   // Asked for more than are shown, because duplicates are folded together below.
   url.searchParams.set('limit', '12');
