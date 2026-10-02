@@ -215,7 +215,14 @@ function LiveOffice() {
           something for the church. It keeps nothing in the database, so it
           needs no rule of its own; the list is kept on this device under this
           account's id. */}
-      {room === 'sabbath' && <SabbathPrograms owner={profile.id} churchName={churchName} />}
+      {room === 'sabbath' && (
+        <SabbathPrograms
+          owner={profile.id}
+          churchName={churchName}
+          role={profile.role}
+          share={async (post) => { await live.createBlogPost({ ...post, visibility: 'published' }); }}
+        />
+      )}
       {room === 'library' && <LiveLibraryForGuide pairings={pairings} />}
 
       {/* PUTTING A NAME FORWARD, whichever direction it goes.
@@ -264,7 +271,7 @@ function LiveOffice() {
  * every screen, and the practice is in reading the room rather than the figures.
  */
 function DemoOffice() {
-  const { db, currentUser } = useDemo();
+  const { db, currentUser, addBlogPost } = useDemo();
   // PARITY IN SHAPE, NOT JUST IN CONTENT. Somebody who learns the job here and
   // then signs in should find the same room with the same strip across the top.
   // A tutorial that teaches one long page and a live app that has subrooms
@@ -298,7 +305,12 @@ function DemoOffice() {
       )}
       {room === 'studies' && <LessonSeriesLibrary />}
       {room === 'sabbath' && (
-        <SabbathPrograms owner={`sample:${currentUser?.id ?? 'nobody'}`} churchName={db.church_name} />
+        <SabbathPrograms
+          owner={`sample:${currentUser?.id ?? 'nobody'}`}
+          churchName={db.church_name}
+          role={currentUser?.role}
+          share={async (post) => { addBlogPost({ ...post, visibility: 'published' }); }}
+        />
       )}
     </div>
   );

@@ -24,13 +24,16 @@
 
 import { APP_NAME } from '@/lib/brand';
 import { zipVault } from '@/lib/study/obsidian';
-import { dateLabel, filledLines, printable, type SabbathProgram } from '@/lib/sabbath-program';
+import {
+  dateLabel, filledExtras, filledLines, formatClock, printable, schedule, type ProgramCopy, type SabbathProgram,
+} from '@/lib/sabbath-program';
 
 export const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
-/** "Sabbath-program-2026-10-03.docx". */
-export function programFileName(p: SabbathProgram): string {
-  return `Sabbath-program-${/^\d{4}-\d{2}-\d{2}$/.test(p.date) ? p.date : 'undated'}.docx`;
+/** "Sabbath-program-2026-10-03.docx", or "...-platform.docx" for the platform copy. */
+export function programFileName(p: SabbathProgram, copy: ProgramCopy = 'congregation'): string {
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(p.date) ? p.date : 'undated';
+  return `Sabbath-program-${day}${copy === 'platform' ? '-platform' : ''}.docx`;
 }
 
 /** Text made safe to sit inside XML, as content or as an attribute. */
@@ -51,6 +54,8 @@ const PAGE = { w: 11906, h: 16838, margin: 1134 };
 const TEXT_WIDTH = PAGE.w - 2 * PAGE.margin; // 9638
 // Part, details, who: the part is short, the details carry hymn titles.
 const COLUMNS = [3080, 3958, 2600];
+// The platform copy puts each line's start time first.
+const PLATFORM_COLUMNS = [1250, 2600, 3488, 2300];
 
 /** A run of text. Spaces are kept, because a hymn number padded by hand is still meant. */
 function run(text: string, props = ''): string {
@@ -61,21 +66,37 @@ function para(content: string, props = ''): string {
   return `<w:p>${props ? `<w:pPr>${props}</w:pPr>` : ''}${content}</w:p>`;
 }
 
-function cell(width: number, content: string): string {
-  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/></w:tcPr>${para(content)}</w:tc>`;
+/** A table cell holding paragraphs already built; it must hold at least one. */
+function cellOf(width: number, paragraphs: string[]): string {
+  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/></w:tcPr>${paragraphs.join('') || para('')}</w:tc>`;
 }
 
-function section(title: string, time: string, rows: string[][]): string {
+function cell(width: number, content: string): string {
+  return cellOf(width, [para(content)]);
+}
+
+interface Row { at: string; part: string; detail: string; who: string; note: string }
+
+function section(title: string, time: string, rows: Row[], platform: boolean): string {
   const heading = para(
     run(title || 'Untitled part') + (time ? run(`   ${time}`, '<w:b w:val="0"/><w:color w:val="4B5563"/>') : ''),
     '<w:pStyle w:val="Heading1"/>',
   );
   if (!rows.length) return heading;
-  const grid = COLUMNS.map((w) => `<w:gridCol w:w="${w}"/>`).join('');
-  const body = rows.map(([part, detail, who]) => '<w:tr><w:trPr><w:cantSplit/></w:trPr>'
-    + cell(COLUMNS[0], part ? run(part, '<w:b/>') : '')
-    + cell(COLUMNS[1], detail ? run(detail) : '')
-    + cell(COLUMNS[2], who ? run(who, '<w:i/>') : '')
+  const columns = platform ? PLATFORM_COLUMNS : COLUMNS;
+  const grid = columns.map((w) => `<w:gridCol w:w="${w}"/>`).join('');
+  const [first, ...others] = platform ? columns.slice(1) : columns;
+  const body = rows.map((r) => '<w:tr><w:trPr><w:cantSplit/></w:trPr>'
+    + (platform ? cell(columns[0], r.at ? run(r.at, '<w:color w:val="4B5563"/>') : '') : '')
+    + cell(first, r.part ? run(r.part, '<w:b/>') : '')
+    + cellOf(others[0], [
+      para(r.detail ? run(r.detail) : ''),
+      // A note is for the people leading, so it is only ever on their copy.
+      ...(platform && r.note
+        ? [para(run(`Note: ${r.note}`, '<w:i/><w:color w:val="6B7280"/><w:sz w:val="18"/><w:szCs w:val="18"/>'))]
+        : []),
+    ])
+    + cell(others[1], r.who ? run(r.who, '<w:i/>') : '')
     + '</w:tr>').join('');
   return heading
     + '<w:tbl><w:tblPr>'
@@ -92,18 +113,28 @@ function section(title: string, time: string, rows: string[][]): string {
     + `</w:tblPr><w:tblGrid>${grid}</w:tblGrid>${body}</w:tbl>`;
 }
 
-/** word/document.xml: the program itself. */
-export function documentXml(p: SabbathProgram): string {
+/** word/document.xml: the program itself, as the congregation's copy or the platform's. */
+export function documentXml(p: SabbathProgram, copy: ProgramCopy = 'congregation'): string {
+  const platform = copy === 'platform';
   const parts: string[] = [];
   parts.push(para(run(p.church || 'Sabbath program'), '<w:pStyle w:val="Title"/>'));
   const when = dateLabel(p.date);
   if (when) parts.push(para(run(when), '<w:pStyle w:val="Subtitle"/>'));
   if (p.theme) parts.push(para(run(p.theme, '<w:i/>'), '<w:pStyle w:val="Subtitle"/>'));
+  for (const x of filledExtras(p)) {
+    parts.push(para(run(`${x.label}: `, '<w:b/>') + run(x.value), '<w:pStyle w:val="Subtitle"/>'));
+  }
+  if (platform) parts.push(para(run('Platform copy, with times and notes'), '<w:pStyle w:val="Subtitle"/>'));
 
   for (const s of p.sections) {
-    const lines = filledLines(s);
     if (!printable(s)) continue;
-    parts.push(section(s.title, s.time, lines.map((l) => [l.part, l.detail, l.who])));
+    const plan = schedule(s);
+    const span = platform && plan.start !== null && plan.end !== null
+      ? `${formatClock(plan.start, plan.twelve)} to ${formatClock(plan.end, plan.twelve)}`
+      : s.time;
+    parts.push(section(s.title, span, filledLines(s).map((l) => ({
+      at: plan.startsById[l.id] ?? '', part: l.part, detail: l.detail, who: l.who, note: l.note,
+    })), platform));
   }
 
   const notes = p.notes.split('\n').map((n) => n.trim()).filter(Boolean);
@@ -158,8 +189,13 @@ export function stylesXml(): string {
 const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
 /** Every part of the file, by its path inside the zip. */
-export function docxParts(p: SabbathProgram, when: Date = new Date()): Record<string, string> {
-  const title = ['Sabbath program', dateLabel(p.date)].filter(Boolean).join(', ');
+export function docxParts(
+  p: SabbathProgram,
+  when: Date = new Date(),
+  copy: ProgramCopy = 'congregation',
+): Record<string, string> {
+  const title = ['Sabbath program', copy === 'platform' && 'platform copy', dateLabel(p.date)]
+    .filter(Boolean).join(', ');
   return {
     '[Content_Types].xml': HEAD
       + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
@@ -180,7 +216,7 @@ export function docxParts(p: SabbathProgram, when: Date = new Date()): Record<st
       + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
       + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
       + '</Relationships>',
-    'word/document.xml': documentXml(p),
+    'word/document.xml': documentXml(p, copy),
     'word/styles.xml': stylesXml(),
     // The file's own properties name the program, never the person who made it:
     // a file that gets forwarded should not carry its author's name inside it.
@@ -201,9 +237,13 @@ export function docxParts(p: SabbathProgram, when: Date = new Date()): Record<st
 }
 
 /** The finished .docx, as bytes. */
-export function programToDocx(p: SabbathProgram, when: Date = new Date()): Uint8Array {
+export function programToDocx(
+  p: SabbathProgram,
+  when: Date = new Date(),
+  copy: ProgramCopy = 'congregation',
+): Uint8Array {
   return zipVault(
-    Object.entries(docxParts(p, when)).map(([path, text]) => ({ path, text })),
+    Object.entries(docxParts(p, when, copy)).map(([path, text]) => ({ path, text })),
     when.getTime(),
   );
 }

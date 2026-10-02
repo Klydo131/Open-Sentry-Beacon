@@ -156,6 +156,12 @@ export function railGroupsFor(
   // trust their study notes to it.
   const studyRoom = { href: '/study', label: 'Study Room', icon: '📖', beta: true };
 
+  // THIS SABBATH, for everybody: the program the church has shared, kept on
+  // the phone so it opens with no signal, and for a leader their own programs
+  // as well. Asked for on 2 October 2026 ("can be share to Explorers too ...
+  // accessible to all devices, offline and online").
+  const thisSabbath = { href: '/sabbath', label: 'This Sabbath', icon: '🗓️' };
+
   if (role === 'ds') {
     return [
       {
@@ -163,6 +169,7 @@ export function railGroupsFor(
         links: [
           home,
           { href: '/ds', label: 'My Journey', icon: '🎯' },
+          thisSabbath,
           studyRoom,
           myFiles,
           publish,
@@ -180,6 +187,7 @@ export function railGroupsFor(
           home,
           { href: '/dm', label: 'My Explorers', icon: '🤝', badge: counts.seekers },
           office,
+          thisSabbath,
           publish,
           myFiles,
         ],
@@ -196,6 +204,7 @@ export function railGroupsFor(
         home,
         { href: '/admin', label: 'Admin', icon: '🛡️', badge: counts.approvals },
         office,
+        thisSabbath,
         publish,
         myFiles,
         cases,

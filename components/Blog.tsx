@@ -24,7 +24,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { Button, Card, EmptyState } from '@/components/ui';
-import type { BlogAudienceKind, BlogPost } from '@/lib/types';
+import type { BlogAudienceKind, BlogPost, DB } from '@/lib/types';
 
 function when(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -285,32 +285,36 @@ export function BlogDesk({ userId }: { userId: string }) {
 // personally. Named for what it is now rather than for the Guide-only version
 // it started as.
 // ---------------------------------------------------------------------------
+/**
+ * The sample church's posts one person may read. The rule BlogFeed draws, kept
+ * in one place so This Sabbath (components/ThisSabbath.tsx) reads exactly the
+ * same posts and the two cannot drift. A church's own app asks the database,
+ * whose `can_read_post` is the real rule.
+ */
+export function postsVisibleTo(db: Pick<DB, 'blog_posts' | 'blog_audience' | 'pairings'>, userId: string): BlogPost[] {
+  // The Guides this person is actually walking with. A post from anybody else
+  // is not theirs to read, whatever its audience says.
+  const myGuides = new Set(
+    db.pairings.filter((p) => p.ds_id === userId && p.status === 'active').map((p) => p.dm_id),
+  );
+  return db.blog_posts.filter((p) => {
+    if (p.visibility !== 'published') return false;
+    // THE NOTICEBOARD REACHES EVERYBODY, whoever wrote it. This used to
+    // require the author be one of your Guides, which is right for the two
+    // narrower audiences and wrong for the board.
+    if (p.audience === 'church') return true;
+    if (p.audience === 'all') return myGuides.has(p.author_id);
+    return db.blog_audience.some((a) => a.post_id === p.id && a.ds_id === userId);
+  });
+}
+
 export function BlogFeed({ userId }: { userId: string }) {
   const { db, recordBlogView } = useDemo();
   const [open, setOpen] = useState(true);
 
-  // The Guides this person is actually walking with. A post from anybody else
-  // is not theirs to read, whatever its audience says.
-  const myGuides = useMemo(
-    () =>
-      new Set(
-        db.pairings.filter((p) => p.ds_id === userId && p.status === 'active').map((p) => p.dm_id),
-      ),
-    [db.pairings, userId],
-  );
-
   const posts = useMemo(
-    () =>
-      db.blog_posts.filter((p) => {
-        if (p.visibility !== 'published') return false;
-        // THE NOTICEBOARD REACHES EVERYBODY, whoever wrote it. This used to
-        // require the author be one of your Guides, which is right for the two
-        // narrower audiences and wrong for the board.
-        if (p.audience === 'church') return true;
-        if (p.audience === 'all') return myGuides.has(p.author_id);
-        return db.blog_audience.some((a) => a.post_id === p.id && a.ds_id === userId);
-      }),
-    [db.blog_posts, db.blog_audience, myGuides, userId],
+    () => postsVisibleTo(db, userId),
+    [db.blog_posts, db.blog_audience, db.pairings, userId],
   );
 
   // Opening the page is reading it. There is no "mark as read" button to forget

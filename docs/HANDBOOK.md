@@ -500,26 +500,60 @@ Follow-ups and prayer requests stayed on the Guide's roster, because they are ab
 
 #### The Sabbath program
 
-**Plan a Sabbath's order of service, then take it away as a Word file.** It is the **Sabbath program** folder in the Office, beside Lesson studies, for Guides, Directors and Executive Directors. Asked for on 2 October 2026.
+**Plan a Sabbath's order of service, then send it where people will read it: a Word file, a picture, text for a group chat, or a post your Explorers find on This Sabbath.** It is the **Sabbath program** folder in the Office, beside Lesson studies, for Guides, Directors and Executive Directors. Asked for on 2 October 2026, and widened the same day.
 
 ![The Sabbath program on a phone: the parts of the day, each line saying what happens, which hymn or passage, and who leads it.](screenshots/walkthrough/24-sabbath-program.png)
 
 **A new program starts from the whole day**, for the coming Sabbath: Sabbath School, the Divine Service, the afternoon program (AY) and sunset vespers, each with the parts a Sabbath usually has (song service, opening hymn and prayer, mission story, sermon, benediction and the rest). Every line is three boxes: what happens, the details (which hymn, which passage, which title) and who leads it. Rename, add or remove anything. **Arrange lines**, under a part, shows arrows to move a line and a button to take it out; **Done** puts them away again, so the boxes keep the whole width of a phone while you type. One part of the day is open at a time. A part with nothing in it and no time is left off what gets printed.
+
+**It says what is left to arrange.** Under the date, "16 lines still need someone to lead it" counts every line that names a part but nobody to lead it, and each program in the list says the same in short ("3 still to fill", or "everyone named"). It is the question a coordinator asks on a Friday.
 
 **No hymn titles come with it.** Every church has its own hymnal; type the number and title you sing.
 
 | Button | What it gives you |
 | --- | --- |
 | **Download Word file** | A .docx named for its Sabbath, such as `Sabbath-program-2026-10-03.docx`. It opens in Word, in Pages, and in Google Docs: upload it to Google Drive, or open it from the Google Docs app on a phone. |
-| **Share the file** | The same file, straight into Messenger, Viber, Drive or email through the phone's own share sheet. Shown only where the browser can share a file, which is most phones and few computers. |
+| **Download picture** | A picture of the program (a PNG 1080 pixels wide, as tall as the program needs) for a group chat, a phone's gallery or Canva. It is drawn on the phone itself, so it works with no signal. |
+| **Share the picture** | The picture, straight into Messenger, Viber, Drive or email through the phone's own share sheet. Shown only where the browser can share a file, which is most phones and few computers. |
 | **Copy as text** | The program as plain text, ready to paste into a group chat. |
+| **Post it** | Under **Share in the app**: the program as a post for the people you walk with, or for the whole church. See below. |
 | **Reuse next week** | A copy for the following Sabbath with every part and name kept, because most weeks change only who does what. |
 
-**Kept on this device, by the owner's choice.** A program is saved as it is typed, in the browser on the phone or computer where it was made, and nowhere else. There is no table and no migration, so a church's app has it the day its code updates, database or not. Each account keeps its own list: a second leader on a shared office computer starts with their own, not the first one's names. The names typed stay on that device unless somebody downloads or shares the file.
+##### Sharing it with Explorers: This Sabbath
+
+**Share in the app**, under the program, makes it a post. Choose **Who sees it**: **The people I walk with**, which is where a Guide's share goes unless they choose otherwise and which includes anybody paired with them later, or **Everyone in the church**, where a Director's or an Executive Director's goes, and which also puts it on the church home screen like any post for the whole church. Press **Post it**.
+
+**It is an ordinary post, with your name on it, read by the rules every post follows.** So an Explorer a Guide does not walk with does not see that Guide's program, and nobody outside the church sees any of it. To take one down, open **Publish**, where the posts you have made are listed. Posting needs a signal; with none, the button says so and nothing typed is lost.
+
+![This Sabbath on an Explorer's phone: the church, the date, the theme and a detail of the church's own, then Sabbath School with who leads each part.](screenshots/walkthrough/27-this-sabbath.png)
+
+**Explorers find it on This Sabbath**, in the Menu. Guides and leadership have it too, with their own programs under the shared ones. The coming Sabbath's program is at the top with **Shared by** and the sender's name; earlier ones fold away under **Other Sabbaths**. It is shown as plain text and never as a web page, because it is something a person typed.
+
+**It opens with no signal.** Each program shared with somebody is kept on their phone, the most recent 20, and the page itself is saved for offline use. Once they have opened This Sabbath with a signal after the program was posted, it opens in a church hall with none.
+
+##### Advanced settings
+
+Tick **Advanced settings**, above the list. The choice is remembered for that account on that device. Simple is the default, because most weeks need nothing more than names.
+
+![Advanced settings on a phone: each line has its minutes, the time it starts, and a note for the platform.](screenshots/walkthrough/25-sabbath-advanced.png)
+
+- **Minutes and start times.** Give a part of the day its start time and each line its minutes, and every line shows when it starts ("starts 9:20 AM"). If a part runs past the start of the next, the program says so in amber: "Sabbath School runs 20 minutes into Divine Service."
+- **A note for the platform.** Each line can carry a note for whoever leads it, such as "Pianist plays the first verse through". Under **Take it away**, **Which copy** chooses between **For the congregation**, without times or notes, and **For the platform, with times and notes**, a Word file ending `-platform.docx` with a column for each line's start time and the notes under their lines. **The picture and anything posted are always the congregation's copy**, so a note never leaves the device that way.
+- **Details of your own.** For anything the standard boxes do not cover: press **Add a detail**, give it a name ("Deacons on duty", "Offering for", "Flowers given by") and write what it says. Every detail with something written prints under the theme on every copy, the picture and the post included; one left empty is left off. Up to twelve.
+- **Your own templates.** **Save as a template** keeps the parts, their times and minutes, and the names of your details, under a name such as "Communion Sabbath". **New program** then asks what to start from: **The standard Sabbath**, one of yours, or **A blank page**. A template never keeps who leads what, the hymns and passages, the notes, or what a detail said: they belong to one Sabbath. Up to ten.
+- **Reminders.** Lists everybody named in the program with what they are doing and when. **Copy reminder** gives a message ready to paste to that person: "Hi Grace Lim. A reminder for Sabbath, October 3, 2026 at Grace SDA Church:" and their parts. The app sends nothing itself.
+
+![Details of your own: a name, what it says, and Add a detail for another.](screenshots/walkthrough/26-sabbath-own-details.png)
+
+##### Designing it in Canva, for free
+
+**A free Canva account is enough, and the app never talks to Canva.** In Canva choose **Upload** and add the picture or the Word file, then design from it. There is no account to connect, no key to keep and nothing to pay, and the privacy notice gains no new company. `docs/SABBATH-PROGRAM-RESEARCH.md` gives the reasoning, the three open-source tools the ideas came from and their licences. One thing in it is unconfirmed: that Canva's free plan imports Word files was read from search results quoting Canva's help page, because the page itself could not be reached from where this was built. Try it once before telling a church it works.
+
+**Kept on this device, by the owner's choice.** A program is saved as it is typed, in the browser on the phone or computer where it was made, and nowhere else until somebody posts it or takes a file away. There is no table and no migration, so a church's app has it the day its code updates, database or not. Each account keeps its own list: a second leader on a shared office computer starts with their own, not the first one's names.
 
 > **CAUTION** · What keeping it on the device costs
 >
-> A program made on a phone is not on the laptop, and two leaders do not see each other's: they share the file, the way churches already pass a program round. Clearing the browser's site data, or a private window closing, deletes the programs in it. If the browser refuses to save at all, the screen says so in red. Download the ones you want to keep.
+> A program made on a phone is not on the laptop, and two leaders do not see each other's drafts: they post it or pass the file round, the way churches already pass a program round. Clearing the browser's site data, or a private window closing, deletes the programs in it. If the browser refuses to save at all, the screen says so in red. Download the ones you want to keep.
 
 #### Asking to walk with somebody
 
@@ -743,7 +777,7 @@ What somebody listens to while they read is nobody else's business, which is why
 
 On a phone, an iPad and a computer alike, a bar along the bottom of the screen has three words on it, and it **is** the navigation:
 
-- **Menu** lists every room you have, written out: Home, your own screen, My Files, **Publish**; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
+- **Menu** lists every room you have, written out: Home, your own screen, **This Sabbath**, My Files, **Publish**; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
 - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
 - **My Files** opens your own files.
 
@@ -1229,7 +1263,10 @@ That raises the standard in four ways: consent has to be **express** rather than
 
 ### The Sabbath program, 2 October 2026
 
-- **Programs never leave the device they were made on**, except inside a file the person downloads or shares, which is their act. The app sends nothing to the database or anywhere else, and a check fails the build if that changes (`tests/a-sabbath-program-is-a-word-file.mjs`).
+- **A program leaves the device it was made on only when its maker chooses**: in a file or picture they download or share, or when they press **Post it**. Nothing else sends it anywhere, and a check fails the build if the tool itself ever talks to the database or the network (`tests/a-sabbath-program-is-a-word-file.mjs`).
+- **A posted program is an ordinary post**: a row in `posts`, with the sender's name, for the audience they chose, read by the same rules as every other post and taken down the same way, from Publish. It needed no new table and no migration.
+- **Notes for the platform never leave the device by the app's own hand.** The picture and every post are the congregation's copy, which has no notes; the same check proves it of the picture by recording every word it draws.
+- **A program shared with somebody is kept on their phone**, the most recent 20, so This Sabbath opens with no signal. It is what the post already showed them, kept under their own account.
 - **The file names the program, not its author.** Its author field says the app's name, because a program gets forwarded.
 - **A shared computer keeps each account's list apart.** Signing out does not delete them; clearing the browser's site data does.
 
@@ -1266,6 +1303,10 @@ The two largest gaps today:
 | The install button does nothing on an iPhone | Not Safari. Chrome, Firefox, Edge and in-app browsers cannot install on iOS. | Tap **Open this page in Safari** on the card, then Share, then Add to Home Screen. If that button does nothing, the browser refused the handoff: use its ••• menu instead. |
 | The icon opens Safari with an address bar | What was added is a bookmark from before the fix. | Delete the icon and add it again from Safari. |
 | A Sabbath program has gone, or is not on another device | Programs are kept in the browser where they were made, under the account that made them. Another phone, another browser, another account, a private window or cleared site data each start with none. | Open the same browser on the same device, signed in as the same person. Keep the ones that matter by downloading them. |
+| An Explorer cannot see a program their Guide posted | It went to the people that Guide walks with, and this Explorer walks with somebody else; or it is still a draft in Publish. | Post it again for **Everyone in the church**, or ask their own Guide to post one. |
+| This Sabbath is empty with no signal | The phone keeps a program once it has opened This Sabbath with a signal after the program was posted. | Open This Sabbath once with a signal, the day before. |
+| "This program is too long to post" | A post holds 20,000 characters. A whole day with long announcements can pass it. | Shorten the announcements, or share the Word file or the picture instead. |
+| A note is missing from the Word file | The Word file was made **For the congregation**. | Under **Which copy**, choose **For the platform, with times and notes**, then download again. |
 | "This copy can never update" | It was installed from a temporary preview address. | Open the real address, install from there, then delete the old icon. |
 | A setting was changed and nothing happened | The two settings beginning `NEXT_PUBLIC_` are read when the site is built. | Redeploy. Saving alone changes nothing. |
 | Everybody was signed out at once | The database project changed, the web address changed, or the project's signing secret was rotated. A code deploy does not do this. | See Part 7. If the address changed, people must reinstall as well. |
@@ -1345,14 +1386,15 @@ Read this section before making a change. It states what is true, what must stay
 15. No file carries an invisible character that reverses or hides text. Write them as `\u` escapes; `tests/no-hidden-characters.mjs` refuses the real thing.
 16. A dependency under a licence not on the allowlist in `tests/dependency-licences.mjs` fails the build until somebody has read it. The third-party notices are written at each build and never committed.
 17. A screen that needs a new table, column or function keeps working without it, until the migration that adds it has run.
-18. The Sabbath program never touches the database or the network. It is kept per account in the browser (`lib/sabbath-program.ts`), and every property in its Word file is written in the order Word's schema gives; `tests/a-sabbath-program-is-a-word-file.mjs` holds both.
+18. The Sabbath program never touches the database or the network itself. It is kept per account in the browser (`lib/sabbath-program.ts`) and leaves only through the `share` its page hands it, as an ordinary post. Every property in its Word file is written in the order Word's schema gives; `tests/a-sabbath-program-is-a-word-file.mjs` holds both.
+19. Whatever leaves the device by the app's hand, a post or a picture, is the congregation's copy: no platform notes. A shared program is read back as plain text, never as markup. The same test holds both.
 
 ### Prove it before you claim it
 
 ```
 npm run verify        # 166 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 62 browser walks: 228 in all
+npm run verify:all    # the same, plus 63 browser walks: 229 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1395,8 +1437,9 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Three photographs of deleted people | Three avatars belong to accounts that no longer exist. No rule can reach them, so no user can see them, and no rule can delete them either. They need removing from the Storage dashboard by hand. |
 | Creating a new church without a developer | Possible in the database, not yet possible from a screen. |
 | Bulk invitations | **Built**: pasting a list, and dragging a spreadsheet onto the screen. Suggested pairing after a batch is the part still to do. |
-| The Sabbath program's Word file in Word, Google Docs and Pages | **Built**, and opened here by LibreOffice Writer and two other readers, and held to the order Word's schema gives. It has not been opened in Microsoft Word, Google Docs or Pages, and **Share the file** has not been tried on a real phone. |
-| Sharing a Sabbath program inside the app | Not built, by choice: programs are kept on the device. Leaders share the downloaded file. Keeping them in the church's database would need a table, rules and a migration. |
+| The Sabbath program's Word file in Word, Google Docs and Pages | **Built**, and opened here by LibreOffice Writer and two other readers, and held to the order Word's schema gives. It has not been opened in Microsoft Word, Google Docs or Pages, and **Share the picture** has not been tried on a real phone. |
+| Sharing a Sabbath program inside the app | **Built**, as an ordinary post, and walked in the sample church: a Guide posts, the Explorer they walk with reads it on This Sabbath, with the network off too, and an Explorer they do not walk with does not see it. Not yet done from a church's own app with a real sign-in, and This Sabbath's no-signal page for a real account has not been seen. |
+| The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |
 | A picture on most Guides' profiles | Almost none have set one, so the card meant to show an Explorer a real person falls back to initials. The app asks them; somebody has to follow it up. |
 | Guild boards in use | The room, the report route and the take-down are built and were proved against the live database. Nothing has yet been posted on one by a real member. |

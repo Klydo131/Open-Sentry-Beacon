@@ -247,7 +247,59 @@ const SHOTS = [
       await p.evaluate(() => window.scrollBy({ top: -150, behavior: 'instant' }));
       await settle(p, 600);
     } },
+  // Advanced settings, the same day: minutes, the start time each line gets
+  // from them, and a note only the platform's copy carries.
+  { file: '25-sabbath-advanced.png', what: 'The Sabbath program with Advanced settings', size: PHONE,
+    go: async (p) => {
+      await advancedProgram(p);
+      await p.locator('[data-program-line]').nth(1).evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -40, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // A detail of the church's own, for what the standard boxes do not cover.
+  { file: '26-sabbath-own-details.png', what: 'The Sabbath program: details of your own', size: PHONE,
+    go: async (p) => {
+      await advancedProgram(p);
+      await p.locator('[data-extras]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -20, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // What an Explorer sees once their Guide has pressed Post it: This Sabbath,
+  // in the Menu, kept on the phone for a Sabbath with no signal.
+  { file: '27-this-sabbath.png', what: 'This Sabbath, as an Explorer sees it', size: PHONE,
+    go: async (p) => {
+      await advancedProgram(p);
+      await p.getByRole('button', { name: 'Post it' }).click();
+      await settle(p, 800);
+      await signIn(p, /John Reyes/i);
+      await p.goto(`${BASE}/sabbath`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+    } },
 ];
+
+/** Maria, Advanced on, filling a program the way a Guide might for shots 25 to 27: invented names only. */
+async function advancedProgram(p) {
+  await signIn(p, /Maria Santos/i);
+  await p.goto(`${BASE}/office?room=sabbath`, { waitUntil: 'networkidle' });
+  await settle(p, 1400);
+  await p.locator('[data-advanced-switch]').check();
+  await p.getByRole('button', { name: 'New program' }).click();
+  await settle(p, 600);
+  await p.getByLabel('Theme or sermon title (optional)').fill('Rest for the weary');
+  await p.getByRole('button', { name: 'Add a detail' }).click();
+  await p.getByLabel('Name of this detail').fill('Deacons on duty');
+  await p.getByLabel('What Deacons on duty says').fill('Anna Yu and Peter Tan');
+  await p.getByLabel('Time of Sabbath School').fill('9:00 AM');
+  for (const [part, minutes] of [['Song service', '15'], ['Opening hymn', '5'], ['Opening prayer', '3'], ['Welcome', '5']]) {
+    await p.getByLabel(`Minutes for ${part}`).first().fill(minutes);
+  }
+  await p.getByLabel('Details for Opening hymn').first().fill('Holy, Holy, Holy');
+  await p.getByLabel('Who leads Song service').first().fill('David Cruz');
+  await p.getByLabel('Who leads Opening hymn').first().fill('Maria Santos');
+  await p.getByLabel('Note for Opening hymn').first().fill('Pianist plays the first verse through');
+  await p.getByLabel('Who leads Opening prayer').first().fill('John Reyes');
+  await p.getByLabel('Who leads Welcome').first().fill('Grace Lim');
+}
 
 const executablePath = (() => {
   const fs = require('node:fs');

@@ -216,19 +216,52 @@ The **Sabbath program** folder in the Office plans a Sabbath's order of
 service. Press **New program**. It starts with Sabbath School, the Divine
 Service, the afternoon program and sunset vespers, ready for names. Type who
 leads each part, and the hymn or passage if you like. Tap a part of the day to
-open it.
+open it. Under the date it says how many lines still need somebody.
 
 ![The Sabbath program. Each line says what happens, which hymn or passage, and who leads it.](screenshots/walkthrough/24-sabbath-program.png)
 
 - **Download Word file** gives you a file that opens in Word, in Pages, and in
   Google Docs (upload it to Google Drive, or open it in the Google Docs app).
+- **Download picture** gives you a picture of the program for a group chat.
+  On a phone, **Share the picture** sends it straight to Messenger, Viber or
+  email.
 - **Copy as text** is for pasting into a group chat.
+- **Post it**, under **Share in the app**, puts it in the app for the people
+  you walk with, or for everyone in the church. They find it on **This
+  Sabbath**, in the Menu.
 - **Reuse next week** starts next week's program from this one, names and all.
 - **Arrange lines**, under a part, is for moving a line or taking it out.
 
-Your programs are kept on your own phone or computer, nowhere else. To have one
-on another device, or to give it to somebody, download it. Directors have the
-same folder.
+**To design it in Canva**, a free account is enough. In Canva, choose
+**Upload** and add the picture or the Word file. The app does not connect to
+Canva.
+
+**Advanced settings**, a tick box above your programs, adds more:
+
+- **Minutes** for each line, so each line shows when it starts. If one part
+  runs into the next, the program tells you.
+- **A note** on any line, for the people on the platform. Choose **For the
+  platform, with times and notes** before you download to get a copy with
+  them. The copy for the congregation, the picture and the post never have
+  the notes.
+- **Your own details**, for anything the boxes do not cover, such as
+  "Deacons on duty". Press **Add a detail**, give it a name, and write what it
+  says. It prints under the theme.
+- **Save as a template**, to start next time from your own layout.
+- **Reminders**: everyone named, each with a message ready to copy and send.
+
+![Advanced settings. Each line has its minutes, when it starts, and a note for the platform.](screenshots/walkthrough/25-sabbath-advanced.png)
+
+Your programs are kept on your own phone or computer until you post them or
+download them. Directors have the same folder.
+
+### This Sabbath
+
+**This Sabbath**, in the Menu, shows the Sabbath program your Guide or your
+church has posted, with who shared it. Once you have opened it with a signal,
+it opens again with none, so you can read it in a church hall without signal.
+
+![This Sabbath on a phone. The church, the date, the theme, then each part of the day and who leads it.](screenshots/walkthrough/27-this-sabbath.png)
 
 ### Your desk drawer
 

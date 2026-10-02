@@ -144,9 +144,11 @@ export default function PrivacyPage() {
           </p>
           <p className="mt-2 text-gray-700">
             <strong>A Sabbath program you make in the Office</strong> stays on your own phone
-            or computer. It is never sent to the church&rsquo;s database or anywhere else.
-            The names in it leave your device only in a file you choose to download or
-            share.
+            or computer. The names in it leave your device only when you choose: in a file
+            or picture you download or share, or when you press <strong>Post it</strong>,
+            which makes it a post with your name on it for the people you chose, the same as
+            any other post. Notes for the platform are never in a post or a picture. A
+            program shared with you is kept on your phone so you can read it with no signal.
           </p>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li><strong>The record of shared links: 30 days</strong>, then deleted

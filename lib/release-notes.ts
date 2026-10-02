@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-02-this-sabbath',
+    date: '2026-10-02',
+    title: 'Share the Sabbath program, and find it on This Sabbath',
+    items: [
+      'Guides and Directors can now post a Sabbath program in the app, to the people they walk with or to the whole church. Explorers find it on This Sabbath, in the Menu, and it is still there with no signal once they have opened it.',
+      'Download picture makes a picture of the program for a group chat or a phone\'s gallery. A free Canva account can design a bulletin from it: in Canva choose Upload and add the picture or the Word file.',
+      'Advanced settings adds minutes and start times, a note for the platform that stays off the congregation\'s copy, details of your own such as who is on duty, your own templates, and a reminder for each person taking part.',
+    ],
+  },
+  {
     id: '2026-10-02-sabbath-program',
     date: '2026-10-02',
     title: 'Make the Sabbath program in the Office',

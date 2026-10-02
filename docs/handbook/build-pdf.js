@@ -307,6 +307,7 @@ const page = (title, body) => `<!doctype html>
        page-break-after: avoid; page-break-before: auto; }
   h3 { font-size: 12pt; margin: 14pt 0 4pt; color: #0b1f3a; page-break-after: avoid; }
   h4 { font-size: 10.5pt; margin: 10pt 0 3pt; page-break-after: avoid; }
+  h5 { font-size: 10.5pt; font-style: italic; margin: 8pt 0 2pt; color: #0b1f3a; page-break-after: avoid; }
   p, li { orphans: 3; widows: 3; }
   ul, ol { margin: 6pt 0 6pt 18pt; padding: 0; }
   li { margin: 2.5pt 0; }
