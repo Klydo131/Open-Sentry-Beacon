@@ -19,7 +19,7 @@ then keep it on your home screen.
 
 ### The link, and what you see first
 
-![The front door. Anybody can open this; it is the only page that does not need an account.](screenshots/walkthrough/01-front-door.png)
+![The front door. Anybody can open this; it is the only page that does not need an account. I have an invitation is the way in.](screenshots/walkthrough/01-front-door.png)
 
 ### Install it, so it opens like an app
 
@@ -52,14 +52,34 @@ bar. Safari on a Mac has **File → Add to Dock**.
 Everything to do with installing also lives inside the app, under Settings, so
 nobody has to keep this page to hand:
 
-![Settings. Installing, alerts, text size and language all live here.](screenshots/walkthrough/13-settings.png)
+![Settings. Installing, alerts, text size and language all live here, in the General folder.](screenshots/walkthrough/13-settings.png)
+
+### Bigger words
+
+If the writing is too small, open **Settings**, stay in **General**, and choose a
+larger **Text size**. Every screen follows it, conversations included.
+
+![A conversation with Text size at its largest. The words grow and still fit the screen.](screenshots/walkthrough/22-text-size-large.png)
 
 ### Signing in
 
 You need an invitation from your church. When you have one, you pick who you
 are and the app takes you to your own part of it.
 
-![Choosing who you are.](screenshots/walkthrough/02-who-are-you.png)
+![Signing in. There is no public sign-up: if you have no invitation yet, ask your church for one.](screenshots/walkthrough/02-who-are-you.png)
+
+### Finding your way
+
+Along the bottom of every screen are three words. **Menu** lists every place you
+can go, written out. **People** opens the people you walk with. **My Files**
+opens your own files.
+
+![The Menu. Every room is written out, with your own profile at the top.](screenshots/walkthrough/19-menu.png)
+
+Some screens hold several **folders**. The button at the top names the one you
+are in and how many there are; tap it to see them all, then tap one to go there.
+
+![A folder list, open. It says you are in My Guide, 1 of 4, and lists the rest.](screenshots/walkthrough/20-subrooms.png)
 
 ---
 
@@ -68,15 +88,44 @@ are and the app takes you to your own part of it.
 An Explorer is somebody the church is walking with. You have one Guide, and the
 app is built around that one relationship.
 
-Your screen is divided into four **rooms**. Tap a room along the top to go
-straight to it. You never have to scroll a long page looking for something.
+Your screen has four folders: **My Guide**, **Study**, **Church** and
+**Prayer**. Tap the button at the top to go straight to one. You never have to
+scroll a long page looking for something.
 
 ### My Guide
 
-Your Guide, and your conversation with them. This conversation is private
-between the two of you. Church leaders cannot read it.
+Your Guide, and anything waiting from them. Your conversation with them is the
+round **Talk** button in the corner of every screen, with a number on it when
+they have written. It is private between the two of you. Church leaders cannot
+read it.
 
-![My Guide. The person walking with you, and the way to talk to them.](screenshots/walkthrough/03-explorer-guide.png)
+![My Guide. What is waiting for you, and a reminder of where the conversation is.](screenshots/walkthrough/03-explorer-guide.png)
+
+### Talking with your Guide
+
+Type in the box at the bottom and press the arrow. The paper clip sends a photo
+or a file.
+
+**Tap a message** to react to it or reply to it. Holding it does the same.
+
+![Tap a message: six reactions along the top, then Reply and Copy. Edit and Delete appear on your own messages.](screenshots/walkthrough/16-message-menu.png)
+
+- **React** with one tap. The praying hands come first, because that is the one
+  people reach for most. Tap the same one again to take it back.
+- **Reply** to answer one message in particular. Your answer carries a quote of
+  it. Swiping a message to the right does the same.
+
+![A reply, with the message it answers quoted above it. The praying hands under the earlier message are a reaction.](screenshots/walkthrough/17-reply-and-reaction.png)
+
+**Say it instead of typing it.** When the box is empty, the button beside it is
+a microphone. Tap it once and speak; the phone asks for the microphone the first
+time. Tap the arrow to send, or the bin to throw it away. It stops at two
+minutes and never sends on its own.
+
+![Recording a voice message. The clock counts while you speak; the bin throws it away, the arrow sends it.](screenshots/walkthrough/18-voice-message.png)
+
+> **If you do not see Reply, the reactions or the microphone**, your church has
+> not switched them on yet. Everything else in the conversation works the same.
 
 ### Study
 
@@ -134,11 +183,13 @@ Everyone you walk with, and what needs you today.
 
 ### Talking with somebody
 
-Open a person to see your conversation with them. It is private between the two
-of you. You can attach a photograph or a file, and photographs are made smaller
-and have their location removed before they are sent.
+Open a person and press **Message**, or use the round **Talk** button in the
+corner. It is private between the two of you. You can attach a photograph or a
+file, and photographs are made smaller and have their location removed before
+they are sent. Replying, reacting and voice messages work as they do for an
+Explorer (Part 2).
 
-![A conversation. Private between the two of you.](screenshots/walkthrough/09-conversation.png)
+![A conversation. The line at the top says it: only the two people walking together can read it.](screenshots/walkthrough/09-conversation.png)
 
 Prayer runs both ways. On a person's **Care** tab you can read what they asked
 and tell them you are praying, and ask them to pray for you. Only they see what
@@ -157,7 +208,15 @@ Everything that is your work rather than your conversation: lesson studies,
 resources, the Guides' room, and putting a name forward. Each is a subroom, so
 you tap once and you are there.
 
-![The Office and its subrooms.](screenshots/walkthrough/11-office.png)
+![The Office in the sample church, open on Numbers. The sample has two of its folders; your church's Office has them all.](screenshots/walkthrough/11-office.png)
+
+### Your desk drawer
+
+On a phone, your desk is a drawer. Tap the small cabinet on the right edge, or
+swipe in from that edge: the date, what is waiting, a note to yourself, and a
+pocket of links. Tap **›››** to put it away.
+
+![The desk drawer, open: today's date, what is waiting, a note, and the pocket.](screenshots/walkthrough/21-desk-drawer.png)
 
 ---
 
@@ -206,8 +265,9 @@ reaches a real person.
 
 - **A blank screen, or something out of place after an update.** Close the app
   fully and open it again. It checks for a new version each time it starts.
-- **You cannot find a button somebody told you about.** Check which room you are
-  in. The rooms along the top are folders, and the button may be in another one.
+- **You cannot find a button somebody told you about.** Check which folder you
+  are in. Tap the button at the top of the screen; what you want may be in
+  another folder.
 - **The app says your invitation is not valid.** Invitations expire. Ask your
   church for a new one.
 - **You changed your profile picture and the old one is still showing.** Close

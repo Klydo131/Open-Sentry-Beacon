@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const {
   Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell,
-  WidthType, BorderStyle, ShadingType, AlignmentType, PageBreak,
+  WidthType, BorderStyle, ShadingType, AlignmentType, PageBreak, ImageRun,
 } = require('docx');
 
 const SRC = path.join(__dirname, '..', 'HANDBOOK.md');
@@ -78,6 +78,45 @@ function callout(label, lines) {
   }));
 }
 
+/**
+ * A screenshot, with its caption under it.
+ *
+ * The handbook got pictures on 2 October 2026, and without this every one of
+ * them would have come out of the Word copy as a line of Markdown. A phone
+ * screen is placed at about the width of a phone (62 mm, as in the PDF); a
+ * wider screen gets most of the page. A picture that is not there is skipped
+ * with a warning, the way the PDF builder does it.
+ */
+function figure(alt, src) {
+  const file = path.join(path.dirname(SRC), src);
+  if (!/\.png$/i.test(file) || !fs.existsSync(file)) {
+    console.error(`  ! skipped picture ${src}`);
+    return [];
+  }
+  const data = fs.readFileSync(file);
+  const w = data.readUInt32BE(16);
+  const h = data.readUInt32BE(20);
+  const width = h > w * 1.4 ? 234 : 600;  // pixels at 96 to the inch
+  return [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 160, after: 60 },
+      keepNext: true,
+      children: [new ImageRun({
+        type: 'png',
+        data,
+        transformation: { width, height: Math.round((width * h) / w) },
+        altText: { name: path.basename(src), title: alt, description: alt },
+      })],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+      children: [new TextRun({ text: alt, italics: true, size: 17, color: GREY })],
+    }),
+  ];
+}
+
 const splitRow = (line) =>
   line.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
 
@@ -117,6 +156,10 @@ function convert(md) {
     const line = lines[i];
 
     if (!line.trim()) { i += 1; continue; }
+
+    // A picture on a line of its own.
+    const picture = line.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (picture) { out.push(...figure(picture[1], picture[2])); i += 1; continue; }
 
     // A table: a header row, a separator, then rows.
     if (line.trim().startsWith('|') && (lines[i + 1] || '').includes('---')) {
@@ -210,7 +253,7 @@ const doc = new Document({
         spacing: { before: 400 },
         alignment: AlignmentType.CENTER,
         children: [new TextRun({
-          text: 'Open Sentry Beacon is free software under the AGPL-3.0. '
+          text: 'Open Sentry Beacon is free software under the AGPL-3.0-only. '
               + 'This handbook contains no keys, no passwords and no member details.',
           size: 18, color: GREY, italics: true,
         })],

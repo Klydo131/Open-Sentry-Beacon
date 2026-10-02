@@ -16,6 +16,13 @@
 // This renders every document that gets printed and looks at the result, which
 // is the only way to catch a class of bug that lives between the Markdown and
 // the page.
+//
+// PICTURES TOO, since 2 October 2026, when the handbook got its screenshots.
+// The builder drops an image it cannot find and carries on, on purpose, so a
+// guide with one shot not yet taken still builds. The cost is that a renamed
+// screenshot disappears from the printed copy with nothing but a line on
+// stderr that nobody reads. So every picture a printed document names must be
+// in the repository, and must come out of the render as a picture.
 
 import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -29,7 +36,7 @@ const ok = (cond, msg) => {
 };
 
 // The documents that are built into PDFs and handed to people.
-const PRINTED = ['HANDBOOK.md', 'WHAT-IT-COSTS.md', 'DATA-PROTECTION.md', 'DO-THIS-NEXT.md'];
+const PRINTED = ['HANDBOOK.md', 'HOW-TO-USE.md', 'WHAT-IT-COSTS.md', 'DATA-PROTECTION.md', 'DO-THIS-NEXT.md'];
 
 // The builder's own renderer, used rather than reimplemented: a second copy of
 // the rules would drift from the first and then this would be checking a
@@ -47,7 +54,13 @@ try {
   // The builder is a script; take everything above the part that goes looking
   // for a browser and export what is needed.
   const escaped = body.replace(/^#!.*\n/, '');
-  const wrapper = `${escaped}\nmodule.exports = { render, inline, escapeHtml };\n`;
+  // The shim lives in a temporary folder, so it is told where docs/ really is;
+  // otherwise every picture would be "missing" and the checks below would be
+  // checking nothing.
+  const DOCS_LINE = "const DOCS = path.join(__dirname, '..');";
+  ok(escaped.includes(DOCS_LINE), 'the builder finds pictures relative to docs/');
+  const located = escaped.replace(DOCS_LINE, `const DOCS = ${JSON.stringify(path.resolve('docs'))};`);
+  const wrapper = `${located}\nmodule.exports = { render, inline, escapeHtml };\n`;
   const fs = await import('node:fs');
   fs.writeFileSync(shim, wrapper);
 
@@ -78,6 +91,21 @@ try {
     // 3. It produced something. A renderer that returns nothing passes every
     //    check above.
     ok(html.length > 2000, `${doc}: rendered to a real page (${Math.round(html.length / 1024)} kB)`);
+
+    // 4. Every picture is there, local, and printed. A caption is put into an
+    //    attribute and then through the bold and italic pass, so a quote mark,
+    //    an asterisk or a backtick in one breaks the page around it.
+    const markdown = readFileSync(file, 'utf8');
+    const pictures = [...markdown.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)].map((m) => ({ alt: m[1], src: m[2] }));
+    if (!pictures.length) continue;
+    const absent = pictures.filter((p) => /^https?:/i.test(p.src) || !existsSync(path.join('docs', p.src)));
+    ok(absent.length === 0,
+       `${doc}: all ${pictures.length} pictures are files in docs/${absent.length ? ` (not: ${absent.map((p) => p.src).join(', ')})` : ''}`);
+    const awkward = pictures.filter((p) => /["*`]/.test(p.alt) || !p.alt.trim());
+    ok(awkward.length === 0,
+       `${doc}: every picture has a caption, with no quote mark, asterisk or backtick in it${awkward.length ? ` (${awkward.map((p) => p.src).join(', ')})` : ''}`);
+    const printed = (html.match(/<figure[ >]/g) ?? []).length;
+    ok(printed === pictures.length, `${doc}: every picture comes out as a figure (${printed} of ${pictures.length})`);
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });

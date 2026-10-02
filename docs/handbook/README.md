@@ -26,15 +26,16 @@ is not that, and a PDF cannot be edited at all.
 Keep them in step with `docs/` when the setup changes — a handbook that
 describes last year's install is worse than none.
 
-## The six PDFs that ARE committed
+## The seven PDFs that ARE committed
 
-Everything in `docs/handbook/pdf/` is build output and ignored. Six PDFs in
+Everything in `docs/handbook/pdf/` is build output and ignored. Seven PDFs in
 `docs/` are committed, because they are what gets handed to somebody who will
 never clone this repository:
 
 | File | Built from | For |
 |---|---|---|
 | `Hope-Beacon-Handbook.pdf` | `HANDBOOK.md` | Anybody running the app day to day |
+| `Hope-Beacon-How-To-Use.pdf` | `HOW-TO-USE.md` | A member: the app in pictures, nothing technical |
 | `Hope-Beacon-Architecture.pdf` | `BACKEND-MAP.md` | Somebody asking how the backend is shaped |
 | `Hope-Beacon-Engineering-Brief.pdf` | `BUILD-BRIEF.md` | A developer picking the work up |
 | `Hope-Beacon-IT-and-AI-Guide.pdf` | four docs, combined | A church's IT volunteer |
@@ -45,11 +46,12 @@ Rebuild them after changing the Markdown, or the committed copy starts telling
 a church something the app stopped doing:
 
 ```bash
-node docs/handbook/build-pdf.js HANDBOOK.md DO-THIS-NEXT.md WHAT-IT-COSTS.md \
+node docs/handbook/build-pdf.js HANDBOOK.md HOW-TO-USE.md DO-THIS-NEXT.md WHAT-IT-COSTS.md \
                                 BACKEND-MAP.md BUILD-BRIEF.md
 node docs/handbook/build-pdf.js --combine "IT and AI Guide" \
      START-HERE.md AI-SETUP-GUIDE.md EMAIL.md SECURITY.md
 cp docs/handbook/pdf/Open-Sentry-Beacon-HANDBOOK.pdf      docs/Hope-Beacon-Handbook.pdf
+cp docs/handbook/pdf/Open-Sentry-Beacon-HOW-TO-USE.pdf   docs/Hope-Beacon-How-To-Use.pdf
 cp docs/handbook/pdf/Open-Sentry-Beacon-BACKEND-MAP.pdf   docs/Hope-Beacon-Architecture.pdf
 cp docs/handbook/pdf/Open-Sentry-Beacon-BUILD-BRIEF.pdf   docs/Hope-Beacon-Engineering-Brief.pdf
 cp docs/handbook/pdf/Open-Sentry-Beacon-IT-and-AI-Guide.pdf docs/Hope-Beacon-IT-and-AI-Guide.pdf

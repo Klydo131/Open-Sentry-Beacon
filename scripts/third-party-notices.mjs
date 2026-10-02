@@ -6,7 +6,7 @@
 // MPL-2.0) that asks for its notice to go with every copy, and the minified
 // code a browser downloads is a copy. The build strips those notices out of the
 // code, and until 1 October 2026 nothing put them back: the licence audit of
-// that day found no notice anywhere in the built app. Settings -> About now
+// that day found no notice anywhere in the built app. Settings -> General now
 // links this file ("Code from other projects").
 //
 // WHAT IS LISTED. Every production dependency in package-lock.json that is

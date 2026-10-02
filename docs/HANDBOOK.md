@@ -14,7 +14,9 @@ Everything needed to run Hope Beacon, move it to a new project, and keep it work
 >
 > **An AI tool picking this up?** Part 13 is written for you and states the invariants you must not break.
 >
-> **Handing this to a member rather than an administrator?** Give them `HOW-TO-USE` instead. It is the same app explained in pictures, phone-shaped, with nothing in it about databases or deployment.
+> **Handing this to a member rather than an administrator?** Give them `HOW-TO-USE` instead, printed as `Hope-Beacon-How-To-Use.pdf`. It is the same app explained in pictures, phone-shaped, with nothing in it about databases or deployment.
+>
+> **The pictures** are the real app, photographed in its sample church: the people in them (Maria Santos, John Reyes, Pastor Ramos and the rest) are invented, and nobody real appears anywhere in this handbook. Where the sample church differs from a church's own app, the caption says so.
 
 1. [What the app is](#1-what-the-app-is)
 2. [The four roles](#2-the-four-roles)
@@ -44,6 +46,8 @@ There is no public sign-up and there never will be. Somebody at the church enter
 ### A conversation belongs to two people
 
 What an Explorer says to their Guide is readable by those two and nobody else. Not other Guides, not Directors, not the person who owns the server. The only exception is a safeguarding report, which a Director may read in place, and the app says so plainly on the screen where a report is made.
+
+![A conversation, in the sample church. The line at the top says who can read it: the two people walking together, and nobody else.](screenshots/walkthrough/09-conversation.png)
 
 ### A message can be corrected, or taken back
 
@@ -98,6 +102,8 @@ The starter shelf is the same nineteen resources for everybody, but an Explorer 
 
 Nothing is hidden. The Great Controversy, the collected writings of Ellen G. White, the quarterly archive and the General Conference publications are all still in the shelf for everyone else, and for an Explorer the moment they go looking. What changed is only what is put in front of somebody first.
 
+![The shelf, as an Explorer sees it. First on it is a Bible they can read on a phone, with whole books saved for reading with no signal.](screenshots/walkthrough/07-explorer-library.png)
+
 The shelf is a constant in `lib/starter-kit.ts`, not a table, so it costs no storage and no query. `tests/the-explorer-starts-with-jesus.mjs` keeps the short list short. The twenty links point at other people's websites, so `links.yml` checks weekly that every one of them still opens.
 
 ## 3. The journey
@@ -111,6 +117,8 @@ Five stages, and an Explorer moves through them at their own pace. The stage is 
 | **Care** | Walking alongside. The longest stage, and usually the most valuable. |
 | **Call** | A point of decision. |
 | **Cultivate** | Growing in faith after that decision. |
+
+![An Explorer's page, as their Guide sees it. The journey reads left to right, and this Explorer has reached Connect, the second stage.](screenshots/walkthrough/10-journey.png)
 
 The first stage was called *Create* until August 2026. That named what the church was doing; *Beginner* names where the Explorer is, which is whose journey it is. Nothing changed in the database, so no history moved.
 
@@ -129,6 +137,8 @@ A sixth idea sits behind these: **Commission**. An Explorer who has been walked 
 **Step 4.** They choose a password. That is what finishes the sign-up.
 
 **Step 5.** They appear under **Awaiting approval**. Approve them, and they can enter.
+
+![A Director's Approvals, on a computer. A name a Guide put forward waits at the top with Invite; somebody who has signed up waits below with Approve and Disapprove. The desk on the right counts what is waiting.](screenshots/walkthrough/14-approvals.png)
 
 > **CAUTION** · One live invitation per person
 >
@@ -227,13 +237,20 @@ Three things about it are worth knowing before you use it on twenty people.
 | **Delete** | Your own only, after asking. A line remains saying the message was deleted, never a gap. |
 | **Open**, **Remove** | For a photo or a file: open it, or (if you sent it) take it back. |
 
+![Tap a message: the six reactions, then Reply and Copy. Edit and Delete appear only on your own messages.](screenshots/walkthrough/16-message-menu.png)
+![A reply carries a quote of the message it answers. The praying hands under the message above it are a reaction.](screenshots/walkthrough/17-reply-and-reaction.png)
+
 **Reactions.** Praying, love, like, haha, wow and sad, in that order. One each per message: choosing another replaces yours, and choosing yours again takes it back. They sit on the lower edge of the bubble; tapping them opens the same panel.
 
 **Photos and files.** The paper clip beside the box sends one. A photo is made smaller and loses where it was taken before it leaves the phone (Part 9), and arrives as the picture: tap it for the full size, with **Save** in the corner. Anything else arrives as its name and size.
 
-**Voice messages.** With nothing typed, the button beside the box is a microphone. Tap it to start; the browser asks for the microphone the first time, and only then. A red dot and a clock show it is recording; **Cancel** throws it away and **Send** sends it. It stops at two minutes and waits for you; it never sends on its own. Tap, not hold, on purpose: holding a button for a minute is hard on an older hand, and a slipping thumb sends something half said. The microphone is let go of the moment recording stops, so the phone's microphone light goes off when it should.
+**Voice messages.** With nothing typed, the button beside the box is a microphone. Tap it to start; the browser asks for the microphone the first time, and only then. A red dot and a clock show it is recording; **the bin** throws it away and **the arrow** sends it. It stops at two minutes and waits for you; it never sends on its own. Tap, not hold, on purpose: holding a button for a minute is hard on an older hand, and a slipping thumb sends something half said. The microphone is let go of the moment recording stops, so the phone's microphone light goes off when it should.
 
-**It follows Text size.** Settings → Language and size changes the conversation's words as well as every other screen's. Until 1 October 2026 the chat was drawn in fixed sizes and did not.
+![Recording a voice message. The clock counts up to the two-minute limit; the bin on the left throws it away, the arrow on the right sends it.](screenshots/walkthrough/18-voice-message.png)
+
+**It follows Text size.** Settings → General → **Text size** changes the conversation's words as well as every other screen's. Until 1 October 2026 the chat was drawn in fixed sizes and did not.
+
+![The same conversation with Text size at its largest. The words grow and still wrap; nothing runs off the side.](screenshots/walkthrough/22-text-size-large.png)
 
 **The tutorial teaches it.** Both the Guide's walk and the Explorer's have a step that points at a message and asks for a reaction or a reply.
 
@@ -424,18 +441,22 @@ Advance stage is one tap, and taps go wrong. **Undo, step back** sits beside it 
 
 The screen a Guide lands on opens with their own figures: how many Explorers they have, how many have **graduated**, how many are still walking, and the breakdown by level. Above that sits whatever is waiting today, which is usually short: prayer requests, and the next meeting with a name and a day.
 
+![A Guide's home on a phone: how many people they walk with, what needs them today, and how many are at each stage.](screenshots/walkthrough/08-guide-desk.png)
+
 **Graduated** means reached Commission: walked the whole journey and now sent to walk with somebody else. It is the number the whole design exists to produce.
 
 ### Rooms and subrooms
 
 **A room is a folder, and a subroom is a folder inside it.** Open a room and a drop-down at the top names the subroom you are in; tap it to see them all, and tap one to go in. Nothing else is drawn, so there is nothing to scroll past.
 
+![The drop-down open on an Explorer's own screen. Closed, it says which folder you are in and that it is 1 of 4; open, it lists them all.](screenshots/walkthrough/20-subrooms.png)
+
 Six rooms work this way now. Measured on a phone, with the sample church in them:
 
 | Room | Was | Now |
 | --- | --- | --- |
 | **The Library** | 11 screens of scrolling | 3 folders: Browse, Featured, On this device |
-| **Settings** | 7 screens | 5 folders: Install, Alerts, Language and size, Church, Help |
+| **Settings** | 7 screens | 4 or 5 folders: General (installing, alerts, language, text size, the source code), Password, Admin Reports, Church for leadership, Help. The sample church has General, Help and, for leadership, Church |
 | **My Journey**, an Explorer's own screen | 7 screens | 4 folders: My Guide, Study, Church, Prayer |
 | **The Church** | 5 screens | 3 folders: Notices, Community Blogs, The numbers |
 | **My Explorers**, a Guide's home | 4 screens | 4 folders: My Explorers, Follow-ups, Prayer, Church |
@@ -450,6 +471,8 @@ Guides, Directors and Executive Directors have an **Office**, in the Menu on eve
 | A Guide's subrooms | A Director's subrooms |
 | --- | --- |
 | Lesson studies, Resources, Guides' room, Put a name forward, Numbers | Numbers, Reports, Lesson studies, Library, Pairing requests, Guides' room |
+
+![The Office in the sample church, open on Numbers. The sample has two of these folders, Numbers and Lesson studies; a church's own Office has the full set above.](screenshots/walkthrough/11-office.png)
 
 Three things about it are worth knowing:
 
@@ -629,6 +652,8 @@ This matters most for somebody holding an invitation. The old advice was to swit
 
 **Settings asks which browser you are in and gives that browser's steps.** It guesses from the browser itself and opens on the right one, and the whole list is one tap away if the guess is wrong.
 
+![Settings, General. Installing is the first card, and Show me how gives the steps for the browser you are in.](screenshots/walkthrough/13-settings.png)
+
 | Browser | Where | What to press |
 | --- | --- | --- |
 | **Chrome** | Android, Windows, Mac, Linux, Chromebook | Phone: **⋮** then **Add to Home screen**. Computer: the install icon at the right-hand end of the address bar. |
@@ -695,9 +720,11 @@ What somebody listens to while they read is nobody else's business, which is why
 
 On a phone, an iPad and a computer alike, a bar along the bottom of the screen has three words on it, and it **is** the navigation:
 
-- **Menu** lists every room you have, written out: Home, your own screen, My Files, **Publish**; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings (and Mail, for leadership) is under **You**; the way out (Sign out) is at the bottom.
+- **Menu** lists every room you have, written out: Home, your own screen, My Files, **Publish**; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
 - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
 - **My Files** opens your own files.
+
+![The Menu, for a Guide in the sample church. Every room is written out; the bar along the bottom is the same on a phone, an iPad and a computer.](screenshots/walkthrough/19-menu.png)
 
 Six of those rooms have **subrooms** inside them, offered as **one drop-down** at the top when you open one. Closed, it names the subroom you are in, says how many there are (*2 of 4*), and shows a count when something is waiting in another one; tap it and every subroom is listed. It is a drop-down on every screen size, because people did not know to swipe the row it replaced. The sections of one person's page (Appointments, Journey, Care and the rest) open the same way. See *Rooms and subrooms* in Part 4.
 
@@ -720,6 +747,8 @@ Coming up is the next three meetings, with the day and the time; pressing one op
 **Every line goes to the exact card, not the top of a page.** *Prayer requests waiting* opens the prayer card itself; *Waiting to be approved* opens Admin already on Approvals rather than on whichever tab you last used; *Guides asking to walk with somebody* opens the Office at that card. The card is marked briefly when you arrive, so you can see which one answered the press. *Unread notifications* is the one exception and it is not a link: the bell is in the header of every screen, so pressing that line opens the bell where you already are.
 
 Lines disappear when the work is done, so an empty panel means an empty desk.
+
+![The desk on a phone is a drawer that slides in from the right edge: the date, the counts that are waiting, a note, and the pocket.](screenshots/walkthrough/21-desk-drawer.png)
 
 > **NOTE** · This is what "it doesn't go to the feature" was
 >
@@ -867,7 +896,9 @@ Brevo templates are supported as an alternative but not recommended: they put th
 
 > **IMPORTANT** · The one thing the licence asks
 >
-> The app is free software under the AGPL-3.0-only. Run it unchanged and you owe nothing. **Change it (renaming it counts) and let your congregation use it, and you must offer them the source of your version.** The app already does that from Settings → About and from its front page; point both at your own repository by changing `SOURCE_URL` in `lib/brand.ts`. Settings → About also links **Code from other projects**: the licence of every open-source package inside the app, written at each build, which those packages ask for and you do not have to do anything about.
+> The app is free software under the AGPL-3.0-only. Run it unchanged and you owe nothing. **Change it (renaming it counts) and let your congregation use it, and you must offer them the source of your version.** The app already does that from Settings → General and from its front page; point both at your own repository by changing `SOURCE_URL` in `lib/brand.ts`. The same card in Settings → General links **Code from other projects**: the licence of every open-source package inside the app, written at each build, which those packages ask for and you do not have to do anything about.
+
+![Settings, General, on a phone: View the source code, Read the licence, and Code from other projects. Below them, which address and which build this copy of the app is.](screenshots/walkthrough/23-source-and-licences.png)
 
 ### Moving the project you already run
 

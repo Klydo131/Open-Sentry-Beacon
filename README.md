@@ -400,13 +400,13 @@ Read those together and the practical rule is short:
 ### How this repo satisfies section 13, and how to copy it
 
 The app carries a **"view and contribute on GitHub"** link on its front door and
-in **Settings → About**. Both read one setting, `SOURCE_URL` in `lib/brand.ts`.
+in **Settings → General**. Both read one setting, `SOURCE_URL` in `lib/brand.ts`.
 If you deploy a modified version, point it at *your* source, not this one. That
 one edit is the whole obligation for most deployments, and leaving it pointing
 here while your version differs is the one way an honest church accidentally
 breaches the licence.
 
-Settings → About also links **"Code from other projects"**: the licence of every
+The same card in Settings → General links **"Code from other projects"**: the licence of every
 open-source package the app is built from, written at each build by
 `scripts/third-party-notices.mjs`. Most of those licences ask that their notice
 go with every copy, and a browser that opens the app receives one.

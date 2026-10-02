@@ -6,8 +6,8 @@ under. Open Sentry Beacon itself is licensed under the AGPL-3.0-only — see
 
 **The complete list ships with the app.** Every open-source package the app is
 built from, with its licence text, is written at each build by
-`scripts/third-party-notices.mjs` and linked from Settings → About as "Code from
-other projects". The drawing board's fonts carry theirs beside them, in
+`scripts/third-party-notices.mjs` and linked from Settings → General as "Code
+from other projects". The drawing board's fonts carry theirs beside them, in
 `/excalidraw/fonts/LICENSES.txt`. `tests/dependency-licences.mjs` fails the
 build if a dependency arrives under a licence nobody here has read.
 

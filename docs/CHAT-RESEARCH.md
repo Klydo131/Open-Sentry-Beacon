@@ -55,7 +55,7 @@ Built in this change:
   six reactions with 🙏 first; tap to record, then Cancel or Send, never
   hold-to-talk (kinder to an older hand than Signal's or FluffyChat's
   press-and-hold).
-- **Chat text follows Settings → Text size.** Every size in the chat is in rem
+- **Chat text follows Settings → General → Text size.** Every size in the chat is in rem
   now; it was in pixels, so the setting never reached the messages.
 - **Readable small print.** The time, "Seen", file sizes and the quoted name
   rose to 13px at normal size and to WCAG AA contrast (the time was 11px at
@@ -137,7 +137,7 @@ No dependency is under a licence that conflicts with AGPL-3.0-only. The gaps
 were in the paperwork, and each is closed:
 
 - **No third-party notice shipped with the app.** Now written at every build
-  (`scripts/third-party-notices.mjs`) and linked from Settings → About as "Code
+  (`scripts/third-party-notices.mjs`) and linked from Settings → General as "Code
   from other projects". `tests/dependency-licences.mjs` fails the build if a
   dependency arrives under a licence nobody has read.
 - **The drawing board's fonts were served without their licences**, and one,

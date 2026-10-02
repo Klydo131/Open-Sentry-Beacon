@@ -32,6 +32,11 @@ const PORT = process.argv[2] || '4310';
 const BASE = `http://localhost:${PORT}`;
 
 const { chromium } = require('playwright');
+// The browser walks' own helpers for the two things that changed shape on
+// 30 September 2026: a room's subrooms are a drop-down now, not a row of tabs,
+// and the conversation is the Talk bubble, not a page. Using the walks' copies
+// means the photographs open things exactly the way the tested walks do.
+const { openRoom, openChat } = require('../tests/e2e/_playwright.js');
 mkdirSync(OUT, { recursive: true });
 
 const settle = (page, ms = 1300) => page.waitForTimeout(ms);
@@ -47,13 +52,37 @@ async function signIn(page, who) {
     const b = page.getByRole('button', { name: label });
     if (await b.count()) { await b.first().click().catch(() => {}); await settle(page, 600); }
   }
+  // THE CONSENT NOTICE can arrive a moment after the sign-in has finished, on
+  // the first page of the app rather than on the sign-in page, and it covers
+  // everything. It is accepted once per person and remembered, so waiting for
+  // it here means no photograph has it over the screen being shown.
+  const consent = page.getByRole('button', { name: /I understand, continue/i }).first();
+  try {
+    await consent.waitFor({ state: 'visible', timeout: 3000 });
+    await consent.click();
+    await settle(page, 600);
+  } catch {
+    // Not shown to this person, or already accepted.
+  }
 }
 
 /** Choose a room or subroom by its visible label. */
 async function room(page, label) {
-  const tab = page.getByRole('tab', { name: label }).first();
-  if (await tab.count()) { await tab.click().catch(() => {}); await settle(page, 900); }
+  await openRoom(page, label);
+  await settle(page, 900);
 }
+
+/** Open Maria's conversation with John, the sample pairing with the most said in it. */
+async function conversation(page) {
+  await signIn(page, /Maria Santos/i);
+  await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
+  await settle(page, 1200);
+  await openChat(page);
+  await settle(page, 900);
+}
+
+/** John's latest message in that conversation: the bubble a Guide would answer. */
+const theirLatest = (page) => page.locator('[data-chat-entry="message"]:not([data-mine]) [data-bubble]').last();
 
 const PHONE = { width: 390, height: 844 };
 const DESK = { width: 1280, height: 900 };
@@ -93,7 +122,7 @@ const SHOTS = [
     go: async (p) => { await signIn(p, /Maria Santos/i); await p.goto(`${BASE}/dm`, { waitUntil: 'networkidle' }); await settle(p, 1600); } },
 
   { file: '09-conversation.png', what: 'A conversation, private between two people', size: PHONE,
-    go: async (p) => { await signIn(p, /Maria Santos/i); await p.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' }); await settle(p, 1700); } },
+    go: async (p) => { await conversation(p); } },
 
   { file: '10-journey.png', what: 'Moving somebody along their journey', size: PHONE,
     go: async (p) => { await signIn(p, /Maria Santos/i); await p.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' }); await settle(p); await room(p, /Journey/i); } },
@@ -120,6 +149,75 @@ const SHOTS = [
 
   { file: '15-church.png', what: 'The church home: notices, prayer wall, the numbers', size: DESK,
     go: async (p) => { await signIn(p, /Pastor Ramos/i); await p.goto(`${BASE}/church`, { waitUntil: 'networkidle' }); await settle(p, 1700); } },
+
+  // THE CONVERSATION, 1 OCTOBER 2026: reply, react and speak.
+  { file: '16-message-menu.png', what: 'Tap a message: six reactions, then Reply, Copy and more', size: PHONE,
+    go: async (p) => {
+      await conversation(p);
+      await theirLatest(p).click();
+      await p.locator('[data-message-menu]').waitFor({ timeout: 5000 });
+      await settle(p, 700);
+    } },
+
+  { file: '17-reply-and-reaction.png', what: 'A reply carries a quote; a reaction sits on the bubble', size: PHONE,
+    go: async (p) => {
+      await conversation(p);
+      await theirLatest(p).click();
+      await p.locator('[data-react="Praying"]').click();
+      await settle(p, 700);
+      await theirLatest(p).click();
+      await p.locator('[data-menu-action="reply"]').click();
+      await settle(p, 500);
+      await p.locator('[data-quest="chat-send"] textarea').first().fill('Yes. Thursday evening works, and I will bring the reading on rest.');
+      await p.locator('[data-composer-action]').click();
+      await settle(p, 1300);
+    } },
+
+  { file: '18-voice-message.png', what: 'Recording a voice message: Cancel or Send, never sent on its own', size: PHONE, microphone: true,
+    go: async (p) => {
+      await conversation(p);
+      await p.locator('[data-composer-action]').click();
+      await p.locator('[data-voice-recorder]').waitFor({ timeout: 8000 });
+      await settle(p, 2600);
+    } },
+
+  // GETTING AROUND, 30 September 2026.
+  { file: '19-menu.png', what: 'Menu: every room, written out', size: PHONE,
+    go: async (p) => { await signIn(p, /Maria Santos/i); await p.goto(`${BASE}/menu`, { waitUntil: 'networkidle' }); await settle(p, 1400); } },
+
+  { file: '20-subrooms.png', what: "A room's subrooms, one drop-down", size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John/i);
+      await p.goto(`${BASE}/ds`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+      const toggle = p.locator('[data-subroom-toggle]').first();
+      await toggle.click();
+      await settle(p, 700);
+    } },
+
+  { file: '21-desk-drawer.png', what: 'The desk, as a drawer on a phone', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+      await p.locator('[data-desk-tab]').first().click();
+      await settle(p, 900);
+    } },
+
+  { file: '22-text-size-large.png', what: 'The conversation at the largest text size', size: PHONE, scale: 1.3,
+    go: async (p) => { await conversation(p); } },
+
+  { file: '23-source-and-licences.png', what: 'Settings: the source code, and other projects\' licences', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John/i);
+      await p.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      // On Settings' first room, General, at the foot: "This app is free software".
+      const link = p.locator('[data-third-party-notices]').first();
+      await link.scrollIntoViewIfNeeded();
+      await p.evaluate(() => window.scrollBy(0, 160));
+      await settle(p, 700);
+    } },
 ];
 
 const executablePath = (() => {
@@ -141,10 +239,24 @@ const executablePath = (() => {
   return undefined;
 })();
 
-const browser = await chromium.launch(executablePath ? { executablePath } : {});
+// A pretend microphone, so the voice-message shot shows the recorder without
+// anybody's real one; the browser is told yes without asking.
+const browser = await chromium.launch({
+  ...(executablePath ? { executablePath } : {}),
+  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+});
 let failed = 0;
 for (const shot of SHOTS) {
-  const context = await browser.newContext({ viewport: shot.size, deviceScaleFactor: 2 });
+  const context = await browser.newContext({
+    viewport: shot.size,
+    deviceScaleFactor: 2,
+    ...(shot.size === PHONE ? { isMobile: true, hasTouch: true } : {}),
+    ...(shot.microphone ? { permissions: ['microphone'] } : {}),
+  });
+  // Settings -> Text size, set the way the app stores it, before the first page.
+  if (shot.scale) {
+    await context.addInitScript((value) => { try { localStorage.setItem('beacon-scale', String(value)); } catch {} }, shot.scale);
+  }
   const page = await context.newPage();
   try {
     await shot.go(page);

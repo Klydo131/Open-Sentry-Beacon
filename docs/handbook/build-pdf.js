@@ -90,7 +90,11 @@ function inline(text) {
   out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
     const embedded = embed(src);
     if (!embedded) return '';  // a missing image is worse as a broken icon
-    return `<figure><img src="${embedded}" alt="${alt}">`
+    // A phone screenshot is printed at the size of a phone, not the width of
+    // the page: full width, a 390-pixel screen would be a page and a half tall.
+    const { width, height } = pngSize(src);
+    const shape = height > width * 1.4 ? ' class="phone"' : '';
+    return `<figure${shape}><img src="${embedded}" alt="${alt}">`
       + (alt ? `<figcaption>${alt}</figcaption>` : '')
       + '</figure>';
   });
@@ -133,6 +137,20 @@ const REPO_DOCS = 'https://github.com/klydo131/open-sentry-beacon/blob/main/docs
  * Returns '' for anything missing rather than throwing. A guide with one
  * screenshot not yet captured should still build; the warning says which.
  */
+/** A PNG's width and height, read from its header; 0 x 0 for anything else. */
+function pngSize(src) {
+  try {
+    const head = Buffer.alloc(24);
+    const fd = fs.openSync(path.resolve(DOCS, src), 'r');
+    fs.readSync(fd, head, 0, 24, 0);
+    fs.closeSync(fd);
+    if (head.toString('ascii', 12, 16) !== 'IHDR') return { width: 0, height: 0 };
+    return { width: head.readUInt32BE(16), height: head.readUInt32BE(20) };
+  } catch {
+    return { width: 0, height: 0 };
+  }
+}
+
 function embed(src) {
   if (/^data:/i.test(src)) return src;
   if (/^https?:/i.test(src)) {
@@ -264,7 +282,12 @@ function render(markdown) {
     while (i < lines.length && lines[i].trim() && !/^([#>|`-]|\s*[-*]\s|\s*\d+\.\s)/.test(lines[i])) {
       para.push(lines[i++]);
     }
-    if (para.length) html.push(`<p>${inline(para.join(' '))}</p>`);
+    // A paragraph that is nothing but pictures is a row of them, side by side:
+    // two phone screens next to each other read as "this, then this". A figure
+    // inside a <p> is not allowed anyway, and Chrome would close the <p> early.
+    const pictures = para.length && para.every((l) => /^!\[[^\]]*\]\([^)]+\)\s*$/.test(l.trim()));
+    if (pictures) html.push(`<div class="figures">${para.map((l) => inline(l.trim())).join('')}</div>`);
+    else if (para.length) html.push(`<p>${inline(para.join(' '))}</p>`);
     else i += 1;
   }
   closeList(list);
@@ -309,13 +332,20 @@ const page = (title, body) => `<!doctype html>
                            border: none; word-break: break-all; }
   strong { color: #0b1f3a; }
   /* A screenshot is evidence, so it gets a frame and stays with its caption.
-     max-height keeps a tall phone screenshot from taking a whole page on its
-     own, which is what pushes the step it illustrates onto the next one. */
+     max-height keeps a tall screenshot from taking a whole page on its own,
+     which is what pushes the step it illustrates onto the next one. */
   figure { margin: 12pt 0; text-align: center; page-break-inside: avoid; }
   figure img { max-width: 100%; max-height: 165mm; height: auto;
                border: 0.75pt solid #d1d5db; border-radius: 3pt; }
   figcaption { margin-top: 4pt; font-size: 8.5pt; color: #6b7280;
                font-style: italic; }
+  /* A phone screen at about the size of a phone, with its caption no wider
+     than the picture it describes. */
+  figure.phone { width: 62mm; margin: 12pt auto; }
+  figure.phone img { width: 100%; max-height: none; }
+  .figures { display: flex; justify-content: center; align-items: flex-start;
+             gap: 8mm; page-break-inside: avoid; }
+  .figures figure.phone { margin: 12pt 0; }
 </style></head><body>${body}</body></html>`;
 
 // COMBINE MODE. `--combine <Output Name>` renders every remaining file into ONE
