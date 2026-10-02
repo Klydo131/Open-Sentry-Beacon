@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-02-sabbath-program',
+    date: '2026-10-02',
+    title: 'Make the Sabbath program in the Office',
+    items: [
+      'Guides and Directors have a new Sabbath program folder in the Office. A new program starts with Sabbath School, the Divine Service, the afternoon program and sunset vespers, ready for names.',
+      'Download it as a Word file, which also opens in Google Docs, or copy it as text for a group chat. Reuse next week starts the next one from this one, names and all.',
+      'Your programs are kept on your own phone or computer, not sent anywhere. Download the ones you want to keep or share.',
+    ],
+  },
+  {
     id: '2026-10-01-a-better-chat',
     date: '2026-10-01',
     title: 'A friendlier chat: reactions, replies and voice messages',

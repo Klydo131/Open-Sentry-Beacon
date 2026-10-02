@@ -71,6 +71,8 @@ import {
 } from '@/components/LiveGuildRoom';
 import { Analytics } from '@/components/DemoAnalytics';
 import { LessonSeriesLibrary } from '@/components/LessonSeriesLibrary';
+import { SabbathPrograms } from '@/components/SabbathProgram';
+import { useDemo } from '@/lib/demo/store';
 import type { Role } from '@/lib/types';
 
 // Guides and leadership. Explorers are sent home by the shell.
@@ -137,6 +139,7 @@ function LiveOffice() {
   const rooms: Room[] = profile?.role === 'dm'
     ? [
       { id: 'studies', label: '📖 Lesson studies' },
+      { id: 'sabbath', label: '🗓️ Sabbath program' },
       { id: 'library', label: '📚 Resources' },
       { id: 'guild', label: '💬 Guides\u2019 room' },
       { id: 'people', label: '🤝 Put a name forward' },
@@ -146,6 +149,7 @@ function LiveOffice() {
       { id: 'numbers', label: '📈 Numbers' },
       { id: 'reports', label: '🖨️ Reports' },
       { id: 'studies', label: '📖 Lesson studies' },
+      { id: 'sabbath', label: '🗓️ Sabbath program' },
       { id: 'library', label: '📚 Library' },
       { id: 'people', label: '🤝 Pairing requests', badge: waitingAsks, urgent: waitingAsks > 0 },
       { id: 'guild', label: '💬 Guides\u2019 room' },
@@ -204,6 +208,14 @@ function LiveOffice() {
           These are two subrooms rather than one. "Write a study" and "stock the
           shelf" are different errands, and the shelf is long. */}
       {room === 'studies' && <LiveStudies />}
+
+      {/* THE SABBATH PROGRAM, asked for on 2 October 2026 for Guides and
+          everybody above them, which is exactly who has this room. It sits
+          beside Lesson studies because it is the same kind of errand: writing
+          something for the church. It keeps nothing in the database, so it
+          needs no rule of its own; the list is kept on this device under this
+          account's id. */}
+      {room === 'sabbath' && <SabbathPrograms owner={profile.id} churchName={churchName} />}
       {room === 'library' && <LiveLibraryForGuide pairings={pairings} />}
 
       {/* PUTTING A NAME FORWARD, whichever direction it goes.
@@ -252,14 +264,20 @@ function LiveOffice() {
  * every screen, and the practice is in reading the room rather than the figures.
  */
 function DemoOffice() {
+  const { db, currentUser } = useDemo();
   // PARITY IN SHAPE, NOT JUST IN CONTENT. Somebody who learns the job here and
   // then signs in should find the same room with the same strip across the top.
   // A tutorial that teaches one long page and a live app that has subrooms
   // teaches the shape of the app wrong, which is the whole reason this file
   // carries a demo half at all.
+  //
+  // The Sabbath program is the same component as the live one, because it
+  // never needed the database: what somebody practises here is exactly what
+  // they will find. Each sample person keeps their own list.
   const rooms: Room[] = [
     { id: 'numbers', label: '📈 Numbers' },
     { id: 'studies', label: '📖 Lesson studies' },
+    { id: 'sabbath', label: '🗓️ Sabbath program' },
   ];
   const [room, chooseRoom] = useRoom(rooms, 'beacon:office-room:demo');
 
@@ -279,6 +297,9 @@ function DemoOffice() {
         </Card>
       )}
       {room === 'studies' && <LessonSeriesLibrary />}
+      {room === 'sabbath' && (
+        <SabbathPrograms owner={`sample:${currentUser?.id ?? 'nobody'}`} churchName={db.church_name} />
+      )}
     </div>
   );
 }

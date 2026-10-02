@@ -582,6 +582,10 @@ const staticChecks = [
   // called, what its front matter says, and a zip checked against a real
   // Info-ZIP and Python rather than against our own reader.
   ['a room can become a vault', 'tests/a-room-can-become-a-vault.mjs'],
+  // The Sabbath program in the Office: the template the owner chose, a list
+  // per account kept on the device, and a Word file checked against the order
+  // Word's schema insists on and against Info-ZIP and Python.
+  ['a Sabbath program is a Word file', 'tests/a-sabbath-program-is-a-word-file.mjs'],
   ['a suspension is immediate', 'tests/a-suspension-is-immediate.mjs'],
   // `x.col = col` inside a subquery is always true: the bare name binds to x.
   // Two live policies checked nothing because of it.

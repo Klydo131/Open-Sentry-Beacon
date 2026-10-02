@@ -14,7 +14,13 @@
 // are the exception and say so: approving members is desk work.
 //
 //   npm run build && node scripts/run-next.mjs start -p 4310
-//   node scripts/walkthrough-shots.mjs 4310
+//   node scripts/walkthrough-shots.mjs 4310          # every shot
+//   node scripts/walkthrough-shots.mjs 4310 11 24    # only 11-... and 24-...
+//
+// Retake only what changed. Every run photographs the sample church as it is
+// that minute (the date on the desk, the time on a message), so retaking an
+// unchanged screen still rewrites its file, and a commit full of pictures
+// nobody meant to change hides the one that did.
 //
 // Every shot is the real app running on its own sample people. Nothing is
 // composed or retouched. A screenshot is the one kind of documentation that
@@ -29,6 +35,7 @@ const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(root, 'docs/screenshots/walkthrough');
 const PORT = process.argv[2] || '4310';
+const ONLY = process.argv.slice(3);
 const BASE = `http://localhost:${PORT}`;
 
 const { chromium } = require('playwright');
@@ -218,6 +225,28 @@ const SHOTS = [
       await p.evaluate(() => window.scrollBy(0, 160));
       await settle(p, 700);
     } },
+  // The Sabbath program, asked for on 2 October 2026: a Guide's own order of
+  // service, typed into the Office and downloaded as a Word file. The hymn is
+  // named without a number on purpose: the number is the church's own hymnal's.
+  { file: '24-sabbath-program.png', what: 'The Sabbath program, in the Office', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.goto(`${BASE}/office?room=sabbath`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+      await p.getByRole('button', { name: 'New program' }).click();
+      await settle(p, 600);
+      await p.getByLabel('Theme or sermon title (optional)').fill('Rest for the weary');
+      await p.getByLabel('Time of Sabbath School').fill('9:00 AM');
+      await p.getByLabel('Details for Opening hymn').first().fill('Holy, Holy, Holy');
+      await p.getByLabel('Who leads Opening hymn').first().fill('Maria Santos');
+      await p.getByLabel('Who leads Opening prayer').first().fill('John Reyes');
+      // Centred on the part being filled, instantly: the app scrolls smoothly,
+      // and a smooth scroll still moving when the picture is taken lands
+      // somewhere else.
+      await p.getByLabel('Name of this part').first().evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -150, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
 ];
 
 const executablePath = (() => {
@@ -246,7 +275,12 @@ const browser = await chromium.launch({
   args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
 });
 let failed = 0;
-for (const shot of SHOTS) {
+const chosen = ONLY.length ? SHOTS.filter((s) => ONLY.some((n) => s.file.startsWith(`${n.padStart(2, '0')}-`))) : SHOTS;
+if (!chosen.length) {
+  console.log(`No shot is numbered ${ONLY.join(', ')}.`);
+  process.exit(1);
+}
+for (const shot of chosen) {
   const context = await browser.newContext({
     viewport: shot.size,
     deviceScaleFactor: 2,
@@ -272,5 +306,5 @@ await browser.close();
 
 // A missing picture is a hole in the guide, so say so loudly rather than
 // leaving somebody to find a broken image in a printed PDF.
-console.log(failed ? `\n${failed} shot(s) did not capture.` : `\nAll ${SHOTS.length} shots captured.`);
+console.log(failed ? `\n${failed} shot(s) did not capture.` : `\nAll ${chosen.length} shots captured.`);
 process.exit(failed ? 1 : 0);

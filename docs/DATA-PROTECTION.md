@@ -72,6 +72,18 @@ Structure read from the live database. No values were read.
 | `posts` | blogs, at the audience the author chose | As chosen |
 | `meetings`, `notes`, `follow_ups` | arrangements and a Guide's private notes | The pair, or the Guide alone |
 
+### Kept on a person's own device, not in the database
+
+| What | Where | Who can read it |
+|---|---|---|
+| A **Sabbath program** (since 2 October 2026): an order of service with the names of who leads each part | The browser's storage on the phone or computer where it was made, under that account's id | Whoever uses that browser as that account. It reaches anybody else only in a file the person downloads or shares |
+
+Nothing here reaches Supabase, Vercel or anybody else, so a deletion request to
+the church has nothing of it to delete; the person deletes it on their device, or
+by clearing the browser's site data. The file's own author field names the app,
+not the person. `tests/a-sabbath-program-is-a-word-file.mjs` fails the build if
+the tool ever talks to the database or the network.
+
 ### What the church records about people
 
 | Where | What | Retention |

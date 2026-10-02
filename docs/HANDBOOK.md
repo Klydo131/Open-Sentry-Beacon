@@ -466,13 +466,13 @@ Publish, Cases, the Guild Room, Mail and Profile are left alone. They are one or
 
 ### The Office
 
-Guides, Directors and Executive Directors have an **Office**, in the Menu on every screen. It holds the work: the numbers, the downloads, the studies you write and the shelf you stock. Its subrooms are:
+Guides, Directors and Executive Directors have an **Office**, in the Menu on every screen. It holds the work: the numbers, the downloads, the studies you write, the Sabbath program and the shelf you stock. Its subrooms are:
 
 | A Guide's subrooms | A Director's subrooms |
 | --- | --- |
-| Lesson studies, Resources, Guides' room, Put a name forward, Numbers | Numbers, Reports, Lesson studies, Library, Pairing requests, Guides' room |
+| Lesson studies, Sabbath program, Resources, Guides' room, Put a name forward, Numbers | Numbers, Reports, Lesson studies, Sabbath program, Library, Pairing requests, Guides' room |
 
-![The Office in the sample church, open on Numbers. The sample has two of these folders, Numbers and Lesson studies; a church's own Office has the full set above.](screenshots/walkthrough/11-office.png)
+![The Office in the sample church, open on Numbers. The sample has three of these folders, Numbers, Lesson studies and the Sabbath program; a church's own Office has the full set above.](screenshots/walkthrough/11-office.png)
 
 Three things about it are worth knowing:
 
@@ -497,6 +497,29 @@ The split is by kind of work rather than by rank. A roster, a conversation, a ca
 Follow-ups and prayer requests stayed on the Guide's roster, because they are about the people on it.
 
 **Explorers do not have this room**, and not because anything is hidden from them. None of it is theirs to do: no roster to report on, no shelf to stock, nobody to write studies for. A room that would be empty for them tells them they are missing something.
+
+#### The Sabbath program
+
+**Plan a Sabbath's order of service, then take it away as a Word file.** It is the **Sabbath program** folder in the Office, beside Lesson studies, for Guides, Directors and Executive Directors. Asked for on 2 October 2026.
+
+![The Sabbath program on a phone: the parts of the day, each line saying what happens, which hymn or passage, and who leads it.](screenshots/walkthrough/24-sabbath-program.png)
+
+**A new program starts from the whole day**, for the coming Sabbath: Sabbath School, the Divine Service, the afternoon program (AY) and sunset vespers, each with the parts a Sabbath usually has (song service, opening hymn and prayer, mission story, sermon, benediction and the rest). Every line is three boxes: what happens, the details (which hymn, which passage, which title) and who leads it. Rename, add or remove anything. **Arrange lines**, under a part, shows arrows to move a line and a button to take it out; **Done** puts them away again, so the boxes keep the whole width of a phone while you type. One part of the day is open at a time. A part with nothing in it and no time is left off what gets printed.
+
+**No hymn titles come with it.** Every church has its own hymnal; type the number and title you sing.
+
+| Button | What it gives you |
+| --- | --- |
+| **Download Word file** | A .docx named for its Sabbath, such as `Sabbath-program-2026-10-03.docx`. It opens in Word, in Pages, and in Google Docs: upload it to Google Drive, or open it from the Google Docs app on a phone. |
+| **Share the file** | The same file, straight into Messenger, Viber, Drive or email through the phone's own share sheet. Shown only where the browser can share a file, which is most phones and few computers. |
+| **Copy as text** | The program as plain text, ready to paste into a group chat. |
+| **Reuse next week** | A copy for the following Sabbath with every part and name kept, because most weeks change only who does what. |
+
+**Kept on this device, by the owner's choice.** A program is saved as it is typed, in the browser on the phone or computer where it was made, and nowhere else. There is no table and no migration, so a church's app has it the day its code updates, database or not. Each account keeps its own list: a second leader on a shared office computer starts with their own, not the first one's names. The names typed stay on that device unless somebody downloads or shares the file.
+
+> **CAUTION** · What keeping it on the device costs
+>
+> A program made on a phone is not on the laptop, and two leaders do not see each other's: they share the file, the way churches already pass a program round. Clearing the browser's site data, or a private window closing, deletes the programs in it. If the browser refuses to save at all, the screen says so in red. Download the ones you want to keep.
 
 #### Asking to walk with somebody
 
@@ -1204,6 +1227,12 @@ That raises the standard in four ways: consent has to be **express** rather than
 - **A reaction** is seen by the two people, like the conversation itself.
 - **Playing a shared YouTube or Facebook video** loads that company's player, and only when Play is tapped. From that tap the company sees the browser play the video, as on its own site. The privacy notice now says so, and `docs/DATA-PROTECTION.md` lists them as separate controllers rather than processors.
 
+### The Sabbath program, 2 October 2026
+
+- **Programs never leave the device they were made on**, except inside a file the person downloads or shares, which is their act. The app sends nothing to the database or anywhere else, and a check fails the build if that changes (`tests/a-sabbath-program-is-a-word-file.mjs`).
+- **The file names the program, not its author.** Its author field says the app's name, because a program gets forwarded.
+- **A shared computer keeps each account's list apart.** Signing out does not delete them; clearing the browser's site data does.
+
 ### Asking for a copy of your own information
 
 Anybody signed in can download everything the app holds about them, from **Profile → A copy of your information**. No reason is needed and nobody has to approve it. The file is JSON, which is the form both laws ask for so it can be carried somewhere else.
@@ -1236,6 +1265,7 @@ The two largest gaps today:
 | "already has a Hope Beacon account" | That address finished a sign-up before, possibly at another church. | If they are in your church, change their role from the member list. If they have genuinely left, delete the account, which frees the address. |
 | The install button does nothing on an iPhone | Not Safari. Chrome, Firefox, Edge and in-app browsers cannot install on iOS. | Tap **Open this page in Safari** on the card, then Share, then Add to Home Screen. If that button does nothing, the browser refused the handoff: use its ••• menu instead. |
 | The icon opens Safari with an address bar | What was added is a bookmark from before the fix. | Delete the icon and add it again from Safari. |
+| A Sabbath program has gone, or is not on another device | Programs are kept in the browser where they were made, under the account that made them. Another phone, another browser, another account, a private window or cleared site data each start with none. | Open the same browser on the same device, signed in as the same person. Keep the ones that matter by downloading them. |
 | "This copy can never update" | It was installed from a temporary preview address. | Open the real address, install from there, then delete the old icon. |
 | A setting was changed and nothing happened | The two settings beginning `NEXT_PUBLIC_` are read when the site is built. | Redeploy. Saving alone changes nothing. |
 | Everybody was signed out at once | The database project changed, the web address changed, or the project's signing secret was rotated. A code deploy does not do this. | See Part 7. If the address changed, people must reinstall as well. |
@@ -1315,13 +1345,14 @@ Read this section before making a change. It states what is true, what must stay
 15. No file carries an invisible character that reverses or hides text. Write them as `\u` escapes; `tests/no-hidden-characters.mjs` refuses the real thing.
 16. A dependency under a licence not on the allowlist in `tests/dependency-licences.mjs` fails the build until somebody has read it. The third-party notices are written at each build and never committed.
 17. A screen that needs a new table, column or function keeps working without it, until the migration that adds it has run.
+18. The Sabbath program never touches the database or the network. It is kept per account in the browser (`lib/sabbath-program.ts`), and every property in its Word file is written in the order Word's schema gives; `tests/a-sabbath-program-is-a-word-file.mjs` holds both.
 
 ### Prove it before you claim it
 
 ```
-npm run verify        # 165 checks: types, build, security, privacy, licences,
+npm run verify        # 166 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 61 browser walks: 226 in all
+npm run verify:all    # the same, plus 62 browser walks: 228 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1364,6 +1395,8 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Three photographs of deleted people | Three avatars belong to accounts that no longer exist. No rule can reach them, so no user can see them, and no rule can delete them either. They need removing from the Storage dashboard by hand. |
 | Creating a new church without a developer | Possible in the database, not yet possible from a screen. |
 | Bulk invitations | **Built**: pasting a list, and dragging a spreadsheet onto the screen. Suggested pairing after a batch is the part still to do. |
+| The Sabbath program's Word file in Word, Google Docs and Pages | **Built**, and opened here by LibreOffice Writer and two other readers, and held to the order Word's schema gives. It has not been opened in Microsoft Word, Google Docs or Pages, and **Share the file** has not been tried on a real phone. |
+| Sharing a Sabbath program inside the app | Not built, by choice: programs are kept on the device. Leaders share the downloaded file. Keeping them in the church's database would need a table, rules and a migration. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |
 | A picture on most Guides' profiles | Almost none have set one, so the card meant to show an Explorer a real person falls back to initials. The app asks them; somebody has to follow it up. |
 | Guild boards in use | The room, the report route and the take-down are built and were proved against the live database. Nothing has yet been posted on one by a real member. |

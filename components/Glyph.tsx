@@ -571,6 +571,15 @@ export function ArrowDownGlyph(props: GlyphProps) {
   );
 }
 
+/** Move up, for reordering a list by hand. ArrowDownGlyph turned over. */
+export function ArrowUpGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 19V5M6 11l6-6 6 6" />
+    </Svg>
+  );
+}
+
 /** A face with a plus: add a reaction. */
 export function ReactGlyph(props: GlyphProps) {
   return (

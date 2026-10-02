@@ -205,10 +205,30 @@ the next lesson.
 ### The Office
 
 Everything that is your work rather than your conversation: lesson studies,
-resources, the Guides' room, and putting a name forward. Each is a subroom, so
-you tap once and you are there.
+the Sabbath program, resources, the Guides' room, and putting a name forward.
+Each is a subroom, so you tap once and you are there.
 
-![The Office in the sample church, open on Numbers. The sample has two of its folders; your church's Office has them all.](screenshots/walkthrough/11-office.png)
+![The Office in the sample church, open on Numbers. The sample has three of its folders; your church's Office has them all.](screenshots/walkthrough/11-office.png)
+
+### The Sabbath program
+
+The **Sabbath program** folder in the Office plans a Sabbath's order of
+service. Press **New program**. It starts with Sabbath School, the Divine
+Service, the afternoon program and sunset vespers, ready for names. Type who
+leads each part, and the hymn or passage if you like. Tap a part of the day to
+open it.
+
+![The Sabbath program. Each line says what happens, which hymn or passage, and who leads it.](screenshots/walkthrough/24-sabbath-program.png)
+
+- **Download Word file** gives you a file that opens in Word, in Pages, and in
+  Google Docs (upload it to Google Drive, or open it in the Google Docs app).
+- **Copy as text** is for pasting into a group chat.
+- **Reuse next week** starts next week's program from this one, names and all.
+- **Arrange lines**, under a part, is for moving a line or taking it out.
+
+Your programs are kept on your own phone or computer, nowhere else. To have one
+on another device, or to give it to somebody, download it. Directors have the
+same folder.
 
 ### Your desk drawer
 

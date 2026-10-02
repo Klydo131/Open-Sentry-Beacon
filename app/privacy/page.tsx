@@ -142,6 +142,12 @@ export default function PrivacyPage() {
             privacy-enhanced mode, which sets no tracking cookie until you play. Nothing is
             loaded from either company before you tap.
           </p>
+          <p className="mt-2 text-gray-700">
+            <strong>A Sabbath program you make in the Office</strong> stays on your own phone
+            or computer. It is never sent to the church&rsquo;s database or anywhere else.
+            The names in it leave your device only in a file you choose to download or
+            share.
+          </p>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li><strong>The record of shared links: 30 days</strong>, then deleted
               automatically.</li>
