@@ -143,17 +143,28 @@ export default function PrivacyPage() {
             loaded from either company before you tap.
           </p>
           <p className="mt-2 text-gray-700">
-            <strong>A Sabbath program you make in the Office</strong> stays on your own phone
-            or computer. The names in it leave your device only when you choose: in a file
-            or picture you download or share, or when you press <strong>Post it</strong>,
-            which makes it a post with your name on it for the people you chose, the same as
-            any other post. Notes for the platform are never in a post or a picture. A
-            program shared with you is kept on your phone so you can read it with no signal.
+            <strong>A Sabbath program or evangelistic meetings you plan in the Office</strong> are
+            saved on your own phone or computer first. A copy is also kept with your account, so
+            they are there when you sign in on another device. Only you can read that copy: not
+            your Guide, and not the church&rsquo;s leaders. The names in them reach other people
+            only when you choose: in a file or picture you download or share, or when you
+            press <strong>Post it</strong>, which makes it a post with your name on it for the
+            people you chose, the same as any other post. Notes for the platform, and anything
+            you mark <strong>Team only</strong>, are never in a picture, a post or a calendar
+            file. A program or a meeting shared with you is kept on your phone so you can read it
+            with no signal.
           </p>
           <p className="mt-2 text-gray-700">
-            <strong>Evangelistic meetings you plan in the Office</strong> work the same way: kept on
-            your phone or computer, and shared only when you download, share or post them. Anything
-            you mark <strong>Team only</strong> is never in a picture or a post.
+            <strong>When you press Google Calendar</strong> on a night of meetings, Google
+            Calendar opens with that night&rsquo;s name, time, place and what is shared about it
+            filled in, so Google receives them, as it would if you typed them there.{' '}
+            <strong>Add to calendar</strong> sends nothing anywhere: it makes a file on your
+            phone or computer.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>A progress report</strong> is made only from what its reader can already see
+            in the app. The notes you write on it stay on your phone or computer until you
+            download or copy the report.
           </p>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li><strong>The record of shared links: 30 days</strong>, then deleted

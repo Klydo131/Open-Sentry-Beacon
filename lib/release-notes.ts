@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-02-progress-report',
+    date: '2026-10-02',
+    title: 'A progress report, folders, calendars, and your plans on every device',
+    items: [
+      'Guides, Directors and Executive Directors have a progress report in the Office, under Reports: for a month or a quarter, how each Explorer is moving along the journey, the Bible studies and lessons, and who needs you this week. Add your own notes, then download it as a Word file.',
+      'Evangelistic meetings now start from the night as many churches run it: children\'s time from 5:30 PM, health time, Bible study, then snacks. Each night has an end time too.',
+      'Keep Sabbath programs and meetings in folders, and put them on your phone\'s calendar with Add to calendar, or one night at a time in Google Calendar.',
+      'Your programs and meetings are still saved on your device first, and now also follow you to any phone or computer where you sign in. Only you can see that copy.',
+    ],
+  },
+  {
     id: '2026-10-02-evangelistic-meetings',
     date: '2026-10-02',
     title: 'Plan evangelistic meetings your own way',

@@ -23,6 +23,7 @@ import { ThisSabbath } from '@/components/ThisSabbath';
 import { postsVisibleTo } from '@/components/Blog';
 import { useLiveSession } from '@/lib/live/session';
 import { KEEP_UP_BLOG, useKeepUp } from '@/lib/live/keep-up';
+import { officePlans } from '@/lib/live/office-plans';
 import { useIsLive } from '@/lib/tutorial';
 import { useDemo } from '@/lib/demo/store';
 import * as live from '@/lib/live/data';
@@ -102,6 +103,7 @@ function LiveSabbath() {
           meetings={meetings}
           status={status}
           share={share}
+          store={officePlans}
         />
       </LiveAppShell>
     );

@@ -2,7 +2,7 @@
 
 Everything needed to run Hope Beacon, move it to a new project, and keep it working. Written for the people who run a church, and for the AI tools that will be asked to continue the work.
 
-**Version:** 1 October 2026 · **Applies to:** migrations through `20261001120000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
+**Version:** 2 October 2026 · **Applies to:** migrations through `20261002150000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
 
 > **NOTE** · How to read this
 >
@@ -466,13 +466,13 @@ Publish, Cases, the Guild Room, Mail and Profile are left alone. They are one or
 
 ### The Office
 
-Guides, Directors and Executive Directors have an **Office**, in the Menu on every screen. It holds the work: the numbers, the downloads, the studies you write, the Sabbath program, evangelistic meetings and the shelf you stock. Its subrooms are:
+Guides, Directors and Executive Directors have an **Office**, in the Menu on every screen. It holds the work: the numbers, the progress report, the downloads, the studies you write, the Sabbath program, evangelistic meetings and the shelf you stock. Its subrooms are:
 
 | A Guide's subrooms | A Director's subrooms |
 | --- | --- |
-| Lesson studies, Sabbath program, Evangelistic meetings, Resources, Guides' room, Put a name forward, Numbers | Numbers, Reports, Lesson studies, Sabbath program, Evangelistic meetings, Library, Pairing requests, Guides' room |
+| Lesson studies, Sabbath program, Evangelistic meetings, Resources, Guides' room, Put a name forward, Reports, Numbers | Numbers, Reports, Lesson studies, Sabbath program, Evangelistic meetings, Library, Pairing requests, Guides' room |
 
-![The Office in the sample church, open on Numbers. The sample has four of these folders, Numbers, Lesson studies, the Sabbath program and Evangelistic meetings; a church's own Office has the full set above.](screenshots/walkthrough/11-office.png)
+![The Office in the sample church, open on Numbers. The sample has five of these folders, Numbers, Lesson studies, the Sabbath program, Evangelistic meetings and Reports; a church's own Office has the full set above.](screenshots/walkthrough/11-office.png)
 
 Three things about it are worth knowing:
 
@@ -498,6 +498,36 @@ Follow-ups and prayer requests stayed on the Guide's roster, because they are ab
 
 **Explorers do not have this room**, and not because anything is hidden from them. None of it is theirs to do: no roster to report on, no shelf to stock, nobody to write studies for. A room that would be empty for them tells them they are missing something.
 
+#### The progress report
+
+**How the Explorers you walk with are moving, for a month or a quarter, and who needs you this week.** It is in the Office under **Reports**, for Guides, Directors and Executive Directors. Asked for on 2 October 2026: "a progress report for Guides and higher up accounts ... make sure it integrates with the data and relevance on how Explorers are progressing rightly."
+
+![The progress report on a Guide's phone: the period, then the totals for October, each a number and what it counts.](screenshots/walkthrough/31-progress-report.png)
+
+**Its shape is the one Adventist churches already keep.** A Sabbath School class record is kept by the quarter, and a Bible worker's report by the month: Bible studies given, visits, decisions, baptisms, and a space to write what happened. So **Period** offers this month, last month, this quarter and last quarter (the calendar's quarters, as Sabbath School's are), and the report counts the same kinds of things in this app's own terms:
+
+| On a Bible worker's report | In this report | Counted from |
+| --- | --- | --- |
+| Interests | **Explorers walked with**, and **New this period** | The pairings |
+| Progress | **Steps forward**: stages reached in the period | The journey's history |
+| Decisions | **Decisions**: Explorers who reached Call, the point of decision | The journey's history |
+| Sent out | **Sent to disciple**: Explorers who reached Commission | The journey's history |
+| Bible studies given | **Bible studies held**: meetings confirmed or done, and already past | Meetings |
+| Lessons studied | **Lessons finished**, of those sent | Lesson studies sent |
+| Visits | **Follow-ups done** | The Guide's own follow-ups |
+
+**Steps forward count where somebody ended up, not every move.** The report compares the stage each Explorer was at when the period began with the stage at its end, so a stage undone and done again is counted once.
+
+**Each Explorer** is listed with their stage, since when, what the period held and what is coming. **Needs attention** is the point of a progress report, so it is said in words and never by colour alone: paused; no Bible study yet, two weeks after pairing; no Bible study for over 30 days; a follow-up overdue; or at one stage for 90 days or more (not Commission, where the journey arrives). Whoever needs attention is listed first.
+
+![Each Explorer: John Reyes at Connect, with a follow-up overdue, and Grace Lim at Care.](screenshots/walkthrough/32-progress-explorers.png)
+
+**Each person's report is what the database already let them read.** A Guide's is their own Explorers, in full. A Director's or an Executive Director's is every Explorer in the church, by stage and by Guide, from the stage and its history only: meetings, lessons and follow-ups stay between each Guide and Explorer, so they are in that Guide's report and not in leadership's, and the screen says so rather than showing zeros. No rule was changed or widened for it.
+
+**Your notes for this report** is a box for what numbers miss: an answered prayer, a family that came along. It is kept on the device, per account and per period, and goes into the Word file and the text and nowhere else. **Download Word file** gives `Progress-report-2026-10.docx` (or `Progress-report-2026-Q4.docx` for a quarter), and **Copy as text** the same for a message. The report keeps up: a stage moved or a study confirmed elsewhere changes it while it is open.
+
+For leadership, **Reports** also keeps the board report and the downloads, as before.
+
 #### The Sabbath program
 
 **Plan a Sabbath's order of service, then send it where people will read it: a Word file, a picture, text for a group chat, or a post your Explorers find on This Sabbath.** It is the **Sabbath program** folder in the Office, beside Lesson studies, for Guides, Directors and Executive Directors. Asked for on 2 October 2026, and widened the same day.
@@ -518,6 +548,7 @@ Follow-ups and prayer requests stayed on the Guide's roster, because they are ab
 | **Copy as text** | The program as plain text, ready to paste into a group chat. |
 | **Post it** | Under **Share in the app**: the program as a post for the people you walk with, or for the whole church. See below. |
 | **Reuse next week** | A copy for the following Sabbath with every part and name kept, because most weeks change only who does what. |
+| **Add to calendar** | A calendar file with each part of the day that has a start time as its own event. See *Folders, calendars and every device*, below. |
 
 ##### Sharing it with Explorers: This Sabbath
 
@@ -549,11 +580,11 @@ Tick **Advanced settings**, above the list. The choice is remembered for that ac
 
 **A free Canva account is enough, and the app never talks to Canva.** In Canva choose **Upload** and add the picture or the Word file, then design from it. There is no account to connect, no key to keep and nothing to pay, and the privacy notice gains no new company. `docs/SABBATH-PROGRAM-RESEARCH.md` gives the reasoning, the three open-source tools the ideas came from and their licences. One thing in it is unconfirmed: that Canva's free plan imports Word files was read from search results quoting Canva's help page, because the page itself could not be reached from where this was built. Try it once before telling a church it works.
 
-**Kept on this device, by the owner's choice.** A program is saved as it is typed, in the browser on the phone or computer where it was made, and nowhere else until somebody posts it or takes a file away. There is no table and no migration, so a church's app has it the day its code updates, database or not. Each account keeps its own list: a second leader on a shared office computer starts with their own, not the first one's names.
+**Kept on this device first, and with your account.** A program is saved as it is typed, in the browser on the phone or computer where it was made, so it works with no signal. In a church's own app whose database has the account copy, it then follows its maker to every device they sign in on (see *Folders, calendars and every device*, below). Nobody else reads it until somebody posts it or takes a file away. Each account keeps its own list: a second leader on a shared office computer starts with their own, not the first one's names.
 
-> **CAUTION** · What keeping it on the device costs
+> **CAUTION** · Where the device is all there is
 >
-> A program made on a phone is not on the laptop, and two leaders do not see each other's drafts: they post it or pass the file round, the way churches already pass a program round. Clearing the browser's site data, or a private window closing, deletes the programs in it. If the browser refuses to save at all, the screen says so in red. Download the ones you want to keep.
+> In the sample church, and on a database that has not had migration `20261002150000`, a program made on a phone is not on the laptop, and clearing the browser's site data or closing a private window deletes the programs in it. With the account copy, the next sign-in brings them back. Either way two leaders do not see each other's drafts: they post it or pass the file round, the way churches already pass a program round. If the browser refuses to save at all, the screen says so in red.
 
 #### Evangelistic meetings
 
@@ -563,16 +594,16 @@ Tick **Advanced settings**, above the list. The choice is remembered for that ac
 
 - **Blocks.** The series as a whole, and each night, is a list of blocks in any order: a list, a paragraph, a checklist. **Add a block** offers six, and three of them are lists with their columns already named: **A program** (time, what happens, who), **A team** (role and name), **A schedule** (date, time, what). **Arrange blocks** moves or removes them; a block is removed only after a second tap.
 - **A list's own columns.** One to six, named anything: "Time, What happens, Who, Song", or "Village, Bible worker, Visits". Each list's **Columns** opens to rename, move, add or take one out. Taking out a column that has words in it asks first, because what it says on every line goes with it. On a phone each line is its boxes one under another; wider, they sit side by side under the column names.
-- **Many nights.** Each night has its own date, time, topic and blocks, and opens on its own so a week of meetings is not one long scroll. **Copy to a new night** adds a copy at the end of the series, on the day after its last night, with the same blocks and names and the topic left to choose. **Add a night** adds an empty one; **Remove this night** asks first.
+- **Many nights.** Each night has its own date, start and end time, topic and blocks, and opens on its own so a week of meetings is not one long scroll. **Copy to a new night** adds a copy at the end of the series, on the day after its last night, with the same blocks and names and the topic left to choose. **Add a night** adds an empty one; **Remove this night** asks first.
 - **Its own look**, for the Word file and the picture: one of eight colours or **your own colour**, a heading face (**Classic**, **Clean** or **Friendly**: Georgia, Arial and Verdana, which every computer already has, so nothing is fetched or licensed), and the name **Centred** or **On the left**. A colour too pale to read as words draws the lines only, and the words stay dark; the screen says so.
 
-![Evangelistic meetings on a phone: night 1, with its topic and a program whose fourth column, Song, the Guide added herself.](screenshots/walkthrough/28-evangelistic-meetings.png)
+![Evangelistic meetings on a phone: night 1, 5:30 to 9:00 PM, opening on Children's time, whose third column, Materials, the Guide added herself.](screenshots/walkthrough/28-evangelistic-meetings.png)
 
-**Nobody has to start from nothing.** **New meetings** asks for the first night and how many nights, then offers:
+**Nobody has to start from nothing.** The plan follows how the owner's church runs its meetings (the old word was a crusade): team work, a night in parts, and snacks afterwards. **New meetings** asks for the first night and how many nights, then offers:
 
 | Choice | What it gives |
 | --- | --- |
-| **Start with a plan** | A night for each day, at 7:00 PM, each with the usual program (song service, welcome and prayer, health talk, children's story, special music, message, appeal and prayer, closing prayer). For the whole series: a paragraph about the meetings, the team (speaker, song leader and the rest, names to fill), and a checklist of what to get ready. Every part of it can be renamed, moved or taken out. |
+| **Start with a plan** | A night for each day, from 5:30 to 9:00 PM, in four parts: **Children's time, 5:30 to 6:30 PM** (songs, Bible story, craft making), **Health time, 6:30 to 7:30 PM** (a health lecture), **Bible study, 7:30 to 8:30 PM** (a discussion or sermon on a Bible truth) and **Snacks**. Each part is a list of what happens and who, ready for a column of your own. For the whole series: a paragraph about the meetings, the team (children's time, songs, Bible story, craft making, health lecture, Bible study, snacks, welcome, prayer team, sound and projector, with names to fill), and a checklist of what to get ready, craft materials and snacks included. Every part of it can be renamed, moved or taken out. |
 | **Start blank** | One night and nothing on it. |
 
 ![Its look: eight colours and one of your own, three heading faces, and where the name sits, with a preview.](screenshots/walkthrough/29-meeting-look.png)
@@ -584,11 +615,34 @@ Tick **Advanced settings**, above the list. The choice is remembered for that ac
 - **What**: **The whole series**, or one night. The whole series is every night in full in the Word file, and the series with its nights at a glance in the picture, the text and a post.
 - **Which copy**: **What is shared**, or **Everything, for the team** (Word file and text only).
 - **Download Word file**, **Download picture**, **Share the picture** (phones), **Copy as text**. Canva's free Upload takes the picture or the Word file, as for the Sabbath program.
+- **Add to calendar** and, for one night, **Google Calendar**: see below.
 - **Share in the app**: **Post it** posts what is chosen under What, to **The people I walk with** (a Guide's default) or **Everyone in the church** (a leader's), as an ordinary post with the sender's name. Explorers find it on **This Sabbath**, under **Evangelistic meetings**, with no signal too once they have opened it.
 
-![This Sabbath on an Explorer's phone with the first night of a series: its name, where, when, the topic, and the program with every column.](screenshots/walkthrough/30-this-sabbath-meeting.png)
+![This Sabbath on an Explorer's phone with the first night of a series: its name, where, 5:30 to 9:00 PM, the topic, and each part of the night with every column.](screenshots/walkthrough/30-this-sabbath-meeting.png)
 
-**Kept on the device, one list per account**, exactly as the Sabbath program is, and for the same reasons: it works the day the code updates, with no database change, and with no signal. Up to 20 series on a device, 31 nights in a series, 20 blocks in a night, six columns and sixty lines in a list. Guides and leaders can also plan on **This Sabbath**, which opens with no signal.
+**Kept on the device first, and with your account**, exactly as the Sabbath program is: it works with no signal, and in a church's own app with the account copy it is on every device its maker signs in on. Up to 60 series on a device, 31 nights in a series, 20 blocks in a night, six columns and sixty lines in a list. Guides and leaders can also plan on **This Sabbath**, which opens with no signal.
+
+#### Folders, calendars and every device
+
+Asked for on 2 October 2026: "Both Sabbath school and evangelistic meetings can have multiple storage files placed in the sub-room to be organised, and there can be an option to put it automatically on their digital calendars ... make sure it's on device first, but ALSO it's transparent to go to other devices that is login."
+
+**Folders.** Every Sabbath program and every series has a **Folder** box. Type a name ("Quarter 4", "Youth Week") or pick one already used, and the list groups by folder, each one folding open and shut with how many it holds. Anything in no folder is listed first. A folder needs no making and no deleting: it is there while something is in it. A device keeps up to 120 programs and 60 series.
+
+**On your calendar.** **Add to calendar** downloads a calendar file (`.ics`, the standard every calendar takes). For a series it holds every night, or the one night chosen under **What**; for a Sabbath program, each part of the day that has a start time. An iPhone or a Mac adds them with one tap, Outlook opens the file, most Android calendars open it from the download, and Google Calendar imports it on a computer (**Settings**, **Import**). A night with no end time is given three hours; a part of the Sabbath runs to the end of its minutes, or to the next part, or an hour. Times carry no time zone, so 5:30 PM is 5:30 PM on the phone in the hall. **Google Calendar**, shown when one night is chosen, opens Google Calendar with that night filled in, ready to save.
+
+![Taking a series away: the Word file, the picture, text, and Add to calendar and Google Calendar, with what each does.](screenshots/walkthrough/33-meeting-calendar.png)
+
+What the calendar is not: something that updates itself. Change a night, and download the file again. Each event keeps the same identity inside the file, which the standard says a calendar should use to replace the night it already has rather than add a second; that has been checked in the file, not yet on every calendar. What goes in is **what is shared**, never a **Team only** block or a platform note, because a calendar can itself be shared.
+
+**On every device you sign in on.** The device still comes first: a program or a series is saved where it is typed, and works with no signal. In a church's own app whose database has had migration `20261002150000`, the account keeps a copy too. Under **Saved**, the screen says which:
+
+| It says | It means |
+| --- | --- |
+| Saved on this device and with your account, so it is on your other devices too. | Sent. Open the Office on the laptop and it is there, and a change on one device reaches another that is open within moments. |
+| Saved on this device. It reaches your other devices when there is a signal. | No signal, or the account could not be reached. It goes up when the signal comes back, by itself. |
+| (only "Saved", or "Kept on this device") | The sample church, or a database without the account copy yet. The device is all there is, as before. |
+
+If the same program is changed on two devices, **the newer change wins**, item by item: the phone's edit to one program and the laptop's to another both survive. A program deleted on one device stays deleted on the others, even one that was offline at the time. **The account's copy is its owner's alone.** Not a Director, not an Executive Director: nobody else's sign-in reads it, by the database's own rule. A program reaches other people the way it always did, as a post somebody chose to make.
 
 #### Asking to walk with somebody
 
@@ -1311,6 +1365,12 @@ That raises the standard in four ways: consent has to be **express** rather than
 - **A block marked Team only never leaves the device by the app's hand.** It is in the team's copy of the Word file, which the person chooses to download, and in nothing else: not the picture, not a post, not the shared copy. The check proves it of the picture by recording every word drawn.
 - **A series shared with somebody is kept on their phone**, the most recent 20, to read with no signal.
 
+### The progress report, folders and the account copy, 2 October 2026
+
+- **The progress report reads nothing new.** A Guide's is built from what their sign-in could already read about the Explorers they walk with; leadership's from every Explorer's stage and its history, which leadership could already read, and nothing from inside a pairing. No rule was added or widened. Its notes are kept on the device, per account and per period, and leave only in a Word file or text somebody chooses to take (`tests/a-progress-report-counts-what-happened.mjs`).
+- **Sabbath programs and evangelistic meetings now have an account copy**, in `office_plans`, on a database that has had migration `20261002150000`. Each row is one program or series and is readable and writable only by the account that made it: four owner-only rules, nothing for a signed-out visitor, and nothing for leadership. It holds what the device holds, including **Team only** blocks and platform notes, because it is the owner's own copy. A deletion keeps a row with its content emptied, so another device does not bring the program back. A ceiling of 1000 rows per account keeps the database from being anybody's free storage. Deleting the account deletes them.
+- **A calendar file holds what is shared only**, never a Team only block or a platform note, and is made on the device. **Google Calendar** is the one button here that sends anything to another company: tapping it opens Google Calendar with the night's name, time, place and what is shared filled in, which reaches Google as it would if typed there. The privacy notice says so.
+
 ### Asking for a copy of your own information
 
 Anybody signed in can download everything the app holds about them, from **Profile → A copy of your information**. No reason is needed and nobody has to approve it. The file is JSON, which is the form both laws ask for so it can be carried somewhere else.
@@ -1372,6 +1432,10 @@ The two largest gaps today:
 | "The microphone is switched off for this app" | The browser was once told no, and remembers. | Allow the microphone for this site in the browser's settings, then tap the microphone again. |
 | "You are reacting faster than the app allows" or "sending faster than the app allows" | A pace rule: thirty reaction changes, ten files or forty messages a minute. Set to stop a script, not a person. | Wait a minute. |
 | A voice message offers a file instead of playing | It was recorded in a format this phone cannot play, such as a `.webm` on an older iPhone. | Open the file, or update the phone. |
+| A Sabbath program or a series made on the phone is not on the laptop | The database has not had migration `20261002150000`, or the phone has had no signal since. The line under **Saved** says which. | Open it on the phone with a signal. If it says nothing about the account, run that migration (Part 9). |
+| A Director's progress report shows no Bible studies or lessons | Working as designed. Those stay between each Guide and Explorer; leadership's report is stages only, and says so on screen. | Ask the Guide for theirs, or for its Word file. |
+| The calendar shows a night twice | The night's file was opened in two different calendars, or the series was copied rather than downloaded again. | Delete the extra night by hand. Opening a fresh download in the same calendar should replace, not add. |
+| Nothing happens on Add to calendar on an Android phone | The download finished but the phone has no app that opens calendar files. | Open the downloaded file from the phone's Files app, or use **Google Calendar** one night at a time. |
 
 ### Where the code lives
 
@@ -1429,16 +1493,19 @@ Read this section before making a change. It states what is true, what must stay
 15. No file carries an invisible character that reverses or hides text. Write them as `\u` escapes; `tests/no-hidden-characters.mjs` refuses the real thing.
 16. A dependency under a licence not on the allowlist in `tests/dependency-licences.mjs` fails the build until somebody has read it. The third-party notices are written at each build and never committed.
 17. A screen that needs a new table, column or function keeps working without it, until the migration that adds it has run.
-18. The Sabbath program never touches the database or the network itself. It is kept per account in the browser (`lib/sabbath-program.ts`) and leaves only through the `share` its page hands it, as an ordinary post. Every property in its Word file is written in the order Word's schema gives; `tests/a-sabbath-program-is-a-word-file.mjs` holds both.
+18. The Sabbath program and evangelistic meetings never touch the database or the network themselves. Each is kept per account in the browser (`lib/sabbath-program.ts`, `lib/evangelistic-meeting.ts`) and leaves only through what its page hands it: `share`, as an ordinary post, and `store`, the owner's own copy (`lib/live/office-plans.ts`). Every property in its Word file is written in the order Word's schema gives; `tests/a-sabbath-program-is-a-word-file.mjs` holds both.
 19. Whatever leaves the device by the app's hand, a post or a picture, is the congregation's copy: no platform notes. A shared program is read back as plain text, never as markup. The same test holds both.
 20. An evangelistic meeting's post and picture are always what is shared, never a **Team only** block, and its colour reaches the page only as a checked six-digit colour. `tests/evangelistic-meetings-are-yours-to-shape.mjs` holds both, and holds its Word file to the same schema order as the Sabbath program's, from one shared list (`tests/_word-order.mjs`).
+21. The progress report asks only for what the reader's rules already return: leadership's report never asks for meetings, lessons or follow-ups. Steps forward are net, from the stage at the period's start to the stage at its end. `tests/a-progress-report-counts-what-happened.mjs` holds both.
+22. `office_plans` is owner-only on every operation, keyed by owner and item together, refuses an older update, and grants nothing to a signed-out visitor. Program screens keep working without the table. The newer copy of each item wins, and a deletion is kept as a mark. `tests/the-office-follows-you.mjs` holds the rules and every merge case.
+23. A calendar file or Google Calendar link carries only what is shared: never a **Team only** block or a platform note. The same test holds it, and holds the file to RFC 5545 (line breaks, folding, escaping).
 
 ### Prove it before you claim it
 
 ```
-npm run verify        # 167 checks: types, build, security, privacy, licences,
+npm run verify        # 169 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 64 browser walks: 231 in all
+npm run verify:all    # the same, plus 65 browser walks: 234 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1484,6 +1551,9 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | The Sabbath program's Word file in Word, Google Docs and Pages | **Built**, and opened here by LibreOffice Writer and two other readers, and held to the order Word's schema gives. It has not been opened in Microsoft Word, Google Docs or Pages, and **Share the picture** has not been tried on a real phone. |
 | Sharing a Sabbath program inside the app | **Built**, as an ordinary post, and walked in the sample church: a Guide posts, the Explorer they walk with reads it on This Sabbath, with the network off too, and an Explorer they do not walk with does not see it. Not yet done from a church's own app with a real sign-in, and This Sabbath's no-signal page for a real account has not been seen. |
 | Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
+| The progress report | **Built** for both halves and walked in the sample church as a Guide and as a Director. Not yet seen from a church's own app with a real sign-in, and its Word file has not been opened in Word. |
+| Calendar files | **Built** and held to the standard by a check, and the walk downloads one. Nobody has yet opened one on a real iPhone, Android phone or in Outlook. |
+| Programs on every device | **Built**: the merge rules are tested case by case and the table's rules are written. Two real devices signed in to the same account have not been tried from here, because this sandbox cannot sign in to a church's site. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |
 | A picture on most Guides' profiles | Almost none have set one, so the card meant to show an Explorer a real person falls back to initials. The app asks them; somebody has to follow it up. |

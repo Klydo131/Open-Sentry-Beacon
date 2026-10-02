@@ -325,6 +325,21 @@ export const KEEP_UP_APPS = ['church_apps'] as const;
 /** Somebody's own account: their name, their photograph, their church. */
 export const KEEP_UP_ACCOUNT = ['profiles', 'churches', 'profile_changes'] as const;
 
+/**
+ * The progress report: the journey, and for a Guide, the meetings, lessons and
+ * follow-ups it is counted from. A stage moved, a study confirmed or a lesson
+ * finished elsewhere changes the report while it is open.
+ */
+export const KEEP_UP_PROGRESS =
+  ['pairings', 'journey_events', 'meetings', 'lesson_assignments', 'follow_ups', 'profiles'] as const;
+
+/**
+ * A person's own Sabbath programs and evangelistic meetings, so an edit on
+ * the phone reaches the laptop while it is open. The read policy is the
+ * owner's alone, and realtime evaluates it per subscriber.
+ */
+export const KEEP_UP_PLANS = ['office_plans'] as const;
+
 /** The numbers. Everything they are counted from. */
 export const KEEP_UP_NUMBERS =
   ['profiles', 'pairings', 'meetings', 'materials', 'prayer_requests', 'journey_events'] as const;

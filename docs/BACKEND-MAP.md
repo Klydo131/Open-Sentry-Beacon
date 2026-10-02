@@ -64,6 +64,7 @@ verify gate fails if a new one arrives without it.
 | `invites` | `manages_church` | ● |
 | `recommendations` | the Guide who made it, or `manages_church` | ● |
 | `profile_changes` | `is_paired_with` | ● |
+| `office_plans` | **its owner alone**, for every operation: a person's own Sabbath programs and evangelistic meetings, the copy that follows them to their other devices | ● |
 
 ### The relationship
 

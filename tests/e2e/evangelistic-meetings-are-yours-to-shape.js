@@ -99,8 +99,11 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   await page.getByRole('button', { name: 'Start with a plan' }).click();
   await page.waitForTimeout(400);
   ok((await page.locator('[data-night]').count()) === 3, 'a planned series has the nights asked for');
-  ok(/Night 1 · Sun, Oct 4 · 7:00 PM/.test(await page.locator('[data-night]').first().innerText()),
-     'each night is dated from the first, at the usual time');
+  ok(/Night 1 · Sun, Oct 4 · 5:30 PM to 9:00 PM/.test(await page.locator('[data-night]').first().innerText()),
+     'each night is dated from the first, 5:30 to 9:00 PM, as the owner\'s church runs one');
+  ok((await page.locator('[data-night]').first().locator('[data-block] [aria-label^="Name of this block"]').evaluateAll(
+    (els) => els.map((e) => e.value).join(' | '))) === "Children's time, 5:30 to 6:30 PM | Health time, 6:30 to 7:30 PM | Bible study, 7:30 to 8:30 PM | Snacks",
+     'in its four parts: children\'s time, health time, Bible study, snacks');
   await page.getByLabel('Name of the meetings').fill('Hope for Today');
   await page.getByLabel('Place', { exact: true }).fill('Riverside Hall');
 
@@ -120,19 +123,19 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   // 3. A COLUMN OF HER OWN, AND A PARAGRAPH
   const night1 = page.locator('[data-night]').first();
   await night1.getByLabel('Topic of night 1').fill('The Blessed Hope');
-  await night1.locator('[data-columns] summary').click();
-  await night1.getByRole('button', { name: 'Add a column' }).click();
-  await night1.getByLabel('Column 4 of Program').fill('Song');
-  await night1.locator('[data-columns] summary').click();
-  await night1.getByLabel('Time, line 1 of Program').fill('7:00 PM');
-  await night1.getByLabel('Who, line 1 of Program').fill('David Cruz');
-  await night1.getByLabel('Song, line 1 of Program').fill('Opening song');
-  const cell = await night1.getByLabel('Song, line 1 of Program').boundingBox();
+  const KIDS = "Children's time, 5:30 to 6:30 PM";
+  await night1.locator('[data-columns] summary').first().click();
+  await night1.getByRole('button', { name: 'Add a column' }).first().click();
+  await night1.getByLabel(`Column 3 of ${KIDS}`).fill('Materials');
+  await night1.locator('[data-columns] summary').first().click();
+  await night1.getByLabel(`Who, line 1 of ${KIDS}`).fill('David Cruz');
+  await night1.getByLabel(`Materials, line 1 of ${KIDS}`).fill('Song sheets');
+  const cell = await night1.getByLabel(`Materials, line 1 of ${KIDS}`).boundingBox();
   // Side by side, four columns would leave each box about 60px on a phone.
   ok(cell && cell.width >= 240, `a box in a list has the width of a phone (${Math.round(cell?.width ?? 0)}px)`);
   await night1.getByRole('button', { name: 'Add a block' }).click();
   await night1.getByRole('button', { name: /A paragraph/ }).click();
-  await night1.getByLabel('Name of this block, in night 1').nth(1).fill('Tonight');
+  await night1.getByLabel('Name of this block, in night 1').nth(4).fill('Tonight');
   await night1.getByLabel('Words for Tonight').fill('Bring a friend.');
   // And a checklist for the team, on the night itself, which must never be posted.
   await night1.getByRole('button', { name: 'Add a block' }).click();
@@ -145,22 +148,22 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   await night1.getByRole('button', { name: 'Arrange blocks' }).click();
   await night1.getByRole('button', { name: 'Move Tonight up' }).click();
   await night1.getByRole('button', { name: 'Done' }).click();
-  ok((await night1.locator('[data-block]').first().locator('input').first().inputValue()) === 'Tonight',
+  ok((await night1.locator('[data-block]').nth(3).locator('[aria-label^="Name of this block"]').inputValue()) === 'Tonight',
      'a block moves where it is put');
   await night1.getByRole('button', { name: 'Copy to a new night' }).click();
   await page.waitForTimeout(300);
   ok((await page.locator('[data-night]').count()) === 4, 'copying a night adds one');
   const night4 = page.locator('[data-night]').nth(3);
-  ok(/Night 4 · Wed, Oct 7/.test(await night4.innerText()) && /No topic yet/.test(await night4.innerText()),
-     'on the day after the last night, with the blocks and no topic');
-  ok((await night4.getByLabel('Song, line 1 of Program').inputValue()) === 'Opening song',
+  ok(/Night 4 · Wed, Oct 7 · 5:30 PM to 9:00 PM/.test(await night4.innerText()) && /No topic yet/.test(await night4.innerText()),
+     'on the day after the last night, at the same hours, with the blocks and no topic');
+  ok((await night4.getByLabel(`Materials, line 1 of ${KIDS}`).inputValue()) === 'Song sheets',
      'and the copy keeps her own column');
 
   // 5. THE WORD FILE, BOTH COPIES, AND THE PICTURE
   const shared = await downloaded(page, 'Download Word file');
   const sharedXml = storedEntry(shared.bytes, 'word/document.xml');
   ok(shared.name === 'Hope-for-Today.docx' && sharedXml.includes('Riverside Hall') && sharedXml.includes('The Blessed Hope')
-     && sharedXml.includes('>Song<') && sharedXml.includes('Bring a friend.'),
+     && sharedXml.includes('>Materials<') && sharedXml.includes('Bring a friend.'),
      'the Word file has the series, its nights, her column and her paragraph');
   ok(!sharedXml.includes(TEAM_ONLY) && !sharedXml.includes(NIGHT_TEAM_ONLY), 'what is shared leaves out the team\'s checklists');
   const styles = storedEntry(shared.bytes, 'word/styles.xml');
@@ -191,7 +194,7 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   await page.waitForTimeout(1500);
   const johnSees = await page.locator('[data-received-meeting]').first().innerText().catch(() => '');
   ok(johnSees.includes('Hope for Today') && johnSees.includes('The Blessed Hope')
-     && johnSees.includes('7:00 PM · Song service · David Cruz · Opening song'),
+     && johnSees.includes('Songs · David Cruz · Song sheets'),
      'John, whom Maria walks with, finds the night on This Sabbath, every column of it');
   ok(johnSees.includes('Bring a friend.') && johnSees.includes('Shared by Maria Santos'),
      'with her paragraph and her name');

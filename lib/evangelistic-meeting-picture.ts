@@ -14,7 +14,7 @@
 import { dateLabel } from '@/lib/sabbath-program';
 import { PICTURE_WIDTH, wrap } from '@/lib/sabbath-program-picture';
 import {
-  HEADING_FACES, blocksFor, filledRows, hasContent, nightLabel, seriesDates, wordColour,
+  HEADING_FACES, blocksFor, filledRows, hasContent, nightHours, nightLabel, seriesDates, wordColour,
   type EvangelisticMeeting, type MeetingBlock,
 } from '@/lib/evangelistic-meeting';
 
@@ -143,7 +143,7 @@ function layout(ctx: CanvasRenderingContext2D, m: EvangelisticMeeting, nightId: 
     if (m.nights.length) {
       heading('The nights');
       m.nights.forEach((n, i) => {
-        const when = [dateLabel(n.date), n.time].filter(Boolean).join(', ');
+        const when = [dateLabel(n.date), nightHours(n)].filter(Boolean).join(', ');
         pair(`Night ${i + 1}`, [when, n.topic].filter(Boolean).join(' · ') || ' ');
       });
     }

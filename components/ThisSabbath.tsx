@@ -20,6 +20,7 @@
 import { Card } from '@/components/ui';
 import { SabbathPrograms, type ShareInApp } from '@/components/SabbathProgram';
 import { EvangelisticMeetings } from '@/components/EvangelisticMeetings';
+import type { PlanStore } from '@/lib/plan-sync';
 import { byComingSabbath, dayKey, readShared, sharedDate, dateLabel, type ReceivedProgram } from '@/lib/sabbath-program';
 
 const LEADS_THE_WORK = ['dm', 'admin', 'executive'];
@@ -60,7 +61,7 @@ function SharedProgram({ program, first, kind = 'program' }: {
   );
 }
 
-export function ThisSabbath({ owner, role, churchName, received, meetings, status, share }: {
+export function ThisSabbath({ owner, role, churchName, received, meetings, status, share, store }: {
   owner: string;
   /** The person's role: decides whether their own programs are offered too. */
   role: string | null;
@@ -72,6 +73,8 @@ export function ThisSabbath({ owner, role, churchName, received, meetings, statu
   /** One line on where what is shown came from. */
   status?: string;
   share?: ShareInApp;
+  /** The account's copy of a leader's own programs and meetings; absent with no signal. */
+  store?: PlanStore;
 }) {
   const today = dayKey(new Date());
   const list = (received ?? []).slice().sort(byComingSabbath(today));
@@ -135,8 +138,8 @@ export function ThisSabbath({ owner, role, churchName, received, meetings, statu
 
       {role && LEADS_THE_WORK.includes(role) && (
         <>
-          <SabbathPrograms owner={owner} churchName={churchName} role={role} share={share} />
-          <EvangelisticMeetings owner={owner} churchName={churchName} role={role} share={share} />
+          <SabbathPrograms owner={owner} churchName={churchName} role={role} share={share} store={store} />
+          <EvangelisticMeetings owner={owner} churchName={churchName} role={role} share={share} store={store} />
         </>
       )}
     </div>

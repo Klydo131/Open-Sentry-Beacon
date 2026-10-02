@@ -77,8 +77,10 @@ export interface MeetingNight {
   id: string;
   /** YYYY-MM-DD, or '' when not chosen yet. */
   date: string;
-  /** As the church writes it: "7:00 PM", "19:00". */
+  /** As the church writes it: "5:30 PM", "17:30". */
   time: string;
+  /** When the night ends, the same way. What a calendar needs; '' when not said. */
+  ends: string;
   topic: string;
   blocks: MeetingBlock[];
 }
@@ -95,11 +97,13 @@ export interface MeetingLook {
 
 export interface EvangelisticMeeting {
   id: string;
+  /** A folder of the planner's own, to keep many series in order. '' for none. */
+  folder: string;
   /** What the series is called: "Hope for Today". */
   name: string;
   church: string;
   place: string;
-  /** A line under the name: "Every night at 7, all are welcome". */
+  /** A line under the name: "Every night from 5:30 PM, all are welcome". */
   tagline: string;
   look: MeetingLook;
   /** Blocks for the whole series: about the meetings, the team, the to-do list. */
@@ -110,7 +114,8 @@ export interface EvangelisticMeeting {
 
 /** Ceilings, so a stored meeting cannot grow without end or break a page. */
 export const MEETING_LIMITS = {
-  meetings: 20,
+  meetings: 60,
+  folder: 60,
   nights: 31,
   blocks: 20,
   columns: 6,
@@ -220,7 +225,24 @@ export function listBlock(title: string, columns: string[], firsts: string[] = [
   return { id: uuid(), kind: 'list', title, teamOnly: false, columns: cols, rows };
 }
 
-/** The program a night of meetings usually has. No hymn titles: they are the hymnal's. */
+/**
+ * A night of evangelistic meetings as the owner's church runs one, told on
+ * 2 October 2026 ("crusade" is the old word; evangelistic meetings is what it
+ * is called now, and it is team work): children's time with songs, a Bible
+ * story and craft making, then a health talk, then the Bible study, then
+ * snacks. Each part is a block of its own with its time in its name, so each
+ * has its own team and can be moved, renamed or dropped.
+ */
+export function nightParts(): MeetingBlock[] {
+  return [
+    listBlock("Children's time, 5:30 to 6:30 PM", ['What happens', 'Who'], ['Songs', 'Bible story', 'Craft making']),
+    listBlock('Health time, 6:30 to 7:30 PM', ['What happens', 'Who'], ['Health lecture']),
+    listBlock('Bible study, 7:30 to 8:30 PM', ['What happens', 'Who'], ['Discussion or sermon on a Bible truth']),
+    listBlock('Snacks', ['What happens', 'Who'], ['Snacks and fellowship']),
+  ];
+}
+
+/** A program in one list, for "Add a block". No hymn titles: they are the hymnal's. */
 export function programBlock(): ListBlock {
   return listBlock('Program', ['Time', 'What happens', 'Who'], [
     'Song service', 'Welcome and prayer', 'Health talk', "Children's story", 'Special music',
@@ -281,8 +303,8 @@ export function comingSunday(from: Date = new Date()): string {
   return dayKey(d);
 }
 
-export function newNight(date = '', time = ''): MeetingNight {
-  return { id: uuid(), date, time, topic: '', blocks: [] };
+export function newNight(date = '', time = '', ends = ''): MeetingNight {
+  return { id: uuid(), date, time, ends, topic: '', blocks: [] };
 }
 
 /** A copy of a night for `date`: the same blocks and names, a topic still to choose. */
@@ -303,20 +325,22 @@ export function withNightCopied(m: EvangelisticMeeting, nightId: string): Evange
 
 /**
  * A series laid out the way one usually runs, to be changed as freely as
- * anything else: a night of meetings for each of `count` days from `first`,
- * each with the usual program, and, for the whole series, a paragraph about
- * the meetings, the team, and the team's own list of what to get ready.
+ * anything else: a night for each of `count` days from `first`, 5:30 to 9:00
+ * PM, each with its four parts (nightParts), and, for the whole series, a
+ * paragraph about the meetings, the team for each part, and the team's own
+ * list of what to get ready.
  */
 export function plannedSeries(church: string, first: string, count: number): EvangelisticMeeting {
   const nights: MeetingNight[] = [];
   let date = first;
   const total = Math.min(MEETING_LIMITS.nights, Math.max(1, Math.round(count) || 1));
   for (let i = 0; i < total; i++) {
-    nights.push({ ...newNight(date, '7:00 PM'), blocks: [programBlock()] });
+    nights.push({ ...newNight(date, '5:30 PM', '9:00 PM'), blocks: nightParts() });
     date = dayAfter(date);
   }
   return {
     id: uuid(),
+    folder: '',
     name: '',
     church,
     place: '',
@@ -325,7 +349,8 @@ export function plannedSeries(church: string, first: string, count: number): Eva
     blocks: [
       { id: uuid(), kind: 'text', title: 'About the meetings', teamOnly: false, body: '' },
       listBlock('Team', ['Role', 'Name'], [
-        'Speaker', 'Song leader', 'Health talk', "Children's story", 'Prayer team', 'Welcome team',
+        "Children's time", 'Songs', 'Bible story', 'Craft making', 'Health lecture', 'Bible study',
+        'Snacks', 'Welcome', 'Prayer team', 'Sound and projector',
       ]),
       {
         id: uuid(),
@@ -333,8 +358,9 @@ export function plannedSeries(church: string, first: string, count: number): Eva
         title: 'Before the first night',
         teamOnly: true,
         items: [
-          'Book the place', 'Sound and projector', 'Invitations and flyers', 'Prayer partners',
-          'Bible study guides for anybody who asks', 'Who follows up with each visitor',
+          'Book the place', 'Sound and projector', 'Invitations and flyers', 'Craft materials for the children',
+          'Snacks for each night', 'Prayer partners', 'Bible study guides for anybody who asks',
+          'Who follows up with each visitor',
         ].map(newItem),
       },
     ],
@@ -346,7 +372,7 @@ export function plannedSeries(church: string, first: string, count: number): Eva
 /** Nothing laid out at all: one night, no blocks. For a church that knows exactly what it wants. */
 export function blankSeries(church: string, first: string): EvangelisticMeeting {
   return {
-    id: uuid(), name: '', church, place: '', tagline: '', look: { ...DEFAULT_LOOK },
+    id: uuid(), folder: '', name: '', church, place: '', tagline: '', look: { ...DEFAULT_LOOK },
     blocks: [], nights: [newNight(first)], updated: Date.now(),
   };
 }
@@ -407,11 +433,13 @@ export function tidyMeeting(raw: unknown): EvangelisticMeeting | null {
       id: id(n.id),
       date: typeof n.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(n.date) ? n.date : '',
       time: oneLine(n.time, MEETING_LIMITS.time),
+      ends: oneLine(n.ends, MEETING_LIMITS.time),
       topic: oneLine(n.topic, MEETING_LIMITS.topic),
       blocks: tidyBlocks(n.blocks),
     }));
   return {
     id: oneLine(r.id, 64),
+    folder: oneLine(r.folder, MEETING_LIMITS.folder).trim(),
     name: oneLine(r.name, MEETING_LIMITS.name),
     church: oneLine(r.church, MEETING_LIMITS.church),
     place: oneLine(r.place, MEETING_LIMITS.place),
@@ -487,12 +515,17 @@ export function hasContent(b: MeetingBlock): boolean {
   return filledRows(b).length > 0;
 }
 
-/** "Night 2 · Monday, October 5, 2026 · 7:00 PM". */
+/** "5:30 PM to 9:00 PM", "5:30 PM", or ''. */
+export function nightHours(n: MeetingNight): string {
+  return n.time && n.ends ? `${n.time} to ${n.ends}` : n.time;
+}
+
+/** "Night 2 · Monday, October 5, 2026 · 5:30 PM to 9:00 PM". */
 export function nightLabel(m: EvangelisticMeeting, nightId: string): string {
   const at = m.nights.findIndex((n) => n.id === nightId);
   if (at < 0) return '';
   const n = m.nights[at];
-  return [`Night ${at + 1}`, dateLabel(n.date), n.time].filter(Boolean).join(' · ');
+  return [`Night ${at + 1}`, dateLabel(n.date), nightHours(n)].filter(Boolean).join(' · ');
 }
 
 /** "Sunday, October 4, 2026 to Saturday, October 10, 2026", or one date, or ''. */
@@ -541,7 +574,7 @@ export function meetingAsText(m: EvangelisticMeeting, nightId: string | null, co
   } else {
     for (const b of blocksFor(m.blocks, copy)) parts.push(blockText(b, copy));
     const glance = m.nights.map((n, i) => {
-      const when = [dateLabel(n.date), n.time].filter(Boolean).join(', ');
+      const when = [dateLabel(n.date), nightHours(n)].filter(Boolean).join(', ');
       return `- Night ${i + 1}${when ? ` · ${when}` : ''}${n.topic ? `: ${n.topic}` : ''}`;
     });
     if (glance.length) parts.push(['THE NIGHTS', ...glance].join('\n'));

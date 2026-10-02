@@ -23,15 +23,15 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Button, Card } from '@/components/ui';
 import {
-  ArrowDownGlyph, ArrowUpGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph, DownloadGlyph,
-  PlusGlyph,
+  ArrowDownGlyph, ArrowUpGlyph, CalendarGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph,
+  DownloadGlyph, PlusGlyph,
 } from '@/components/Glyph';
 import { FIELD, GROWS, IconButton, WIDE, moved, oneParagraph, type ShareInApp } from '@/components/SabbathProgram';
 import { dateLabel, manyLines, oneLine } from '@/lib/sabbath-program';
 import {
   BLOCK_CHOICES, COLOURS, HEADING_FACES, MEETING_LIMITS as L, blankSeries, bySeries, comingSunday,
-  contrastOnWhite, dayAfter, firstDate, hexColour, loadMeetings, meetingAsText, meetingShareTitle, newBlock, newItem, newNight,
-  newRow, plannedSeries, saveMeetings, withNightCopied,
+  contrastOnWhite, dayAfter, firstDate, hexColour, loadMeetings, nightHours, meetingAsText, meetingShareTitle, newBlock, newItem, newNight,
+  newRow, plannedSeries, saveMeetings, tidyMeeting, withNightCopied,
   type ChecklistBlock, type EvangelisticMeeting, type HeadingStyle, type ListBlock, type MeetingBlock,
   type MeetingCopy, type MeetingLook, type MeetingNight, type TextBlock,
 } from '@/lib/evangelistic-meeting';
@@ -41,6 +41,10 @@ import { meetingPicture } from '@/lib/evangelistic-meeting-picture';
 import { downloadBlob } from '@/lib/pdf';
 import { canShareFiles, copyText, shareItem } from '@/lib/share';
 import { useOnline } from '@/lib/online';
+import { FolderField, FolderedList, folderNames } from '@/components/Folders';
+import { ICS_MIME, googleCalendarLink, icsCalendar, meetingEvents } from '@/lib/calendar';
+import type { PlanStore } from '@/lib/plan-sync';
+import { syncLine, usePlanSync, type SyncState } from '@/lib/use-plan-sync';
 
 /** "Sun, Oct 4": short enough for a night's folder on a phone. */
 function shortDate(date: string): string {
@@ -52,13 +56,15 @@ function shortDate(date: string): string {
 
 const KIND_NAME: Record<MeetingBlock['kind'], string> = { list: 'List', text: 'Paragraph', checklist: 'Checklist' };
 
-export function EvangelisticMeetings({ owner, churchName, role, share }: {
+export function EvangelisticMeetings({ owner, churchName, role, share, store }: {
   /** The signed-in account, so a shared computer keeps each person's meetings apart. */
   owner: string;
   churchName?: string;
   role?: string | null;
   /** Absent where sharing cannot happen, such as a page opened with no signal. */
   share?: ShareInApp;
+  /** The account's copy, so meetings follow the person to other devices. Absent in the sample church. */
+  store?: PlanStore;
 }) {
   const [meetings, setMeetings] = useState<EvangelisticMeeting[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -72,12 +78,20 @@ export function EvangelisticMeetings({ owner, churchName, role, share }: {
     setOpenId(null);
   }, [owner]);
 
-  if (!meetings) return null;
-
-  const commit = (next: EvangelisticMeeting[]) => {
+  const keepHere = (next: EvangelisticMeeting[]) => {
     const sorted = next.slice().sort(bySeries);
     setMeetings(sorted);
     setSaved(saveMeetings(owner, sorted));
+  };
+  const sync = usePlanSync({
+    kind: 'evangelistic_meeting', owner, store, list: meetings, apply: keepHere, tidy: tidyMeeting,
+  });
+
+  if (!meetings) return null;
+
+  const commit = (next: EvangelisticMeeting[]) => {
+    keepHere(next);
+    sync.changed();
   };
   const full = meetings.length >= L.meetings;
   const church = churchName ?? meetings[0]?.church ?? '';
@@ -93,15 +107,18 @@ export function EvangelisticMeetings({ owner, churchName, role, share }: {
       <MeetingEditor
         key={open.id}
         meeting={open}
+        folders={folderNames(meetings, (x) => x.folder)}
         saved={saved}
         role={role}
         share={share}
         onBack={() => setOpenId(null)}
         onChange={(m) => commit(meetings.map((x) => (x.id === m.id ? { ...m, updated: Date.now() } : x)))}
         onDelete={() => {
+          sync.deleted(open.id);
           commit(meetings.filter((x) => x.id !== open.id));
           setOpenId(null);
         }}
+        syncState={sync.state}
       />
     );
   }
@@ -113,9 +130,10 @@ export function EvangelisticMeetings({ owner, churchName, role, share }: {
         Plan a series your own way: its nights, the blocks on each night, the columns in each list,
         and its look. Then download it, send it as a picture, or share it in the app.
       </p>
-      <p className="mt-1 text-sm text-gray-600">
-        Kept on this device, and it works without signal. The names you type stay here until you
-        download or share them.
+      <p className="mt-1 text-sm text-gray-600" data-kept>
+        {store && sync.state !== 'device'
+          ? 'Kept on this device first, and with your account, so it opens on your other devices too. It works without signal. Nobody else can see it until you download, share or post it.'
+          : 'Kept on this device, and it works without signal. The names you type stay here until you download or share them.'}
       </p>
 
       <div className="mt-4">
@@ -180,8 +198,11 @@ export function EvangelisticMeetings({ owner, churchName, role, share }: {
       {meetings.length === 0 ? (
         <p className="mt-4 text-sm text-gray-600">No meetings yet.</p>
       ) : (
-        <ul className="mt-4 space-y-2" aria-label="Your evangelistic meetings">
-          {meetings.map((m) => (
+        <FolderedList
+          items={meetings}
+          folderOf={(m) => m.folder}
+          label="Your evangelistic meetings"
+          render={(m) => (
             <li key={m.id}>
               <button
                 type="button"
@@ -199,15 +220,18 @@ export function EvangelisticMeetings({ owner, churchName, role, share }: {
                 <ChevronGlyph />
               </button>
             </li>
-          ))}
-        </ul>
+          )}
+        />
       )}
     </Card>
   );
 }
 
-function MeetingEditor({ meeting: m, saved, role, share, onBack, onChange, onDelete }: {
+function MeetingEditor({ meeting: m, folders, saved, role, share, onBack, onChange, onDelete, syncState }: {
   meeting: EvangelisticMeeting;
+  syncState: SyncState;
+  /** Folders already in use, to pick from. */
+  folders: string[];
   saved: boolean;
   role?: string | null;
   share?: ShareInApp;
@@ -257,6 +281,13 @@ function MeetingEditor({ meeting: m, saved, role, share, onBack, onChange, onDel
     }
   };
 
+  const events = meetingEvents(m, nightId);
+  const addToCalendar = () => {
+    const name = meetingFileName(m, nightId, 'shared', 'ics');
+    downloadBlob(new Blob([icsCalendar(events, m.name || 'Evangelistic meetings')], { type: ICS_MIME }), name);
+    setMessage(`Downloaded: ${name}. Open it to add ${events.length === 1 ? 'the night' : `all ${events.length} nights`} to your calendar.`);
+  };
+
   const copyAsText = async () => {
     const ok = await copyText(meetingAsText(m, nightId, copy));
     setMessage(ok ? 'Copied. Paste it into a message.' : 'This browser would not copy it. Download the file instead.');
@@ -278,6 +309,7 @@ function MeetingEditor({ meeting: m, saved, role, share, onBack, onChange, onDel
           ? 'Saved on this device as you type.'
           : 'This browser would not save on this device. Download it before you leave the page.'}
       </p>
+      {syncLine(syncState) && <p className="text-sm text-gray-600" data-sync-state={syncState}>{syncLine(syncState)}</p>}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {([
@@ -297,6 +329,10 @@ function MeetingEditor({ meeting: m, saved, role, share, onBack, onChange, onDel
             />
           </label>
         ))}
+      </div>
+
+      <div className="mt-3">
+        <FolderField value={m.folder} folders={folders} max={L.folder} onChange={(folder) => onChange({ ...m, folder })} />
       </div>
 
       <LookEditor meeting={m} onChange={(look) => onChange({ ...m, look })} />
@@ -331,7 +367,7 @@ function MeetingEditor({ meeting: m, saved, role, share, onBack, onChange, onDel
           className={`mt-2 ${WIDE}`}
           onClick={() => {
             const last = m.nights[m.nights.length - 1];
-            const night = last ? newNight(dayAfter(last.date), last.time) : newNight();
+            const night = last ? newNight(dayAfter(last.date), last.time, last.ends) : newNight();
             onChange({ ...m, nights: [...m.nights, night] });
             setOpenNight(night.id);
           }}
@@ -390,7 +426,26 @@ function MeetingEditor({ meeting: m, saved, role, share, onBack, onChange, onDel
           <Button variant="ghost" onClick={() => void copyAsText()} className={WIDE}>
             <CopyGlyph /> Copy as text
           </Button>
+          <Button variant="ghost" onClick={addToCalendar} disabled={events.length === 0} className={WIDE}>
+            <CalendarGlyph /> Add to calendar
+          </Button>
+          {nightId && events.length === 1 && (
+            <a
+              href={googleCalendarLink(events[0])}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-sm inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 font-semibold text-navy ring-1 ring-navy/20 sm:w-auto"
+              data-google-calendar
+            >
+              <CalendarGlyph /> Google Calendar
+            </a>
+          )}
         </div>
+        <p className="mt-2 text-sm text-gray-600" data-calendar-help>
+          {events.length === 0
+            ? 'To add it to a calendar, give each night a date and a start time.'
+            : 'Add to calendar downloads a calendar file: open it and your phone or computer adds every night. To change a night later, download it again. Google Calendar opens one night in Google Calendar, ready to save.'}
+        </p>
         <p className="mt-2 text-sm text-gray-600">
           The Word file opens in Word, Google Docs and Pages. To design it in Canva, a free account is
           enough: in Canva choose Upload, and add the Word file or the picture.
@@ -538,7 +593,7 @@ function NightEditor({ night: n, index, open, canCopy, onToggle, onChange, onCop
         <ChevronGlyph open={open} />
         <span className="min-w-0 flex-1">
           <span className="block font-bold text-navy">
-            Night {index + 1}{n.date ? ` · ${shortDate(n.date)}` : ''}{n.time ? ` · ${n.time}` : ''}
+            Night {index + 1}{n.date ? ` · ${shortDate(n.date)}` : ''}{nightHours(n) ? ` · ${nightHours(n)}` : ''}
           </span>
           <span className="block truncate text-sm text-gray-600">{n.topic || 'No topic yet'}</span>
         </span>
@@ -546,7 +601,7 @@ function NightEditor({ night: n, index, open, canCopy, onToggle, onChange, onCop
 
       {open && (
         <div className="space-y-3 border-t border-navy/10 p-2 sm:p-3">
-          <div className="grid gap-2 sm:grid-cols-[12rem_10rem_minmax(0,1fr)]">
+          <div className="grid gap-2 sm:grid-cols-[12rem_16rem_minmax(0,1fr)]">
             <input
               type="date"
               aria-label={`Date of ${label}`}
@@ -554,14 +609,24 @@ function NightEditor({ night: n, index, open, canCopy, onToggle, onChange, onCop
               onChange={(e) => onChange({ ...n, date: /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : '' })}
               className={`tap-sm ${FIELD}`}
             />
-            <input
-              aria-label={`Time of ${label}`}
-              value={n.time}
-              maxLength={L.time}
-              placeholder="Time, e.g. 7:00 PM"
-              onChange={(e) => onChange({ ...n, time: oneLine(e.target.value, L.time) })}
-              className={`tap-sm ${FIELD}`}
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                aria-label={`Time of ${label}`}
+                value={n.time}
+                maxLength={L.time}
+                placeholder="Starts, e.g. 5:30 PM"
+                onChange={(e) => onChange({ ...n, time: oneLine(e.target.value, L.time) })}
+                className={`tap-sm ${FIELD}`}
+              />
+              <input
+                aria-label={`End of ${label}`}
+                value={n.ends}
+                maxLength={L.time}
+                placeholder="Ends, e.g. 9:00 PM"
+                onChange={(e) => onChange({ ...n, ends: oneLine(e.target.value, L.time) })}
+                className={`tap-sm ${FIELD}`}
+              />
+            </div>
             <textarea
               aria-label={`Topic of ${label}`}
               value={n.topic}
@@ -689,13 +754,15 @@ function BlockEditor({ block: b, where, onChange }: {
   const title = b.title || (b.kind === 'list' ? 'this list' : b.kind === 'text' ? 'this paragraph' : 'this checklist');
   return (
     <div className="space-y-2 rounded-xl bg-navy/[0.03] p-2 sm:p-3" data-block data-kind={b.kind}>
-      <input
+      <textarea
         aria-label={`Name of this block, in ${where}`}
         value={b.title}
+        rows={1}
         maxLength={L.title}
         placeholder={b.kind === 'text' ? 'Heading, e.g. About the meetings' : 'Name, e.g. Program'}
+        onKeyDown={oneParagraph}
         onChange={(e) => onChange({ ...b, title: oneLine(e.target.value, L.title) })}
-        className={`tap-sm font-bold ${FIELD}`}
+        className={`font-bold ${GROWS}`}
       />
       <label className="flex cursor-pointer items-start gap-2 px-1 text-sm text-gray-700">
         <input

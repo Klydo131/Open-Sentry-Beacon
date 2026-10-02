@@ -62,16 +62,29 @@ ok(S.comingSunday(new Date(2026, 9, 4, 20, 0)) === '2026-10-04', 'and on a Sunda
 const plan = S.plannedSeries('Grace SDA Church', '2026-10-30', 4);
 ok(plan.nights.map((n) => n.date).join(' ') === '2026-10-30 2026-10-31 2026-11-01 2026-11-02',
    'a planned series has a night for each day, across the end of a month');
-ok(plan.nights.every((n) => n.time === '7:00 PM' && n.blocks.length === 1 && n.blocks[0].kind === 'list'),
-   'each night starts with the usual time and a program');
+// The owner's own church, 2 October 2026: children's time 5:30 to 6:30 with
+// songs, a Bible story and craft making; a health talk 6:30 to 7:30; the
+// Bible study 7:30 to 8:30; then snacks.
+ok(plan.nights.every((n) => n.time === '5:30 PM' && n.ends === '9:00 PM'),
+   'each night runs 5:30 to 9:00 PM, as the owner\'s church runs one');
+ok(plan.nights[0].blocks.map((b) => b.title).join(' | ')
+   === "Children's time, 5:30 to 6:30 PM | Health time, 6:30 to 7:30 PM | Bible study, 7:30 to 8:30 PM | Snacks",
+   'in its four parts, each a block of its own with its time in its name');
 const program = plan.nights[0].blocks[0];
-ok(program.columns.map((c) => c.name).join('|') === 'Time|What happens|Who' && program.rows.length === 8,
-   'the program is a list with three named columns and the parts a night usually has');
-ok(program.rows.every((r) => Object.keys(r.cells).length === 1 && r.cells[columnId(program, 'What happens')]),
-   'with only what happens filled in: who leads is the church\'s to type');
+ok(program.columns.map((c) => c.name).join('|') === 'What happens|Who'
+   && program.rows.map((r) => r.cells[columnId(program, 'What happens')]).join('|') === 'Songs|Bible story|Craft making',
+   'children\'s time is songs, a Bible story and craft making');
+ok(plan.nights[0].blocks[1].rows.length === 1 && plan.nights[0].blocks[2].rows.length === 1,
+   'the health time is the health lecture, and the Bible study one discussion or sermon');
+ok(plan.nights.every((n) => n.blocks.every((b) => b.rows.every((r) => !r.cells[columnId(b, 'Who')]))),
+   'with nobody named in advance: who leads is the church\'s to type');
+ok(S.programBlock().columns.map((c) => c.name).join('|') === 'Time|What happens|Who' && S.programBlock().rows.length === 8,
+   'and A program, under Add a block, is still one list with a time for each part');
 ok(plan.blocks.map((b) => `${b.kind}:${b.title}:${b.teamOnly}`).join(' | ')
    === 'text:About the meetings:false | list:Team:false | checklist:Before the first night:true',
    'the series has a paragraph, its team, and a to-do list that is the team\'s only');
+ok(plan.blocks[1].rows.slice(0, 4).map((r) => r.cells[columnId(plan.blocks[1], 'Role')]).join('|') === "Children's time|Songs|Bible story|Craft making",
+   'its team has a role for each part of the night: it is team work');
 ok(!/\bNo\.\s*\d|\b#\s*\d/.test(JSON.stringify(plan)), 'no hymn numbers or titles are shipped');
 ok(new Set(ids(plan)).size === ids(plan).length, 'every night and block has its own id');
 ok(S.plannedSeries('', '2026-10-04', 0).nights.length === 1 && S.plannedSeries('', '2026-10-04', 99).nights.length === 31
@@ -100,7 +113,7 @@ ok(blank.nights.length === 1 && blank.blocks.length === 0 && blank.nights[0].blo
   ok(copy.id !== source.id && copy.columns.every((c, i) => c.id !== source.columns[i].id)
      && copy.rows.every((r, i) => r.id !== source.rows[i].id),
      'a copied block has new ids throughout, so editing it cannot touch the original');
-  ok(copy.rows[0].cells[columnId(copy, 'Who')] === 'David Cruz' && copy.rows[0].cells[columnId(copy, 'What happens')] === 'Song service',
+  ok(copy.rows[0].cells[columnId(copy, 'Who')] === 'David Cruz' && copy.rows[0].cells[columnId(copy, 'What happens')] === 'Songs',
      'and every line keeps what it said, under the new columns');
 }
 
@@ -114,7 +127,7 @@ ok(blank.nights.length === 1 && blank.blocks.length === 0 && blank.nights[0].blo
   const added = copied.nights[3];
   ok(copied.nights.length === 4 && added.date === '2026-10-07',
      'copying a night adds it at the end, on the day after the last night, never on a day already taken');
-  ok(added.topic === '' && added.blocks[0].id !== three.nights[0].blocks[0].id && added.blocks[0].rows.length === 8,
+  ok(added.topic === '' && added.ends === '9:00 PM' && added.blocks[0].id !== three.nights[0].blocks[0].id && added.blocks.length === 4,
      'with the same blocks, new ids, and a topic still to choose');
   const full = { ...three, nights: Array.from({ length: 31 }, () => S.newNight('2026-10-04')) };
   ok(S.withNightCopied(full, full.nights[0].id).nights.length === 31, 'and never past 31 nights');
@@ -208,6 +221,7 @@ m.blocks[1].rows[0].cells[columnId(m.blocks[1], 'Name')] = 'Pastor Ramos';
 m.blocks[2].items[0].done = true;
 const n1 = m.nights[0];
 n1.topic = 'The Blessed Hope';
+n1.blocks = [S.programBlock()];
 const prog = n1.blocks[0];
 prog.columns.push({ id: 'song', name: 'Song' });
 prog.rows[0].cells[columnId(prog, 'Time')] = '7:00 PM';
@@ -225,13 +239,13 @@ const TEAM_ONLY = ['Book the place', 'Anna Yu drives the Tans'];
   const series = S.meetingAsText(m, null);
   ok(series.startsWith('Hope & Healing "2026" <Riverside>\nGrace SDA Church · Riverside Hall\nSunday, October 4, 2026 to Tuesday, October 6, 2026\nAll are welcome'),
      'the series opens with its name, where, its dates and its line');
-  ok(series.includes('ABOUT THE MEETINGS\nThree nights of hope.\nBring a friend.') && series.includes('TEAM\n- Speaker · Pastor Ramos'),
+  ok(series.includes('ABOUT THE MEETINGS\nThree nights of hope.\nBring a friend.') && series.includes("TEAM\n- Children's time · Pastor Ramos"),
      'its own blocks follow, each under its heading');
-  ok(series.includes('THE NIGHTS\n- Night 1 · Sunday, October 4, 2026, 7:00 PM: The Blessed Hope\n- Night 2 · Monday, October 5, 2026, 7:00 PM'),
+  ok(series.includes('THE NIGHTS\n- Night 1 · Sunday, October 4, 2026, 5:30 PM to 9:00 PM: The Blessed Hope\n- Night 2 · Monday, October 5, 2026, 5:30 PM to 9:00 PM'),
      'and every night at a glance');
   ok(TEAM_ONLY.every((t) => !series.includes(t)), 'what is shared never has a team-only block');
   const night = S.meetingAsText(m, n1.id);
-  ok(night.includes('Night 1 · Sunday, October 4, 2026 · 7:00 PM\nTopic: The Blessed Hope'), 'one night says which, when and its topic');
+  ok(night.includes('Night 1 · Sunday, October 4, 2026 · 5:30 PM to 9:00 PM\nTopic: The Blessed Hope'), 'one night says which, when, until when, and its topic');
   ok(night.indexOf('TONIGHT') < night.indexOf('PROGRAM') && night.includes('- 7:00 PM · Song service · David Cruz · Opening song'),
      'its blocks come in the order arranged, and a line has every column, her own included');
   ok(!night.includes('- \n') && !/\n- $/.test(night), 'an empty line is left out');
@@ -283,7 +297,7 @@ const docxFile = path.join(out, 'meetings.docx');
   const words = textOf(doc);
   ok(words.startsWith('Hope & Healing "2026" <Riverside>|Grace SDA Church · Riverside Hall'),
      'the file opens with its name and where, an ampersand, quotes and angle brackets as typed');
-  ok(words.includes('Night 1 · Sunday, October 4, 2026 · 7:00 PM|The Blessed Hope|Tonight|Doors open at 6:30.'),
+  ok(words.includes('Night 1 · Sunday, October 4, 2026 · 5:30 PM to 9:00 PM|The Blessed Hope|Tonight|Doors open at 6:30.'),
      'the whole series has every night in full, its topic, and its blocks in order');
   const firstTable = doc.slice(doc.indexOf('<w:tbl>'), doc.indexOf('</w:tbl>'));
   const programTable = doc.slice(doc.indexOf('<w:tbl>', doc.indexOf('The Blessed Hope')));
@@ -297,7 +311,7 @@ const docxFile = path.join(out, 'meetings.docx');
   ok(TEAM_ONLY.every((t) => teamWords.includes(t)) && teamWords.includes('team only') && teamWords.includes('\u2611  Book the place'),
      'the team\'s copy has them, marked, with what is done ticked');
   const nightWords = textOf(S.meetingDocumentXml(m, n1.id));
-  ok(nightWords.includes('Night 1 · Sunday, October 4, 2026 · 7:00 PM') && !nightWords.includes('Night 2'),
+  ok(nightWords.includes('Night 1 · Sunday, October 4, 2026 · 5:30 PM to 9:00 PM') && !nightWords.includes('Night 2'),
      'one night\'s file is that night only');
   ok(/<w:p><\/w:p><w:sectPr>/.test(doc), 'the body ends with a paragraph, so Word has nothing to repair');
 
@@ -365,7 +379,7 @@ function drawn(meeting, nightId) {
 }
 {
   const night = drawn(m, n1.id);
-  ok(night.words.includes('Night 1 · Sunday, October 4, 2026 · 7:00 PM') && night.words.includes('The Blessed Hope')
+  ok(night.words.join(' ').includes('Night 1 · Sunday, October 4, 2026 · 5:30 PM to 9:00 PM') && night.words.includes('The Blessed Hope')
      && night.words.includes('Tonight') && night.words.includes('7:00 PM')
      // The right-hand column wraps in the pretend font, so read its pieces back together.
      && night.words.join(' ').includes('Song service · David Cruz · Opening song'),
@@ -406,7 +420,7 @@ function drawn(meeting, nightId) {
   const tool = ['components/EvangelisticMeetings.tsx', 'lib/evangelistic-meeting.ts', 'lib/evangelistic-meeting-docx.ts',
     'lib/evangelistic-meeting-picture.ts'].map(code).join('\n');
   ok(!/@\/lib\/live|supabase|fetch\(|XMLHttpRequest|sendBeacon/.test(tool),
-     'nothing in it talks to the database or the network itself: a series leaves the device only by Post it, through the page');
+     'nothing in it talks to the database or the network itself: a series leaves the device only through what the page hands it, Post it and the account\'s own copy');
   ok(!/dangerouslySetInnerHTML/.test(tool + code('components/ThisSabbath.tsx')), 'a shared meeting is drawn as text, never as markup');
   const editor = code('components/EvangelisticMeetings.tsx');
   ok(/const body = meetingAsText\(m, nightId, 'shared'\)/.test(editor)

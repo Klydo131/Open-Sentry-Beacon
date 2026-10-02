@@ -277,7 +277,7 @@ const SHOTS = [
     } },
   // Evangelistic meetings, the same day: shaped the church's own way. A night's
   // program with a column Maria added herself.
-  { file: '28-evangelistic-meetings.png', what: 'Evangelistic meetings: a night, with a column of your own', size: PHONE,
+  { file: '28-evangelistic-meetings.png', what: 'Evangelistic meetings: children\'s time, with a column of your own', size: PHONE,
     go: async (p) => {
       await meetingSeries(p);
       await p.locator('[data-night]').first().locator('[data-kind="list"]').first()
@@ -308,6 +308,35 @@ const SHOTS = [
       await p.evaluate(() => window.scrollBy({ top: -20, behavior: 'instant' }));
       await settle(p, 600);
     } },
+  // The progress report, the same day: a Guide's own Explorers, in the shape
+  // an Adventist teacher's report has.
+  { file: '31-progress-report.png', what: 'The progress report, as a Guide sees it', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.goto(`${BASE}/office?room=reports`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+      await p.locator('[data-panel="progress-report"]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -20, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  { file: '32-progress-explorers.png', what: 'The progress report: each Explorer, and who needs attention', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.goto(`${BASE}/office?room=reports`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+      await p.locator('[data-explorers]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -20, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // A series in a folder, and on the calendar.
+  { file: '33-meeting-calendar.png', what: 'Evangelistic meetings: Add to calendar', size: PHONE,
+    go: async (p) => {
+      await meetingSeries(p);
+      await p.getByLabel('Folder', { exact: true }).fill('Youth Week');
+      await p.getByLabel('What to take away').selectOption({ index: 1 });
+      await p.getByRole('button', { name: 'Add to calendar' }).evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 600);
+    } },
 ];
 
 /** Maria plans three nights of meetings for shots 28 to 30: invented names only. */
@@ -322,22 +351,23 @@ async function meetingSeries(p) {
   await settle(p, 500);
   await p.getByLabel('Name of the meetings').fill('Hope for Today');
   await p.getByLabel('Place', { exact: true }).fill('Riverside Hall');
-  await p.getByLabel('A line under the name').fill('Every night at 7. All are welcome.');
+  await p.getByLabel('A line under the name').fill('Every night from 5:30 PM. All are welcome.');
   await p.locator('[data-look] summary').click();
   await p.locator('[data-look] label[title="Forest"]').click();
   await p.getByRole('radio', { name: 'Clean' }).check();
   await p.locator('[data-look] summary').click();
   const night = p.locator('[data-night]').first();
   await night.getByLabel('Topic of night 1').fill('The Blessed Hope');
-  await night.locator('[data-columns] summary').click();
-  await night.getByRole('button', { name: 'Add a column' }).click();
-  await night.getByLabel('Column 4 of Program').fill('Song');
-  await night.locator('[data-columns] summary').click();
-  for (const [line, time, who, song] of [[1, '7:00 PM', 'David Cruz', 'Opening song'], [2, '7:15 PM', 'Grace Lim', '']]) {
-    await night.getByLabel(`Time, line ${line} of Program`).fill(time);
-    await night.getByLabel(`Who, line ${line} of Program`).fill(who);
-    if (song) await night.getByLabel(`Song, line ${line} of Program`).fill(song);
+  const kids = "Children's time, 5:30 to 6:30 PM";
+  await night.locator('[data-columns] summary').first().click();
+  await night.getByRole('button', { name: 'Add a column' }).first().click();
+  await night.getByLabel(`Column 3 of ${kids}`).fill('Materials');
+  await night.locator('[data-columns] summary').first().click();
+  for (const [line, who, what] of [[1, 'David Cruz', 'Song sheets'], [2, 'Grace Lim', ''], [3, 'Anna Yu', 'Paper and crayons']]) {
+    await night.getByLabel(`Who, line ${line} of ${kids}`).fill(who);
+    if (what) await night.getByLabel(`Materials, line ${line} of ${kids}`).fill(what);
   }
+  await night.getByLabel('Who, line 1 of Health time, 6:30 to 7:30 PM').fill('Pastor Ramos');
 }
 
 /** Maria, Advanced on, filling a program the way a Guide might for shots 25 to 27: invented names only. */

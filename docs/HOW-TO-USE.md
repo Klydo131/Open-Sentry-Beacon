@@ -205,11 +205,31 @@ the next lesson.
 ### The Office
 
 Everything that is your work rather than your conversation: lesson studies,
-the Sabbath program, evangelistic meetings, resources, the Guides' room, and
-putting a name forward.
+the Sabbath program, evangelistic meetings, resources, the Guides' room,
+putting a name forward, and your progress report.
 Each is a subroom, so you tap once and you are there.
 
-![The Office in the sample church, open on Numbers. The sample has four of its folders; your church's Office has them all.](screenshots/walkthrough/11-office.png)
+![The Office in the sample church, open on Numbers. The sample has five of its folders; your church's Office has them all.](screenshots/walkthrough/11-office.png)
+
+### Your progress report
+
+**Reports**, in the Office, shows how the Explorers you walk with are doing,
+for this month, last month, this quarter or last quarter. Choose one under
+**Period**.
+
+![The progress report. How many you walk with, who moved a step, and the Bible studies held.](screenshots/walkthrough/31-progress-report.png)
+
+- The numbers at the top: how many you walk with, who is new, the steps
+  forward, decisions, Bible studies held, lessons finished and follow-ups
+  done.
+- **Each Explorer**: where they are on the journey and what this month held.
+  Anybody who needs you comes first, with the reason in words, such as
+  "1 follow-up overdue" or "No Bible study for 35 days".
+- **Your notes for this report**: what the numbers miss, such as an answered
+  prayer. They stay on your phone and go into the Word file.
+- **Download Word file** or **Copy as text** to hand it in.
+
+![Each Explorer, and who needs attention.](screenshots/walkthrough/32-progress-explorers.png)
 
 ### The Sabbath program
 
@@ -232,6 +252,10 @@ open it. Under the date it says how many lines still need somebody.
   Sabbath**, in the Menu.
 - **Reuse next week** starts next week's program from this one, names and all.
 - **Arrange lines**, under a part, is for moving a line or taking it out.
+- **Folder** keeps programs in order: type a name such as "Quarter 4", and
+  the list groups them.
+- **Add to calendar** puts each part of the day that has a time on your phone's
+  calendar.
 
 **To design it in Canva**, a free account is enough. In Canva, choose
 **Upload** and add the picture or the Word file. The app does not connect to
@@ -253,17 +277,22 @@ Canva.
 
 ![Advanced settings. Each line has its minutes, when it starts, and a note for the platform.](screenshots/walkthrough/25-sabbath-advanced.png)
 
-Your programs are kept on your own phone or computer until you post them or
-download them. Directors have the same folder.
+Your programs are saved on your phone or computer as you type, and work with
+no signal. In your church's app they also follow you to any phone or computer
+where you sign in. Nobody else sees them until you post them or download them.
+Directors have the same folder.
 
 ### Evangelistic meetings
 
 The **Evangelistic meetings** folder in the Office plans a series of meetings
 your own way. Press **New meetings**, choose the first night and how many
-nights, then **Start with a plan** (each night with the usual program, and a
-team and a to-do list) or **Start blank**.
+nights, then **Start with a plan** or **Start blank**. The plan gives each
+night from 5:30 to 9:00 PM: children's time (songs, a Bible story, craft
+making), health time, Bible study, and snacks, plus a team and a to-do list.
+Change any of it.
 
-- Tap a night to open it. Give it a date, a time and a topic.
+- Tap a night to open it. Give it a date, when it starts and ends, and a
+  topic.
 - **Add a block** puts a program, a team, a schedule, a list, a paragraph or a
   checklist on a night or on the whole series. **Arrange blocks** moves them.
 - A list's **Columns** lets you name its columns yourself, up to six.
@@ -273,11 +302,30 @@ team and a to-do list) or **Start blank**.
 - Tick **Team only** on anything that is not for the public. It stays out of
   the picture and anything you post.
 
-![Evangelistic meetings. A night, with a column you added yourself.](screenshots/walkthrough/28-evangelistic-meetings.png)
+- **Folder** keeps many series in order, such as "Youth Week".
+
+![Evangelistic meetings. A night's children's time, with a column you added yourself.](screenshots/walkthrough/28-evangelistic-meetings.png)
 
 Under **Take it away**, choose the whole series or one night, then download a
 Word file or a picture, or **Post it** for the people you walk with or the
 whole church.
+
+### On your calendar, and on your other devices
+
+**Add to calendar** downloads a calendar file. Open it and your phone or
+computer adds every night (or each part of a Sabbath program that has a time).
+On an iPhone it is one tap. On a computer, Google Calendar takes it under
+**Settings**, **Import**. If you change a night, download it again.
+
+**Google Calendar** appears when you choose one night: it opens Google
+Calendar with that night filled in, ready to save.
+
+![Add to calendar and Google Calendar, under Take it away.](screenshots/walkthrough/33-meeting-calendar.png)
+
+**On another phone or computer**, sign in with the same account and open the
+Office: in your church's app, your programs and meetings are there. Under
+**Saved** it says whether they have reached your account yet. With no signal,
+they wait on the phone and go up by themselves when the signal comes back.
 
 ### This Sabbath
 
@@ -323,6 +371,13 @@ Notices, the prayer wall, and the numbers.
 4. Is there anything in the trial room?
 
 Without that rhythm the numbers are decoration.
+
+### The progress report
+
+**Reports**, in the Office, shows every Explorer in the church by stage and by
+Guide, for a month or a quarter, with who needs somebody to look. Bible
+studies, lessons and follow-ups stay between each Guide and Explorer, so they
+are in each Guide's own report, not yours. Ask a Guide for theirs.
 
 ---
 

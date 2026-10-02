@@ -63,6 +63,8 @@ export interface ProgramExtra {
 
 export interface SabbathProgram {
   id: string;
+  /** A folder of the planner's own, to keep many programs in order. '' for none. */
+  folder: string;
   church: string;
   /** YYYY-MM-DD. */
   date: string;
@@ -112,7 +114,8 @@ export const TEMPLATE: ReadonlyArray<{ title: string; parts: readonly string[] }
 // How long each field may be. Generous for anything a program says; they exist
 // so that a paste of something enormous cannot fill the device's storage.
 export const LIMITS = {
-  programs: 60, // a year of Sabbaths, and some
+  programs: 120, // two years of Sabbaths, kept in folders
+  folder: 60,
   sections: 12,
   lines: 40, // in one section
   church: 120,
@@ -199,6 +202,7 @@ export function newSection(title = ''): ProgramSection {
 export function fromTemplate(church: string, now: Date = new Date()): SabbathProgram {
   return {
     id: uuid(),
+    folder: '',
     church: oneLine(church, LIMITS.church),
     date: nextSabbath(now),
     theme: '',
@@ -269,6 +273,7 @@ export function tidyProgram(raw: unknown): SabbathProgram | null {
     }));
   return {
     id: oneLine(r.id, 64),
+    folder: oneLine(r.folder, LIMITS.folder).trim(),
     church: oneLine(r.church, LIMITS.church),
     date,
     theme: oneLine(r.theme, LIMITS.theme),
@@ -581,6 +586,7 @@ export function templateFrom(p: SabbathProgram, name: string): OwnTemplate {
 export function fromOwnTemplate(t: OwnTemplate, church: string, now: Date = new Date()): SabbathProgram {
   return {
     id: uuid(),
+    folder: '',
     church: oneLine(church, LIMITS.church),
     date: nextSabbath(now),
     theme: '',

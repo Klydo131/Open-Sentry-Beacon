@@ -280,7 +280,7 @@ if (process.platform === 'win32') {
   const tool = ['components/SabbathProgram.tsx', 'components/ThisSabbath.tsx', 'lib/sabbath-program.ts',
     'lib/sabbath-program-docx.ts', 'lib/sabbath-program-picture.ts'].map(code).join('\n');
   ok(!/@\/lib\/live|supabase|fetch\(|XMLHttpRequest|sendBeacon/.test(tool),
-     'nothing in it talks to the database or the network itself: a program leaves the device only by Post it, through the page');
+     'nothing in it talks to the database or the network itself: a program leaves the device only through what the page hands it, Post it and the account\'s own copy');
   ok(/aria-expanded=\{open\}/.test(code('components/SabbathProgram.tsx')),
      'a part of the day opens and shuts, so 28 lines are not one long scroll');
 }

@@ -71,22 +71,37 @@ Structure read from the live database. No values were read.
 | `guild_activity_posts` | a post on a guild board | Members of that guild, unsigned; leadership only when reported |
 | `posts` | blogs, at the audience the author chose | As chosen |
 | `meetings`, `notes`, `follow_ups` | arrangements and a Guide's private notes | The pair, or the Guide alone |
+| `office_plans` (since 2 October 2026, migration `20261002150000`) | the account's own copy of its Sabbath programs and evangelistic meetings, so they follow it to every device it signs in on: the same as the device holds, platform notes and **Team only** blocks included. A deleted one stays as a row with its content emptied, so no other device brings it back. At most 1000 rows an account | **Its owner alone**: four owner-only rules, nothing for leadership, nothing for anybody signed out. Deleted with the account |
 
-### Kept on a person's own device, not in the database
+### Kept on a person's own device first
 
 | What | Where | Who can read it |
 |---|---|---|
-| A **Sabbath program** (since 2 October 2026): an order of service with the names of who leads each part, and with Advanced settings, notes for the platform and the church's own details | The browser's storage on the phone or computer where it was made, under that account's id | Whoever uses that browser as that account. It reaches anybody else only in a file or picture the person downloads or shares, or when they press **Post it** (below) |
+| A **Sabbath program** (since 2 October 2026): an order of service with the names of who leads each part, and with Advanced settings, notes for the platform and the church's own details | The browser's storage on the phone or computer where it was made, under that account's id; and the account's own copy in `office_plans` (above), where the database has it | Whoever uses that browser as that account, and that account on its other devices. It reaches anybody else only in a file, picture or calendar file the person downloads or shares, or when they press **Post it** (below) |
 | The person's own **Sabbath templates** and their **Advanced settings** choice | The same browser storage, under that account's id | The same. A template keeps the parts and the names of details, never who leads them or what was written |
 | **Sabbath programs shared with the person** (the most recent 20), so This Sabbath opens with no signal | The browser's storage on their own phone, under their account's id | Whoever uses that browser as that account. It is a copy of a post they could already read |
-| **Evangelistic meetings** (since 2 October 2026): a series of nights with the names of who does what, and blocks the planner may mark **Team only** | The browser's storage on the phone or computer where it was made, under that account's id | Whoever uses that browser as that account. It reaches anybody else only in a file or picture the person downloads or shares, or a post; a Team only block only in the team's copy of the Word file |
+| **Evangelistic meetings** (since 2 October 2026): a series of nights with the names of who does what, and blocks the planner may mark **Team only** | The same as a Sabbath program: the browser first, and the account's own copy | The same. It reaches anybody else only in a file, picture or calendar file the person downloads or shares, or a post; a Team only block only in the team's copy of the Word file |
+| **Folders** for programs and series | Part of the program or series, wherever it is kept | The same |
+| **Deletion marks**: which programs and series this account deleted, and when, for a year | The browser's storage, under that account's id | Whoever uses that browser as that account. Ids and times only, no content |
+| **Notes on a progress report**, per period | The browser's storage, under that account's id | Whoever uses that browser as that account. They leave only in the report's Word file or text, when the person takes it |
 | **Evangelistic meetings shared with the person** (the most recent 20) | The browser's storage on their own phone, under their account's id | Whoever uses that browser as that account. It is a copy of a post they could already read |
 
-None of these rows reaches Supabase, Vercel or anybody else, so a deletion
-request to the church has nothing of them to delete; the person deletes them on
-their device, or by clearing the browser's site data. The file's own author
-field names the app, not the person. `tests/a-sabbath-program-is-a-word-file.mjs`
-fails the build if the tool itself ever talks to the database or the network.
+Apart from the account's own copy in `office_plans`, none of these rows reaches
+Supabase, Vercel or anybody else; the person deletes them on their device, or by
+clearing the browser's site data. A deletion request reaches the account copy:
+deleting a program deletes its content there, and deleting the account deletes
+every row. The file's own author field names the app, not the person.
+`tests/a-sabbath-program-is-a-word-file.mjs` and
+`tests/evangelistic-meetings-are-yours-to-shape.mjs` fail the build if either
+tool ever talks to the database or the network itself: the account copy is
+reached only through what the page hands it (`lib/live/office-plans.ts`), and
+`tests/the-office-follows-you.mjs` holds the table's owner-only rules.
+
+**A calendar file** made with **Add to calendar** is made on the device and goes
+wherever the person opens it. It holds what is shared only, never a platform
+note or a Team only block. **The progress report** stores nothing: it is
+computed in the browser from what its reader's sign-in already returns, and a
+Director's version never asks for meetings, lessons or follow-ups.
 
 **A program somebody posts** with **Post it** is a different thing: an ordinary
 row in `posts` (the table above), with the sender's name, for the audience they
@@ -143,6 +158,12 @@ than assumed**.
   1 October 2026, after the licence audit found it missing. These two are
   separate controllers rather than processors: the member is using their
   service, not the church's.
+- **Google (Google Calendar)**, only when a Guide or a leader taps **Google
+  Calendar** on a night of evangelistic meetings. That opens Google Calendar
+  with the night's name, time, place and what is shared filled in, so Google
+  receives them, as it would if typed there. Nothing is sent before the tap,
+  and **Add to calendar** sends nothing. A separate controller, like YouTube.
+  Named in the privacy notice on 2 October 2026.
 
 Each of those is a processor, and RA 10173 §21 expects a contract with each one
 holding them to the same standard. Their standard terms may already do it; **it

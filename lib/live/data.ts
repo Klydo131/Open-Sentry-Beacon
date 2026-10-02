@@ -2885,6 +2885,18 @@ export interface Meeting {
   answer_note: string | null;
 }
 
+/**
+ * When and how every meeting the reader may see went, for the progress report:
+ * one query rather than one per Explorer. The rules decide which pairings'
+ * meetings come back (`meetings_read`: the two people in the pairing), so a
+ * Guide gets their own and leadership gets only pairings they are in.
+ */
+export async function listMeetingTimes(): Promise<Pick<Meeting, 'pairing_id' | 'starts_at' | 'status'>[]> {
+  const { data, error } = await db().from('meetings').select('pairing_id, starts_at, status');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Pick<Meeting, 'pairing_id' | 'starts_at' | 'status'>[];
+}
+
 /** Everything arranged for this pairing, soonest first. */
 export async function listMeetings(pairingId: string): Promise<Meeting[]> {
   const { data, error } = await db()

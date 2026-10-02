@@ -27,11 +27,11 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { Button, Card } from '@/components/ui';
 import {
-  ArrowDownGlyph, ArrowUpGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph,
+  ArrowDownGlyph, ArrowUpGlyph, CalendarGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph,
   DownloadGlyph, PlusGlyph,
 } from '@/components/Glyph';
 import {
-  LIMITS, blankProgram, byDate, copyForNextSabbath, dateLabel, filledLines, formatClock,
+  LIMITS, blankProgram, byDate, copyForNextSabbath, tidyProgram, dateLabel, filledLines, formatClock,
   fromOwnTemplate, fromTemplate, loadAdvanced, loadPrograms, loadTemplates, manyLines, newLine,
   newSection, oneLine, overruns, peopleIn, programAsText, reminderText, saveAdvanced, savePrograms,
   saveTemplates, schedule, shareTitle, stillToFill, templateFrom, wholeMinutes,
@@ -42,6 +42,10 @@ import { pictureFileName, programPicture } from '@/lib/sabbath-program-picture';
 import { downloadBlob } from '@/lib/pdf';
 import { canShareFiles, copyText, shareItem } from '@/lib/share';
 import { useOnline } from '@/lib/online';
+import { FolderField, FolderedList, folderNames } from '@/components/Folders';
+import { ICS_MIME, icsCalendar, programEvents } from '@/lib/calendar';
+import type { PlanStore } from '@/lib/plan-sync';
+import { syncLine, usePlanSync, type SyncState } from '@/lib/use-plan-sync';
 
 export const FIELD = 'w-full min-w-0 rounded-xl bg-white px-3 text-base ring-1 ring-navy/10';
 // A box for one paragraph that can outgrow a phone's width: a note, or what a
@@ -114,7 +118,7 @@ function toFillText(n: number): string {
   return `${n} ${n === 1 ? 'line still needs' : 'lines still need'} someone to lead it.`;
 }
 
-export function SabbathPrograms({ owner, churchName, role, share }: {
+export function SabbathPrograms({ owner, churchName, role, share, store }: {
   /** The signed-in account, so a shared computer keeps each person's list apart. */
   owner: string;
   churchName?: string;
@@ -122,8 +126,10 @@ export function SabbathPrograms({ owner, churchName, role, share }: {
   role?: string | null;
   /** Absent where sharing cannot happen, such as a page opened with no signal. */
   share?: ShareInApp;
+  /** The account's copy, so programs follow the person to other devices. Absent in the sample church. */
+  store?: PlanStore;
 }) {
-  // null until read: the list is in the browser, and the server has none.
+  // null until read: the list is in the browser first.
   const [programs, setPrograms] = useState<SabbathProgram[] | null>(null);
   const [templates, setTemplates] = useState<OwnTemplate[]>([]);
   const [advanced, setAdvanced] = useState(false);
@@ -138,10 +144,17 @@ export function SabbathPrograms({ owner, churchName, role, share }: {
     setOpenId(null);
   }, [owner]);
 
-  const commit = (next: SabbathProgram[]) => {
+  const keepHere = (next: SabbathProgram[]) => {
     const sorted = next.slice().sort(byDate);
     setPrograms(sorted);
     setSaved(savePrograms(owner, sorted));
+  };
+  const sync = usePlanSync({
+    kind: 'sabbath_program', owner, store, list: programs, apply: keepHere, tidy: tidyProgram,
+  });
+  const commit = (next: SabbathProgram[]) => {
+    keepHere(next);
+    sync.changed();
   };
 
   const switchAdvanced = (on: boolean) => {
@@ -174,6 +187,7 @@ export function SabbathPrograms({ owner, churchName, role, share }: {
       <ProgramEditor
         key={open.id}
         program={open}
+        folders={folderNames(programs, (x) => x.folder)}
         saved={saved}
         advanced={advanced}
         canCopy={!full}
@@ -183,10 +197,12 @@ export function SabbathPrograms({ owner, churchName, role, share }: {
         onChange={(p) => commit(programs.map((x) => (x.id === p.id ? { ...p, updated: Date.now() } : x)))}
         onCopy={() => start(copyForNextSabbath(open))}
         onDelete={() => {
+          sync.deleted(open.id);
           commit(programs.filter((x) => x.id !== open.id));
           setOpenId(null);
         }}
         onSaveTemplate={keepTemplate}
+        syncState={sync.state}
       />
     );
   }
@@ -197,9 +213,10 @@ export function SabbathPrograms({ owner, churchName, role, share }: {
       <p className="mt-1 text-gray-600">
         Plan the order of service, then download it, send it as a picture, or share it in the app.
       </p>
-      <p className="mt-1 text-sm text-gray-600">
-        Kept on this device, and it works without signal. The names you type stay here until you
-        download or share the program.
+      <p className="mt-1 text-sm text-gray-600" data-kept>
+        {store && sync.state !== 'device'
+          ? 'Kept on this device first, and with your account, so it opens on your other devices too. It works without signal. Nobody else can see it until you download, share or post it.'
+          : 'Kept on this device, and it works without signal. The names you type stay here until you download or share the program.'}
       </p>
 
       <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-navy/[0.03] p-3">
@@ -273,8 +290,11 @@ export function SabbathPrograms({ owner, churchName, role, share }: {
           program and sunset vespers, ready for names.
         </p>
       ) : (
-        <ul className="mt-4 space-y-2" aria-label="Your Sabbath programs">
-          {programs.map((p) => {
+        <FolderedList
+          items={programs}
+          folderOf={(p) => p.folder}
+          label="Your Sabbath programs"
+          render={(p) => {
             const left = stillToFill(p);
             return (
               <li key={p.id}>
@@ -297,17 +317,21 @@ export function SabbathPrograms({ owner, churchName, role, share }: {
                 </button>
               </li>
             );
-          })}
-        </ul>
+          }}
+        />
       )}
     </Card>
   );
 }
 
 function ProgramEditor({
-  program: p, saved, advanced, canCopy, role, share, onBack, onChange, onCopy, onDelete, onSaveTemplate,
+  program: p, folders, saved, advanced, canCopy, role, share, onBack, onChange, onCopy, onDelete, onSaveTemplate,
+  syncState,
 }: {
   program: SabbathProgram;
+  syncState: SyncState;
+  /** Folders already in use, to pick from. */
+  folders: string[];
   saved: boolean;
   advanced: boolean;
   canCopy: boolean;
@@ -366,6 +390,13 @@ function ProgramEditor({
     }
   };
 
+  const events = programEvents(p);
+  const addToCalendar = () => {
+    const name = programFileName(p).replace(/\.docx$/, '.ics');
+    downloadBlob(new Blob([icsCalendar(events, dateLabel(p.date) || 'Sabbath program')], { type: ICS_MIME }), name);
+    setMessage(`Downloaded: ${name}. Open it to add ${events.length === 1 ? 'it' : `the ${events.length} parts`} to your calendar.`);
+  };
+
   const copyAsText = async () => {
     const ok = await copyText(programAsText(p, chosen));
     setMessage(ok
@@ -389,6 +420,7 @@ function ProgramEditor({
           ? 'Saved on this device as you type.'
           : 'This browser would not save on this device. Download it before you leave the page.'}
       </p>
+      {syncLine(syncState) && <p className="text-sm text-gray-600" data-sync-state={syncState}>{syncLine(syncState)}</p>}
       <p className="mt-1 text-sm font-semibold text-navy" data-still-to-fill>{toFillText(toFill)}</p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -419,6 +451,9 @@ function ProgramEditor({
             className={`tap mt-1 ${FIELD}`}
           />
         </label>
+        <div className="sm:col-span-2">
+          <FolderField value={p.folder} folders={folders} max={LIMITS.folder} onChange={(folder) => onChange({ ...p, folder })} />
+        </div>
       </div>
 
       {advanced && (
@@ -569,7 +604,15 @@ function ProgramEditor({
           <Button variant="ghost" onClick={() => void copyAsText()} className={WIDE}>
             <CopyGlyph /> Copy as text
           </Button>
+          <Button variant="ghost" onClick={addToCalendar} disabled={events.length === 0} className={WIDE}>
+            <CalendarGlyph /> Add to calendar
+          </Button>
         </div>
+        <p className="mt-2 text-sm text-gray-600" data-calendar-help>
+          {events.length === 0
+            ? 'To add it to a calendar, give a part of the day its time, e.g. Sabbath School 9:00 AM.'
+            : 'Add to calendar downloads a calendar file: open it and your phone or computer adds each part of the day that has a time.'}
+        </p>
         <p className="mt-2 text-sm text-gray-600">
           The Word file opens in Word, Google Docs and Pages. For Google Docs, upload it to Google
           Drive, or open it from the Google Docs app on a phone.

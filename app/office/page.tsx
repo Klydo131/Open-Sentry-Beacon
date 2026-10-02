@@ -73,6 +73,9 @@ import { Analytics } from '@/components/DemoAnalytics';
 import { LessonSeriesLibrary } from '@/components/LessonSeriesLibrary';
 import { SabbathPrograms } from '@/components/SabbathProgram';
 import { EvangelisticMeetings } from '@/components/EvangelisticMeetings';
+import { DemoProgressReport } from '@/components/ProgressReport';
+import { LiveProgressReport } from '@/components/LiveProgressReport';
+import { officePlans } from '@/lib/live/office-plans';
 import { useDemo } from '@/lib/demo/store';
 import type { Role } from '@/lib/types';
 
@@ -145,6 +148,7 @@ function LiveOffice() {
       { id: 'library', label: '📚 Resources' },
       { id: 'guild', label: '💬 Guides\u2019 room' },
       { id: 'people', label: '🤝 Put a name forward' },
+      { id: 'reports', label: '🖨️ Reports' },
       { id: 'numbers', label: '📈 Numbers' },
     ]
     : [
@@ -194,10 +198,14 @@ function LiveOffice() {
 
       {/* Printing for a board meeting and downloading the figures are the same
           errand, so they share a subroom rather than each taking a tab. */}
-      {room === 'reports' && leads && (
+      {/* The progress report is everybody's who works here: a Guide's for the
+          people they walk with, leadership's for the whole church. The board
+          report and the export are leadership's only, as they were. */}
+      {room === 'reports' && (
         <>
-          <LiveBoardReport churchName={churchName} />
-          <LiveExport churchName={churchName} />
+          <LiveProgressReport me={profile.id} role={profile.role} churchName={churchName} />
+          {leads && <LiveBoardReport churchName={churchName} />}
+          {leads && <LiveExport churchName={churchName} />}
         </>
       )}
 
@@ -224,6 +232,7 @@ function LiveOffice() {
           churchName={churchName}
           role={profile.role}
           share={async (post) => { await live.createBlogPost({ ...post, visibility: 'published' }); }}
+          store={officePlans}
         />
       )}
       {room === 'evangelism' && (
@@ -232,6 +241,7 @@ function LiveOffice() {
           churchName={churchName}
           role={profile.role}
           share={async (post) => { await live.createBlogPost({ ...post, visibility: 'published' }); }}
+          store={officePlans}
         />
       )}
       {room === 'library' && <LiveLibraryForGuide pairings={pairings} />}
@@ -297,6 +307,7 @@ function DemoOffice() {
     { id: 'studies', label: '📖 Lesson studies' },
     { id: 'sabbath', label: '🗓️ Sabbath program' },
     { id: 'evangelism', label: '📣 Evangelistic meetings' },
+    { id: 'reports', label: '🖨️ Reports' },
   ];
   const [room, chooseRoom] = useRoom(rooms, 'beacon:office-room:demo');
 
@@ -324,6 +335,7 @@ function DemoOffice() {
           share={async (post) => { addBlogPost({ ...post, visibility: 'published' }); }}
         />
       )}
+      {room === 'reports' && <DemoProgressReport />}
       {room === 'evangelism' && (
         <EvangelisticMeetings
           owner={`sample:${currentUser?.id ?? 'nobody'}`}

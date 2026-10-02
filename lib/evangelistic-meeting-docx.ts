@@ -21,7 +21,7 @@ import {
   HEAD, PAGE, TEXT_WIDTH, W, cellOf, para, run, wordPackage,
 } from '@/lib/sabbath-program-docx';
 import {
-  HEADING_FACES, blocksFor, filledRows, hasContent, nightLabel, seriesDates, wordColour,
+  HEADING_FACES, blocksFor, filledRows, hasContent, nightHours, nightLabel, seriesDates, wordColour,
   type EvangelisticMeeting, type MeetingBlock, type MeetingCopy,
 } from '@/lib/evangelistic-meeting';
 
@@ -113,7 +113,7 @@ export function meetingDocumentXml(m: EvangelisticMeeting, nightId: string | nul
   } else {
     for (const b of blocksFor(m.blocks, copy)) parts.push(block(b, copy, 'Heading1'));
     m.nights.forEach((n, i) => {
-      const label = [`Night ${i + 1}`, dateLabel(n.date), n.time].filter(Boolean).join(' · ');
+      const label = [`Night ${i + 1}`, dateLabel(n.date), nightHours(n)].filter(Boolean).join(' · ');
       parts.push(para(run(label), '<w:pStyle w:val="Heading1"/>'));
       if (n.topic) parts.push(para(run(n.topic, '<w:b/>')));
       for (const b of blocksFor(n.blocks, copy)) parts.push(block(b, copy, 'Heading2'));
