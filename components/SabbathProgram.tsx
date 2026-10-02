@@ -43,21 +43,21 @@ import { downloadBlob } from '@/lib/pdf';
 import { canShareFiles, copyText, shareItem } from '@/lib/share';
 import { useOnline } from '@/lib/online';
 
-const FIELD = 'w-full min-w-0 rounded-xl bg-white px-3 text-base ring-1 ring-navy/10';
+export const FIELD = 'w-full min-w-0 rounded-xl bg-white px-3 text-base ring-1 ring-navy/10';
 // A box for one paragraph that can outgrow a phone's width: a note, or what a
 // detail says. It grows to show every word, where the browser can
 // (field-sizing), and is one line tall where it cannot, like the boxes around
 // it, 44px like them (10 + 24 + 10). Enter does nothing, because what is
 // typed is kept as one line.
-const GROWS = `block min-h-[44px] resize-none py-[10px] leading-[24px] [field-sizing:content] ${FIELD}`;
-const oneParagraph = (e: KeyboardEvent) => { if (e.key === 'Enter') e.preventDefault(); };
+export const GROWS = `block min-h-[44px] resize-none py-[10px] leading-[24px] [field-sizing:content] ${FIELD}`;
+export const oneParagraph = (e: KeyboardEvent) => { if (e.key === 'Enter') e.preventDefault(); };
 // Its own width, not FIELD's: two width classes on one box are settled by
 // where they sit in the stylesheet, and w-full sits after w-20.
 const MINUTES_FIELD = 'w-20 shrink-0 rounded-xl bg-white px-3 text-base ring-1 ring-navy/10';
 // Full width on a phone and a size down, so no label breaks over two lines.
 // The size is forced: Button's own text-lg sits later in the stylesheet than
 // text-base and would otherwise win.
-const WIDE = 'w-full !text-base sm:w-auto';
+export const WIDE = 'w-full !text-base sm:w-auto';
 
 /** Post a program into the app, to the people the sender walks with or the whole church. */
 export type ShareInApp = (post: { title: string; body: string; audience: 'all' | 'church' }) => Promise<void>;
@@ -79,7 +79,7 @@ function docxBlob(p: SabbathProgram, copy: ProgramCopy): Blob {
   return new Blob([bytes.buffer as ArrayBuffer], { type: DOCX_MIME });
 }
 
-function IconButton({ label, onClick, disabled, children }: {
+export function IconButton({ label, onClick, disabled, children }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
@@ -100,7 +100,7 @@ function IconButton({ label, onClick, disabled, children }: {
 }
 
 /** Move the item at `from` one place up (-1) or down (+1). */
-function moved<T>(list: T[], from: number, by: -1 | 1): T[] {
+export function moved<T>(list: T[], from: number, by: -1 | 1): T[] {
   const to = from + by;
   if (to < 0 || to >= list.length) return list;
   const next = list.slice();

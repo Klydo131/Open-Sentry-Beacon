@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-02-evangelistic-meetings',
+    date: '2026-10-02',
+    title: 'Plan evangelistic meetings your own way',
+    items: [
+      'Guides and Directors have a new Evangelistic meetings folder in the Office. Start with a plan (a night for each day, each with the usual program) or start blank.',
+      'Shape it freely: add blocks to the whole series or to any night, name a list\'s columns yourself, copy a night to make the next, and choose its colour and heading style.',
+      'Mark anything Team only to keep it off the picture and posts. Download a Word file or a picture, or post a night for the people you walk with or the whole church. Explorers find it on This Sabbath.',
+    ],
+  },
+  {
     id: '2026-10-02-this-sabbath',
     date: '2026-10-02',
     title: 'Share the Sabbath program, and find it on This Sabbath',

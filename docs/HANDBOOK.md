@@ -466,13 +466,13 @@ Publish, Cases, the Guild Room, Mail and Profile are left alone. They are one or
 
 ### The Office
 
-Guides, Directors and Executive Directors have an **Office**, in the Menu on every screen. It holds the work: the numbers, the downloads, the studies you write, the Sabbath program and the shelf you stock. Its subrooms are:
+Guides, Directors and Executive Directors have an **Office**, in the Menu on every screen. It holds the work: the numbers, the downloads, the studies you write, the Sabbath program, evangelistic meetings and the shelf you stock. Its subrooms are:
 
 | A Guide's subrooms | A Director's subrooms |
 | --- | --- |
-| Lesson studies, Sabbath program, Resources, Guides' room, Put a name forward, Numbers | Numbers, Reports, Lesson studies, Sabbath program, Library, Pairing requests, Guides' room |
+| Lesson studies, Sabbath program, Evangelistic meetings, Resources, Guides' room, Put a name forward, Numbers | Numbers, Reports, Lesson studies, Sabbath program, Evangelistic meetings, Library, Pairing requests, Guides' room |
 
-![The Office in the sample church, open on Numbers. The sample has three of these folders, Numbers, Lesson studies and the Sabbath program; a church's own Office has the full set above.](screenshots/walkthrough/11-office.png)
+![The Office in the sample church, open on Numbers. The sample has four of these folders, Numbers, Lesson studies, the Sabbath program and Evangelistic meetings; a church's own Office has the full set above.](screenshots/walkthrough/11-office.png)
 
 Three things about it are worth knowing:
 
@@ -554,6 +554,41 @@ Tick **Advanced settings**, above the list. The choice is remembered for that ac
 > **CAUTION** · What keeping it on the device costs
 >
 > A program made on a phone is not on the laptop, and two leaders do not see each other's drafts: they post it or pass the file round, the way churches already pass a program round. Clearing the browser's site data, or a private window closing, deletes the programs in it. If the browser refuses to save at all, the screen says so in red. Download the ones you want to keep.
+
+#### Evangelistic meetings
+
+**A series of meetings, shaped the church's own way.** It is the **Evangelistic meetings** folder in the Office, beside the Sabbath program, for Guides, Directors and Executive Directors. Asked for on 2 October 2026: "super customizable, unlike Sabbath program it has a template that can put input, but for EMs users can have much more freedom to customise their meeting."
+
+**Where the Sabbath program has a fixed shape, this has none.** The owner chose four freedoms, and each is there:
+
+- **Blocks.** The series as a whole, and each night, is a list of blocks in any order: a list, a paragraph, a checklist. **Add a block** offers six, and three of them are lists with their columns already named: **A program** (time, what happens, who), **A team** (role and name), **A schedule** (date, time, what). **Arrange blocks** moves or removes them; a block is removed only after a second tap.
+- **A list's own columns.** One to six, named anything: "Time, What happens, Who, Song", or "Village, Bible worker, Visits". Each list's **Columns** opens to rename, move, add or take one out. Taking out a column that has words in it asks first, because what it says on every line goes with it. On a phone each line is its boxes one under another; wider, they sit side by side under the column names.
+- **Many nights.** Each night has its own date, time, topic and blocks, and opens on its own so a week of meetings is not one long scroll. **Copy to a new night** adds a copy at the end of the series, on the day after its last night, with the same blocks and names and the topic left to choose. **Add a night** adds an empty one; **Remove this night** asks first.
+- **Its own look**, for the Word file and the picture: one of eight colours or **your own colour**, a heading face (**Classic**, **Clean** or **Friendly**: Georgia, Arial and Verdana, which every computer already has, so nothing is fetched or licensed), and the name **Centred** or **On the left**. A colour too pale to read as words draws the lines only, and the words stay dark; the screen says so.
+
+![Evangelistic meetings on a phone: night 1, with its topic and a program whose fourth column, Song, the Guide added herself.](screenshots/walkthrough/28-evangelistic-meetings.png)
+
+**Nobody has to start from nothing.** **New meetings** asks for the first night and how many nights, then offers:
+
+| Choice | What it gives |
+| --- | --- |
+| **Start with a plan** | A night for each day, at 7:00 PM, each with the usual program (song service, welcome and prayer, health talk, children's story, special music, message, appeal and prayer, closing prayer). For the whole series: a paragraph about the meetings, the team (speaker, song leader and the rest, names to fill), and a checklist of what to get ready. Every part of it can be renamed, moved or taken out. |
+| **Start blank** | One night and nothing on it. |
+
+![Its look: eight colours and one of your own, three heading faces, and where the name sits, with a preview.](screenshots/walkthrough/29-meeting-look.png)
+
+**A block can be the team's only.** Planning a campaign means writing things down that are not for the public: what is still to do, who drives whom. Tick **Team only** on any block and it is in the team's copy of the Word file and nowhere else. A checklist starts that way. The picture and every post are always **what is shared**, so a team-only block never leaves the device by the app's hand.
+
+**Taking it away**, under **Take it away**:
+
+- **What**: **The whole series**, or one night. The whole series is every night in full in the Word file, and the series with its nights at a glance in the picture, the text and a post.
+- **Which copy**: **What is shared**, or **Everything, for the team** (Word file and text only).
+- **Download Word file**, **Download picture**, **Share the picture** (phones), **Copy as text**. Canva's free Upload takes the picture or the Word file, as for the Sabbath program.
+- **Share in the app**: **Post it** posts what is chosen under What, to **The people I walk with** (a Guide's default) or **Everyone in the church** (a leader's), as an ordinary post with the sender's name. Explorers find it on **This Sabbath**, under **Evangelistic meetings**, with no signal too once they have opened it.
+
+![This Sabbath on an Explorer's phone with the first night of a series: its name, where, when, the topic, and the program with every column.](screenshots/walkthrough/30-this-sabbath-meeting.png)
+
+**Kept on the device, one list per account**, exactly as the Sabbath program is, and for the same reasons: it works the day the code updates, with no database change, and with no signal. Up to 20 series on a device, 31 nights in a series, 20 blocks in a night, six columns and sixty lines in a list. Guides and leaders can also plan on **This Sabbath**, which opens with no signal.
 
 #### Asking to walk with somebody
 
@@ -1270,6 +1305,12 @@ That raises the standard in four ways: consent has to be **express** rather than
 - **The file names the program, not its author.** Its author field says the app's name, because a program gets forwarded.
 - **A shared computer keeps each account's list apart.** Signing out does not delete them; clearing the browser's site data does.
 
+### Evangelistic meetings, 2 October 2026
+
+- **The same rules as the Sabbath program**: kept on the device under the account that made them, sent nowhere unless somebody downloads, shares or posts them, and a posted series is an ordinary post. The same kind of check holds it (`tests/evangelistic-meetings-are-yours-to-shape.mjs`).
+- **A block marked Team only never leaves the device by the app's hand.** It is in the team's copy of the Word file, which the person chooses to download, and in nothing else: not the picture, not a post, not the shared copy. The check proves it of the picture by recording every word drawn.
+- **A series shared with somebody is kept on their phone**, the most recent 20, to read with no signal.
+
 ### Asking for a copy of your own information
 
 Anybody signed in can download everything the app holds about them, from **Profile → A copy of your information**. No reason is needed and nobody has to approve it. The file is JSON, which is the form both laws ask for so it can be carried somewhere else.
@@ -1307,6 +1348,8 @@ The two largest gaps today:
 | This Sabbath is empty with no signal | The phone keeps a program once it has opened This Sabbath with a signal after the program was posted. | Open This Sabbath once with a signal, the day before. |
 | "This program is too long to post" | A post holds 20,000 characters. A whole day with long announcements can pass it. | Shorten the announcements, or share the Word file or the picture instead. |
 | A note is missing from the Word file | The Word file was made **For the congregation**. | Under **Which copy**, choose **For the platform, with times and notes**, then download again. |
+| A block is missing from a meeting's picture or post | It is marked **Team only**. The picture and posts are always what is shared. | Untick **Team only** on that block if it is for everyone, or use **Everything, for the team** for the Word file. |
+| A meeting's headings print dark, not in the colour chosen | The colour is too pale to read as words on white, so it draws the lines only. | Choose a darker colour, or keep it for the lines. |
 | "This copy can never update" | It was installed from a temporary preview address. | Open the real address, install from there, then delete the old icon. |
 | A setting was changed and nothing happened | The two settings beginning `NEXT_PUBLIC_` are read when the site is built. | Redeploy. Saving alone changes nothing. |
 | Everybody was signed out at once | The database project changed, the web address changed, or the project's signing secret was rotated. A code deploy does not do this. | See Part 7. If the address changed, people must reinstall as well. |
@@ -1388,13 +1431,14 @@ Read this section before making a change. It states what is true, what must stay
 17. A screen that needs a new table, column or function keeps working without it, until the migration that adds it has run.
 18. The Sabbath program never touches the database or the network itself. It is kept per account in the browser (`lib/sabbath-program.ts`) and leaves only through the `share` its page hands it, as an ordinary post. Every property in its Word file is written in the order Word's schema gives; `tests/a-sabbath-program-is-a-word-file.mjs` holds both.
 19. Whatever leaves the device by the app's hand, a post or a picture, is the congregation's copy: no platform notes. A shared program is read back as plain text, never as markup. The same test holds both.
+20. An evangelistic meeting's post and picture are always what is shared, never a **Team only** block, and its colour reaches the page only as a checked six-digit colour. `tests/evangelistic-meetings-are-yours-to-shape.mjs` holds both, and holds its Word file to the same schema order as the Sabbath program's, from one shared list (`tests/_word-order.mjs`).
 
 ### Prove it before you claim it
 
 ```
-npm run verify        # 166 checks: types, build, security, privacy, licences,
+npm run verify        # 167 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 63 browser walks: 229 in all
+npm run verify:all    # the same, plus 64 browser walks: 231 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1439,6 +1483,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Bulk invitations | **Built**: pasting a list, and dragging a spreadsheet onto the screen. Suggested pairing after a batch is the part still to do. |
 | The Sabbath program's Word file in Word, Google Docs and Pages | **Built**, and opened here by LibreOffice Writer and two other readers, and held to the order Word's schema gives. It has not been opened in Microsoft Word, Google Docs or Pages, and **Share the picture** has not been tried on a real phone. |
 | Sharing a Sabbath program inside the app | **Built**, as an ordinary post, and walked in the sample church: a Guide posts, the Explorer they walk with reads it on This Sabbath, with the network off too, and an Explorer they do not walk with does not see it. Not yet done from a church's own app with a real sign-in, and This Sabbath's no-signal page for a real account has not been seen. |
+| Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |
 | A picture on most Guides' profiles | Almost none have set one, so the card meant to show an Explorer a real person falls back to initials. The app asks them; somebody has to follow it up. |

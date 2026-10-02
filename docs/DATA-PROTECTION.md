@@ -79,6 +79,8 @@ Structure read from the live database. No values were read.
 | A **Sabbath program** (since 2 October 2026): an order of service with the names of who leads each part, and with Advanced settings, notes for the platform and the church's own details | The browser's storage on the phone or computer where it was made, under that account's id | Whoever uses that browser as that account. It reaches anybody else only in a file or picture the person downloads or shares, or when they press **Post it** (below) |
 | The person's own **Sabbath templates** and their **Advanced settings** choice | The same browser storage, under that account's id | The same. A template keeps the parts and the names of details, never who leads them or what was written |
 | **Sabbath programs shared with the person** (the most recent 20), so This Sabbath opens with no signal | The browser's storage on their own phone, under their account's id | Whoever uses that browser as that account. It is a copy of a post they could already read |
+| **Evangelistic meetings** (since 2 October 2026): a series of nights with the names of who does what, and blocks the planner may mark **Team only** | The browser's storage on the phone or computer where it was made, under that account's id | Whoever uses that browser as that account. It reaches anybody else only in a file or picture the person downloads or shares, or a post; a Team only block only in the team's copy of the Word file |
+| **Evangelistic meetings shared with the person** (the most recent 20) | The browser's storage on their own phone, under their account's id | Whoever uses that browser as that account. It is a copy of a post they could already read |
 
 None of these rows reaches Supabase, Vercel or anybody else, so a deletion
 request to the church has nothing of them to delete; the person deletes them on
@@ -91,7 +93,10 @@ row in `posts` (the table above), with the sender's name, for the audience they
 chose: the people they walk with, or the whole church. It is read, kept and
 taken down exactly like any other post, and needed no new table. It is always
 the congregation's copy: the platform notes are never in it, and the same test
-proves the picture never draws them either.
+proves the picture never draws them either. A posted evangelistic meeting is
+the same kind of post, and never carries a block marked Team only;
+`tests/evangelistic-meetings-are-yours-to-shape.mjs` proves it of the post and
+the picture.
 
 ### What the church records about people
 

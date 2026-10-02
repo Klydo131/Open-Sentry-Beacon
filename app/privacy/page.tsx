@@ -150,6 +150,11 @@ export default function PrivacyPage() {
             any other post. Notes for the platform are never in a post or a picture. A
             program shared with you is kept on your phone so you can read it with no signal.
           </p>
+          <p className="mt-2 text-gray-700">
+            <strong>Evangelistic meetings you plan in the Office</strong> work the same way: kept on
+            your phone or computer, and shared only when you download, share or post them. Anything
+            you mark <strong>Team only</strong> is never in a picture or a post.
+          </p>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li><strong>The record of shared links: 30 days</strong>, then deleted
               automatically.</li>

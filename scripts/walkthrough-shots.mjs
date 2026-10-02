@@ -275,7 +275,70 @@ const SHOTS = [
       await p.goto(`${BASE}/sabbath`, { waitUntil: 'networkidle' });
       await settle(p, 1400);
     } },
+  // Evangelistic meetings, the same day: shaped the church's own way. A night's
+  // program with a column Maria added herself.
+  { file: '28-evangelistic-meetings.png', what: 'Evangelistic meetings: a night, with a column of your own', size: PHONE,
+    go: async (p) => {
+      await meetingSeries(p);
+      await p.locator('[data-night]').first().locator('[data-kind="list"]').first()
+        .evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -150, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // Its own look: a colour, a heading face, and where the name sits.
+  { file: '29-meeting-look.png', what: 'Evangelistic meetings: its own look', size: PHONE,
+    go: async (p) => {
+      await meetingSeries(p);
+      await p.locator('[data-look] summary').click();
+      await p.locator('[data-look]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -20, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // What an Explorer reads once the first night is posted.
+  { file: '30-this-sabbath-meeting.png', what: 'This Sabbath with a night of meetings, as an Explorer sees it', size: PHONE,
+    go: async (p) => {
+      await meetingSeries(p);
+      await p.getByLabel('What to take away').selectOption({ index: 1 });
+      await p.locator('[data-meeting-share]').getByRole('button', { name: 'Post it' }).click();
+      await settle(p, 800);
+      await signIn(p, /John Reyes/i);
+      await p.goto(`${BASE}/sabbath`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+      await p.locator('[data-panel="shared-meetings"]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy({ top: -20, behavior: 'instant' }));
+      await settle(p, 600);
+    } },
 ];
+
+/** Maria plans three nights of meetings for shots 28 to 30: invented names only. */
+async function meetingSeries(p) {
+  await signIn(p, /Maria Santos/i);
+  await p.goto(`${BASE}/office?room=evangelism`, { waitUntil: 'networkidle' });
+  await settle(p, 1400);
+  await p.getByRole('button', { name: 'New meetings' }).click();
+  await p.getByLabel('First night', { exact: true }).fill('2026-10-04');
+  await p.getByLabel('How many nights', { exact: true }).fill('3');
+  await p.getByRole('button', { name: 'Start with a plan' }).click();
+  await settle(p, 500);
+  await p.getByLabel('Name of the meetings').fill('Hope for Today');
+  await p.getByLabel('Place', { exact: true }).fill('Riverside Hall');
+  await p.getByLabel('A line under the name').fill('Every night at 7. All are welcome.');
+  await p.locator('[data-look] summary').click();
+  await p.locator('[data-look] label[title="Forest"]').click();
+  await p.getByRole('radio', { name: 'Clean' }).check();
+  await p.locator('[data-look] summary').click();
+  const night = p.locator('[data-night]').first();
+  await night.getByLabel('Topic of night 1').fill('The Blessed Hope');
+  await night.locator('[data-columns] summary').click();
+  await night.getByRole('button', { name: 'Add a column' }).click();
+  await night.getByLabel('Column 4 of Program').fill('Song');
+  await night.locator('[data-columns] summary').click();
+  for (const [line, time, who, song] of [[1, '7:00 PM', 'David Cruz', 'Opening song'], [2, '7:15 PM', 'Grace Lim', '']]) {
+    await night.getByLabel(`Time, line ${line} of Program`).fill(time);
+    await night.getByLabel(`Who, line ${line} of Program`).fill(who);
+    if (song) await night.getByLabel(`Song, line ${line} of Program`).fill(song);
+  }
+}
 
 /** Maria, Advanced on, filling a program the way a Guide might for shots 25 to 27: invented names only. */
 async function advancedProgram(p) {

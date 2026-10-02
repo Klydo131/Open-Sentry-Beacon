@@ -72,6 +72,7 @@ import {
 import { Analytics } from '@/components/DemoAnalytics';
 import { LessonSeriesLibrary } from '@/components/LessonSeriesLibrary';
 import { SabbathPrograms } from '@/components/SabbathProgram';
+import { EvangelisticMeetings } from '@/components/EvangelisticMeetings';
 import { useDemo } from '@/lib/demo/store';
 import type { Role } from '@/lib/types';
 
@@ -140,6 +141,7 @@ function LiveOffice() {
     ? [
       { id: 'studies', label: '📖 Lesson studies' },
       { id: 'sabbath', label: '🗓️ Sabbath program' },
+      { id: 'evangelism', label: '📣 Evangelistic meetings' },
       { id: 'library', label: '📚 Resources' },
       { id: 'guild', label: '💬 Guides\u2019 room' },
       { id: 'people', label: '🤝 Put a name forward' },
@@ -150,6 +152,7 @@ function LiveOffice() {
       { id: 'reports', label: '🖨️ Reports' },
       { id: 'studies', label: '📖 Lesson studies' },
       { id: 'sabbath', label: '🗓️ Sabbath program' },
+      { id: 'evangelism', label: '📣 Evangelistic meetings' },
       { id: 'library', label: '📚 Library' },
       { id: 'people', label: '🤝 Pairing requests', badge: waitingAsks, urgent: waitingAsks > 0 },
       { id: 'guild', label: '💬 Guides\u2019 room' },
@@ -223,6 +226,14 @@ function LiveOffice() {
           share={async (post) => { await live.createBlogPost({ ...post, visibility: 'published' }); }}
         />
       )}
+      {room === 'evangelism' && (
+        <EvangelisticMeetings
+          owner={profile.id}
+          churchName={churchName}
+          role={profile.role}
+          share={async (post) => { await live.createBlogPost({ ...post, visibility: 'published' }); }}
+        />
+      )}
       {room === 'library' && <LiveLibraryForGuide pairings={pairings} />}
 
       {/* PUTTING A NAME FORWARD, whichever direction it goes.
@@ -285,6 +296,7 @@ function DemoOffice() {
     { id: 'numbers', label: '📈 Numbers' },
     { id: 'studies', label: '📖 Lesson studies' },
     { id: 'sabbath', label: '🗓️ Sabbath program' },
+    { id: 'evangelism', label: '📣 Evangelistic meetings' },
   ];
   const [room, chooseRoom] = useRoom(rooms, 'beacon:office-room:demo');
 
@@ -306,6 +318,14 @@ function DemoOffice() {
       {room === 'studies' && <LessonSeriesLibrary />}
       {room === 'sabbath' && (
         <SabbathPrograms
+          owner={`sample:${currentUser?.id ?? 'nobody'}`}
+          churchName={db.church_name}
+          role={currentUser?.role}
+          share={async (post) => { addBlogPost({ ...post, visibility: 'published' }); }}
+        />
+      )}
+      {room === 'evangelism' && (
+        <EvangelisticMeetings
           owner={`sample:${currentUser?.id ?? 'nobody'}`}
           churchName={db.church_name}
           role={currentUser?.role}

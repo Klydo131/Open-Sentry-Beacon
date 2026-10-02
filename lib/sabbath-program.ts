@@ -293,7 +293,7 @@ export function byDate(a: SabbathProgram, b: SabbathProgram): number {
 }
 
 /** Read something this file keeps. null when it is not there, or storage is shut. */
-function readKept(key: string): unknown {
+export function readKept(key: string): unknown {
   try {
     const raw = window.localStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
@@ -303,7 +303,7 @@ function readKept(key: string): unknown {
 }
 
 /** Keep something. False when the browser would not. */
-function keep(key: string, value: unknown): boolean {
+export function keep(key: string, value: unknown): boolean {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
     return true;

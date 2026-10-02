@@ -586,6 +586,7 @@ const staticChecks = [
   // per account kept on the device, and a Word file checked against the order
   // Word's schema insists on and against Info-ZIP and Python.
   ['a Sabbath program is a Word file', 'tests/a-sabbath-program-is-a-word-file.mjs'],
+  ['evangelistic meetings are yours to shape', 'tests/evangelistic-meetings-are-yours-to-shape.mjs'],
   ['a suspension is immediate', 'tests/a-suspension-is-immediate.mjs'],
   // `x.col = col` inside a subquery is always true: the bare name binds to x.
   // Two live policies checked nothing because of it.

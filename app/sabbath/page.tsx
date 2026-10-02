@@ -30,6 +30,9 @@ import { readBrowserSession } from '@/lib/supabase/client';
 import {
   isSharedProgram, loadReceived, rememberRole, rememberedRole, saveReceived, type ReceivedProgram,
 } from '@/lib/sabbath-program';
+import {
+  byNewest, isSharedMeeting, loadReceivedMeetings, saveReceivedMeetings,
+} from '@/lib/evangelistic-meeting';
 import type { Role } from '@/lib/types';
 
 const EVERYONE: Role[] = ['executive', 'admin', 'dm', 'ds'];
@@ -39,6 +42,7 @@ function LiveSabbath() {
   const [stored, setStored] = useState<string | null>(null);
   const owner = profile?.id ?? stored;
   const [received, setReceived] = useState<ReceivedProgram[] | null>(null);
+  const [meetings, setMeetings] = useState<ReceivedProgram[] | null>(null);
   const [status, setStatus] = useState('');
   const [churchName, setChurchName] = useState<string>();
 
@@ -47,7 +51,9 @@ function LiveSabbath() {
 
   // The device's copy, at once.
   useEffect(() => {
-    if (owner) setReceived(loadReceived(owner));
+    if (!owner) return;
+    setReceived(loadReceived(owner));
+    setMeetings(loadReceivedMeetings(owner));
   }, [owner]);
 
   // Then the church's, when it can be asked, and again whenever a post
@@ -56,13 +62,14 @@ function LiveSabbath() {
   const load = useCallback(async () => {
     if (!profile) return;
     try {
-      const shared = (await live.listBlogFeed(100))
-        .filter((p) => isSharedProgram(p.title))
+      const posts = (await live.listBlogFeed(100))
         .map((p) => ({ id: p.id, title: p.title, body: p.body, from: p.author_name, at: p.created_at }));
+      const shared = posts.filter((p) => isSharedProgram(p.title));
+      const series = posts.filter((p) => isSharedMeeting(p.title)).sort(byNewest);
       setReceived(shared);
-      setStatus(saveReceived(profile.id, shared)
-        ? ''
-        : 'This browser would not keep a copy, so this will need a signal next time.');
+      setMeetings(series);
+      const kept = saveReceived(profile.id, shared) && saveReceivedMeetings(profile.id, series);
+      setStatus(kept ? '' : 'This browser would not keep a copy, so this will need a signal next time.');
     } catch {
       setStatus('Your church could not be reached. This is what this phone saved last time.');
     }
@@ -92,6 +99,7 @@ function LiveSabbath() {
           role={profile.role}
           churchName={churchName}
           received={received}
+          meetings={meetings}
           status={status}
           share={share}
         />
@@ -107,7 +115,7 @@ function LiveSabbath() {
           Your church cannot be reached just now, so this is what this phone has saved. It catches up
           by itself when there is a signal.
         </p>
-        <ThisSabbath owner={owner} role={rememberedRole(owner)} received={received} />
+        <ThisSabbath owner={owner} role={rememberedRole(owner)} received={received} meetings={meetings} />
         <a href="/" className="tap-sm inline-flex items-center font-semibold text-navy underline">Home</a>
       </main>
     );
@@ -123,20 +131,23 @@ function DemoSabbath() {
 
   // What this sample person may read, by the same rule as the sample feed, and
   // their own shared programs too, as a church's own app returns them.
-  const received = useMemo<ReceivedProgram[]>(() => {
+  const readable = useMemo<ReceivedProgram[]>(() => {
     if (!currentUser) return [];
     const nameOf = (id: string) => db.profiles.find((x) => x.id === id)?.full_name ?? 'Someone';
     const mine = db.blog_posts.filter((p) => p.author_id === currentUser.id && p.visibility === 'published');
     const seen = new Map([...postsVisibleTo(db, currentUser.id), ...mine].map((p) => [p.id, p]));
     return [...seen.values()]
-      .filter((p) => isSharedProgram(p.title))
       .map((p) => ({ id: p.id, title: p.title, body: p.body, from: nameOf(p.author_id), at: p.created_at }));
   }, [db, currentUser]);
+  const received = useMemo(() => readable.filter((p) => isSharedProgram(p.title)), [readable]);
+  const meetings = useMemo(() => readable.filter((p) => isSharedMeeting(p.title)).sort(byNewest), [readable]);
 
   // Kept on the device the same way, so the two halves behave alike offline.
   useEffect(() => {
-    if (currentUser) saveReceived(owner, received);
-  }, [owner, received, currentUser]);
+    if (!currentUser) return;
+    saveReceived(owner, received);
+    saveReceivedMeetings(owner, meetings);
+  }, [owner, received, meetings, currentUser]);
 
   const share = async (post: { title: string; body: string; audience: 'all' | 'church' }) => {
     addBlogPost({ ...post, visibility: 'published' });
@@ -148,6 +159,7 @@ function DemoSabbath() {
       role={currentUser?.role ?? null}
       churchName={db.church_name}
       received={received}
+      meetings={meetings}
       share={share}
     />
   );

@@ -205,10 +205,11 @@ the next lesson.
 ### The Office
 
 Everything that is your work rather than your conversation: lesson studies,
-the Sabbath program, resources, the Guides' room, and putting a name forward.
+the Sabbath program, evangelistic meetings, resources, the Guides' room, and
+putting a name forward.
 Each is a subroom, so you tap once and you are there.
 
-![The Office in the sample church, open on Numbers. The sample has three of its folders; your church's Office has them all.](screenshots/walkthrough/11-office.png)
+![The Office in the sample church, open on Numbers. The sample has four of its folders; your church's Office has them all.](screenshots/walkthrough/11-office.png)
 
 ### The Sabbath program
 
@@ -255,10 +256,34 @@ Canva.
 Your programs are kept on your own phone or computer until you post them or
 download them. Directors have the same folder.
 
+### Evangelistic meetings
+
+The **Evangelistic meetings** folder in the Office plans a series of meetings
+your own way. Press **New meetings**, choose the first night and how many
+nights, then **Start with a plan** (each night with the usual program, and a
+team and a to-do list) or **Start blank**.
+
+- Tap a night to open it. Give it a date, a time and a topic.
+- **Add a block** puts a program, a team, a schedule, a list, a paragraph or a
+  checklist on a night or on the whole series. **Arrange blocks** moves them.
+- A list's **Columns** lets you name its columns yourself, up to six.
+- **Copy to a new night** makes the next night from this one.
+- **Its look** chooses a colour, a heading style, and where the name sits, for
+  the Word file and the picture.
+- Tick **Team only** on anything that is not for the public. It stays out of
+  the picture and anything you post.
+
+![Evangelistic meetings. A night, with a column you added yourself.](screenshots/walkthrough/28-evangelistic-meetings.png)
+
+Under **Take it away**, choose the whole series or one night, then download a
+Word file or a picture, or **Post it** for the people you walk with or the
+whole church.
+
 ### This Sabbath
 
 **This Sabbath**, in the Menu, shows the Sabbath program your Guide or your
-church has posted, with who shared it. Once you have opened it with a signal,
+church has posted, with who shared it, and any evangelistic meetings they have
+posted. Once you have opened it with a signal,
 it opens again with none, so you can read it in a church hall without signal.
 
 ![This Sabbath on a phone. The church, the date, the theme, then each part of the day and who leads it.](screenshots/walkthrough/27-this-sabbath.png)

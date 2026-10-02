@@ -34,6 +34,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { misplacedIn, parseXml } from './_word-order.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
@@ -173,90 +174,18 @@ const NAMES = ['[Content_Types].xml', '_rels/.rels', 'word/_rels/document.xml.re
 ok(NAMES.every((n) => n in parts) && files.length === NAMES.length, `the zip holds the ${NAMES.length} parts of a Word document`);
 ok(files[0].path === '[Content_Types].xml', 'content types first, where Word looks for them');
 
-/** Parse XML far enough to check it: well-formed, one root, and each element's children in order. */
-function parseXml(xml) {
-  const top = { name: '#document', children: [] };
-  const stack = [top];
-  const re = /<\?[\s\S]*?\?>|<(\/?)([A-Za-z_][\w:.-]*)((?:\s+[\w:.-]+="[^"<]*")*)\s*(\/?)>|([^<]+)|</g;
-  let m;
-  while ((m = re.exec(xml))) {
-    if (m[0].startsWith('<?')) continue;
-    if (m[0] === '<') throw new Error(`a "<" that starts no tag, at ${m.index}`);
-    if (m[5] !== undefined) {
-      if (/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/.test(m[5])) throw new Error(`a bare "&" at ${m.index}`);
-      if (stack.length === 1 && m[5].trim()) throw new Error('text outside the root element');
-      continue;
-    }
-    const [, close, name, attrs, self] = m;
-    if (/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/.test(attrs)) throw new Error(`a bare "&" in <${name}>`);
-    if (close) {
-      const open = stack.pop();
-      if (open.name !== name) throw new Error(`</${name}> closes <${open.name}>`);
-    } else {
-      const el = { name, children: [] };
-      stack[stack.length - 1].children.push(el);
-      if (!self) stack.push(el);
-    }
-  }
-  if (stack.length !== 1) throw new Error(`<${stack[stack.length - 1].name}> is never closed`);
-  if (top.children.length !== 1) throw new Error('not exactly one root element');
-  return top.children[0];
-}
-
 const trees = {};
 for (const n of NAMES) {
   try { trees[n] = parseXml(parts[n]); ok(true, `${n} is well-formed XML`); }
   catch (e) { ok(false, `${n} is well-formed XML (${e.message})`); }
 }
 
-// THE ORDER WORD INSISTS ON, from the schema (ECMA-376, WordprocessingML).
-// Only the lists this file writes are here; an element that is not on its
-// list fails as well, so a new property cannot be added without being placed.
-const ORDER = {
-  'w:pPr': ['pStyle', 'keepNext', 'keepLines', 'pageBreakBefore', 'framePr', 'widowControl', 'numPr',
-    'suppressLineNumbers', 'pBdr', 'shd', 'tabs', 'suppressAutoHyphens', 'kinsoku', 'wordWrap',
-    'overflowPunct', 'topLinePunct', 'autoSpaceDE', 'autoSpaceDN', 'bidi', 'adjustRightInd', 'snapToGrid',
-    'spacing', 'ind', 'contextualSpacing', 'mirrorIndents', 'suppressOverlap', 'jc', 'textDirection',
-    'textAlignment', 'textboxTightWrap', 'outlineLvl', 'divId', 'cnfStyle', 'rPr', 'sectPr', 'pPrChange'],
-  'w:rPr': ['rStyle', 'rFonts', 'b', 'bCs', 'i', 'iCs', 'caps', 'smallCaps', 'strike', 'dstrike', 'outline',
-    'shadow', 'emboss', 'imprint', 'noProof', 'snapToGrid', 'vanish', 'webHidden', 'color', 'spacing', 'w',
-    'kern', 'position', 'sz', 'szCs', 'highlight', 'u', 'effect', 'bdr', 'shd', 'fitText', 'vertAlign', 'rtl',
-    'cs', 'em', 'lang', 'eastAsianLayout', 'specVanish', 'oMath'],
-  'w:tblPr': ['tblStyle', 'tblpPr', 'tblOverlap', 'bidiVisual', 'tblStyleRowBandSize', 'tblStyleColBandSize',
-    'tblW', 'jc', 'tblCellSpacing', 'tblInd', 'tblBorders', 'shd', 'tblLayout', 'tblCellMar', 'tblLook'],
-  'w:tblBorders': ['top', 'left', 'start', 'bottom', 'right', 'end', 'insideH', 'insideV'],
-  'w:tblCellMar': ['top', 'left', 'start', 'bottom', 'right', 'end'],
-  'w:pBdr': ['top', 'left', 'bottom', 'right', 'between', 'bar'],
-  'w:tcPr': ['cnfStyle', 'tcW', 'gridSpan', 'hMerge', 'vMerge', 'tcBorders', 'shd', 'noWrap', 'tcMar',
-    'textDirection', 'tcFitText', 'vAlign', 'hideMark'],
-  'w:style': ['name', 'aliases', 'basedOn', 'next', 'link', 'autoRedefine', 'hidden', 'uiPriority', 'semiHidden',
-    'unhideWhenUsed', 'qFormat', 'locked', 'personal', 'personalCompose', 'personalReply', 'rsid', 'pPr', 'rPr',
-    'tblPr', 'trPr', 'tcPr', 'tblStylePr'],
-  'w:sectPr': ['headerReference', 'footerReference', 'footnotePr', 'endnotePr', 'type', 'pgSz', 'pgMar'],
-  'w:styles': ['docDefaults', 'latentStyles', 'style'],
-  'w:docDefaults': ['rPrDefault', 'pPrDefault'],
-  'w:tbl': ['tblPr', 'tblGrid', 'tr'],
-  'w:tr': ['trPr', 'tc'],
-  'w:tc': ['tcPr', 'p'],
-  'w:p': ['pPr', 'r'],
-  'w:r': ['rPr', 't'],
-};
-const misplaced = [];
-const walk = (el) => {
-  const order = ORDER[el.name];
-  if (order) {
-    let last = -1;
-    for (const c of el.children) {
-      const at = order.indexOf(c.name.replace(/^w:/, ''));
-      if (at === -1) misplaced.push(`<${c.name}> is not allowed in <${el.name}>`);
-      else if (at < last) misplaced.push(`<${c.name}> comes too late in <${el.name}>`);
-      else last = at;
-    }
-  }
-  el.children.forEach(walk);
-};
-if (trees['word/document.xml']) walk(trees['word/document.xml']);
-if (trees['word/styles.xml']) walk(trees['word/styles.xml']);
+// THE ORDER WORD INSISTS ON, from the schema (ECMA-376, WordprocessingML):
+// tests/_word-order.mjs, shared with the evangelistic meetings' test.
+const misplaced = [
+  ...(trees['word/document.xml'] ? misplacedIn(trees['word/document.xml']) : []),
+  ...(trees['word/styles.xml'] ? misplacedIn(trees['word/styles.xml']) : []),
+];
 ok(misplaced.length === 0, `every property is where Word's schema puts it${misplaced.length ? `: ${misplaced.slice(0, 3).join('; ')}` : ''}`);
 
 const docXml = parts['word/document.xml'];
@@ -434,10 +363,7 @@ two.sections[0].lines[1].note = NOTE;
   ok(!congregationXml.includes(NOTE), 'the congregation Word file does not');
   ok(S.programFileName(two, 'platform') === 'Sabbath-program-2026-10-03-platform.docx', 'and the two files are not called the same thing');
   try {
-    const tree = parseXml(platformXml);
-    const before = misplaced.length;
-    walk(tree);
-    ok(misplaced.length === before, 'the platform file keeps to Word\'s order too');
+    ok(misplacedIn(parseXml(platformXml)).length === 0, 'the platform file keeps to Word\'s order too');
   } catch (e) {
     ok(false, `the platform file is well-formed XML (${e.message})`);
   }
@@ -498,7 +424,7 @@ two.sections[0].lines[1].note = NOTE;
      'and a reminder never carries a note');
 
   const page = code('app/sabbath/page.tsx');
-  ok(/<ThisSabbath owner=\{owner\} role=\{rememberedRole\(owner\)\} received=\{received\} \/>/.test(page),
+  ok(/<ThisSabbath owner=\{owner\} role=\{rememberedRole\(owner\)\} received=\{received\} meetings=\{meetings\} \/>/.test(page),
      'This Sabbath with no signal draws from the device only, and offers no sharing');
   ok(!/dangerouslySetInnerHTML/.test(page + code('components/ThisSabbath.tsx')),
      'a shared program is drawn as text, never as markup: it is a post somebody wrote');

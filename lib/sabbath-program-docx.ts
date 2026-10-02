@@ -46,28 +46,28 @@ export function xml(text: string): string {
     .replace(/'/g, '&apos;');
 }
 
-const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+export const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+export const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
 
 // A4 with 2 cm margins, in twentieths of a point.
-const PAGE = { w: 11906, h: 16838, margin: 1134 };
-const TEXT_WIDTH = PAGE.w - 2 * PAGE.margin; // 9638
+export const PAGE = { w: 11906, h: 16838, margin: 1134 };
+export const TEXT_WIDTH = PAGE.w - 2 * PAGE.margin; // 9638
 // Part, details, who: the part is short, the details carry hymn titles.
 const COLUMNS = [3080, 3958, 2600];
 // The platform copy puts each line's start time first.
 const PLATFORM_COLUMNS = [1250, 2600, 3488, 2300];
 
 /** A run of text. Spaces are kept, because a hymn number padded by hand is still meant. */
-function run(text: string, props = ''): string {
+export function run(text: string, props = ''): string {
   return `<w:r>${props ? `<w:rPr>${props}</w:rPr>` : ''}<w:t xml:space="preserve">${xml(text)}</w:t></w:r>`;
 }
 
-function para(content: string, props = ''): string {
+export function para(content: string, props = ''): string {
   return `<w:p>${props ? `<w:pPr>${props}</w:pPr>` : ''}${content}</w:p>`;
 }
 
 /** A table cell holding paragraphs already built; it must hold at least one. */
-function cellOf(width: number, paragraphs: string[]): string {
+export function cellOf(width: number, paragraphs: string[]): string {
   return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/></w:tcPr>${paragraphs.join('') || para('')}</w:tc>`;
 }
 
@@ -188,14 +188,17 @@ export function stylesXml(): string {
 /** W3C date-time without milliseconds, which is the form docProps accepts. */
 const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-/** Every part of the file, by its path inside the zip. */
-export function docxParts(
-  p: SabbathProgram,
+/**
+ * Every part of a .docx around its document and styles, by path inside the
+ * zip. The file's own properties name what it is, never the person who made
+ * it: a file that gets forwarded should not carry its author's name inside it.
+ */
+export function wordPackage(
+  document: string,
+  styles: string,
+  title: string,
   when: Date = new Date(),
-  copy: ProgramCopy = 'congregation',
 ): Record<string, string> {
-  const title = ['Sabbath program', copy === 'platform' && 'platform copy', dateLabel(p.date)]
-    .filter(Boolean).join(', ');
   return {
     '[Content_Types].xml': HEAD
       + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
@@ -216,10 +219,8 @@ export function docxParts(
       + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
       + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
       + '</Relationships>',
-    'word/document.xml': documentXml(p, copy),
-    'word/styles.xml': stylesXml(),
-    // The file's own properties name the program, never the person who made it:
-    // a file that gets forwarded should not carry its author's name inside it.
+    'word/document.xml': document,
+    'word/styles.xml': styles,
     'docProps/core.xml': HEAD
       + '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"'
       + ' xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"'
@@ -234,6 +235,17 @@ export function docxParts(
       + `<Application>${xml(APP_NAME)}</Application>`
       + '</Properties>',
   };
+}
+
+/** Every part of the file, by its path inside the zip. */
+export function docxParts(
+  p: SabbathProgram,
+  when: Date = new Date(),
+  copy: ProgramCopy = 'congregation',
+): Record<string, string> {
+  const title = ['Sabbath program', copy === 'platform' && 'platform copy', dateLabel(p.date)]
+    .filter(Boolean).join(', ');
+  return wordPackage(documentXml(p, copy), stylesXml(), title, when);
 }
 
 /** The finished .docx, as bytes. */
