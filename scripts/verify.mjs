@@ -637,6 +637,9 @@ const staticChecks = [
   // Menu that lists every room the rail has (30 September 2026). The browser
   // half is tests/e2e/the-rooms-fit-a-phone.js.
   ['the bottom bar', 'tests/the-bottom-bar.mjs'],
+  // Text size is tried in the preview and changes the app only on Apply
+  // (3 October 2026). The browser half is tests/e2e/text-size-is-tried-first.js.
+  ['text size is tried first', 'tests/text-size-is-tried-first.mjs'],
   // A failing browser walk prints what the browser saw, so a WebKit failure in
   // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],

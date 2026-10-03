@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-03-text-size-apply',
+    date: '2026-10-03',
+    title: 'Try a text size before you apply it',
+    items: [
+      'Settings, General, Text size: choosing a size now shows it in the preview first, at exactly that size.',
+      'Press Apply when it reads well, and every screen follows. Leave without pressing it and nothing changes.',
+    ],
+  },
+  {
     id: '2026-10-03-classic-on-a-computer',
     date: '2026-10-03',
     title: 'Classic is the computer design now',

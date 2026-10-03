@@ -31,6 +31,7 @@
 // for them. Text size is the difference between using the app and asking
 // somebody else to read it out.
 
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui';
 import { useLocale, LANGUAGES } from '@/lib/i18n';
 import { UI_THEMES, saveUiTheme } from '@/lib/ui-themes';
@@ -72,43 +73,103 @@ export function LanguageCard() {
   );
 }
 
+// TRY IT FIRST, THEN APPLY. The owner, 3 October 2026: "text size should be
+// tested and see first before applying, there should be an apply button for
+// text size". Pressing a size used to change the whole app at once, so the
+// very screen somebody was reading jumped under their finger, and a size too
+// big to find the next button on was already in force. Now a size only
+// changes the preview, which is drawn at exactly the size it would be (the
+// root is 18px times the scale, lib/i18n.tsx), and nothing else moves until
+// Apply. Leaving the screen without pressing it changes nothing.
 export function TextSizeCard() {
   const { t, scale, setScale } = useLocale();
+  const [trying, setTrying] = useState(scale);
+  const [justApplied, setJustApplied] = useState(false);
+  // A size applied somewhere else (another tab) is what this card shows next.
+  useEffect(() => {
+    setTrying(scale);
+  }, [scale]);
+
+  const same = (a: number, b: number) => Math.abs(a - b) < 0.001;
+  const nameOf = (value: number) => t(SIZES.find((s) => same(s.scale, value))?.key ?? 'normal');
+  const changed = !same(trying, scale);
+
   return (
-    <Card className="p-5">
+    <Card className="p-5" data-panel="text-size">
       <h2 className="mb-1 text-xl font-bold text-navy">🔠 {t('textSize')}</h2>
       <p className="mb-4 text-sm text-gray-500">
-        Make everything bigger or smaller. Changes apply right away.
+        Make everything bigger or smaller. Try a size in the preview first, then press Apply.
       </p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {SIZES.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => setScale(s.scale)}
-            // The chosen one is said out loud as well as coloured, because
-            // colour alone is not an answer for somebody who came to this
-            // screen precisely because reading it is hard.
-            aria-pressed={Math.abs(scale - s.scale) < 0.001}
-            className="tap rounded-xl px-3 font-semibold"
-            style={
-              Math.abs(scale - s.scale) < 0.001
-                ? { backgroundColor: '#1E2A4A', color: '#fff' }
-                : { backgroundColor: '#EEF1F7', color: '#1E2A4A' }
-            }
-          >
-            <span style={{ fontSize: `${0.9 + (s.scale - 0.9) * 1.2}rem` }}>A</span>{' '}
-            {t(s.key)}
-          </button>
-        ))}
+        {SIZES.map((s) => {
+          const picked = same(trying, s.scale);
+          return (
+            <button
+              key={s.key}
+              type="button"
+              data-text-size={s.key}
+              onClick={() => {
+                setTrying(s.scale);
+                setJustApplied(false);
+              }}
+              // The one being tried is said out loud as well as coloured,
+              // because colour alone is not an answer for somebody who came
+              // to this screen precisely because reading it is hard.
+              aria-pressed={picked}
+              className="tap rounded-xl px-3 font-semibold"
+              style={picked ? { backgroundColor: '#1E2A4A', color: '#fff' } : { backgroundColor: '#EEF1F7', color: '#1E2A4A' }}
+            >
+              <span style={{ fontSize: `${0.9 + (s.scale - 0.9) * 1.2}rem` }}>A</span> {t(s.key)}
+              {changed && same(scale, s.scale) && <span className="block text-xs font-normal opacity-70">In use</span>}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Something to read at the new size without leaving the screen, so the
-          choice can be judged rather than guessed at. */}
-      <div className="mt-5 rounded-xl bg-gray-50 p-4">
-        <p className="mb-1 text-sm text-gray-400">Preview</p>
-        <p className="text-lg text-navy">{t('appTagline')}</p>
+      {/* Drawn at the size being tried, in pixels, whatever the app is at now. */}
+      <div className="mt-5 rounded-xl bg-gray-50 p-4" data-text-size-preview>
+        <p className="mb-1 text-sm text-gray-400">Preview: {nameOf(trying)}</p>
+        <p className="font-semibold text-navy" style={{ fontSize: `${18 * trying * 1.125}px`, lineHeight: 1.35 }}>
+          {t('appTagline')}
+        </p>
+        <p className="mt-1 text-gray-700" style={{ fontSize: `${18 * trying}px`, lineHeight: 1.5 }}>
+          This is how your messages, lessons and notices will read.
+        </p>
       </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          data-text-size-apply
+          disabled={!changed}
+          onClick={() => {
+            setScale(trying);
+            setJustApplied(true);
+          }}
+          className="tap rounded-xl px-6 font-bold disabled:cursor-not-allowed"
+          style={changed ? { backgroundColor: '#1E2A4A', color: '#fff' } : { backgroundColor: '#EEF1F7', color: '#6B7280' }}
+        >
+          Apply
+        </button>
+        {changed && (
+          <button
+            type="button"
+            data-text-size-keep
+            onClick={() => setTrying(scale)}
+            className="tap rounded-xl px-4 font-semibold text-navy underline"
+          >
+            Keep {nameOf(scale)}
+          </button>
+        )}
+      </div>
+      {/* Its own line: beside the buttons it was squeezed to a sliver on a phone. */}
+      <p className="mt-2 text-sm text-gray-600" aria-live="polite" data-text-size-status>
+        {changed
+          ? `Showing ${nameOf(trying)} in the preview. Apply to use it everywhere.`
+          : justApplied
+            ? `${nameOf(scale)} is applied everywhere.`
+            : `${nameOf(scale)} is in use.`}
+      </p>
     </Card>
   );
 }
@@ -117,11 +178,10 @@ export function TextSizeCard() {
 // the settings right now, ChatGPT or Codex will introduce new theme UI that
 // users can pick, but make sure the classic UI remains the same please."
 //
-// Classic is the app exactly as it was before this card existed. Desktop,
-// added the same day, puts the rooms down the left on a computer and is what a
-// computer shows until somebody chooses (the owner: "make Desktop the default
-// on computers"); on a phone it is Classic. How a look is added without
-// touching Classic is in lib/ui-themes.ts.
+// Classic is the app as it is, and on a computer that is the desktop design
+// (rooms down the left, a light top bar), which was briefly a look of its own
+// called Desktop until the owner: "this is the classic". How a look is added
+// without touching Classic is in lib/ui-themes.ts.
 export function LookCard() {
   // This device's choice, or the default (Desktop) when nothing is chosen.
   const look = useChosenLook();

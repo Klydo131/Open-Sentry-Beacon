@@ -248,7 +248,7 @@ Three things about it are worth knowing before you use it on twenty people.
 
 ![Recording a voice message. The clock counts up to the two-minute limit; the bin on the left throws it away, the arrow on the right sends it.](screenshots/walkthrough/18-voice-message.png)
 
-**It follows Text size.** Settings → General → **Text size** changes the conversation's words as well as every other screen's. Until 1 October 2026 the chat was drawn in fixed sizes and did not.
+**It follows Text size.** Settings → General → **Text size** changes the conversation's words as well as every other screen's. A size is tried in the card's preview first, drawn at exactly that size, and changes the app only when **Apply** is pressed (the owner, 3 October 2026: "text size should be tested and see first before applying, there should be an apply button"). Until 1 October 2026 the chat was drawn in fixed sizes and did not.
 
 ![The same conversation with Text size at its largest. The words grow and still wrap; nothing runs off the side.](screenshots/walkthrough/22-text-size-large.png)
 

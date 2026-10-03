@@ -57,7 +57,8 @@ nobody has to keep this page to hand:
 ### Bigger words
 
 If the writing is too small, open **Settings**, stay in **General**, and choose a
-larger **Text size**. Every screen follows it, conversations included.
+larger **Text size**. The preview below the sizes shows it first; when it reads
+well, press **Apply**, and every screen follows it, conversations included.
 
 Just below it is **Look**, with **Classic** chosen. On a computer, Classic has
 your rooms down the left side and a light bar across the top; on a phone or
