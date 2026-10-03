@@ -106,7 +106,20 @@ const S = await import(pathToFileURL(bundle).href);
   ok(/owner_id\s+uuid not null default auth\.uid\(\)/.test(m) && !/owner_id/.test(code('lib/live/office-plans.ts').replace(/onConflict: 'owner_id,id'/, '')),
      'the owner is filled in by the database, never sent by the browser');
   ok(/revoke all on public\.office_plans from anon/.test(m), 'nobody signed out reaches it');
-  ok(/octet_length\(body::text\) <= 400000/.test(m) && />= 1000 then/.test(m), 'one row cannot be enormous, and one account cannot fill the database');
+  // The limits were tightened by the audit of 3 October 2026, in a migration of
+  // their own; supabase/tests/an-office-plan-has-a-size.sql proves them as people.
+  const sized = sql('supabase/migrations/20261003120000_an_office_plan_has_a_size.sql');
+  ok(/octet_length\(body::text\) <= 200000/.test(sized) && /live_plans >= 200/.test(sized) && /all_rows >= 1000/.test(sized)
+     && /kept_bytes \+ pg_column_size\(new\.body\) > 10000000/.test(sized),
+     'one plan holds 200 KB, an account 200 plans, 1,000 rows and 10 MB: nobody can fill the database');
+  ok(/p\.is_approved/.test(sized) && /before insert or update on public\.office_plans/.test(sized),
+     'only an approved member keeps plans, checked on every write');
+  // A plan too big for the account stays on the device, so it never holds the
+  // rest of a save back; the limit leaves room for the database's longer text.
+  const store = code('lib/live/office-plans.ts');
+  const limit = Number((/OFFICE_PLAN_SEND_LIMIT = ([\d_]+)/.exec(store)?.[1] ?? '0').replace(/_/g, ''));
+  ok(limit > 50_000 && limit <= 150_000 && /all\.filter\(fitsTheAccount\)/.test(store) && /if \(row\.deleted\) return true/.test(store),
+     `a plan over ${limit} bytes is kept on the device and not sent; a deletion is always sent`);
   ok(/if new\.updated < old\.updated then\s+return null;/.test(m) && /before update on public\.office_plans/.test(m),
      'a slower device cannot overwrite a newer copy: the account only moves forward');
   ok(/alter publication supabase_realtime add table public\.office_plans/.test(m), 'it is published, so another device hears a change while open');

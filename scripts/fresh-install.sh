@@ -107,6 +107,11 @@ psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-conversation-can-reply-react-and-speak.sql"
 
+# AN OFFICE PLAN HAS A SIZE, the same way: an approved member keeps plans, one
+# account cannot fill the database, as invented people, rolled back.
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/an-office-plan-has-a-size.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"
