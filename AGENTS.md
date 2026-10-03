@@ -206,26 +206,31 @@ right now, ChatGPT or Codex will introduce new theme UI that users can pick, but
 make sure the classic UI remains the same please." Settings, General, **Look**
 lists the looks. Classic is first and is the app exactly as it is, with no
 stylesheet of its own; the page says which look it is as `data-ui-theme` on
-`<html>`. What a device shows until somebody chooses is `DEFAULT_LOOK`: Desktop
-since 3 October 2026 ("make Desktop the default on computers"), which on a
-phone or a pad is Classic, and a person who chooses Classic keeps it. To add a
-look:
+`<html>`. What a device shows until somebody chooses is `DEFAULT_LOOK`, Classic.
+
+**On a computer, Classic is the desktop design**, under every look: the rooms
+down the left (`components/DesktopNav.tsx`) and a light top bar
+(`app/desktop-layout.css`), from 1280px. It was a look of its own, Desktop, for
+a few hours on 3 October 2026, until the owner: "this is the classic. I dont
+want the UI classic with the outdated version where the UI is still mobile in
+desktop". A device that stored "desktop" is on Classic. A look recolours the
+top bar through `--top-bar-bg`, `--top-bar-ink` and the other `--top-bar-*`
+variables, set in its own file. To add a look:
 
 1. register it in `lib/ui-themes.ts`, after Classic;
 2. put every style it changes in `app/themes/<id>.css`, every rule starting
    `:root[data-ui-theme="<id>"]`, and import that file in `app/layout.tsx`;
 3. if it needs something Classic does not draw, give it a component of its
    own that renders nothing unless that look is chosen (`useChosenLook` in
-   `components/UiTheme.tsx`); `components/DesktopNav.tsx`, the Desktop look's
-   rooms down the left side, is the example;
+   `components/UiTheme.tsx`);
 4. never edit `globals.css`, `tailwind.config.ts` or a component's own classes
    to make a look work. That is changing Classic.
 
 To restyle something shared without touching its classes, find it by the
 `data-` hooks it carries, which draw nothing: `data-app-header` on the header
 in both halves, `data-header-brand` on its logo, `data-back-button`,
-`data-avatar` on the initials circle. The Desktop look's top bar
-(`app/themes/desktop.css`) is built from them. And a look is on `<html>`
+`data-avatar` on the initials circle. The computer's top bar
+(`app/desktop-layout.css`) is built from them. And a look is on `<html>`
 before the first frame: `lib/look-before-paint.ts` builds a small script from
 `UI_THEMES`, so a look you register needs no change there, and
 `tests/e2e/the-first-paint.js` checks the browser's first paint.
@@ -362,9 +367,8 @@ shipped:
   refuses the rest.
 - **The bottom bar is the navigation on a phone and a pad.** **Menu | People |
   My Files** (`components/TabBar.tsx`, `lib/tab-bar.ts`), and Menu lists every
-  room. On a computer the Desktop look, the default there since 3 October 2026,
-  lists the same rooms down the left and puts the bar away; under Classic the
-  bar is the navigation on a computer too (section 2, "Classic is the app's look"). The right
+  room. On a computer (1280px and up) the same rooms are down the left and the
+  bar is put away (section 2, "On a computer, Classic is the desktop design"). The right
   rail (the person's own desk) sits beside the page from `xl`, and below `xl`
   it is a drawer behind a small tab on the right edge
   (`components/DeskDrawer.tsx`, `tests/the-desk-is-a-drawer.mjs`). The bar is

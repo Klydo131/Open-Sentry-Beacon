@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-// The looks other than Classic, each scoped to itself (lib/ui-themes.ts).
-import './themes/desktop.css';
+// The app on a computer: rooms down the left, a light bar across the top.
+// Classic's own, under every look; not a look (app/desktop-layout.css).
+import './desktop-layout.css';
+// The looks other than Classic go here, each scoped to itself (lib/ui-themes.ts).
 import { DemoProvider } from '@/lib/demo/store';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SelfHeal } from '@/components/SelfHeal';

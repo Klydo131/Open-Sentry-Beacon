@@ -1,32 +1,26 @@
 'use client';
 
-// THE DESKTOP LOOK'S ROOMS, DOWN THE LEFT SIDE OF A COMPUTER SCREEN.
+// THE ROOMS, DOWN THE LEFT SIDE OF A COMPUTER SCREEN.
 //
 // Asked for on 3 October 2026, with a screenshot of a Guide's home on a wide
 // screen: "This UI is not desktop friendly, can we make the desktop have it's
-// own UI too", in the same breath as "make sure the classic UI remains the
-// same". So it is a look of its own (lib/ui-themes.ts), chosen in Settings,
-// and Classic is untouched. Since the owner's "make Desktop the default on
-// computers" it is what a computer shows until somebody chooses Classic.
-//
-// RENDERS NOTHING UNLESS THE DESKTOP LOOK IS CHOSEN. Not hidden: absent. For
-// everybody on Classic the page is the same element for element, which is the
-// only honest way to promise that Classic did not change. When it is chosen it
-// shows from 1280px up, the width the desk already moves beside the page at;
-// below that a phone and a pad are exactly Classic, bottom bar and all.
+// own UI too". It began as a look of its own, Desktop, and the same day the
+// owner made it Classic's: "this is the classic. I dont want the UI classic
+// with the outdated version where the UI is still mobile in desktop". So it is
+// drawn under every look, and shown from 1280px up, the width the desk already
+// moves beside the page at; below that, `hidden`, a phone and a pad keep the
+// bar along the bottom.
 //
 // THE SAME ROOMS AS THE MENU, FROM THE SAME LIST. railGroupsFor() is what the
 // Menu draws for each role on both halves; drawing it again here means a room
 // added to the Menu arrives in the sidebar without anybody remembering to.
 // What it replaces on a computer, the bar along the bottom, is hidden by
-// app/themes/desktop.css, scoped to this look.
+// app/desktop-layout.css, which also turns the header into the top bar.
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDemoRooms } from '@/components/AppShell';
 import { railGroupsFor, type RailGroup } from '@/components/RoomRails';
-import { useChosenLook } from '@/components/UiTheme';
-import { DESKTOP } from '@/lib/ui-themes';
 import { useDemo } from '@/lib/demo/store';
 import { useLiveSession } from '@/lib/live/session';
 import { useIsLive } from '@/lib/tutorial';
@@ -34,9 +28,7 @@ import { APP_SHORT_NAME } from '@/lib/brand';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 
 export function DesktopNav() {
-  const look = useChosenLook();
   const live = useIsLive();
-  if (look !== DESKTOP) return null;
   return live ? <LiveRooms /> : <SampleRooms />;
 }
 
@@ -74,7 +66,7 @@ function Rooms({ groups }: { groups: RailGroup[] }) {
       style={{ top: 'var(--beacon-chrome-top, 0px)' }}
     >
       {/* THE LOGO ROW IS THE TOP BAR'S HEIGHT (--desktop-top-bar, in
-          app/themes/desktop.css), so the sidebar and the bar across the page
+          app/desktop-layout.css), so the sidebar and the bar across the page
           share one line. Who you are is on the right of that bar, as on every
           computer app, so it is not repeated here. */}
       <Link

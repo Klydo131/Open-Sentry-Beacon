@@ -13,8 +13,12 @@
 // animation-frame tick can fall in that wait, when nothing is drawn. The
 // browser's first-paint entry is when something actually reached the screen.
 //
-// lib/look-before-paint.ts is what makes it pass; on the build before it, a
-// computer that had chosen nothing first painted as "classic".
+// lib/look-before-paint.ts is what makes it pass. While Classic is the only
+// look the server and the script agree, so what is checked today is that the
+// script's rule holds (an old "desktop" in storage is Classic at first paint)
+// and that a computer's frames are its layout from the first. EVERY OTHER
+// LOOK SETTINGS OFFERS IS CHECKED TOO, found on the Look card, so a look added
+// later is walked here with no change to this file.
 //
 //   npm run build && node scripts/run-next.mjs start -p 4415
 //   node tests/e2e/the-first-paint.js 4415
@@ -96,49 +100,61 @@ async function framesOf(page, url) {
 }
 
 (async () => {
-  // 1. A COMPUTER THAT HAS CHOSEN NOTHING: Desktop, the default, from frame one.
+  // 1. A COMPUTER, NOTHING CHOSEN: Classic, and Classic's computer layout, from the first frame.
+  let otherLooks = [];
   {
     const { browser, page } = await device({ width: 1440, height: 900, mobile: false });
     const door = await framesOf(page, '/login');
-    ok(door.firstPaint !== null && door.lookAtFirstPaint === 'desktop',
-       `the sign-in page first paints already in Desktop (${door.lookAtFirstPaint}, first paint at ${door.firstPaint}ms)`);
-    await signIn(page);
-    const frames = await framesOf(page, '/church');
-    ok(frames.firstPaint !== null && frames.lookAtFirstPaint === 'desktop',
-       `the church home first paints already in Desktop (${frames.lookAtFirstPaint}, first paint at ${frames.firstPaint}ms)`);
-    ok(frames.filter((f) => f.t >= frames.firstPaint).every((f) => f.look === 'desktop'), 'and it never changes look after that');
-    const drawn = frames.filter((f) => f.header);
-    ok(drawn.length > 0, `the header is drawn (first at ${drawn[0]?.t}ms), so the next checks measure something`);
-    const phoneLike = drawn.filter((f) => f.header === NAVY || f.bar || !f.side);
-    ok(phoneLike.length === 0,
-       `no frame shows the phone's navy header, the bottom bar, or a missing sidebar${phoneLike.length ? ` (first at ${phoneLike[0].t}ms: ${JSON.stringify(phoneLike[0])})` : ''}`);
-    await browser.close();
-  }
-
-  // 2. A COMPUTER THAT CHOSE CLASSIC: Classic from frame one, and Classic all the way.
-  {
-    const { browser, page } = await device({ width: 1440, height: 900, mobile: false, stored: 'classic' });
+    ok(door.firstPaint !== null && door.lookAtFirstPaint === 'classic',
+       `the sign-in page first paints in Classic (${door.lookAtFirstPaint}, first paint at ${door.firstPaint}ms)`);
     await signIn(page);
     const frames = await framesOf(page, '/church');
     ok(frames.firstPaint !== null && frames.lookAtFirstPaint === 'classic'
        && frames.filter((f) => f.t >= frames.firstPaint).every((f) => f.look === 'classic'),
-       'a computer that chose Classic first paints in Classic, and stays in it');
+       `the church home first paints in Classic and stays in it (first paint at ${frames.firstPaint}ms)`);
     const drawn = frames.filter((f) => f.header);
-    ok(drawn.length > 0 && drawn.every((f) => f.header === NAVY && f.bar && !f.side),
-       'with Classic\'s navy header and bar from the first frame they are drawn in, and never a sidebar');
+    ok(drawn.length > 0, `the header is drawn (first at ${drawn[0]?.t}ms), so the next check measures something`);
+    const phoneLike = drawn.filter((f) => f.header === NAVY || f.bar || !f.side);
+    ok(phoneLike.length === 0,
+       `no frame on a computer shows the phone's navy header, the bottom bar, or a missing sidebar${phoneLike.length ? ` (first at ${phoneLike[0].t}ms: ${JSON.stringify(phoneLike[0])})` : ''}`);
+    await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+    otherLooks = (await page.locator('[data-ui-theme-choice]').evaluateAll((els) => els.map((el) => el.getAttribute('data-ui-theme-choice'))))
+      .filter((id) => id && id !== 'classic');
     await browser.close();
   }
 
-  // 3. A PHONE: the look is on the page from frame one, and a phone draws Classic.
+  // 2. A COMPUTER THAT CHOSE "DESKTOP" WHILE IT WAS A LOOK: Classic from the first paint.
+  {
+    const { browser, page } = await device({ width: 1440, height: 900, mobile: false, stored: 'desktop' });
+    await signIn(page);
+    const frames = await framesOf(page, '/church');
+    ok(frames.firstPaint !== null && frames.lookAtFirstPaint === 'classic',
+       `a stored "desktop" first paints as Classic (${frames.lookAtFirstPaint})`);
+    await browser.close();
+  }
+
+  // 3. A PHONE: Classic from the first paint, with the navy header and the bar in every frame.
   {
     const { browser, page } = await device({ width: 390, height: 844, mobile: true });
     await signIn(page);
     const frames = await framesOf(page, '/church');
-    ok(frames.firstPaint !== null && frames.lookAtFirstPaint === 'desktop',
-       `a phone first paints with the look on the page too (${frames.lookAtFirstPaint})`);
+    ok(frames.firstPaint !== null && frames.lookAtFirstPaint === 'classic', `a phone first paints in Classic (${frames.lookAtFirstPaint})`);
     const drawn = frames.filter((f) => f.header);
     ok(drawn.length > 0 && drawn.every((f) => f.header === NAVY && f.bar),
-       'and on a phone that look is drawn as Classic: the navy header and the bar, in every frame');
+       'and draws the navy header and the bar along the bottom in every frame');
+    await browser.close();
+  }
+
+  // 4. EVERY OTHER LOOK SETTINGS OFFERS, chosen before the page loads, is on
+  // the page at its first paint and never changes after.
+  if (otherLooks.length === 0) console.log('    (Settings offers no look but Classic yet; nothing more to check)');
+  for (const look of otherLooks) {
+    const { browser, page } = await device({ width: 1440, height: 900, mobile: false, stored: look });
+    const door = await framesOf(page, '/login');
+    ok(door.firstPaint !== null && door.lookAtFirstPaint === look
+       && door.filter((f) => f.t >= door.firstPaint).every((f) => f.look === look),
+       `${look}: the sign-in page first paints in it, and stays in it (${door.lookAtFirstPaint})`);
     await browser.close();
   }
 

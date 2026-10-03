@@ -10,8 +10,7 @@
 // On 30 September 2026 that row was replaced by what was asked for: "Menu |
 // People | My Files as our bottom for our UI to make it simple in our Mobile
 // and Pad". So this now walks the bar the way a person would, as a phone (touch,
-// 2x) at the three widths that matter, as a pad upright and on its side, and as
-// a desktop, where the bar must not be drawn at all:
+// 2x) at the three widths that matter, and as a pad upright and on its side:
 //
 //   - the three tabs are on screen, whole, tall enough to hit, and not clipped;
 //   - the header is one row with no rooms in it;
@@ -22,12 +21,10 @@
 //
 // The source half is tests/the-bottom-bar.mjs.
 //
-// THE BAR ON A COMPUTER IS CLASSIC'S. Since 3 October 2026 ("make Desktop the
-// default on computers") a computer opens in the Desktop look, with the rooms
-// down the left side and no bar. So the computer sizes here choose Classic
-// first, the way a person does in Settings, and walk its bar; the Desktop
-// look's own walk is tests/e2e/the-desktop-look.js. The conversation below is
-// walked in both, because it is what every computer now opens it in.
+// A COMPUTER HAS NO BAR. Since 3 October 2026 ("this is the classic") the
+// rooms are down the left side of a computer and the bar is put away; that is
+// walked in tests/e2e/the-desktop-layout.js. The conversation below is still
+// walked on a computer, because the panel stands somewhere different there.
 //
 //   npm run build && node scripts/run-next.mjs start -p 4382
 //   node tests/e2e/the-rooms-fit-a-phone.js 4382
@@ -46,18 +43,8 @@ const SIZES = [
   { name: '412 phone', width: 412, height: 915, mobile: true },
   { name: 'pad upright', width: 820, height: 1180, mobile: true },
   { name: 'pad on its side', width: 1194, height: 834, mobile: true },
-  // AND A DESKTOP, since "Can we have the same dropdown and UI with Desktops
-  // please?" (30 September 2026). The same checks, with a mouse.
-  { name: 'desktop', width: 1440, height: 900, mobile: false, look: 'classic' },
 ];
 
-// Chooses a look on this browser before any page loads, as Settings would.
-async function chooseLook(ctx, look) {
-  if (!look) return;
-  await ctx.addInitScript((id) => {
-    try { localStorage.setItem('beacon-ui-theme', id); } catch { /* the walk then sees the default */ }
-  }, look);
-}
 const sidebar = (page) => page.locator('[data-desktop-nav]');
 
 async function signIn(page, who) {
@@ -97,7 +84,6 @@ async function go(page, locator, url) {
       viewport: { width: size.width, height: size.height },
       isMobile: size.mobile, hasTouch: size.mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
     });
-    await chooseLook(ctx, size.look);
     const page = await ctx.newPage();
     await signIn(page, /Maria Santos/i);
 
@@ -297,16 +283,12 @@ async function go(page, locator, url) {
   // screen, bar and all; on a desktop it is a panel standing on the bar. In
   // the Desktop look, which a computer opens in, there is no bar: the rooms
   // are down the left, and the panel stands on the bottom edge, clear of them.
-  for (const [label, w, h, mobile, look] of [
-    ['phone', 390, 844, true, null],
-    ['desktop', 1440, 900, false, 'classic'],
-    ['desktop look', 1440, 900, false, null],
-  ]) {
-    const ownLook = !mobile && !look;
+  for (const [label, w, h, mobile] of [['phone', 390, 844, true], ['desktop', 1440, 900, false]]) {
+    // On a computer the rooms are down the left and there is no bar.
+    const ownLook = !mobile;
     const ctx = await browser.newContext({
       viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
     });
-    await chooseLook(ctx, look);
     const page = await ctx.newPage();
     await signIn(page, /Maria Santos/i);
     await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });

@@ -8,9 +8,9 @@
 // What keeps Classic the same is a rule about where a look's styles may live,
 // so that is what this checks (lib/ui-themes.ts says the rule in full):
 //
-//   1. Classic is the first look. The default, until somebody chooses, is
-//      Desktop (the owner, 3 October 2026: "make Desktop the default on
-//      computers"), and anything unknown in storage is the default.
+//   1. Classic is the first look and the default, and anything unknown in
+//      storage is the default: "desktop" included, the look that became
+//      Classic's computer layout on 3 October 2026 ("this is the classic").
 //   2. The page says which look it is from the first paint, Classic unless
 //      chosen otherwise, and Settings offers the choice in both halves.
 //   3. Classic has no stylesheet, and no rule anywhere targets it.
@@ -57,8 +57,9 @@ const L = await import(pathToFileURL(bundle).href);
      'the first look is Classic, called Classic');
   ok(L.UI_THEMES.every((t) => /^[a-z][a-z-]{0,30}$/.test(t.id)) && new Set(L.UI_THEMES.map((t) => t.id)).size === L.UI_THEMES.length,
      'every look has its own id of lowercase letters and hyphens');
-  ok(L.DEFAULT_LOOK === 'desktop' && L.UI_THEMES.some((t) => t.id === L.DEFAULT_LOOK),
-     'until somebody chooses, a device shows Desktop: the owner\'s default on computers, and Classic on a phone');
+  ok(L.DEFAULT_LOOK === 'classic', 'until somebody chooses, a device shows Classic');
+  ok(!L.UI_THEMES.some((t) => t.id === 'desktop') && L.knownTheme('desktop') === 'classic',
+     'Desktop is no longer a look of its own: it is Classic on a computer, and a device that chose it is on Classic');
   ok([null, undefined, '', 'nonsense', 'CLASSIC', '"><script>', 42, {}].every((v) => L.knownTheme(v) === L.DEFAULT_LOOK),
      'nothing unknown, empty or malformed can choose a look: it is the default');
   ok(L.UI_THEMES.every((t) => L.knownTheme(t.id) === t.id), 'and every look the app has can be chosen');
@@ -100,11 +101,14 @@ const L = await import(pathToFileURL(bundle).href);
   // data- attribute of the card's own compiles, and never reaches the page.
   ok(/<Card className="p-5" data-panel="look-settings">/.test(card),
      'the Look card is found by data-panel, which Card passes on to the page');
-  // What a look draws of its own is absent, not hidden, for everybody else.
+  // The rooms down the left of a computer are Classic's, so every look has
+  // them: drawn wherever the bar is, shown from 1280px, hidden below.
   const nav = code('components/DesktopNav.tsx');
-  ok(/const look = useChosenLook\(\);/.test(nav) && /if \(look !== DESKTOP\) return null;/.test(nav),
-     'the Desktop look\'s rooms render nothing unless Desktop is chosen');
+  ok(!/useChosenLook|data-ui-theme|uiTheme/.test(nav) && /className="[^"]*\bhidden\b[^"]*\bxl:flex\b/.test(nav),
+     'the rooms down the left are drawn under every look, shown from 1280px and hidden below');
   ok(/<DesktopNav \/>/.test(code('components/TabBar.tsx')), 'and are drawn wherever the bar along the bottom is');
+  ok(/import '\.\/desktop-layout\.css';/.test(code('app/layout.tsx')) && !/data-ui-theme/.test(read('app/desktop-layout.css').replace(/\/\*[\s\S]*?\*\//g, '')),
+     'the computer layout is the app\'s own stylesheet, imported for every page, and targets no look');
   for (const f of ['app/settings/page.tsx', 'components/LiveAccountPages.tsx']) {
     ok(/\{room === 'general' && <ReadingSettings \/>\}/.test(code(f)), `${f}: Look is in Settings, General`);
   }

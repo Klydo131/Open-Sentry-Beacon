@@ -59,10 +59,10 @@ nobody has to keep this page to hand:
 If the writing is too small, open **Settings**, stay in **General**, and choose a
 larger **Text size**. Every screen follows it, conversations included.
 
-Just below it is **Look**. On a computer the app opens in **Desktop**: your
-rooms down the left side instead of the bar along the bottom. If you prefer the
-look it had before, choose **Classic** there, and it stays that way on that
-computer. On a phone or tablet the two look the same.
+Just below it is **Look**, with **Classic** chosen. On a computer, Classic has
+your rooms down the left side and a light bar across the top; on a phone or
+tablet, the bar along the bottom. If new looks are added, you can pick one
+there.
 
 ![A conversation with Text size at its largest. The words grow and still fit the screen.](screenshots/walkthrough/22-text-size-large.png)
 

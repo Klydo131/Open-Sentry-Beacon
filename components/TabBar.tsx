@@ -22,7 +22,11 @@
 //
 // ON A DESKTOP TOO (30 September 2026): "Can we have the same dropdown and UI
 // with Desktops please?" There was a left rail at 1280px and up, drawing the
-// same rooms; it is gone, and this bar is the navigation at every width.
+// same rooms; it went, and this bar was the navigation at every width.
+// UNTIL 3 OCTOBER 2026: "This UI is not desktop friendly", then "this is the
+// classic". From 1280px the rooms are down the left again (DesktopNav, drawn
+// from here) and this bar is put away; on a phone and a pad it is the
+// navigation, as before.
 //
 // NOT INSIDE A CONVERSATION. Asked for as "Hide the bar inside conversations
 // too": a screen that IS a conversation marks itself `data-conversation-screen`,
@@ -88,9 +92,9 @@ export function TabBar({ role }: { role: Role }) {
   const hrefOf = (key: Tab) =>
     key === 'menu' ? MENU_HREF : key === 'files' ? FILES_HREF : peopleHref(role);
 
-  // THE DESKTOP LOOK'S ROOMS ARE DRAWN FROM HERE, because this bar is drawn
-  // on exactly the pages that have rooms to go to. Under Classic it renders
-  // nothing at all (components/DesktopNav.tsx).
+  // THE ROOMS DOWN THE LEFT OF A COMPUTER ARE DRAWN FROM HERE, because this
+  // bar is drawn on exactly the pages that have rooms to go to. From 1280px
+  // they replace it (components/DesktopNav.tsx, app/desktop-layout.css).
   return (
     <>
     <DesktopNav />

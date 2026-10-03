@@ -1,0 +1,118 @@
+/* THE APP ON A COMPUTER: rooms down the left side, a light bar across the top.
+ *
+ * Classic's computer layout, under every look. It began on 3 October 2026 as
+ * a look of its own called Desktop ("This UI is not desktop friendly, can we
+ * make the desktop have it's own UI too"), and the same day the owner made it
+ * Classic: "this is the classic. I dont want the UI classic with the outdated
+ * version where the UI is still mobile in desktop". So nothing here is scoped
+ * to a look, and nothing here may target one (tests/the-classic-look-stays.mjs).
+ *
+ * Every rule is for a computer's width. Below 1280px a phone and a pad keep the
+ * bar along the bottom and the navy header, exactly as before.
+ *
+ * The rooms down the left come from components/DesktopNav.tsx. These rules
+ * make room for it and put away what it replaces. :has() keeps them to pages
+ * that actually draw it, so the sign-in page and the front door are not pushed
+ * sideways by a sidebar that is not there.
+ *
+ * A LOOK RECOLOURS THE TOP BAR THROUGH ITS VARIABLES, --top-bar-bg,
+ * --top-bar-ink, --top-bar-soft, --top-bar-chip, --top-bar-chip-hover,
+ * --top-bar-line and --top-bar-avatar (behind white initials), set
+ * under :root[data-ui-theme="<id>"] in its own file. Nothing here needs to
+ * change for a dark look.
+ */
+
+:root {
+  /* The top bar's height, shared by the bar and the sidebar's logo row. */
+  --desktop-top-bar: 4rem;
+  --top-bar-bg: #ffffff;
+  --top-bar-ink: #1e2a4a;
+  --top-bar-soft: rgba(30, 42, 74, 0.6);
+  --top-bar-chip: rgba(30, 42, 74, 0.06);
+  --top-bar-chip-hover: rgba(30, 42, 74, 0.12);
+  --top-bar-line: rgba(30, 42, 74, 0.1);
+  --top-bar-avatar: #1e2a4a;
+}
+
+@media (min-width: 1280px) {
+  /* The page starts after the sidebar (w-60, 15rem). */
+  body:has([data-desktop-nav]) {
+    padding-left: 15rem;
+  }
+
+  /* The rooms are down the left, so the bar along the bottom goes. Its height
+     stops being published (components/TabBar.tsx), and whatever stood on it
+     stands on the bottom of the screen again. */
+  body:has([data-desktop-nav]) nav.tab-bar {
+    display: none;
+  }
+
+  /* A COMPUTER'S TOP BAR, NOT A PHONE'S. The owner, 3 October 2026, with a
+     screenshot of the live app: "Top UI still looks like mobile, change the
+     desktop to real desktop design please". On a phone the header is a navy
+     band carrying a Back arrow and the logo, because that is all the
+     navigation a phone has. Here the sidebar has the logo and every room, and
+     the browser has Back, so the header becomes a light bar across the page:
+     the person's controls on the right, reaching the right edge, at the same
+     height as the sidebar's logo row so the two make one frame.
+
+     The header is the phone's too, so nothing in it is edited. These rules
+     find it by the data- hooks it carries (data-app-header, data-header-brand,
+     data-back-button, data-avatar), which draw nothing themselves. */
+  body:has([data-desktop-nav]) [data-app-header] {
+    /* !important because the header paints its navy as an inline style. */
+    background-color: var(--top-bar-bg) !important;
+    color: var(--top-bar-ink);
+    box-shadow: 0 1px 0 var(--top-bar-line);
+  }
+
+  /* flex-end: on the live side the logo was the spacer (flex-1) that pushed
+     the controls right; with it put away they would gather on the left. The
+     sample side's own right-hand group already stretches, so it is unchanged. */
+  body:has([data-desktop-nav]) [data-app-header] > div {
+    max-width: none;
+    height: var(--desktop-top-bar);
+    padding: 0 1.5rem;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+  }
+
+  /* A chip that is a link (Install) has its words at the top of its 44px,
+     because a link does not centre what it holds the way a button does. */
+  body:has([data-desktop-nav]) [data-app-header] a.tap-sm:not(.grid):not(.flex) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  /* The logo is in the sidebar, and a computer has the browser's own Back. */
+  body:has([data-desktop-nav]) [data-app-header] [data-header-brand],
+  body:has([data-desktop-nav]) [data-app-header] [data-back-button] {
+    display: none;
+  }
+
+  /* What was drawn white on navy, drawn in the bar's ink on the bar. Only the
+     header's own controls carry these classes; the panels that open from them
+     are white cards with their own colours. */
+  body:has([data-desktop-nav]) [data-app-header] .text-white\/60 {
+    color: var(--top-bar-soft);
+  }
+
+  body:has([data-desktop-nav]) [data-app-header] .bg-white\/10 {
+    background-color: var(--top-bar-chip);
+  }
+
+  body:has([data-desktop-nav]) [data-app-header] .hover\:bg-white\/20:hover,
+  body:has([data-desktop-nav]) [data-app-header] .sm\:hover\:bg-white\/10:hover {
+    background-color: var(--top-bar-chip-hover);
+  }
+
+  /* The initials circle was a white tint for a navy header. */
+  body:has([data-desktop-nav]) [data-app-header] [data-avatar] {
+    background-color: var(--top-bar-avatar) !important;
+  }
+
+  /* The desk sticks below this bar with no rule of its own here: both shells
+     publish the header's measured height, and `.desk-rail` in globals.css
+     sticks below whatever that is. */
+}

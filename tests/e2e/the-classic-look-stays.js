@@ -83,13 +83,13 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
 
-  // 1. CLASSIC, AS IT IS. On a phone nothing chosen means Desktop, the default
-  // on computers since the owner asked for it, and on a phone Desktop IS
-  // Classic: the fingerprint below is taken before anybody chooses anything.
+  // 1. CLASSIC, AS IT IS, before anybody chooses anything. On a computer
+  // Classic has its own layout (rooms down the left, tests/e2e/the-desktop-
+  // layout.js); a phone is where these colours were measured, and still are.
   await signInAs(page, 'Maria Santos');
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);
-  ok((await lookOf(page)) === 'desktop', 'before anybody chooses, the page is on the default look, Desktop');
+  ok((await lookOf(page)) === 'classic', 'before anybody chooses, the page is Classic');
   const before = await fingerprint(page);
   ok(before.ground === CLASSIC.ground && before.ink === CLASSIC.ink,
      `Classic's ground and ink are the same pale blue-grey and dark ink (${before.ground}, ${before.ink})`);
@@ -109,36 +109,32 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   ok((await radios.count()) >= 1 && /^Classic/.test((await radios.first().innerText()).trim()),
      'its first look is Classic');
   const classic = card.locator('[data-ui-theme-choice="classic"]');
-  const desktop = card.locator('[data-ui-theme-choice="desktop"]');
-  ok((await desktop.getAttribute('aria-checked')) === 'true' && /Chosen/.test(await desktop.innerText())
-     && (await classic.getAttribute('aria-checked')) === 'false',
-     'and Desktop, the default, is the one chosen, said in words as well as colour');
+  ok((await classic.getAttribute('aria-checked')) === 'true' && /Chosen/.test(await classic.innerText()),
+     'and Classic is the one chosen, said in words as well as colour');
+  ok((await card.locator('[data-ui-theme-choice="desktop"]').count()) === 0,
+     'Desktop is not offered any more: on a computer it is Classic');
   await classic.scrollIntoViewIfNeeded();
   ok((await sideways(page)) <= 1, 'the card does not push a phone sideways');
   await classic.click();
   await page.waitForTimeout(400);
-  ok((await page.evaluate(() => localStorage.getItem('beacon-ui-theme'))) === 'classic' && (await lookOf(page)) === 'classic'
-     && (await classic.getAttribute('aria-checked')) === 'true' && /Chosen/.test(await classic.innerText()),
-     'choosing Classic chooses it, says so, and this device remembers it');
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(1200);
-  ok((await lookOf(page)) === 'classic', 'and keeps it after a reload: a person who chose Classic is not moved by the default');
+  ok((await page.evaluate(() => localStorage.getItem('beacon-ui-theme'))) === 'classic' && (await lookOf(page)) === 'classic',
+     'choosing Classic chooses it, and this device remembers it');
 
-  // 3. NOTHING ELSE CAN BE SMUGGLED IN
-  await page.evaluate(() => localStorage.setItem('beacon-ui-theme', 'nonsense"><b'));
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(1200);
-  ok((await lookOf(page)) === 'desktop' && (await page.locator('[data-ui-theme-choice="desktop"]').getAttribute('aria-checked')) === 'true',
-     'a stored value the app does not know is the default, and nothing else');
-  await page.locator('[data-ui-theme-choice="classic"]').click();
-  await page.waitForTimeout(400);
+  // 3. NOTHING ELSE CAN BE SMUGGLED IN, AND AN OLD CHOICE LANDS ON CLASSIC
+  for (const stored of ['nonsense"><b', 'desktop']) {
+    await page.evaluate((v) => localStorage.setItem('beacon-ui-theme', v), stored);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(1200);
+    ok((await lookOf(page)) === 'classic' && (await page.locator('[data-ui-theme-choice="classic"]').getAttribute('aria-checked')) === 'true',
+       `a stored ${JSON.stringify(stored)} is Classic, and nothing else`);
+  }
 
   // 4. AND CLASSIC IS STILL CLASSIC
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);
   const after = await fingerprint(page);
   ok((await lookOf(page)) === 'classic' && JSON.stringify(after) === JSON.stringify(before),
-     'Classic, chosen, draws exactly what the phone drew before anybody chose: nothing has changed colour or size');
+     'after all of that, a phone draws exactly what it drew before: nothing has changed colour or size');
 
   ok(errors.length === 0, `no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
   await browser.close();

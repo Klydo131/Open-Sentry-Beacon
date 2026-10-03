@@ -10,6 +10,15 @@
 // which look is chosen, as data-ui-theme on <html>, and Classic's value,
 // "classic", is matched by no rule anywhere.
 //
+// ON A COMPUTER, CLASSIC IS THE DESKTOP DESIGN. For a few hours on 3 October
+// 2026 that was a second look called Desktop, beside a Classic that still put
+// the phone's bar and navy band on a computer. The owner, the same day, with a
+// screenshot of Desktop: "this is the classic. I dont want the UI classic with
+// the outdated version where the UI is still mobile in desktop". So the rooms
+// down the left and the light top bar are now the app's own computer layout
+// (components/DesktopNav.tsx, app/desktop-layout.css), under every look, and
+// a device that had chosen Desktop is simply on Classic again.
+//
 // A NEW LOOK IS ADDED, NEVER MADE BY CHANGING CLASSIC. For whoever adds one,
 // with whatever tool:
 //
@@ -21,7 +30,7 @@
 //      Classic, or another look.
 //   3. If it needs something Classic does not draw, that is a component of its
 //      own which renders NOTHING unless its look is chosen (useChosenLook in
-//      components/UiTheme.tsx); components/DesktopNav.tsx is the example.
+//      components/UiTheme.tsx).
 //   4. Do not edit the shared styles (globals.css, tailwind.config.ts, the
 //      components' own classes) to make a look work. That is changing Classic.
 //
@@ -43,31 +52,21 @@ export interface UiTheme {
 }
 
 export const CLASSIC = 'classic';
-export const DESKTOP = 'desktop';
 
 /** Every look, Classic first. What a device shows before anybody chooses is DEFAULT_LOOK, below. */
 export const UI_THEMES: readonly UiTheme[] = [
   {
     id: CLASSIC,
     name: 'Classic',
-    description: 'The look the app has today.',
-  },
-  // DESKTOP, 3 October 2026: "This UI is not desktop friendly, can we make the
-  // desktop have it's own UI too". Classic on a phone or a pad; on a computer
-  // the rooms go down the left side and the bar along the bottom goes away
-  // (components/DesktopNav.tsx, app/themes/desktop.css).
-  {
-    id: DESKTOP,
-    name: 'Desktop',
-    description: 'For a computer: your rooms down the left side instead of the bar along the bottom. On a phone or tablet it looks like Classic.',
+    description: 'The Hope Beacon look. On a computer, your rooms down the left side; on a phone or tablet, the bar along the bottom.',
   },
 ];
 
-// WHAT A DEVICE SHOWS UNTIL SOMEBODY CHOOSES: Desktop. The owner, 3 October
-// 2026: "make Desktop the default on computers". Desktop on a phone or a pad is
-// Classic, so this changes computers only; Classic itself is unchanged and one
-// tap away in Settings, and a person who chooses it keeps it.
-export const DEFAULT_LOOK = DESKTOP;
+// WHAT A DEVICE SHOWS UNTIL SOMEBODY CHOOSES: Classic. It was Desktop for a
+// few hours on 3 October 2026, until Desktop became Classic's own computer
+// layout (above); "desktop", still in some browsers' storage, is now unknown
+// and so means this.
+export const DEFAULT_LOOK = CLASSIC;
 
 export const UI_THEME_KEY = 'beacon-ui-theme';
 

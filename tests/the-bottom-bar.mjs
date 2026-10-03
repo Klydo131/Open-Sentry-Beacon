@@ -132,10 +132,13 @@ const ok = (cond, msg) => {
   const labels = [...bar.matchAll(/\{ key: '(\w+)', label: '([^']+)'/g)].map((m) => `${m[1]}:${m[2]}`);
   ok(labels.join(' | ') === 'menu:Menu | people:People | files:My Files',
      `three tabs, in the order asked for (${labels.join(' | ')})`);
-  // AT EVERY WIDTH since "the same dropdown and UI with Desktops": no
-  // breakpoint hides the bar, and neither shell mounts a left rail any more.
-  ok(!/\b(sm|md|lg|xl|2xl):hidden\b/.test(bar) && !/className="[^"]*\bhidden\b/.test(bar),
-     'the bar is on a desktop too; no breakpoint hides it');
+  // The bar hides itself at no width. On a computer (3 October 2026, "this is
+  // the classic") the rooms are down the left and app/desktop-layout.css puts
+  // the bar away, only on pages that draw those rooms; a phone and a pad keep it.
+  const layoutCss = read('app/desktop-layout.css');
+  ok(!/\b(sm|md|lg|xl|2xl):hidden\b/.test(bar) && !/className="[^"]*\bhidden\b/.test(bar)
+     && /@media \(min-width: 1280px\)[\s\S]*body:has\(\[data-desktop-nav\]\) nav\.tab-bar \{\s*display: none;/.test(layoutCss),
+     'the bar hides itself at no width; from 1280px the rooms down the left replace it, and only where they are drawn');
   ok(!/LeftRail/.test(demoSrc) && !/LeftRail/.test(liveSrc) && !/export function LeftRail/.test(read('components/RoomRails.tsx')),
      'and there is no left rail drawing the rooms a second time');
   ok(/data-quest=\{`tab-\$\{key\}`\}/.test(bar), 'each tab carries a tutorial anchor (tab-menu, tab-people, tab-files)');

@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-03-classic-on-a-computer',
+    date: '2026-10-03',
+    title: 'Classic is the computer design now',
+    items: [
+      'On a computer, Classic has your rooms down the left side and a light bar across the top. There is no separate Desktop choice any more: it is Classic.',
+      'Nothing has changed on a phone or tablet.',
+      'At the very end of a page, the desk on the right no longer slides under the top of the screen.',
+    ],
+  },
+  {
     id: '2026-10-03-desktop-top-bar',
     date: '2026-10-03',
     title: 'A computer\'s top bar on a computer',
