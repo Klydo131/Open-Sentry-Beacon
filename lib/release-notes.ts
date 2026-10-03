@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-03-desktop-top-bar',
+    date: '2026-10-03',
+    title: 'A computer\'s top bar on a computer',
+    items: [
+      'On a computer, the top of the screen is now a light bar with your bell, your name and Sign out on the right. The Back arrow and the second logo are gone: the logo is in the sidebar, and your browser has Back.',
+      'The desk on the right no longer slides under the top of the screen as you scroll.',
+      'The look you chose is on the page from the very first moment it opens.',
+    ],
+  },
+  {
     id: '2026-10-03-desktop-default',
     date: '2026-10-03',
     title: 'Computers open in the Desktop look',

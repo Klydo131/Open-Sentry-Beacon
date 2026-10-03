@@ -207,6 +207,7 @@ export function Avatar({
     .toUpperCase();
   return (
     <div
+      data-avatar
       className="flex shrink-0 items-center justify-center rounded-full font-bold text-white"
       style={{
         width: size,

@@ -221,6 +221,15 @@ look:
 4. never edit `globals.css`, `tailwind.config.ts` or a component's own classes
    to make a look work. That is changing Classic.
 
+To restyle something shared without touching its classes, find it by the
+`data-` hooks it carries, which draw nothing: `data-app-header` on the header
+in both halves, `data-header-brand` on its logo, `data-back-button`,
+`data-avatar` on the initials circle. The Desktop look's top bar
+(`app/themes/desktop.css`) is built from them. And a look is on `<html>`
+before the first frame: `lib/look-before-paint.ts` builds a small script from
+`UI_THEMES`, so a look you register needs no change there, and
+`tests/e2e/the-first-paint.js` checks the browser's first paint.
+
 New features still arrive in Classic, drawn the way Classic already draws
 things; what may not change is how Classic looks: its colours, type, shapes and
 spacing. `tests/the-classic-look-stays.mjs` holds the rule, and

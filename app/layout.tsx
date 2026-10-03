@@ -21,6 +21,7 @@ import { TutorialModeProvider } from '@/lib/tutorial';
 import { TutorialExtras } from '@/components/TutorialExtras';
 import { PlayerProvider } from '@/lib/player';
 import { UiTheme } from '@/components/UiTheme';
+import { LookBeforePaint } from '@/components/LookBeforePaint';
 
 export const metadata: Metadata = {
   // The name comes from lib/brand.ts so a fork changes it in one place. It also
@@ -94,12 +95,17 @@ export default function RootLayout({
   return (
     // data-ui-theme: the look, Classic unless this device chose another.
     // Classic is the app as it is, matched by no rule (lib/ui-themes.ts).
-    <html lang="en" data-ui-theme="classic">
+    // The server cannot see the choice, so LookBeforePaint sets it in the
+    // browser before the first frame; suppressHydrationWarning is for that
+    // one attribute, which React would otherwise report as a mismatch.
+    <html lang="en" data-ui-theme="classic" suppressHydrationWarning>
       <body>
         {/* First thing in the document: it has to be listening before any
             bundle is requested, because a bundle failing to load is the signal
             it exists to catch. */}
         <SelfHeal />
+        {/* Second, and still before anything is drawn: this device's look. */}
+        <LookBeforePaint />
         {/* A file let go where nothing takes files is ignored, rather than
             opened by the browser in place of the app. */}
         <StrayFileDrops />

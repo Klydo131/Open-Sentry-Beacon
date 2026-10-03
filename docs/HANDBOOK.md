@@ -946,6 +946,10 @@ New features still arrive in Classic, drawn the way it already draws things. Wha
 
 **Desktop is the second look.** Asked for the same day, with a screenshot of a Guide's home on a wide screen: "This UI is not desktop friendly, can we make the desktop have it's own UI too". On a computer (1280 pixels wide and up) it puts every room down the left side, the same rooms the Menu lists, with the one you are in lit, and puts away the bar along the bottom; the page starts after the sidebar. On a phone or a tablet it is Classic, bar and all. **It is the default on computers**, by the owner's word the same day: "make Desktop the default on computers". A computer shows Desktop until somebody chooses otherwise in Settings → General → **Look**; choosing **Classic** there keeps Classic on that computer, exactly as it was, after every reload. Phones and tablets look the same either way. For anybody on Classic the sidebar is not hidden but absent, so Classic is the same page it was.
 
+**A computer's top bar, not a phone's.** The owner, the same day, with a screenshot of the live app on a computer: "Top UI still looks like mobile, change the desktop to real desktop design please". In the Desktop look the navy band across the top, with its Back arrow and a second logo beside the sidebar's, becomes a light bar across the page: the logo is in the sidebar, a computer has its own Back, and the bell, your name and Sign out sit at the right edge. The bar and the sidebar's logo row end on one line, and the desk on the right now starts below the bar; it used to slide under the header as the page scrolled. Classic's header is unchanged, and on a phone or a tablet the Desktop look still shows Classic's.
+
+**The first frame is already in your look.** The server cannot see which look a device chose, so pages used to arrive as Classic and switch a moment later. A small script at the top of every page now puts the stored look on the page before anything is drawn. With Desktop the switch fell on a blank page and nobody saw it; it matters for a look that colours the whole page, such as a dark one.
+
 ### Notifications
 
 The bell in the header holds both the list and its switch. Alerts in the app are **on by default**.
@@ -1511,14 +1515,14 @@ Read this section before making a change. It states what is true, what must stay
 21. The progress report asks only for what the reader's rules already return: leadership's report never asks for meetings, lessons or follow-ups. Steps forward are net, from the stage at the period's start to the stage at its end. `tests/a-progress-report-counts-what-happened.mjs` holds both.
 22. `office_plans` is owner-only on every operation, keyed by owner and item together, refuses an older update, and grants nothing to a signed-out visitor. Program screens keep working without the table. The newer copy of each item wins, and a deletion is kept as a mark. `tests/the-office-follows-you.mjs` holds the rules and every merge case.
 23. A calendar file or Google Calendar link carries only what is shared: never a **Team only** block or a platform note. The same test holds it, and holds the file to RFC 5545 (line breaks, folding, escaping).
-24. Classic is the first look, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look, and anything a look draws of its own renders nothing unless it is chosen. `tests/the-classic-look-stays.mjs` holds the rule, `tests/e2e/the-classic-look-stays.js` holds Classic's colours, and `tests/e2e/the-desktop-look.js` walks Desktop at three widths. The default, until somebody chooses, is `DEFAULT_LOOK` (Desktop), and anything unknown in storage is the default. Never edit the shared styles to make a look work.
+24. Classic is the first look, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look, and anything a look draws of its own renders nothing unless it is chosen. `tests/the-classic-look-stays.mjs` holds the rule, `tests/e2e/the-classic-look-stays.js` holds Classic's colours, `tests/e2e/the-desktop-look.js` walks Desktop at three widths, top bar included, and `tests/e2e/the-first-paint.js` checks which look the browser first paints. The default, until somebody chooses, is `DEFAULT_LOOK` (Desktop), and anything unknown in storage is the default. Never edit the shared styles to make a look work.
 
 ### Prove it before you claim it
 
 ```
 npm run verify        # 170 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 67 browser walks: 237 in all
+npm run verify:all    # the same, plus 68 browser walks: 238 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1566,7 +1570,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
 | The progress report | **Built** for both halves and walked in the sample church as a Guide and as a Director. Not yet seen from a church's own app with a real sign-in, and its Word file has not been opened in Word. |
 | Calendar files | **Built** and held to the standard by a check, and the walk downloads one. Nobody has yet opened one on a real iPhone, Android phone or in Outlook. |
-| The Desktop look | **Built** and walked in the sample church at 1280, 1440 and 1920 pixels and on a phone. Not yet seen in a church's own app with a real sign-in, and not in Safari. It is the default on computers since 3 October 2026; Classic is one choice away in Settings. |
+| The Desktop look | **Built** and walked in the sample church at 1280, 1440 and 1920 pixels and on a phone, with its own top bar since 3 October 2026. Not yet seen in a church's own app with a real sign-in (the live header's top bar has not been seen rendered), and not in Safari. It is the default on computers since 3 October 2026; Classic is one choice away in Settings. |
 | Programs on every device | **Built**: the merge rules are tested case by case and the table's rules are written. Two real devices signed in to the same account have not been tried from here, because this sandbox cannot sign in to a church's site. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |

@@ -73,11 +73,12 @@ const L = await import(pathToFileURL(bundle).href);
       const rel = path.join(dir, entry.name);
       if (entry.isDirectory()) walk(rel);
       else if (/\.(ts|tsx|js|mjs)$/.test(entry.name) && rel !== path.join('lib', 'ui-themes.ts')
+        && rel !== path.join('lib', 'look-before-paint.ts')
         && /dataset\.uiTheme\s*=|setAttribute\(\s*['"]data-ui-theme/.test(code(rel))) writers.push(rel);
     }
   };
   for (const d of ['app', 'components', 'lib']) walk(d);
-  ok(writers.length === 0, `nothing but lib/ui-themes.ts writes the page's look${writers.length ? `: ${writers.join(', ')}` : ''}`);
+  ok(writers.length === 0, `nothing but lib/ui-themes.ts and the first-paint script write the page's look${writers.length ? `: ${writers.join(', ')}` : ''}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -85,7 +86,8 @@ const L = await import(pathToFileURL(bundle).href);
 // ---------------------------------------------------------------------------
 {
   const layout = code('app/layout.tsx');
-  ok(/<html lang="en" data-ui-theme="classic">/.test(layout), 'every page starts as Classic, from the first paint');
+  ok(/<html lang="en" data-ui-theme="classic" suppressHydrationWarning>/.test(layout),
+     'the server sends Classic, for a browser that runs no script; the attribute is the one React may find changed');
   ok(/<UiTheme \/>/.test(layout) && /applyUiTheme\(readUiTheme\(\)\)/.test(code('components/UiTheme.tsx')),
      'and takes this device\'s choice once it has loaded');
   const card = code('components/ReadingSettings.tsx');
@@ -172,6 +174,50 @@ function cssFiles() {
     ok(themeFiles.some((f) => f.endsWith(`/${t.id}.css`) || f.endsWith(`/${t.id}.scss`)), `${t.name} has its stylesheet in ${themeDir}`);
   }
   console.log(`      (${L.UI_THEMES.length} look${L.UI_THEMES.length === 1 ? '' : 's'}: ${L.UI_THEMES.map((t) => t.name).join(', ')})`);
+}
+
+// ---------------------------------------------------------------------------
+// 5. THE CHOSEN LOOK IS ON THE PAGE BEFORE THE FIRST FRAME
+//
+// The owner, 3 October 2026: "fix the first paint flash too". The script runs
+// at the top of <body>, so it is checked here by running it: in a stand-in
+// browser, for every kind of stored value, it must put on <html> exactly what
+// knownTheme() would. tests/e2e/the-first-paint.js checks it in a real one.
+// ---------------------------------------------------------------------------
+{
+  const vm = await import('node:vm');
+  const paintBundle = path.join(out, 'paint.mjs');
+  await build({
+    stdin: { contents: "export * from './lib/look-before-paint';\n", resolveDir: root, loader: 'ts' },
+    alias: { '@': root },
+    outfile: paintBundle,
+    bundle: true, format: 'esm', platform: 'node', target: 'es2020', logLevel: 'silent',
+  });
+  const { LOOK_BEFORE_PAINT } = await import(pathToFileURL(paintBundle).href);
+  // Only `</script` ends a script element, so a script with no `<` in it
+  // cannot be closed early by anything a look's id might one day contain.
+  ok(typeof LOOK_BEFORE_PAINT === 'string' && !LOOK_BEFORE_PAINT.includes('<'),
+     'the script has no < in it, so nothing can close the tag it sits in');
+
+  const run = (stored, throws = false) => {
+    const html = { dataset: {} };
+    const storage = { getItem: (k) => { if (throws) throw new Error('blocked'); return k === L.UI_THEME_KEY ? stored : null; } };
+    vm.runInNewContext(LOOK_BEFORE_PAINT, { localStorage: storage, document: { documentElement: html } });
+    return html.dataset.uiTheme;
+  };
+  const values = [null, '', 'nonsense', 'CLASSIC', ' desktop', '"><script>', '__proto__', 'constructor', ...L.UI_THEMES.map((t) => t.id)];
+  const wrong = values.filter((v) => run(v) !== L.knownTheme(v));
+  ok(wrong.length === 0, `for every stored value it puts on the page what knownTheme() says${wrong.length ? `; not for: ${wrong.map((v) => JSON.stringify(v)).join(', ')}` : ''}`);
+  ok(L.UI_THEMES.every((t) => run(t.id) === t.id), 'every registered look, Classic included, is applied before paint');
+  ok(run('anything', true) === L.DEFAULT_LOOK, 'and a browser that refuses storage gets the default, as readUiTheme() gives it');
+
+  const layout = code('app/layout.tsx');
+  const body = layout.slice(layout.indexOf('<body>'));
+  const firstDrawn = body.search(/<(DemoProvider|LocaleProvider|LiveSessionProvider|TutorialModeProvider|main|div)\b/);
+  ok(/<LookBeforePaint \/>/.test(body) && body.indexOf('<LookBeforePaint />') < firstDrawn,
+     'the script is in <body> ahead of anything the page draws');
+  ok(/__html: LOOK_BEFORE_PAINT \}/.test(code('components/LookBeforePaint.tsx')),
+     'and what it writes into the page is the constant, nothing else');
 }
 
 console.log(bad ? `\nRESULT: ${bad} FAILURE(S)` : '\nRESULT: ALL OK');

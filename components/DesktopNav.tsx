@@ -30,7 +30,7 @@ import { DESKTOP } from '@/lib/ui-themes';
 import { useDemo } from '@/lib/demo/store';
 import { useLiveSession } from '@/lib/live/session';
 import { useIsLive } from '@/lib/tutorial';
-import { APP_SHORT_NAME, roleLabel } from '@/lib/brand';
+import { APP_SHORT_NAME } from '@/lib/brand';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 
 export function DesktopNav() {
@@ -44,20 +44,14 @@ function LiveRooms() {
   const { profile } = useLiveSession();
   if (!profile) return null;
   const leadsChurch = profile.role === 'admin' || profile.role === 'executive';
-  return (
-    <Rooms
-      name={profile.full_name || 'Member'}
-      role={roleLabel(profile.role, profile.role) ?? ''}
-      groups={railGroupsFor(profile.role, {}, { mail: leadsChurch })}
-    />
-  );
+  return <Rooms groups={railGroupsFor(profile.role, {}, { mail: leadsChurch })} />;
 }
 
 function SampleRooms() {
   const { currentUser } = useDemo();
   const { groups } = useDemoRooms();
   if (!currentUser) return null;
-  return <Rooms name={currentUser.full_name} role={roleLabel(currentUser.role, currentUser.role) ?? ''} groups={groups} />;
+  return <Rooms groups={groups} />;
 }
 
 /** Lit when this is the room, or a page inside it (one Explorer's page is /dm/<pairing>). */
@@ -66,8 +60,10 @@ function isHere(path: string, href: string): boolean {
   return clean === href || clean.startsWith(`${href}/`);
 }
 
-function Rooms({ name, role, groups }: { name: string; role: string; groups: RailGroup[] }) {
+function Rooms({ groups }: { groups: RailGroup[] }) {
   const path = usePathname() || '/';
+  // The logo goes where Home does, which is each role's own first room.
+  const home = groups[0]?.links[0]?.href ?? '/church';
   return (
     <aside
       data-desktop-nav
@@ -77,15 +73,20 @@ function Rooms({ name, role, groups }: { name: string; role: string; groups: Rai
       // its own height (components/TutorialBar.tsx); at the top otherwise.
       style={{ top: 'var(--beacon-chrome-top, 0px)' }}
     >
-      <Link href="/church" className="flex items-center gap-3 px-5 pb-4 pt-5">
+      {/* THE LOGO ROW IS THE TOP BAR'S HEIGHT (--desktop-top-bar, in
+          app/themes/desktop.css), so the sidebar and the bar across the page
+          share one line. Who you are is on the right of that bar, as on every
+          computer app, so it is not repeated here. */}
+      <Link
+        href={home}
+        aria-label={`${APP_SHORT_NAME} home`}
+        className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5"
+        style={{ height: 'var(--desktop-top-bar, 4rem)' }}
+      >
         <SentryBeaconMark size={32} />
         <span className="text-lg font-extrabold leading-tight">{APP_SHORT_NAME}</span>
       </Link>
-      <p className="px-5 pb-4 text-sm leading-tight">
-        <span className="block font-semibold">{name}</span>
-        <span className="text-white/70">{role}</span>
-      </p>
-      <nav aria-label="Rooms" className="flex-1 space-y-5 px-3 pb-6">
+      <nav aria-label="Rooms" className="flex-1 space-y-5 px-3 pb-6 pt-4">
         {groups.map((group) => (
           <div key={group.title}>
             <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-white/60">{group.title}</p>

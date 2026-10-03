@@ -197,6 +197,9 @@ function DemoAppShell({
     <div className="room-surface min-h-screen" style={{ background: theme.bg }}>
       <header
         ref={headerRef}
+        // data-app-header and data-header-brand are hooks for a look's own
+        // stylesheet (app/themes/*.css). They change nothing about Classic.
+        data-app-header
         className="no-print sticky z-20 text-white shadow-md"
         // Sticks BELOW the tutorial bar when there is one. `top-0` pinned it
         // to the viewport, which put it under that bar and made the top of
@@ -229,6 +232,7 @@ function DemoAppShell({
             <InstallChip onDark />
             <Link
               href={NAV[currentUser.role][0].href}
+              data-header-brand
               className="flex shrink-0 items-center gap-2 sm:gap-3"
               aria-label={`${APP_SHORT_NAME} home`}
             >

@@ -40,6 +40,26 @@ const barShown = (page) => page.evaluate(() => {
 });
 const sidebar = (page) => page.locator('[data-desktop-nav]');
 
+// The top of a computer's screen: the header, what it shows, and what is beside it.
+const topOf = (page) => page.evaluate(() => {
+  const header = document.querySelector('[data-app-header]');
+  const shown = (el) => !!el && getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0;
+  const back = header?.querySelector('[data-back-button]');
+  const brand = header?.querySelector('[data-header-brand]');
+  const h = header?.getBoundingClientRect();
+  const logoRow = document.querySelector('[data-desktop-nav] a')?.getBoundingClientRect();
+  const side = document.querySelector('[data-desktop-nav]')?.getBoundingClientRect();
+  const you = header?.querySelector('a[href="/profile"]')?.getBoundingClientRect();
+  return {
+    bg: header ? getComputedStyle(header).backgroundColor : '',
+    backThere: !!back, backShown: shown(back), brandThere: !!brand, brandShown: shown(brand),
+    left: h ? Math.round(h.left) : null, bottom: h ? Math.round(h.bottom) : null,
+    logoRowBottom: logoRow ? Math.round(logoRow.bottom) : null,
+    sideRight: side && side.width ? Math.round(side.right) : null,
+    youRight: you ? Math.round(you.right) : null, vw: innerWidth,
+  };
+});
+
 async function choose(page, id) {
   await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
@@ -98,6 +118,32 @@ async function choose(page, id) {
   await page.waitForTimeout(1000);
   ok((await sidebar(page).locator('a[aria-current="page"]').innerText()).includes('Office'), 'a room opens from the sidebar, and is lit there');
 
+  // 3b. A COMPUTER'S TOP BAR, NOT A PHONE'S. The owner, 3 October 2026, with a
+  // screenshot of the live app: "Top UI still looks like mobile, change the
+  // desktop to real desktop design please". Office was reached from Settings,
+  // so there is somewhere to go back to and the header has drawn its Back.
+  const top = await topOf(page);
+  ok(top.bg === 'rgb(255, 255, 255)', `the bar across the top is light, not the phone's navy band (${top.bg})`);
+  ok(top.backThere && top.brandThere, 'the header has drawn its Back and its logo, so the next check measures something');
+  ok(!top.backShown && !top.brandShown, 'and neither is shown: the logo is in the sidebar, and a computer has its own Back');
+  ok(top.sideRight !== null && top.left >= top.sideRight - 1, `the bar starts after the sidebar (${top.left} >= ${top.sideRight})`);
+  ok(top.logoRowBottom !== null && Math.abs(top.bottom - top.logoRowBottom) <= 1,
+     `the bar and the sidebar's logo row end on one line (${top.bottom}, ${top.logoRowBottom})`);
+  ok(top.youRight !== null && top.youRight >= top.vw - 48, `who you are sits at the right edge (${top.youRight} of ${top.vw})`);
+  await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  await page.mouse.wheel(0, 900);
+  await page.waitForTimeout(600);
+  const desk = await page.evaluate(() => {
+    const rail = document.querySelector('.desk-rail')?.getBoundingClientRect();
+    const header = document.querySelector('[data-app-header]')?.getBoundingClientRect();
+    return { scrolled: Math.round(scrollY), deskTop: rail ? Math.round(rail.top) : null, barBottom: header ? Math.round(header.bottom) : null };
+  });
+  ok(desk.scrolled > 100 && desk.deskTop !== null && desk.deskTop >= desk.barBottom,
+     `scrolled ${desk.scrolled}px, the desk still starts below the bar, nothing of it underneath (${desk.deskTop} >= ${desk.barBottom})`);
+  await page.goto(`${BASE}/office`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(800);
+
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
   ok((await sidebar(page).isVisible()) && !(await barShown(page)), 'still Desktop after a reload: this device remembers');
@@ -127,6 +173,9 @@ async function choose(page, id) {
   ok((await sidebar(page).count()) === 0 && (await barShown(page))
      && (await page.evaluate(() => getComputedStyle(document.body).paddingLeft)) === '0px',
      'choosing Classic again: no sidebar, the bar is back, the page where it was');
+  const classicTop = await topOf(page);
+  ok(classicTop.bg === 'rgb(30, 42, 74)' && classicTop.brandShown,
+     `and Classic's header on a computer is the navy band with its logo, as it was (${classicTop.bg})`);
 
   // 6. THE FRONT DOOR IS NOT PUSHED SIDEWAYS FOR A SIDEBAR THAT IS NOT THERE
   await choose(page, 'desktop');

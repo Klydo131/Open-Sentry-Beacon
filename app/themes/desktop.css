@@ -24,4 +24,85 @@
   :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) nav.tab-bar {
     display: none;
   }
+
+  /* A COMPUTER'S TOP BAR, NOT A PHONE'S. The owner, 3 October 2026, with a
+     screenshot of the live app in this look: "Top UI still looks like mobile,
+     change the desktop to real desktop design please". On a phone the header
+     is a navy band carrying a Back arrow and the logo, because that is all the
+     navigation a phone has. Here the sidebar has the logo and every room, and
+     the browser has Back, so the header becomes a light bar across the page:
+     the person's controls on the right, reaching the right edge, at the same
+     height as the sidebar's logo row so the two make one frame.
+
+     The header is shared with Classic, so nothing in it is edited. These rules
+     find it by the data- hooks it carries (data-app-header, data-header-brand,
+     data-back-button, data-avatar), which draw nothing themselves. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] {
+    /* !important because the header paints its navy as an inline style. */
+    background-color: #ffffff !important;
+    color: #1e2a4a;
+    box-shadow: 0 1px 0 rgba(30, 42, 74, 0.1);
+  }
+
+  /* flex-end: on the live side the logo was the spacer (flex-1) that pushed
+     the controls right; with it put away they would gather on the left. The
+     sample side's own right-hand group already stretches, so it is unchanged. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] > div {
+    max-width: none;
+    height: var(--desktop-top-bar);
+    padding: 0 1.5rem;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+  }
+
+  /* A chip that is a link (Install) has its words at the top of its 44px,
+     because a link does not centre what it holds the way a button does. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] a.tap-sm:not(.grid):not(.flex) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  /* The logo is in the sidebar, and a computer has the browser's own Back. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] [data-header-brand],
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] [data-back-button] {
+    display: none;
+  }
+
+  /* What was drawn white on navy, drawn navy on white. Only the header's own
+     controls carry these classes; the panels that open from them are white
+     cards with their own colours. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] .text-white\/60 {
+    color: rgba(30, 42, 74, 0.6);
+  }
+
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] .bg-white\/10 {
+    background-color: rgba(30, 42, 74, 0.06);
+  }
+
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] .hover\:bg-white\/20:hover,
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] .sm\:hover\:bg-white\/10:hover {
+    background-color: rgba(30, 42, 74, 0.12);
+  }
+
+  /* The initials circle was a white tint for a navy header. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) [data-app-header] [data-avatar] {
+    background-color: #1e2a4a !important;
+  }
+
+  /* THE DESK STARTS BELOW THE TOP BAR. Its column sticks 76px from the top,
+     which is less than the live header is tall, so the first card slid under
+     the header as the page scrolled ("MY OFFICE" cut in half on the owner's
+     screen). Here the bar's height is known, so the desk sticks just below it. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) .desk-rail {
+    top: calc(var(--beacon-chrome-top, 0px) + var(--desktop-top-bar) + 1rem);
+    max-height: calc(100vh - var(--beacon-chrome-top, 0px) - var(--desktop-top-bar) - 2rem);
+    max-height: calc(100dvh - var(--beacon-chrome-top, 0px) - var(--desktop-top-bar) - 2rem);
+  }
+}
+
+/* The top bar's height, shared by the bar, the sidebar's logo row and the
+   desk. A custom property, so it is declared once and changes in one place. */
+:root[data-ui-theme="desktop"] {
+  --desktop-top-bar: 4rem;
 }

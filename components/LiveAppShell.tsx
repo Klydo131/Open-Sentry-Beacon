@@ -182,6 +182,8 @@ export function LiveAppShell({
       } as React.CSSProperties}
     >
       <header
+        // Hooks for a look's own stylesheet (app/themes/*.css); nothing to Classic.
+        data-app-header
         className="sticky z-20 text-white shadow-md"
         /* Sticks BELOW the tutorial bar when there is one. See AppShell. */
         style={{ backgroundColor: NAVY, top: 'var(--beacon-chrome-top, 0px)' }}
@@ -197,6 +199,7 @@ export function LiveAppShell({
           <BackButton home={homeFor(profile.role)} />
           <Link
             href={homeFor(profile.role)}
+            data-header-brand
             className="flex min-w-0 flex-1 items-center gap-3"
             aria-label={`${APP_SHORT_NAME} home`}
           >

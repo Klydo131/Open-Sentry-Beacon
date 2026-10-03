@@ -47,6 +47,7 @@ export function BackButton({ home }: { home?: string }) {
       onClick={() => router.back()}
       aria-label="Go back"
       title="Go back"
+      data-back-button
       className="tap-sm -ml-1 grid shrink-0 place-items-center rounded-full bg-white/10 text-lg hover:bg-white/20"
     >
       <span aria-hidden>←</span>
