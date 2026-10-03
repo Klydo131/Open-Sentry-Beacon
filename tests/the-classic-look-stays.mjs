@@ -63,6 +63,16 @@ const L = await import(pathToFileURL(bundle).href);
   ok([null, undefined, '', 'nonsense', 'CLASSIC', '"><script>', 42, {}].every((v) => L.knownTheme(v) === L.DEFAULT_LOOK),
      'nothing unknown, empty or malformed can choose a look: it is the default');
   ok(L.UI_THEMES.every((t) => L.knownTheme(t.id) === t.id), 'and every look the app has can be chosen');
+  globalThis.localStorage = { getItem: () => null, setItem: () => { throw new Error('storage refused'); } };
+  globalThis.document = { documentElement: { dataset: {} } };
+  L.saveUiTheme('focus');
+  ok(L.readUiTheme() === 'focus' && globalThis.document.documentElement.dataset.uiTheme === 'focus',
+     'when storage is refused, the chosen component tree and colours still agree');
+  L.saveUiTheme('classic');
+  ok(L.readUiTheme() === 'classic' && globalThis.document.documentElement.dataset.uiTheme === 'classic',
+     'and Classic can still be restored without storage');
+  delete globalThis.localStorage;
+  delete globalThis.document;
   // The page attribute is only ever written through knownTheme, and only here.
   const lib = code('lib/ui-themes.ts');
   ok(/dataset\.uiTheme = knownTheme\(/.test(lib) && /return knownTheme\(localStorage\.getItem\(UI_THEME_KEY\)\)/.test(lib),

@@ -50,6 +50,9 @@ const SERVER_OR_BUILD_ONLY = [
   // libvips, the image library under next/image's optimiser: runs on the
   // server, is never sent to anybody, and is dynamically linked as LGPL asks.
   { name: /^@img\/sharp-(libvips-|wasm32)/, licence: 'LGPL-3.0-or-later' },
+  // Reviewed Windows sharp bundles libvips DLLs for local/server image
+  // processing; this source/UI delivery does not redistribute its binaries.
+  { name: /^@img\/sharp-win32-x64$/, licence: 'LGPL-3.0-or-later' },
   // Browser-support DATA read while building; not code, and not in the app.
   { name: /^caniuse-lite$/, licence: 'CC-BY-4.0' },
 ];
@@ -72,6 +75,9 @@ ok(!packages.some((p) => p.licence === 'not declared'), 'and none leaves its lic
 
 // The allowlist itself refuses what it should.
 const probe = (licence, name = 'probe') => allowed({ name, licence });
+ok(probe('Apache-2.0 AND LGPL-3.0-or-later', '@img/sharp-win32-x64')
+   && !probe('Apache-2.0 AND LGPL-3.0-or-later', 'browser-package'),
+   'the reviewed Windows server library is allowed without allowing LGPL in arbitrary browser packages');
 ok(!probe('GPL-2.0-only') && !probe('SSPL-1.0') && !probe('UNLICENSED') && !probe('BUSL-1.1') && !probe('CC-BY-NC-4.0'),
    'GPL-2.0-only, SSPL, UNLICENSED, BUSL and non-commercial licences are refused');
 ok(probe('(MPL-2.0 OR Apache-2.0)') && !probe('MIT AND SSPL-1.0') && probe('MIT OR SSPL-1.0'),

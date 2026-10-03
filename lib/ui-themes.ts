@@ -58,7 +58,22 @@ export const UI_THEMES: readonly UiTheme[] = [
   {
     id: CLASSIC,
     name: 'Classic',
-    description: 'The Hope Beacon look. On a computer, your rooms down the left side; on a phone or tablet, the bar along the bottom.',
+    description: 'The Hope Beacon look. On a computer or a large tablet turned sideways, your rooms down the left side; otherwise, the bar along the bottom.',
+  },
+  {
+    id: 'beacon',
+    name: 'Beacon',
+    description: 'Bright skies, open space and easy-to-find room cards.',
+  },
+  {
+    id: 'study',
+    name: 'Study',
+    description: 'Warm paper and a calm space for reading and reflection.',
+  },
+  {
+    id: 'focus',
+    name: 'Focus',
+    description: 'A quiet night sky, dark surfaces and clear room cards.',
   },
 ];
 
@@ -73,6 +88,15 @@ export const UI_THEME_KEY = 'beacon-ui-theme';
 /** Said on window when this tab changes its look, so what draws a look can follow. */
 export const UI_THEME_EVENT = 'beacon-ui-theme';
 
+// A private browser may refuse writes. Keep the person's choice for this tab
+// so the selected component tree and the page's colours still agree.
+let unstoredLook: string | undefined;
+
+/** These looks have their own menu and extra destinations in the computer rail. */
+export function isFreshLook(id: string): boolean {
+  return id === 'beacon' || id === 'study' || id === 'focus';
+}
+
 /**
  * A stored or given value, as a look this app actually has: anything unknown,
  * empty or malformed is the default. It is what reaches the page's attribute,
@@ -84,6 +108,7 @@ export function knownTheme(id: unknown): string {
 
 /** The look chosen on this device, or the default when nothing has been chosen. */
 export function readUiTheme(): string {
+  if (unstoredLook !== undefined) return unstoredLook;
   try {
     return knownTheme(localStorage.getItem(UI_THEME_KEY));
   } catch {
@@ -96,8 +121,10 @@ export function saveUiTheme(id: string): string {
   const chosen = knownTheme(id);
   try {
     localStorage.setItem(UI_THEME_KEY, chosen);
+    unstoredLook = undefined;
   } catch {
     // Storage refused (a private window): the look still applies until reload.
+    unstoredLook = chosen;
   }
   applyUiTheme(chosen);
   try {

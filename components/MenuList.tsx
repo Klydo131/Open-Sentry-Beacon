@@ -23,15 +23,11 @@ import type { RailGroup } from '@/components/RoomRails';
 import { Avatar } from '@/components/ui';
 import { ChevronGlyph } from '@/components/Glyph';
 import { emitQuest } from '@/lib/quest';
+import { FreshMenu } from '@/components/FreshMenu';
+import { useChosenLook } from '@/components/UiTheme';
+import { isFreshLook } from '@/lib/ui-themes';
 
-export function MenuList({
-  name,
-  role,
-  photo,
-  avatar,
-  groups,
-  footer,
-}: {
+export interface MenuListProps {
   name: string;
   /** The role's label, or null where the app does not name it (an Explorer). */
   role: string | null;
@@ -40,7 +36,12 @@ export function MenuList({
   groups: RailGroup[];
   /** The way out: Sign out on the live side, Switch account on the sample. */
   footer?: React.ReactNode;
-}) {
+}
+
+export function MenuList(props: MenuListProps) {
+  const look = useChosenLook();
+  if (isFreshLook(look)) return <FreshMenu {...props} />;
+  const { name, role, photo, avatar, groups, footer } = props;
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <h1 className="text-[34px] font-extrabold leading-tight tracking-tight text-room">Menu</h1>

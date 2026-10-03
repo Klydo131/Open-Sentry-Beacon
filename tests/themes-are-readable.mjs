@@ -105,6 +105,19 @@ for (const t of themes) {
      `${t.key}: the selected page label is readable on its accent (${onAccent.toFixed(1)}:1, ${chosen})`);
 }
 
+// The app-wide looks use their own scoped CSS rather than the room palettes.
+// Measure the colours actually shipped, including secondary text and actions.
+for (const id of ['beacon', 'study', 'focus']) {
+  const css = readFileSync(`app/themes/${id}.css`, 'utf8');
+  const token = (name) => new RegExp(`--look-${name}:\\s*(#[0-9a-f]{6})`, 'i').exec(css)?.[1];
+  for (const [ink, ground] of [['ink', 'page'], ['ink', 'panel'], ['soft', 'page'], ['soft', 'panel'], ['soft', 'inset'], ['onPrimary', 'primary']]) {
+    const ratio = contrast(token(ink) ?? '', token(ground) ?? '');
+    ok(ratio >= BODY, `${id}: ${ink} on ${ground} clears normal-text AA (${ratio.toFixed(1)}:1)`);
+  }
+  const header = contrast('#ffffff', token('header') ?? '');
+  ok(header >= BODY, `${id}: white header controls clear AA (${header.toFixed(1)}:1)`);
+}
+
 // --- and the theme has to actually be painted -------------------------------
 // The left rail has no surface of its own. If a shell does not paint the
 // background, the rail's ink lands on whatever that shell hard-coded, which is

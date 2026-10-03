@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-fresh-looks',
+    date: '2026-10-04',
+    title: 'Three new looks, the same familiar rooms',
+    items: [
+      'Choose bright Beacon, warm Study or dark Focus in Settings, General, Look. Each fits your phone, tablet and computer.',
+      'Your choice stays on this device. Return to Classic whenever you like; its familiar look stays the same.',
+      'First-time sign-in is no longer interrupted by an automatic refresh.',
+    ],
+  },
+  {
     id: '2026-10-03-write-in-home',
     date: '2026-10-03',
     title: 'Write your blog and announcements from Home',

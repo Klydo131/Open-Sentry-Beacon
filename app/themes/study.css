@@ -1,0 +1,273 @@
+/* Study: scoped to this choice. Original local SVG art; no external assets. Screen only. */
+@media screen {
+:root[data-ui-theme="study"] {
+  --look-page: #f7efdf;
+  --look-panel: #fffbf2;
+  --look-inset: #eee1c9;
+  --look-ink: #3c2c21;
+  --look-soft: #72604e;
+  --look-line: #d9c5a7;
+  --look-header: #694221;
+  --look-primary: #694221;
+  --look-onPrimary: #ffffff;
+  --look-accent: #81501f;
+  --look-gold: #e8b84b;
+  --top-bar-bg: var(--look-panel);
+  --top-bar-ink: var(--look-ink);
+  --top-bar-soft: var(--look-soft);
+  --top-bar-chip: var(--look-inset);
+  --top-bar-chip-hover: var(--look-inset);
+  --top-bar-line: var(--look-line);
+  --top-bar-avatar: var(--look-primary);
+  color-scheme: light;
+  --navy: var(--look-ink);
+  --gold: var(--look-gold);
+}
+:root[data-ui-theme="study"] .sr {
+  --sr-bg: var(--look-page);
+  --sr-surface: var(--look-panel);
+  --sr-ink: var(--look-ink);
+  --sr-ink-2: var(--look-soft);
+  --sr-sep: var(--look-line);
+  --sr-fill: var(--look-inset);
+  --sr-fill-2: var(--look-inset);
+  --sr-tint: var(--look-accent);
+  --sr-tint-soft: var(--look-inset);
+}
+:root[data-ui-theme="study"] .sr-bar,
+:root[data-ui-theme="study"] .sr-formatbar,
+:root[data-ui-theme="study"] .sr-side {
+  background: var(--look-panel);
+}
+:root[data-ui-theme="study"] .sr-action-icon,
+:root[data-ui-theme="study"] .sr-side-item[aria-current='true'] {
+  background: var(--look-primary);
+  color: var(--look-onPrimary);
+}
+:root[data-ui-theme="study"] .sr-side-item[aria-current='true'] svg {
+  color: inherit;
+}
+:root[data-ui-theme="study"] .sr-side-item[aria-current='true'] .opacity-60 {
+  opacity: 1;
+}
+:root[data-ui-theme="study"] body {
+  background: var(--look-page);
+  color: var(--look-ink);
+}
+:root[data-ui-theme="study"] .room-surface {
+  background: var(--look-page) !important;
+}
+:root[data-ui-theme="study"] [data-app-header] {
+  background-color: var(--look-header) !important;
+  color: #ffffff;
+}
+:root[data-ui-theme="study"] .bg-white:not([data-look-preview]),
+:root[data-ui-theme="study"] .menu-group,
+:root[data-ui-theme="study"] [data-desk-drawer] .rounded-2xl[style*="background-color"] {
+  background-color: var(--look-panel) !important;
+  border-color: var(--look-line) !important;
+}
+:root[data-ui-theme="study"] .bg-white\/95,
+:root[data-ui-theme="study"] .bg-white\/90,
+:root[data-ui-theme="study"] .bg-white\/80,
+:root[data-ui-theme="study"] .bg-white\/70,
+:root[data-ui-theme="study"] .bg-white\/65 {
+  background-color: var(--look-panel);
+}
+:root[data-ui-theme="study"] .bg-gray-50,
+:root[data-ui-theme="study"] .bg-gray-100,
+:root[data-ui-theme="study"] .bg-slate-50,
+:root[data-ui-theme="study"] .bg-slate-100,
+:root[data-ui-theme="study"] .menu-icon,
+:root[data-ui-theme="study"] .tab-bar-pill,
+:root[data-ui-theme="study"] [data-ui-theme-choice][aria-checked="false"] {
+  background-color: var(--look-inset) !important;
+}
+:root[data-ui-theme="study"] .text-navy,
+:root[data-ui-theme="study"] .text-room,
+:root[data-ui-theme="study"] .text-gray-800,
+:root[data-ui-theme="study"] .text-gray-900,
+:root[data-ui-theme="study"] .text-slate-800,
+:root[data-ui-theme="study"] .text-slate-900,
+:root[data-ui-theme="study"] .menu-row,
+:root[data-ui-theme="study"] [data-ui-theme-choice][aria-checked="false"] {
+  color: var(--look-ink) !important;
+}
+:root[data-ui-theme="study"] .text-room-soft,
+:root[data-ui-theme="study"] .text-gray-400,
+:root[data-ui-theme="study"] .text-gray-500,
+:root[data-ui-theme="study"] .text-gray-600,
+:root[data-ui-theme="study"] .text-gray-700,
+:root[data-ui-theme="study"] .text-slate-400,
+:root[data-ui-theme="study"] .text-slate-500,
+:root[data-ui-theme="study"] .text-slate-600,
+:root[data-ui-theme="study"] .text-slate-700,
+:root[data-ui-theme="study"] .menu-group-head,
+:root[data-ui-theme="study"] .menu-row .text-\[15px\],
+:root[data-ui-theme="study"] .menu-row > svg,
+:root[data-ui-theme="study"] [data-desk-drawer] p[style*="color"],
+:root[data-ui-theme="study"] [data-desk-drawer] a[style*="color"],
+:root[data-ui-theme="study"] [data-desk-drawer] span[style*="color"],
+:root[data-ui-theme="study"] [data-desk-drawer] button[style*="color"]:not([style*="background-color"]) {
+  color: var(--look-soft) !important;
+}
+:root[data-ui-theme="study"] [data-desk-drawer] p.font-extrabold,
+:root[data-ui-theme="study"] [data-desk-drawer] p.font-bold,
+:root[data-ui-theme="study"] [data-desk-drawer] span.font-extrabold {
+  color: var(--look-ink) !important;
+}
+:root[data-ui-theme="study"] .bg-navy,
+:root[data-ui-theme="study"] .bg-\[\#1e2a4a\],
+:root[data-ui-theme="study"] button[style*="background-color: rgb(30"],
+:root[data-ui-theme="study"] button[style*="background-color: #1E2A4A"],
+:root[data-ui-theme="study"] [data-subroom-toggle],
+:root[data-ui-theme="study"] [data-ui-theme-choice][aria-checked="true"] {
+  background-color: var(--look-primary) !important;
+  color: var(--look-onPrimary) !important;
+}
+:root[data-ui-theme="study"] [data-subroom-toggle] * {
+  color: inherit !important;
+}
+:root[data-ui-theme="study"] .border-gray-100,
+:root[data-ui-theme="study"] .border-gray-200,
+:root[data-ui-theme="study"] .border-gray-300,
+:root[data-ui-theme="study"] .border-slate-200,
+:root[data-ui-theme="study"] .border-black\/5,
+:root[data-ui-theme="study"] .border-navy\/10,
+:root[data-ui-theme="study"] .menu-group > li + li::before {
+  border-color: var(--look-line);
+}
+:root[data-ui-theme="study"] .ring-black\/5,
+:root[data-ui-theme="study"] .ring-navy\/10,
+:root[data-ui-theme="study"] .ring-navy\/20,
+:root[data-ui-theme="study"] .menu-group {
+  --tw-ring-color: var(--look-line);
+  box-shadow: 0 0 0 1px var(--look-line);
+}
+:root[data-ui-theme="study"] .tab-bar {
+  background: var(--look-panel);
+  border-top-color: var(--look-line);
+}
+:root[data-ui-theme="study"] .tab-bar-tab {
+  color: var(--look-soft);
+}
+:root[data-ui-theme="study"] .tab-bar-tab[aria-current] {
+  color: var(--look-ink);
+}
+:root[data-ui-theme="study"] .tab-bar-tab[aria-current] .tab-bar-pill {
+  background: var(--look-primary) !important;
+  color: var(--look-onPrimary);
+}
+:root[data-ui-theme="study"] .menu-group {
+  color: var(--look-ink);
+}
+:root[data-ui-theme="study"] .menu-row.text-\[\#b42318\] {
+  color: #b42318 !important;
+}
+:root[data-ui-theme="study"] .menu-row:hover,
+:root[data-ui-theme="study"] .tab-bar-tab:hover {
+  background: var(--look-inset);
+}
+:root[data-ui-theme="study"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+:root[data-ui-theme="study"] textarea,
+:root[data-ui-theme="study"] select {
+  background-color: var(--look-panel);
+  color: var(--look-ink);
+  border-color: var(--look-line);
+  accent-color: var(--look-primary);
+}
+:root[data-ui-theme="study"] input::placeholder,
+:root[data-ui-theme="study"] textarea::placeholder {
+  color: var(--look-soft);
+  opacity: 1;
+}
+:root[data-ui-theme="study"] .bg-gold,
+:root[data-ui-theme="study"] button[style*="background-color: rgb(232"],
+:root[data-ui-theme="study"] button[style*="background-color: #E8B84B"] {
+  color: #302f27 !important;
+}
+:root[data-ui-theme="study"] [data-look-preview] .text-gray-700 {
+  color: #374151 !important;
+}
+:root[data-ui-theme="study"] :focus-visible {
+  outline-color: var(--look-primary);
+  box-shadow: 0 0 0 2px var(--look-gold);
+}
+:root[data-ui-theme="study"] .bg-navy .text-white\/60,
+:root[data-ui-theme="study"] .bg-navy .text-white\/70,
+:root[data-ui-theme="study"] .bg-navy .text-white\/80,
+:root[data-ui-theme="study"] .bg-navy .text-white\/85,
+:root[data-ui-theme="study"] .bg-navy .text-white\/90 {
+  color: var(--look-onPrimary) !important;
+}
+
+
+:root[data-ui-theme="study"] .fresh-menu { width:100%; max-width:56rem; margin:auto; display:flex; flex-direction:column; gap:1.2rem; }
+:root[data-ui-theme="study"] .fresh-page-title { margin:0; font-size:15px; font-weight:700; color:var(--look-soft); }
+:root[data-ui-theme="study"] .fresh-hero { position:relative; overflow:hidden; min-height:190px; border:1px solid var(--look-line); border-radius:20px; background:var(--look-panel); }
+:root[data-ui-theme="study"] .fresh-art { position:absolute; right:0; top:0; width:56%; height:100%; object-fit:cover; }
+:root[data-ui-theme="study"] .fresh-hero-copy { position:relative; width:52%; min-height:190px; padding:22px; background:var(--look-panel); }
+:root[data-ui-theme="study"] .fresh-eyebrow { margin:0 0 8px; color:var(--look-accent); font-size:13px; font-weight:700; }
+:root[data-ui-theme="study"] .fresh-hero h2 { margin:0; color:var(--look-ink); font:600 25px/1.2 system-ui, sans-serif; letter-spacing:-.025em; overflow-wrap:anywhere; }
+:root[data-ui-theme="study"] .fresh-hero h2 span { font-weight:800; }
+:root[data-ui-theme="study"] .fresh-intro { margin:12px 0 0; color:var(--look-soft); font-size:15px; line-height:1.45; }
+:root[data-ui-theme="study"] .fresh-profile { display:flex; gap:12px; align-items:center; min-height:68px; padding:10px 14px; border:1px solid var(--look-line); border-radius:14px; background:var(--look-panel); color:var(--look-ink); }
+:root[data-ui-theme="study"] .fresh-profile-copy { min-width:0; flex:1; display:flex; flex-direction:column; }
+:root[data-ui-theme="study"] .fresh-profile-copy strong { font-size:17px; overflow-wrap:anywhere; }
+:root[data-ui-theme="study"] .fresh-profile-copy > span { color:var(--look-soft); font-size:13px; }
+:root[data-ui-theme="study"] .fresh-room-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+:root[data-ui-theme="study"] .fresh-personal-list { display:grid; gap:10px; }
+:root[data-ui-theme="study"] .fresh-room-grid > li { min-width:0; }
+:root[data-ui-theme="study"] .fresh-room { height:100%; display:flex; position:relative; align-items:center; gap:12px; min-height:70px; padding:14px; border:1px solid var(--look-line); border-radius:16px; background:var(--look-panel); color:var(--look-ink); }
+:root[data-ui-theme="study"] .fresh-room-grid .fresh-room { flex-wrap:wrap; align-content:flex-start; min-height:150px; gap:10px; }
+:root[data-ui-theme="study"] .fresh-room-icon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:14px; background:var(--look-inset); color:var(--look-accent); }
+:root[data-ui-theme="study"] .fresh-room-copy { display:flex; flex-direction:column; flex:1; min-width:0; gap:4px; }
+:root[data-ui-theme="study"] .fresh-room-grid .fresh-room-copy { flex-basis:100%; order:2; }
+:root[data-ui-theme="study"] .fresh-room-copy strong { font-size:17px; line-height:1.3; overflow-wrap:anywhere; }
+:root[data-ui-theme="study"] .fresh-room-copy > span { font-size:13px; line-height:1.4; color:var(--look-soft); }
+:root[data-ui-theme="study"] .fresh-chevron { margin-left:auto; flex-shrink:0; color:var(--look-soft); }
+:root[data-ui-theme="study"] .fresh-beta { flex-shrink:0; background:var(--look-gold); color:#302f27; border-radius:999px; padding:2px 7px; font-size:13px; font-weight:700; }
+:root[data-ui-theme="study"] .fresh-count { flex-shrink:0; background:var(--look-primary); color:var(--look-onPrimary); border-radius:999px; padding:2px 7px; font-size:13px; font-weight:700; }
+:root[data-ui-theme="study"] .fresh-room:hover { background:var(--look-inset); border-color:var(--look-accent); }
+:root[data-ui-theme="study"] .fresh-nav-link { display:flex; align-items:center; gap:10px; min-height:44px; padding:8px; margin:2px 0; border-radius:10px; color:var(--look-ink); font-size:15px; }
+:root[data-ui-theme="study"] .fresh-nav-link > span:not(.fresh-beta):not(.fresh-count) { min-width:0; flex:1; overflow-wrap:anywhere; }
+:root[data-ui-theme="study"] .fresh-nav-link > svg { flex-shrink:0; }
+:root[data-ui-theme="study"] .fresh-nav-link[aria-current] { background:var(--look-primary); color:var(--look-onPrimary); font-weight:700; }
+:root[data-ui-theme="study"] .fresh-nav-link:hover:not([aria-current]) { background:var(--look-inset); }
+
+@media (max-width:479px) {
+:root[data-ui-theme="study"] .fresh-menu { gap:14px; }
+:root[data-ui-theme="study"] .fresh-hero { min-height:170px; }
+:root[data-ui-theme="study"] .fresh-hero-copy { min-height:170px; padding:16px; width:61%; }
+:root[data-ui-theme="study"] .fresh-hero h2 { font-size:23px; }
+:root[data-ui-theme="study"] .fresh-intro { font-size:13px; margin-top:10px; }
+:root[data-ui-theme="study"] .fresh-eyebrow { display:none; }
+:root[data-ui-theme="study"] .fresh-room { padding:12px; }
+:root[data-ui-theme="study"] .fresh-room-grid { gap:10px; }
+:root[data-ui-theme="study"] .fresh-room-copy strong { font-size:15px; }
+:root[data-ui-theme="study"] .fresh-profile { padding:8px 12px; min-height:60px; }
+}
+@media (max-width:359px) {
+:root[data-ui-theme="study"] .fresh-room-grid { grid-template-columns:minmax(0,1fr); }
+:root[data-ui-theme="study"] .fresh-room-grid .fresh-room { min-height:68px; flex-wrap:nowrap; align-items:center; }
+:root[data-ui-theme="study"] .fresh-room-grid .fresh-room-copy { flex-basis:auto; order:0; }
+}
+
+:root[data-ui-theme="study"] .fresh-room-grid { grid-template-columns:minmax(0,1fr); }
+:root[data-ui-theme="study"] .fresh-room-grid .fresh-room { min-height:72px; flex-wrap:nowrap; align-items:center; }
+:root[data-ui-theme="study"] .fresh-room-grid .fresh-room-copy { flex-basis:auto; order:0; }
+@media (min-width:640px) {
+:root[data-ui-theme="study"] .fresh-room-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+:root[data-ui-theme="study"] .fresh-main-nav { padding:12px 12px 0; }
+:root[data-ui-theme="study"] [data-desktop-nav] { background:var(--look-panel) !important; color:var(--look-ink) !important; border-right:1px solid var(--look-line); }
+:root[data-ui-theme="study"] [data-desktop-nav] .text-white\/85 { color:var(--look-ink) !important; }
+:root[data-ui-theme="study"] [data-desktop-nav] .text-white\/60 { color:var(--look-soft) !important; }
+:root[data-ui-theme="study"] [data-desktop-nav] a[aria-current] { background:var(--look-primary); color:var(--look-onPrimary) !important; }
+:root[data-ui-theme="study"] [data-desktop-nav] .bg-gold\/90 { color:#302f27 !important; }
+@media (min-width:1280px) {
+:root[data-ui-theme="study"] body:has([data-desktop-nav]) [data-app-header] { background-color:var(--top-bar-bg) !important; color:var(--top-bar-ink); }
+:root[data-ui-theme="study"] body:has([data-desktop-nav]) [data-app-header] [data-avatar] { color:var(--look-onPrimary) !important; }
+}
+}
