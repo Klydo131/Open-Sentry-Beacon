@@ -251,7 +251,7 @@ export function LiveExplorerPage() {
           </>
         )}
 
-        {/* READ, THEN ASK. Writing moved to the Publish room, which every role
+        {/* READ, THEN ASK. Writing is in Home's Blog folder, which every role
             has: this screen is somebody's journey, and their own blog desk sat
             on it because there was nowhere else to put it. */}
         {/* ASKING FOR PRAYER IS THE MOST EXPOSED THING ANYBODY DOES HERE, which

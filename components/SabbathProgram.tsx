@@ -759,7 +759,7 @@ function ShareInAppBox({ program, role, share }: {
           <p role="status" className="mt-2 text-sm text-gray-700">
             {!online && 'No signal. Post it when you have one; nothing is lost meanwhile.'}
             {online && tooLong && 'This program is too long to post. Share the Word file or the picture instead.'}
-            {online && !tooLong && state === 'posted' && 'Posted. To take it down, open Publish.'}
+            {online && !tooLong && state === 'posted' && 'Posted. To take it down, open Home, then Blog.'}
             {online && !tooLong && state === 'failed' && `It did not post${why ? `: ${why}` : '.'} Nothing was shared.`}
           </p>
           <p className="text-sm text-gray-600">

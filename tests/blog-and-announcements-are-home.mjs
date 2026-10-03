@@ -38,6 +38,11 @@ for (const dir of ['components', 'app', 'lib']) {
   walk(dir);
 }
 ok(linksToPublish.length === 0, `nothing links to /publish any more${linksToPublish.length ? `: ${linksToPublish.join(', ')}` : ''}`);
+// Nor sends anybody there in words: the notice board when it is empty, and the
+// line a Sabbath program or a series of meetings shows once posted.
+const saysPublish = ['components/LiveAnnouncements.tsx', 'components/SabbathProgram.tsx', 'components/EvangelisticMeetings.tsx']
+  .filter((f) => /in Publish\b|open Publish\b/.test(code(f)));
+ok(saysPublish.length === 0, `no screen tells anybody to go to Publish${saysPublish.length ? `: ${saysPublish.join(', ')}` : ''}`);
 
 // 2. HOME HAS THEM, ON BOTH HALVES
 const liveHome = code('components/LiveChurchPages.tsx');

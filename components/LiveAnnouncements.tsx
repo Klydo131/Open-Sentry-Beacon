@@ -89,7 +89,7 @@ export function LiveAnnouncements({
       {!error && shown.length === 0 ? (
         <Card className="p-6 text-center text-gray-400">
           {mayPost
-            ? 'No notices yet. Write the first one in Publish.'
+            ? 'No notices yet. Write the first one in Announcements, above.'
             : 'Nothing pinned at the moment.'}
         </Card>
       ) : (

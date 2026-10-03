@@ -1070,7 +1070,7 @@ function MeetingShareBox({ meeting: m, nightId, role, share }: {
           <p role="status" className="mt-2 text-sm text-gray-700">
             {!online && 'No signal. Post it when you have one; nothing is lost meanwhile.'}
             {online && tooLong && 'This is too long to post. Post one night at a time, or share the Word file.'}
-            {online && !tooLong && state === 'posted' && 'Posted. To take it down, open Publish.'}
+            {online && !tooLong && state === 'posted' && 'Posted. To take it down, open Home, then Blog.'}
             {online && !tooLong && state === 'failed' && `It did not post${why ? `: ${why}` : '.'} Nothing was shared.`}
           </p>
         </>
