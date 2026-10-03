@@ -290,6 +290,19 @@ export function LiveAppShell({
         <main className="page-in mx-auto w-full min-w-0 max-w-5xl pb-28 pt-6">
           {children}
 
+          {/* THE FOOTER IS PART OF THE PAGE COLUMN, not a row under the page
+              and the desk. Under them, it ended their row a footer's height
+              above the bottom of the screen, and the desk beside the page,
+              which sticks inside that row and cannot hang past it, was pushed
+              up under the header at the end of every page ("MY OFFICE" cut
+              in half on the owner's screen, 3 October 2026, Settings
+              scrolled to the end). Reproduced in the sample church by adding
+              the same footer under the row: the desk went from 136 to 90,
+              under a header ending at 118. Inside the column it stays put. */}
+          <footer className="mt-10 border-t border-black/5 py-5 text-center text-xs text-gray-400">
+            Invitation-only. Access is enforced by the church database.
+          </footer>
+
           {/* THE POCKET IS NO LONGER DRAWN TWICE HERE.
               "can we add the pocket app features in pads and mobile too?" was
               answered by rendering a second copy of it at this spot, because the
@@ -328,10 +341,6 @@ export function LiveAppShell({
           </DeskDrawer>
         )}
       </div>
-
-      <footer className="border-t border-black/5 py-5 text-center text-xs text-gray-400">
-        Invitation-only. Access is enforced by the church database.
-      </footer>
 
       <TabBar role={profile.role} />
     </div>

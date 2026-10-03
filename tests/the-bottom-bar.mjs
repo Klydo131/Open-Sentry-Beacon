@@ -205,6 +205,15 @@ const ok = (cond, msg) => {
   ok(/\.desk-rail\s*\{[^}]*top:\s*calc\(var\(--beacon-chrome-top, 0px\) \+ var\(--app-header, 60px\)/.test(css)
      && !/xl:top-\[/.test(read('components/RoomRails.tsx')),
      'the desk sticks below the measured header, not a fixed distance from the top');
+  // Nothing may sit in a row below the page and the desk: the desk sticks
+  // inside their row and cannot hang past it, so a row ending above the bottom
+  // of the screen pushes the desk under the header at the end of every page.
+  {
+    const live = read('components/LiveAppShell.tsx');
+    const main = live.slice(live.indexOf('<main'), live.indexOf('</main>'));
+    ok(/<footer\b/.test(main) && (live.match(/<footer\b/g) || []).length === 1,
+       'the live footer is inside the page column, so the desk\'s row reaches the bottom of the page');
+  }
   for (const shell of ['components/AppShell.tsx', 'components/LiveAppShell.tsx']) {
     const src = read(shell);
     ok(/setProperty\(\s*'--app-header'/.test(src) && /ref=\{headerRef\}/.test(src), `${shell} measures its header for it`);
