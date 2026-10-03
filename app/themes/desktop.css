@@ -90,15 +90,9 @@
     background-color: #1e2a4a !important;
   }
 
-  /* THE DESK STARTS BELOW THE TOP BAR. Its column sticks 76px from the top,
-     which is less than the live header is tall, so the first card slid under
-     the header as the page scrolled ("MY OFFICE" cut in half on the owner's
-     screen). Here the bar's height is known, so the desk sticks just below it. */
-  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) .desk-rail {
-    top: calc(var(--beacon-chrome-top, 0px) + var(--desktop-top-bar) + 1rem);
-    max-height: calc(100vh - var(--beacon-chrome-top, 0px) - var(--desktop-top-bar) - 2rem);
-    max-height: calc(100dvh - var(--beacon-chrome-top, 0px) - var(--desktop-top-bar) - 2rem);
-  }
+  /* The desk sticks below this bar with no rule of its own here: both shells
+     publish the header's measured height, and `.desk-rail` in globals.css
+     sticks below whatever that is, in Classic and every look alike. */
 }
 
 /* The top bar's height, shared by the bar, the sidebar's logo row and the

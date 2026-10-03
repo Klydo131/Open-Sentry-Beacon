@@ -283,12 +283,13 @@ export function RightRail({
   // FROM xl IT IS A STICKY COLUMN THAT SCROLLS ITSELF, and since the bottom bar
   // is on a desktop too it has to end ABOVE the bar, with the same deep floor
   // inside it. Its height was the window less 96px, which put its last 40px
-  // (the player again) under the bar however far it was scrolled. The height
-  // is `.desk-rail` in globals.css, because it spends `--tab-bar`.
+  // (the player again) under the bar however far it was scrolled. Where it
+  // sticks and how tall it is are `.desk-rail` in globals.css, because both
+  // spend measured heights: the header's above it and the bar's below.
   return (
     <aside
       aria-label={seeker ? 'My room' : 'My office'}
-      className="desk-rail compact-ui thin-scroll w-full space-y-3 pb-28 xl:sticky xl:top-[76px] xl:w-72 xl:shrink-0 xl:overflow-y-auto"
+      className="desk-rail compact-ui thin-scroll w-full space-y-3 pb-28 xl:sticky xl:w-72 xl:shrink-0 xl:overflow-y-auto"
     >
       <RoomCard
         seeker={seeker}

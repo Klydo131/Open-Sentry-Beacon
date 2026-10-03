@@ -1478,11 +1478,21 @@ body:has([data-conversation-screen]) .tab-bar {
 /* The person's own desk (RoomRails' right rail), where it is a sticky column
    beside the page: as tall as the window less the header above it AND the
    bottom bar below it, so scrolled to its end its last line is above the bar.
-   `vh` first for engines without `dvh`. */
+   `vh` first for engines without `dvh`.
+
+   IT STICKS BELOW THE HEADER, HOWEVER TALL THE HEADER IS. It stuck a fixed
+   76px from the top, which is less than the header plus the sample church's
+   purple strip, and less than the live header alone: as the page scrolled,
+   the desk's first card slid underneath ("MY OFFICE" cut in half on the
+   owner's screen, 3 October 2026; "yes fix it in Classic too"). Both shells
+   publish the header's measured height, the tutorial bar its own, and 1rem
+   is the gap the page itself keeps under the header. Before the header has
+   been measured, 60px plus that gap is the 76px it always was. */
 @media (min-width: 1280px) {
   .desk-rail {
-    max-height: calc(100vh - 96px - var(--tab-bar, 0px));
-    max-height: calc(100dvh - 96px - var(--tab-bar, 0px));
+    top: calc(var(--beacon-chrome-top, 0px) + var(--app-header, 60px) + 1rem);
+    max-height: calc(100vh - var(--beacon-chrome-top, 0px) - var(--app-header, 60px) - 2rem - var(--tab-bar, 0px));
+    max-height: calc(100dvh - var(--beacon-chrome-top, 0px) - var(--app-header, 60px) - 2rem - var(--tab-bar, 0px));
   }
 }
 

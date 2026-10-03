@@ -41,6 +41,19 @@ const barShown = (page) => page.evaluate(() => {
 const sidebar = (page) => page.locator('[data-desktop-nav]');
 
 // The top of a computer's screen: the header, what it shows, and what is beside it.
+// The church home scrolled well down, and where the desk's column and the header end up.
+async function deskAfterScrolling(page) {
+  await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  await page.mouse.wheel(0, 900);
+  await page.waitForTimeout(600);
+  return page.evaluate(() => {
+    const rail = document.querySelector('.desk-rail')?.getBoundingClientRect();
+    const header = document.querySelector('[data-app-header]')?.getBoundingClientRect();
+    return { scrolled: Math.round(scrollY), deskTop: rail ? Math.round(rail.top) : null, barBottom: header ? Math.round(header.bottom) : null };
+  });
+}
+
 const topOf = (page) => page.evaluate(() => {
   const header = document.querySelector('[data-app-header]');
   const shown = (el) => !!el && getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0;
@@ -130,15 +143,7 @@ async function choose(page, id) {
   ok(top.logoRowBottom !== null && Math.abs(top.bottom - top.logoRowBottom) <= 1,
      `the bar and the sidebar's logo row end on one line (${top.bottom}, ${top.logoRowBottom})`);
   ok(top.youRight !== null && top.youRight >= top.vw - 48, `who you are sits at the right edge (${top.youRight} of ${top.vw})`);
-  await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(1000);
-  await page.mouse.wheel(0, 900);
-  await page.waitForTimeout(600);
-  const desk = await page.evaluate(() => {
-    const rail = document.querySelector('.desk-rail')?.getBoundingClientRect();
-    const header = document.querySelector('[data-app-header]')?.getBoundingClientRect();
-    return { scrolled: Math.round(scrollY), deskTop: rail ? Math.round(rail.top) : null, barBottom: header ? Math.round(header.bottom) : null };
-  });
+  const desk = await deskAfterScrolling(page);
   ok(desk.scrolled > 100 && desk.deskTop !== null && desk.deskTop >= desk.barBottom,
      `scrolled ${desk.scrolled}px, the desk still starts below the bar, nothing of it underneath (${desk.deskTop} >= ${desk.barBottom})`);
   await page.goto(`${BASE}/office`, { waitUntil: 'networkidle' });
@@ -176,6 +181,11 @@ async function choose(page, id) {
   const classicTop = await topOf(page);
   ok(classicTop.bg === 'rgb(30, 42, 74)' && classicTop.brandShown,
      `and Classic's header on a computer is the navy band with its logo, as it was (${classicTop.bg})`);
+  // "yes fix it in Classic too" (3 October 2026): Classic's desk stuck 76px
+  // from the top, under its header and the sample church's purple strip.
+  const classicDesk = await deskAfterScrolling(page);
+  ok(classicDesk.scrolled > 100 && classicDesk.deskTop !== null && classicDesk.deskTop >= classicDesk.barBottom,
+     `in Classic too, scrolled ${classicDesk.scrolled}px, the desk starts below the header (${classicDesk.deskTop} >= ${classicDesk.barBottom})`);
 
   // 6. THE FRONT DOOR IS NOT PUSHED SIDEWAYS FOR A SIDEBAR THAT IS NOT THERE
   await choose(page, 'desktop');

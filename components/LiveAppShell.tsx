@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { roleLabel, NAVY, APP_SHORT_NAME } from '@/lib/brand';
 import type { Role } from '@/lib/types';
 import { homeFor, useLiveSession } from '@/lib/live/session';
@@ -80,6 +80,29 @@ export function LiveAppShell({
   // event for it. See lib/url-signal.ts.
   const url = useUrlKey();
   useScrollToHash([url, loading]);
+
+  // THE HEADER SAYS HOW TALL IT IS, as the sample shell's always has
+  // (components/AppShell.tsx). This one never did, so on the live side three
+  // things that subtract the header's height subtracted nothing: the desk's
+  // sticky column slid its first card under the header as the page scrolled
+  // ("MY OFFICE" cut in half, on the owner's screen, 3 October 2026), a
+  // scrolled-to card came to rest behind the header, and the conversation's
+  // height left no room for it. Measured, because the header is taller on
+  // the live side and rewraps on a phone. Above the guards, like every hook.
+  const headerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () =>
+      document.documentElement.style.setProperty('--app-header', `${Math.ceil(el.getBoundingClientRect().height)}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--app-header');
+    };
+  });
 
   useEffect(() => {
     if (loading) return;
@@ -182,6 +205,7 @@ export function LiveAppShell({
       } as React.CSSProperties}
     >
       <header
+        ref={headerRef}
         // Hooks for a look's own stylesheet (app/themes/*.css); nothing to Classic.
         data-app-header
         className="sticky z-20 text-white shadow-md"

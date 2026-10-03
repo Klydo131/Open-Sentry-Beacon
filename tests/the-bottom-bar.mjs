@@ -195,9 +195,20 @@ const ok = (cond, msg) => {
   // The desk beside the page on a desktop scrolls itself; it must end above
   // the bar, or its last line (the player) is under the bar however far it is
   // scrolled.
-  ok(/\.desk-rail\s*\{[^}]*max-height:\s*calc\(100dvh - 96px - var\(--tab-bar, 0px\)\)/.test(css)
+  ok(/\.desk-rail\s*\{[^}]*max-height:\s*calc\(100dvh[^;]*- var\(--tab-bar, 0px\)\)/.test(css)
      && /className="desk-rail /.test(read('components/RoomRails.tsx')),
      'the desk beside the page on a desktop ends above the bar');
+  // And it starts below the header (3 October 2026, "yes fix it in Classic
+  // too"): it stuck a fixed 76px down, under a taller header, so its first
+  // card slid underneath. The height it sticks below is measured by both
+  // shells, so neither can forget to say how tall its header is.
+  ok(/\.desk-rail\s*\{[^}]*top:\s*calc\(var\(--beacon-chrome-top, 0px\) \+ var\(--app-header, 60px\)/.test(css)
+     && !/xl:top-\[/.test(read('components/RoomRails.tsx')),
+     'the desk sticks below the measured header, not a fixed distance from the top');
+  for (const shell of ['components/AppShell.tsx', 'components/LiveAppShell.tsx']) {
+    const src = read(shell);
+    ok(/setProperty\(\s*'--app-header'/.test(src) && /ref=\{headerRef\}/.test(src), `${shell} measures its header for it`);
+  }
   ok(/\.tab-bar-tab\s*\{[^}]*min-height:\s*60px[^}]*font-size:\s*15px/.test(css),
      'each tab is a tall target with a label no smaller than 15px');
 }
