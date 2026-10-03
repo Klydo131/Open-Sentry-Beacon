@@ -121,6 +121,11 @@ Four kinds of people, each seeing a different app built from the same data.
 | **Director** | Who gets in, who walks with whom, what is on the library shelf, and a progress report on every Explorer in the church, by stage and by Guide. |
 | **Executive Director** | The church in numbers, and how those numbers are changing. Never anybody's conversations. |
 
+**Four looks, one app.** Settings offers **Classic**, **Beacon** (bright),
+**Study** (warm paper) and **Focus** (dark). Each person picks one for their
+own phone or computer, and the colour squares on their desk recolour whichever
+look they chose, always keeping its text easy to read.
+
 Underneath is a six-stage journey, **Beginner, Connect, Care, Call, Cultivate,
 Commission**, which ends by turning around: the last stage is the point where
 somebody being walked with starts walking with somebody else. (The first stage

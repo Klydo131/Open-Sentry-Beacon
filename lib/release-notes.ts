@@ -25,6 +25,8 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       'The colours on your desk now change Beacon, Study and Focus too, not only Classic. The first one is the look\'s own colours, so you can always go back.',
       'Each look keeps its own light or dark. In Focus, Warm Office becomes a warm evening brown, and everything stays as easy to read as before.',
       'Each look remembers its own colour on this device.',
+      'A few buttons in Settings were hard to read in Focus. They now follow every look.',
+      'On a Mac, the invitation to install no longer covers the Talk button, and it steps aside while a conversation is open.',
     ],
   },
   {

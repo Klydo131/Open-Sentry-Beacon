@@ -2,7 +2,7 @@
 
 Everything needed to run Hope Beacon, move it to a new project, and keep it working. Written for the people who run a church, and for the AI tools that will be asked to continue the work.
 
-**Version:** 3 October 2026 · **Applies to:** migrations through `20261002150000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
+**Version:** 4 October 2026 · **Applies to:** migrations through `20261003130000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
 
 > **NOTE** · How to read this
 >
@@ -827,6 +827,10 @@ This matters most for somebody holding an invitation. The old advice was to swit
 >
 > Not a setting, and nothing to turn on. Use Chrome, Edge or Safari on a computer. Firefox on a phone is fine and is in the table above. The app says this plainly rather than offering steps that cannot work.
 
+> **GOOD TO KNOW** · On a computer, the invitation to install stays out of the way
+>
+> In Safari on a Mac, and in Chrome when it offers to install, a card in the bottom-right corner invites you to add the app. It sits above the **Talk** button, and it is not there at all while a conversation is open, so it can never cover **Send** or **Report**. Until 4 October 2026 it sat on top of Talk, and on a Mac the conversations could not be opened until the card was closed. Close it with its **×**, or **I already have Beacon installed**.
+
 ### Updates
 
 Nobody reinstalls. When a new version ships, every open copy notices within seconds and offers to refresh. The app will not reload while a message is half written.
@@ -870,7 +874,7 @@ What somebody listens to while they read is nobody else's business, which is why
 
 On a phone and an iPad, a bar along the bottom of the screen has three words on it, and it **is** the navigation. On a computer the same rooms are listed down the left side instead, and a light bar runs across the top (see *The look* below). So does a large iPad turned sideways, which is as wide as a laptop: the owner chose to keep the sidebar there (3 October 2026, "keep the sidebar on large iPads"):
 
-- **Menu** lists every room you have, written out: Home (with its **Blog** and **Announcements** folders), your own screen, **This Sabbath**, My Files; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
+- **Menu** lists every room you have, written out: Home (with its **Blog** and **Announcements** folders), your own screen, **This Sabbath**, My Files; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. **Signing out ends that sign-in for good**, not only on the screen in front of you: the app tells the sign-in server too, for this device only, so your other devices stay signed in. If the phone is offline it still signs out, and the server's copy runs out on its own. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
 - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
 - **My Files** opens your own files.
 
@@ -886,7 +890,7 @@ Six of those rooms have **subrooms** inside them, offered as **one drop-down** a
 >
 > **The conversation is a bubble**, the round **Talk** button in the corner of every screen, with a number on it when somebody has written. On a phone or an iPad it opens to the whole screen; on a computer it opens beside the page. **Report** is at the top of it.
 >
-> **Your desk** (the study timer, your note, the pocket, the player) sits beside the page on a wide screen. On a phone or an iPad it is a drawer: tap the small cabinet with **‹‹‹** on the right edge, or swipe in from that edge, and it slides in; tap **›››** to put it away.
+> **Your desk** (the study timer, your note, the pocket, the player) sits beside the page on a wide screen. On a phone or an iPad it is a drawer: tap the small cabinet with **‹‹‹** on the right edge, or swipe in from that edge, and it slides in; tap **›››** to put it away. Its colour squares change the colours of the whole app, in every look: see *Your desk's colours* below.
 
 **Tutorial, What's new and Feedback are cards inside Settings**, not rows in the Menu. On a live church that was half true for a while: only the tutorial made the move, so What's new and Feedback existed in the sample-data build and nowhere else. Both are now on a **Help and feedback** card in Settings, on both. They were rows for a while, put there because each had been reported as missing when it was only reachable by scrolling Settings. That fixed the wrong half: it made the column six entries long for three things somebody uses about once a month, and the column is what people look at all day. The unread mark for a new release sits on Settings itself, so it is still visible from every screen.
 
@@ -944,7 +948,7 @@ A device set to reduce motion gets the same message without the spin.
 
 **The app's look has a name: Classic.** Settings → General → **Look** shows it, chosen. Asked for on 3 October 2026: "I want the current UI to be called "classic" in the settings right now, ChatGPT or Codex will introduce new theme UI that users can pick, but make sure the classic UI remains the same please."
 
-Classic is the app exactly as it is: choosing it changes nothing, and it has no styles of its own to drift. When a new look is added it appears beside Classic as another choice, kept on the device like the text size, and Classic stays as it is. A new look is added by the rule in `AGENTS.md` (section 2) and `lib/ui-themes.ts`: its styles live in a file of their own and reach only the people who chose it. Two checks hold it: one fails the build if Classic gains a style or a look's styles reach beyond that look, and a browser walk measures Classic's colours, type and shapes against the day it was named.
+Classic is the app exactly as it is: choosing it changes nothing, and it has no styles of its own to drift. Other looks appear beside Classic as further choices, kept on the device like the text size, and Classic stays as it is. Since 4 October 2026 there are three: *Beacon, Study and Focus* below. A new look is added by the rule in `AGENTS.md` (section 2) and `lib/ui-themes.ts`: its styles live in a file of their own and reach only the people who chose it. Two checks hold it: one fails the build if Classic gains a style or a look's styles reach beyond that look, and a browser walk measures Classic's colours, type and shapes against the day it was named.
 
 New features still arrive in Classic, drawn the way it already draws things. What does not change, unless the owner decides it should, is how Classic looks.
 
@@ -955,6 +959,33 @@ New features still arrive in Classic, drawn the way it already draws things. Wha
 **The desk stays below the header, in every look.** On a computer the desk on the right sticks beside the page as you scroll, and it used to stick a fixed 76 pixels from the top, which is less than the header is tall on the live side (and less than the header plus the sample church's purple strip). So its first card slid underneath as the page scrolled. Both halves now measure their header, and the desk sticks just below whatever height that is. The owner asked for this in Classic too ("yes fix it in Classic too"), so it is the one change to Classic since it was named: where the desk stops, not how anything looks.
 
 **The first frame is already in your look.** The server cannot see which look a device chose, so pages used to arrive as Classic and switch a moment later. A small script at the top of every page now puts the stored look on the page before anything is drawn. When the switch was measured it fell on a blank page and nobody saw it; it matters for a look that colours the whole page, such as a dark one.
+
+### Beacon, Study and Focus
+
+![Settings → General → Look on a phone: Classic, Beacon, Study and Focus, with Focus chosen.](screenshots/walkthrough/36-looks.png)
+
+**Three more looks sit beside Classic** in Settings → General → **Look**:
+
+- **Beacon**: bright sky, blue accents, and room cards that are easy to find.
+- **Study**: warm paper and brown accents, calm for reading.
+- **Focus**: a night sky with dark surfaces and pale blue accents.
+
+Each one has the same rooms, the same people and the same rules as Classic; only how the screens look changes. The choice belongs to the device, like the text size: it is not part of anybody's account, and a church cannot set it for its members. Choose Classic to go back. The looks were drawn by Codex, alongside the rest of the work; the files are listed in `docs/FRESH-LOOKS.md`.
+
+### Your desk's colours, in every look
+
+![The desk drawer on a phone, under Focus, with Warm Office chosen: the page, the cards and the drawer turn a warm dark brown.](screenshots/walkthrough/37-desk-colours.png)
+
+**The colour squares on your desk work in every look.** Asked for on 4 October 2026, with a picture of the Office squares on the desk: "This colors doesnt work for other Themes in settings, please integrate it too". Under Beacon, Study and Focus the look used to paint over them, so pressing one changed nothing.
+
+- **The first square is the look's own colours**, called "Focus's own" (or Beacon's, or Study's). It is chosen until you choose another.
+- **The others recolour the look**: the page, the cards, the desk, the top bar and the buttons. Guides and leadership have the four Office colours; Explorers have the five Study colours.
+- **Each look keeps its own light or dark.** In Focus, Warm Office is a warm evening brown, not cream; in Beacon, Slate is a cool light grey-blue, not dark. That is on purpose. Each look also has colours of its own (a pale red for a warning, a gold badge) chosen to be read on its own light or dark. A first version put the colours on exactly as they are, and a cream colour under Focus left that pale red at 1.5 to 1, unreadable. So every colour keeps the brightness the look gives it, and everything reads as well as it does in the look itself. Each square shows exactly what you will get.
+- **Each look remembers its own choice**, on this device. Classic's choice is Classic's, as it always was.
+
+`lib/room-theme.ts` does the work; `tests/room-colours-keep-the-look-light.mjs` checks every look against every colour, and `tests/e2e/room-colours-in-every-look.js` walks it on a computer and a phone.
+
+**Text keeps its contrast in every look.** Measuring each look's own colours on the busiest screens on 4 October 2026 found a few places where a light box kept its white under Focus while its text turned pale: *What's new*, *Send feedback* and *Share Beacon* in Settings, the *Which Beacon is this* box, and the Pocket's remove button, all at about 1.1 to 1. They now take their colours the same way the rest of the app does, so every look recolours them, and `tests/text-and-ground-change-together.mjs` refuses a new one.
 
 ### Notifications
 
@@ -1390,7 +1421,7 @@ That raises the standard in four ways: consent has to be **express** rather than
 ### The progress report, folders and the account copy, 2 October 2026
 
 - **The progress report reads nothing new.** A Guide's is built from what their sign-in could already read about the Explorers they walk with; leadership's from every Explorer's stage and its history, which leadership could already read, and nothing from inside a pairing. No rule was added or widened. Its notes are kept on the device, per account and per period, and leave only in a Word file or text somebody chooses to take (`tests/a-progress-report-counts-what-happened.mjs`).
-- **Sabbath programs and evangelistic meetings now have an account copy**, in `office_plans`, on a database that has had migration `20261002150000`. Each row is one program or series and is readable and writable only by the account that made it: four owner-only rules, nothing for a signed-out visitor, and nothing for leadership. It holds what the device holds, including **Team only** blocks and platform notes, because it is the owner's own copy. A deletion keeps a row with its content emptied, so another device does not bring the program back. A ceiling of 1000 rows per account keeps the database from being anybody's free storage. Deleting the account deletes them.
+- **Sabbath programs and evangelistic meetings now have an account copy**, in `office_plans`, on a database that has had migration `20261002150000`. Each row is one program or series and is readable and writable only by the account that made it: four owner-only rules, nothing for a signed-out visitor, and nothing for leadership. It holds what the device holds, including **Team only** blocks and platform notes, because it is the owner's own copy. A deletion keeps a row with its content emptied, so another device does not bring the program back. Limits keep the database from being anybody's free storage: each plan up to 200 KB, and per account up to 200 plans, 1000 rows and 10 MB in all (migration `20261003120000`, which also lets only an approved member keep one). A real 31-night series is about 55 KB. The app keeps a plan over 150 KB on the device rather than sending it. Deleting the account deletes them.
 - **A calendar file holds what is shared only**, never a Team only block or a platform note, and is made on the device. **Google Calendar** is the one button here that sends anything to another company: tapping it opens Google Calendar with the night's name, time, place and what is shared filled in, which reaches Google as it would if typed there. The privacy notice says so.
 
 ### Asking for a copy of your own information
@@ -1519,9 +1550,9 @@ Read this section before making a change. It states what is true, what must stay
 19. Whatever leaves the device by the app's hand, a post or a picture, is the congregation's copy: no platform notes. A shared program is read back as plain text, never as markup. The same test holds both.
 20. An evangelistic meeting's post and picture are always what is shared, never a **Team only** block, and its colour reaches the page only as a checked six-digit colour. `tests/evangelistic-meetings-are-yours-to-shape.mjs` holds both, and holds its Word file to the same schema order as the Sabbath program's, from one shared list (`tests/_word-order.mjs`).
 21. The progress report asks only for what the reader's rules already return: leadership's report never asks for meetings, lessons or follow-ups. Steps forward are net, from the stage at the period's start to the stage at its end. `tests/a-progress-report-counts-what-happened.mjs` holds both.
-22. `office_plans` is owner-only on every operation, keyed by owner and item together, refuses an older update, and grants nothing to a signed-out visitor. Program screens keep working without the table. The newer copy of each item wins, and a deletion is kept as a mark. `tests/the-office-follows-you.mjs` holds the rules and every merge case.
+22. `office_plans` is owner-only on every operation, keyed by owner and item together, refuses an older update, and grants nothing to a signed-out visitor. Program screens keep working without the table. The newer copy of each item wins, and a deletion is kept as a mark. Only an approved member writes, each plan is at most 200 KB and each account at most 200 live plans, 1000 rows and 10 MB (`20261003120000`). `tests/the-office-follows-you.mjs` holds the rules and every merge case, and `supabase/tests/an-office-plan-has-a-size.sql` the limits.
 23. A calendar file or Google Calendar link carries only what is shared: never a **Team only** block or a platform note. The same test holds it, and holds the file to RFC 5545 (line breaks, folding, escaping).
-24. Classic is the first look, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look, and anything a look draws of its own renders nothing unless it is chosen. `tests/the-classic-look-stays.mjs` holds the rule, `tests/e2e/the-classic-look-stays.js` holds Classic's colours, `tests/e2e/the-desktop-layout.js` walks the computer layout at three widths, top bar and desk included, and `tests/e2e/the-first-paint.js` checks which look the browser first paints. The default, until somebody chooses, is `DEFAULT_LOOK` (Classic), and anything unknown in storage is the default, `desktop` included. Classic's computer layout (rooms down the left, the light top bar) is the app's, under every look. Never edit the shared styles to make a look work.
+24. Classic is the first look, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look, and anything a look draws of its own renders nothing unless it is chosen. `tests/the-classic-look-stays.mjs` holds the rule, `tests/e2e/the-classic-look-stays.js` holds Classic's colours, `tests/e2e/the-desktop-layout.js` walks the computer layout at three widths, top bar and desk included, and `tests/e2e/the-first-paint.js` checks which look the browser first paints. The default, until somebody chooses, is `DEFAULT_LOOK` (Classic), and anything unknown in storage is the default, `desktop` included. Classic's computer layout (rooms down the left, the light top bar) is the app's, under every look. Never edit the shared styles to make a look work. Under another look the desk's colours recolour it through the look's own `--look-*` variables set on `<body>`, each at the brightness of the look's own (`lib/room-theme.ts`, `atTheLook`), so a palette can never make the look's own colours unreadable; every look must name its ten `--look-*` colours as `#rrggbb` for that to work, which `tests/room-colours-keep-the-look-light.mjs` checks. A light background set inline must have its text colour set inline too, or both by class (`tests/text-and-ground-change-together.mjs`).
 
 ### Prove it before you claim it
 
@@ -1576,6 +1607,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
 | The progress report | **Built** for both halves and walked in the sample church as a Guide and as a Director. Not yet seen from a church's own app with a real sign-in, and its Word file has not been opened in Word. |
 | Calendar files | **Built** and held to the standard by a check, and the walk downloads one. Nobody has yet opened one on a real iPhone, Android phone or in Outlook. |
+| Beacon, Study and Focus, and the desk's colours in each | **Built**, and walked in the sample church on a computer and a phone, with every look measured against every colour for readable text. Not yet seen on Safari, an iPhone or the owner's own devices. |
 | The computer layout | **Built**, Classic's since 3 October 2026, and walked in the sample church at 1280, 1440 and 1920 pixels and on a phone. The live header's top bar has been seen on the owner's own screen; a live sign-in walk does not exist yet, and Safari has not been tried. |
 | Programs on every device | **Built**: the merge rules are tested case by case and the table's rules are written. Two real devices signed in to the same account have not been tried from here, because this sandbox cannot sign in to a church's site. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |

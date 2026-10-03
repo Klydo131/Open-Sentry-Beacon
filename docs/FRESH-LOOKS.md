@@ -68,3 +68,23 @@ controlled page; the server version check remains independent. The executable
 guard in `tests/a-first-install-stays-on-the-page.mjs` exercises both first-claim
 event orders and a genuine controlled-page update. Its `--negative-control`
 mode deliberately restores the race and must fail.
+
+## The desk's colours under these looks (4 October 2026, Claude)
+
+The colour squares on the desk now recolour Beacon, Study and Focus as well as
+Classic. `lib/room-theme.ts` sets the look's own `--look-*` and `--top-bar-*`
+variables on `<body>`, each at the brightness (relative luminance) of the
+look's own value and in the palette's hue, so every colour a look paints for
+itself keeps its contrast whatever palette is on. The first square is the
+look's own colours. Two things this asks of a look:
+
+- Name all ten `--look-*` colours in the look's `:root[data-ui-theme]` block
+  as `#rrggbb`. `tests/room-colours-keep-the-look-light.mjs` checks it.
+- Paint from the `--look-*` variables rather than fixed colours wherever the
+  page, cards or desk are drawn. Each look now also gives `.desk-drawer` (the
+  desk on a phone) its page colour; before, it stayed Classic's grey.
+
+Settings' buttons and the "Which Beacon is this" box used inline white
+backgrounds with class-coloured text, which read at 1.1:1 under Focus; they now
+use `bg-white` and `bg-gray-50`, and `tests/text-and-ground-change-together.mjs`
+refuses the pattern.

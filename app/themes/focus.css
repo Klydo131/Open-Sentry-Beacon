@@ -57,6 +57,11 @@
 :root[data-ui-theme="focus"] .room-surface {
   background: var(--look-page) !important;
 }
+/* The desk drawer on a phone or tablet, behind its cards: the look's page,
+   not Classic's grey (4 October 2026). A room colour recolours it too. */
+:root[data-ui-theme="focus"] .desk-drawer {
+  background: var(--look-page);
+}
 :root[data-ui-theme="focus"] [data-app-header] {
   background-color: var(--look-header) !important;
   color: #ffffff;

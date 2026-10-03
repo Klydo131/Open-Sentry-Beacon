@@ -261,6 +261,10 @@ async function noWorseThanTheLook(page, look, key, label) {
     });
     ok(drawer.card === rgb(drawer.panel) && drawer.card !== rgb('#fffbf2'),
        `and so does the desk in the drawer (${drawer.card}, not Study's own card colour)`);
+    // Behind the cards the drawer was Classic's grey in every look until 4
+    // October 2026, a light strip around Focus's dark cards.
+    const ground = await page.evaluate(() => getComputedStyle(document.querySelector('[data-desk-drawer]')).backgroundColor);
+    ok(ground === s.page, `and the drawer behind them is the page's colour, not Classic's grey (${ground})`);
     ok(errors.length === 0, `phone: no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
     await context.close();
   }

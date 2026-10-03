@@ -359,6 +359,32 @@ const SHOTS = [
       await card.locator('[data-text-size-apply]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await settle(p, 600);
     } },
+  // The four looks, 4 October 2026. The Look card in Settings with all four
+  // offered; Focus chosen, so the picture also shows a look other than Classic.
+  { file: '36-looks.png', what: 'Settings: four looks, Classic, Beacon, Study and Focus', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.evaluate(() => localStorage.setItem('beacon-ui-theme', 'focus'));
+      await p.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      // Beacon, Study and Focus in the middle, clear of the badges at the bottom.
+      await p.locator('[data-ui-theme-choice="study"]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // The desk's colours in a look other than Classic, 4 October 2026: "This
+  // colors doesnt work for other Themes in settings, please integrate it too".
+  // Focus with Warm Office: the warm dark that palette is in Focus's light.
+  { file: '37-desk-colours.png', what: "The desk's colours under Focus: Warm Office, in Focus's dark", size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.evaluate(() => localStorage.setItem('beacon-ui-theme', 'focus'));
+      await p.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-desk-tab]').first().click();
+      await settle(p, 900);
+      await p.locator('[data-desk-drawer] [data-room-palette="study"]').click();
+      await settle(p, 900);
+    } },
 ];
 
 /** Maria plans three nights of meetings for shots 28 to 30: invented names only. */

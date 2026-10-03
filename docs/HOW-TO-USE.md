@@ -65,7 +65,14 @@ well, press **Apply**, and every screen follows it, conversations included.
 Just below it is **Look**, with **Classic** chosen. On a computer, and on a
 large iPad turned sideways, Classic has your rooms down the left side and a
 light bar across the top; on a phone or a smaller tablet, the bar along the
-bottom. If new looks are added, you can pick one there.
+bottom.
+
+You can choose three other looks there: **Beacon** (bright and blue),
+**Study** (warm paper) and **Focus** (dark, like a night sky). The rooms and
+everything in them stay the same; only the colours and shapes change. The
+choice is kept on this phone or computer, and **Classic** takes you back.
+
+![Look in Settings: Classic, Beacon, Study and Focus. Focus is chosen here.](screenshots/walkthrough/36-looks.png)
 
 ![A conversation with Text size at its largest. The words grow and still fit the screen.](screenshots/walkthrough/22-text-size-large.png)
 
@@ -351,6 +358,13 @@ swipe in from that edge: the date, what is waiting, a note to yourself, and a
 pocket of links. Tap **›››** to put it away.
 
 ![The desk drawer, open: today's date, what is waiting, a note, and the pocket.](screenshots/walkthrough/21-desk-drawer.png)
+
+The colour squares at the top of your desk change the colours of the whole
+app. They work in every look. The first square is the look's own colours, so
+you can always go back. In Focus, which is dark, a colour stays dark: Warm
+Office becomes a warm evening brown. Each look remembers its own choice.
+
+![The desk under Focus with Warm Office chosen: the whole page turns a warm dark brown.](screenshots/walkthrough/37-desk-colours.png)
 
 ---
 
