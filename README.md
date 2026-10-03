@@ -387,89 +387,67 @@ that way.
 
 ## Licence: AGPL-3.0
 
-Open Sentry Beacon is free software under the
-**[GNU Affero General Public License, version 3](LICENSE)**.
+Open Sentry Beacon is free software, licensed under the
+**[GNU Affero General Public License, version 3](LICENSE)** (AGPL-3.0-only).
+The full licence text in [LICENSE](LICENSE) governs. The summary below is for
+convenience only, is not legal advice, and does not modify the licence.
 
-It was MIT until August 2026. The owner changed it deliberately, and the reason
-is the one AGPL exists for: this app is run as a service, over a network, for
-congregations. Under MIT a company could take it, host it for churches as a paid
-product, improve it, and never give any of that back. AGPL closes that door
-while leaving every door a church needs wide open.
+### Permissions
 
-### What you may do, which is nearly everything
+Subject to the licence, you may:
 
-- **Run it.** For your church, for a hundred churches, commercially or not. No
-  fee, no permission, no notification.
-- **Read it and learn from it.** Every line.
-- **Change it.** Rename it, restyle it, rip out what you do not need, add what
-  you do.
-- **Give it to anyone**, modified or not.
+- **Use** the software, for any purpose, including commercial use, without fee
+  or notice to the copyright holder.
+- **Study and modify** the source code.
+- **Distribute** the software, modified or unmodified.
 
-### What you must do in return
+### Conditions
 
-Two things, and only two.
+- **Copyleft (sections 4 to 6).** Any distribution of the software, or of a
+  work based on it, must be under AGPL-3.0, with the Corresponding Source, and
+  with the copyright and licence notices preserved.
+- **Remote network interaction (section 13).** If you modify the software and
+  make it available to users over a network, you must offer those users the
+  Corresponding Source of your modified version.
+- **Notices.** Third-party components remain under their own licences, listed
+  in [NOTICES.md](NOTICES.md) and in the app.
 
-**1. Keep it AGPL.** If you distribute the app or a work derived from it, it
-goes out under AGPL-3.0 as well, with the source. You cannot fold this code into
-a closed-source product.
-
-**2. If you MODIFY it and let people use it over a network, offer those people
-your source.** This is section 13, and it is the only clause that makes AGPL
-different from ordinary GPL. Running a website counts as "over a network", and
-"I never shipped them a copy" is exactly the loophole this closes.
-
-Read those together and the practical rule is short:
-
-| What you are doing | What you owe |
+| Use | Obligation |
 |---|---|
-| Running this repo unmodified for your church | **Nothing.** Section 13 speaks to modified versions. Renaming the app in `lib/brand.ts` *is* a modification, so it puts you on the next line |
-| Changing it, running it for your congregation | Offer your congregation your source |
-| Changing it, hosting it for other churches | Offer those churches your source |
-| Selling hosting, support or setup | Nothing extra. Charging money is fine, AGPL is not "non-commercial" |
-| Keeping changes on your own laptop, never deployed | **Nothing.** No use is triggered until other people use it |
+| Deploying this repository unmodified | Preserve the licence and notices. Changing the name in `lib/brand.ts` is a modification. |
+| Deploying a modified version for any users, including your own congregation | Offer those users the Corresponding Source (section 13). |
+| Distributing the software or a derived work | Distribute it under AGPL-3.0, with source. |
+| Charging for hosting, support or setup | No additional obligation. AGPL-3.0 permits commercial use. |
+| Modifying it privately, with no users over a network and no distribution | None. |
 
-### How this repo satisfies section 13, and how to copy it
+### Disclaimer of warranty and limitation of liability
 
-The app carries a **"view and contribute on GitHub"** link on its front door and
-in **Settings → General**. Both read one setting, `SOURCE_URL` in `lib/brand.ts`.
-If you deploy a modified version, point it at *your* source, not this one. That
-one edit is the whole obligation for most deployments, and leaving it pointing
-here while your version differs is the one way an honest church accidentally
-breaches the licence.
+The software is provided **"as is", without warranty of any kind**, and in no
+event will the copyright holder or any contributor be liable for damages
+arising from its use, as set out in sections 15 and 16 of the licence.
 
-The same card in Settings → General links **"Code from other projects"**: the licence of every
-open-source package the app is built from, written at each build by
-`scripts/third-party-notices.mjs`. Most of those licences ask that their notice
-go with every copy, and a browser that opens the app receives one.
+### Compliance with section 13 in this repository
 
-### If your organisation cannot accept AGPL
+The app links to its source from its front door and from **Settings → General**,
+both reading `SOURCE_URL` in `lib/brand.ts`. A deployment of a modified version
+must set `SOURCE_URL` to the Corresponding Source of that version.
 
-Some institutions hold a standing policy against AGPL software. Where that
-policy exists it is usually applied before anyone looks at what the software
-does, and explaining the licence rarely changes the outcome.
+The same card in Settings → General links **"Code from other projects"**: the
+licence of every open-source package the app is built from, generated at each
+build by `scripts/third-party-notices.mjs` and delivered with the app.
 
-If that describes the organisation your church belongs to, a separate licence
-for this code is available from the copyright holder. It covers the same
-software under different terms, without the obligations of section 13, so a
-deployment may keep its modifications private. Terms are settled case by case.
+### Alternative licensing
 
-Two things are worth saying plainly. This repository stays AGPL-3.0, so a
-private arrangement between two parties changes nothing about what you or
-anyone else receives here. And the purpose is not to hold the software back.
-It is to stop a procurement policy from becoming the reason a congregation
-cannot use something built for congregations.
+Organisations unable to accept AGPL-3.0 may request a separate licence from
+the copyright holder, on terms agreed case by case. Any such licence is a
+private arrangement between its parties and does not change the licence of
+this repository, which remains AGPL-3.0. Enquiries: open an issue titled
+"Licensing enquiry", or contact the maintainer through GitHub.
 
-To ask, open an issue titled "Licensing enquiry", or contact the maintainer
-through GitHub.
+### Contributions
 
-### Contributing under AGPL
-
-Contributions ship under AGPL-3.0. You keep your copyright; you are granting
-everyone the licence's rights, not signing your work away.
-
-### If you already have it under MIT
-
-You keep those rights, permanently, for the versions you received. A licence
-cannot be revoked retroactively. This change binds new releases from here on.
+Contributions are accepted under AGPL-3.0. Contributors retain the copyright
+in their contributions and license them to all recipients under the terms of
+AGPL-3.0.
 
 Full text: [LICENSE](LICENSE). Third-party code and its terms: [NOTICES.md](NOTICES.md).

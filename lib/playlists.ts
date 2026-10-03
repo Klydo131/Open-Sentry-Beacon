@@ -3,12 +3,8 @@
 // Playlists for the library player.
 //
 // PORTED FROM OPEN MORBITAL, the owner's local-first music player
-// (github.com/Klydo131/open_morbital_official). It is AGPL-3.0 upstream, and
-// was taken here under an MIT grant from its copyright holder because Hope
-// Beacon was MIT at the time and promised forks "no strings". Hope Beacon is
-// now AGPL-3.0 itself, so the grant is no longer what makes this lawful —
-// Morbital's own terms would do. It still stands; it is just not load-bearing.
-// See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code
+// (github.com/Klydo131/open_morbital_official), AGPL-3.0 upstream, and used
+// here under its terms as part of this AGPL-3.0 work. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code
 // is written against this app's own storage rather than copied, because
 // Morbital is Vite/zustand/dexie and this is Next.js.
 //
