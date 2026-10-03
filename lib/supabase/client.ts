@@ -271,6 +271,54 @@ export async function liveAccessToken(): Promise<string | null> {
 }
 
 // ---------------------------------------------------------------------------
+// SIGNING OUT ENDS THE SESSION, NOT ONLY THIS DEVICE'S COPY OF IT.
+// ---------------------------------------------------------------------------
+//
+// Found by the audit of 3 October 2026. "Sign out" used to delete the session
+// from this browser and nothing else, so the sign-in server went on honouring
+// it. A copy taken before the person pressed Sign out (a shared computer, a
+// browser backup, anything that read storage) kept working afterwards, for as
+// long as its refresh token did.
+//
+// So the server is told first, for THIS session only (`scope=local`): the
+// person's phone stays signed in when they sign out of the church office's
+// computer. Ending the session also ends its access token at once, because the
+// database checks that the session still exists (an_ended_session_ends_at_once).
+//
+// Called directly, like the refresh above, and for the same reason: a second
+// client would write this storage key in its own format.
+//
+// NEVER A REASON NOT TO SIGN OUT. Offline, slow, or refused, this device still
+// forgets the session, and the wait is capped so the button never hangs.
+const SIGN_OUT_WAIT_MS = 4000;
+
+export async function endBrowserSession(): Promise<void> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  if (url && key && readBrowserSession()) {
+    const stop = new AbortController();
+    const timer = setTimeout(() => stop.abort(), SIGN_OUT_WAIT_MS);
+    try {
+      // A token that is still valid, refreshed first if it is not: the server
+      // only ends a session for somebody who can prove it is theirs.
+      const token = await liveAccessToken();
+      if (token) {
+        await fetch(`${url}/auth/v1/logout?scope=local`, {
+          method: 'POST',
+          headers: { apikey: key, Authorization: `Bearer ${token}` },
+          signal: stop.signal,
+        });
+      }
+    } catch {
+      // Offline or too slow. The device below still forgets it.
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  clearBrowserSession();
+}
+
+// ---------------------------------------------------------------------------
 // A SESSION ENDED ELSEWHERE ENDS HERE TOO, AT ONCE.
 // ---------------------------------------------------------------------------
 //

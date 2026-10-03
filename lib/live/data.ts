@@ -35,7 +35,7 @@
 //    is not rendered is one careless change away from being rendered.
 
 import {
-  clearBrowserSession,
+  endBrowserSession,
   readBrowserSession,
   saveBrowserSession,
   supabase,
@@ -182,8 +182,9 @@ export async function signUp(email: string, password: string, fullName: string):
   if (error) throw new Error(error.message);
 }
 
+/** Sign out: the server ends this session, then this device forgets it (lib/supabase/client.ts). */
 export async function signOut(): Promise<void> {
-  clearBrowserSession();
+  await endBrowserSession();
 }
 
 /**

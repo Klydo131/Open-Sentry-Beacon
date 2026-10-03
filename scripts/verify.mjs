@@ -645,6 +645,9 @@ const staticChecks = [
   ['offline says offline', 'tests/offline-says-offline.mjs'],
   // Blog and Announcements are Home's folders; no Publish room (3 October 2026).
   ['blog and announcements are home', 'tests/blog-and-announcements-are-home.mjs'],
+  // Sign out tells the server, for this session only, and never hangs
+  // (the audit of 3 October 2026).
+  ['signing out ends the session', 'tests/signing-out-ends-the-session.mjs'],
   // A failing browser walk prints what the browser saw, so a WebKit failure in
   // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],
