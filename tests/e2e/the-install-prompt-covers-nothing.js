@@ -141,6 +141,21 @@ async function signIn(page) {
     ok(await reachable(page, '[data-talk-bubble]') === 'reachable',
        `${label}: the Talk button can be pressed with the card showing (${await reachable(page, '[data-talk-bubble]')})`);
 
+    // The bell's list drops from the top right. Standing above Talk, the card
+    // reached the middle of it on WebKit (header-layers, 4 October 2026).
+    await page.getByRole('button', { name: /notification/i }).first().click({ timeout: 6000 }).catch(() => {});
+    await page.waitForTimeout(600);
+    ok(!(await cardShown(page)), `${label}: with the bell's list open the card is not there`);
+    ok(await reachable(page, '[role="dialog"]') === 'reachable',
+       `${label}: and the list can be pressed (${await reachable(page, '[role="dialog"]')})`);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    if (await page.locator('[role="dialog"]').count()) {
+      await page.getByRole('button', { name: /notification/i }).first().click({ timeout: 6000 }).catch(() => {});
+      await page.waitForTimeout(400);
+    }
+    ok(await cardShown(page), `${label}: closing the list brings the card back`);
+
     await page.locator('[data-talk-bubble]').first().click({ timeout: 6000 }).catch(() => {});
     await page.waitForTimeout(900);
     const thread = page.locator('[data-talk-thread]').first();

@@ -829,7 +829,7 @@ This matters most for somebody holding an invitation. The old advice was to swit
 
 > **GOOD TO KNOW** · On a computer, the invitation to install stays out of the way
 >
-> In Safari on a Mac, and in Chrome when it offers to install, a card in the bottom-right corner invites you to add the app. It sits above the **Talk** button, and it is not there at all while a conversation is open, so it can never cover **Send** or **Report**. Until 4 October 2026 it sat on top of Talk, and on a Mac the conversations could not be opened until the card was closed. Close it with its **×**, or **I already have Beacon installed**.
+> In Safari on a Mac, and in Chrome when it offers to install, a card in the bottom-right corner invites you to add the app. It sits above the **Talk** button, and it is not there at all while a conversation, the bell's list or any other panel you opened is showing, so it can never cover **Send**, **Report** or your notifications. Until 4 October 2026 it sat on top of Talk, and on a Mac the conversations could not be opened until the card was closed. Close it with its **×**, or **I already have Beacon installed**.
 
 ### Updates
 

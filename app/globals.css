@@ -709,7 +709,13 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
 body:has([data-talk-bubble]) [data-install-prompt='card'] {
   bottom: 5.25rem;
 }
-body:has([data-talk-sheet]) [data-install-prompt='card'] {
+/* And it steps aside for anything the person has opened: the chat, the
+   bell's list, a menu, a share sheet. Every one of those is a role="dialog"
+   (AnchoredPanel, the Talk sheet, the modals); the card is not. Standing
+   above Talk put it high enough to cover the middle of the bell's list on a
+   1280px screen, and WebKit's run said so (header-layers, 4 October 2026). */
+body:has([data-talk-sheet]) [data-install-prompt='card'],
+body:has([role='dialog']) [data-install-prompt='card'] {
   display: none !important;
 }
 [data-install-prompt='card'] {
