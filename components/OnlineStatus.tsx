@@ -97,7 +97,9 @@ export function OnlineRow() {
         className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
         style={{ backgroundColor: online ? '#16A34A' : '#DC2626' }}
       />
-      <span className="font-semibold" style={{ color: online ? '#16A34A' : '#DC2626' }}>
+      {/* Classes, so each look can recolour them: #16A34A was 3.3:1 on white
+          and could not follow Focus into the dark (4 October 2026). */}
+      <span className={`font-semibold ${online ? 'text-green-800' : 'text-red-700'}`}>
         {checking ? 'Checking…' : online ? 'Online' : 'Offline'}
       </span>
     </div>

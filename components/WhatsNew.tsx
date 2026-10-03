@@ -29,8 +29,7 @@ export function WhatsNewButton({ className = '' }: { className?: string }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className={`relative rounded-xl px-4 text-base font-semibold text-navy ring-1 ring-navy/20 ${className}`}
-        style={{ backgroundColor: '#fff' }}
+        className={`relative rounded-xl bg-white px-4 text-base font-semibold text-navy ring-1 ring-navy/20 ${className}`}
       >
         ✨ What&rsquo;s new
         {unseen > 0 && (

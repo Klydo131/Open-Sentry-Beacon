@@ -350,15 +350,17 @@ function VersionCard() {
           ? 'Updates run when the app is installed'
           : "You're on the latest version";
 
+  // Classes, so each look can recolour them. The green was #16A34A, 3.3:1 on
+  // white, and inline it could not follow Focus into the dark (4 October 2026).
   const tone = stuck
-    ? '#B91C1C'
+    ? 'text-red-700'
     : state === 'required'
-      ? '#B91C1C'
+      ? 'text-red-700'
       : state === 'ready'
-        ? '#B45309'
+        ? 'text-amber-700'
         : state === 'unsupported'
-          ? '#6B7280'
-          : '#16A34A';
+          ? 'text-gray-500'
+          : 'text-green-800';
 
   return (
     <Card className="p-5">
@@ -385,7 +387,7 @@ function VersionCard() {
       </div>
 
       <div className="rounded-xl bg-gray-50 p-4">
-        <p className="font-bold" style={{ color: tone }}>
+        <p className={`font-bold ${tone}`}>
           {stuck
             ? '⚠️'
             : state === 'required'

@@ -54,14 +54,15 @@ export function WhichApp() {
   // trusting it removes the second opinion rather than adding one.
 
   return (
-    <div
-      className="rounded-xl p-4"
-      style={{ backgroundColor: wrong ? '#FEF2F2' : '#F9FAFB' }}
-    >
+    // Classes, not inline colours: the same #F9FAFB and #FEF2F2 in Classic,
+    // and recoloured with everything else under Beacon, Study and Focus. As an
+    // inline white this box kept its white under Focus while its text went
+    // pale, and read at 1.1:1 (found 4 October 2026).
+    <div className={`rounded-xl p-4 ${wrong ? 'bg-red-50' : 'bg-gray-50'}`}>
       <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
         Which Beacon is this
       </p>
-      <p className="mt-1 font-bold" style={{ color: wrong ? '#B91C1C' : '#1E2A4A' }}>
+      <p className={`mt-1 font-bold ${wrong ? 'text-red-700' : 'text-navy'}`}>
         {wrong ? 'A one-off deployment address' : 'The home address'}
       </p>
       <dl className="mt-3 space-y-1 text-sm">
@@ -75,7 +76,7 @@ export function WhichApp() {
         {wrong && CANONICAL_HOST && (
           <div className="flex justify-between gap-3">
             <dt className="text-gray-500">Home address</dt>
-            <dd className="min-w-0 truncate font-mono font-bold" style={{ color: '#B91C1C' }}>
+            <dd className="min-w-0 truncate font-mono font-bold text-red-700">
               {CANONICAL_HOST}
             </dd>
           </div>
@@ -91,7 +92,7 @@ export function WhichApp() {
       </dl>
 
       {wrong ? (
-        <div className="mt-3 text-sm leading-snug" style={{ color: '#B91C1C' }}>
+        <div className="mt-3 text-sm leading-snug text-red-700">
           <p>
             This is one deployment&rsquo;s own permanent address, not the app&rsquo;s
             home address. It has its own storage and can never receive a later

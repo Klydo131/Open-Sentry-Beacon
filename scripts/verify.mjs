@@ -652,6 +652,9 @@ const staticChecks = [
   // nothing becomes harder to read (4 October 2026). The browser half is
   // tests/e2e/room-colours-in-every-look.js.
   ['room colours keep the look\'s light', 'tests/room-colours-keep-the-look-light.mjs'],
+  // A light background and its text change together, so no look can turn the
+  // text pale on a ground it cannot reach (4 October 2026).
+  ['text and ground change together', 'tests/text-and-ground-change-together.mjs'],
   // A failing browser walk prints what the browser saw, so a WebKit failure in
   // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],

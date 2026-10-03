@@ -64,8 +64,7 @@ export function FeedbackButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className={`rounded-xl px-4 text-base font-semibold text-navy ring-1 ring-navy/20 ${className}`}
-        style={{ backgroundColor: '#fff' }}
+        className={`rounded-xl bg-white px-4 text-base font-semibold text-navy ring-1 ring-navy/20 ${className}`}
       >
         💬 {label}
       </button>

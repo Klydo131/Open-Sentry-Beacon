@@ -214,7 +214,7 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
                   aria-label={`Remove ${i.label} from your pocket`}
                   // Always reachable, not hover-only: a phone has no hover, and
                   // a control that only exists on a mouse is not a control.
-                  className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-gray-200 text-xs leading-none text-gray-600"
+                  className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-gray-100 text-xs leading-none text-gray-600"
                 >
                   {'\u00d7'}
                 </button>

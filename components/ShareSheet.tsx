@@ -97,8 +97,7 @@ export function ShareButton({
       <button
         onClick={go}
         aria-label={`${label}: ${payload.title}`}
-        className={`tap-sm rounded-xl px-3 font-semibold text-navy ring-1 ring-navy/20 ${className}`}
-        style={{ backgroundColor: '#fff' }}
+        className={`tap-sm rounded-xl bg-white px-3 font-semibold text-navy ring-1 ring-navy/20 ${className}`}
       >
         <span aria-hidden>↗</span>
         {!compact && <span className="ml-1.5">{label}</span>}
