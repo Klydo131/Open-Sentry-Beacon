@@ -16,30 +16,46 @@ it.
 
 ## What it looks like
 
-Real screenshots of the app running with its own built-in sample people. Nothing
-here is a mockup, and nothing is assembled from parts that never appeared
-together. Regenerate them any time with `node scripts/screenshots.mjs`.
+Real screenshots of the app running with its own built-in sample people, taken
+on 3 October 2026. Nothing here is a mockup, and nothing is assembled from parts
+that never appeared together. Regenerate them any time with
+`node scripts/screenshots.mjs`.
 
 ### A Guide's desk
 
 Who you are walking with, what needs you today, and where each person is on the
-six-node journey.
+six-stage journey. The bar along the bottom (Menu, People, My Files) is the same
+on a phone, a tablet and a computer.
 
-![The Guide's home screen, showing two Explorers, overdue follow-ups, the six journey nodes from Create to Commission, and an upcoming Bible study](docs/screenshots/guide-people.png)
+![A Guide's home on a computer: two Explorers, two follow-ups overdue and one message unread, how many are at each of the six stages from Beginner to Commission, and the desk on the right with today's date and what is waiting](docs/screenshots/guide-people.png)
 
 ### One person, one conversation
 
-Everything about that relationship in one place: how to reach them, what they
-are interested in, the conversation, their journey, and the resources shared.
+Everything about that relationship in one place: where they are on the journey,
+meetings to arrange, care and the resources shared. The conversation opens in
+its own bubble and goes with you to every other screen. Reply to one message,
+react to it, or record a voice message. Only the two people walking together
+can read it; the church's leaders cannot.
 
-![An Explorer's page showing John Reyes at the Connect stage on the digital track, with tabs for Talk, Journey, Care and Resources](docs/screenshots/conversation.png)
+![John Reyes's page, as his Guide Maria sees it on a computer: Connect stage, Digital track, Message John, and Appointments. The conversation is open beside it, where Maria has reacted to John's message with praying hands and replied to it with a quote](docs/screenshots/conversation.png)
 
 ### The church, without anybody's private journey
 
 Leaders see counts and what needs a decision. They do not see conversations, and
 the screen says so in as many words.
 
-![The church home screen showing counts, a sign-up awaiting approval, and announcements](docs/screenshots/church-overview.png)
+![The church home for a Director: the church's counts, a sign-up awaiting a decision, and announcements below](docs/screenshots/church-overview.png)
+
+### The Office, where the week's work is done
+
+Guides and leaders plan the Sabbath, a series of evangelistic meetings, and the
+month's report in one room. Everything is kept on the device first, so it works
+with no signal, and in a church's own app it follows you to every phone or
+computer you sign in on.
+
+| The Sabbath program | Evangelistic meetings | The progress report |
+|---|---|---|
+| ![The Sabbath program on a phone: Sabbath School at 9:00 AM, and each line saying what happens, which hymn, and who leads it](docs/screenshots/office-sabbath.png) | ![Night 1 of a series of evangelistic meetings on a phone: 5:30 to 9:00 PM, the topic, and Children's time with songs, a Bible story and craft making, each with who leads it](docs/screenshots/office-meetings.png) | ![The progress report on a phone: each Explorer with their stage, what the month held, and John Reyes marked as needing attention for an overdue follow-up](docs/screenshots/office-progress.png) |
 
 ### On a phone, which is where it is actually used
 
@@ -48,7 +64,7 @@ with the signal off.
 
 | An Explorer's home | A Guide's home |
 |---|---|
-| ![An Explorer's phone screen: a welcome, a verse, and what is waiting for them](docs/screenshots/phone-explorer.png) | ![A Guide's phone screen: greeting, what needs attention, and the six journey nodes](docs/screenshots/phone-guide.png) |
+| ![An Explorer's phone screen: a welcome, a verse, and what is waiting for them: a message from their Guide and a Bible study tomorrow](docs/screenshots/phone-explorer.png) | ![A Guide's phone screen: a greeting, what needs attention, and how many of their Explorers are at each of the six stages](docs/screenshots/phone-guide.png) |
 
 **Look at what is missing from the Explorer's screen.** There is no stage, no
 progress bar, no label about how far along they are. A stage is a note the
@@ -99,23 +115,37 @@ Four kinds of people, each seeing a different app built from the same data.
 
 | | What they see |
 |---|---|
-| **Explorer** | Messages from the person walking with them, their lessons, how far through a course they are, and a way to ask for prayer and to pray for their Guide. |
-| **Guide** | Their own people and nobody else's. Conversations, lessons to share, meetings to arrange, private notes, and prayer both ways. |
-| **Director** | Who gets in, who walks with whom, and what is on the library shelf. |
+| **Explorer** | Messages from the person walking with them, their lessons, how far through a course they are, the Sabbath program and meetings their church posts, and a way to ask for prayer and to pray for their Guide. |
+| **Guide** | Their own people and nobody else's. Conversations, lessons to share, meetings to arrange, private notes, and prayer both ways. An Office for the Sabbath program, evangelistic meetings, and a progress report on the people they walk with. |
+| **Director** | Who gets in, who walks with whom, what is on the library shelf, and a progress report on every Explorer in the church, by stage and by Guide. |
 | **Executive Director** | The church in numbers, and how those numbers are changing. Never anybody's conversations. |
 
-Underneath is a six-stage journey, **Create, Connect, Care, Call, Cultivate,
+Underneath is a six-stage journey, **Beginner, Connect, Care, Call, Cultivate,
 Commission**, which ends by turning around: the last stage is the point where
-somebody being walked with starts walking with somebody else.
+somebody being walked with starts walking with somebody else. (The first stage
+is still `create` in the database; the screens say Beginner, which is where the
+person is rather than what the church is doing.)
 
 **An Explorer never sees their own stage.** A stage is a note the church keeps to
 organise its work, not a label to show a person about themselves. A test enforces
 this, and it should survive anything you build on top.
 
-Conversations carry **attachments**: a photo, a voice note, a video, a document.
-An attachment is visible to exactly the two people in that conversation,
-with no Director exception. The files stay on the device, in IndexedDB, and never
-go into the saved database.
+Conversations carry **replies, reactions and attachments**: answer one message
+by quoting it, react with one of six, or send a photo, a voice message recorded
+in the app, a video or a document. An attachment is visible to exactly the two
+people in that conversation, with no Director exception. In this browser-only
+version the files stay on the device, in IndexedDB, and never go into the saved
+database.
+
+**The Office holds the week's work.** A Sabbath program starts from the whole
+day (Sabbath School, the Divine Service, the afternoon and vespers) and leaves as
+a Word file, a picture, text for a group chat, or a post the people you walk with
+find on **This Sabbath**, which opens with no signal. Evangelistic meetings are
+planned night by night, from blocks and columns of your own. The progress report
+counts, for a month or a quarter, what a Sabbath School class record and a Bible
+worker's report already count: Bible studies, lessons, decisions, and who needs a
+visit this week. Folders keep many programs in order, and **Add to calendar**
+puts them on a phone's calendar.
 
 **Nobody can change a shared thing on everybody else's behalf.** The church
 publishes example studies and a shelf of links, and anybody may edit or remove

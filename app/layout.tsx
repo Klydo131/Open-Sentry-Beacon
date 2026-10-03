@@ -18,6 +18,7 @@ import { LiveSessionProvider } from '@/lib/live/session';
 import { TutorialModeProvider } from '@/lib/tutorial';
 import { TutorialExtras } from '@/components/TutorialExtras';
 import { PlayerProvider } from '@/lib/player';
+import { UiTheme } from '@/components/UiTheme';
 
 export const metadata: Metadata = {
   // The name comes from lib/brand.ts so a fork changes it in one place. It also
@@ -89,7 +90,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    // data-ui-theme: the look, Classic unless this device chose another.
+    // Classic is the app as it is, matched by no rule (lib/ui-themes.ts).
+    <html lang="en" data-ui-theme="classic">
       <body>
         {/* First thing in the document: it has to be listening before any
             bundle is requested, because a bundle failing to load is the signal
@@ -129,6 +132,7 @@ export default function RootLayout({
               update system cannot fix by itself. */}
           <FrozenCopy />
           <OnlineStatus />
+          <UiTheme />
         </LocaleProvider>
         <ServiceWorker />
       </body>

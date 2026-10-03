@@ -31,8 +31,10 @@
 // for them. Text size is the difference between using the app and asking
 // somebody else to read it out.
 
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui';
 import { useLocale, LANGUAGES } from '@/lib/i18n';
+import { CLASSIC, UI_THEMES, readUiTheme, saveUiTheme } from '@/lib/ui-themes';
 
 // The same four steps the demo has always offered. 0.9 to 1.3 against an 18px
 // base is 16px to 23px -- a real change for somebody who needs it, and still
@@ -111,12 +113,69 @@ export function TextSizeCard() {
   );
 }
 
-/** Both cards, in the order the demo has always shown them. */
+// THE LOOK, 3 October 2026: "I want the current UI to be called "classic" in
+// the settings right now, ChatGPT or Codex will introduce new theme UI that
+// users can pick, but make sure the classic UI remains the same please."
+//
+// Today there is one look, Classic, and it is the app exactly as it was before
+// this card existed: choosing it changes nothing. The card is here so that a
+// look added later has its place, and so that the look everybody has now has a
+// name to come back to. How a look is added without touching Classic is in
+// lib/ui-themes.ts.
+export function LookCard() {
+  // Classic until this device's choice has been read, which is what the page
+  // already shows: the server sends data-ui-theme="classic".
+  const [look, setLook] = useState(CLASSIC);
+  useEffect(() => {
+    setLook(readUiTheme());
+  }, []);
+  return (
+    // data-panel, not a data- attribute of its own: Card passes on only the
+    // attributes it names (components/ui.tsx), and an unnamed one never reaches
+    // the page.
+    <Card className="p-5" data-panel="look-settings">
+      <h2 className="mb-1 text-xl font-bold text-navy">🎨 Look</h2>
+      <p className="mb-4 text-sm text-gray-500">
+        How the app looks on this device. If new looks are added, they appear here, and Classic stays
+        exactly as it is.
+      </p>
+      <div role="radiogroup" aria-label="Look" className="grid gap-2 sm:grid-cols-2">
+        {UI_THEMES.map((theme) => {
+          const chosen = look === theme.id;
+          return (
+            <button
+              key={theme.id}
+              type="button"
+              role="radio"
+              aria-checked={chosen}
+              data-ui-theme-choice={theme.id}
+              onClick={() => setLook(saveUiTheme(theme.id))}
+              className="tap rounded-xl px-4 py-3 text-left"
+              style={chosen ? { backgroundColor: '#1E2A4A', color: '#fff' } : { backgroundColor: '#EEF1F7', color: '#1E2A4A' }}
+            >
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="text-lg font-bold">{theme.name}</span>
+                {/* Said in words as well as coloured, as the text size is. */}
+                {chosen && <span className="text-sm font-semibold">Chosen</span>}
+              </span>
+              <span className="mt-0.5 block text-sm" style={{ opacity: 0.85 }}>
+                {theme.description}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+/** The cards for how the app reads and looks here, in the order the demo has always shown the first two. */
 export function ReadingSettings() {
   return (
     <>
       <LanguageCard />
       <TextSizeCard />
+      <LookCard />
     </>
   );
 }

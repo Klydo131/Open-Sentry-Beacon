@@ -2,7 +2,7 @@
 
 Everything needed to run Hope Beacon, move it to a new project, and keep it working. Written for the people who run a church, and for the AI tools that will be asked to continue the work.
 
-**Version:** 2 October 2026 · **Applies to:** migrations through `20261002150000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
+**Version:** 3 October 2026 · **Applies to:** migrations through `20261002150000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
 
 > **NOTE** · How to read this
 >
@@ -456,7 +456,7 @@ Six rooms work this way now. Measured on a phone, with the sample church in them
 | Room | Was | Now |
 | --- | --- | --- |
 | **The Library** | 11 screens of scrolling | 3 folders: Browse, Featured, On this device |
-| **Settings** | 7 screens | 4 or 5 folders: General (installing, alerts, language, text size, the source code), Password, Admin Reports, Church for leadership, Help. The sample church has General, Help and, for leadership, Church |
+| **Settings** | 7 screens | 4 or 5 folders: General (installing, alerts, language, text size, look, the source code), Password, Admin Reports, Church for leadership, Help. The sample church has General, Help and, for leadership, Church |
 | **My Journey**, an Explorer's own screen | 7 screens | 4 folders: My Guide, Study, Church, Prayer |
 | **The Church** | 5 screens | 3 folders: Notices, Community Blogs, The numbers |
 | **My Explorers**, a Guide's home | 4 screens | 4 folders: My Explorers, Follow-ups, Prayer, Church |
@@ -933,6 +933,14 @@ A device set to reduce motion gets the same message without the spin.
 **Things move a little, quickly, and never for their own sake.** A panel unfolds from the button that opened it and folds back into it; a new subroom fades in where the old one was; a conversation slides in. Every movement in the app uses one of three lengths, 160, 220 and 280 thousandths of a second, so nothing drifts.
 
 **Reduce motion turns all of it off.** Phones have that setting for people whom movement on a screen makes dizzy or sick, and the app honours it everywhere: nothing slides, fades or bobs, and panels simply appear. A check fails the build if any animation in the app cannot be stilled.
+
+### The look: Classic
+
+**The app's look has a name: Classic.** Settings → General → **Look** shows it, chosen. Asked for on 3 October 2026: "I want the current UI to be called "classic" in the settings right now, ChatGPT or Codex will introduce new theme UI that users can pick, but make sure the classic UI remains the same please."
+
+Classic is the app exactly as it is: choosing it changes nothing, and it has no styles of its own to drift. When a new look is added it appears beside Classic as another choice, kept on the device like the text size, and Classic stays as it is. A new look is added by the rule in `AGENTS.md` (section 2) and `lib/ui-themes.ts`: its styles live in a file of their own and reach only the people who chose it. Two checks hold it: one fails the build if Classic gains a style or a look's styles reach beyond that look, and a browser walk measures Classic's colours, type and shapes against the day it was named.
+
+New features still arrive in Classic, drawn the way it already draws things. What does not change, unless the owner decides it should, is how Classic looks.
 
 ### Notifications
 
@@ -1499,13 +1507,14 @@ Read this section before making a change. It states what is true, what must stay
 21. The progress report asks only for what the reader's rules already return: leadership's report never asks for meetings, lessons or follow-ups. Steps forward are net, from the stage at the period's start to the stage at its end. `tests/a-progress-report-counts-what-happened.mjs` holds both.
 22. `office_plans` is owner-only on every operation, keyed by owner and item together, refuses an older update, and grants nothing to a signed-out visitor. Program screens keep working without the table. The newer copy of each item wins, and a deletion is kept as a mark. `tests/the-office-follows-you.mjs` holds the rules and every merge case.
 23. A calendar file or Google Calendar link carries only what is shared: never a **Team only** block or a platform note. The same test holds it, and holds the file to RFC 5545 (line breaks, folding, escaping).
+24. Classic is the first look and the default, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look. `tests/the-classic-look-stays.mjs` holds the rule and `tests/e2e/the-classic-look-stays.js` holds Classic's colours. Never edit the shared styles to make a look work.
 
 ### Prove it before you claim it
 
 ```
-npm run verify        # 169 checks: types, build, security, privacy, licences,
+npm run verify        # 170 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 65 browser walks: 234 in all
+npm run verify:all    # the same, plus 66 browser walks: 236 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1553,6 +1562,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
 | The progress report | **Built** for both halves and walked in the sample church as a Guide and as a Director. Not yet seen from a church's own app with a real sign-in, and its Word file has not been opened in Word. |
 | Calendar files | **Built** and held to the standard by a check, and the walk downloads one. Nobody has yet opened one on a real iPhone, Android phone or in Outlook. |
+| Other looks | **Not built.** Settings shows one look, Classic, chosen; the way to add another is written down and checked, and no other look exists yet. |
 | Programs on every device | **Built**: the merge rules are tested case by case and the table's rules are written. Two real devices signed in to the same account have not been tried from here, because this sandbox cannot sign in to a church's site. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |

@@ -199,6 +199,27 @@ Report is in the bubble's header, in words, never beside Send), and **a
 Guide sees the church's notices above the row rather than inside a folder** —
 both were asked for in those terms and both are checked.
 
+**Classic is the app's look, and a new look never changes it.** Asked for on 3
+October 2026: "I want the current UI to be called "classic" in the settings
+right now, ChatGPT or Codex will introduce new theme UI that users can pick, but
+make sure the classic UI remains the same please." Settings, General, **Look**
+lists the looks. Classic is first, is the default, and is the app exactly as it
+is, with no stylesheet of its own; the page says which look it is as
+`data-ui-theme` on `<html>`. To add a look:
+
+1. register it in `lib/ui-themes.ts`, after Classic;
+2. put every style it changes in `app/themes/<id>.css`, every rule starting
+   `:root[data-ui-theme="<id>"]`, and import that file in `app/layout.tsx`;
+3. never edit `globals.css`, `tailwind.config.ts` or a component's own classes
+   to make a look work. That is changing Classic.
+
+New features still arrive in Classic, drawn the way Classic already draws
+things; what may not change is how Classic looks: its colours, type, shapes and
+spacing. `tests/the-classic-look-stays.mjs` holds the rule, and
+`tests/e2e/the-classic-look-stays.js` holds Classic's colours as measured on the
+day it was named. If that walk fails, your change has altered Classic: make it a
+look of its own, or ask the owner whether Classic itself should change.
+
 ---
 
 ## 3. Authorisation lives in the database

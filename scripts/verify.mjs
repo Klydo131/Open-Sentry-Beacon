@@ -589,6 +589,9 @@ const staticChecks = [
   ['evangelistic meetings are yours to shape', 'tests/evangelistic-meetings-are-yours-to-shape.mjs'],
   ['a progress report counts what happened', 'tests/a-progress-report-counts-what-happened.mjs'],
   ['the Office follows you: devices, folders, calendars', 'tests/the-office-follows-you.mjs'],
+  // Classic is the look the app has, named in Settings on 3 October 2026, and
+  // a look added later may not change it.
+  ['the Classic look stays as it is', 'tests/the-classic-look-stays.mjs'],
   ['a suspension is immediate', 'tests/a-suspension-is-immediate.mjs'],
   // `x.col = col` inside a subquery is always true: the bare name binds to x.
   // Two live policies checked nothing because of it.

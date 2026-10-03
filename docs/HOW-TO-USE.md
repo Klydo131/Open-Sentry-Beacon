@@ -59,6 +59,9 @@ nobody has to keep this page to hand:
 If the writing is too small, open **Settings**, stay in **General**, and choose a
 larger **Text size**. Every screen follows it, conversations included.
 
+Just below it, **Look** shows **Classic**, the look the app has today. If new
+looks are added, you can pick one there; Classic stays as it is.
+
 ![A conversation with Text size at its largest. The words grow and still fit the screen.](screenshots/walkthrough/22-text-size-large.png)
 
 ### Signing in

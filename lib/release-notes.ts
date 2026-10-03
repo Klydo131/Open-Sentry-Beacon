@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-03-classic-look',
+    date: '2026-10-03',
+    title: 'The app\'s look is called Classic',
+    items: [
+      'Settings, General, has a new Look card. The look you know is called Classic, and it is chosen.',
+      'Nothing about the app has changed. If new looks are added later, they will appear beside Classic, and Classic stays exactly as it is.',
+    ],
+  },
+  {
     id: '2026-10-02-progress-report',
     date: '2026-10-02',
     title: 'A progress report, folders, calendars, and your plans on every device',
