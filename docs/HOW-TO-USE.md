@@ -60,6 +60,8 @@ If the writing is too small, open **Settings**, stay in **General**, and choose 
 larger **Text size**. The preview below the sizes shows it first; when it reads
 well, press **Apply**, and every screen follows it, conversations included.
 
+![Text size. Large is tried in the preview; Apply makes it the size everywhere, Keep Normal leaves it as it was.](screenshots/walkthrough/35-text-size-apply.png)
+
 Just below it is **Look**, with **Classic** chosen. On a computer, Classic has
 your rooms down the left side and a light bar across the top; on a phone or
 tablet, the bar along the bottom. If new looks are added, you can pick one
@@ -352,6 +354,21 @@ pocket of links. Tap **›››** to put it away.
 
 ---
 
+### Writing for the church
+
+Open **Home**, then the folder button at the top, and choose **Blog**. The
+writing box is already open: give it a title, write, and press **Publish**.
+Everybody in the church reads it, with your name on it. Tick **Advanced
+settings** to send it only to the people you walk with, or to people you choose,
+or to **Save as draft**.
+
+To pin a notice at the top of everybody's Home, choose **Announcements**
+instead: a title, the words, **Pin it**. **Advanced settings** adds when it
+happens, such as "This Sabbath, 9:00 AM". Take a notice down from **Notices**,
+beside the notice itself.
+
+![Home, Blog. The writing box is open as soon as you arrive; what the church wrote is below it.](screenshots/walkthrough/34-home-blog.png)
+
 ## Part 4 — If you are a Director
 
 Directors run the church's account: who gets in, and who walks with whom.
@@ -365,7 +382,7 @@ app**, so anything above zero here is somebody being ignored.
 
 ### The church home
 
-Notices, the prayer wall, and the numbers.
+Notices, your **Blog**, **Announcements**, the prayer wall, and the numbers.
 
 ![The church home.](screenshots/walkthrough/15-church.png)
 

@@ -337,6 +337,28 @@ const SHOTS = [
       await p.getByRole('button', { name: 'Add to calendar' }).evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await settle(p, 600);
     } },
+  // Home's Blog folder, 3 October 2026: "Blog and announcement will be the sub
+  // rooms of home". The box is open on arrival; nothing typed, so the picture
+  // shows what somebody meets.
+  { file: '34-home-blog.png', what: "Home's Blog folder: write, and read what the church wrote", size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.goto(`${BASE}/church?room=blogs`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+    } },
+  // Text size, tried first, 3 October 2026: "text size should be tested and
+  // see first before applying, there should be an apply button".
+  { file: '35-text-size-apply.png', what: 'Text size: tried in the preview, then Apply', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      const card = p.locator('[data-panel="text-size"]');
+      await card.locator('[data-text-size="large"]').click();
+      // Apply in the middle of the screen, clear of the badges that float at the bottom.
+      await card.locator('[data-text-size-apply]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 600);
+    } },
 ];
 
 /** Maria plans three nights of meetings for shots 28 to 30: invented names only. */

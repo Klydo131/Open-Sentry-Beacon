@@ -1,13 +1,89 @@
-# The backend, on one page
+# The backend
 
-Read this before changing anything in `supabase/`. It is the map the rest of the
-docs assume you already have.
+Read this before changing anything in `supabase/` or `lib/live/`.
 
-Everything here was read out of the **live database** on 9 September 2026, not
-transcribed from the migrations. Where the two ever disagree, the database is
-the truth and the migration that drifted is the bug.
+**Part 1, the basics,** is for any developer: what the backend is, how one
+request travels, where things live, and the four jobs you will actually do.
+**Part 2, advanced,** is the detail behind it: the security vocabulary, every
+table, and the rules that have bitten before. Read Part 1 first; go to Part 2
+when a task takes you there.
 
 ---
+
+# Part 1. The basics
+
+## What the backend is
+
+One [Supabase](https://supabase.com) project, which is four things you already
+know by other names:
+
+| Piece | What it does here |
+|---|---|
+| **Postgres** | Every table: profiles, pairings, messages, studies, posts, and the rest. |
+| **Auth** | Sign-in with email and password, and invitations. |
+| **Storage** | Files: photos, attachments, study files. |
+| **Edge functions** | Three small server programs, in `supabase/functions/`: `invite` (sends an invitation; it holds the one key that can bypass the rules, so it never runs in a browser), `notify` (sends a notification to a person's devices) and `places` (suggests places as somebody types where to meet). |
+
+There is no other server. The app is a website that talks to Supabase directly.
+
+The sample church (the tutorial, "No database connected") uses **no backend at
+all**: it keeps an invented church in the browser (`lib/demo/store.tsx`). Nothing
+in this document applies to it.
+
+## How one request travels
+
+```
+the screen            components/Live*.tsx
+   asks for data  ->  lib/live/data.ts        one function per thing, e.g. listAnnouncements()
+   which calls    ->  Supabase, as the signed-in person
+   which checks   ->  the database's own rules (row level security)
+   and returns    ->  only the rows that person may see
+```
+
+**The database decides who may see what. Nothing else does.** The browser asks
+plainly; the answer is already correct. If you find yourself filtering rows in
+JavaScript "for safety", stop: anybody can call Supabase directly with the same
+public key, so a rule only the browser enforces is not enforced at all. The rule
+belongs in a migration.
+
+## Where things live
+
+```
+supabase/migrations/   every table and every rule, in order, one file per change
+supabase/functions/    the three edge functions (invite, notify, places)
+supabase/seed/         one-off scripts, such as making the first Director
+supabase/tests/        SQL checks run against a real database
+lib/live/data.ts       every query the app makes, one function per thing
+lib/live/session.tsx   who is signed in, and their profile
+lib/live/keep-up.ts    which tables each screen listens to for changes
+tests/                 one file per rule, each broken on purpose before it is trusted
+```
+
+## The four jobs you will actually do
+
+1. **Show something new.** Add a function to `lib/live/data.ts` that asks for
+   it, and call it from the screen. If the right people can already read those
+   rows, that is all.
+2. **Store something new.** Write a new migration in `supabase/migrations/`: the
+   table, `alter table ... enable row level security`, and a policy for each of
+   select, insert, update and delete that should exist. Then the function in
+   `lib/live/data.ts`, then a test in `tests/` that would fail without the rule.
+3. **Change who may see or do something.** Never edit an old migration. Write a
+   new one that drops the old policy and creates the new one. Old files have
+   already run on real churches' databases.
+4. **Check your work.** `npm run verify` runs the type checks, the build and
+   every rule test; it must pass. `npm run verify:all` adds the browser walks.
+
+That is enough to work on most features. When a policy will not do what you
+expect, or you need to know exactly who can read a table, read Part 2.
+
+---
+
+# Part 2. Advanced
+
+Everything in this part was read out of the **live database** on 9 September
+2026, not transcribed from the migrations. Where the two ever disagree, the
+database is the truth and the migration that drifted is the bug.
 
 ## The one idea
 

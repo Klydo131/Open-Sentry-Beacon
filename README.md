@@ -24,9 +24,9 @@ that never appeared together. Regenerate them any time with
 ### A Guide's desk
 
 Who you are walking with, what needs you today, and where each person is on the
-six-stage journey. On a computer your rooms are down the left side; on a phone
-and a tablet they are behind the bar along the bottom (Menu, People, My Files).
-Settings, Look switches a computer to **Classic**, with the bar, if you prefer it.
+six-stage journey. On a computer your rooms are down the left side, with a light
+bar across the top; on a phone and a tablet they are behind the bar along the
+bottom (Menu, People, My Files).
 
 ![A Guide's home on a computer, with the rooms down the left side: two Explorers, two follow-ups overdue and one message unread, how many are at each of the six stages from Beginner to Commission, and the desk on the right with today's date and what is waiting](docs/screenshots/guide-people.png)
 
@@ -126,6 +126,12 @@ Commission**, which ends by turning around: the last stage is the point where
 somebody being walked with starts walking with somebody else. (The first stage
 is still `create` in the database; the screens say Beginner, which is where the
 person is rather than what the church is doing.)
+
+**Writing lives in Home.** Home's **Blog** folder opens with the writing box
+ready: a title, the post, Publish, to the whole church with your name on it.
+Guides and Directors also have **Announcements**, to pin a notice for everybody.
+**Advanced settings** under each adds the rest: who sees a post, drafts, when an
+announcement happens.
 
 **An Explorer never sees their own stage.** A stage is a note the church keeps to
 organise its work, not a label to show a person about themselves. A test enforces

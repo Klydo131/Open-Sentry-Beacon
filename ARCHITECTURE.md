@@ -3,6 +3,14 @@
 Written for a developer who has just cloned this and wants to know where things
 are before changing anything. No prior knowledge of the project is assumed.
 
+**How to read it.** The sections up to *Roles, and the rule that matters* are
+the basics: what the app is, how to run it, where things are, and the two halves
+(the sample church in the browser, and the live app with a database). For the
+backend there is one more page, [docs/BACKEND-MAP.md](docs/BACKEND-MAP.md):
+its **Part 1** is the backend in plain terms (what it is, how a request travels,
+the four jobs you will do), and its **Part 2, advanced,** is every table, every
+rule and the mistakes that taught them.
+
 ---
 
 ## The one-sentence version

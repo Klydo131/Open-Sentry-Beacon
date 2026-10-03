@@ -252,6 +252,8 @@ Three things about it are worth knowing before you use it on twenty people.
 
 ![The same conversation with Text size at its largest. The words grow and still wrap; nothing runs off the side.](screenshots/walkthrough/22-text-size-large.png)
 
+![Text size in Settings. Large is being tried in the preview; nothing else has changed until Apply.](screenshots/walkthrough/35-text-size-apply.png)
+
 **The tutorial teaches it.** Both the Guide's walk and the Explorer's have a step that points at a message and asks for a reaction or a reply.
 
 > **NOTE** · If Reply, reactions and the microphone are not there
@@ -360,6 +362,8 @@ Directors keep the same control over everything, which is what running the churc
 **Announcements.** A title, the words and **Pin it**, and the notice sits at the top of everybody's Home. Tick **Advanced settings** to add when it happens ("This Sabbath, 9:00 AM"). Below are the ones you have pinned already. An Explorer has no Announcements folder: notices are pinned by Guides and leadership, and what an Explorer wants to say goes in their blog, which everybody reads too.
 
 **Taking a notice down still happens in Notices**, beside the notice itself. Deleting is about the thing in front of you; writing is something you go and do.
+
+![Home, Blog, on a phone. The writing box is open as soon as you arrive, and what the church wrote is below it.](screenshots/walkthrough/34-home-blog.png)
 
 ### Announcements
 
@@ -1522,9 +1526,9 @@ Read this section before making a change. It states what is true, what must stay
 ### Prove it before you claim it
 
 ```
-npm run verify        # 170 checks: types, build, security, privacy, licences,
+npm run verify        # 173 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 68 browser walks: 238 in all
+npm run verify:all    # the same, plus 69 browser walks: 242 in all
 npm run build         # must pass before anything is pushed
 ```
 
