@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-03-desktop-default',
+    date: '2026-10-03',
+    title: 'Computers open in the Desktop look',
+    items: [
+      'On a computer, your rooms are now down the left side and the bar along the bottom is gone. Phones and tablets have not changed.',
+      'Prefer the look you had before? Settings, General, Look, then Classic. Your choice stays.',
+    ],
+  },
+  {
     id: '2026-10-03-classic-look',
     date: '2026-10-03',
     title: 'Classic, and a Desktop look for computers',

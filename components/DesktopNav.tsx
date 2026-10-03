@@ -5,8 +5,9 @@
 // Asked for on 3 October 2026, with a screenshot of a Guide's home on a wide
 // screen: "This UI is not desktop friendly, can we make the desktop have it's
 // own UI too", in the same breath as "make sure the classic UI remains the
-// same". So it is a look of its own (lib/ui-themes.ts), chosen in Settings:
-// Classic is untouched and stays the default.
+// same". So it is a look of its own (lib/ui-themes.ts), chosen in Settings,
+// and Classic is untouched. Since the owner's "make Desktop the default on
+// computers" it is what a computer shows until somebody chooses Classic.
 //
 // RENDERS NOTHING UNLESS THE DESKTOP LOOK IS CHOSEN. Not hidden: absent. For
 // everybody on Classic the page is the same element for element, which is the

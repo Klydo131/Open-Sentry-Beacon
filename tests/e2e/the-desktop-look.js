@@ -1,6 +1,6 @@
-// The Desktop look, in a browser: chosen in Settings, it puts every room down
-// the left side of a computer screen and puts the bottom bar away; on a phone
-// it is Classic; and choosing Classic again takes all of it away.
+// The Desktop look, in a browser: the default on a computer, it puts every
+// room down the left side and puts the bottom bar away; on a phone it is
+// Classic; and choosing Classic in Settings takes all of it away, for good.
 //
 // Asked for on 3 October 2026: "This UI is not desktop friendly, can we make
 // the desktop have it's own UI too", alongside "make sure the classic UI
@@ -60,13 +60,26 @@ async function choose(page, id) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
 
-  // 1. CLASSIC FIRST: no sidebar at all, the bar along the bottom.
+  // 1. BEFORE ANYBODY CHOOSES, A COMPUTER IS ON DESKTOP. The owner, 3 October
+  // 2026: "make Desktop the default on computers".
   await signInAs(page, 'Maria Santos');
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1300);
-  ok((await sidebar(page).count()) === 0 && (await barShown(page)), 'on Classic a computer has no sidebar, and the bar along the bottom');
+  ok((await sidebar(page).isVisible()) && !(await barShown(page)),
+     'with nothing chosen, a computer has the rooms down the left and no bar along the bottom');
 
-  // 2. CHOOSE DESKTOP
+  // 2. CLASSIC IS ONE CHOICE AWAY, AND STAYS CHOSEN
+  await choose(page, 'classic');
+  await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  ok((await sidebar(page).count()) === 0 && (await barShown(page))
+     && (await page.evaluate(() => getComputedStyle(document.body).paddingLeft)) === '0px',
+     'choosing Classic: no sidebar at all, the bar along the bottom, the page where it was');
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  ok((await sidebar(page).count()) === 0, 'and Classic stays after a reload: the default does not take it back');
+
+  // 3. CHOOSE DESKTOP AGAIN
   const option = await choose(page, 'desktop');
   ok((await option.getAttribute('aria-checked')) === 'true' && (await page.evaluate(() => document.documentElement.dataset.uiTheme)) === 'desktop',
      'Settings offers Desktop, and choosing it puts it on the page');
@@ -94,7 +107,7 @@ async function choose(page, id) {
     ok((await sideways(page)) <= 1, `nothing scrolls sideways at ${w} wide`);
   }
 
-  // 3. ON A PHONE, THE DESKTOP LOOK IS CLASSIC
+  // 4. ON A PHONE, THE DESKTOP LOOK IS CLASSIC
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
@@ -106,7 +119,7 @@ async function choose(page, id) {
   ok(phone.pad === '0px' && phone.ground === 'rgb(244, 246, 251)' && phone.header === 'rgb(30, 42, 74)',
      'and the page is Classic\'s: no space kept for a sidebar, the same ground and header');
 
-  // 4. CLASSIC AGAIN TAKES IT ALL AWAY
+  // 5. CLASSIC AGAIN TAKES IT ALL AWAY
   await page.setViewportSize({ width: 1440, height: 900 });
   await choose(page, 'classic');
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
@@ -115,7 +128,7 @@ async function choose(page, id) {
      && (await page.evaluate(() => getComputedStyle(document.body).paddingLeft)) === '0px',
      'choosing Classic again: no sidebar, the bar is back, the page where it was');
 
-  // 5. THE FRONT DOOR IS NOT PUSHED SIDEWAYS FOR A SIDEBAR THAT IS NOT THERE
+  // 6. THE FRONT DOOR IS NOT PUSHED SIDEWAYS FOR A SIDEBAR THAT IS NOT THERE
   await choose(page, 'desktop');
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);

@@ -83,11 +83,13 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
 
-  // 1. CLASSIC, AS IT IS
+  // 1. CLASSIC, AS IT IS. On a phone nothing chosen means Desktop, the default
+  // on computers since the owner asked for it, and on a phone Desktop IS
+  // Classic: the fingerprint below is taken before anybody chooses anything.
   await signInAs(page, 'Maria Santos');
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);
-  ok((await lookOf(page)) === 'classic', 'the page says it is Classic before anybody has chosen');
+  ok((await lookOf(page)) === 'desktop', 'before anybody chooses, the page is on the default look, Desktop');
   const before = await fingerprint(page);
   ok(before.ground === CLASSIC.ground && before.ink === CLASSIC.ink,
      `Classic's ground and ink are the same pale blue-grey and dark ink (${before.ground}, ${before.ink})`);
@@ -107,27 +109,36 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   ok((await radios.count()) >= 1 && /^Classic/.test((await radios.first().innerText()).trim()),
      'its first look is Classic');
   const classic = card.locator('[data-ui-theme-choice="classic"]');
-  ok((await classic.getAttribute('aria-checked')) === 'true' && /Chosen/.test(await classic.innerText()),
-     'and Classic is chosen, said in words as well as colour');
+  const desktop = card.locator('[data-ui-theme-choice="desktop"]');
+  ok((await desktop.getAttribute('aria-checked')) === 'true' && /Chosen/.test(await desktop.innerText())
+     && (await classic.getAttribute('aria-checked')) === 'false',
+     'and Desktop, the default, is the one chosen, said in words as well as colour');
   await classic.scrollIntoViewIfNeeded();
   ok((await sideways(page)) <= 1, 'the card does not push a phone sideways');
   await classic.click();
   await page.waitForTimeout(400);
-  ok((await page.evaluate(() => localStorage.getItem('beacon-ui-theme'))) === 'classic' && (await lookOf(page)) === 'classic',
-     'choosing Classic keeps Classic, and this device remembers it');
+  ok((await page.evaluate(() => localStorage.getItem('beacon-ui-theme'))) === 'classic' && (await lookOf(page)) === 'classic'
+     && (await classic.getAttribute('aria-checked')) === 'true' && /Chosen/.test(await classic.innerText()),
+     'choosing Classic chooses it, says so, and this device remembers it');
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  ok((await lookOf(page)) === 'classic', 'and keeps it after a reload: a person who chose Classic is not moved by the default');
 
   // 3. NOTHING ELSE CAN BE SMUGGLED IN
   await page.evaluate(() => localStorage.setItem('beacon-ui-theme', 'nonsense"><b'));
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
-  ok((await lookOf(page)) === 'classic' && (await page.locator('[data-ui-theme-choice="classic"]').getAttribute('aria-checked')) === 'true',
-     'a stored value the app does not know is Classic');
+  ok((await lookOf(page)) === 'desktop' && (await page.locator('[data-ui-theme-choice="desktop"]').getAttribute('aria-checked')) === 'true',
+     'a stored value the app does not know is the default, and nothing else');
+  await page.locator('[data-ui-theme-choice="classic"]').click();
+  await page.waitForTimeout(400);
 
   // 4. AND CLASSIC IS STILL CLASSIC
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);
   const after = await fingerprint(page);
-  ok(JSON.stringify(after) === JSON.stringify(before), 'after all of that, nothing on the page has changed colour or size');
+  ok((await lookOf(page)) === 'classic' && JSON.stringify(after) === JSON.stringify(before),
+     'Classic, chosen, draws exactly what the phone drew before anybody chose: nothing has changed colour or size');
 
   ok(errors.length === 0, `no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
   await browser.close();

@@ -8,8 +8,9 @@
 // What keeps Classic the same is a rule about where a look's styles may live,
 // so that is what this checks (lib/ui-themes.ts says the rule in full):
 //
-//   1. Classic is the first look and the default, and anything unknown in
-//      storage is Classic.
+//   1. Classic is the first look. The default, until somebody chooses, is
+//      Desktop (the owner, 3 October 2026: "make Desktop the default on
+//      computers"), and anything unknown in storage is the default.
 //   2. The page says which look it is from the first paint, Classic unless
 //      chosen otherwise, and Settings offers the choice in both halves.
 //   3. Classic has no stylesheet, and no rule anywhere targets it.
@@ -56,8 +57,10 @@ const L = await import(pathToFileURL(bundle).href);
      'the first look is Classic, called Classic');
   ok(L.UI_THEMES.every((t) => /^[a-z][a-z-]{0,30}$/.test(t.id)) && new Set(L.UI_THEMES.map((t) => t.id)).size === L.UI_THEMES.length,
      'every look has its own id of lowercase letters and hyphens');
-  ok([null, undefined, '', 'nonsense', 'CLASSIC', '"><script>', 42, {}].every((v) => L.knownTheme(v) === 'classic'),
-     'nothing unknown, empty or malformed can choose a look: it is Classic');
+  ok(L.DEFAULT_LOOK === 'desktop' && L.UI_THEMES.some((t) => t.id === L.DEFAULT_LOOK),
+     'until somebody chooses, a device shows Desktop: the owner\'s default on computers, and Classic on a phone');
+  ok([null, undefined, '', 'nonsense', 'CLASSIC', '"><script>', 42, {}].every((v) => L.knownTheme(v) === L.DEFAULT_LOOK),
+     'nothing unknown, empty or malformed can choose a look: it is the default');
   ok(L.UI_THEMES.every((t) => L.knownTheme(t.id) === t.id), 'and every look the app has can be chosen');
   // The page attribute is only ever written through knownTheme, and only here.
   const lib = code('lib/ui-themes.ts');

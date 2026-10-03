@@ -121,8 +121,9 @@ return <AppShell allow={...}>…</AppShell>;
 on the sample side and then signs in; if a room is in one header and not the
 other, they were taught a layout that does not exist. When you add a room, add
 it to `railGroupsFor` in `RoomRails`: that one list is what the Menu tab draws
-(`app/menu/page.tsx`) on both sides and at every width, so there is no second
-list to forget. There is no row of room icons in either header any more.
+(`app/menu/page.tsx`) on both sides and at every width, and what the Desktop
+look's sidebar draws on a computer (`components/DesktopNav.tsx`), so there is
+no second list to forget. There is no row of room icons in either header any more.
 `tests/live-header-fits.mjs` fails if the Menu stops drawing that list, and it
 exists because, for several weeks, three rooms were reachable only on a screen
 wider than 1280px.
@@ -203,9 +204,12 @@ both were asked for in those terms and both are checked.
 October 2026: "I want the current UI to be called "classic" in the settings
 right now, ChatGPT or Codex will introduce new theme UI that users can pick, but
 make sure the classic UI remains the same please." Settings, General, **Look**
-lists the looks. Classic is first, is the default, and is the app exactly as it
-is, with no stylesheet of its own; the page says which look it is as
-`data-ui-theme` on `<html>`. To add a look:
+lists the looks. Classic is first and is the app exactly as it is, with no
+stylesheet of its own; the page says which look it is as `data-ui-theme` on
+`<html>`. What a device shows until somebody chooses is `DEFAULT_LOOK`: Desktop
+since 3 October 2026 ("make Desktop the default on computers"), which on a
+phone or a pad is Classic, and a person who chooses Classic keeps it. To add a
+look:
 
 1. register it in `lib/ui-themes.ts`, after Classic;
 2. put every style it changes in `app/themes/<id>.css`, every rule starting
@@ -347,9 +351,11 @@ shipped:
   render as a blank box on Android while looking perfect on a Mac. Controls are
   drawn in `components/Glyph.tsx` as inline SVG. `tests/glyphs-render-everywhere.mjs`
   refuses the rest.
-- **The bottom bar is the navigation, at every width.** **Menu | People | My
-  Files** (`components/TabBar.tsx`, `lib/tab-bar.ts`), on a phone, a pad and a
-  desktop alike, and Menu lists every room. There is no left rail; the right
+- **The bottom bar is the navigation on a phone and a pad.** **Menu | People |
+  My Files** (`components/TabBar.tsx`, `lib/tab-bar.ts`), and Menu lists every
+  room. On a computer the Desktop look, the default there since 3 October 2026,
+  lists the same rooms down the left and puts the bar away; under Classic the
+  bar is the navigation on a computer too (section 2, "Classic is the app's look"). The right
   rail (the person's own desk) sits beside the page from `xl`, and below `xl`
   it is a drawer behind a small tab on the right edge
   (`components/DeskDrawer.tsx`, `tests/the-desk-is-a-drawer.mjs`). The bar is

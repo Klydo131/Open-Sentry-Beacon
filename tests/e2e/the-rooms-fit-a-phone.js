@@ -22,6 +22,13 @@
 //
 // The source half is tests/the-bottom-bar.mjs.
 //
+// THE BAR ON A COMPUTER IS CLASSIC'S. Since 3 October 2026 ("make Desktop the
+// default on computers") a computer opens in the Desktop look, with the rooms
+// down the left side and no bar. So the computer sizes here choose Classic
+// first, the way a person does in Settings, and walk its bar; the Desktop
+// look's own walk is tests/e2e/the-desktop-look.js. The conversation below is
+// walked in both, because it is what every computer now opens it in.
+//
 //   npm run build && node scripts/run-next.mjs start -p 4382
 //   node tests/e2e/the-rooms-fit-a-phone.js 4382
 // ---------------------------------------------------------------------------
@@ -41,8 +48,17 @@ const SIZES = [
   { name: 'pad on its side', width: 1194, height: 834, mobile: true },
   // AND A DESKTOP, since "Can we have the same dropdown and UI with Desktops
   // please?" (30 September 2026). The same checks, with a mouse.
-  { name: 'desktop', width: 1440, height: 900, mobile: false },
+  { name: 'desktop', width: 1440, height: 900, mobile: false, look: 'classic' },
 ];
+
+// Chooses a look on this browser before any page loads, as Settings would.
+async function chooseLook(ctx, look) {
+  if (!look) return;
+  await ctx.addInitScript((id) => {
+    try { localStorage.setItem('beacon-ui-theme', id); } catch { /* the walk then sees the default */ }
+  }, look);
+}
+const sidebar = (page) => page.locator('[data-desktop-nav]');
 
 async function signIn(page, who) {
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
@@ -81,6 +97,7 @@ async function go(page, locator, url) {
       viewport: { width: size.width, height: size.height },
       isMobile: size.mobile, hasTouch: size.mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
     });
+    await chooseLook(ctx, size.look);
     const page = await ctx.newPage();
     await signIn(page, /Maria Santos/i);
 
@@ -277,17 +294,30 @@ async function go(page, locator, url) {
   // THE CONVERSATION IS IN THE TALK BUBBLE (30 September 2026). A Guide
   // opening one Explorer lands on Appointments, which is not a conversation and
   // keeps the bar. Message opens the bubble: on a phone it covers the whole
-  // screen, bar and all; on a desktop it is a panel standing on the bar.
-  for (const [label, w, h, mobile] of [['phone', 390, 844, true], ['desktop', 1440, 900, false]]) {
+  // screen, bar and all; on a desktop it is a panel standing on the bar. In
+  // the Desktop look, which a computer opens in, there is no bar: the rooms
+  // are down the left, and the panel stands on the bottom edge, clear of them.
+  for (const [label, w, h, mobile, look] of [
+    ['phone', 390, 844, true, null],
+    ['desktop', 1440, 900, false, 'classic'],
+    ['desktop look', 1440, 900, false, null],
+  ]) {
+    const ownLook = !mobile && !look;
     const ctx = await browser.newContext({
       viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 2, serviceWorkers: 'block',
     });
+    await chooseLook(ctx, look);
     const page = await ctx.newPage();
     await signIn(page, /Maria Santos/i);
     await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(600);
     ok(!(await page.locator('[data-conversation-screen]').count()), `Appointments (${label}): is not marked as a conversation`);
-    ok(await bar(page).isVisible(), `Appointments (${label}): and keeps the bar`);
+    if (ownLook) {
+      ok(!(await bar(page).isVisible()) && (await sidebar(page).isVisible()),
+         `Appointments (${label}): the rooms are down the left, and there is no bar`);
+    } else {
+      ok(await bar(page).isVisible(), `Appointments (${label}): and keeps the bar`);
+    }
     ok(/Appointments/.test((await page.locator('[data-subroom-toggle]').first().getAttribute('aria-label')) || ''),
        `Appointments (${label}): it is the section the page opens on`);
 
@@ -297,15 +327,22 @@ async function go(page, locator, url) {
       const nav = document.querySelector('nav[aria-label="Main"]')?.getBoundingClientRect();
       const box = document.querySelector('[data-quest="chat-send"]')?.getBoundingClientRect();
       const report = document.querySelector('[data-talk-report]')?.getBoundingClientRect();
+      const side = document.querySelector('[data-desktop-nav]')?.getBoundingClientRect();
       return {
         vh: innerHeight, vw: innerWidth,
         sheet: sheet && { top: Math.round(sheet.top), bottom: Math.round(sheet.bottom), left: Math.round(sheet.left), right: Math.round(sheet.right) },
         barTop: nav ? Math.round(nav.top) : null,
         composerBottom: box ? Math.round(box.bottom) : null,
         reportTop: report ? Math.round(report.top) : null,
+        sideRight: side && side.width ? Math.round(side.right) : null,
       };
     });
-    if (mobile) {
+    if (ownLook) {
+      ok(!!geo.sheet && geo.sheet.bottom <= geo.vh && geo.sheet.bottom >= geo.vh - 40,
+         `bubble (${label}): the panel stands on the bottom edge (${geo.sheet?.bottom} of ${geo.vh})`);
+      ok(!!geo.sheet && geo.sideRight !== null && geo.sheet.left >= geo.sideRight,
+         `bubble (${label}): and covers none of the rooms (${geo.sheet?.left} >= ${geo.sideRight})`);
+    } else if (mobile) {
       ok(!!geo.sheet && geo.sheet.left <= 0 && geo.sheet.right >= geo.vw && geo.sheet.bottom >= geo.vh - 1,
          `bubble (${label}): it covers the screen, bar and all (${JSON.stringify(geo.sheet)})`);
     } else {
@@ -313,12 +350,17 @@ async function go(page, locator, url) {
          `bubble (${label}): the panel stands on the bar (${geo.sheet?.bottom} <= ${geo.barTop})`);
     }
     ok(geo.composerBottom !== null && geo.composerBottom <= geo.vh, `bubble (${label}): the box to type in is on the screen (${geo.composerBottom} <= ${geo.vh})`);
-    ok(geo.reportTop !== null && geo.reportTop >= 0 && geo.reportTop < geo.vh / 3,
-       `bubble (${label}): Report is at the top of it (${geo.reportTop}px)`);
+    // At the top of the panel. On a phone or above Classic's bar the panel is
+    // tall, so that is the top third of the screen; the Desktop look's panel
+    // stands lower, with nothing under it, so it is measured from the panel.
+    ok(geo.reportTop !== null && geo.reportTop >= 0
+       && (ownLook ? !!geo.sheet && geo.reportTop - geo.sheet.top < 48 : geo.reportTop < geo.vh / 3),
+       `bubble (${label}): Report is at the top of it (${geo.reportTop}px${ownLook ? `, the panel at ${geo.sheet?.top}px` : ''})`);
     await page.getByRole('button', { name: 'Close the chat' }).first().click();
     await page.waitForTimeout(500);
-    ok(!(await page.locator('[data-talk-sheet]').count()) && await bar(page).isVisible(),
-       `bubble (${label}): closing it puts the page and the bar back`);
+    ok(!(await page.locator('[data-talk-sheet]').count())
+       && (ownLook ? (await sidebar(page).isVisible()) && !(await bar(page).isVisible()) : await bar(page).isVisible()),
+       `bubble (${label}): closing it puts the page${ownLook ? ' and the rooms' : ' and the bar'} back`);
     await ctx.close();
   }
   {

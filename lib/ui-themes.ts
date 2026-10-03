@@ -26,7 +26,7 @@
 //      components' own classes) to make a look work. That is changing Classic.
 //
 // tests/the-classic-look-stays.mjs fails the build if Classic stops being the
-// first look or the default, gains a stylesheet, or if any look's rules are not
+// first look, Classic gains a stylesheet, or any look's rules are not
 // scoped to that look; tests/e2e/the-classic-look-stays.js checks in a browser
 // that Classic still draws the colours it draws today.
 //
@@ -45,7 +45,7 @@ export interface UiTheme {
 export const CLASSIC = 'classic';
 export const DESKTOP = 'desktop';
 
-/** Every look, Classic first. Classic is the default and stays first. */
+/** Every look, Classic first. What a device shows before anybody chooses is DEFAULT_LOOK, below. */
 export const UI_THEMES: readonly UiTheme[] = [
   {
     id: CLASSIC,
@@ -63,6 +63,12 @@ export const UI_THEMES: readonly UiTheme[] = [
   },
 ];
 
+// WHAT A DEVICE SHOWS UNTIL SOMEBODY CHOOSES: Desktop. The owner, 3 October
+// 2026: "make Desktop the default on computers". Desktop on a phone or a pad is
+// Classic, so this changes computers only; Classic itself is unchanged and one
+// tap away in Settings, and a person who chooses it keeps it.
+export const DEFAULT_LOOK = DESKTOP;
+
 export const UI_THEME_KEY = 'beacon-ui-theme';
 
 /** Said on window when this tab changes its look, so what draws a look can follow. */
@@ -70,19 +76,19 @@ export const UI_THEME_EVENT = 'beacon-ui-theme';
 
 /**
  * A stored or given value, as a look this app actually has: anything unknown,
- * empty or malformed is Classic. It is what reaches the page's attribute, so a
- * hand-edited value in storage can only ever choose one of the looks above.
+ * empty or malformed is the default. It is what reaches the page's attribute,
+ * so a hand-edited value in storage can only ever choose one of the looks above.
  */
 export function knownTheme(id: unknown): string {
-  return typeof id === 'string' && UI_THEMES.some((t) => t.id === id) ? id : CLASSIC;
+  return typeof id === 'string' && UI_THEMES.some((t) => t.id === id) ? id : DEFAULT_LOOK;
 }
 
-/** The look chosen on this device, or Classic. */
+/** The look chosen on this device, or the default when nothing has been chosen. */
 export function readUiTheme(): string {
   try {
     return knownTheme(localStorage.getItem(UI_THEME_KEY));
   } catch {
-    return CLASSIC;
+    return DEFAULT_LOOK;
   }
 }
 

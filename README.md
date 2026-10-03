@@ -24,10 +24,11 @@ that never appeared together. Regenerate them any time with
 ### A Guide's desk
 
 Who you are walking with, what needs you today, and where each person is on the
-six-stage journey. The bar along the bottom (Menu, People, My Files) is the same
-on a phone, a tablet and a computer.
+six-stage journey. On a computer your rooms are down the left side; on a phone
+and a tablet they are behind the bar along the bottom (Menu, People, My Files).
+Settings, Look switches a computer to **Classic**, with the bar, if you prefer it.
 
-![A Guide's home on a computer: two Explorers, two follow-ups overdue and one message unread, how many are at each of the six stages from Beginner to Commission, and the desk on the right with today's date and what is waiting](docs/screenshots/guide-people.png)
+![A Guide's home on a computer, with the rooms down the left side: two Explorers, two follow-ups overdue and one message unread, how many are at each of the six stages from Beginner to Commission, and the desk on the right with today's date and what is waiting](docs/screenshots/guide-people.png)
 
 ### One person, one conversation
 
@@ -37,14 +38,14 @@ its own bubble and goes with you to every other screen. Reply to one message,
 react to it, or record a voice message. Only the two people walking together
 can read it; the church's leaders cannot.
 
-![John Reyes's page, as his Guide Maria sees it on a computer: Connect stage, Digital track, Message John, and Appointments. The conversation is open beside it, where Maria has reacted to John's message with praying hands and replied to it with a quote](docs/screenshots/conversation.png)
+![John Reyes's page, as his Guide Maria sees it on a computer, with the rooms down the left side: Connect stage, Digital track, Message John, and Appointments. The conversation is open beside it, where Maria has reacted to John's message with praying hands and replied to it with a quote](docs/screenshots/conversation.png)
 
 ### The church, without anybody's private journey
 
 Leaders see counts and what needs a decision. They do not see conversations, and
 the screen says so in as many words.
 
-![The church home for a Director: the church's counts, a sign-up awaiting a decision, and announcements below](docs/screenshots/church-overview.png)
+![The church home for a Director on a computer, with the rooms down the left side: the church's counts, a sign-up awaiting a decision, and announcements below](docs/screenshots/church-overview.png)
 
 ### The Office, where the week's work is done
 

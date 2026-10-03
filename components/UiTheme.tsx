@@ -9,7 +9,7 @@
 // the Content-Security-Policy in next.config.mjs has to allow it. See
 // lib/ui-themes.ts.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { applyUiTheme, CLASSIC, readUiTheme, UI_THEME_EVENT, UI_THEME_KEY } from '@/lib/ui-themes';
 
 export function UiTheme() {
@@ -25,25 +25,30 @@ export function UiTheme() {
   return null;
 }
 
+function follow(onChange: () => void) {
+  const fromStorage = (event: StorageEvent) => {
+    if (event.key === UI_THEME_KEY) onChange();
+  };
+  window.addEventListener(UI_THEME_EVENT, onChange);
+  window.addEventListener('storage', fromStorage);
+  return () => {
+    window.removeEventListener(UI_THEME_EVENT, onChange);
+    window.removeEventListener('storage', fromStorage);
+  };
+}
+
 /**
  * The look chosen on this device, kept up to date as it changes here or in
- * another tab. Classic until it has been read, which is what the server sent.
- * What a look draws of its own renders only when this says that look.
+ * another tab. What a look draws of its own renders only when this says so.
+ *
+ * READ AT ONCE, NOT A MOMENT LATER. Desktop is the default on computers, so
+ * its rooms are on most computer screens, and they are drawn from the bottom
+ * bar, which every page mounts afresh. Read in an effect, they appeared a
+ * frame after the page on every navigation. useSyncExternalStore reads this
+ * device's choice on the first render of anything mounted after the page has
+ * loaded (every shell waits for its person first), and uses Classic, what the
+ * server sent, only while the server's HTML is being taken over.
  */
 export function useChosenLook(): string {
-  const [look, setLook] = useState(CLASSIC);
-  useEffect(() => {
-    const read = () => setLook(readUiTheme());
-    read();
-    const fromStorage = (event: StorageEvent) => {
-      if (event.key === UI_THEME_KEY) read();
-    };
-    window.addEventListener(UI_THEME_EVENT, read);
-    window.addEventListener('storage', fromStorage);
-    return () => {
-      window.removeEventListener(UI_THEME_EVENT, read);
-      window.removeEventListener('storage', fromStorage);
-    };
-  }, []);
-  return look;
+  return useSyncExternalStore(follow, readUiTheme, () => CLASSIC);
 }

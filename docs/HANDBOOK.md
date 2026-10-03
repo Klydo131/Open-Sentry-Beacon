@@ -138,7 +138,7 @@ A sixth idea sits behind these: **Commission**. An Explorer who has been walked 
 
 **Step 5.** They appear under **Awaiting approval**. Approve them, and they can enter.
 
-![A Director's Approvals, on a computer. A name a Guide put forward waits at the top with Invite; somebody who has signed up waits below with Approve and Disapprove. The desk on the right counts what is waiting.](screenshots/walkthrough/14-approvals.png)
+![A Director's Approvals, on a computer, with the rooms down the left side. A name a Guide put forward waits at the top with Invite; somebody who has signed up waits below with Approve and Disapprove. The desk on the right counts what is waiting.](screenshots/walkthrough/14-approvals.png)
 
 > **CAUTION** · One live invitation per person
 >
@@ -864,19 +864,21 @@ What somebody listens to while they read is nobody else's business, which is why
 
 ### How you get around: Menu, People, My Files
 
-On a phone, an iPad and a computer alike, a bar along the bottom of the screen has three words on it, and it **is** the navigation:
+On a phone and an iPad, a bar along the bottom of the screen has three words on it, and it **is** the navigation. On a computer the same rooms are listed down the left side instead (the **Desktop** look, the default there; see *The look* below), and anybody who chooses **Classic** has the bar on a computer too:
 
 - **Menu** lists every room you have, written out: Home, your own screen, **This Sabbath**, My Files, **Publish**; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
 - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
 - **My Files** opens your own files.
 
-![The Menu, for a Guide in the sample church. Every room is written out; the bar along the bottom is the same on a phone, an iPad and a computer.](screenshots/walkthrough/19-menu.png)
+![The Menu, for a Guide in the sample church. Every room is written out, with the bar along the bottom that a phone and an iPad use.](screenshots/walkthrough/19-menu.png)
 
 Six of those rooms have **subrooms** inside them, offered as **one drop-down** at the top when you open one. Closed, it names the subroom you are in, says how many there are (*2 of 4*), and shows a count when something is waiting in another one; tap it and every subroom is listed. It is a drop-down on every screen size, because people did not know to swipe the row it replaced. The sections of one person's page (Appointments, Journey, Care and the rest) open the same way. See *Rooms and subrooms* in Part 4.
 
 > **IMPORTANT** · There is no left column any more
 >
 > Until 30 September 2026 a laptop had a column of rooms down the left side, and a phone had a row of small icons under the header instead. Two lists of the same rooms drifted apart: Office, Publish and Cases were added to the column and never to the row, so for several weeks they could not be reached on a phone. Now there is one list, and the Menu draws it at every size. There is a check that fails the build if the Menu stops drawing it.
+>
+> The Desktop look's sidebar (3 October 2026) brings a column back on a computer, from that same one list: a room added for the Menu appears in the sidebar without anybody remembering to add it.
 >
 > **The conversation is a bubble**, the round **Talk** button in the corner of every screen, with a number on it when somebody has written. On a phone or an iPad it opens to the whole screen; on a computer it opens beside the page. **Report** is at the top of it.
 >
@@ -942,7 +944,7 @@ Classic is the app exactly as it is: choosing it changes nothing, and it has no 
 
 New features still arrive in Classic, drawn the way it already draws things. What does not change, unless the owner decides it should, is how Classic looks.
 
-**Desktop is the second look.** Asked for the same day, with a screenshot of a Guide's home on a wide screen: "This UI is not desktop friendly, can we make the desktop have it's own UI too". On a computer (1280 pixels wide and up) it puts every room down the left side, the same rooms the Menu lists, with the one you are in lit, and puts away the bar along the bottom; the page starts after the sidebar. On a phone or a tablet it is Classic, bar and all. It is chosen in Settings → General → **Look**, on each computer, and Classic is the default: nobody's screen changed until they chose it. For anybody on Classic the sidebar is not hidden but absent, so Classic is the same page it was.
+**Desktop is the second look.** Asked for the same day, with a screenshot of a Guide's home on a wide screen: "This UI is not desktop friendly, can we make the desktop have it's own UI too". On a computer (1280 pixels wide and up) it puts every room down the left side, the same rooms the Menu lists, with the one you are in lit, and puts away the bar along the bottom; the page starts after the sidebar. On a phone or a tablet it is Classic, bar and all. **It is the default on computers**, by the owner's word the same day: "make Desktop the default on computers". A computer shows Desktop until somebody chooses otherwise in Settings → General → **Look**; choosing **Classic** there keeps Classic on that computer, exactly as it was, after every reload. Phones and tablets look the same either way. For anybody on Classic the sidebar is not hidden but absent, so Classic is the same page it was.
 
 ### Notifications
 
@@ -1509,7 +1511,7 @@ Read this section before making a change. It states what is true, what must stay
 21. The progress report asks only for what the reader's rules already return: leadership's report never asks for meetings, lessons or follow-ups. Steps forward are net, from the stage at the period's start to the stage at its end. `tests/a-progress-report-counts-what-happened.mjs` holds both.
 22. `office_plans` is owner-only on every operation, keyed by owner and item together, refuses an older update, and grants nothing to a signed-out visitor. Program screens keep working without the table. The newer copy of each item wins, and a deletion is kept as a mark. `tests/the-office-follows-you.mjs` holds the rules and every merge case.
 23. A calendar file or Google Calendar link carries only what is shared: never a **Team only** block or a platform note. The same test holds it, and holds the file to RFC 5545 (line breaks, folding, escaping).
-24. Classic is the first look and the default, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look, and anything a look draws of its own renders nothing unless it is chosen. `tests/the-classic-look-stays.mjs` holds the rule, `tests/e2e/the-classic-look-stays.js` holds Classic's colours, and `tests/e2e/the-desktop-look.js` walks Desktop at three widths. Never edit the shared styles to make a look work.
+24. Classic is the first look, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look, and anything a look draws of its own renders nothing unless it is chosen. `tests/the-classic-look-stays.mjs` holds the rule, `tests/e2e/the-classic-look-stays.js` holds Classic's colours, and `tests/e2e/the-desktop-look.js` walks Desktop at three widths. The default, until somebody chooses, is `DEFAULT_LOOK` (Desktop), and anything unknown in storage is the default. Never edit the shared styles to make a look work.
 
 ### Prove it before you claim it
 
@@ -1564,7 +1566,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
 | The progress report | **Built** for both halves and walked in the sample church as a Guide and as a Director. Not yet seen from a church's own app with a real sign-in, and its Word file has not been opened in Word. |
 | Calendar files | **Built** and held to the standard by a check, and the walk downloads one. Nobody has yet opened one on a real iPhone, Android phone or in Outlook. |
-| The Desktop look | **Built** and walked in the sample church at 1280, 1440 and 1920 pixels and on a phone. Not yet seen in a church's own app with a real sign-in, and not in Safari. Classic stays the default; making Desktop the default on computers is a one-line change if the owner wants it. |
+| The Desktop look | **Built** and walked in the sample church at 1280, 1440 and 1920 pixels and on a phone. Not yet seen in a church's own app with a real sign-in, and not in Safari. It is the default on computers since 3 October 2026; Classic is one choice away in Settings. |
 | Programs on every device | **Built**: the merge rules are tested case by case and the table's rules are written. Two real devices signed in to the same account have not been tried from here, because this sandbox cannot sign in to a church's site. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |
