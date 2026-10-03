@@ -688,6 +688,35 @@ body:has([data-live-conversation]) [data-install-prompt='bar'] {
   display: none;
 }
 
+/* ON A COMPUTER, THE INSTALL CARD AND TALK SHARED ONE CORNER, AND TALK LOST.
+
+   Found on 4 October 2026 by the WebKit job, as three walks that timed out on
+   a 1280px screen (safeguarding, media-and-realtime, chat-order): Playwright
+   named the install card as what received the click on Send, and on the
+   Report dialog's reasons. Measured as Mac Safari in Chromium: the card is
+   535px tall at `fixed bottom-4 right-4`, the closed Talk button is
+   `fixed bottom-4 right-4` underneath it, and from 1280px the open chat is a
+   22rem panel at `bottom-4 right-4` too. One layer up, the same width, the
+   same corner: a Mac user could not open their conversations, send in one,
+   or report one, until they had found the card's close button. Chrome on a
+   computer draws the same card when it offers to install.
+
+   So the card stands above the Talk button (1rem from the bottom, 3.5rem
+   tall, then a gap), and while a conversation is open it is not there at all,
+   at any width. Below 1280px the rule above already did that; this adds the
+   computer. The card's height is capped so a short window still shows its
+   header and close button. Walked in tests/e2e/the-install-prompt-covers-nothing.js. */
+body:has([data-talk-bubble]) [data-install-prompt='card'] {
+  bottom: 5.25rem;
+}
+body:has([data-talk-sheet]) [data-install-prompt='card'] {
+  display: none !important;
+}
+[data-install-prompt='card'] {
+  max-height: calc(100dvh - 7rem);
+  overflow-y: auto;
+}
+
 /* A strip that scrolls sideways with no visible scrollbar.
    Used by the header's feature icons. A scrollbar under a 44px row of icons
    eats a third of the row's height on desktop and looks like a defect on a

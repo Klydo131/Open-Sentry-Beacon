@@ -124,6 +124,13 @@ async function savedDrawing(page) {
 (async () => {
   const browser = await chromium.launch(launchOptions);
   const ctx = await browser.newContext({ viewport: { width: 1180, height: 820 }, serviceWorkers: 'block' });
+  // The install invitation is not what this walk is about. On WebKit it is
+  // drawn (Safari never offers its own install), and at 1180 wide its card
+  // sat on "+ New series" and took the click (the Safari job, 3 October 2026).
+  // Where the card may sit is walked in the-install-prompt-covers-nothing.js.
+  await ctx.addInitScript(() => {
+    try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 864e5)); } catch { /* fine */ }
+  });
   const page = await ctx.newPage();
 
   // Everything the page asks for while drawing, and anything refused.

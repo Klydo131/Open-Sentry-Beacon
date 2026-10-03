@@ -77,15 +77,23 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok(forced === 'ready', 'the page can be put into the "update available" state');
 
   const originBefore = await page.evaluate(() => performance.timeOrigin);
+  // Every load of the page itself while the message is half-written, with its
+  // address. The time-origin comparison alone could not say what happened: on
+  // WebKit (3 October 2026) it read as a reload while the draft was still in
+  // the box, and a read that throws mid-check counted as a reload too.
+  const loads = [];
+  const onNav = (frame) => { if (frame === page.mainFrame()) loads.push(frame.url().replace(BASE, '')); };
+  page.on('framenavigated', onNav);
 
   // Longer than the component's quiet window, so "it simply had not got round to
   // it yet" is not an available explanation for a pass.
   await sleep(26_000);
 
-  const originAfter = await page.evaluate(() => performance.timeOrigin).catch(() => null);
+  page.off('framenavigated', onNav);
+  const originAfter = await page.evaluate(() => performance.timeOrigin).catch(() => 'unreadable');
   ok(
-    originAfter === originBefore,
-    'the app does NOT reload while a message is half-written',
+    loads.length === 0 && originAfter === originBefore,
+    `the app does NOT reload while a message is half-written (${loads.length ? `loaded ${loads.join(', ')}` : 'no page load'}${originAfter === originBefore ? '' : `; time origin ${originAfter === 'unreadable' ? 'could not be read' : 'changed'}`})`,
   );
 
   const stillThere = await box.inputValue().catch(() => '');

@@ -110,6 +110,62 @@ async function signIn(page) {
     await context.close();
   }
 
+  // 2. A MAC, WHERE THE CARD AND TALK SHARED ONE CORNER (4 October 2026).
+  //
+  // The WebKit job timed out clicking Send, and the Report dialog's reasons,
+  // with the install card named as what received the click. On a computer the
+  // card, the closed Talk button and the open chat panel were all at
+  // bottom-right; the card is the layer on top. Mac Safari's user agent with a
+  // mouse puts any engine on the card's path, as the iPad does above.
+  const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15';
+  const reachable = (page, selector) => page.evaluate((sel) => {
+    const el = [...document.querySelectorAll(sel)].find((n) => n.getBoundingClientRect().width > 0);
+    if (!el) return 'absent';
+    const r = el.getBoundingClientRect();
+    const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    if (top && (top === el || el.contains(top))) return 'reachable';
+    return top && top.closest('[data-install-prompt]') ? 'under the install card' : `under ${top ? top.tagName : 'nothing'}`;
+  }, selector);
+  const cardShown = (page) => page.evaluate(() => {
+    const el = document.querySelector('[data-install-prompt="card"]');
+    return el ? getComputedStyle(el).display !== 'none' : false;
+  });
+  for (const [label, width, height] of [['a Mac, 1280 wide', 1280, 1000], ['a Mac, 1440 wide', 1440, 900], ['a Mac, 1180 wide', 1180, 820]]) {
+    const context = await browser.newContext({ viewport: { width, height }, userAgent: MAC });
+    const page = await context.newPage();
+    await signIn(page);
+    await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1800);
+
+    ok(await cardShown(page), `${label}: the install card is on screen, so this measures something`);
+    ok(await reachable(page, '[data-talk-bubble]') === 'reachable',
+       `${label}: the Talk button can be pressed with the card showing (${await reachable(page, '[data-talk-bubble]')})`);
+
+    await page.locator('[data-talk-bubble]').first().click({ timeout: 6000 }).catch(() => {});
+    await page.waitForTimeout(900);
+    const thread = page.locator('[data-talk-thread]').first();
+    if (await thread.count()) { await thread.click({ timeout: 6000 }).catch(() => {}); await page.waitForTimeout(1200); }
+    ok(!(await cardShown(page)), `${label}: with a conversation open the card is not there`);
+    // Send appears once there is something to send; until then it is the
+    // microphone.
+    await page.locator('[data-quest="chat-send"] textarea').first().fill('Hello').catch(() => {});
+    await page.waitForTimeout(300);
+    ok(await reachable(page, '[data-composer-action="send"]') === 'reachable',
+       `${label}: Send can be pressed (${await reachable(page, '[data-composer-action="send"]')})`);
+    ok(await reachable(page, '[data-talk-report]') === 'reachable',
+       `${label}: and so can Report (${await reachable(page, '[data-talk-report]')})`);
+
+    await page.getByRole('button', { name: 'Close the chat' }).first().click({ timeout: 6000 }).catch(() => {});
+    await page.waitForTimeout(900);
+    ok(await cardShown(page), `${label}: when the chat closes, the card comes back`);
+    const fits = await page.evaluate(() => {
+      const r = document.querySelector('[data-install-prompt="card"]').getBoundingClientRect();
+      return r.top >= 0 && r.bottom <= innerHeight;
+    });
+    ok(fits, `${label}: and the whole card, close button and all, is inside the window`);
+    await context.close();
+  }
+
   await browser.close();
   console.log(bad ? `\n${bad} problem(s).` : '\nRESULT: ALL OK');
   process.exit(bad ? 1 : 0);

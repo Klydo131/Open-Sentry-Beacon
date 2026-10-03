@@ -148,6 +148,15 @@ async function openConversation(page) {
 
   for (const [label, w, h] of SCREENS) {
     const context = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: true });
+    // Only the stand-in below may publish --install-bar. On WebKit the real
+    // invitation can also appear (WebKit's Mac user agent with a touch screen
+    // reads as an iPad in isIos), a moment after the stand-in is built, and
+    // its own measuring would replace or clear the number this reads. The
+    // likeliest cause of "really is tall to begin with ()" on one Safari run
+    // of the last two; not reproduced here, where there is no WebKit.
+    await context.addInitScript(() => {
+      try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 864e5)); } catch { /* fine */ }
+    });
     const page = await context.newPage();
     await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
 

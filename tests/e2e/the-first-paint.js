@@ -90,7 +90,14 @@ async function framesOf(page, url) {
   await page.goto(`${BASE}${url}`, { waitUntil: 'load' });
   await page.waitForTimeout(2500);
   return page.evaluate(() => {
-    const paint = performance.getEntriesByType('paint').find((e) => e.name === 'first-paint');
+    // WebKit records no 'first-paint' entry, only 'first-contentful-paint'.
+    // Without this the Safari job read every paint as missing, and every look
+    // as Classic (seven checks red on each run up to 4 October 2026). The first
+    // contentful paint is the first frame with the page on it, which is the
+    // frame these checks are about; Chromium still uses the earlier one.
+    const entries = performance.getEntriesByType('paint');
+    const paint = entries.find((e) => e.name === 'first-paint')
+      || entries.find((e) => e.name === 'first-contentful-paint');
     const before = paint ? window.__lookChanges.filter((c) => c.t <= paint.startTime) : [];
     const frames = window.__frames;
     frames.firstPaint = paint ? Math.round(paint.startTime) : null;

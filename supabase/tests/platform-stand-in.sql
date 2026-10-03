@@ -40,6 +40,47 @@ alter table storage.buckets add column if not exists owner_id text;
 alter table storage.objects add column if not exists version text;
 alter table storage.objects add column if not exists owner_id text;
 alter table storage.objects add column if not exists user_metadata jsonb;
+-- auth.uid(), auth.role() and auth.email() as the sign-in service leaves them.
+-- The image's own versions read only the old one-setting-per-claim form
+-- (request.jwt.claim.sub); a real project's also read request.jwt.claims,
+-- which is what every signed-in request sets today and what the SQL tests set
+-- to act as somebody. Without these, every "as a person" check in
+-- supabase/tests/a-conversation-can-reply-react-and-speak.sql ran as nobody,
+-- and this install failed in CI on every push from 1 to 4 October 2026.
+-- Copied from a live project on 4 October 2026.
+create or replace function auth.uid()
+returns uuid
+language sql
+stable
+as $$
+  select
+  coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
+  )::uuid
+$$;
+create or replace function auth.role()
+returns text
+language sql
+stable
+as $$
+  select
+  coalesce(
+    nullif(current_setting('request.jwt.claim.role', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role')
+  )::text
+$$;
+create or replace function auth.email()
+returns text
+language sql
+stable
+as $$
+  select
+  coalesce(
+    nullif(current_setting('request.jwt.claim.email', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email')
+  )::text
+$$;
 -- auth.jwt(), the request's claims. The image has auth.uid() and auth.role(),
 -- but this one is added by the sign-in service's own migrations when a real
 -- project starts. Copied from a live project on 29 September 2026; the first
