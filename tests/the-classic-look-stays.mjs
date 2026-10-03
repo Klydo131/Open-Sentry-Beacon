@@ -22,6 +22,7 @@
 //   node tests/the-classic-look-stays.mjs
 
 import { build } from 'esbuild';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -94,6 +95,11 @@ const L = await import(pathToFileURL(bundle).href);
   // data- attribute of the card's own compiles, and never reaches the page.
   ok(/<Card className="p-5" data-panel="look-settings">/.test(card),
      'the Look card is found by data-panel, which Card passes on to the page');
+  // What a look draws of its own is absent, not hidden, for everybody else.
+  const nav = code('components/DesktopNav.tsx');
+  ok(/const look = useChosenLook\(\);/.test(nav) && /if \(look !== DESKTOP\) return null;/.test(nav),
+     'the Desktop look\'s rooms render nothing unless Desktop is chosen');
+  ok(/<DesktopNav \/>/.test(code('components/TabBar.tsx')), 'and are drawn wherever the bar along the bottom is');
   for (const f of ['app/settings/page.tsx', 'components/LiveAccountPages.tsx']) {
     ok(/\{room === 'general' && <ReadingSettings \/>\}/.test(code(f)), `${f}: Look is in Settings, General`);
   }
@@ -128,20 +134,16 @@ function selectorsOf(css) {
   return found;
 }
 
-const SKIP = new Set(['node_modules', '.next', '.git', 'out', 'coverage']);
-function cssFiles(dir) {
-  const files = [];
-  for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
-    if (SKIP.has(entry.name)) continue;
-    const rel = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...cssFiles(rel));
-    else if (/\.(css|scss)$/.test(entry.name)) files.push(rel);
-  }
-  return files;
+// The repository's own stylesheets: tracked, or new and not ignored. Build
+// output (.next, .next-dev) compiles the looks' rules into one file and is
+// not where anybody writes a style, so it is not looked at.
+function cssFiles() {
+  const out = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' });
+  return out.split('\n').filter((f) => /\.(css|scss)$/.test(f) && fs.existsSync(path.join(root, f)));
 }
 
 {
-  const all = cssFiles('.').map((f) => f.replace(/^\.\//, '').split(path.sep).join('/'));
+  const all = cssFiles();
   const themeDir = 'app/themes/';
   const themeFiles = all.filter((f) => f.startsWith(themeDir));
   const others = all.filter((f) => !f.startsWith(themeDir));

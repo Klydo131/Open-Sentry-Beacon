@@ -19,7 +19,10 @@
 //      in app/layout.tsx after globals.css. Every rule in it starts with
 //      :root[data-ui-theme="<id>"], so it cannot reach anybody who chose
 //      Classic, or another look.
-//   3. Do not edit the shared styles (globals.css, tailwind.config.ts, the
+//   3. If it needs something Classic does not draw, that is a component of its
+//      own which renders NOTHING unless its look is chosen (useChosenLook in
+//      components/UiTheme.tsx); components/DesktopNav.tsx is the example.
+//   4. Do not edit the shared styles (globals.css, tailwind.config.ts, the
 //      components' own classes) to make a look work. That is changing Classic.
 //
 // tests/the-classic-look-stays.mjs fails the build if Classic stops being the
@@ -40,6 +43,7 @@ export interface UiTheme {
 }
 
 export const CLASSIC = 'classic';
+export const DESKTOP = 'desktop';
 
 /** Every look, Classic first. Classic is the default and stays first. */
 export const UI_THEMES: readonly UiTheme[] = [
@@ -48,9 +52,21 @@ export const UI_THEMES: readonly UiTheme[] = [
     name: 'Classic',
     description: 'The look the app has today.',
   },
+  // DESKTOP, 3 October 2026: "This UI is not desktop friendly, can we make the
+  // desktop have it's own UI too". Classic on a phone or a pad; on a computer
+  // the rooms go down the left side and the bar along the bottom goes away
+  // (components/DesktopNav.tsx, app/themes/desktop.css).
+  {
+    id: DESKTOP,
+    name: 'Desktop',
+    description: 'For a computer: your rooms down the left side instead of the bar along the bottom. On a phone or tablet it looks like Classic.',
+  },
 ];
 
 export const UI_THEME_KEY = 'beacon-ui-theme';
+
+/** Said on window when this tab changes its look, so what draws a look can follow. */
+export const UI_THEME_EVENT = 'beacon-ui-theme';
 
 /**
  * A stored or given value, as a look this app actually has: anything unknown,
@@ -79,6 +95,11 @@ export function saveUiTheme(id: string): string {
     // Storage refused (a private window): the look still applies until reload.
   }
   applyUiTheme(chosen);
+  try {
+    window.dispatchEvent(new Event(UI_THEME_EVENT));
+  } catch {
+    // No window: nothing is drawn here to follow it.
+  }
   return chosen;
 }
 

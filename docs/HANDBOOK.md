@@ -942,6 +942,8 @@ Classic is the app exactly as it is: choosing it changes nothing, and it has no 
 
 New features still arrive in Classic, drawn the way it already draws things. What does not change, unless the owner decides it should, is how Classic looks.
 
+**Desktop is the second look.** Asked for the same day, with a screenshot of a Guide's home on a wide screen: "This UI is not desktop friendly, can we make the desktop have it's own UI too". On a computer (1280 pixels wide and up) it puts every room down the left side, the same rooms the Menu lists, with the one you are in lit, and puts away the bar along the bottom; the page starts after the sidebar. On a phone or a tablet it is Classic, bar and all. It is chosen in Settings → General → **Look**, on each computer, and Classic is the default: nobody's screen changed until they chose it. For anybody on Classic the sidebar is not hidden but absent, so Classic is the same page it was.
+
 ### Notifications
 
 The bell in the header holds both the list and its switch. Alerts in the app are **on by default**.
@@ -1507,14 +1509,14 @@ Read this section before making a change. It states what is true, what must stay
 21. The progress report asks only for what the reader's rules already return: leadership's report never asks for meetings, lessons or follow-ups. Steps forward are net, from the stage at the period's start to the stage at its end. `tests/a-progress-report-counts-what-happened.mjs` holds both.
 22. `office_plans` is owner-only on every operation, keyed by owner and item together, refuses an older update, and grants nothing to a signed-out visitor. Program screens keep working without the table. The newer copy of each item wins, and a deletion is kept as a mark. `tests/the-office-follows-you.mjs` holds the rules and every merge case.
 23. A calendar file or Google Calendar link carries only what is shared: never a **Team only** block or a platform note. The same test holds it, and holds the file to RFC 5545 (line breaks, folding, escaping).
-24. Classic is the first look and the default, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look. `tests/the-classic-look-stays.mjs` holds the rule and `tests/e2e/the-classic-look-stays.js` holds Classic's colours. Never edit the shared styles to make a look work.
+24. Classic is the first look and the default, has no stylesheet, and nothing targets it; every other look's styles live in `app/themes/<id>.css`, every rule scoped to that look, and anything a look draws of its own renders nothing unless it is chosen. `tests/the-classic-look-stays.mjs` holds the rule, `tests/e2e/the-classic-look-stays.js` holds Classic's colours, and `tests/e2e/the-desktop-look.js` walks Desktop at three widths. Never edit the shared styles to make a look work.
 
 ### Prove it before you claim it
 
 ```
 npm run verify        # 170 checks: types, build, security, privacy, licences,
                       # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 66 browser walks: 236 in all
+npm run verify:all    # the same, plus 67 browser walks: 237 in all
 npm run build         # must pass before anything is pushed
 ```
 
@@ -1562,7 +1564,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
 | The progress report | **Built** for both halves and walked in the sample church as a Guide and as a Director. Not yet seen from a church's own app with a real sign-in, and its Word file has not been opened in Word. |
 | Calendar files | **Built** and held to the standard by a check, and the walk downloads one. Nobody has yet opened one on a real iPhone, Android phone or in Outlook. |
-| Other looks | **Not built.** Settings shows one look, Classic, chosen; the way to add another is written down and checked, and no other look exists yet. |
+| The Desktop look | **Built** and walked in the sample church at 1280, 1440 and 1920 pixels and on a phone. Not yet seen in a church's own app with a real sign-in, and not in Safari. Classic stays the default; making Desktop the default on computers is a one-line change if the owner wants it. |
 | Programs on every device | **Built**: the merge rules are tested case by case and the table's rules are written. Two real devices signed in to the same account have not been tried from here, because this sandbox cannot sign in to a church's site. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |
 | Safari and iOS behaviour | Checked at iPhone sizes in Chromium, which is not WebKit. WebKit itself is covered by `safari.yml`, which runs every suite on a real macOS machine on each push. Nothing in this app has been seen running on a physical iPhone. |

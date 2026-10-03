@@ -20,10 +20,11 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     id: '2026-10-03-classic-look',
     date: '2026-10-03',
-    title: 'The app\'s look is called Classic',
+    title: 'Classic, and a Desktop look for computers',
     items: [
-      'Settings, General, has a new Look card. The look you know is called Classic, and it is chosen.',
-      'Nothing about the app has changed. If new looks are added later, they will appear beside Classic, and Classic stays exactly as it is.',
+      'Settings, General, has a new Look card. The look you know is called Classic, and it stays chosen until you choose otherwise.',
+      'On a computer, choose Desktop: your rooms go down the left side and the bar along the bottom goes away. On a phone or tablet it looks just like Classic.',
+      'Classic itself has not changed, and any looks added later will appear beside it.',
     ],
   },
   {

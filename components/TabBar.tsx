@@ -38,6 +38,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { Role } from '@/lib/types';
 import { FILES_HREF, MENU_HREF, peopleHref, tabFor, type Tab } from '@/lib/tab-bar';
 import { FolderGlyph, MenuGlyph, PeopleGlyph } from '@/components/Glyph';
+import { DesktopNav } from '@/components/DesktopNav';
 
 // Before the first paint on the client, so a page never draws one frame with
 // its last line under the bar. The plain effect is only there for the server
@@ -87,7 +88,12 @@ export function TabBar({ role }: { role: Role }) {
   const hrefOf = (key: Tab) =>
     key === 'menu' ? MENU_HREF : key === 'files' ? FILES_HREF : peopleHref(role);
 
+  // THE DESKTOP LOOK'S ROOMS ARE DRAWN FROM HERE, because this bar is drawn
+  // on exactly the pages that have rooms to go to. Under Classic it renders
+  // nothing at all (components/DesktopNav.tsx).
   return (
+    <>
+    <DesktopNav />
     <nav
       ref={ref}
       aria-label="Main"
@@ -120,5 +126,6 @@ export function TabBar({ role }: { role: Role }) {
         })}
       </ul>
     </nav>
+    </>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+// The looks other than Classic, each scoped to itself (lib/ui-themes.ts).
+import './themes/desktop.css';
 import { DemoProvider } from '@/lib/demo/store';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SelfHeal } from '@/components/SelfHeal';

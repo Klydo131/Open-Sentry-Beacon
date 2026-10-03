@@ -1,0 +1,27 @@
+/* THE DESKTOP LOOK, chosen in Settings, General, Look (lib/ui-themes.ts).
+ *
+ * Every rule here starts with :root[data-ui-theme="desktop"], so nothing in
+ * this file can reach anybody who chose Classic; tests/the-classic-look-stays.mjs
+ * fails the build if one does not. And every rule is for a computer's width:
+ * on a phone or a pad the Desktop look is Classic, bottom bar and all.
+ *
+ * The rooms down the left come from components/DesktopNav.tsx, which renders
+ * only for this look. These rules make room for it and put away what it
+ * replaces. :has() keeps them to pages that actually draw it, so the sign-in
+ * page and the front door are not pushed sideways by a sidebar that is not
+ * there.
+ */
+
+@media (min-width: 1280px) {
+  /* The page starts after the sidebar (w-60, 15rem). */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) {
+    padding-left: 15rem;
+  }
+
+  /* The rooms are down the left, so the bar along the bottom goes. Its height
+     stops being published (components/TabBar.tsx), and whatever stood on it
+     stands on the bottom of the screen again. */
+  :root[data-ui-theme="desktop"] body:has([data-desktop-nav]) nav.tab-bar {
+    display: none;
+  }
+}

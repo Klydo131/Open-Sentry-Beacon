@@ -210,7 +210,11 @@ is, with no stylesheet of its own; the page says which look it is as
 1. register it in `lib/ui-themes.ts`, after Classic;
 2. put every style it changes in `app/themes/<id>.css`, every rule starting
    `:root[data-ui-theme="<id>"]`, and import that file in `app/layout.tsx`;
-3. never edit `globals.css`, `tailwind.config.ts` or a component's own classes
+3. if it needs something Classic does not draw, give it a component of its
+   own that renders nothing unless that look is chosen (`useChosenLook` in
+   `components/UiTheme.tsx`); `components/DesktopNav.tsx`, the Desktop look's
+   rooms down the left side, is the example;
+4. never edit `globals.css`, `tailwind.config.ts` or a component's own classes
    to make a look work. That is changing Classic.
 
 New features still arrive in Classic, drawn the way Classic already draws
