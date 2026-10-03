@@ -648,6 +648,10 @@ const staticChecks = [
   // Sign out tells the server, for this session only, and never hangs
   // (the audit of 3 October 2026).
   ['signing out ends the session', 'tests/signing-out-ends-the-session.mjs'],
+  // The desk's colours work under every look, in that look's own light, so
+  // nothing becomes harder to read (4 October 2026). The browser half is
+  // tests/e2e/room-colours-in-every-look.js.
+  ['room colours keep the look\'s light', 'tests/room-colours-keep-the-look-light.mjs'],
   // A failing browser walk prints what the browser saw, so a WebKit failure in
   // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],

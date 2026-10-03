@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-desk-colours-every-look',
+    date: '2026-10-04',
+    title: 'Your desk colours work in every look',
+    items: [
+      'The colours on your desk now change Beacon, Study and Focus too, not only Classic. The first one is the look\'s own colours, so you can always go back.',
+      'Each look keeps its own light or dark. In Focus, Warm Office becomes a warm evening brown, and everything stays as easy to read as before.',
+      'Each look remembers its own colour on this device.',
+    ],
+  },
+  {
     id: '2026-10-04-safer-sign-in',
     date: '2026-10-04',
     title: 'Safer signing in and out',

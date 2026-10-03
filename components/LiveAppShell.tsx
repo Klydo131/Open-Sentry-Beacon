@@ -12,7 +12,7 @@ import { Avatar, Button, Card } from '@/components/ui';
 import { RightRail } from '@/components/RoomRails';
 import { DeskDrawer } from '@/components/DeskDrawer';
 import { LiveDesk } from '@/components/LiveDesk';
-import { useRoom } from '@/lib/room-theme';
+import { useLookPalette, useRoom } from '@/lib/room-theme';
 import { LiveBell } from '@/components/LiveBell';
 import { TalkDock } from '@/components/live/TalkDock';
 import { ModeSwitch } from '@/components/ModeSwitch';
@@ -60,6 +60,8 @@ export function LiveAppShell({
   // and a tablet get the single column, because the page they flank is the one
   // that matters and there is no room for three.
   const room = useRoom(profile?.id ?? null, profile?.role ?? 'ds');
+  // Under Beacon, Study or Focus a chosen palette recolours the look.
+  useLookPalette(room.theme, room.recolours);
 
   // LAND ON THE CARD, NOT NEAR IT. Wired once here because every live screen
   // is inside this shell, so there is no page that can forget to do it.
@@ -331,6 +333,8 @@ export function LiveAppShell({
             themes={room.themes}
             prefs={room.prefs}
             update={room.update}
+            chosen={room.chosen}
+            choose={room.choose}
             // THE DESK WAS ALWAYS EMPTY. This passed a hard-coded [], so every
             // signed-in person was told "Nothing waiting. A good place to be."
             // whatever was actually waiting: a panel that looked like a

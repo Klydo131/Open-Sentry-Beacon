@@ -12,7 +12,7 @@ import { Avatar } from './ui';
 import { NotificationBell } from './NotificationBell';
 import { RoleSwitcher } from './RoleSwitcher';
 import { RightRail, railGroupsFor } from './RoomRails';
-import { useRoom } from '@/lib/room-theme';
+import { useLookPalette, useRoom } from '@/lib/room-theme';
 import { emitQuest } from '@/lib/quest';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { BackButton } from '@/components/BackButton';
@@ -109,7 +109,9 @@ function DemoAppShell({
   // Room prefs are per-person and per-device. Hooks must run unconditionally,
   // so this sits above the guard's early return.
   const role: Role = currentUser?.role ?? 'ds';
-  const { prefs, update, theme, themes } = useRoom(currentUser?.id ?? null, role);
+  const { prefs, update, theme, themes, chosen, choose, recolours } = useRoom(currentUser?.id ?? null, role);
+  // Under Beacon, Study or Focus a chosen palette recolours the look.
+  useLookPalette(theme, recolours);
 
   // Land on the card a `#link` names, once it exists. The same wiring as the
   // live shell — the Install chip points at `/settings#install` in both modes,
@@ -335,6 +337,8 @@ function DemoAppShell({
             themes={themes}
             prefs={prefs}
             update={update}
+            chosen={chosen}
+            choose={choose}
             today={today}
           />
           </DeskDrawer>

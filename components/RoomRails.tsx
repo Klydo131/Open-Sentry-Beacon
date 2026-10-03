@@ -228,6 +228,8 @@ export function RightRail({
   themes,
   prefs,
   update,
+  chosen,
+  choose,
   today,
   desk,
 }: {
@@ -237,6 +239,9 @@ export function RightRail({
   themes: RoomTheme[];
   prefs: RoomPrefs;
   update: (p: Partial<RoomPrefs>) => void;
+  /** The swatch that is on: Classic's palette, or under another look, that look's choice. */
+  chosen: string;
+  choose: (key: string) => void;
   today?: { label: string; value: string }[];
   /**
    * Replaces the desk card entirely.
@@ -295,6 +300,8 @@ export function RightRail({
         themes={themes}
         prefs={prefs}
         update={update}
+        chosen={chosen}
+        choose={choose}
       />
 
       {/* AN EXPLORER GETS THE TIMER, EVERYBODY ELSE GETS THE DESK, and that
@@ -329,6 +336,8 @@ function RoomCard({
   themes,
   prefs,
   update,
+  chosen,
+  choose,
 }: {
   seeker: boolean;
   role: Role;
@@ -337,6 +346,8 @@ function RoomCard({
   themes: RoomTheme[];
   prefs: RoomPrefs;
   update: (p: Partial<RoomPrefs>) => void;
+  chosen: string;
+  choose: (key: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(prefs.motto);
@@ -427,19 +438,24 @@ function RoomCard({
       >
         {seeker ? 'Room' : 'Office'}
       </p>
-      <div className="grid grid-cols-5 gap-1.5">
+      {/* UNDER ANOTHER LOOK the first swatch is that look's own colours and
+          the rest recolour it; under Classic they are the page, as always
+          (lib/room-theme.ts, useRoom). Six to a row so a seeker's five rooms
+          and the look's own still fit. */}
+      <div className={`grid ${themes.length > 5 ? 'grid-cols-6' : 'grid-cols-5'} gap-1.5`} data-room-palettes>
         {themes.map((t) => {
-          const on = t.key === prefs.theme;
+          const on = t.key === chosen;
           return (
             <button
               key={t.key}
-              onClick={() => update({ theme: t.key })}
+              onClick={() => choose(t.key)}
               title={`${t.label} · ${t.blurb}`}
               aria-label={t.label}
               aria-pressed={on}
+              data-room-palette={t.key}
               className="h-8 rounded-lg"
               style={{
-                background: t.bg,
+                background: t.swatch ?? t.bg,
                 border: on ? `2px solid ${theme.accent}` : `1px solid ${theme.line}`,
                 boxShadow: on ? `0 0 0 2px ${theme.panel}` : undefined,
               }}
