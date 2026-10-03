@@ -169,6 +169,31 @@ const topOf = (page) => page.evaluate(() => {
      && (await sidebar(page).isVisible()) && !(await barShown(page)),
      'is on Classic, and sees the same rooms down the left: nothing about its screen changed');
 
+  // 5b. A LARGE iPAD TURNED SIDEWAYS IS A COMPUTER. The owner, 3 October 2026:
+  // "keep the sidebar on large iPads". A 12.9-inch iPad Pro on its side is 1366
+  // wide, past the 1280 the sidebar starts at; upright it is 1024, and an
+  // 11-inch on its side is 1194, so both keep the bar.
+  for (const [label, width, height, wantSidebar] of [
+    ['12.9-inch iPad on its side', 1366, 1024, true],
+    ['12.9-inch iPad upright', 1024, 1366, false],
+    ['11-inch iPad on its side', 1194, 834, false],
+  ]) {
+    const pad = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+    await pad.addInitScript(() => {
+      try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 24 * 60 * 60 * 1000)); } catch { /* fine */ }
+    });
+    const tab = await pad.newPage();
+    await signInAs(tab, 'Maria Santos');
+    await tab.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+    await tab.waitForTimeout(1200);
+    const side = await sidebar(tab).isVisible();
+    const bar = await barShown(tab);
+    ok(wantSidebar ? side && !bar : !side && bar,
+       `${label} (${width} wide): ${wantSidebar ? 'the rooms are down the left, and no bar' : 'the bar along the bottom, and no sidebar'}`);
+    ok((await sideways(tab)) <= 1, `${label}: nothing scrolls sideways`);
+    await pad.close();
+  }
+
   // 6. THE FRONT DOOR IS NOT PUSHED SIDEWAYS FOR A SIDEBAR THAT IS NOT THERE
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);

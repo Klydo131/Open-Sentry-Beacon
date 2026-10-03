@@ -367,8 +367,10 @@ shipped:
   refuses the rest.
 - **The bottom bar is the navigation on a phone and a pad.** **Menu | People |
   My Files** (`components/TabBar.tsx`, `lib/tab-bar.ts`), and Menu lists every
-  room. On a computer (1280px and up) the same rooms are down the left and the
-  bar is put away (section 2, "On a computer, Classic is the desktop design"). The right
+  room. On a computer (1280px and up, which includes a large iPad turned
+  sideways, kept so by the owner on 3 October 2026) the same rooms are down the
+  left and the bar is put away (section 2, "On a computer, Classic is the
+  desktop design"). The right
   rail (the person's own desk) sits beside the page from `xl`, and below `xl`
   it is a drawer behind a small tab on the right edge
   (`components/DeskDrawer.tsx`, `tests/the-desk-is-a-drawer.mjs`). The bar is

@@ -24,9 +24,9 @@ that never appeared together. Regenerate them any time with
 ### A Guide's desk
 
 Who you are walking with, what needs you today, and where each person is on the
-six-stage journey. On a computer your rooms are down the left side, with a light
-bar across the top; on a phone and a tablet they are behind the bar along the
-bottom (Menu, People, My Files).
+six-stage journey. On a computer, and on a large iPad turned sideways, your
+rooms are down the left side, with a light bar across the top; on a phone and a
+smaller tablet they are behind the bar along the bottom (Menu, People, My Files).
 
 ![A Guide's home on a computer, with the rooms down the left side: two Explorers, two follow-ups overdue and one message unread, how many are at each of the six stages from Beginner to Commission, and the desk on the right with today's date and what is waiting](docs/screenshots/guide-people.png)
 

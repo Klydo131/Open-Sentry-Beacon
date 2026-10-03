@@ -62,10 +62,10 @@ well, press **Apply**, and every screen follows it, conversations included.
 
 ![Text size. Large is tried in the preview; Apply makes it the size everywhere, Keep Normal leaves it as it was.](screenshots/walkthrough/35-text-size-apply.png)
 
-Just below it is **Look**, with **Classic** chosen. On a computer, Classic has
-your rooms down the left side and a light bar across the top; on a phone or
-tablet, the bar along the bottom. If new looks are added, you can pick one
-there.
+Just below it is **Look**, with **Classic** chosen. On a computer, and on a
+large iPad turned sideways, Classic has your rooms down the left side and a
+light bar across the top; on a phone or a smaller tablet, the bar along the
+bottom. If new looks are added, you can pick one there.
 
 ![A conversation with Text size at its largest. The words grow and still fit the screen.](screenshots/walkthrough/22-text-size-large.png)
 
