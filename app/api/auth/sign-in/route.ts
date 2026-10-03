@@ -7,6 +7,9 @@ export const dynamic = 'force-dynamic';
 type PendingCookie = { name: string; value: string; options: CookieOptions };
 
 const roles = new Set<Role>(['executive', 'admin', 'dm', 'ds']);
+
+/** Shown when the sign-in service is turning attempts away for a while. */
+const TOO_MANY = 'Too many sign-in attempts just now. Wait a few minutes, then try again.';
 const homeForRole: Record<Role, string> = {
   executive: '/admin',
   admin: '/admin',
@@ -91,6 +94,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    // TOO MANY TRIES IS NOT A WRONG PASSWORD (the audit of 3 October 2026).
+    // The sign-in service limits attempts, and because this route is what
+    // reaches it, everybody signing in at once can be held back together.
+    // Telling them their password is wrong sends them to reset a password
+    // that was right; telling them to wait is the truth. It says nothing about
+    // whether the address has an account, so it gives nobody a list.
+    if (authError?.status === 429) {
+      return expectsJson
+        ? jsonResponse({ error: TOO_MANY }, 429, pendingCookies, pendingHeaders)
+        : formRedirect(request, '/login?error=busy', pendingCookies, pendingHeaders);
+    }
     if (authError || !authData.user || !authData.session) {
       // Keep unknown addresses and wrong passwords indistinguishable. An
       // invitation-only church directory must not become enumerable.

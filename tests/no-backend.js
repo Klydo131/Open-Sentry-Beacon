@@ -449,6 +449,10 @@ const GUARDRAILS = new Set([
   // credential-shape scan above still applies to them.
   'supabase/migrations/20260929100000_an_invitation_password_runs_out.sql',
   'tests/an-invitation-password-runs-out.mjs',
+  // The same start function, shortened to three days on 3 October 2026, with
+  // the same revoke from every browser role and the same grant to the server
+  // role alone, restated because replacing a function can reset its grants.
+  'supabase/migrations/20261003130000_an_invitation_password_lasts_three_days.sql',
   // The replica fingerprint compares the settings of the four database roles
   // Supabase creates, so it has to name them to select them. It reads the
   // catalogue only; it holds no key and no hostname.

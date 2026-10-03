@@ -11,51 +11,55 @@
 // link that had already been used.
 //
 // A password is not consumed by being read, survives being forwarded,
-// re-opened, or tapped twice, and lasts a week rather than an hour. The person
-// can also read it out loud to somebody helping them, which is how an older
-// member actually gets set up.
+// re-opened, or tapped twice, and lasts three days rather than an hour. The
+// person can also read it out loud to somebody helping them, which is how an
+// older member actually gets set up.
 //
 // WHAT THIS COSTS, SAID PLAINLY. A password sitting in an inbox is weaker than
 // a link that dies in an hour: anybody who can read that mailbox can sign in
-// until the person chooses their own password or the week runs out. Since 29
-// September 2026 the database ends it after seven days and signs out every
-// device that used it (supabase/migrations/20260929100000_an_invitation_
-// password_runs_out.sql); before that it stayed true until changed. That is the
-// trade, it was made deliberately, and the answer to it is the week, the
-// wording in the email and the nudge inside the app -- not pretending the trade
-// is not there.
+// until the person chooses their own password or the three days run out. Since
+// 29 September 2026 the database ends it and signs out every device that used
+// it (supabase/migrations/20260929100000_an_invitation_password_runs_out.sql),
+// after seven days at first and three since 3 October 2026
+// (20261003130000_an_invitation_password_lasts_three_days.sql). That is the
+// trade, it was made deliberately, and the answer to it is the short life, the
+// wording in the email and the nudge inside the app -- not pretending the
+// trade is not there.
 //
 // THE SHAPE, AND WHY IT IS THIS SHAPE.
 //
-//   harbor4821        acorn48213
+//   harbor-acorn-river-48
 //
-// ONE WORD AND SOME DIGITS, EXACTLY TEN CHARACTERS. Asked for directly: "Please
-// dont make the passwords be too long, just make a word with numbers in a 10
-// letter password." The previous shape was three hyphenated words and three
-// digits -- twenty-two characters -- which is stronger and is genuinely worse
-// to be handed. It wraps in a mail client, it is a long way to look between
-// reading and typing, and every hyphen is a character somebody leaves out.
+// THREE DIFFERENT WORDS AND A TWO-DIGIT NUMBER, JOINED BY DASHES. Chosen by the
+// owner on 3 October 2026, after that day's security audit found that the
+// shape before it was too easy to guess:
+//
+//   * 28 September to 3 October: ONE WORD AND DIGITS, TEN CHARACTERS
+//     (`harbor4821`), asked for as "a word with numbers in a 10 letter
+//     password". About 8 million possibilities, 23 bits. It was accepted
+//     because sign-in is rate-limited, but that limit counts attempts per
+//     internet address, and addresses are cheap to rent; and the app signs in
+//     through its own server, so the limit counted the server's addresses, not
+//     the guesser's.
+//   * Now: about 1.5 billion possibilities, 30.5 bits, roughly 180 times
+//     harder to guess, for three days instead of seven.
 //
 //   * ALL LOWERCASE. Every capital is a shift key on a phone, and a shift key
 //     is a place to get it wrong. Nothing here needs the extra alphabet.
-//   * A REAL WORD FIRST. `xK7#pQ2v` cannot be read aloud, cannot be remembered
-//     for the ten seconds between the email and the sign-in box, and cannot be
+//   * REAL WORDS. `xK7#pQ2v` cannot be read aloud, cannot be remembered for
+//     the ten seconds between the email and the sign-in box, and cannot be
 //     dictated over the phone to somebody who is stuck.
-//   * NO HYPHEN NOW. At ten characters a separator costs a tenth of the whole
-//     password to buy nothing: `harbor4821` has an obvious seam already.
-//   * DIGITS FILL THE REST, so the total is always exactly ten -- the app's own
-//     minimum, in lib/live/data.ts. Longer words get fewer digits.
+//   * DASHES BETWEEN, because three words run together cannot be read
+//     (`harboracornriver48`). The e-mail says "joined by dashes" in words.
+//   * THREE DIFFERENT WORDS, so nobody thinks `river-river-lamp` is a typo.
+//   * TWO DIGITS, 10 TO 99. A number never starts with a zero, because `07`
+//     gets typed as `7`.
 //   * NO AMBIGUOUS WORDS. Nothing that sounds like something else when read
 //     out (`their`, `there`), nothing anybody has to think about spelling.
 //
-// WHAT IT COSTS, STATED PLAINLY RATHER THAN BURIED. Three words and a number
-// was about 34 bits; one word and a number is about 23, which is roughly eight
-// million possibilities instead of fifteen billion. That is a real reduction
-// and it was asked for knowingly. What makes it defensible is what the
-// credential IS: temporary, on a rate-limited online sign-in, for an account
-// that also has to be approved before it can do anything, with the e-mail and
-// the app both asking the person to change it. It is not a secret meant to
-// survive somebody running guesses offline, and it never was.
+// WHAT IT STILL IS. A temporary credential on an online sign-in, with the
+// e-mail and the app both asking the person to change it. It is not a secret
+// meant to survive somebody running guesses offline, and it never was.
 
 /**
  * The words. Short, ordinary, unmistakable when spoken.
@@ -110,52 +114,33 @@ export const WORDS: readonly string[] = [
   'rope', 'rosemary', 'saffron', 'sage', 'salmon', 'sandal', 'satin', 'scarf',
 ];
 
-/** The whole password, every time. The app's own minimum, met exactly. */
-const TOTAL = 10;
+/** Three different words, then the number. */
+const WORDS_IN_A_PASSWORD = 3;
 
-/**
- * Which words may be drawn.
- *
- * Five and six letters only, so what follows is four or five digits. Shorter
- * words would leave six digits to remember, which is the part people get wrong;
- * longer ones leave three, which is where the guessing space gets thin.
- */
-const USABLE = WORDS.filter((w) => w.length === 5 || w.length === 6);
+/** The number after them: 10 to 99, so it never starts with a zero. */
+const FIRST_NUMBER = 10;
+const NUMBERS = 90;
 
-/** How many numbers can follow a word: first digit 1-9, the rest 0-9. */
-function numbersAfter(word: string): number {
-  return 9 * (10 ** (TOTAL - word.length - 1));
-}
-
-/** Every password this can make, counted over the real branches. */
+/** Every password this can make: three different words in order, then a number. */
 function allPasswords(): number {
-  let combinations = 0;
-  for (const word of USABLE) combinations += numbersAfter(word);
+  let combinations = NUMBERS;
+  for (let i = 0; i < WORDS_IN_A_PASSWORD; i++) combinations *= WORDS.length - i;
   return combinations;
 }
 
 /**
  * How hard this is to guess, in bits, worked out rather than asserted.
  *
- * One word from the list, then enough digits to make ten characters. The test
+ * Three different words from the list, then a number from 10 to 99. The test
  * prints this and fails if it drops, so shrinking the word list can never
  * quietly weaken every invitation the church sends.
  *
- * About 23 bits. That is a TEMPORARY credential on a rate-limited online
- * sign-in, not a secret meant to stand up to somebody with the password file
- * and a month. The email says to change it and the app asks again; this number
- * is the floor under the few days in between.
- *
- * TRUE ONLY BECAUSE EVERY PASSWORD IS EQUALLY LIKELY (see firstPassword). A
- * count of possibilities is the strength of a password only when each of them
- * is as likely as the rest; until 28 September 2026 they were not, and this
- * number said 23.0 while the likeliest passwords were about 20.6.
+ * About 30.5 bits at 256 words. TRUE ONLY BECAUSE EVERY PASSWORD IS EQUALLY
+ * LIKELY (see firstPassword): a count of possibilities is the strength of a
+ * password only when each of them is as likely as the rest. Until 28 September
+ * 2026 they were not.
  */
 export function entropyBits(): number {
-  // Summed over the real branches rather than assumed uniform: a five-letter
-  // word leaves five digits and a six-letter word leaves four, and those are
-  // very different sizes. Counting them separately is the only way this number
-  // stays true when the word list changes.
   return Math.log2(allPasswords());
 }
 
@@ -176,10 +161,12 @@ export function entropyBits(): number {
  */
 function below(limit: number): number {
   if (limit < 1) throw new Error('below() needs a positive limit');
-  if (limit > 2 ** 32) throw new Error('below() draws at most four bytes');
-  // One byte, two, or four: whichever is the smallest that can reach the limit.
-  // Four is for the whole-password draw below, which is about eight million.
-  const size = limit > 65536 ? 4 : limit > 256 ? 2 : 1;
+  if (limit > 2 ** 48) throw new Error('below() draws at most six bytes');
+  // The fewest bytes that can reach the limit. The whole-password draw below
+  // is about a billion and a half, so it takes four; a longer word list may
+  // take five or six, which a JavaScript number still holds exactly.
+  let size = 1;
+  while (2 ** (8 * size) < limit) size += 1;
   const range = 2 ** (8 * size);
   const ceiling = Math.floor(range / limit) * limit;   // largest exact multiple
   const bytes = new Uint8Array(size);
@@ -194,43 +181,43 @@ function below(limit: number): number {
 
 /**
  * The password at a given place in the list of every password, in order: the
- * first word with its smallest number, through to the last word with its
- * largest. Exported so the test can check the ends of every word's run without
- * drawing millions of passwords to find them.
+ * first three words with the smallest number, through to the last three with
+ * the largest. Exported so the test can check both ends of the list without
+ * drawing a billion passwords to find them.
+ *
+ * The place is read like the digits of a number whose last digit is the
+ * number in the password (90 of them) and whose earlier digits pick each word
+ * from the words not yet used (256, then 255, then 254).
  */
 export function passwordAt(index: number): string {
-  let rest = index;
-  for (const word of USABLE) {
-    const count = numbersAfter(word);
-    if (rest < count) {
-      // The smallest number with this many digits, plus how far along we are:
-      // 1000..9999 after a six-letter word, 10000..99999 after a five-letter one.
-      return `${word}${10 ** (TOTAL - word.length - 1) + rest}`;
-    }
-    rest -= count;
+  if (!Number.isInteger(index) || index < 0 || index >= allPasswords()) {
+    throw new Error('passwordAt() was given a place past the last password');
   }
-  throw new Error('passwordAt() was given a place past the last password');
+  const number = FIRST_NUMBER + (index % NUMBERS);
+  let rest = Math.floor(index / NUMBERS);
+  // The word digits, last first, then put back in order.
+  const places: number[] = [];
+  for (let i = WORDS_IN_A_PASSWORD - 1; i >= 0; i--) {
+    const choices = WORDS.length - i;
+    places.unshift(rest % choices);
+    rest = Math.floor(rest / choices);
+  }
+  const left = [...WORDS];
+  const words = places.map((place) => left.splice(place, 1)[0]);
+  return `${words.join('-')}-${number}`;
 }
 
 /**
- * A first password: one word and a number, exactly ten characters.
+ * A first password: three different words and a number, joined by dashes.
  *
- * Example shape: `harbor4821`
+ * Example shape: `harbor-acorn-river-48`
  *
- * ONE DRAW OVER EVERY PASSWORD, NOT A WORD AND THEN A NUMBER. It used to pick
- * the word first, evenly, and then the digits. That made a six-letter word
- * (9,000 numbers after it) exactly as likely as a five-letter one (90,000), so
- * each password after a six-letter word was TEN TIMES as likely as the rest:
- * somebody guessing those first needed about 20.6 bits of luck, not the 23
- * entropyBits() reported. Found on 28 September 2026 because the test that
- * counts repeats failed on one runner -- it expected about half a repeat in
- * three thousand passwords and the real rate was about one and a half.
- *
- * Every password is now one place in a single list and each place is equally
- * likely, so the 23 bits are true. The number still never starts with a zero
- * (`047` gets typed as `47`), because the list only holds numbers that do not.
+ * ONE DRAW OVER EVERY PASSWORD, NOT A WORD AND THEN A NUMBER. The one-word
+ * shape before this picked the word first, evenly, and then the digits, which
+ * made some passwords ten times as likely as the rest (found on 28 September
+ * 2026). Every password is one place in a single list here, and each place is
+ * equally likely, so the bits entropyBits() reports are true.
  */
 export function firstPassword(): string {
   return passwordAt(below(allPasswords()));
 }
-

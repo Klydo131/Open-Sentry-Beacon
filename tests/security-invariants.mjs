@@ -580,6 +580,13 @@ if (exists('app/api/auth/sign-in/route.ts')) {
     'the sign-in route names no service-role or other privileged key');
   ok(/session:\s*authData\.session/.test(signInRoute),
     'the same-origin gateway returns only the verified session needed by the browser');
+  // Too many tries is told as too many tries, never as a wrong password, and
+  // before anything else is said about the attempt (the audit of 3 October 2026).
+  const limited = signInRoute.indexOf('if (authError?.status === 429)');
+  ok(limited > 0 && limited < signInRoute.indexOf("'/login?error=credentials'")
+     && /error=busy/.test(signInRoute)
+     && /case 'busy': return 'Too many sign-in attempts just now/.test(read('components/live/DoorPages.tsx')),
+    'a limited sign-in says to wait, on both the screen and the form path, instead of "wrong password"');
   ok(/fetch\('\/api\/auth\/sign-in'/.test(liveData) && /credentials:\s*'same-origin'/.test(liveData),
     'the browser sends credentials only to Hope Beacon itself');
   const browserClient = read('lib/supabase/client.ts');

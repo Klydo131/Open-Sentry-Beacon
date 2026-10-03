@@ -103,13 +103,17 @@ adopting it; the live half never loads it. `tests/nobody-promotes-themselves.mjs
 fails if any of that changes, including a later migration that drops the
 trigger.
 
-### An invitation is a way in for a week
+### An invitation is a way in for three days
 
 An invitation creates the account and e-mails a temporary password, because a
 one-time link is spent by mail scanners and strands people. That password is
-now **a way in for seven days and no longer** (since 29 September 2026):
+now **a way in for three days and no longer** (seven from 29 September 2026,
+three since 3 October 2026). Since 3 October it is also three ordinary words
+and a two-digit number joined by dashes (`harbor-acorn-river-48`), about 1.5
+billion possibilities, so guessing one in those three days is not practical
+even for somebody who knows the address it was sent to:
 
-- **It runs out on the server, not in the app.** When the week is up the
+- **It runs out on the server, not in the app.** When the three days are up the
   database replaces it with a random password nobody knows and signs out every
   device that used it (`end_expired_temporary_passwords`, hourly via pg_cron).
   A letter found in an old inbox, a forwarded e-mail, or the Director's own
@@ -221,6 +225,21 @@ embeds, online library and file export are switched off.
 `tests/e2e/a-study-can-have-a-drawing.js` draws in a real browser and fails if
 any request leaves the app or anything is refused by the policy.
 
+### Settings that live outside the code
+
+Some protections are switches in Supabase and GitHub, which no file in this
+repository can turn on. Check them once when you set up, and again after
+anybody new is given access. Listed after the audit of 3 October 2026.
+
+| Where | Set it to | Why |
+|---|---|---|
+| Supabase → Authentication → "Allow new users to sign up" | **Off** | The app is invitation-only, and invitations are made through the service role, so nothing breaks. Left on, the public key alone can create accounts. |
+| Supabase → Authentication → email code expiry | **Under an hour** | A sign-in code that lasts longer is longer to steal. |
+| GitHub → Settings → Environments → `backup` | Allow `main` only, you as **required reviewer**, `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` as its secrets | The database address can read everything. As a repository secret, any workflow on any branch can read it, so anybody who can push, or an AI tool working with that access, could copy it out. `.github/workflows/backup.yml` explains. |
+| GitHub → Settings → Code security | **Private vulnerability reporting, secret scanning and push protection on** | The "report a vulnerability" link above depends on the first; the others stop a key from being pushed by mistake. |
+| GitHub → Settings → Branches (or Rules) for `main` | **Require review from Code Owners** | Then a pull request that touches the files in `.github/CODEOWNERS` (database rules, workflows, server routes, the AI brief) waits for your review. |
+| Any AI tool's connection to your database or hosting | **Ask every time** for running SQL, applying migrations and deploying | The prompt is what stands between an AI session and your live data. `AGENTS.md` section 0.3 says why an AI tool must not act on instructions it merely read. |
+
 ---
 
 ## What is not protected, plainly
@@ -229,8 +248,8 @@ any request leaves the app or anything is refused by the policy.
   sees. True of all software; worth saying because it is the most likely
   real-world exposure. *Sign out everywhere else* on the Password page ends
   every session but the one it is pressed on.
-- **A temporary password during its week.** Anybody who reads the invitation
-  e-mail in the first seven days can sign in with it. Choosing a password ends
+- **A temporary password during its three days.** Anybody who reads the invitation
+  e-mail in the first three days can sign in with it. Choosing a password ends
   that at once.
 - **Anyone with a legitimate account.** Rules restrict what a role can retrieve.
   They cannot stop somebody reading their own records and repeating them.

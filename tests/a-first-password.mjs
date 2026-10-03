@@ -65,17 +65,17 @@ ok(new Set(WORDS).size === WORDS.length, 'and none of them is in the list twice'
 
   // NOT "ALL OF THEM WERE DIFFERENT", WHICH IS THE WRONG TEST AND WAS FLAKY.
   //
-  // It was right while a password was three words and a number: fifteen billion
-  // possibilities, so a repeat in three thousand draws really would have meant
-  // the randomness was broken. At ten characters the space is about eight
-  // million, and the birthday maths gives roughly half a duplicate per run --
-  // so that check would have failed at random about two runs in five. A
-  // guardrail that fails on healthy code is worse than no guardrail, because
-  // the habit it teaches is to re-run the gate until it goes quiet.
+  // While a password was one word and ten characters (28 September to 3
+  // October 2026) the space was about eight million, and the birthday maths
+  // gave roughly half a duplicate per run -- so "all different" would have
+  // failed at random about two runs in five. A guardrail that fails on healthy
+  // code is worse than no guardrail, because the habit it teaches is to re-run
+  // the gate until it goes quiet.
   //
   // So: allow the collisions chance actually produces, and fail on the far
   // larger number a broken picker would produce. A generator stuck on one word
-  // would collide thousands of times, not six.
+  // would collide thousands of times, not six. At three words the expected
+  // count is about three in a thousand runs, and the allowance still holds.
   const space = 2 ** entropyBits();
   const expected = (N * (N - 1)) / (2 * space);
   const allowed = Math.max(5, Math.ceil(expected * 10));
@@ -87,6 +87,10 @@ ok(new Set(WORDS).size === WORDS.length, 'and none of them is in the list twice'
 // ---------------------------------------------------------------------------
 // 3. The shape, on real output
 // ---------------------------------------------------------------------------
+//
+// THREE DIFFERENT WORDS AND A TWO-DIGIT NUMBER, JOINED BY DASHES, chosen by
+// the owner on 3 October 2026 after that day's security audit. Before
+// it, from 28 September, one word and digits made exactly ten characters.
 {
   const sample = Array.from({ length: 2000 }, () => firstPassword());
 
@@ -94,39 +98,35 @@ ok(new Set(WORDS).size === WORDS.length, 'and none of them is in the list twice'
   // generator that can emit a nine-character password would create accounts
   // whose own password the app would not accept as a replacement.
   const shortest = Math.min(...sample.map((p) => p.length));
+  const longest = Math.max(...sample.map((p) => p.length));
   ok(shortest >= 10, `never shorter than the app's own 10-character rule (${shortest})`);
+  ok(longest <= 29, `and never longer than three of the longest words and a number (${longest})`);
 
-  // EXACTLY TEN, NOT AT LEAST TEN. Asked for directly: "just make a word with
-  // numbers in a 10 letter password." A generator that sometimes emitted
-  // eleven would still pass a `>= 10` check while quietly ignoring the ask.
-  const lengths = new Set(sample.map((p) => p.length));
-  ok(lengths.size === 1 && lengths.has(10),
-     `every password is exactly ten characters (saw: ${[...lengths].join(', ')})`);
-
-  const wrong = sample.filter((p) => !/^[a-z]{5,6}[1-9][0-9]{3,4}$/.test(p));
+  const wrong = sample.filter((p) => !/^[a-z]{3,8}-[a-z]{3,8}-[a-z]{3,8}-[1-9][0-9]$/.test(p));
   ok(wrong.length === 0,
-     wrong.length ? `every password is one word then digits (bad: ${wrong[0]})` : 'one word, then digits');
+     wrong.length ? `every password is three words then a number (bad: ${wrong[0]})` : 'three words, then a two-digit number, joined by dashes');
 
-  // NO HYPHEN. At ten characters a separator costs a tenth of the whole
-  // password and buys nothing, and it is a character people leave out.
-  ok(!sample.some((p) => p.includes('-')), 'and nothing to leave out, because there is no hyphen');
+  // THREE DIFFERENT WORDS, so nobody reads `river-river-lamp` as a typo.
+  const repeats = sample.filter((p) => new Set(p.split('-').slice(0, 3)).size !== 3);
+  ok(repeats.length === 0, repeats.length ? `a password repeats a word (${repeats[0]})` : 'and the three words are always different');
 
   // ALL LOWERCASE. Every capital is a shift key on a phone and a place to get
   // it wrong, and there is nothing here that needs the extra alphabet.
   ok(!sample.some((p) => /[A-Z]/.test(p)), 'nothing needs the shift key');
-  // No character a person has to be told the name of.
-  ok(!sample.some((p) => /[^a-z0-9]/.test(p)), 'and no symbol anybody has to describe out loud');
+  // The dash is the only character that is not a letter or a digit.
+  ok(!sample.some((p) => /[^a-z0-9-]/.test(p)), 'and no symbol but the dash, which the e-mail names');
 
-  // A NUMBER THAT NEVER STARTS WITH A ZERO. `047` gets typed as `47`, and the
-  // person then cannot sign in and has no idea why.
-  const leadingZero = sample.filter((p) => /^[a-z]+0/.test(p));
-  ok(leadingZero.length === 0, 'the number never starts with a zero, which people drop when typing');
-
-  // The word is a real one from the list, not a fragment of one.
+  // Every word is a real one from the list, not a fragment of one.
   const known = new Set(WORDS);
-  const unknown = sample.filter((p) => !known.has(p.replace(/[0-9]+$/, '')));
+  const unknown = sample.filter((p) => !p.split('-').slice(0, 3).every((w) => known.has(w)));
   ok(unknown.length === 0,
-     unknown.length ? `a password used something that is not a word (${unknown[0]})` : 'and the word is always one from the list');
+     unknown.length ? `a password used something that is not a word (${unknown[0]})` : 'and every word is one from the list');
+
+  // The e-mail describes the shape the generator makes, in both its forms.
+  const email = read('supabase/functions/invite/email.ts');
+  ok((email.match(/Three words and a number, joined by dashes\. No spaces, no capitals\./g) ?? []).length === 2
+     && !/ten characters/.test(email),
+     'the e-mail says what the password looks like, in the HTML and the plain text');
 }
 
 // ---------------------------------------------------------------------------
@@ -134,26 +134,17 @@ ok(new Set(WORDS).size === WORDS.length, 'and none of them is in the list twice'
 // ---------------------------------------------------------------------------
 //
 // The number is printed so shrinking the word list can never quietly weaken
-// every invitation the church sends. It is a TEMPORARY credential on a
-// rate-limited online sign-in, not a secret meant to survive an offline attack
-// -- the email says to change it and the app asks again.
+// every invitation the church sends.
 {
-  // THIS FLOOR WAS LOWERED ON PURPOSE, AND THE NUMBER IS THE POINT.
-  //
-  // Three hyphenated words and three digits was about 34 bits. One word and a
-  // number, at ten characters, is about 23 -- roughly eight million
-  // possibilities rather than fifteen billion. That is a real reduction and it
-  // was made knowingly, because a twenty-two character password wraps in a mail
-  // client and is a long way to look between reading and typing.
-  //
-  // What keeps it defensible is what the credential is: temporary, on a
-  // rate-limited online sign-in, for an account that must also be approved, with
-  // the e-mail and the app both asking the person to change it. The check stays
-  // here so that shrinking the word list further can never quietly take another
-  // few bits off every invitation the church sends.
+  // RAISED ON PURPOSE, 3 OCTOBER 2026. One word and digits was about 23 bits,
+  // accepted because sign-in is rate-limited. The audit found that limit is per
+  // internet address, which a guesser can rent many of, and that the app's own
+  // sign-in reaches Supabase from the server's addresses, not the guesser's. So
+  // the password itself has to carry the weight: about 30.5 bits, roughly 180
+  // times harder, for three days instead of seven.
   const bits = entropyBits();
-  ok(bits >= 22, `roughly ${bits.toFixed(1)} bits to guess, the floor under a temporary password`);
-  ok(bits < 30, 'and the report above is not silently claiming the old strength');
+  ok(bits >= 30, `roughly ${bits.toFixed(1)} bits to guess, the floor under a temporary password`);
+  ok(bits < 34, 'and the report above is not claiming more than three words can give');
 }
 
 // ---------------------------------------------------------------------------
@@ -167,89 +158,78 @@ ok(new Set(WORDS).size === WORDS.length, 'and none of them is in the list twice'
   // more likely than the rest.
   ok(/ceiling/.test(src) && /% limit/.test(src), 'out-of-range draws are rejected rather than folded');
   // The fix for the hang above: the draw widens instead of assuming one byte.
-  ok(/limit > 256/.test(src), 'and the draw widens for a list of more than 256, instead of hanging');
+  ok(/while \(2 \*\* \(8 \* size\) < limit\) size \+= 1/.test(src), 'and the draw widens to reach any list, instead of hanging');
 
   // A CHEAP EVENNESS CHECK. Not a statistical proof -- it is here to catch a
   // picker that always returns the same index, or one that never reaches the
   // end of the list, which is what a modulo bug actually looks like.
-  // STRIP THE DIGITS, DO NOT SPLIT ON A HYPHEN. This used to say
-  // `firstPassword().split('-')[0]`, which was correct while passwords had
-  // hyphens in them. Without one it returns the WHOLE password, so the map
-  // counted six thousand distinct passwords instead of the words inside them --
-  // and then cheerfully reported that the word list was reachable and no word
-  // dominated. Both assertions passed, neither measured anything, and a picker
-  // jammed on a single word would have sailed through.
-  const usable = WORDS.filter((w) => w.length === 5 || w.length === 6);
-  const first = new Map();
-  for (let i = 0; i < 6000; i += 1) {
-    const w = firstPassword().replace(/[0-9]+$/, '');
-    first.set(w, (first.get(w) ?? 0) + 1);
+  const seen = new Map();
+  const draws = 6000;
+  for (let i = 0; i < draws; i += 1) {
+    for (const w of firstPassword().split('-').slice(0, 3)) seen.set(w, (seen.get(w) ?? 0) + 1);
   }
-  ok(first.size > usable.length * 0.95,
-     `the whole list is reachable (${first.size} of ${usable.length} usable words seen)`);
-  // A five-letter word has ten times the numbers after it that a six-letter
-  // one has, so it is drawn ten times as often (section 6). "Dominates" is
-  // measured against what a five-letter word should get, with room to spare: a
-  // picker jammed on one word would give it all six thousand.
-  const total = 2 ** entropyBits();
-  const fairShare = 6000 * 90000 / total;
-  const most = Math.max(...first.values());
+  ok(seen.size > WORDS.length * 0.95, `the whole list is reachable (${seen.size} of ${WORDS.length} words seen)`);
+  const fairShare = (draws * 3) / WORDS.length;
+  const most = Math.max(...seen.values());
   ok(most < fairShare * 2,
-     `and no single word dominates (most common appeared ${most} times in 6000; a five-letter word expects about ${Math.round(fairShare)})`);
+     `and no single word dominates (most common appeared ${most} times; each expects about ${Math.round(fairShare)})`);
 }
 
 // ---------------------------------------------------------------------------
 // 6. Every password is as likely as every other
 // ---------------------------------------------------------------------------
 //
-// FOUND ON 28 SEPTEMBER 2026, BY THE REPEAT COUNT IN SECTION 2 FAILING ON ONE
-// RUNNER. The picker chose a word evenly and then its digits, so a password
-// after a six-letter word (9,000 numbers) was ten times as likely as one after
-// a five-letter word (90,000). The repeat count expected about 0.54 in three
-// thousand and the real rate was about 1.6; and the "23 bits" above was the
-// count of possibilities, which is only the strength when each is equally
-// likely. For the likeliest passwords it was about 20.6.
+// FOUND ON 28 SEPTEMBER 2026: a picker that chose a word and then its digits
+// made some passwords ten times as likely as the rest, and the strength it
+// reported was then only true for the unlikely ones. A password is one place in
+// a single list, and the draw is one even draw over the places. This checks the
+// list really is one place per password.
 {
-  const usable = WORDS.filter((w) => w.length === 5 || w.length === 6);
   const total = 2 ** entropyBits();
-  ok(Number.isInteger(Math.round(total)) && Math.abs(total - Math.round(total)) < 1e-6,
-     `the strength is a count of real passwords (${Math.round(total).toLocaleString('en')})`);
+  const count = Math.round(total);
+  ok(Math.abs(total - count) < 1e-3 && count === WORDS.length * (WORDS.length - 1) * (WORDS.length - 2) * 90,
+     `the strength is a count of real passwords (${count.toLocaleString('en')})`);
 
-  // Walk the whole list by its runs: each word's first and last place hold that
-  // word with its smallest and largest number, and the runs add up to the
-  // count the strength is worked out from. So every password has one place,
-  // and one draw over the places is one draw over the passwords.
-  let at = 0;
-  let wrongRun = '';
-  for (const word of usable) {
-    const digits = 10 - word.length;
-    const run = 9 * 10 ** (digits - 1);
-    if (passwordAt(at) !== `${word}${10 ** (digits - 1)}`
-        || passwordAt(at + run - 1) !== `${word}${10 ** digits - 1}`) {
-      wrongRun = `${word}: ${passwordAt(at)} .. ${passwordAt(at + run - 1)}`;
-      break;
-    }
-    at += run;
-  }
-  ok(!wrongRun, wrongRun ? `a word's run of numbers is wrong (${wrongRun})` : 'every word owns a run of numbers, from its smallest to its largest');
-  ok(at === Math.round(total), `and the runs add up to the whole count (${at.toLocaleString('en')})`);
+  const W = WORDS;
+  ok(passwordAt(0) === `${W[0]}-${W[1]}-${W[2]}-10`, `the list starts with the first three words and 10 (${passwordAt(0)})`);
+  ok(passwordAt(count - 1) === `${W[W.length - 1]}-${W[W.length - 2]}-${W[W.length - 3]}-99`,
+     `and ends with the last three and 99 (${passwordAt(count - 1)})`);
   let past = false;
-  try { passwordAt(at); } catch { past = true; }
-  ok(past, 'and there is nothing past the last password');
+  try { passwordAt(count); } catch { past = true; }
+  let before = false;
+  try { passwordAt(-1); } catch { before = true; }
+  ok(past && before, 'and there is nothing past either end');
+
+  // ONE PLACE PER PASSWORD, BOTH WAYS. Reading a password back into its place
+  // gives the place it came from, for places all along the list: so no two
+  // places make the same password, and one even draw over the places is one
+  // even draw over the passwords.
+  const placeOf = (pw) => {
+    const parts = pw.split('-');
+    const left = [...W];
+    let place = 0;
+    for (let i = 0; i < 3; i += 1) {
+      const at = left.indexOf(parts[i]);
+      place = place * left.length + at;
+      left.splice(at, 1);
+    }
+    return place * 90 + (Number(parts[3]) - 10);
+  };
+  let mismatch = '';
+  for (let i = 0; i < 4000 && !mismatch; i += 1) {
+    const at = Math.floor((i / 4000) * count) + (i % 97);
+    if (placeOf(passwordAt(at)) !== at) mismatch = `${at} -> ${passwordAt(at)} -> ${placeOf(passwordAt(at))}`;
+  }
+  ok(!mismatch, mismatch ? `a password does not read back to its place (${mismatch})` : 'every place reads back to itself, so each password has exactly one place');
 
   const src = read('supabase/functions/invite/password.ts');
   ok(/return passwordAt\(below\(allPasswords\(\)\)\);/.test(src),
-     'a password is ONE even draw over all of them, not a word and then digits');
-  ok(/limit > 65536 \? 4/.test(src), 'and the draw widens to four bytes to reach eight million');
+     'a password is ONE even draw over all of them, not words and then digits');
 
-  // THE SAME THING, SEEN IN THE OUTPUT. When every password is equally likely,
-  // six-letter words carry their share of the count, about one in ten. The old
-  // picker gave them their share of the WORDS, about one in two.
-  const sixShare = usable.filter((w) => w.length === 6).length * 9000 / total;
-  const draws = Array.from({ length: 3000 }, () => firstPassword());
-  const six = draws.filter((p) => /^[a-z]{6}[0-9]/.test(p)).length / draws.length;
-  ok(Math.abs(six - sixShare) < 0.05,
-     `six-letter words come up at their share of the passwords (${(six * 100).toFixed(1)}%, expected ${(sixShare * 100).toFixed(1)}%)`);
+  // THE SAME THING, SEEN IN THE OUTPUT: the number is even across 10 to 99.
+  const numbers = Array.from({ length: 4000 }, () => Number(firstPassword().split('-')[3]));
+  const high = numbers.filter((n) => n >= 55).length / numbers.length;
+  ok(Math.abs(high - 0.5) < 0.05, `numbers 55 to 99 come up half the time, as they should (${(high * 100).toFixed(1)}%)`);
 }
 
 console.log(bad ? `\n${bad} problem(s).` : '\nRESULT: ALL OK');

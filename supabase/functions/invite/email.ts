@@ -265,13 +265,13 @@ export function inviteHtml(
               <p style="margin:0 0 12px 0;font-family:'Courier New',Courier,monospace;font-size:17px;font-weight:bold;color:#1E2A4A;word-break:break-all;">${who}</p>
               <p style="margin:0 0 3px 0;font-size:12px;font-weight:bold;color:#5B6472;letter-spacing:0.5px;text-transform:uppercase;">Password</p>
               <p style="margin:0 0 8px 0;font-family:'Courier New',Courier,monospace;font-size:21px;font-weight:bold;color:#1E2A4A;letter-spacing:0.5px;word-break:break-all;">${pass}</p>
-              <p style="margin:0;font-size:14px;line-height:1.5;color:#5B6472;">All small letters and numbers, ten characters, no spaces.</p>
+              <p style="margin:0;font-size:14px;line-height:1.5;color:#5B6472;">Three words and a number, joined by dashes. No spaces, no capitals.</p>
             </td></tr>
           </table>
 
           <p style="margin:0 0 22px 0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#7A2A20;">
             <strong>This password is temporary. Please change it.</strong> Anybody who can read this
-            e-mail can use it, so it stops working after seven days. Choose your own before then;
+            e-mail can use it, so it stops working after three days. Choose your own before then;
             if you miss it, tap &ldquo;Forgot your password&rdquo; when you sign in. There is a page for exactly that:
             <a href="${app}/password" style="color:#7A2A20;font-weight:bold;">${app}/password</a>
           </p>
@@ -288,7 +288,7 @@ export function inviteHtml(
 
           <p style="margin:0 0 6px 0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#22272F;">
             You can open this e-mail again, on any device. The button never expires; the password
-            works for seven days, or until you choose your own.
+            works for three days, or until you choose your own.
           </p>
           <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#5B6472;">
             ${esc(afterLine)} To add Hope&nbsp;Beacon to your Home Screen, open <strong>Settings</strong> inside the app.
@@ -362,10 +362,10 @@ export function inviteText(
     'YOUR SIGN-IN DETAILS',
     `E-mail:   ${signInEmail}`,
     `Password: ${tempPassword}`,
-    'All small letters and numbers, ten characters, no spaces.',
+    'Three words and a number, joined by dashes. No spaces, no capitals.',
     '',
     wrap('This password is temporary. Please change it. Anybody who can read '
-      + 'this e-mail can use it, so it stops working after seven days. Choose your '
+      + 'this e-mail can use it, so it stops working after three days. Choose your '
       + 'own before then; if you miss it, tap "Forgot your password" when you sign '
       + 'in. There is a page for exactly that:'),
     `${appUrl}/password`,
@@ -375,7 +375,7 @@ export function inviteText(
     '',
     ...(WAITS[role] ? [wrap(WAITS[role] as string), ''] : []),
     wrap('You can open this e-mail again, on any device. The button never '
-      + 'expires; the password works for seven days, or until you choose your own.'),
+      + 'expires; the password works for three days, or until you choose your own.'),
     '',
     wrap(AFTER[role]),
     '',

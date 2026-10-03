@@ -306,5 +306,17 @@ const ui = strip(read('components/Pocket.tsx'));
      'and every storage access is wrapped, because a private window refuses');
 }
 
+// FOR THIS APP'S OWN PAGES ONLY (the audit of 3 October 2026): another website
+// cannot turn its visitors' browsers into users of this route, and cannot draw
+// what it returns.
+{
+  const route = read('app/api/app-icon/route.ts');
+  const head = route.slice(route.indexOf('export async function GET'));
+  const refuse = head.indexOf("if (from && from !== 'same-origin') return new NextResponse(null, { status: 403 });");
+  ok(/request\.headers\.get\('sec-fetch-site'\)/.test(head) && refuse > 0 && refuse < head.indexOf('publicUrl('),
+     'a request from another site is refused before anything is fetched');
+  ok(/'cross-origin-resource-policy': 'same-origin'/.test(route), 'and no other site may draw the picture it returns');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

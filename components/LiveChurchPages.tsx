@@ -382,7 +382,7 @@ export function LiveMailPage() {
               opening it does nothing at all to the Director's own session. */}
           <p className={`mt-1 text-sm ${handLink.wait ? 'text-blue-800' : 'text-amber-800'}`}>
             The link never expires. They can use it as often as they need, on any
-            device, and opening it yourself is harmless. The password works for seven
+            device, and opening it yourself is harmless. The password works for three
             days, or until they choose their own; after that they tap &ldquo;Forgot your
             password&rdquo; on the sign-in page.
           </p>

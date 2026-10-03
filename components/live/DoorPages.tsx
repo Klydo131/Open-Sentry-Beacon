@@ -172,6 +172,7 @@ export function LiveLoginPage() {
       case 'missing': return 'Enter your e-mail and password.';
       case 'profile': return 'Your account profile is not ready yet.';
       case 'unavailable': return 'Could not reach live sign-in. Please try again.';
+      case 'busy': return 'Too many sign-in attempts just now. Wait a few minutes, then try again.';
       default: return '';
     }
   });
@@ -442,14 +443,14 @@ export function LiveLoginPage() {
                 Never set a password yet?
               </p>
               {/* SAID HERE BECAUSE IT IS WHERE IT HAPPENS. Since 29 September
-                  2026 an invitation's password stops working after seven days
-                  unless it was changed (see the migration an_invitation_
+                  2026 an invitation's password stops working after a few days
+                  (three since 3 October 2026) unless it was changed (see the migration an_invitation_
                   password_runs_out), and "wrong password" is all the sign-in
                   can say. The way back is the same link as ever. */}
               <p className="mt-1 text-sm text-gray-700">
                 If you were invited but never got as far as choosing one, there is
                 nothing to type here yet. The password in an invitation e-mail also
-                stops working seven days after it was sent. Either way, we can send
+                stops working three days after it was sent. Either way, we can send
                 you a link that lets you choose your own now.
               </p>
               <Button

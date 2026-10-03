@@ -9,6 +9,16 @@
 // look identical. In an open-source project anybody can propose a change, and
 // a reviewer -- human or AI -- reads the screen, not the bytes.
 //
+// TEXT FOR AN AI THAT NO PERSON CAN SEE (added after the audit of 3 October
+// 2026). Unicode "tag" characters (U+E0000 to U+E007F) mirror plain ASCII and
+// draw as nothing at all, so a sentence written in them is invisible on GitHub
+// and in every editor while an AI tool reading the file still reads it as
+// words. That is a way to slip instructions to a contributor's AI through a
+// pull request a human approved. The variation selectors beyond the emoji ones
+// (U+E0100 to U+E01EF) and the invisible maths operators (U+2061 to U+2064) can
+// carry hidden text the same way. None has any use in this repository.
+// (U+FE0F stays allowed: it is what turns a heart into the red heart emoji.)
+//
 // FOUND THE HARD WAY, 1 October 2026. Writing lib/talk/thread.ts, which strips
 // exactly these characters from file names, the first draft put the characters
 // themselves into the source instead of their `\u` escapes. It worked, and it
@@ -44,14 +54,19 @@ function files() {
   }
 }
 
-const HIDDEN = /[\u202A-\u202E\u2066-\u2069\u200B-\u200F\u2060\uFEFF]/u;
+const HIDDEN = /[\u202A-\u202E\u2066-\u2069\u200B-\u200F\u2060-\u2064\uFEFF\u{E0000}-\u{E007F}\u{E0100}-\u{E01EF}]/u;
 const NAMES = {
   0x202a: 'LEFT-TO-RIGHT EMBEDDING', 0x202b: 'RIGHT-TO-LEFT EMBEDDING', 0x202c: 'POP DIRECTIONAL FORMATTING',
   0x202d: 'LEFT-TO-RIGHT OVERRIDE', 0x202e: 'RIGHT-TO-LEFT OVERRIDE', 0x2066: 'LEFT-TO-RIGHT ISOLATE',
   0x2067: 'RIGHT-TO-LEFT ISOLATE', 0x2068: 'FIRST STRONG ISOLATE', 0x2069: 'POP DIRECTIONAL ISOLATE',
   0x200b: 'ZERO WIDTH SPACE', 0x200c: 'ZERO WIDTH NON-JOINER', 0x200d: 'ZERO WIDTH JOINER',
   0x200e: 'LEFT-TO-RIGHT MARK', 0x200f: 'RIGHT-TO-LEFT MARK', 0x2060: 'WORD JOINER', 0xfeff: 'ZERO WIDTH NO-BREAK SPACE',
+  0x2061: 'FUNCTION APPLICATION', 0x2062: 'INVISIBLE TIMES', 0x2063: 'INVISIBLE SEPARATOR', 0x2064: 'INVISIBLE PLUS',
 };
+/** The name of a hidden character, including the two whole blocks named by range. */
+const nameOf = (code) => NAMES[code]
+  ?? (code >= 0xe0000 && code <= 0xe007f ? 'TAG CHARACTER (invisible text an AI still reads)'
+    : code >= 0xe0100 && code <= 0xe01ef ? 'VARIATION SELECTOR SUPPLEMENT' : undefined);
 
 let scanned = 0;
 const found = [];
@@ -68,7 +83,7 @@ for (const rel of files()) {
   text.split('\n').forEach((line, i) => {
     for (const ch of line) {
       const code = ch.codePointAt(0);
-      if (NAMES[code]) found.push(`${rel}:${i + 1}  U+${code.toString(16).toUpperCase().padStart(4, '0')} ${NAMES[code]}`);
+      if (nameOf(code)) found.push(`${rel}:${i + 1}  U+${code.toString(16).toUpperCase().padStart(4, '0')} ${nameOf(code)}`);
     }
   });
 }

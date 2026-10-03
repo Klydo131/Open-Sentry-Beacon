@@ -23,7 +23,19 @@
 # "public backup".
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# WHAT TO SET UP (Settings → Secrets and variables → Actions):
+# WHAT TO SET UP (Settings → Environments → New environment, named `backup`):
+#
+#   Under "Deployment branches and tags", allow `main` only, and under
+#   "Required reviewers" add the owner. Then add the two secrets below as
+#   ENVIRONMENT secrets of `backup`, and delete them from Settings → Secrets and
+#   variables → Actions if they are there.
+#
+#   WHY AN ENVIRONMENT (the audit of 3 October 2026). A repository secret can be
+#   read by any workflow on any branch, so anybody who can push to this
+#   repository, and any AI tool working with that access, could add a workflow
+#   that copies the database address out. An environment secret reaches only a
+#   job that names the environment, only from the branches it allows, and only
+#   after its reviewer approves the run. The cost is one approval a week.
 #
 #   SUPABASE_DB_URL     the pooler connection string from
 #                       Supabase → Project Settings → Database → Connection string
@@ -53,6 +65,9 @@ permissions:
 
 jobs:
   dump:
+    # The database address lives here, not in the repository's secrets: see
+    # WHAT TO SET UP above.
+    environment: backup
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -96,7 +111,7 @@ jobs:
             # wrong here: the point of the job is that nobody is watching.
             if [ "${HERE}" = "${UPSTREAM}" ]; then
               echo "::error::SUPABASE_DB_URL is not set on the live repository, so the database is NOT being backed up."
-              echo "::error::Add SUPABASE_DB_URL and BACKUP_PASSPHRASE under Settings → Secrets and variables → Actions."
+              echo "::error::Add SUPABASE_DB_URL and BACKUP_PASSPHRASE as secrets of the backup environment (Settings → Environments → backup)."
               exit 1
             fi
 
@@ -161,7 +176,7 @@ jobs:
       # made: on a fork the step above stops cleanly with nothing to send.
       - name: Upload encrypted backup
         if: steps.dump.outputs.made == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: beacon-backup
           path: '*.sql.gpg'

@@ -1,0 +1,25 @@
+# Who must review a change to the files that guard everybody else.
+#
+# Added after the audit of 3 October 2026. These are the places where one
+# careless or hostile change, by a person or by an AI tool, could expose the
+# church's data or switch a protection off: the database's rules, the
+# workflows that hold secrets, the server routes, the security headers, the
+# instructions AI tools read, and the checks that keep all of it honest.
+#
+# This takes effect for pull requests once "Require review from Code Owners" is
+# turned on for `main` (Settings → Branches, or Rules). Until then GitHub asks
+# for the review but does not wait for it.
+
+/.github/                  @Klydo131
+/supabase/                 @Klydo131
+/app/api/                  @Klydo131
+/next.config.mjs           @Klydo131
+/package.json              @Klydo131
+/package-lock.json         @Klydo131
+/scripts/                  @Klydo131
+/tests/                    @Klydo131
+/lib/supabase/             @Klydo131
+/lib/live/storage-path.ts  @Klydo131
+/AGENTS.md                 @Klydo131
+/CLAUDE.md                 @Klydo131
+/.claude/                  @Klydo131

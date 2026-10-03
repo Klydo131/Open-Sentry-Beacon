@@ -46,7 +46,18 @@ const MIGRATION = 'supabase/migrations/20260929100000_an_invitation_password_run
     'and no grant to anybody signed in or not');
 
   const start = fn('start_temporary_password');
-  ok(/interval '7 days'/.test(start), 'an invitation password lasts seven days');
+  ok(/interval '7 days'/.test(start), 'an invitation password lasted seven days when this first ran');
+  // Three days since 3 October 2026, by the owner's choice after that day's
+  // audit, in a migration of its own so the first one stays as it was applied.
+  const three = read('supabase/migrations/20261003130000_an_invitation_password_lasts_three_days.sql');
+  const later = three.slice(three.indexOf('create or replace function public.start_temporary_password'));
+  ok(/interval '3 days'/.test(later) && !/interval '7 days'/.test(later.replace(/--[^\n]*/g, '')),
+    'and lasts three days now');
+  ok(/revoke all on function public\.start_temporary_password\(uuid\) from public, anon, authenticated;/.test(three)
+     && /grant execute on function public\.start_temporary_password\(uuid\) to service_role;/.test(three),
+    'and replacing it keeps it the invitation service\'s alone');
+  ok(!/update public\.temporary_passwords/.test(three.replace(/--[^\n]*/g, '')),
+    'and passwords already sent keep the seven days their e-mail promised');
   ok(/select u\.encrypted_password into current_hash from auth\.users u where u\.id = p_user;/.test(start),
     'and the hash it was set with is kept, to tell it from any password chosen later');
   ok(/grant execute on function public\.start_temporary_password\(uuid\) to service_role;/.test(sql)
@@ -93,8 +104,10 @@ const MIGRATION = 'supabase/migrations/20260929100000_an_invitation_password_run
   ok(clock !== -1 && clock > set, 'the invitation starts the clock after it sets the password, so the hash is the new one');
 
   const email = read('supabase/functions/invite/email.ts');
-  ok((email.match(/stops working after seven days/g) ?? []).length === 2,
-    'the e-mail says the password stops working after seven days, in the HTML and the plain text');
+  ok((email.match(/stops working after three days/g) ?? []).length === 2
+     && (email.match(/works for three days, or until you choose your own/g) ?? []).length === 2
+     && !/seven days/.test(email),
+    'the e-mail says the password stops working after three days, in the HTML and the plain text');
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +131,7 @@ const MIGRATION = 'supabase/migrations/20260929100000_an_invitation_password_run
     'the Password page has "Sign out everywhere else"');
   ok(/live\.myTemporaryPasswordEnds\(\)/.test(page) && /It stops working on/.test(page),
     'and tells somebody on an invitation password the day it stops working');
-  ok(/stops working seven days after it was sent/.test(read('components/live/DoorPages.tsx')),
+  ok(/stops working three days after it was sent/.test(read('components/live/DoorPages.tsx')),
     'and the sign-in page says so where a refused password is explained');
 }
 

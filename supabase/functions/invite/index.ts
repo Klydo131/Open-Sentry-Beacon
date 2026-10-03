@@ -370,9 +370,11 @@ async function handle(req: Request): Promise<Response> {
   //
   // This project has Supabase's "prevent use of leaked passwords" turned on,
   // which rejects any password found in the HaveIBeenPwned corpus. A generated
-  // password is a real word plus digits -- `harbor4821` -- which is exactly the
-  // shape those lists are full of, so a draw landing in the corpus is unlikely
-  // per invitation and close to inevitable across a launch of two dozen.
+  // password was once a real word plus digits -- `harbor4821` -- exactly the
+  // shape those lists are full of, so a draw landing in the corpus was
+  // unlikely per invitation and close to inevitable across a launch of two
+  // dozen. Three words and a number (since 3 October 2026) is far rarer in
+  // them, and the retry stays for the draw that still lands.
   //
   // THE FAILURE IT WOULD CAUSE IS THE WORST KIND: not an error anybody could
   // act on, but one person out of twenty-five who never receives an invitation,
@@ -442,7 +444,9 @@ async function handle(req: Request): Promise<Response> {
       if (flagErr) console.log(JSON.stringify({ at: 'invite', warn: 'flag', why: flagErr.message }));
 
       // AND IT RUNS OUT (29 September 2026). The password in this letter now
-      // lasts seven days: after that the database replaces it with one nobody
+      // lasts three days (seven until 3 October 2026; see
+      // 20261003130000_an_invitation_password_lasts_three_days.sql): after
+      // that the database replaces it with one nobody
       // knows and signs out every device that used it, unless the person has
       // chosen their own first. It keeps the hash set a moment ago, so it can
       // never touch a password somebody chose. See

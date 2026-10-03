@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-safer-sign-in',
+    date: '2026-10-04',
+    title: 'Safer signing in and out',
+    items: [
+      'Sign out now ends that sign-in for good, not only on the screen in front of you. Your other devices stay signed in.',
+      'A new invitation\'s password is three short words and a number, joined by dashes, such as harbor-acorn-river-48. It works for three days, so choose your own when you first sign in.',
+      'If too many sign-ins arrive at once, the app now asks you to wait a few minutes instead of saying your password is wrong.',
+    ],
+  },
+  {
     id: '2026-10-04-fresh-looks',
     date: '2026-10-04',
     title: 'Three new looks, the same familiar rooms',

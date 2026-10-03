@@ -302,6 +302,15 @@ function declaredIcon(html: string, base: URL): string | null {
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  // FOR THIS APP'S OWN PAGES ONLY (the audit of 3 October 2026). Without this,
+  // any website could point its own visitors' browsers at this route and use
+  // the church's server as a free picture fetcher, spending the church's
+  // hosting allowance. A browser says where a request came from in
+  // Sec-Fetch-Site and does not let a page change it; a browser too old to
+  // send it is let through, because nothing else here depends on it.
+  const from = request.headers.get('sec-fetch-site');
+  if (from && from !== 'same-origin') return new NextResponse(null, { status: 403 });
+
   const asked = request.nextUrl.searchParams.get('url');
   if (!asked) return new NextResponse(null, { status: 400 });
 
@@ -345,6 +354,8 @@ export async function GET(request: NextRequest) {
         'cache-control': 'public, max-age=86400, s-maxage=604800, immutable',
         'content-security-policy': "default-src 'none'; sandbox",
         'x-content-type-options': 'nosniff',
+        // And no other site may draw it, even from a copy a browser cached.
+        'cross-origin-resource-policy': 'same-origin',
       },
     });
   }

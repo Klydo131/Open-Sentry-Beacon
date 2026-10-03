@@ -709,7 +709,7 @@ export function LiveAdminPage() {
                 handLink.wait ? 'text-blue-800' : handLink.why === 'sent' ? 'text-green-800' : 'text-amber-800'
               }`}>
                 The account is ready. The link can be used as often as they need; the
-                password works for seven days, or until they choose their own.
+                password works for three days, or until they choose their own.
               </p>
 
               {/* THE PASSWORD, WHERE A DIRECTOR CAN READ IT DOWN A PHONE LINE.

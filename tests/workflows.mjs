@@ -155,9 +155,29 @@ for (const file of files) {
 // These three majors (v5 and later) run on Node 24.
 for (const file of files) {
   const text = fs.readFileSync(path.join(dir, file), 'utf8');
-  for (const m of text.matchAll(/uses:\s*actions\/(checkout|setup-node|upload-artifact|download-artifact|cache)@v(\d+)/g)) {
-    ok(Number(m[2]) >= 5, `${file}: actions/${m[1]}@v${m[2]} runs on Node 24${Number(m[2]) >= 5 ? '' : ' -- it does NOT; v4 and older run on the retired Node 20'}`);
+  // Read from the tag, or from the version written after a pinned commit.
+  for (const m of text.matchAll(/uses:\s*actions\/(checkout|setup-node|upload-artifact|download-artifact|cache)@(?:v(\d+)|[0-9a-f]{40} # v(\d+))/g)) {
+    const major = Number(m[2] ?? m[3]);
+    ok(major >= 5, `${file}: actions/${m[1]}@v${major} runs on Node 24${major >= 5 ? '' : ' -- it does NOT; v4 and older run on the retired Node 20'}`);
   }
+}
+
+// EVERY ACTION IS PINNED TO A COMMIT (the audit of 3 October 2026). A tag such
+// as `@v7` is a name its owner can move to different code at any time, and a
+// workflow that runs it would run the new code with this repository's token
+// and, in backup.yml, beside the database's address. A commit cannot be moved.
+// The version stays written after it, so a person can still read what it is.
+{
+  let uses = 0;
+  for (const file of files) {
+    const text = fs.readFileSync(path.join(dir, file), 'utf8');
+    for (const m of text.matchAll(/^\s*(?:-\s*)?uses:\s*(\S+)(.*)$/gm)) {
+      uses += 1;
+      ok(/@[0-9a-f]{40}$/.test(m[1]) && /^\s+# v\d+(\.\d+)*\s*$/.test(m[2]),
+         `${file}: ${m[1].split('@')[0]} is pinned to a commit, with its version written beside it`);
+    }
+  }
+  ok(uses >= 10, `and that was checked for every action the workflows use (${uses})`);
 }
 
 // THE BACKUP SAYS SO WHEN THERE IS NO BACKUP. On the live repository a missing
@@ -170,6 +190,13 @@ for (const file of files) {
   const upstreamBranch = noUrl.slice(0, noUrl.indexOf('fi\n'));
   ok(/if \[ "\$\{HERE\}" = "\$\{UPSTREAM\}" \]; then[\s\S]*?::error::[\s\S]*?exit 1/.test(upstreamBranch),
     'backup.yml: on the live repository, no database address is an error that says there is no backup');
+  // THE DATABASE ADDRESS IS AN ENVIRONMENT'S, NOT THE REPOSITORY'S (the audit
+  // of 3 October 2026): only a job that names `backup`, from the branches the
+  // owner allows and after the owner approves, can read it.
+  ok(/\n  dump:\n(?:    #[^\n]*\n)*    environment: backup\n/.test(backup),
+    'backup.yml: the backup job runs in the protected backup environment');
+  ok(fs.readdirSync(dir).every((f) => f === 'backup.yml' || !/SUPABASE_DB_URL/.test(fs.readFileSync(path.join(dir, f), 'utf8'))),
+    'and no other workflow asks for the database address');
   ok(/UPSTREAM: Klydo131\/Open-Sentry-Beacon/.test(backup)
      && /UPSTREAM: Klydo131\/Open-Sentry-Beacon/.test(fs.readFileSync(path.join(dir, 'keep-awake.yml'), 'utf8')),
     'backup.yml and keep-awake.yml name the same live repository');
