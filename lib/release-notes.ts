@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-03-write-in-home',
+    date: '2026-10-03',
+    title: 'Write your blog and announcements from Home',
+    items: [
+      'Home has a Blog folder: the writing box is open as soon as you arrive. A title, your post, Publish.',
+      'Guides and leaders also have an Announcements folder in Home, to pin a notice for everybody.',
+      'Need more? Tick Advanced settings to choose who sees a post, save a draft, or add when an announcement happens.',
+      'There is no Publish room any more. Old links to it open Home\'s Blog folder.',
+      'Offline, the app now simply says Offline.',
+    ],
+  },
+  {
     id: '2026-10-03-text-size-apply',
     date: '2026-10-03',
     title: 'Try a text size before you apply it',

@@ -72,11 +72,11 @@ export function LiveAnnouncements({
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-bold text-room">📌 Announcements</h2>
-        {/* WRITING IS IN /publish. This is what the church has said; a composer
-            on top of it makes a reader's page into a writer's page for the
-            three roles who can write. */}
+        {/* WRITING IS IN HOME'S ANNOUNCEMENTS FOLDER. This is what the church
+            has said; a composer on top of it makes a reader's page into a
+            writer's page for the three roles who can write. */}
         {mayPost && (
-          <Link href="/publish" className="text-sm font-semibold text-room underline underline-offset-2">
+          <Link href="/church?room=announcements" className="text-sm font-semibold text-room underline underline-offset-2">
             Write one →
           </Link>
         )}

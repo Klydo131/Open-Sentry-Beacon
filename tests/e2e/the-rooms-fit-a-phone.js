@@ -137,7 +137,8 @@ async function go(page, locator, url) {
     ok(/\/menu$/.test(new URL(page.url()).pathname), `${at}: Menu opens the Menu (${new URL(page.url()).pathname})`);
     ok((await litTab(page)) === 'Menu', `${at}: and Menu is lit`);
     const rooms = await page.locator('main a.menu-row').allInnerTexts();
-    const want = ['Home', 'My Explorers', 'Office', 'Publish', 'My Files', 'Mail', 'Settings'];
+    const want = ['Home', 'My Explorers', 'Office', 'My Files', 'Mail', 'Settings'];
+    ok(!rooms.some((r) => /Publish/.test(r)), `${at}: and no Publish room: Blog and Announcements are Home's`);
     const missing = want.filter((w) => !rooms.some((r) => r.includes(w)));
     ok(missing.length === 0, `${at}: the Menu lists every room a Guide has${missing.length ? ` (missing ${missing.join(', ')})` : ''}`);
 

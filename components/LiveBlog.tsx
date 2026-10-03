@@ -56,7 +56,9 @@ function Body({ text }: { text: string }) {
 export function LiveBlogDesk() {
   const [posts, setPosts] = useState<live.MyBlogPost[] | null>(null);
   const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
-  const [open, setOpen] = useState(false);
+  // Open from the start: Home's Blog room is where people come to write.
+  const [open, setOpen] = useState(true);
+  const [advanced, setAdvanced] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [audience, setAudience] = useState<live.BlogAudienceKind>('church');
@@ -102,7 +104,7 @@ export function LiveBlogDesk() {
     setError('');
     try {
       await live.createBlogPost({ title, body, visibility, audience, dsIds: picked });
-      setTitle(''); setBody(''); setAudience('church'); setPicked([]); setOpen(false);
+      setTitle(''); setBody(''); setAudience('church'); setPicked([]);
       await load();
     } catch (cause) {
       setError(message(cause));
@@ -152,6 +154,28 @@ export function LiveBlogDesk() {
             className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
           />
 
+          {/* SIMPLE FIRST, ADVANCED WHEN WANTED. The owner, 3 October 2026,
+              moving writing into Home: "make it simple with advance settings
+              too". Simple is a title, the post and Publish, to everybody in
+              the church. Advanced adds who sees it, and saving as a draft. */}
+          <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-navy">
+            <input
+              type="checkbox"
+              data-blog-advanced
+              checked={advanced}
+              onChange={(e) => {
+                setAdvanced(e.target.checked);
+                if (!e.target.checked) {
+                  setAudience('church');
+                  setPicked([]);
+                }
+              }}
+            />
+            Advanced settings
+            <span className="font-normal text-gray-500">(choose who sees it, or save as a draft)</span>
+          </label>
+
+          {advanced && (<>
           {/* THE NOTICEBOARD IS FIRST because it is what most people mean by
               publishing. The two narrower audiences are still here, and a post
               addressed to one of them is not on the board at all. */}
@@ -209,11 +233,18 @@ export function LiveBlogDesk() {
             </div>
           )}
 
+          </>)}
+
+          {!advanced && (
+            <p className="mt-2 text-xs text-gray-500">Everyone in the church sees it, with your name and role on it.</p>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             <Button onClick={() => submit('published')} disabled={!canPost || busy}>Publish</Button>
-            <Button variant="ghost" onClick={() => submit('private')} disabled={!title.trim() || !body.trim() || busy}>
-              Save as draft
-            </Button>
+            {advanced && (
+              <Button variant="ghost" onClick={() => submit('private')} disabled={!title.trim() || !body.trim() || busy}>
+                Save as draft
+              </Button>
+            )}
           </div>
         </div>
       )}

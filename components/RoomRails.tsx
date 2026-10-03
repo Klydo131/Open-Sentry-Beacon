@@ -136,11 +136,10 @@ export function railGroupsFor(
   // Explorer's screen over their shoulder saw a room they did not have.
   const myFiles = { href: '/library', label: 'My Files', icon: '📚' };
 
-  // PUBLISH, for every role. Writing was scattered across the screens people
-  // READ: the blog desk on an Explorer's journey, on a Guide's Office and in a
-  // Director's admin tab, and the announcement composer on top of the church
-  // home screen. Publishing is a task, and a task gets a room.
-  const publish = { href: '/publish', label: 'Publish', icon: '✍️', beta: true };
+  // NO PUBLISH ROOM. It was one, for every role, from late September; on 3
+  // October 2026 the owner moved its two halves into Home: "Blog and
+  // announcement will be the sub rooms of home, so basically we will take out
+  // publish". /publish now opens Home's Blog folder (app/publish/page.tsx).
   // The Guild Room is archived. Its rail entries are gone with its nav entry;
   // see the note in LiveAppShell. Nothing in the database was touched.
 
@@ -172,7 +171,6 @@ export function railGroupsFor(
           thisSabbath,
           studyRoom,
           myFiles,
-          publish,
         ],
       },
       personal,
@@ -188,7 +186,6 @@ export function railGroupsFor(
           { href: '/dm', label: 'My Explorers', icon: '🤝', badge: counts.seekers },
           office,
           thisSabbath,
-          publish,
           myFiles,
         ],
       },
@@ -205,7 +202,6 @@ export function railGroupsFor(
         { href: '/admin', label: 'Admin', icon: '🛡️', badge: counts.approvals },
         office,
         thisSabbath,
-        publish,
         myFiles,
         cases,
       ],

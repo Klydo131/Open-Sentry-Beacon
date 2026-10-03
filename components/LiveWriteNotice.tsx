@@ -83,6 +83,7 @@ export function LiveWriteNotice() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [whenText, setWhenText] = useState('');
+  const [advanced, setAdvanced] = useState(false);
   const [mine, setMine] = useState<live.Announcement[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -187,15 +188,36 @@ export function LiveWriteNotice() {
         multiline
       />
 
+      {/* SIMPLE FIRST, ADVANCED WHEN WANTED. The owner, 3 October 2026,
+          moving announcements into Home: "make it simple with advance settings
+          too". Simple is a title, the announcement and Pin it; Advanced adds
+          when it happens. Unticking it forgets a When typed under it, so what
+          is pinned is what is on the screen. */}
+      <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-navy">
+        <input
+          type="checkbox"
+          data-notice-advanced
+          checked={advanced}
+          onChange={(e) => {
+            setAdvanced(e.target.checked);
+            if (!e.target.checked) setWhenText('');
+          }}
+        />
+        Advanced settings
+        <span className="font-normal text-gray-500">(add when it happens)</span>
+      </label>
+
       {/* FREE TEXT, NOT A DATE PICKER. "This Sabbath, 9:00 AM" and "Every
           evening this week" are both what a church actually writes, and neither
           is a date. The label says When rather than Date for the same reason. */}
-      <Field
-        label="When"
-        value={whenText}
-        onChange={setWhenText}
-        placeholder="This Sabbath, 9:00 AM"
-      />
+      {advanced && (
+        <Field
+          label="When"
+          value={whenText}
+          onChange={setWhenText}
+          placeholder="This Sabbath, 9:00 AM"
+        />
+      )}
       {/* SAID BEFORE THEY POST. There is no audience to choose, and somebody
           writing a notice should know that rather than assume there is one. */}
       <p className="mt-2 text-xs text-gray-500">

@@ -13,7 +13,7 @@
 //
 //   * a roster, a conversation, a case  -> about a person, on their own screen
 //   * numbers, exports, stocking a shelf -> office work, in here
-//   * a blog post, an announcement -> publishing, in /publish
+//   * a blog post, an announcement -> Home's Blog and Announcements folders
 //
 // Writing left this room after it arrived here: a blog post and a notice are
 // the same act for every role, including an Explorer, and this room is only for

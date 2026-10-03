@@ -8,6 +8,7 @@ import { LiveChurchPage } from '@/components/LiveChurchPages';
 import { useIsLive } from '@/lib/tutorial';
 import { Card } from '@/components/ui';
 import { ChurchBillboard } from '@/components/ChurchBillboard';
+import { BlogDesk, BlogFeed } from '@/components/Blog';
 import { FeedbackButton } from '@/components/Feedback';
 import { STAGES, roleLabel } from '@/lib/brand';
 import type { Role } from '@/lib/types';
@@ -50,8 +51,12 @@ function Body() {
 
   const seesMore = me.role === 'admin' || me.role === 'executive';
 
+  // BLOG IS HOME'S (3 October 2026: "Blog and announcement will be the sub
+  // rooms of home"). The sample church has no announcement composer to move:
+  // pinning a notice is a live-app thing, and was never in the tutorial.
   const rooms: Room[] = [
     { id: 'notices', label: '📌 Notices' },
+    { id: 'blogs', label: '✍️ Blog' },
     { id: 'prayer', label: '🙏 Prayer wall' },
     // An Explorer has no numbers folder, here as in the live church: a tally
     // of how many people like them there are reads as being counted.
@@ -79,6 +84,25 @@ function Body() {
         </p>
         <FeedbackButton className="tap" />
       </div>)}
+
+      {/* WRITE, THEN WHAT PEOPLE WROTE. The sample church carries a blog desk
+          for the sample Guide; everybody reads what is shared with them. */}
+      {room === 'blogs' && (
+        <div className="space-y-5">
+          {me.role === 'dm' ? (
+            <BlogDesk userId={me.id} />
+          ) : (
+            <Card className="p-5">
+              <p className="font-bold text-navy">Practise writing as a Guide</p>
+              <p className="mt-1 text-sm text-gray-500">
+                The sample church carries a blog for the sample Guide. In your own church app everybody writes
+                here, and Guides and Directors pin announcements in the folder beside it.
+              </p>
+            </Card>
+          )}
+          <BlogFeed userId={me.id} />
+        </div>
+      )}
 
       {/* Prayer wall — anonymously shared requests, visible to everyone */}
       {room === 'prayer' && (() => {

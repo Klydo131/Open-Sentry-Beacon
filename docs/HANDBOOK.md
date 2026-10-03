@@ -351,15 +351,15 @@ Directors keep the same control over everything, which is what running the churc
 
 **This works on a phone, and for a while it did not.** The writing desk is in the Office, the Office was only ever linked from the left column, and the left column does not exist below the width of a laptop. So a Guide on a phone or an iPad held upright could read studies but never write one, with nothing on screen to suggest the room existed. Three rooms were in that state (Office, Publish and Cases) and the fix was to put them in the header row that a phone had at the time. Since 30 September 2026 every screen size steers by the bar at the bottom instead, and its **Menu** is the one list of rooms, so there is no second list for a room to be missing from.
 
-### Publish
+### Blog and Announcements, in Home
 
-**Everything you write for other people to read is in one room**, and every role has it. Writing used to be scattered across the screens people *read*: the blog desk sat on an Explorer's journey, on a Guide's Office and inside a Director's admin tab, and the announcement composer sat on top of the church home screen, which is the page somebody opens to find out what the church has said.
+**Writing lives in Home, beside what has been written.** Home has a **Blog** folder and, for Guides and leadership, an **Announcements** folder. The owner, 3 October 2026: "Blog and announcement will be the sub rooms of home, so basically we will take out publish". There is no Publish room any more; an old link to it opens Home's Blog folder.
 
-Publishing is a task, and a task gets a room.
+**Blog.** The writing box is open as soon as you arrive: a title, the post and **Publish**, which goes to everybody in the church with your name on it. Tick **Advanced settings** to choose who sees it (only the people you walk with, or people you pick) or to **Save as draft**. Below the box are your own posts and then everything the church has written.
 
-An **Explorer** writes a blog post here, which the whole church reads. They cannot pin an announcement, and the screen says so and points them at the blog rather than showing them a blank space. A room that is empty for a whole role reads as broken.
+**Announcements.** A title, the words and **Pin it**, and the notice sits at the top of everybody's Home. Tick **Advanced settings** to add when it happens ("This Sabbath, 9:00 AM"). Below are the ones you have pinned already. An Explorer has no Announcements folder: notices are pinned by Guides and leadership, and what an Explorer wants to say goes in their blog, which everybody reads too.
 
-**Taking a notice down still happens on the church home screen**, beside the notice itself. Deleting is about the thing in front of you; writing is something you go and do.
+**Taking a notice down still happens in Notices**, beside the notice itself. Deleting is about the thing in front of you; writing is something you go and do.
 
 ### Announcements
 
@@ -462,7 +462,7 @@ Six rooms work this way now. Measured on a phone, with the sample church in them
 | **My Explorers**, a Guide's home | 4 screens | 4 folders: My Explorers, Follow-ups, Prayer, Church |
 | **The Office** | 3 screens, and nine cards | 5 or 6 folders, below |
 
-Publish, Cases, the Guild Room, Mail and Profile are left alone. They are one or two screens and mostly one thing; a list of choices above a single card is furniture, not navigation.
+Cases, the Guild Room, Mail and Profile are left alone. They are one or two screens and mostly one thing; a list of choices above a single card is furniture, not navigation.
 
 ### The Office
 
@@ -866,7 +866,7 @@ What somebody listens to while they read is nobody else's business, which is why
 
 On a phone and an iPad, a bar along the bottom of the screen has three words on it, and it **is** the navigation. On a computer the same rooms are listed down the left side instead, and a light bar runs across the top (see *The look* below):
 
-- **Menu** lists every room you have, written out: Home, your own screen, **This Sabbath**, My Files, **Publish**; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
+- **Menu** lists every room you have, written out: Home (with its **Blog** and **Announcements** folders), your own screen, **This Sabbath**, My Files; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
 - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
 - **My Files** opens your own files.
 
@@ -1371,7 +1371,7 @@ That raises the standard in four ways: consent has to be **express** rather than
 ### The Sabbath program, 2 October 2026
 
 - **A program leaves the device it was made on only when its maker chooses**: in a file or picture they download or share, or when they press **Post it**. Nothing else sends it anywhere, and a check fails the build if the tool itself ever talks to the database or the network (`tests/a-sabbath-program-is-a-word-file.mjs`).
-- **A posted program is an ordinary post**: a row in `posts`, with the sender's name, for the audience they chose, read by the same rules as every other post and taken down the same way, from Publish. It needed no new table and no migration.
+- **A posted program is an ordinary post**: a row in `posts`, with the sender's name, for the audience they chose, read by the same rules as every other post and taken down the same way, from your blog in Home. It needed no new table and no migration.
 - **Notes for the platform never leave the device by the app's own hand.** The picture and every post are the congregation's copy, which has no notes; the same check proves it of the picture by recording every word it draws.
 - **A program shared with somebody is kept on their phone**, the most recent 20, so This Sabbath opens with no signal. It is what the post already showed them, kept under their own account.
 - **The file names the program, not its author.** Its author field says the app's name, because a program gets forwarded.
@@ -1422,7 +1422,7 @@ The two largest gaps today:
 | The install button does nothing on an iPhone | Not Safari. Chrome, Firefox, Edge and in-app browsers cannot install on iOS. | Tap **Open this page in Safari** on the card, then Share, then Add to Home Screen. If that button does nothing, the browser refused the handoff: use its ••• menu instead. |
 | The icon opens Safari with an address bar | What was added is a bookmark from before the fix. | Delete the icon and add it again from Safari. |
 | A Sabbath program has gone, or is not on another device | Programs are kept in the browser where they were made, under the account that made them. Another phone, another browser, another account, a private window or cleared site data each start with none. | Open the same browser on the same device, signed in as the same person. Keep the ones that matter by downloading them. |
-| An Explorer cannot see a program their Guide posted | It went to the people that Guide walks with, and this Explorer walks with somebody else; or it is still a draft in Publish. | Post it again for **Everyone in the church**, or ask their own Guide to post one. |
+| An Explorer cannot see a program their Guide posted | It went to the people that Guide walks with, and this Explorer walks with somebody else; or it is still a draft in your blog (Home, Blog). | Post it again for **Everyone in the church**, or ask their own Guide to post one. |
 | This Sabbath is empty with no signal | The phone keeps a program once it has opened This Sabbath with a signal after the program was posted. | Open This Sabbath once with a signal, the day before. |
 | "This program is too long to post" | A post holds 20,000 characters. A whole day with long announcements can pass it. | Shorten the announcements, or share the Word file or the picture instead. |
 | A note is missing from the Word file | The Word file was made **For the congregation**. | Under **Which copy**, choose **For the platform, with times and notes**, then download again. |

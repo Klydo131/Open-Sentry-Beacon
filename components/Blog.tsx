@@ -53,7 +53,9 @@ function Body({ text }: { text: string }) {
 // ---------------------------------------------------------------------------
 export function BlogDesk({ userId }: { userId: string }) {
   const { db, addBlogPost, setBlogVisibility, deleteBlogPost } = useDemo();
-  const [open, setOpen] = useState(false);
+  // Open from the start: Home's Blog room is where people come to write.
+  const [open, setOpen] = useState(true);
+  const [advanced, setAdvanced] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [audience, setAudience] = useState<BlogAudienceKind>('church');
@@ -85,9 +87,8 @@ export function BlogDesk({ userId }: { userId: string }) {
     addBlogPost({ title, body, visibility: 'published', audience, dsIds: picked });
     setTitle('');
     setBody('');
-    setAudience('all');
+    setAudience('church');
     setPicked([]);
-    setOpen(false);
   };
 
   const saveDraft = () => {
@@ -96,7 +97,6 @@ export function BlogDesk({ userId }: { userId: string }) {
     setTitle('');
     setBody('');
     setPicked([]);
-    setOpen(false);
   };
 
   return (
@@ -137,6 +137,28 @@ export function BlogDesk({ userId }: { userId: string }) {
             className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
           />
 
+          {/* SIMPLE FIRST, ADVANCED WHEN WANTED. The owner, 3 October 2026,
+              moving writing into Home: "make it simple with advance settings
+              too". Simple is a title, the post and Publish, to everybody in
+              the church. Advanced adds who sees it, and saving as a draft. */}
+          <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-navy">
+            <input
+              type="checkbox"
+              data-blog-advanced
+              checked={advanced}
+              onChange={(e) => {
+                setAdvanced(e.target.checked);
+                if (!e.target.checked) {
+                  setAudience('church');
+                  setPicked([]);
+                }
+              }}
+            />
+            Advanced settings
+            <span className="font-normal text-gray-500">(choose who sees it, or save as a draft)</span>
+          </label>
+
+          {advanced && (<>
           <fieldset className="mt-3">
             <legend className="text-sm font-semibold text-navy">Who sees it</legend>
             <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -196,14 +218,20 @@ export function BlogDesk({ userId }: { userId: string }) {
               )}
             </div>
           )}
+          </>)}
 
+          {!advanced && (
+            <p className="mt-2 text-xs text-gray-500">Everyone in the church sees it, with your name on it.</p>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             <Button onClick={submit} disabled={!canPost}>
               Publish
             </Button>
-            <Button variant="ghost" onClick={saveDraft} disabled={!title.trim() || !body.trim()}>
-              Save as draft
-            </Button>
+            {advanced && (
+              <Button variant="ghost" onClick={saveDraft} disabled={!title.trim() || !body.trim()}>
+                Save as draft
+              </Button>
+            )}
           </div>
         </div>
       )}

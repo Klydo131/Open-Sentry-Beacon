@@ -16,7 +16,6 @@ import {
 } from '@/lib/engagement';
 import { useIsLive } from '@/lib/tutorial';
 import { prayerAuthor } from '@/lib/types';
-import { BlogDesk } from '@/components/Blog';
 import { LiveGuidePage } from '@/components/LiveCorePages';
 
 // A missionary's dashboard: what needs doing today, how the flock is spread
@@ -43,13 +42,13 @@ function Dashboard() {
 
   const today = todayKey();
 
-  // FOUR FOLDERS, matching the live Guide's home. What needs attention, the
-  // roster and the filter are one errand and stay together; the week ahead and
-  // the writing desk are two others that were simply further down the page.
+  // What needs attention, the roster and the filter are one errand and stay
+  // together; the week ahead is another. Writing was a third folder here until
+  // 3 October 2026, when the blog moved into Home ("Blog and announcement will
+  // be the sub rooms of home").
   const rooms: Room[] = [
     { id: 'people', label: '🤝 My Explorers' },
     { id: 'week', label: '📅 Next 7 days' },
-    { id: 'write', label: '✍️ Write' },
   ];
   const [room, chooseRoom] = useRoom(rooms, 'beacon:demo-guide-room');
 
@@ -403,9 +402,6 @@ function Dashboard() {
         )}
       </div>)}
 
-      {/* Its own folder now. Writing is the thing you do once everyone is
-          answered, and it was the bottom of a page nobody reached. */}
-      {room === 'write' && <BlogDesk userId={me.id} />}
     </div>
   );
 }

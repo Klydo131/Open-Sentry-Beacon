@@ -20,7 +20,8 @@ import { copyText } from '@/lib/share';
 import { Button, Card } from '@/components/ui';
 import { roleNoun } from '@/lib/brand';
 import * as live from '@/lib/live/data';
-import { LiveBlogFeed } from '@/components/LiveBlog';
+import { LiveBlogDesk, LiveBlogFeed } from '@/components/LiveBlog';
+import { LiveWriteNotice } from '@/components/LiveWriteNotice';
 import { useLiveSession } from '@/lib/live/session';
 import { LiveChurchOverview, LiveBoardReport } from '@/components/LiveExecutive';
 import { LiveBillboard } from '@/components/LiveBillboard';
@@ -74,9 +75,19 @@ function ChurchRooms({ profile, churchName, leads, explorer }: {
   leads: boolean;
   explorer: boolean;
 }) {
+  // BLOG AND ANNOUNCEMENTS ARE HOME'S, and there is no Publish room. The
+  // owner, 3 October 2026: "will now be a sub room for home so people can
+  // write and publish in home page right away", "Blog and announcement will be
+  // the sub rooms of home, so basically we will take out publish". Writing sits
+  // in the same folder as what has been written, so nobody has to remember a
+  // second room to say something. `blogs` keeps its id, so a device that
+  // remembered the old Community Blogs folder opens Blog.
   const rooms: Room[] = [
     { id: 'notices', label: '📌 Notices' },
-    { id: 'blogs', label: '✍️ Community Blogs' },
+    { id: 'blogs', label: '✍️ Blog' },
+    // Guides and leadership pin notices; an Explorer has no Announcements
+    // folder rather than one that only says they cannot.
+    ...(explorer ? [] : [{ id: 'announcements', label: '📣 Announcements' }]),
     // An Explorer has no numbers folder at all rather than an empty one. A room
     // that would be empty for somebody tells them they are missing something.
     ...(explorer ? [] : [{ id: 'numbers', label: '📊 The numbers' }]),
@@ -94,8 +105,16 @@ function ChurchRooms({ profile, churchName, leads, explorer }: {
           thing nobody can find twice. */}
       {room === 'notices' && <LiveBillboard churchName={churchName} />}
 
-      {/* WHAT PEOPLE WROTE, which is the reason to come back. */}
-      {room === 'blogs' && <LiveBlogFeed selfId={profile.id} />}
+      {/* WRITE, THEN WHAT PEOPLE WROTE, which is the reason to come back. */}
+      {room === 'blogs' && (
+        <div className="space-y-5">
+          <LiveBlogDesk />
+          <LiveBlogFeed selfId={profile.id} />
+        </div>
+      )}
+
+      {/* PIN A NOTICE, and the ones you have already pinned. */}
+      {room === 'announcements' && <LiveWriteNotice />}
 
       {/* NOT FOR EXPLORERS. Counts of Guides, Explorers, approvals and prayer
           requests are the church looking at itself, a management view. An

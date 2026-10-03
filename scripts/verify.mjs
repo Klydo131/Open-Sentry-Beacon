@@ -642,6 +642,8 @@ const staticChecks = [
   ['text size is tried first', 'tests/text-size-is-tried-first.mjs'],
   // Offline says "Offline" and promises nothing (3 October 2026).
   ['offline says offline', 'tests/offline-says-offline.mjs'],
+  // Blog and Announcements are Home's folders; no Publish room (3 October 2026).
+  ['blog and announcements are home', 'tests/blog-and-announcements-are-home.mjs'],
   // A failing browser walk prints what the browser saw, so a WebKit failure in
   // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],

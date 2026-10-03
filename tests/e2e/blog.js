@@ -35,14 +35,13 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
   });
   const page = ctx.pages()[0] || await ctx.newPage();
 
-  // ---- The Guide writes. ----
+  // ---- The Guide writes, in Home's Blog folder. ----
+  // 3 October 2026: "Blog and announcement will be the sub rooms of home, so
+  // basically we will take out publish". The desk is open on arrival.
   await signInAs(page, 'Maria Santos');
-  await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
-
-  // Writing lives in its own room now, so the desk is not rendered until
-  // that tab is chosen.
-  await openRoom(page, /Write/i);
+  await openRoom(page, /Blog/i);
 
   const desk = page.getByText(/Your blog/i).first();
   ok(await desk.count() > 0, 'the Guide has a blog desk on their dashboard');
@@ -55,14 +54,26 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
   // The seeded DRAFT is visible to its author, and labelled as one.
   ok(await page.getByText(/DRAFT/).count() > 0, 'the author sees their own draft, marked DRAFT');
 
-  await page.getByRole('button', { name: /^Write$/i }).first().click();
-  await page.waitForTimeout(500);
+  // SIMPLE FIRST: a title, the post and Publish, ready without pressing Write.
+  ok(await page.locator('#blog-title').isVisible(), 'the writing box is open on arrival, with nothing to press first');
+  // The fieldset's own heading, not the words in the Advanced hint beside the box.
+  const whoSees = () => page.locator('legend', { hasText: 'Who sees it' }).count();
+  ok((await whoSees()) === 0 && (await page.getByRole('button', { name: /Save as draft/i }).count()) === 0,
+     'and it is simple: no audience to choose and no draft button until Advanced settings');
+  await page.locator('[data-blog-advanced]').check();
+  await page.waitForTimeout(300);
+  ok((await whoSees()) > 0 && (await page.getByRole('button', { name: /Save as draft/i }).count()) > 0,
+     'Advanced settings shows who sees it, and saving as a draft');
+  await page.locator('[data-blog-advanced]').uncheck();
+  await page.waitForTimeout(300);
   await page.locator('#blog-title').fill(TITLE);
   await page.locator('#blog-body').fill(BODY);
   await page.waitForTimeout(200);
   await page.getByRole('button', { name: /^Publish$/i }).first().click();
   await page.waitForTimeout(1200);
   ok(await page.getByText(TITLE).count() > 0, 'the new post appears on the Guide\'s desk');
+  ok(await page.locator('#blog-title').isVisible() && (await page.locator('#blog-title').inputValue()) === '',
+     'and the box stays open, empty, for the next one');
 
   // A brand new post has nobody reading it yet, and the author opening their
   // own page must not create a reader.
@@ -92,7 +103,7 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
 
   // ---- Back to the Guide: the read was counted, once. ----
   await signInAs(page, 'Maria Santos');
-  await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}/church?room=blogs`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
   await page.getByText(/Your blog/i).first().scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);
