@@ -21,7 +21,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { chromium, launchOptions, engineName } = require('./_playwright');
+const { chromium, launchOptions, engineName, isCancelledPrefetch } = require('./_playwright');
 
 const PORT = process.argv[2] || '4414';
 const BASE = `http://localhost:${PORT}`;
@@ -72,7 +72,8 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   });
   const page = await context.newPage();
   const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
+  // WebKit's cancelled prefetch is not an error (_playwright.js says why).
+  page.on('pageerror', (e) => { if (!isCancelledPrefetch(e)) errors.push(String(e)); });
 
   // 1. A GUIDE'S PROGRESS REPORT
   await signInAs(page, 'Maria Santos');

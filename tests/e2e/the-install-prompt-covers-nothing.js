@@ -171,7 +171,12 @@ async function signIn(page) {
        `${label}: and so can Report (${await reachable(page, '[data-talk-report]')})`);
 
     await page.getByRole('button', { name: 'Close the chat' }).first().click({ timeout: 6000 }).catch(() => {});
-    await page.waitForTimeout(900);
+    // Waited for, not slept past: the chat leaves on an animation, and WebKit
+    // took longer than a fixed 900ms once (4 October 2026).
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-install-prompt="card"]');
+      return el && getComputedStyle(el).display !== 'none';
+    }, null, { timeout: 5000 }).catch(() => {});
     ok(await cardShown(page), `${label}: when the chat closes, the card comes back`);
     const fits = await page.evaluate(() => {
       const r = document.querySelector('[data-install-prompt="card"]').getBoundingClientRect();

@@ -221,9 +221,16 @@ const settle = (page) => page.waitForTimeout(2600);
       await settle(pg);
 
       // THE DROP-DOWN (30 September 2026): its button, and the list it opens.
+      // Waited for rather than counted at once: on WebKit a different room
+      // counted none on each of two runs (Settings, then an Explorer's
+      // journey), while the page was still arriving.
+      await pg.locator('[data-subroom-toggle]').first().waitFor({ state: 'visible', timeout: 6000 }).catch(() => {});
       const button = pg.locator('[data-subroom-toggle]').first();
       const hasButton = (await button.count()) > 0;
-      if (hasButton) { await button.click(); await pg.waitForTimeout(300); }
+      if (hasButton) {
+        await button.click();
+        await pg.locator('[data-subroom-menu] [role="option"]').first().waitFor({ state: 'visible', timeout: 4000 }).catch(() => {});
+      }
       const t = pg.locator('[data-subroom-menu] [role="option"]');
       const n = await t.count();
 

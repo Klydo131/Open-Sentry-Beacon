@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { browser: engine, launchOptions, openChat } = require('./_playwright');
+const { browser: engine, launchOptions, openChat, isCancelledPrefetch } = require('./_playwright');
 const BASE = `http://localhost:${process.argv[2] || '4414'}`;
 const shots = path.resolve('.ui-check/looks', process.env.E2E_BROWSER || 'chromium');
 fs.mkdirSync(shots, { recursive: true });
@@ -67,7 +67,9 @@ async function menuFingerprint(page) {
       await context.addInitScript(() => localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864000000)));
       const page = await context.newPage();
       const errors = [];
-      page.on('pageerror', (e) => errors.push(String(e)));
+      // WebKit's cancelled prefetch is not an error (_playwright.js says why);
+      // it failed this walk at a different size on each Safari run.
+      page.on('pageerror', (e) => { if (!isCancelledPrefetch(e)) errors.push(String(e)); });
       await signIn(page, 'Maria Santos');
       await choose(page, 'classic');
       await page.goto(`${BASE}/menu`, { waitUntil: 'networkidle' });
