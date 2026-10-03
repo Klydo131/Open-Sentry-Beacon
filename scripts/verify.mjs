@@ -640,6 +640,8 @@ const staticChecks = [
   // Text size is tried in the preview and changes the app only on Apply
   // (3 October 2026). The browser half is tests/e2e/text-size-is-tried-first.js.
   ['text size is tried first', 'tests/text-size-is-tried-first.mjs'],
+  // Offline says "Offline" and promises nothing (3 October 2026).
+  ['offline says offline', 'tests/offline-says-offline.mjs'],
   // A failing browser walk prints what the browser saw, so a WebKit failure in
   // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],

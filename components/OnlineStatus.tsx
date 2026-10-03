@@ -15,11 +15,13 @@ import { useUpdateState } from '@/lib/app-update';
 // top, and stacked on top of each other the pill covered the Restart button, so
 // the one notice you could act on was the one you could not reach.
 //
-// The wording differs by site, because the truth differs. On the demo every
-// scrap of data is already on the device, so offline costs nothing and the
-// message should not alarm. On the live site the person's own saved work is
-// local but anything involving other people needs the network, and pretending
-// otherwise would be a lie they discover at the worst moment.
+// ONE WORD: "Offline". It said "Offline. Everything here still works", and
+// the owner, 3 October 2026, with a picture of it on their phone: "Just put
+// offline for text, 'Everything still works here' is very misleading". It
+// was: the person's own saved work is on the phone, but anything involving
+// other people needs the network, and a promise that everything works is one
+// they discover is false at the worst moment. One word is also a smaller pill
+// over the header's buttons.
 export function OnlineStatus() {
   const { online } = useOnline();
   const update = useUpdateState();
@@ -57,12 +59,7 @@ export function OnlineStatus() {
           style={{ backgroundColor: '#7C2D12' }}
         >
           <span aria-hidden>⚡</span>
-          <span>
-            Offline.{' '}
-            <span className="font-normal">
-              Everything here still works
-            </span>
-          </span>
+          <span>Offline</span>
         </div>
       </div>
     );
