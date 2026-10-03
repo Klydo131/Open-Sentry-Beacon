@@ -164,6 +164,7 @@ const staticChecks = [
   // passes that half too — so the decision itself is a pure function and both
   // answers are checked here.
   ['auto-update policy', 'tests/auto-update-policy.mjs'],
+  ['a first install stays on the page', 'tests/a-first-install-stays-on-the-page.mjs'],
   ['analytics over time', 'tests/analytics-trend.mjs'],
   ['security invariants', 'tests/security-invariants.mjs'],
   // What a visitor who has NOT signed in can touch. Supabase grants the

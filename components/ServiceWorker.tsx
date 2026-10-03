@@ -48,6 +48,9 @@ export function ServiceWorker() {
 
     // The ?v= is the whole trick. See scripts/stamp-build.mjs.
     const build = BUILD_ID;
+    // A first worker can claim the page before its installed event is observed
+    // in WebKit. Remember the starting state so that claim is never an update.
+    const controlledOnLoad = Boolean(navigator.serviceWorker.controller);
 
     navigator.serviceWorker
       .register(`/sw.js?v=${build}`, {
@@ -83,7 +86,7 @@ export function ServiceWorker() {
           const nw = reg.installing;
           if (!nw) return;
           nw.addEventListener('statechange', () => {
-            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            if (nw.state === 'installed' && controlledOnLoad && navigator.serviceWorker.controller) {
               offerUpdate();
             }
           });
