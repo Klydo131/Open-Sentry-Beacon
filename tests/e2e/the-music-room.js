@@ -88,6 +88,15 @@ const clocksOpen = (page) => page.evaluate(() => window.__clocks.filter((c) => c
 const sideways = (page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 const say = (page, sel) => page.locator(sel).first().innerText().catch(() => '');
 
+// The Tuner, Conductor and Pieces are fetched when first needed (the audit of
+// 4 October 2026), so opening one shows "Opening" for a moment on a slow
+// machine. Open the folder, then wait for what it draws, as a person would.
+const FOLDER = { Tuner: '[data-music-tuner]', Conductor: '[data-music-conductor]', Pieces: '[data-music-pieces]', Listen: '[data-music-listen]' };
+async function openFolder(page, name) {
+  await openRoom(page, name);
+  await page.locator(FOLDER[name]).first().waitFor({ timeout: 15000 }).catch(() => {});
+}
+
 /** A photo of a page lying on a desk, a little crooked, drawn in the page and returned as PNG bytes. */
 async function deskPhoto(page) {
   const b64 = await page.evaluate(async () => {
@@ -156,7 +165,7 @@ async function deskPhoto(page) {
       ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in Listen`);
 
       // 2. THE TUNER ----------------------------------------------------------
-      await openRoom(page, 'Tuner');
+      await openFolder(page, 'Tuner');
       ok(await page.locator('[data-music-tuner]').isVisible(), `${size}: the Tuner folder opens`);
       ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')), `${size}: concert pitch starts at A 440`);
       await page.getByRole('button', { name: /Start listening/ }).click();
@@ -177,7 +186,7 @@ async function deskPhoto(page) {
         ok(/A = 445 Hz/.test(await say(page, '[data-tuner-a4]')) && /flat/.test(await say(page, '[data-tuner-verdict]')),
            `${size}: at A 445 the same tone reads flat (${(await say(page, '[data-tuner-verdict]')).trim()})`);
         await page.reload({ waitUntil: 'networkidle' });
-        await openRoom(page, 'Tuner');
+        await openFolder(page, 'Tuner');
         ok(/A = 445 Hz/.test(await say(page, '[data-tuner-a4]')), `${size}: the chosen concert pitch is remembered on the phone`);
         await page.getByRole('button', { name: 'Back to 440' }).click();
         // Stop lets the microphone go.
@@ -190,11 +199,11 @@ async function deskPhoto(page) {
         // Leaving the folder does too.
         await page.getByRole('button', { name: /Start listening/ }).click();
         await page.waitForTimeout(800);
-        await openRoom(page, 'Conductor');
+        await openFolder(page, 'Conductor');
         await page.waitForTimeout(200);
         ok((await micsLive(page)) === 0, `${size}: leaving the Tuner lets the microphone go`);
         // And the phone locking.
-        await openRoom(page, 'Tuner');
+        await openFolder(page, 'Tuner');
         await page.getByRole('button', { name: /Start listening/ }).click();
         await page.waitForTimeout(800);
         await page.evaluate(() => {
@@ -207,16 +216,16 @@ async function deskPhoto(page) {
         // Left while the browser was still asking: the answer arrives after,
         // and the microphone must not start listening behind the person's back.
         await page.reload({ waitUntil: 'networkidle' });
-        await openRoom(page, 'Tuner');
+        await openFolder(page, 'Tuner');
         await page.evaluate(() => { window.__micDelay = 1200; });
         await page.getByRole('button', { name: /Start listening/ }).click();
         await page.waitForTimeout(150);
-        await openRoom(page, 'Conductor');
+        await openFolder(page, 'Conductor');
         await page.waitForTimeout(1700);
         ok((await page.evaluate(() => window.__mics.length)) === 1 && (await micsLive(page)) === 0,
            `${size}: a microphone allowed after leaving the Tuner is let go at once`);
         await page.evaluate(() => { window.__micDelay = 0; });
-        await openRoom(page, 'Tuner');
+        await openFolder(page, 'Tuner');
       } else {
         await page.waitForTimeout(1500);
         const listening = await page.getByRole('button', { name: /Stop listening/ }).isVisible();
@@ -233,7 +242,7 @@ async function deskPhoto(page) {
       ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in the Tuner`);
 
       // 3. THE CONDUCTOR ------------------------------------------------------
-      await openRoom(page, 'Conductor');
+      await openFolder(page, 'Conductor');
       const hand = page.locator('[data-baton-hand]');
       ok(/80/.test(await say(page, '[data-tempo]')) && (await page.locator('[data-baton] circle').count()) === 5,
          `${size}: the Conductor starts at 80 in 4/4 (four beats and the hand)`);
@@ -285,7 +294,7 @@ async function deskPhoto(page) {
       ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in the Conductor`);
 
       // 4. PIECES: a score file ----------------------------------------------
-      await openRoom(page, 'Pieces');
+      await openFolder(page, 'Pieces');
       await page.locator('[data-score-input]').setInputFiles(FIXTURE);
       await page.locator('[data-panel="score-view"]').waitFor({ timeout: 8000 }).catch(() => {});
       const refused = await page.locator('[data-music-pieces] [role="alert"]').innerText().catch(() => '');
@@ -313,7 +322,7 @@ async function deskPhoto(page) {
       await page.locator('[data-panel="score-view"]').getByRole('button', { name: 'Close' }).click();
       ok(/Sing, my soul/.test(await say(page, '[data-piece-list]')), `${size}: the score is kept in Pieces`);
       await page.reload({ waitUntil: 'networkidle' });
-      await openRoom(page, 'Pieces');
+      await openFolder(page, 'Pieces');
       ok(/Sing, my soul/.test(await say(page, '[data-piece-list]')), `${size}: and is still there after a reload`);
       await page.locator('[data-piece-list] li').filter({ hasText: 'Sing, my soul' }).getByRole('button', { name: 'Open' }).click();
       await page.locator('[data-panel="score-view"]').waitFor({ timeout: 5000 }).catch(() => {});
