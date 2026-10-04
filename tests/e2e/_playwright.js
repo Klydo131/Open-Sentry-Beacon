@@ -326,6 +326,63 @@ function isCancelledPrefetch(message) {
     .test(String(message));
 }
 
+/**
+ * A request the walk itself cut short by moving to the next page.
+ *
+ * About 1.5 seconds after every page load the app checks for a new release:
+ * it asks the server for /version.json, then asks the browser to re-check
+ * /sw.js. A walk that moves to its next page at that moment cancels both.
+ * WebKit reports each as "Cannot load http://localhost:PORT/... due to access
+ * control checks", and Playwright raises that as a page error. Nothing went
+ * wrong: the app handles the failed check, and the next page runs its own.
+ * (Seen seven times in five Safari runs on 3 and 4 October 2026, each time
+ * followed by the walk's next page load within 3 to 131ms.)
+ *
+ * So the rule is about ORDER, not words: the message, then the main page
+ * navigating within CUT_SHORT_MS. The same words with no navigation after
+ * them, another address, or any other error still fail the walk.
+ */
+const CUT_SHORT_MS = 500;
+
+function isCutShortMessage(message) {
+  return /cannot load https?:\s?\/\/?(localhost|127\.0\.0\.1)(:\d+)?\/\S* due to access control checks/i
+    .test(String(message));
+}
+
+/**
+ * Collect a page's errors, leaving out the two kinds of cancellation above.
+ *
+ *   const errors = pageErrors(page);
+ *   ...
+ *   assert.deepEqual(errors.list(), []);
+ *
+ * `now` is only there so tests/a-walk-forgives-only-what-it-cut-short.mjs can
+ * drive the rule with a pretend clock.
+ */
+function pageErrors(page, now = Date.now) {
+  const errors = [];
+  // Cut-short messages waiting to see whether a navigation follows.
+  let waiting = [];
+
+  page.on('pageerror', (err) => {
+    const text = String(err);
+    if (isCancelledPrefetch(text)) return;
+    if (isCutShortMessage(text)) waiting.push({ text, at: now() });
+    else errors.push(text);
+  });
+
+  page.on('framenavigated', (frame) => {
+    if (frame !== page.mainFrame()) return;
+    const navigatedAt = now();
+    const tooLongAgo = waiting.filter((w) => navigatedAt - w.at > CUT_SHORT_MS);
+    errors.push(...tooLongAgo.map((w) => w.text));
+    waiting = [];
+  });
+
+  // Anything still waiting when asked was never followed by a navigation.
+  return { list: () => [...errors, ...waiting.map((w) => w.text)] };
+}
+
 module.exports = {
   openChat,
   openByQuest,
@@ -347,4 +404,6 @@ module.exports = {
   launchOptions: EXECUTABLE ? { executablePath: EXECUTABLE } : {},
   openRoom,
   isCancelledPrefetch,
+  pageErrors,
+  CUT_SHORT_MS,
 };

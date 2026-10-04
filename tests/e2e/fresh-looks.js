@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { browser: engine, launchOptions, openChat, isCancelledPrefetch } = require('./_playwright');
+const { browser: engine, launchOptions, openChat, pageErrors } = require('./_playwright');
 const BASE = `http://localhost:${process.argv[2] || '4414'}`;
 const shots = path.resolve('.ui-check/looks', process.env.E2E_BROWSER || 'chromium');
 fs.mkdirSync(shots, { recursive: true });
@@ -66,10 +66,11 @@ async function menuFingerprint(page) {
       const context = await browser.newContext({ viewport: { width, height }, reducedMotion: 'reduce', hasTouch: size !== 'desktop' });
       await context.addInitScript(() => localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864000000)));
       const page = await context.newPage();
-      const errors = [];
-      // WebKit's cancelled prefetch is not an error (_playwright.js says why);
-      // it failed this walk at a different size on each Safari run.
-      page.on('pageerror', (e) => { if (!isCancelledPrefetch(e)) errors.push(String(e)); });
+      // WebKit's cancelled prefetch is not an error, and nor is the app's
+      // release check cut short by this walk's own next page load; _playwright.js
+      // says why for both. Of the five Safari runs read on 4 October 2026, the
+      // release check failed this walk on three and the prefetch on none.
+      const errors = pageErrors(page);
       await signIn(page, 'Maria Santos');
       await choose(page, 'classic');
       await page.goto(`${BASE}/menu`, { waitUntil: 'networkidle' });
@@ -199,7 +200,7 @@ async function menuFingerprint(page) {
         await readable(page.locator('#look-primary-probe p'), `${look} primary surface metadata`);
         await page.locator('#look-primary-probe').evaluate((el) => el.remove());
       }
-      assert.deepEqual(errors, [], `no page errors at ${size}`);
+      assert.deepEqual(errors.list(), [], `no page errors at ${size}`);
       console.log(`OK Beacon, Study, Focus, Classic restoration and Explorer reporting at ${size}`);
       await context.close();
     }
