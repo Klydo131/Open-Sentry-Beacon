@@ -28,6 +28,12 @@ const AERO = [
 
 let bad = 0;
 const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
+/** Whether a picture loads: waits for it, up to five seconds, rather than asking once. */
+const loads = (img) => img.evaluate((el) => (el.complete && el.naturalWidth > 0) || new Promise((done) => {
+  el.addEventListener('load', () => done(el.naturalWidth > 0), { once: true });
+  el.addEventListener('error', () => done(false), { once: true });
+  setTimeout(() => done(el.complete && el.naturalWidth > 0), 5000);
+}));
 /** A readable() that reports instead of stopping the walk. */
 const reads = (locator, label) => readable(locator, label).then(() => ok(true, label), (e) => ok(false, e.message));
 
@@ -60,7 +66,7 @@ const reads = (locator, label) => readable(locator, label).then(() => ok(true, l
       const choice = page.locator(`[data-ui-theme-choice="${id}"]`);
       const shown = await choice.isVisible();
       const text = shown ? await choice.innerText() : '';
-      const picture = shown && await choice.locator('img').evaluate((img) => img.complete && img.naturalWidth > 0);
+      const picture = shown && await loads(choice.locator('img'));
       ok(shown && text.includes(name) && text.length > name.length + 30 && picture,
          `${size}: ${name} is shown with its picture and its description`);
     }
@@ -78,8 +84,7 @@ const reads = (locator, label) => readable(locator, label).then(() => ok(true, l
 
       await page.goto(`${BASE}/menu`, { waitUntil: 'networkidle' });
       const art = page.locator('.fresh-art');
-      ok(await art.getAttribute('src') === `/themes/${id}.svg`
-         && await art.evaluate((img) => img.complete && img.naturalWidth > 0),
+      ok(await art.getAttribute('src') === `/themes/${id}.svg` && await loads(art),
          `${size}: ${name}'s Menu shows its own drawing`);
       await reads(page.locator('.fresh-hero h2'), `${size}: ${name} welcome`);
       await reads(page.locator('.fresh-intro'), `${size}: ${name} welcome line`);

@@ -221,13 +221,14 @@ function LookChoice({ theme, chosen, picture = false }: { theme: UiTheme; chosen
       {picture && (
         // The look's own drawn art (public/themes/<id>.svg), so the difference
         // can be seen before choosing. Decoration: the name says which it is.
+        // Not lazy: each is about 2 KB, and lazy meant they began loading only
+        // as the drop-down opened, so they appeared a moment after it.
         <img
           src={`/themes/${theme.id}.svg`}
           alt=""
           aria-hidden
           width={600}
           height={320}
-          loading="lazy"
           className="mb-2 block h-24 w-full rounded-lg object-cover"
         />
       )}
