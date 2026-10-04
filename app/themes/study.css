@@ -212,7 +212,7 @@
 
 
 /* Local picture previews live above the words, so palette changes keep their contrast. */
-:root[data-ui-theme="study"] [data-ui-theme-choice]::before { content:""; display:block; height:64px; margin-bottom:12px; border-radius:8px; background:#1e2a4a; background-size:cover; background-position:center; }
+:root[data-ui-theme="study"] [data-ui-theme-choice]:not([data-ui-theme-choice^="aero-"])::before { content:""; display:block; height:64px; margin-bottom:12px; border-radius:8px; background-color:#1e2a4a; background-size:cover; background-position:center; }
 :root[data-ui-theme="study"] [data-ui-theme-choice="beacon"]::before { background-image:url('/themes/beacon.svg'); }
 :root[data-ui-theme="study"] [data-ui-theme-choice="study"]::before { background-image:url('/themes/study.svg'); }
 :root[data-ui-theme="study"] [data-ui-theme-choice="focus"]::before { background-image:url('/themes/focus.svg'); }

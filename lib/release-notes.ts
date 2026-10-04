@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-tutorial-talk-arrives',
+    date: '2026-10-04',
+    title: 'Keep your tutorial conversation open',
+    items: [
+      'The tutorial keeps Talk open while its typing box loads, so you can send a message without opening the conversation again.',
+      'Prayer requests are easier to read in Dark Aero, and Settings pictures stay tidy when moving between looks.',
+    ],
+  },
+  {
     id: '2026-10-04-look-details',
     date: '2026-10-04',
     title: 'A little more character in your chosen look',

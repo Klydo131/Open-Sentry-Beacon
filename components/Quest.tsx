@@ -239,7 +239,9 @@ export function Quest() {
       // to see or press. When what comes next is outside an open chat, the
       // chat is put down first, as a person would.
       const sheet = document.querySelector('[data-talk-sheet]');
-      if (el && sheet && !sheet.contains(el)) closeTalk();
+      // Message is still the fallback while a conversation's controls arrive.
+      // That fallback is outside Talk, but the step itself still belongs in it.
+      if (el && sheet && !step.target.startsWith('chat-') && !sheet.contains(el)) closeTalk();
 
       targetEl.current = el;
 

@@ -71,6 +71,17 @@ const reads = (locator, label) => readable(locator, label).then(() => ok(true, l
          `${size}: ${name} is shown with its picture and its description`);
     }
 
+    // Other looks have pseudo-element previews; Aero already has real images.
+    // Opening this family under any of those looks must not add a blank tile.
+    for (const look of ['beacon', 'study', 'focus']) {
+      await choose(page, BASE, look);
+      if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+      const choices = page.locator('[data-ui-theme-choice^="aero-"]');
+      const clean = await choices.evaluateAll((cards) => cards.every((card) =>
+        getComputedStyle(card, '::before').content === 'none'));
+      ok(clean, `${size}: Aero pictures have no extra preview tile under ${look}`);
+    }
+
     // 3. EACH ONE, CHOSEN: on the page, on the Menu, readable, nothing sideways.
     for (const [id, name] of AERO) {
       await choose(page, BASE, id);
@@ -99,6 +110,13 @@ const reads = (locator, label) => readable(locator, label).then(() => ok(true, l
         await reads(page.locator('.tab-bar-tab').first(), `${size}: ${name} bottom bar`);
       }
       await page.screenshot({ path: `.ui-check/aero-${id}-${size}.png`, fullPage: false }).catch(() => {});
+
+      await page.goto(`${BASE}/dm?room=people`, { waitUntil: 'networkidle' });
+      const prayer = page.locator('[data-prayer-waiting]').first();
+      if (id === 'aero-dark' && process.argv.includes('--negative-prayer')) {
+        await prayer.evaluate((el) => el.style.setProperty('color', '#7C3AED', 'important'));
+      }
+      await reads(prayer, `${size}: ${name} prayer request on the actual Guide screen`);
     }
 
     // 4. BACK TO CLASSIC, and the row closes again on its own.

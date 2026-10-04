@@ -49,9 +49,10 @@ styles, and every selector starts with that look's root attribute. Styles are
 screen-only; printed pages keep their existing design. Shared global styles,
 Tailwind configuration and Classic's markup and classes are unchanged.
 
-FreshMenu renders nothing unless one of the three new looks is chosen. The original MenuList rendering and Classic desktop layout remain in place.
+FreshMenu renders nothing unless an optional look is chosen. The original MenuList rendering and Classic desktop layout remain in place.
 
-The three decorative SVGs in `public/themes/` are original native artwork.
+The three landscapes and five Aero illustrations in `public/themes/` are
+original native artwork made for this app.
 They have no external references, text, scripts, member details or new fonts.
 Greeting text sits on an opaque panel beside the artwork. No dependency or
 database change is needed.
