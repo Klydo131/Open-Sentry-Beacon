@@ -9,8 +9,11 @@ it does not change an account or a church setting.
 - **Focus** uses a night sky, dark panels and pale blue accents.
 
 All three use the same authorized room groups as Classic. Desktop widths
-(1280px and up) show a left rail, including Menu, People and My Files. Phones
-and tablets keep the bottom tabs and the existing desk drawer. The right desk
+(1280px and up) show Classic's left rail of rooms; Menu, People and My Files
+are the bottom tabs of phones and tablets and are not repeated on a computer,
+where every room, My Files included, is already in the rail (asked for on
+4 October 2026). Phones and tablets keep the bottom tabs and the existing desk
+drawer. The right desk
 continues to show its real local tools; no simulated activity, appointments,
 search or progress widgets were added to reproduce the reference pictures.
 
@@ -21,7 +24,7 @@ styles, and every selector starts with that look's root attribute. Styles are
 screen-only; printed pages keep their existing design. Shared global styles,
 Tailwind configuration and Classic's markup and classes are unchanged.
 
-FreshMenu and FreshNav render nothing unless one of the three new looks is chosen. FreshNav adds main destinations inside the existing DesktopNav. The original MenuList rendering and Classic desktop layout remain in place.
+FreshMenu renders nothing unless one of the three new looks is chosen. The original MenuList rendering and Classic desktop layout remain in place.
 
 The three decorative SVGs in `public/themes/` are original native artwork.
 They have no external references, text, scripts, member details or new fonts.

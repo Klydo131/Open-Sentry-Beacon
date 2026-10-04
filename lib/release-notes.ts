@@ -18,6 +18,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-computer-sidebar',
+    date: '2026-10-04',
+    title: 'A tidier column on computers',
+    items: [
+      'In the Beacon, Study and Focus looks, the column down the left of a computer now starts with your rooms. Menu, People and My Files stay along the bottom of phones and tablets; on a computer, every room, My Files included, is already in the column.',
+    ],
+  },
+  {
     id: '2026-10-04-smoother',
     date: '2026-10-04',
     title: 'Smoother on your phone',

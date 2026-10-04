@@ -89,18 +89,23 @@ async function menuFingerprint(page) {
         await readable(page.locator('.fresh-intro'), `${look} welcome text at ${size}`);
         assert.match(await page.locator('.fresh-hero h2').evaluate((el) => getComputedStyle(el).fontFamily), /sans-serif/, `${look} heading has a portable native fallback`);
         await readable(page.locator('.menu-group-head').first(), `${look} section label at ${size}`);
-        await readable(page.locator(width >= 1280 ? '.fresh-nav-link' : '.tab-bar-tab').first(), `${look} navigation at ${size}`);
+        await readable(page.locator(width >= 1280 ? '[data-desktop-nav] nav a' : '.tab-bar-tab').first(), `${look} navigation at ${size}`);
         if (width < 1280) await readable(page.locator('.tab-bar-tab[aria-current] .tab-bar-pill'), `${look} selected navigation icon`);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), `${look} fits ${size}`);
         assert.equal(await page.locator('[data-desktop-nav]').count(), 1, `${look} keeps the existing desktop rail`);
         assert.deepEqual(await page.locator('[data-theme-room]').evaluateAll((links) => links.map((l) => l.getAttribute('href')).sort()), classicRooms, `${look} keeps every authorized room`);
         if (width >= 1280) {
           await readable(page.locator('[data-desktop-nav] .bg-white.text-navy').first(), `${look} real rail count`);
-          await page.locator('[data-desktop-nav]').getByRole('link', { name: 'People', exact: true }).click();
-          await page.waitForURL('**/dm?room=people');
-          assert.ok(page.url().includes('/dm?room=people'), `${look} People goes to the actual people screen`);
-          await page.locator('[data-desktop-nav]').getByRole('link', { name: 'Menu', exact: true }).click();
-          await page.waitForURL('**/menu');
+          // THE BAR'S THREE BUTTONS STAY ON PHONES AND PADS. On a computer the
+          // rail is the rooms, the Guide's people and My Files among them, and
+          // it does not repeat Menu | People | My Files above them (4 October
+          // 2026: "This is not needed in Desktop I think, this is only for
+          // mobile and pad").
+          const goesTo = (href) => page.locator(`[data-desktop-nav] a[href="${href}"]`).count();
+          assert.deepEqual(
+            { menu: await goesTo('/menu'), people: await goesTo('/dm?room=people'), files: await goesTo('/library'), explorers: await goesTo('/dm') },
+            { menu: 0, people: 0, files: 1, explorers: 1 },
+            `${look} rail is the rooms, without the bar's three buttons repeated`);
         }
         await page.screenshot({ path: path.join(shots, `${look}-${size}.png`), fullPage: true });
         if (size === 'phone') {

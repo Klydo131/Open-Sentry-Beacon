@@ -117,6 +117,11 @@ const L = await import(pathToFileURL(bundle).href);
   ok(!/useChosenLook|data-ui-theme|uiTheme/.test(nav) && /className="[^"]*\bhidden\b[^"]*\bxl:flex\b/.test(nav),
      'the rooms down the left are drawn under every look, shown from 1280px and hidden below');
   ok(/<DesktopNav \/>/.test(code('components/TabBar.tsx')), 'and are drawn wherever the bar along the bottom is');
+  // The bar's Menu | People | My Files are for phones and pads. On a computer
+  // the rooms down the left already hold every one of them (4 October 2026:
+  // "This is not needed in Desktop I think, this is only for mobile and pad").
+  ok(!/FreshNav|MENU_HREF|peopleHref|['"`]\/menu['"`]/.test(nav) && !fs.existsSync(path.join(root, 'components/FreshNav.tsx')),
+     'the rooms down the left do not repeat the bar\'s Menu, People and My Files, under any look');
   ok(/import '\.\/desktop-layout\.css';/.test(code('app/layout.tsx')) && !/data-ui-theme/.test(read('app/desktop-layout.css').replace(/\/\*[\s\S]*?\*\//g, '')),
      'the computer layout is the app\'s own stylesheet, imported for every page, and targets no look');
   for (const f of ['app/settings/page.tsx', 'components/LiveAccountPages.tsx']) {

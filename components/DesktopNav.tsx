@@ -16,6 +16,13 @@
 // added to the Menu arrives in the sidebar without anybody remembering to.
 // What it replaces on a computer, the bar along the bottom, is hidden by
 // app/desktop-layout.css, which also turns the header into the top bar.
+//
+// THE BAR'S THREE BUTTONS ARE NOT REPEATED HERE, under any look. Menu, People
+// and My Files are how a phone or a pad gets around; on a computer every room
+// is already in this column, My Files and each role's people among them. The
+// Beacon, Study and Focus looks put the three back at the top of it for a day,
+// and the owner (4 October 2026): "This is not needed in Desktop I think, this
+// is only for mobile and pad." tests/the-classic-look-stays.mjs holds it.
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,8 +33,6 @@ import { useLiveSession } from '@/lib/live/session';
 import { useIsLive } from '@/lib/tutorial';
 import { APP_SHORT_NAME } from '@/lib/brand';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
-import { FreshNav } from '@/components/FreshNav';
-import type { Role } from '@/lib/types';
 
 export function DesktopNav() {
   const live = useIsLive();
@@ -38,14 +43,14 @@ function LiveRooms() {
   const { profile } = useLiveSession();
   if (!profile) return null;
   const leadsChurch = profile.role === 'admin' || profile.role === 'executive';
-  return <Rooms role={profile.role} groups={railGroupsFor(profile.role, {}, { mail: leadsChurch })} />;
+  return <Rooms groups={railGroupsFor(profile.role, {}, { mail: leadsChurch })} />;
 }
 
 function SampleRooms() {
   const { currentUser } = useDemo();
   const { groups } = useDemoRooms();
   if (!currentUser) return null;
-  return <Rooms role={currentUser.role} groups={groups} />;
+  return <Rooms groups={groups} />;
 }
 
 /** Lit when this is the room, or a page inside it (one Explorer's page is /dm/<pairing>). */
@@ -54,7 +59,7 @@ function isHere(path: string, href: string): boolean {
   return clean === href || clean.startsWith(`${href}/`);
 }
 
-function Rooms({ role, groups }: { role: Role; groups: RailGroup[] }) {
+function Rooms({ groups }: { groups: RailGroup[] }) {
   const path = usePathname() || '/';
   // The logo goes where Home does, which is each role's own first room.
   const home = groups[0]?.links[0]?.href ?? '/church';
@@ -80,7 +85,6 @@ function Rooms({ role, groups }: { role: Role; groups: RailGroup[] }) {
         <SentryBeaconMark size={32} />
         <span className="text-lg font-extrabold leading-tight">{APP_SHORT_NAME}</span>
       </Link>
-      <FreshNav role={role} />
       <nav aria-label="Rooms" className="flex-1 space-y-5 px-3 pb-6 pt-4">
         {groups.map((group) => (
           <div key={group.title}>
