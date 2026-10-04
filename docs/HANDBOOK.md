@@ -889,7 +889,7 @@ Asked for on 4 October 2026: "another room for music for music lovers and choir"
 
 > **GOOD TO KNOW** · What is not there yet
 >
-> The score is drawn as notes on a strip (higher notes higher, longer notes longer), not as printed music: printed notation needs a library this app's security rules do not allow. A scanned page does not play; turning a photo into notes is a decision the owner has not made yet. `docs/MUSIC-RESEARCH.md` has both reasons in full.
+> The score is drawn as notes on a strip (higher notes higher, longer notes longer), not as printed music: printed notation needs a library this app's security rules do not allow. A scanned page does not play: turning a photo into notes was left out on 4 October 2026, by the owner's decision, because every way of doing it sends the photo to a server or loosens the security rules. `docs/MUSIC-RESEARCH.md` has both reasons in full.
 
 ### How you get around: Menu, People, My Files
 

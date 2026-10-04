@@ -111,8 +111,9 @@ table above. `tests/e2e/the-music-room.js` walks the room in a browser, with a
 - **Turning a photo into notes that play (optical music recognition)** is not
   built. The owner asked for it. Every working approach either sends the photo
   to a server (Audiveris, oemer) or runs a model on the phone that needs the
-  security policy to allow WebAssembly. That is a decision for the owner, not a
-  default, and it is written up for them separately.
+  security policy to allow WebAssembly. The owner decided on 4 October 2026 to
+  leave it out for now: scanned pages stay pictures to read, and scores play from
+  MusicXML files.
 - **Safari's microphone** has not been tested with a real voice. The browser
   walks can feed a tone into Chromium's microphone; WebKit offers no such thing,
   so on Safari the walk checks only that Start either listens or says why it
