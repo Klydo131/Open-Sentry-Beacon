@@ -109,9 +109,34 @@ async function measure(page) {
     // of the screen looked reasonable and landed inside the panel in landscape,
     // where the panel is wide and the screen is short: the code was right and
     // the test was wrong, which is the more expensive of the two.
-    const away = m ? { x: Math.max(2, m.left - 8), y: h - 4 } : { x: 4, y: h - 4 };
+    //
+    // AND NOT ON SOMETHING THAT DOES ITS OWN THING. The bottom edge is the tab
+    // bar, so that point tapped a link to another room: the panel then went
+    // because the page changed, and on WebKit a slower page change left it on
+    // screen at the moment of checking (the Safari runs of 3 and 4 October
+    // 2026). The first point, from a few candidates outside the panel, that is
+    // not a link, a button or a field.
+    const away = await page.evaluate(({ w, h }) => {
+      const panel = document.querySelector('[data-anchored-panel]');
+      const r = panel ? panel.getBoundingClientRect() : { left: w, right: w, top: 0, bottom: 0 };
+      const tries = [
+        [Math.max(4, r.left - 12), Math.min(h - 120, r.bottom + 40)],
+        [Math.max(4, r.left - 12), h / 2],
+        [8, h / 2],
+        [w / 2, Math.min(h - 120, r.bottom + 60)],
+        [8, h - 140],
+      ];
+      for (const [x, y] of tries) {
+        const t = document.elementFromPoint(x, y);
+        if (!t || (panel && panel.contains(t))) continue;
+        if (t.closest('a, button, input, textarea, select, [role="button"], [contenteditable="true"]')) continue;
+        return { x, y };
+      }
+      return { x: 8, y: h / 2 };
+    }, { w, h });
     await page.mouse.click(away.x, away.y);
-    await page.waitForTimeout(400);
+    // Waited for, not slept past.
+    await page.waitForFunction(() => !document.querySelector('[data-anchored-panel]'), null, { timeout: 3000 }).catch(() => {});
     ok(await page.locator('[data-anchored-panel]').count() === 0,
       `${label}: tapping elsewhere closes it`);
 
