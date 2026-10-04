@@ -26,6 +26,27 @@ const signInAs = async (page, name) => {
   if (await c.count()) { await c.first().click().catch(() => {}); await page.waitForTimeout(600); }
 };
 
+// Whether an element is wholly on the first screen, with no scrolling.
+const onFirstScreen = (locator) => locator.evaluate((el) => {
+  const r = el.getBoundingClientRect();
+  return r.height > 0 && r.bottom <= innerHeight;
+}).catch(() => false);
+
+// The writing box, read from the page: whether it still has a Close/Write
+// switch, and whether Publish comes before the Advanced settings switch.
+const writingBoxShape = (page) => page.locator('#blog-title').evaluate((title) => {
+  let box = title;
+  while (box && !box.querySelector('[data-blog-advanced]')) box = box.parentElement;
+  if (!box) return { stopButton: false, publishFirst: false };
+  const buttons = [...box.querySelectorAll('button')];
+  const publish = buttons.find((b) => b.textContent.trim() === 'Publish');
+  const advanced = box.querySelector('[data-blog-advanced]');
+  return {
+    stopButton: buttons.some((b) => /^(Close|Write)$/.test(b.textContent.trim())),
+    publishFirst: Boolean(publish && (publish.compareDocumentPosition(advanced) & Node.DOCUMENT_POSITION_FOLLOWING)),
+  };
+});
+
 const TITLE = 'Thursday evening, and what I am reading';
 const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer has two to make.';
 
@@ -43,11 +64,7 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
   await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
   const prompt = page.locator('[data-write-post]');
-  const onFirstScreen = await prompt.evaluate((el) => {
-    const r = el.getBoundingClientRect();
-    return r.height > 0 && r.bottom <= innerHeight;
-  }).catch(() => false);
-  ok(onFirstScreen, 'Home opens with "Write a post" on the first screen, no scrolling and no folder to find');
+  ok(await onFirstScreen(prompt), 'Home opens with "Write a post" on the first screen, no scrolling and no folder to find');
   // The whole row is the link: one target the width of the screen.
   ok(await prompt.evaluate((el) => el.tagName === 'A' && /room=blogs/.test(el.getAttribute('href') || '')),
      'the whole row is one link to the Blog folder');
@@ -63,17 +80,7 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
   const desk = page.getByRole('heading', { name: /Write a post/i }).first();
   ok(await desk.count() > 0, 'the writing box is called "Write a post"');
   await desk.scrollIntoViewIfNeeded();
-  const shape = await page.locator('#blog-title').evaluate((title) => {
-    let card = title;
-    while (card && !card.querySelector('[data-blog-advanced]')) card = card.parentElement;
-    const buttons = card ? [...card.querySelectorAll('button')] : [];
-    const publish = buttons.find((b) => b.textContent.trim() === 'Publish');
-    const advanced = card ? card.querySelector('[data-blog-advanced]') : null;
-    return {
-      stopButton: buttons.some((b) => /^(Close|Write)$/.test(b.textContent.trim())),
-      publishFirst: !!(publish && advanced && (publish.compareDocumentPosition(advanced) & Node.DOCUMENT_POSITION_FOLLOWING)),
-    };
-  });
+  const shape = await writingBoxShape(page);
   ok(!shape.stopButton, 'there is no Close or Write switch on the box: Publish is its one strong button');
   ok(shape.publishFirst, 'and Advanced settings comes after Publish, so nobody reads past it to finish');
 

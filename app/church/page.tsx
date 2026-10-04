@@ -70,10 +70,10 @@ function Body() {
       <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
 
       {/* WRITING STARTS HERE, on the screen Home opens on (4 October 2026:
-          "can be easily accessible to Home page"). One line and one button;
-          the button opens the Blog folder with the cursor in Title
-          (components/WritePost.tsx). In the sample church only the sample
-          Guide has a blog, so only they are offered it. */}
+          "can be easily accessible to Home page"). The row opens the Blog
+          folder with the cursor in Title; see components/WritePost.tsx. In
+          the sample church only the sample Guide has a blog, so only they
+          are offered it. */}
       {room === 'notices' && me.role === 'dm' && <WritePostPrompt />}
 
       {/* The activity billboard — masthead, privileged strip, announcements and

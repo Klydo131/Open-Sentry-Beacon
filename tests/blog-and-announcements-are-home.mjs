@@ -60,34 +60,43 @@ ok(!/id: 'write'/.test(code('app/dm/page.tsx')), 'and the sample Guide\'s old Wr
 //
 // The owner, 4 October 2026: "I would love writing the Blog to be simple (with
 // advance settings too but that's optional) and can be easily accessible to
-// Home page". The box is always open (there is nothing to close it with), a
-// Write link on Home's first screen lands the cursor in Title, and the
-// Advanced switch sits after Publish so the first thing read is the writing.
-// The writing box alone: the feed below it keeps its own Hide and Show.
+// Home page". What a person sees of writing is the same on both halves, so it
+// is built once, in components/WritePost.tsx, and each writing box uses it.
+const shared = code('components/WritePost.tsx');
+ok(/role="status" data-blog-done/.test(shared), 'the note after Publish is a status line, so a screen reader says it too');
+ok(/data-blog-advanced/.test(shared) && /Advanced settings/.test(shared), 'there is one Advanced settings switch, shared by both');
+
+// Each writing box: the function itself, not the feed below it in the same
+// file, which keeps its own Hide and Show.
+const DESKS = [['components/LiveBlog.tsx', 'LiveBlogDesk'], ['components/Blog.tsx', 'BlogDesk']];
 const deskOf = (src, name) => {
-  const at = src.indexOf(`export function ${name}(`);
-  const end = src.indexOf('\nexport function ', at + 1);
-  return at < 0 ? '' : src.slice(at, end < 0 ? undefined : end);
+  const start = src.indexOf(`export function ${name}(`);
+  const end = src.indexOf('\nexport function ', start + 1);
+  return start < 0 ? '' : src.slice(start, end < 0 ? undefined : end);
 };
-for (const [f, name] of [['components/LiveBlog.tsx', 'LiveBlogDesk'], ['components/Blog.tsx', 'BlogDesk']]) {
-  const desk = code(f);
-  const box = deskOf(desk, name);
-  ok(box.length > 0 && !/setOpen\b/.test(box) && !/>\s*(Close|Hide)\s*</.test(box),
-     `${f}: the writing box is always open, with nothing to close it`);
-  ok(/useFocusOnWrite\(titleRef\)/.test(desk) && /ref=\{titleRef\}/.test(desk), `${f}: Home's Write link puts the cursor in Title`);
-  ok(/>\s*Publish\s*</.test(box) && box.search(/>\s*Publish\s*</) < box.search(/data-blog-advanced/),
-     `${f}: Publish comes before the Advanced switch`);
-  ok(/role="status"[^>]*data-blog-done|data-blog-done[^>]*role="status"/.test(box), `${f}: publishing says, out loud, that it worked`);
-  ok(/data-blog-advanced/.test(desk) && /\{advanced && \(<>[\s\S]*?Who sees it[\s\S]*?<\/>\)\}/.test(desk)
+// True when every pattern is found, each after the one before it.
+const inOrder = (text, patterns) => {
+  const places = patterns.map((pattern) => text.search(pattern));
+  return places.every((place, i) => place >= 0 && (i === 0 || place > places[i - 1]));
+};
+
+for (const [file, name] of DESKS) {
+  const desk = deskOf(code(file), name);
+  ok(desk.length > 0 && !/setOpen\b/.test(desk) && !/>\s*(Close|Hide)\s*</.test(desk),
+     `${file}: the writing box is always open, with nothing to close it`);
+  ok(/useFocusOnWrite\(titleRef\)/.test(desk) && /ref=\{titleRef\}/.test(desk),
+     `${file}: Home's Write a post puts the cursor in Title`);
+  ok(inOrder(desk, [/<WritingBox>/, />\s*Publish\s*</, /<PostedNote /, /<AdvancedSwitch /]),
+     `${file}: the heading, then Publish, then what happened, then the Advanced switch`);
+  ok(/\{advanced && \(\s*<>[\s\S]*?Who sees it[\s\S]*?<\/>\s*\)\}/.test(desk)
      && /\{advanced && \([\s\S]{0,200}Save as draft/.test(desk),
-     `${f}: who sees it and saving a draft are under Advanced settings`);
+     `${file}: who sees it and saving a draft are under Advanced settings`);
 }
 
 // 4. A WAY TO WRITE ON HOME'S FIRST SCREEN
-const prompt = code('components/WritePost.tsx');
-ok(/WRITE_HREF = '\/church\?room=blogs&write=1'/.test(prompt) && /href=\{WRITE_HREF\}/.test(prompt),
-   'the Write a post button is a plain link to the Blog folder, asking for the cursor in Title');
-ok(/room === 'notices' && <WritePostPrompt \/>/.test(liveHome), 'live Home: the Write a post button is on the screen Home opens on');
+ok(/WRITE_HREF = '\/church\?room=blogs&write=1'/.test(shared) && /href=\{WRITE_HREF\}/.test(shared),
+   'Write a post is a plain link to the Blog folder, asking for the cursor in Title');
+ok(/room === 'notices' && <WritePostPrompt \/>/.test(liveHome), 'live Home: Write a post is on the screen Home opens on');
 ok(/room === 'notices' && me\.role === 'dm' && <WritePostPrompt \/>/.test(sampleHome),
    'sample Home: the same, for the sample Guide, the one person there with a blog');
 

@@ -24,7 +24,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { Button, Card, EmptyState } from '@/components/ui';
-import { useFocusOnWrite } from '@/components/WritePost';
+import {
+  AdvancedSwitch,
+  PostedNote,
+  WritingBox,
+  postOutcome,
+  useFocusOnWrite,
+  type PostOutcome,
+} from '@/components/WritePost';
 import type { BlogAudienceKind, BlogPost, DB } from '@/lib/types';
 
 function when(iso: string): string {
@@ -54,18 +61,20 @@ function Body({ text }: { text: string }) {
 // ---------------------------------------------------------------------------
 export function BlogDesk({ userId }: { userId: string }) {
   const { db, addBlogPost, setBlogVisibility, deleteBlogPost } = useDemo();
-  const [advanced, setAdvanced] = useState(false);
-  // What just happened, said where the person is looking. Cleared as soon as
-  // they start the next post.
-  const [done, setDone] = useState('');
-  const titleRef = useRef<HTMLInputElement>(null);
-  // From Home's "Write a post": the cursor goes straight into Title.
-  useFocusOnWrite(titleRef);
+
+  // The post being written.
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [audience, setAudience] = useState<BlogAudienceKind>('church');
   const [picked, setPicked] = useState<string[]>([]);
+  const [advanced, setAdvanced] = useState(false);
+  // What happened to the last post, shown until the next one is started.
+  const [posted, setPosted] = useState<PostOutcome | null>(null);
   const [confirming, setConfirming] = useState('');
+
+  // From Home's "Write a post": the cursor goes straight into Title.
+  const titleRef = useRef<HTMLInputElement>(null);
+  useFocusOnWrite(titleRef);
 
   const mine = db.blog_posts.filter((p) => p.author_id === userId);
 
@@ -87,6 +96,19 @@ export function BlogDesk({ userId }: { userId: string }) {
   const canPost = title.trim().length > 0 && body.trim().length > 0
     && (audience !== 'selected' || picked.length > 0);
 
+  // Typing starts the next post, so the note about the last one goes.
+  const typeTitle = (text: string) => { setTitle(text); setPosted(null); };
+  const typeBody = (text: string) => { setBody(text); setPosted(null); };
+
+  // Simple means the whole church, so turning Advanced off puts that back.
+  const switchAdvanced = (on: boolean) => {
+    setAdvanced(on);
+    if (!on) {
+      setAudience('church');
+      setPicked([]);
+    }
+  };
+
   const submit = () => {
     if (!canPost) return;
     addBlogPost({ title, body, visibility: 'published', audience, dsIds: picked });
@@ -94,9 +116,7 @@ export function BlogDesk({ userId }: { userId: string }) {
     setBody('');
     setAudience('church');
     setPicked([]);
-    setDone(audience === 'church'
-      ? 'Published. Everyone in the church can read it now.'
-      : 'Published, to the people you chose.');
+    setPosted(postOutcome('published', audience));
   };
 
   const saveDraft = () => {
@@ -105,150 +125,117 @@ export function BlogDesk({ userId }: { userId: string }) {
     setTitle('');
     setBody('');
     setPicked([]);
-    setDone('Saved as a draft. Only you can see it, below.');
+    setPosted(postOutcome('private', audience));
   };
 
   return (
-    <Card className="p-5">
-      {/* ONE HEADING AND ONE LINE, AND NO CLOSE BUTTON. The owner, 4 October
-          2026: "I would love writing the Blog to be simple". The box used to
-          carry a Close/Write switch as its largest button, dark beside a grey
-          Publish that waits for words: the first thing the eye found on a
-          writing screen was the way to stop writing. It is always open now,
-          and Publish is the one strong button. */}
-      <h2 className="text-xl font-bold text-navy">✍️ Write a post</h2>
-      <p className="text-sm text-gray-500">For your church to read, in their own time.</p>
+    <WritingBox>
 
       <div className="mt-4 rounded-xl bg-navy/5 p-4">
-          <label className="block text-sm font-semibold text-navy" htmlFor="blog-title">
-            Title
-          </label>
-          <input
-            id="blog-title"
-            ref={titleRef}
-            value={title}
-            onChange={(e) => { setTitle(e.target.value); setDone(''); }}
-            placeholder="What I keep coming back to in Psalm 23"
-            className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
-          />
+        <label className="block text-sm font-semibold text-navy" htmlFor="blog-title">
+          Title
+        </label>
+        <input
+          id="blog-title"
+          ref={titleRef}
+          value={title}
+          onChange={(e) => typeTitle(e.target.value)}
+          placeholder="What I keep coming back to in Psalm 23"
+          className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
+        />
 
-          <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="blog-body">
-            Post
-          </label>
-          <textarea
-            id="blog-body"
-            value={body}
-            onChange={(e) => { setBody(e.target.value); setDone(''); }}
-            rows={7}
-            placeholder="Leave a blank line between paragraphs."
-            className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
-          />
+        <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="blog-body">
+          Post
+        </label>
+        <textarea
+          id="blog-body"
+          value={body}
+          onChange={(e) => typeBody(e.target.value)}
+          rows={7}
+          placeholder="Leave a blank line between paragraphs."
+          className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
+        />
 
-          {advanced && (<>
-          <fieldset className="mt-3">
-            <legend className="text-sm font-semibold text-navy">Who sees it</legend>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="radio"
-                name="blog-audience"
-                checked={audience === 'church'}
-                onChange={() => setAudience('church')}
-              />
-              Everyone in the church
-              <span className="text-gray-400">(it goes on the church home screen)</span>
-            </label>
-            <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="radio"
-                name="blog-audience"
-                checked={audience === 'all'}
-                onChange={() => setAudience('all')}
-              />
-              Only the people I walk with
-              <span className="text-gray-400">
-                ({explorers.length} {explorers.length === 1 ? 'person' : 'people'}, and anyone paired with me later)
-              </span>
-            </label>
-            <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="radio"
-                name="blog-audience"
-                checked={audience === 'selected'}
-                onChange={() => setAudience('selected')}
-              />
-              Only the people I choose
-            </label>
-          </fieldset>
+        {advanced && (
+          <>
+            <fieldset className="mt-3">
+              <legend className="text-sm font-semibold text-navy">Who sees it</legend>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="radio"
+                  name="blog-audience"
+                  checked={audience === 'church'}
+                  onChange={() => setAudience('church')}
+                />
+                Everyone in the church
+                <span className="text-gray-400">(it goes on the church home screen)</span>
+              </label>
+              <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="radio"
+                  name="blog-audience"
+                  checked={audience === 'all'}
+                  onChange={() => setAudience('all')}
+                />
+                Only the people I walk with
+                <span className="text-gray-400">
+                  ({explorers.length} {explorers.length === 1 ? 'person' : 'people'}, and anyone paired with me later)
+                </span>
+              </label>
+              <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="radio"
+                  name="blog-audience"
+                  checked={audience === 'selected'}
+                  onChange={() => setAudience('selected')}
+                />
+                Only the people I choose
+              </label>
+            </fieldset>
 
-          {audience === 'selected' && (
-            <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-black/5">
-              {explorers.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  You are not walking with anyone yet, so there is nobody to choose.
-                </p>
-              ) : (
-                explorers.map((e) => (
-                  <label key={e.id} className="flex items-center gap-2 py-1 text-sm text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={picked.includes(e.id)}
-                      onChange={() =>
-                        setPicked((p) =>
-                          p.includes(e.id) ? p.filter((x) => x !== e.id) : [...p, e.id],
-                        )
-                      }
-                    />
-                    {e.name}
-                  </label>
-                ))
-              )}
-            </div>
-          )}
-          </>)}
-
-          {!advanced && (
-            <p className="mt-2 text-xs text-gray-500">Everyone in the church sees it, with your name on it.</p>
-          )}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button onClick={submit} disabled={!canPost}>
-              Publish
-            </Button>
-            {advanced && (
-              <Button variant="ghost" onClick={saveDraft} disabled={!title.trim() || !body.trim()}>
-                Save as draft
-              </Button>
+            {audience === 'selected' && (
+              <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-black/5">
+                {explorers.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    You are not walking with anyone yet, so there is nobody to choose.
+                  </p>
+                ) : (
+                  explorers.map((e) => (
+                    <label key={e.id} className="flex items-center gap-2 py-1 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={picked.includes(e.id)}
+                        onChange={() =>
+                          setPicked((p) =>
+                            p.includes(e.id) ? p.filter((x) => x !== e.id) : [...p, e.id],
+                          )
+                        }
+                      />
+                      {e.name}
+                    </label>
+                  ))
+                )}
+              </div>
             )}
-          </div>
-          {done && (
-            <p role="status" data-blog-done className="mt-3 text-sm font-semibold text-green-800">
-              {done}
-            </p>
-          )}
-          {/* SIMPLE FIRST, ADVANCED WHEN WANTED. The owner, 3 October 2026,
-              moving writing into Home: "make it simple with advance settings
-              too", and again on 4 October: "advance settings too but that's
-              optional". Simple is a title, the post and Publish, to everybody
-              in the church. The switch for the rest sits BELOW Publish, so
-              nobody has to read past it to finish; what it adds (who sees it,
-              a draft) appears above the buttons it changes. */}
-          <label className="mt-4 flex flex-wrap items-center gap-x-2 text-sm font-semibold text-navy">
-            <input
-              type="checkbox"
-              data-blog-advanced
-              checked={advanced}
-              onChange={(e) => {
-                setAdvanced(e.target.checked);
-                if (!e.target.checked) {
-                  setAudience('church');
-                  setPicked([]);
-                }
-              }}
-            />
-            Advanced settings
-            <span className="font-normal text-gray-500">(choose who sees it, or save as a draft)</span>
-          </label>
+          </>
+        )}
 
+        {!advanced && (
+          <p className="mt-2 text-xs text-gray-500">Everyone in the church sees it, with your name on it.</p>
+        )}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button onClick={submit} disabled={!canPost}>
+            Publish
+          </Button>
+          {advanced && (
+            <Button variant="ghost" onClick={saveDraft} disabled={!title.trim() || !body.trim()}>
+              Save as draft
+            </Button>
+          )}
         </div>
+        <PostedNote outcome={posted} />
+        <AdvancedSwitch on={advanced} onChange={switchAdvanced} />
+      </div>
 
       <div className="mt-4 space-y-3">
         {mine.length === 0 && (
@@ -318,7 +305,7 @@ export function BlogDesk({ userId }: { userId: string }) {
           </article>
         ))}
       </div>
-    </Card>
+    </WritingBox>
   );
 }
 

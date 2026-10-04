@@ -348,12 +348,13 @@ const SHOTS = [
       await settle(p, 1200);
       await p.locator('[data-write-post]').click();
       await settle(p, 1400);
-      // Title to Advanced settings, clear of the badges that float at the
-      // bottom (a phone cannot fit the heading as well); the cursor stays in
-      // Title. Shot 38 shows the way in, by name.
-      await p.locator('[data-blog-advanced]').first().evaluate((el) => {
-        window.scrollBy(0, el.getBoundingClientRect().bottom - (window.innerHeight - 200));
-      });
+      // Title to Advanced settings, with Advanced clear of the DEMO badge and
+      // Talk button that float in the bottom 200px of a phone. The heading
+      // does not fit as well; shot 38 shows the way in, by name.
+      const FLOATING_BADGES_PX = 200;
+      await p.locator('[data-blog-advanced]').first().evaluate((el, clearance) => {
+        window.scrollBy(0, el.getBoundingClientRect().bottom - (window.innerHeight - clearance));
+      }, FLOATING_BADGES_PX);
       await settle(p, 600);
     } },
   // Text size, tried first, 3 October 2026: "text size should be tested and

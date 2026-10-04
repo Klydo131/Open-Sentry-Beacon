@@ -100,10 +100,10 @@ function ChurchRooms({ profile, churchName, leads, explorer }: {
       <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
 
       {/* WRITING STARTS HERE, on the screen Home opens on (4 October 2026:
-          "can be easily accessible to Home page"). One line and one button;
-          the button opens the Blog folder with the cursor in Title
-          (components/WritePost.tsx). Everybody in a live church writes,
-          Explorers included, so everybody is offered it. */}
+          "can be easily accessible to Home page"). The row opens the Blog
+          folder with the cursor in Title; see components/WritePost.tsx.
+          Everybody in a live church writes, Explorers included, so everybody
+          is offered it. */}
       {room === 'notices' && <WritePostPrompt />}
 
       {/* THE BOARD. Masthead and the church's own notices. The blogs used to be

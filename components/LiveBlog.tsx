@@ -18,7 +18,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as live from '@/lib/live/data';
 import { Button, Card } from '@/components/ui';
-import { useFocusOnWrite } from '@/components/WritePost';
+import {
+  AdvancedSwitch,
+  PostedNote,
+  WritingBox,
+  postOutcome,
+  useFocusOnWrite,
+  type PostOutcome,
+} from '@/components/WritePost';
 import { Linked } from '@/components/Linked';
 import { roleLabel, roleNoun } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
@@ -57,20 +64,22 @@ function Body({ text }: { text: string }) {
 export function LiveBlogDesk() {
   const [posts, setPosts] = useState<live.MyBlogPost[] | null>(null);
   const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
-  const [advanced, setAdvanced] = useState(false);
-  // What just happened, said where the person is looking. Cleared as soon as
-  // they start the next post.
-  const [done, setDone] = useState('');
-  const titleRef = useRef<HTMLInputElement>(null);
-  // From Home's "Write a post": the cursor goes straight into Title.
-  useFocusOnWrite(titleRef);
+
+  // The post being written.
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [audience, setAudience] = useState<live.BlogAudienceKind>('church');
   const [picked, setPicked] = useState<string[]>([]);
+  const [advanced, setAdvanced] = useState(false);
+  // What happened to the last post, shown until the next one is started.
+  const [posted, setPosted] = useState<PostOutcome | null>(null);
   const [confirming, setConfirming] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // From Home's "Write a post": the cursor goes straight into Title.
+  const titleRef = useRef<HTMLInputElement>(null);
+  useFocusOnWrite(titleRef);
 
   const load = useCallback(async () => {
     try {
@@ -103,6 +112,19 @@ export function LiveBlogDesk() {
     title.trim() && body.trim() && (audience !== 'selected' || picked.length > 0),
   );
 
+  // Typing starts the next post, so the note about the last one goes.
+  const typeTitle = (text: string) => { setTitle(text); setPosted(null); };
+  const typeBody = (text: string) => { setBody(text); setPosted(null); };
+
+  // Simple means the whole church, so turning Advanced off puts that back.
+  const switchAdvanced = (on: boolean) => {
+    setAdvanced(on);
+    if (!on) {
+      setAudience('church');
+      setPicked([]);
+    }
+  };
+
   const submit = async (visibility: live.BlogVisibility) => {
     if (!title.trim() || !body.trim() || busy) return;
     setBusy(true);
@@ -110,11 +132,7 @@ export function LiveBlogDesk() {
     try {
       await live.createBlogPost({ title, body, visibility, audience, dsIds: picked });
       setTitle(''); setBody(''); setAudience('church'); setPicked([]);
-      setDone(visibility === 'private'
-        ? 'Saved as a draft. Only you can see it, below.'
-        : audience === 'church'
-          ? 'Published. Everyone in the church can read it now.'
-          : 'Published, to the people you chose.');
+      setPosted(postOutcome(visibility, audience));
       await load();
     } catch (cause) {
       setError(message(cause));
@@ -131,15 +149,7 @@ export function LiveBlogDesk() {
   };
 
   return (
-    <Card className="p-5">
-      {/* ONE HEADING AND ONE LINE, AND NO CLOSE BUTTON. The owner, 4 October
-          2026: "I would love writing the Blog to be simple". The box used to
-          carry a Close/Write switch as its largest button, dark beside a grey
-          Publish that waits for words: the first thing the eye found on a
-          writing screen was the way to stop writing. It is always open now,
-          and Publish is the one strong button. */}
-      <h2 className="text-xl font-bold text-navy">✍️ Write a post</h2>
-      <p className="text-sm text-gray-500">For your church to read, in their own time.</p>
+    <WritingBox>
 
       {error && (
         <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 ring-1 ring-red-200">
@@ -148,119 +158,93 @@ export function LiveBlogDesk() {
       )}
 
       <div className="mt-4 rounded-xl bg-navy/5 p-4">
-          <label className="block text-sm font-semibold text-navy" htmlFor="lblog-title">Title</label>
-          <input
-            id="lblog-title" ref={titleRef} value={title} onChange={(e) => { setTitle(e.target.value); setDone(''); }}
-            placeholder="What I keep coming back to in Psalm 23"
-            className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
-          />
-          <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="lblog-body">Post</label>
-          <textarea
-            id="lblog-body" value={body} onChange={(e) => { setBody(e.target.value); setDone(''); }} rows={7}
-            placeholder="Leave a blank line between paragraphs."
-            className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
-          />
+        <label className="block text-sm font-semibold text-navy" htmlFor="lblog-title">Title</label>
+        <input
+          id="lblog-title" ref={titleRef} value={title} onChange={(e) => typeTitle(e.target.value)}
+          placeholder="What I keep coming back to in Psalm 23"
+          className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
+        />
+        <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="lblog-body">Post</label>
+        <textarea
+          id="lblog-body" value={body} onChange={(e) => typeBody(e.target.value)} rows={7}
+          placeholder="Leave a blank line between paragraphs."
+          className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
+        />
 
-          {advanced && (<>
-          {/* THE NOTICEBOARD IS FIRST because it is what most people mean by
-              publishing. The two narrower audiences are still here, and a post
-              addressed to one of them is not on the board at all. */}
-          <fieldset className="mt-3">
-            <legend className="text-sm font-semibold text-navy">Who sees it</legend>
-            <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
-              <input type="radio" name="lblog-aud" checked={audience === 'church'} onChange={() => setAudience('church')} />
-              Everyone in the church
-              <span className="text-gray-400">(it goes on the church home screen)</span>
-            </label>
-            {/* SAID BEFORE THEY PRESS PUBLISH, not discovered afterwards. A
-                church-wide post is signed with the writer's name and role, and
-                somebody choosing that audience is entitled to know they are
-                choosing to be identified. */}
-            {audience === 'church' && (
-              <p className="mt-1 pl-6 text-xs text-gray-500">
-                Your name and role are shown on it, so the church can see who
-                said what.
-              </p>
-            )}
-            <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
-              <input type="radio" name="lblog-aud" checked={audience === 'all'} onChange={() => setAudience('all')} />
-              Only the people I walk with
-              <span className="text-gray-400">
-                {people.length === 0
-                  ? '(whoever you are paired with)'
-                  : `(${people.length} ${people.length === 1 ? 'person' : 'people'}, and anyone paired with me later)`}
-              </span>
-            </label>
-            {/* Hidden when there is nobody to choose from. An Explorer walks
-                with one Guide, so a picker with nothing in it is an option that
-                cannot be completed, sitting under a button that stays
-                disabled. */}
-            {people.length > 0 && (
+        {advanced && (
+          <>
+            {/* THE NOTICEBOARD IS FIRST because it is what most people mean by
+                publishing. The two narrower audiences are still here, and a post
+                addressed to one of them is not on the board at all. */}
+            <fieldset className="mt-3">
+              <legend className="text-sm font-semibold text-navy">Who sees it</legend>
               <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
-                <input type="radio" name="lblog-aud" checked={audience === 'selected'} onChange={() => setAudience('selected')} />
-                Only the people I choose
+                <input type="radio" name="lblog-aud" checked={audience === 'church'} onChange={() => setAudience('church')} />
+                Everyone in the church
+                <span className="text-gray-400">(it goes on the church home screen)</span>
               </label>
-            )}
-          </fieldset>
-
-          {audience === 'selected' && (
-            <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-black/5">
-              {people.length === 0 ? (
-                <p className="text-sm text-gray-500">You are not walking with anyone yet.</p>
-              ) : people.map((p) => (
-                <label key={p.id} className="flex items-center gap-2 py-1 text-sm text-gray-700">
-                  <input
-                    type="checkbox" checked={picked.includes(p.id)}
-                    onChange={() => setPicked((v) => v.includes(p.id) ? v.filter((x) => x !== p.id) : [...v, p.id])}
-                  />
-                  {p.name}
+              {/* SAID BEFORE THEY PRESS PUBLISH, not discovered afterwards. A
+                  church-wide post is signed with the writer's name and role, and
+                  somebody choosing that audience is entitled to know they are
+                  choosing to be identified. */}
+              {audience === 'church' && (
+                <p className="mt-1 pl-6 text-xs text-gray-500">
+                  Your name and role are shown on it, so the church can see who
+                  said what.
+                </p>
+              )}
+              <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
+                <input type="radio" name="lblog-aud" checked={audience === 'all'} onChange={() => setAudience('all')} />
+                Only the people I walk with
+                <span className="text-gray-400">
+                  {people.length === 0
+                    ? '(whoever you are paired with)'
+                    : `(${people.length} ${people.length === 1 ? 'person' : 'people'}, and anyone paired with me later)`}
+                </span>
+              </label>
+              {/* Hidden when there is nobody to choose from. An Explorer walks
+                  with one Guide, so a picker with nothing in it is an option that
+                  cannot be completed, sitting under a button that stays
+                  disabled. */}
+              {people.length > 0 && (
+                <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
+                  <input type="radio" name="lblog-aud" checked={audience === 'selected'} onChange={() => setAudience('selected')} />
+                  Only the people I choose
                 </label>
-              ))}
-            </div>
-          )}
+              )}
+            </fieldset>
 
-          </>)}
-
-          {!advanced && (
-            <p className="mt-2 text-xs text-gray-500">Everyone in the church sees it, with your name and role on it.</p>
-          )}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button onClick={() => submit('published')} disabled={!canPost || busy}>Publish</Button>
-            {advanced && (
-              <Button variant="ghost" onClick={() => submit('private')} disabled={!title.trim() || !body.trim() || busy}>
-                Save as draft
-              </Button>
+            {audience === 'selected' && (
+              <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-black/5">
+                {people.length === 0 ? (
+                  <p className="text-sm text-gray-500">You are not walking with anyone yet.</p>
+                ) : people.map((p) => (
+                  <label key={p.id} className="flex items-center gap-2 py-1 text-sm text-gray-700">
+                    <input
+                      type="checkbox" checked={picked.includes(p.id)}
+                      onChange={() => setPicked((v) => v.includes(p.id) ? v.filter((x) => x !== p.id) : [...v, p.id])}
+                    />
+                    {p.name}
+                  </label>
+                ))}
+              </div>
             )}
-          </div>
-          {done && (
-            <p role="status" data-blog-done className="mt-3 text-sm font-semibold text-green-800">
-              {done}
-            </p>
-          )}
-          {/* SIMPLE FIRST, ADVANCED WHEN WANTED. The owner, 3 October 2026,
-              moving writing into Home: "make it simple with advance settings
-              too", and again on 4 October: "advance settings too but that's
-              optional". Simple is a title, the post and Publish, to everybody
-              in the church. The switch for the rest sits BELOW Publish, so
-              nobody has to read past it to finish; what it adds (who sees it,
-              a draft) appears above the buttons it changes. */}
-          <label className="mt-4 flex flex-wrap items-center gap-x-2 text-sm font-semibold text-navy">
-            <input
-              type="checkbox"
-              data-blog-advanced
-              checked={advanced}
-              onChange={(e) => {
-                setAdvanced(e.target.checked);
-                if (!e.target.checked) {
-                  setAudience('church');
-                  setPicked([]);
-                }
-              }}
-            />
-            Advanced settings
-            <span className="font-normal text-gray-500">(choose who sees it, or save as a draft)</span>
-          </label>
+          </>
+        )}
 
+        {!advanced && (
+          <p className="mt-2 text-xs text-gray-500">Everyone in the church sees it, with your name and role on it.</p>
+        )}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button onClick={() => submit('published')} disabled={!canPost || busy}>Publish</Button>
+          {advanced && (
+            <Button variant="ghost" onClick={() => submit('private')} disabled={!title.trim() || !body.trim() || busy}>
+              Save as draft
+            </Button>
+          )}
+        </div>
+        <PostedNote outcome={posted} />
+        <AdvancedSwitch on={advanced} onChange={switchAdvanced} />
       </div>
 
       <div className="mt-4 space-y-3">
@@ -319,7 +303,7 @@ export function LiveBlogDesk() {
           </article>
         ))}
       </div>
-    </Card>
+    </WritingBox>
   );
 }
 
