@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-write-from-home',
+    date: '2026-10-04',
+    title: 'Write a post straight from Home',
+    items: [
+      'Home now opens with "Write a post" near the top. One tap, and you are typing the title.',
+      'The writing box is simpler: a title, your post, Publish. It tells you when your post has gone out.',
+      'Advanced settings are still there, under Publish, for choosing who sees a post or saving a draft. You never have to open them.',
+    ],
+  },
+  {
     id: '2026-10-04-desk-colours-every-look',
     date: '2026-10-04',
     title: 'Your desk colours work in every look',

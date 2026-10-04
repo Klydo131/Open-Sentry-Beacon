@@ -357,13 +357,17 @@ Directors keep the same control over everything, which is what running the churc
 
 **Writing lives in Home, beside what has been written.** Home has a **Blog** folder and, for Guides and leadership, an **Announcements** folder. The owner, 3 October 2026: "Blog and announcement will be the sub rooms of home, so basically we will take out publish". There is no Publish room any more; an old link to it opens Home's Blog folder.
 
-**Blog.** The writing box is open as soon as you arrive: a title, the post and **Publish**, which goes to everybody in the church with your name on it. Tick **Advanced settings** to choose who sees it (only the people you walk with, or people you pick) or to **Save as draft**. Below the box are your own posts and then everything the church has written.
+**Write a post, from the screen Home opens on.** The owner, 4 October 2026: "I would love writing the Blog to be simple (with advance settings too but that's optional) and can be easily accessible to Home page". Home opens on its Notices, and near the top is one row, **Write a post** ("Something to share with your church?"). The whole row is the button. It opens the Blog folder with the cursor already in **Title**. Whether the keyboard rises by itself is the phone's decision; an iPhone usually waits for a tap on the box. Before this, writing was in the Blog folder, behind the folder button, and nothing on Home's first screen said so.
+
+**Blog.** The writing box is always open, with nothing to press first and nothing to close it with: a title, the post and **Publish**, which goes to everybody in the church with your name on it. When it has gone the box says so ("Published. Everyone in the church can read it now.") and empties for the next one. **Advanced settings** sits under Publish, so nobody has to read past it to finish a post: tick it to choose who sees it (only the people you walk with, or people you pick) or to **Save as draft**. Below the box are your own posts and then everything the church has written.
+
+![Home opens with Write a post near the top. The whole row is the button.](screenshots/walkthrough/38-home-write.png)
 
 **Announcements.** A title, the words and **Pin it**, and the notice sits at the top of everybody's Home. Tick **Advanced settings** to add when it happens ("This Sabbath, 9:00 AM"). Below are the ones you have pinned already. An Explorer has no Announcements folder: notices are pinned by Guides and leadership, and what an Explorer wants to say goes in their blog, which everybody reads too.
 
 **Taking a notice down still happens in Notices**, beside the notice itself. Deleting is about the thing in front of you; writing is something you go and do.
 
-![Home, Blog, on a phone. The writing box is open as soon as you arrive, and what the church wrote is below it.](screenshots/walkthrough/34-home-blog.png)
+![Write a post, on a phone, after the tap on Home: the cursor in Title, Publish, and Advanced settings under it.](screenshots/walkthrough/34-home-blog.png)
 
 ### Announcements
 
@@ -386,7 +390,7 @@ Nothing is drawn at all when nothing is pinned, so an ordinary day costs no spac
 
 ### Community Blogs
 
-**Anybody approved in the church can write a post.** Explorers, Guides, Directors and Executive Directors all have **Your blog** on their own screen. Before tonight only Guides and leaders could, and an Explorer who tried was shown an error from the database.
+**Anybody approved in the church can write a post.** Explorers, Guides, Directors and Executive Directors all write from **Write a post** on Home, or Home's **Blog** folder. There was a time when only Guides and leaders could, and an Explorer who tried was shown an error from the database.
 
 Three audiences, and the choice is made before publishing.
 
@@ -402,7 +406,7 @@ A post stays private until it is published, and **Make private** takes it back o
 >
 > Choosing **Everyone in the church** puts your name and your role on it, and the screen says so before you press publish. That is on purpose: a blog everyone reads where some posts are signed and others are anonymous is one nobody can hold to account. The narrower audiences follow the app's ordinary rule, which does not name an Explorer's role to people who have no reason to know it.
 
-**Community Blogs** sits below the masthead on the church Home screen, and at the bottom of every other role's own screen, newest first. It is deliberately never the first thing anybody sees. On the church Home the order is the church's name, then the blogs, then the pinned notices; on a Guide's or an Explorer's own screen the blogs are last, because what a person came there to do belongs above what everybody else has written.
+**Community Blogs** is in Home's **Blog** folder, under the writing box, and in the **Church** folder of a Guide's or an Explorer's own screen, newest first. It is deliberately never the first thing anybody sees: Home opens on its Notices, with a way to write near the top and what everybody has written one folder away, because what a person came there to do belongs above what everybody else has written.
 
 It draws nothing at all when nobody has published, rather than leaving an empty card on the screen.
 

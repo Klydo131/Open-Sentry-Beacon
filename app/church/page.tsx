@@ -9,6 +9,7 @@ import { useIsLive } from '@/lib/tutorial';
 import { Card } from '@/components/ui';
 import { ChurchBillboard } from '@/components/ChurchBillboard';
 import { BlogDesk, BlogFeed } from '@/components/Blog';
+import { WritePostPrompt } from '@/components/WritePost';
 import { FeedbackButton } from '@/components/Feedback';
 import { STAGES, roleLabel } from '@/lib/brand';
 import type { Role } from '@/lib/types';
@@ -67,6 +68,13 @@ function Body() {
   return (
     <div className="space-y-6">
       <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
+
+      {/* WRITING STARTS HERE, on the screen Home opens on (4 October 2026:
+          "can be easily accessible to Home page"). One line and one button;
+          the button opens the Blog folder with the cursor in Title
+          (components/WritePost.tsx). In the sample church only the sample
+          Guide has a blog, so only they are offered it. */}
+      {room === 'notices' && me.role === 'dm' && <WritePostPrompt />}
 
       {/* The activity billboard — masthead, privileged strip, announcements and
           the live stream of what's happening across the church. */}

@@ -370,18 +370,25 @@ Office becomes a warm evening brown. Each look remembers its own choice.
 
 ### Writing for the church
 
-Open **Home**, then the folder button at the top, and choose **Blog**. The
-writing box is already open: give it a title, write, and press **Publish**.
-Everybody in the church reads it, with your name on it. Tick **Advanced
-settings** to send it only to the people you walk with, or to people you choose,
-or to **Save as draft**.
+On **Home**, press **Write a post**, near the top. The writing box opens with
+the cursor already in **Title**: give it a title, write, and press **Publish**.
+Everybody in the church reads it, with your name on it, and the box says so once
+it has gone.
 
-To pin a notice at the top of everybody's Home, choose **Announcements**
-instead: a title, the words, **Pin it**. **Advanced settings** adds when it
-happens, such as "This Sabbath, 9:00 AM". Take a notice down from **Notices**,
-beside the notice itself.
+![Home opens with Write a post near the top.](screenshots/walkthrough/38-home-write.png)
 
-![Home, Blog. The writing box is open as soon as you arrive; what the church wrote is below it.](screenshots/walkthrough/34-home-blog.png)
+That is all most posts need. Under **Publish**, **Advanced settings** is there
+if you want it: send the post only to the people you walk with, or to people you
+choose, or **Save as draft** to finish it later. You never have to open it.
+
+The same box is in Home's **Blog** folder, with what the church wrote below it.
+
+![Write a post: a title, the post, Publish, and Advanced settings under it if you want it.](screenshots/walkthrough/34-home-blog.png)
+
+To pin a notice at the top of everybody's Home, open Home's folder button and
+choose **Announcements**: a title, the words, **Pin it**. **Advanced settings**
+adds when it happens, such as "This Sabbath, 9:00 AM". Take a notice down from
+**Notices**, beside the notice itself.
 
 ## Part 4 — If you are a Director
 

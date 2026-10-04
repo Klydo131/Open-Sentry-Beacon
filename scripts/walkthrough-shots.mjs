@@ -338,13 +338,23 @@ const SHOTS = [
       await settle(p, 600);
     } },
   // Home's Blog folder, 3 October 2026: "Blog and announcement will be the sub
-  // rooms of home". The box is open on arrival; nothing typed, so the picture
-  // shows what somebody meets.
-  { file: '34-home-blog.png', what: "Home's Blog folder: write, and read what the church wrote", size: PHONE,
+  // rooms of home". Reached the way a person reaches it since 4 October, by
+  // Write a post on Home's first screen, so the cursor is in Title. Nothing
+  // typed, so the picture shows what somebody meets.
+  { file: '34-home-blog.png', what: "Write a post: a title, the post and Publish", size: PHONE,
     go: async (p) => {
       await signIn(p, /Maria Santos/i);
-      await p.goto(`${BASE}/church?room=blogs`, { waitUntil: 'networkidle' });
+      await p.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-write-post]').click();
       await settle(p, 1400);
+      // Title to Advanced settings, clear of the badges that float at the
+      // bottom (a phone cannot fit the heading as well); the cursor stays in
+      // Title. Shot 38 shows the way in, by name.
+      await p.locator('[data-blog-advanced]').first().evaluate((el) => {
+        window.scrollBy(0, el.getBoundingClientRect().bottom - (window.innerHeight - 200));
+      });
+      await settle(p, 600);
     } },
   // Text size, tried first, 3 October 2026: "text size should be tested and
   // see first before applying, there should be an apply button".
@@ -384,6 +394,15 @@ const SHOTS = [
       await settle(p, 900);
       await p.locator('[data-desk-drawer] [data-room-palette="study"]').click();
       await settle(p, 900);
+    } },
+  // Writing from Home, 4 October 2026: "I would love writing the Blog to be
+  // simple (with advance settings too but that's optional) and can be easily
+  // accessible to Home page". The screen Home opens on, Write a post near the top.
+  { file: '38-home-write.png', what: 'Home opens with Write a post near the top', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
     } },
 ];
 

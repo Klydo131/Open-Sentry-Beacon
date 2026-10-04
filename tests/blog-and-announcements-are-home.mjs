@@ -57,13 +57,40 @@ ok(/\{ id: 'blogs', label: '✍️ Blog' \}/.test(sampleHome) && /<BlogDesk user
 ok(!/id: 'write'/.test(code('app/dm/page.tsx')), 'and the sample Guide\'s old Write folder is gone: writing is in Home');
 
 // 3. SIMPLE FIRST, ADVANCED WHEN WANTED
-for (const f of ['components/LiveBlog.tsx', 'components/Blog.tsx']) {
+//
+// The owner, 4 October 2026: "I would love writing the Blog to be simple (with
+// advance settings too but that's optional) and can be easily accessible to
+// Home page". The box is always open (there is nothing to close it with), a
+// Write link on Home's first screen lands the cursor in Title, and the
+// Advanced switch sits after Publish so the first thing read is the writing.
+// The writing box alone: the feed below it keeps its own Hide and Show.
+const deskOf = (src, name) => {
+  const at = src.indexOf(`export function ${name}(`);
+  const end = src.indexOf('\nexport function ', at + 1);
+  return at < 0 ? '' : src.slice(at, end < 0 ? undefined : end);
+};
+for (const [f, name] of [['components/LiveBlog.tsx', 'LiveBlogDesk'], ['components/Blog.tsx', 'BlogDesk']]) {
   const desk = code(f);
-  ok(/const \[open, setOpen\] = useState\(true\);/.test(desk), `${f}: the writing box is open on arrival`);
+  const box = deskOf(desk, name);
+  ok(box.length > 0 && !/setOpen\b/.test(box) && !/>\s*(Close|Hide)\s*</.test(box),
+     `${f}: the writing box is always open, with nothing to close it`);
+  ok(/useFocusOnWrite\(titleRef\)/.test(desk) && /ref=\{titleRef\}/.test(desk), `${f}: Home's Write link puts the cursor in Title`);
+  ok(/>\s*Publish\s*</.test(box) && box.search(/>\s*Publish\s*</) < box.search(/data-blog-advanced/),
+     `${f}: Publish comes before the Advanced switch`);
+  ok(/role="status"[^>]*data-blog-done|data-blog-done[^>]*role="status"/.test(box), `${f}: publishing says, out loud, that it worked`);
   ok(/data-blog-advanced/.test(desk) && /\{advanced && \(<>[\s\S]*?Who sees it[\s\S]*?<\/>\)\}/.test(desk)
      && /\{advanced && \([\s\S]{0,200}Save as draft/.test(desk),
      `${f}: who sees it and saving a draft are under Advanced settings`);
 }
+
+// 4. A WAY TO WRITE ON HOME'S FIRST SCREEN
+const prompt = code('components/WritePost.tsx');
+ok(/WRITE_HREF = '\/church\?room=blogs&write=1'/.test(prompt) && /href=\{WRITE_HREF\}/.test(prompt),
+   'the Write a post button is a plain link to the Blog folder, asking for the cursor in Title');
+ok(/room === 'notices' && <WritePostPrompt \/>/.test(liveHome), 'live Home: the Write a post button is on the screen Home opens on');
+ok(/room === 'notices' && me\.role === 'dm' && <WritePostPrompt \/>/.test(sampleHome),
+   'sample Home: the same, for the sample Guide, the one person there with a blog');
+
 const notice = code('components/LiveWriteNotice.tsx');
 ok(/data-notice-advanced/.test(notice) && /\{advanced && \(\s*<Field\s+label="When"/.test(notice),
    'the announcement asks for a title and the words; When is under Advanced settings');

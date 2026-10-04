@@ -35,17 +35,47 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
   });
   const page = ctx.pages()[0] || await ctx.newPage();
 
-  // ---- The Guide writes, in Home's Blog folder. ----
+  // ---- The Guide writes, starting from Home's first screen. ----
   // 3 October 2026: "Blog and announcement will be the sub rooms of home, so
-  // basically we will take out publish". The desk is open on arrival.
+  // basically we will take out publish". 4 October: "I would love writing the
+  // Blog to be simple ... and can be easily accessible to Home page".
   await signInAs(page, 'Maria Santos');
   await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
-  await openRoom(page, /Blog/i);
+  const prompt = page.locator('[data-write-post]');
+  const onFirstScreen = await prompt.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return r.height > 0 && r.bottom <= innerHeight;
+  }).catch(() => false);
+  ok(onFirstScreen, 'Home opens with "Write a post" on the first screen, no scrolling and no folder to find');
+  // The whole row is the link: one target the width of the screen.
+  ok(await prompt.evaluate((el) => el.tagName === 'A' && /room=blogs/.test(el.getAttribute('href') || '')),
+     'the whole row is one link to the Blog folder');
+  await prompt.click();
+  await page.waitForTimeout(1200);
+  const arrived = await page.evaluate(() => ({
+    focus: document.activeElement ? document.activeElement.id : '',
+    url: location.search,
+  }));
+  ok(arrived.focus === 'blog-title', `one tap opens the writing box with the cursor in Title (focus on #${arrived.focus || 'nothing'})`);
+  ok(!/write=1/.test(arrived.url), `and the address forgets it, so a reload does not pop the keyboard again (${arrived.url})`);
 
-  const desk = page.getByText(/Your blog/i).first();
-  ok(await desk.count() > 0, 'the Guide has a blog desk on their dashboard');
+  const desk = page.getByRole('heading', { name: /Write a post/i }).first();
+  ok(await desk.count() > 0, 'the writing box is called "Write a post"');
   await desk.scrollIntoViewIfNeeded();
+  const shape = await page.locator('#blog-title').evaluate((title) => {
+    let card = title;
+    while (card && !card.querySelector('[data-blog-advanced]')) card = card.parentElement;
+    const buttons = card ? [...card.querySelectorAll('button')] : [];
+    const publish = buttons.find((b) => b.textContent.trim() === 'Publish');
+    const advanced = card ? card.querySelector('[data-blog-advanced]') : null;
+    return {
+      stopButton: buttons.some((b) => /^(Close|Write)$/.test(b.textContent.trim())),
+      publishFirst: !!(publish && advanced && (publish.compareDocumentPosition(advanced) & Node.DOCUMENT_POSITION_FOLLOWING)),
+    };
+  });
+  ok(!shape.stopButton, 'there is no Close or Write switch on the box: Publish is its one strong button');
+  ok(shape.publishFirst, 'and Advanced settings comes after Publish, so nobody reads past it to finish');
 
   // The seeded post proves the count renders before anything is written.
   const seeded = page.getByText(/2 readers/i).first();
@@ -72,6 +102,8 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
   await page.getByRole('button', { name: /^Publish$/i }).first().click();
   await page.waitForTimeout(1200);
   ok(await page.getByText(TITLE).count() > 0, 'the new post appears on the Guide\'s desk');
+  ok(/Published\. Everyone in the church can read it now\./.test(await page.locator('[data-blog-done]').innerText().catch(() => '')),
+     'and the box says so: "Published. Everyone in the church can read it now."');
   ok(await page.locator('#blog-title').isVisible() && (await page.locator('#blog-title').inputValue()) === '',
      'and the box stays open, empty, for the next one');
 
@@ -82,6 +114,12 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
 
   // ---- An Explorer paired with Maria reads it. ----
   await signInAs(page, 'John');
+  // In the sample church only the sample Guide has a blog, so the sample
+  // Explorer is not offered one (a live church offers everybody).
+  await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  ok(await page.locator('[data-write-post]').count() === 0,
+     'the sample Explorer, who has no blog in the sample church, is not offered "Write a post"');
   await page.goto(`${BASE}/ds`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1800);
 
@@ -105,7 +143,7 @@ const BODY = 'A short note for this week.\n\nSecond paragraph, so the renderer h
   await signInAs(page, 'Maria Santos');
   await page.goto(`${BASE}/church?room=blogs`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
-  await page.getByText(/Your blog/i).first().scrollIntoViewIfNeeded();
+  await page.getByRole('heading', { name: /Write a post/i }).first().scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);
   const counted = await page.getByText(/1 reader\b/i).count();
   ok(counted > 0, 'the Explorer who opened it is counted as one reader');

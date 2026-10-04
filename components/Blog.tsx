@@ -21,9 +21,10 @@
 // for the same reason they are never shown their own journey stage and the
 // prayer wall carries no names.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { Button, Card, EmptyState } from '@/components/ui';
+import { useFocusOnWrite } from '@/components/WritePost';
 import type { BlogAudienceKind, BlogPost, DB } from '@/lib/types';
 
 function when(iso: string): string {
@@ -53,9 +54,13 @@ function Body({ text }: { text: string }) {
 // ---------------------------------------------------------------------------
 export function BlogDesk({ userId }: { userId: string }) {
   const { db, addBlogPost, setBlogVisibility, deleteBlogPost } = useDemo();
-  // Open from the start: Home's Blog room is where people come to write.
-  const [open, setOpen] = useState(true);
   const [advanced, setAdvanced] = useState(false);
+  // What just happened, said where the person is looking. Cleared as soon as
+  // they start the next post.
+  const [done, setDone] = useState('');
+  const titleRef = useRef<HTMLInputElement>(null);
+  // From Home's "Write a post": the cursor goes straight into Title.
+  useFocusOnWrite(titleRef);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [audience, setAudience] = useState<BlogAudienceKind>('church');
@@ -89,6 +94,9 @@ export function BlogDesk({ userId }: { userId: string }) {
     setBody('');
     setAudience('church');
     setPicked([]);
+    setDone(audience === 'church'
+      ? 'Published. Everyone in the church can read it now.'
+      : 'Published, to the people you chose.');
   };
 
   const saveDraft = () => {
@@ -97,30 +105,29 @@ export function BlogDesk({ userId }: { userId: string }) {
     setTitle('');
     setBody('');
     setPicked([]);
+    setDone('Saved as a draft. Only you can see it, below.');
   };
 
   return (
     <Card className="p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-navy">✍️ Your blog</h2>
-          <p className="text-sm text-gray-500">
-            Something said once, to the whole church or to a few people. They read it in their
-            own time and owe you no reply.
-          </p>
-        </div>
-        <Button onClick={() => setOpen((v) => !v)}>{open ? 'Close' : 'Write'}</Button>
-      </div>
+      {/* ONE HEADING AND ONE LINE, AND NO CLOSE BUTTON. The owner, 4 October
+          2026: "I would love writing the Blog to be simple". The box used to
+          carry a Close/Write switch as its largest button, dark beside a grey
+          Publish that waits for words: the first thing the eye found on a
+          writing screen was the way to stop writing. It is always open now,
+          and Publish is the one strong button. */}
+      <h2 className="text-xl font-bold text-navy">✍️ Write a post</h2>
+      <p className="text-sm text-gray-500">For your church to read, in their own time.</p>
 
-      {open && (
-        <div className="mt-4 rounded-xl bg-navy/5 p-4">
+      <div className="mt-4 rounded-xl bg-navy/5 p-4">
           <label className="block text-sm font-semibold text-navy" htmlFor="blog-title">
             Title
           </label>
           <input
             id="blog-title"
+            ref={titleRef}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setDone(''); }}
             placeholder="What I keep coming back to in Psalm 23"
             className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
           />
@@ -131,32 +138,11 @@ export function BlogDesk({ userId }: { userId: string }) {
           <textarea
             id="blog-body"
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(e) => { setBody(e.target.value); setDone(''); }}
             rows={7}
             placeholder="Leave a blank line between paragraphs."
             className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
           />
-
-          {/* SIMPLE FIRST, ADVANCED WHEN WANTED. The owner, 3 October 2026,
-              moving writing into Home: "make it simple with advance settings
-              too". Simple is a title, the post and Publish, to everybody in
-              the church. Advanced adds who sees it, and saving as a draft. */}
-          <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-navy">
-            <input
-              type="checkbox"
-              data-blog-advanced
-              checked={advanced}
-              onChange={(e) => {
-                setAdvanced(e.target.checked);
-                if (!e.target.checked) {
-                  setAudience('church');
-                  setPicked([]);
-                }
-              }}
-            />
-            Advanced settings
-            <span className="font-normal text-gray-500">(choose who sees it, or save as a draft)</span>
-          </label>
 
           {advanced && (<>
           <fieldset className="mt-3">
@@ -223,7 +209,7 @@ export function BlogDesk({ userId }: { userId: string }) {
           {!advanced && (
             <p className="mt-2 text-xs text-gray-500">Everyone in the church sees it, with your name on it.</p>
           )}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             <Button onClick={submit} disabled={!canPost}>
               Publish
             </Button>
@@ -233,8 +219,36 @@ export function BlogDesk({ userId }: { userId: string }) {
               </Button>
             )}
           </div>
+          {done && (
+            <p role="status" data-blog-done className="mt-3 text-sm font-semibold text-green-800">
+              {done}
+            </p>
+          )}
+          {/* SIMPLE FIRST, ADVANCED WHEN WANTED. The owner, 3 October 2026,
+              moving writing into Home: "make it simple with advance settings
+              too", and again on 4 October: "advance settings too but that's
+              optional". Simple is a title, the post and Publish, to everybody
+              in the church. The switch for the rest sits BELOW Publish, so
+              nobody has to read past it to finish; what it adds (who sees it,
+              a draft) appears above the buttons it changes. */}
+          <label className="mt-4 flex flex-wrap items-center gap-x-2 text-sm font-semibold text-navy">
+            <input
+              type="checkbox"
+              data-blog-advanced
+              checked={advanced}
+              onChange={(e) => {
+                setAdvanced(e.target.checked);
+                if (!e.target.checked) {
+                  setAudience('church');
+                  setPicked([]);
+                }
+              }}
+            />
+            Advanced settings
+            <span className="font-normal text-gray-500">(choose who sees it, or save as a draft)</span>
+          </label>
+
         </div>
-      )}
 
       <div className="mt-4 space-y-3">
         {mine.length === 0 && (

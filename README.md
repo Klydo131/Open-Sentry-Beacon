@@ -132,8 +132,9 @@ somebody being walked with starts walking with somebody else. (The first stage
 is still `create` in the database; the screens say Beginner, which is where the
 person is rather than what the church is doing.)
 
-**Writing lives in Home.** Home's **Blog** folder opens with the writing box
-ready: a title, the post, Publish, to the whole church with your name on it.
+**Writing lives in Home.** Home opens with **Write a post** near the top; one
+tap and the cursor is in the title. Then a title, the post, Publish, to the
+whole church with your name on it.
 Guides and Directors also have **Announcements**, to pin a notice for everybody.
 **Advanced settings** under each adds the rest: who sees a post, drafts, when an
 announcement happens.
