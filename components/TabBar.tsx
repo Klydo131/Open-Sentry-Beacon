@@ -38,16 +38,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { usePublishedHeight } from '@/lib/published-height';
 import type { Role } from '@/lib/types';
 import { FILES_HREF, MENU_HREF, peopleHref, tabFor, type Tab } from '@/lib/tab-bar';
 import { FolderGlyph, MenuGlyph, PeopleGlyph } from '@/components/Glyph';
 import { DesktopNav } from '@/components/DesktopNav';
-
-// Before the first paint on the client, so a page never draws one frame with
-// its last line under the bar. The plain effect is only there for the server
-// render, where there is nothing to measure.
-const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 const TABS: { key: Tab; label: string; Icon: typeof MenuGlyph }[] = [
   { key: 'menu', label: 'Menu', Icon: MenuGlyph },
@@ -58,36 +53,20 @@ const TABS: { key: Tab; label: string; Icon: typeof MenuGlyph }[] = [
 export function TabBar({ role }: { role: Role }) {
   const path = usePathname() || '/';
   const lit = tabFor(path, role);
-  const ref = useRef<HTMLElement | null>(null);
 
   // PUBLISHED, NOT GUESSED. The bar is fixed, so the page does not know it is
   // there, and its height is not a constant: the phone's home-indicator inset
   // is added to it, and on a pad the icon and the word sit side by side. So it
-  // measures itself and writes `--tab-bar`, the same way the install bar
-  // writes `--install-bar`, and globals.css spends it in the three places that
-  // need it: the page's bottom padding, where a scrolled-to control comes to
-  // rest, and `.safe-bottom`, which lifts every floating thing (the chat
-  // bubble, the install bar, the feedback nudge, the update toast) above it.
+  // publishes `--tab-bar` (lib/published-height.ts), the same way the install
+  // bar publishes `--install-bar`, and globals.css spends it in the three
+  // places that need it: the page's bottom padding, where a scrolled-to
+  // control comes to rest, and `.safe-bottom`, which lifts every floating thing
+  // (the chat bubble, the install bar, the feedback nudge, the update toast)
+  // above it.
   //
-  // Hidden inside a conversation, the element measures 0 and the variable is
+  // Hidden inside a conversation, the bar measures 0 and the variable is
   // removed, so the conversation gets the room back.
-  useBeforePaint(() => {
-    const el = ref.current;
-    if (!el) return;
-    const root = document.documentElement;
-    const publish = () => {
-      const h = Math.ceil(el.getBoundingClientRect().height);
-      if (h > 0) root.style.setProperty('--tab-bar', `${h}px`);
-      else root.style.removeProperty('--tab-bar');
-    };
-    publish();
-    const ro = new ResizeObserver(publish);
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      root.style.removeProperty('--tab-bar');
-    };
-  }, []);
+  const ref = usePublishedHeight('--tab-bar');
 
   const hrefOf = (key: Tab) =>
     key === 'menu' ? MENU_HREF : key === 'files' ? FILES_HREF : peopleHref(role);

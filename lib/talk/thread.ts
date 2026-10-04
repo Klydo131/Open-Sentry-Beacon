@@ -53,9 +53,14 @@ export function dayLabel(at: string): string {
   });
 }
 
+// One formatter, made once. Building it is the costly part, and a thread asks
+// for a time on every run of messages as it opens (4 October 2026). The text is
+// the same as toLocaleTimeString with these options.
+const CLOCK = new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' });
+
 /** The clock time, as the phone shows it: 10:41 or 10:41 AM. */
 export function clockTime(at: string): string {
-  return new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return CLOCK.format(new Date(at));
 }
 
 /**

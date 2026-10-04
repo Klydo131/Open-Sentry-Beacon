@@ -161,8 +161,32 @@ const ok = (cond, msg) => {
 {
   const bar = read('components/TabBar.tsx');
   const css = read('app/globals.css');
-  ok(/setProperty\('--tab-bar'/.test(bar) && /removeProperty\('--tab-bar'\)/.test(bar),
-     'the bar publishes its measured height, and withdraws it when it goes');
+  // Measured by the shared hook (lib/published-height.ts), which publishes the
+  // height when the bar arrives and withdraws it when it goes or measures 0.
+  const publisher = read('lib/published-height.ts');
+  ok(/usePublishedHeight\('--tab-bar'\)/.test(bar) && /ref=\{ref\}/.test(bar),
+     'the bar publishes its measured height');
+  ok(/root\.style\.setProperty\(name, value\)/.test(publisher) && /root\.style\.removeProperty\(name\)/.test(publisher),
+     'and the publisher withdraws it when the bar goes, or is hidden');
+  // SMOOTHNESS (4 October 2026): measured by a ResizeObserver after layout,
+  // never with a forced read while React is still committing, and written only
+  // when the height changed. The forced reads cost about 60ms of every page
+  // change on a phone-speed processor.
+  ok(/new ResizeObserver\(/.test(publisher) && /getPropertyValue\(name\) === value\) return/.test(publisher),
+     'the height is read by a ResizeObserver, and written only when it changes');
+  ok(!/getBoundingClientRect|useLayoutEffect|useEffect/.test(bar),
+     'the bar itself forces no layout to measure itself');
+  // Safari, on 218b4bd: writing the height INSIDE the ResizeObserver's callback
+  // changed the layout while size reports were still being delivered, and it
+  // raised "ResizeObserver loop completed with undelivered notifications" as a
+  // page error. Changes are written on the next frame instead.
+  const observed = publisher.slice(publisher.indexOf('new ResizeObserver('));
+  ok(/requestAnimationFrame\(\(\) => publish\(/.test(observed) && !/setProperty|removeProperty/.test(observed.slice(0, observed.indexOf('observe(el)'))),
+     'a change the browser reports is written on the next frame, never inside its report');
+  // A page change draws a new bar; the old one's leaving waits for the end of
+  // the update, so the height never vanishes in between.
+  ok(/queueMicrotask\(\(\) => \{\s*if \(!publishing\.get\(name\)\)/.test(publisher),
+     'a bar replaced in the same update keeps its height');
   // Anchored to the start of the line: `scroll-padding-bottom` below contains
   // the same words, and matched in its place when this one was taken away.
   ok(/\n\s+padding-bottom:\s*calc\(var\(--install-bar, 0px\) \+ var\(--tab-bar, 0px\)\)/.test(css),
@@ -219,7 +243,8 @@ const ok = (cond, msg) => {
   }
   for (const shell of ['components/AppShell.tsx', 'components/LiveAppShell.tsx']) {
     const src = read(shell);
-    ok(/setProperty\(\s*'--app-header'/.test(src) && /ref=\{headerRef\}/.test(src), `${shell} measures its header for it`);
+    ok(/usePublishedHeight\('--app-header'\)/.test(src) && /ref=\{headerRef\}/.test(src), `${shell} measures its header for it`);
+    ok(!/getBoundingClientRect/.test(src), `${shell} forces no layout to do it, on any render`);
   }
   ok(/\.tab-bar-tab\s*\{[^}]*min-height:\s*60px[^}]*font-size:\s*15px/.test(css),
      'each tab is a tall target with a label no smaller than 15px');

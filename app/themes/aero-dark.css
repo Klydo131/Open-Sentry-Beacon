@@ -1,0 +1,127 @@
+/* Dark Aero, a Frutiger Aero look: sleek and immersive; deep glass and glowing light.
+   Its colours and what is only its own; what the five share is in
+   app/themes/aero.css. Scoped to this choice. Screen only. */
+@media screen {
+:root[data-ui-theme="aero-dark"] {
+  --look-page: #06152b;
+  --look-panel: #0d2240;
+  --look-inset: #163257;
+  --look-ink: #eaf4ff;
+  --look-soft: #a9c3e2;
+  --look-line: #2f4f7a;
+  --look-header: #04101f;
+  --look-primary: #6cc0ff;
+  --look-onPrimary: #04182c;
+  --look-accent: #7fd0ff;
+  --look-gold: #e8b84b;
+  --top-bar-bg: var(--look-panel);
+  --top-bar-ink: var(--look-ink);
+  --top-bar-soft: var(--look-soft);
+  --top-bar-chip: var(--look-inset);
+  --top-bar-chip-hover: var(--look-inset);
+  --top-bar-line: var(--look-line);
+  --top-bar-avatar: var(--look-primary);
+  color-scheme: dark;
+  --navy: var(--look-ink);
+  --gold: var(--look-gold);
+  --aero-opacity: 86%;
+  --aero-sheen: .09;
+  --aero-gloss: .18;
+  --aero-rim: rgb(140 200 255 / .28);
+  --aero-shadow: rgb(0 0 0 / .6);
+  --aero-radius: 20px;
+  --aero-icon: linear-gradient(180deg, #1d4d8f 0%, #0f2c56 100%);
+  --aero-backdrop: radial-gradient(40rem 24rem at 85% -6rem, #123d78 0%, rgb(18 61 120 / 0) 70%), radial-gradient(34rem 22rem at -8% 30rem, #0b4a5c 0%, rgb(11 74 92 / 0) 70%);
+}
+/* A DARK LOOK: notes, warnings, success and danger read light on dark,
+   the same corrections Focus makes (app/themes/focus.css). */
+:root[data-ui-theme="aero-dark"] .text-\[\#1F7A8C\],
+:root[data-ui-theme="aero-dark"] .text-\[\#9A5A1C\] {
+  color: var(--look-accent);
+}
+:root[data-ui-theme="aero-dark"] .sr-note,
+:root[data-ui-theme="aero-dark"] .sr-mini--tag {
+  background: #3b321f;
+  color: #f4d28a;
+}
+:root[data-ui-theme="aero-dark"] .sr-note--trouble {
+  background: #44252c;
+  color: #ffc3bf;
+}
+:root[data-ui-theme="aero-dark"] .chat-thread {
+  background: var(--look-page);
+}
+:root[data-ui-theme="aero-dark"] .bg-\[\#E4F0F5\],
+:root[data-ui-theme="aero-dark"] .bg-\[\#FCEEDF\] {
+  background: var(--look-inset);
+}
+:root[data-ui-theme="aero-dark"] .bg-navy\/5,
+:root[data-ui-theme="aero-dark"] .bg-navy\/10,
+:root[data-ui-theme="aero-dark"] .bg-black\/5,
+:root[data-ui-theme="aero-dark"] .bg-\[\#eef1f6\],
+:root[data-ui-theme="aero-dark"] .bg-\[\#EEF1F7\] {
+  background-color: var(--look-inset);
+}
+:root[data-ui-theme="aero-dark"] .bg-red-50,
+:root[data-ui-theme="aero-dark"] .bg-red-100 {
+  background-color: #44252c;
+}
+:root[data-ui-theme="aero-dark"] .text-red-600,
+:root[data-ui-theme="aero-dark"] .text-red-700,
+:root[data-ui-theme="aero-dark"] .text-red-800,
+:root[data-ui-theme="aero-dark"] .text-red-900 {
+  color: #ffc3bf;
+}
+:root[data-ui-theme="aero-dark"] .bg-amber-50,
+:root[data-ui-theme="aero-dark"] .bg-amber-100 {
+  background-color: #3b321f;
+}
+:root[data-ui-theme="aero-dark"] .text-amber-600,
+:root[data-ui-theme="aero-dark"] .text-amber-700,
+:root[data-ui-theme="aero-dark"] .text-amber-800,
+:root[data-ui-theme="aero-dark"] .text-amber-900 {
+  color: #f4d28a;
+}
+:root[data-ui-theme="aero-dark"] .bg-green-50,
+:root[data-ui-theme="aero-dark"] .bg-green-100 {
+  background-color: #193d32;
+}
+:root[data-ui-theme="aero-dark"] .text-green-600,
+:root[data-ui-theme="aero-dark"] .text-green-700,
+:root[data-ui-theme="aero-dark"] .text-green-800,
+:root[data-ui-theme="aero-dark"] .text-green-900 {
+  color: #9ee4bd;
+}
+:root[data-ui-theme="aero-dark"] .bg-emerald-50,
+:root[data-ui-theme="aero-dark"] .bg-emerald-100 {
+  background-color: #193d32;
+}
+:root[data-ui-theme="aero-dark"] .text-emerald-600,
+:root[data-ui-theme="aero-dark"] .text-emerald-700,
+:root[data-ui-theme="aero-dark"] .text-emerald-800,
+:root[data-ui-theme="aero-dark"] .text-emerald-900 {
+  color: #9ee4bd;
+}
+:root[data-ui-theme="aero-dark"] .bg-blue-50,
+:root[data-ui-theme="aero-dark"] .bg-blue-100 {
+  background-color: #20354b;
+}
+:root[data-ui-theme="aero-dark"] .text-blue-600,
+:root[data-ui-theme="aero-dark"] .text-blue-700,
+:root[data-ui-theme="aero-dark"] .text-blue-800,
+:root[data-ui-theme="aero-dark"] .text-blue-900 {
+  color: #b9d8ff;
+}
+:root[data-ui-theme="aero-dark"] [data-danger],
+:root[data-ui-theme="aero-dark"] .menu-row.text-\[\#b42318\] {
+  color: #ffc3bf !important;
+  border-color: #bc7774;
+}
+:root[data-ui-theme="aero-dark"] .bg-navy .text-white,
+:root[data-ui-theme="aero-dark"] .bg-navy .text-navy {
+  color: var(--look-onPrimary) !important;
+}
+:root[data-ui-theme="aero-dark"] [data-desktop-nav] .bg-white.text-navy {
+  color: var(--look-ink) !important;
+}
+}

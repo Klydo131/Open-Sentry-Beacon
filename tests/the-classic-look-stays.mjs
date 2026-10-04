@@ -103,8 +103,25 @@ const L = await import(pathToFileURL(bundle).href);
      'and takes this device\'s choice once it has loaded');
   const card = code('components/ReadingSettings.tsx');
   ok(/role="radiogroup" aria-label="Look"/.test(card) && /role="radio"/.test(card) && /aria-checked=\{chosen\}/.test(card)
-     && /UI_THEMES\.map/.test(card) && /saveUiTheme\(theme\.id\)/.test(card),
-     'Settings lists every look as a choice, says which is chosen, and saves it');
+     && /UI_THEMES\.filter\(\(theme\) => !theme\.family\)\.map/.test(card) && /saveUiTheme\(theme\.id\)/.test(card),
+     'Settings lists every look of its own as a choice, says which is chosen, and saves it');
+  // A FAMILY (Frutiger Aero, 4 October 2026: "as sub file for 'look' ... with
+  // drop down on it (with description)") is one row that opens to show its
+  // looks. Its looks are radios like any other, each with its picture, and
+  // stay on the page, hidden, while it is closed.
+  ok(/UI_FAMILIES\.map/.test(card) && /looksIn\(family\.id\)/.test(card) && /aria-expanded=\{open\}/.test(card)
+     && /aria-controls=\{panel\}/.test(card) && /hidden=\{!open\}/.test(card) && /\{family\.description\}/.test(card)
+     && /<LookChoice key=\{theme\.id\} theme=\{theme\} chosen=\{look === theme\.id\} picture \/>/.test(card),
+     'every family of looks is a row that opens to show its looks, with their pictures, and says what it is');
+  ok(L.UI_FAMILIES.every((f) => /^[a-z]+$/.test(f.id) && f.name && f.description && L.looksIn(f.id).length > 0
+     && L.looksIn(f.id).every((t) => t.id.startsWith(`${f.id}-`)))
+     && L.UI_THEMES.every((t) => !t.family || L.UI_FAMILIES.some((f) => f.id === t.family)),
+     'every family has looks, every look in one has an id that begins with the family\'s, and no look names a family that is not there');
+  ok(L.UI_THEMES.filter((t) => t.id !== 'classic').every((t) => L.isFreshLook(t.id)) && !L.isFreshLook('classic') && !L.isFreshLook('nonsense'),
+     'every look but Classic draws its own Menu, and nothing unknown does');
+  for (const t of L.UI_THEMES.filter((x) => x.id !== 'classic')) {
+    ok(fs.existsSync(path.join(root, 'public/themes', `${t.id}.svg`)), `${t.name} has its own drawing (public/themes/${t.id}.svg)`);
+  }
   ok(/<LookCard \/>/.test(card.slice(card.indexOf('export function ReadingSettings'))),
      'the Look card is one of the cards both settings pages draw');
   // Card passes on only the attributes it declares (components/ui.tsx). A
@@ -117,6 +134,11 @@ const L = await import(pathToFileURL(bundle).href);
   ok(!/useChosenLook|data-ui-theme|uiTheme/.test(nav) && /className="[^"]*\bhidden\b[^"]*\bxl:flex\b/.test(nav),
      'the rooms down the left are drawn under every look, shown from 1280px and hidden below');
   ok(/<DesktopNav \/>/.test(code('components/TabBar.tsx')), 'and are drawn wherever the bar along the bottom is');
+  // The bar's Menu | People | My Files are for phones and pads. On a computer
+  // the rooms down the left already hold every one of them (4 October 2026:
+  // "This is not needed in Desktop I think, this is only for mobile and pad").
+  ok(!/FreshNav|MENU_HREF|peopleHref|['"`]\/menu['"`]/.test(nav) && !fs.existsSync(path.join(root, 'components/FreshNav.tsx')),
+     'the rooms down the left do not repeat the bar\'s Menu, People and My Files, under any look');
   ok(/import '\.\/desktop-layout\.css';/.test(code('app/layout.tsx')) && !/data-ui-theme/.test(read('app/desktop-layout.css').replace(/\/\*[\s\S]*?\*\//g, '')),
      'the computer layout is the app\'s own stylesheet, imported for every page, and targets no look');
   for (const f of ['app/settings/page.tsx', 'components/LiveAccountPages.tsx']) {
@@ -175,14 +197,25 @@ function cssFiles() {
   ok(leaks.length === 0, `no stylesheet outside ${themeDir} targets a look${leaks.length ? `: ${leaks.join(', ')}` : ''}`);
 
   const ids = new Set(L.UI_THEMES.map((t) => t.id));
+  const families = new Set(L.UI_FAMILIES.map((f) => f.id));
   const layout = code('app/layout.tsx');
   for (const f of themeFiles) {
     const id = path.basename(f).replace(/\.(css|scss)$/, '');
-    ok(ids.has(id) && id !== 'classic', `${f} is a look the app lists`);
-    const scope = new RegExp(`^:root\\[data-ui-theme=["']${id}["']\\](?=$|[\\s>+~.:\\[#])`);
+    // A family's shared stylesheet reaches its looks, and only them, by the
+    // start of their ids: :root[data-ui-theme^="aero-"].
+    const family = families.has(id);
+    ok((ids.has(id) || family) && id !== 'classic', `${f} is a look${family ? ' family' : ''} the app lists`);
+    const scope = family
+      ? new RegExp(`^:root\\[data-ui-theme\\^=["']${id}-["']\\](?=$|[\\s>+~.:\\[#])`)
+      : new RegExp(`^:root\\[data-ui-theme=["']${id}["']\\](?=$|[\\s>+~.:\\[#])`);
     const loose = selectorsOf(read(f)).filter((s) => !scope.test(s));
-    ok(loose.length === 0, `${f}: every rule starts with :root[data-ui-theme="${id}"]${loose.length ? `, not: ${loose.slice(0, 3).join(' | ')}` : ''}`);
+    ok(loose.length === 0, `${f}: every rule starts with :root[data-ui-theme${family ? `^="${id}-"` : `="${id}"`}]${loose.length ? `, not: ${loose.slice(0, 3).join(' | ')}` : ''}`);
     ok(layout.includes(`'./themes/${id}.css'`), `${f} is imported in app/layout.tsx`);
+  }
+  for (const fam of L.UI_FAMILIES) {
+    const shared = layout.indexOf(`'./themes/${fam.id}.css'`);
+    ok(shared >= 0 && L.looksIn(fam.id).every((t) => layout.indexOf(`'./themes/${t.id}.css'`) > shared),
+       `${fam.name}'s shared stylesheet is imported before its looks' own, so theirs come after it`);
   }
   for (const t of L.UI_THEMES.slice(1)) {
     ok(themeFiles.some((f) => f.endsWith(`/${t.id}.css`) || f.endsWith(`/${t.id}.scss`)), `${t.name} has its stylesheet in ${themeDir}`);

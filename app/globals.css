@@ -529,10 +529,14 @@ a[role='button']:active {
   transform: scale(0.985);
 }
 
-/* Anchor jumps and "back to top" glide instead of teleporting. */
+/* NO GLIDE FOR THE WHOLE PAGE (4 October 2026). `scroll-behavior: smooth`
+   here turned every scroll anybody's code started into a glide, so a button
+   being scrolled into view was still moving when it was tapped. That failed a
+   Safari walk, and a person tapping quickly meets the same moving target. The
+   glides that are wanted (a link to a card, Show me in the tutorial, the
+   newest message) ask for one themselves through scrollMotion() in
+   lib/motion.ts, which also honours reduced motion. */
 html {
-  scroll-behavior: smooth;
-
   /* The other half of the install-bar fix above. Padding lets the page scroll
      far enough to lift a control clear of the bar; this decides where a
      scrolled-to control comes to REST. Without it, `scrollIntoView` on anything
@@ -823,9 +827,6 @@ body:has([role='dialog']) [data-install-prompt='card'] {
   }
   .talk-bubble:active:not(:disabled) {
     transform: none;
-  }
-  html {
-    scroll-behavior: auto;
   }
   button:active:not(:disabled),
   a[role='button']:active {

@@ -152,6 +152,10 @@
 :root[data-ui-theme="study"] .tab-bar {
   background: var(--look-panel);
   border-top-color: var(--look-line);
+  /* The panel is solid, so the blur behind it shows nothing and only costs
+     the phone work on every frame of scrolling. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 :root[data-ui-theme="study"] .tab-bar-tab {
   color: var(--look-soft);
@@ -246,11 +250,6 @@
 :root[data-ui-theme="study"] .fresh-beta { flex-shrink:0; background:var(--look-gold); color:#302f27; border-radius:999px; padding:2px 7px; font-size:13px; font-weight:700; }
 :root[data-ui-theme="study"] .fresh-count { flex-shrink:0; background:var(--look-primary); color:var(--look-onPrimary); border-radius:999px; padding:2px 7px; font-size:13px; font-weight:700; }
 :root[data-ui-theme="study"] .fresh-room:hover { background:var(--look-inset); border-color:var(--look-accent); }
-:root[data-ui-theme="study"] .fresh-nav-link { display:flex; align-items:center; gap:10px; min-height:44px; padding:8px; margin:2px 0; border-radius:10px; color:var(--look-ink); font-size:15px; }
-:root[data-ui-theme="study"] .fresh-nav-link > span:not(.fresh-beta):not(.fresh-count) { min-width:0; flex:1; overflow-wrap:anywhere; }
-:root[data-ui-theme="study"] .fresh-nav-link > svg { flex-shrink:0; }
-:root[data-ui-theme="study"] .fresh-nav-link[aria-current] { background:var(--look-primary); color:var(--look-onPrimary); font-weight:700; }
-:root[data-ui-theme="study"] .fresh-nav-link:hover:not([aria-current]) { background:var(--look-inset); }
 
 @media (max-width:479px) {
 :root[data-ui-theme="study"] .fresh-menu { gap:14px; }
@@ -277,7 +276,6 @@
 :root[data-ui-theme="study"] .fresh-room-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 
-:root[data-ui-theme="study"] .fresh-main-nav { padding:12px 12px 0; }
 :root[data-ui-theme="study"] [data-desktop-nav] { background:var(--look-panel) !important; color:var(--look-ink) !important; border-right:1px solid var(--look-line); }
 :root[data-ui-theme="study"] [data-desktop-nav] .text-white\/85 { color:var(--look-ink) !important; }
 :root[data-ui-theme="study"] [data-desktop-nav] .text-white\/60 { color:var(--look-soft) !important; }

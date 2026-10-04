@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { usePublishedHeight } from '@/lib/published-height';
 import { roleLabel, NAVY, APP_SHORT_NAME } from '@/lib/brand';
 import type { Role } from '@/lib/types';
 import { homeFor, useLiveSession } from '@/lib/live/session';
@@ -91,20 +92,7 @@ export function LiveAppShell({
   // scrolled-to card came to rest behind the header, and the conversation's
   // height left no room for it. Measured, because the header is taller on
   // the live side and rewraps on a phone. Above the guards, like every hook.
-  const headerRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const publish = () =>
-      document.documentElement.style.setProperty('--app-header', `${Math.ceil(el.getBoundingClientRect().height)}px`);
-    publish();
-    const ro = new ResizeObserver(publish);
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      document.documentElement.style.removeProperty('--app-header');
-    };
-  });
+  const headerRef = usePublishedHeight('--app-header');
 
   useEffect(() => {
     if (loading) return;

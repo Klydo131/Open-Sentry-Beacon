@@ -1,0 +1,43 @@
+/* Four Colors, a Frutiger Aero look: clean and colourful; a bright tile for each room.
+   Its colours and what is only its own; what the five share is in
+   app/themes/aero.css. Scoped to this choice. Screen only. */
+@media screen {
+:root[data-ui-theme="aero-colors"] {
+  --look-page: #f3f6fb;
+  --look-panel: #ffffff;
+  --look-inset: #e4eaf4;
+  --look-ink: #18212f;
+  --look-soft: #4a5568;
+  --look-line: #cfd8e6;
+  --look-header: #1f3a8a;
+  --look-primary: #2148b8;
+  --look-onPrimary: #ffffff;
+  --look-accent: #2148b8;
+  --look-gold: #e8b84b;
+  --top-bar-bg: var(--look-panel);
+  --top-bar-ink: var(--look-ink);
+  --top-bar-soft: var(--look-soft);
+  --top-bar-chip: var(--look-inset);
+  --top-bar-chip-hover: var(--look-inset);
+  --top-bar-line: var(--look-line);
+  --top-bar-avatar: var(--look-primary);
+  color-scheme: light;
+  --navy: var(--look-ink);
+  --gold: var(--look-gold);
+  --aero-opacity: 90%;
+  --aero-sheen: .7;
+  --aero-gloss: .16;
+  --aero-rim: rgb(255 255 255 / .9);
+  --aero-shadow: rgb(31 58 138 / .22);
+  --aero-radius: 20px;
+  --aero-icon: linear-gradient(180deg, #eef2fb 0%, #dbe3f2 100%);
+  --aero-backdrop: radial-gradient(34rem 20rem at 92% -4rem, #dbe8ff 0%, rgb(219 232 255 / 0) 70%), radial-gradient(28rem 18rem at -4% 26rem, #ffe9d6 0%, rgb(255 233 214 / 0) 70%), radial-gradient(30rem 18rem at 70% 44rem, #e2f6e8 0%, rgb(226 246 232 / 0) 70%);
+}
+/* FOUR COLOURS, one for each room in turn: blue, green, orange, purple. The
+   icon is decoration beside the room's written name, white on its tile. */
+:root[data-ui-theme="aero-colors"] .fresh-room-icon { color:#ffffff; }
+:root[data-ui-theme="aero-colors"] .fresh-room-grid > li:nth-child(4n+1) .fresh-room-icon { background: var(--aero-gloss-image), #1d5bd8; }
+:root[data-ui-theme="aero-colors"] .fresh-room-grid > li:nth-child(4n+2) .fresh-room-icon { background: var(--aero-gloss-image), #138a3f; }
+:root[data-ui-theme="aero-colors"] .fresh-room-grid > li:nth-child(4n+3) .fresh-room-icon { background: var(--aero-gloss-image), #c2410c; }
+:root[data-ui-theme="aero-colors"] .fresh-room-grid > li:nth-child(4n+4) .fresh-room-icon { background: var(--aero-gloss-image), #7c3aed; }
+}

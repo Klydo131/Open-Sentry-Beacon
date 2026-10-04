@@ -27,6 +27,7 @@ import * as live from '@/lib/live/data';
 import { humanError } from '@/lib/live/errors';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { useKeepUp, KEEP_UP_ADMIN_REPORTS } from '@/lib/live/keep-up';
+import { scrollMotion } from '@/lib/motion';
 
 const REASON: Record<string, string> = {
   inappropriate: 'Something inappropriate',
@@ -72,7 +73,7 @@ function Thread({ report, me, onChanged }: {
   // THE HALF THAT MAKES IT A CONVERSATION. Without this the other person's
   // reply sits in the database until somebody reloads the page.
   useKeepUp(KEEP_UP_ADMIN_REPORTS, load);
-  useEffect(() => { foot.current?.scrollIntoView({ block: 'end' }); }, [rows]);
+  useEffect(() => { foot.current?.scrollIntoView({ block: 'end', behavior: scrollMotion() }); }, [rows]);
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();

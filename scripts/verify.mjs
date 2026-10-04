@@ -662,6 +662,9 @@ const staticChecks = [
   // A walk forgives a request only when its own next page load cut it short:
   // the app's release check, on Safari (4 October 2026).
   ['a walk forgives only what it cut short', 'tests/a-walk-forgives-only-what-it-cut-short.mjs'],
+  // No needless work in the frame a screen opens (4 October 2026: "can we even
+  // make our UI animations smoother please").
+  ['screens open without a hitch', 'tests/screens-open-without-a-hitch.mjs'],
   // Plan and show, test, polish, and the owner is aware before anything
   // reaches main, for people and AI tools alike (30 September 2026).
   ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],

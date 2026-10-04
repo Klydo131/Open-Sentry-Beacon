@@ -6,6 +6,13 @@ import './desktop-layout.css';
 import './themes/beacon.css';
 import './themes/study.css';
 import './themes/focus.css';
+// Frutiger Aero: what its looks share first, then each look's own.
+import './themes/aero.css';
+import './themes/aero-eco.css';
+import './themes/aero-dark.css';
+import './themes/aero-technozen.css';
+import './themes/aero-dorfic.css';
+import './themes/aero-colors.css';
 // The looks other than Classic go here, each scoped to itself (lib/ui-themes.ts).
 import { DemoProvider } from '@/lib/demo/store';
 import { ServiceWorker } from '@/components/ServiceWorker';

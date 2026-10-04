@@ -405,6 +405,20 @@ const SHOTS = [
       await p.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
       await settle(p, 1400);
     } },
+  // Frutiger Aero, 4 October 2026: "as sub file for 'look' so people can see
+  // the difference ... with drop down on it (with description)". Frutiger Eco
+  // chosen, so the row is open and the page is in it.
+  { file: '39-frutiger-aero.png', what: 'Settings: Frutiger Aero opened, five looks with their pictures', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.evaluate(() => localStorage.setItem('beacon-ui-theme', 'aero-eco'));
+      await p.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      // The row and the first looks in it, clear of the badges at the bottom.
+      await p.locator('[data-look-family="aero"]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy(0, -90));
+      await settle(p, 600);
+    } },
 ];
 
 /** Maria plans three nights of meetings for shots 28 to 30: invented names only. */

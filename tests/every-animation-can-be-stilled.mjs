@@ -200,8 +200,33 @@ function isFade(name, keyframes) {
   ok(rules.some((r) => r.reduce && r.selectors.includes('*')
        && /transition-duration:\s*0\.01ms\s*!important/.test(r.body)),
      'every transition is cut to nothing under prefers-reduced-motion (`*`, !important)');
-  ok(rules.some((r) => r.reduce && r.selectors.includes('html') && /scroll-behavior:\s*auto/.test(r.body)),
-     'and the page jumps instead of gliding to an anchor');
+}
+
+// SCROLLING GLIDES ONLY WHERE CODE ASKS, AND ASKS THROUGH scrollMotion().
+//
+// The page used to glide on every scroll (`scroll-behavior: smooth` on html),
+// with a reduced-motion rule to switch it off. It was taken out on 4 October
+// 2026: a button being scrolled into view was still moving when it was
+// tapped, which failed a Safari walk and is the same trap for a quick finger.
+// The glides that are wanted call scrollMotion() (lib/motion.ts), which
+// answers 'auto' when the device asks for less movement.
+{
+  const sheets = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walk(rel);
+      else if (e.name.endsWith('.css')) sheets.push(rel);
+    }
+  };
+  walk('app');
+  walk('components');
+  // Comments left out: the one in globals.css explaining this names the rule.
+  const gliding = sheets.filter((f) => /scroll-behavior:\s*smooth/.test(read(f).replace(/\/\*[\s\S]*?\*\//g, '')));
+  ok(sheets.length > 0 && gliding.length === 0,
+     `no stylesheet makes scrolling glide on its own${gliding.length ? `: ${gliding.join(', ')}` : ''}`);
+  // Code that asks for a glide without scrollMotion() is held further down
+  // ("a scroll that glides whatever the setting says").
 }
 
 // ---- 3. What a stylesheet cannot reach --------------------------------------

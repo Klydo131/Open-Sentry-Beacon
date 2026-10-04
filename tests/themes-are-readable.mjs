@@ -107,7 +107,19 @@ for (const t of themes) {
 
 // The app-wide looks use their own scoped CSS rather than the room palettes.
 // Measure the colours actually shipped, including secondary text and actions.
-for (const id of ['beacon', 'study', 'focus']) {
+// Every look the registry lists but Classic, read from lib/ui-themes.ts.
+const registry = readFileSync('lib/ui-themes.ts', 'utf8');
+const looks = [...registry.slice(registry.indexOf('export const UI_THEMES'), registry.indexOf('export const UI_FAMILIES'))
+  .matchAll(/\bid: '([a-z][a-z-]*)'/g)].map((m) => m[1]);
+ok(looks.length >= 8 && looks.includes('aero-dark'), `every look but Classic was read from the registry (${looks.length})`);
+
+/** `t` of colour a over colour b, as #rrggbb: a see-through layer on what is behind it. */
+function over(a, b, t) {
+  const [x, y] = [a, b].map((h) => h.replace('#', '')).map((h) => [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  return `#${x.map((v, i) => Math.round(v * t + y[i] * (1 - t)).toString(16).padStart(2, '0')).join('')}`;
+}
+
+for (const id of looks) {
   const css = readFileSync(`app/themes/${id}.css`, 'utf8');
   const token = (name) => new RegExp(`--look-${name}:\\s*(#[0-9a-f]{6})`, 'i').exec(css)?.[1];
   for (const [ink, ground] of [['ink', 'page'], ['ink', 'panel'], ['soft', 'page'], ['soft', 'panel'], ['soft', 'inset'], ['onPrimary', 'primary']]) {
@@ -116,6 +128,31 @@ for (const id of ['beacon', 'study', 'focus']) {
   }
   const header = contrast('#ffffff', token('header') ?? '');
   ok(header >= BODY, `${id}: white header controls clear AA (${header.toFixed(1)}:1)`);
+
+  // FRUTIGER AERO (app/themes/aero.css) adds two things that change what is
+  // behind the words, and both are measured at their brightest.
+  const aero = (name) => new RegExp(`--aero-${name}:\\s*([^;]+);`).exec(css)?.[1]?.trim();
+  if (aero('gloss') === undefined) continue;
+  // 1. GLOSS: a button's top half is white over its colour, up to --aero-gloss.
+  const gloss = Number(aero('gloss'));
+  const top = over('#ffffff', token('primary'), gloss);
+  const label = contrast(token('onPrimary'), top);
+  ok(gloss > 0 && gloss < 0.5 && label >= BODY,
+     `${id}: a button's label still reads on the brightest of its gloss (${label.toFixed(1)}:1 at ${gloss})`);
+  // 2. GLASS: a card is --aero-opacity solid over the page, the sky behind it
+  // and each glow of light (--aero-backdrop). Text on the card is measured
+  // over every one of them.
+  const solid = parseFloat(aero('opacity')) / 100;
+  const behind = [token('page'), token('inset'), ...((aero('backdrop') ?? '').match(/#[0-9a-f]{6}\b/gi) ?? [])];
+  let worst = Infinity;
+  let worstSoft = Infinity;
+  for (const ground of behind) {
+    const glass = over(token('panel'), ground, solid);
+    worst = Math.min(worst, contrast(token('ink'), glass));
+    worstSoft = Math.min(worstSoft, contrast(token('soft'), glass));
+  }
+  ok(solid >= 0.8 && solid <= 1 && behind.length > 2 && worst >= BODY && worstSoft >= BODY,
+     `${id}: text on a glass card reads over every glow behind it (ink ${worst.toFixed(1)}:1, quiet text ${worstSoft.toFixed(1)}:1, ${behind.length} grounds)`);
 }
 
 // --- and the theme has to actually be painted -------------------------------
