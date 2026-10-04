@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" width="960" height="600" font-family="Liberation Sans, Helvetica, Arial, sans-serif">
+  <title>Hope Beacon: one app, two halves, one database</title>
+  <rect width="960" height="600" fill="#ffffff"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0b1f3a"/>
+    </marker>
+  </defs>
+
+  <!-- The device -->
+  <rect x="20" y="20" width="560" height="560" rx="14" fill="#f4f6f9" stroke="#c9d1dd" stroke-width="1.5"/>
+  <text x="40" y="52" font-size="17" font-weight="700" fill="#0b1f3a">The phone or computer</text>
+  <text x="40" y="74" font-size="12.5" fill="#5b6474">Everything here runs in the browser. Next.js 15 and React 19.</text>
+
+  <!-- The door -->
+  <rect x="40" y="94" width="520" height="62" rx="10" fill="#0b1f3a"/>
+  <text x="60" y="120" font-size="15" font-weight="700" fill="#ffffff">One door: every route asks useIsLive()</text>
+  <text x="60" y="141" font-size="12" fill="#c9d2e3">lib/tutorial.tsx · true only when a database is configured and the visitor is not in the tutorial</text>
+
+  <!-- Sample half -->
+  <rect x="40" y="178" width="250" height="210" rx="10" fill="#ffffff" stroke="#c9a227" stroke-width="2"/>
+  <text x="58" y="206" font-size="15" font-weight="700" fill="#0b1f3a">The sample half</text>
+  <text x="58" y="228" font-size="12" fill="#3a4252">AppShell · components/*.tsx</text>
+  <text x="58" y="252" font-size="12" fill="#3a4252">Data: lib/demo/store.tsx</text>
+  <text x="58" y="270" font-size="12" fill="#3a4252">Seeded from lib/demo/seed.ts</text>
+  <text x="58" y="288" font-size="12" fill="#3a4252">Kept in localStorage</text>
+  <text x="58" y="318" font-size="12" fill="#3a4252">A fictional church.</text>
+  <text x="58" y="336" font-size="12" fill="#3a4252">No server, no keys, no setup.</text>
+  <text x="58" y="364" font-size="12" font-weight="700" fill="#7a5c00">Runs every test without a database</text>
+
+  <!-- Live half -->
+  <rect x="310" y="178" width="250" height="210" rx="10" fill="#ffffff" stroke="#2a4f86" stroke-width="2"/>
+  <text x="328" y="206" font-size="15" font-weight="700" fill="#0b1f3a">The live half</text>
+  <text x="328" y="228" font-size="12" fill="#3a4252">LiveAppShell · components/Live*.tsx</text>
+  <text x="328" y="252" font-size="12" fill="#3a4252">Data: lib/live/data.ts, only</text>
+  <text x="328" y="270" font-size="12" fill="#3a4252">Client: lib/supabase/client.ts</text>
+  <text x="328" y="288" font-size="12" fill="#3a4252">(returns null, never throws)</text>
+  <text x="328" y="318" font-size="12" fill="#3a4252">A real church: its own people,</text>
+  <text x="328" y="336" font-size="12" fill="#3a4252">signed in with email and password.</text>
+  <text x="328" y="364" font-size="12" font-weight="700" fill="#2a4f86">Every rule is in the database</text>
+
+  <line x1="165" y1="156" x2="165" y2="176" stroke="#0b1f3a" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="435" y1="156" x2="435" y2="176" stroke="#0b1f3a" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Device storage -->
+  <rect x="40" y="410" width="520" height="150" rx="10" fill="#ffffff" stroke="#c9d1dd" stroke-width="1.5"/>
+  <text x="58" y="438" font-size="15" font-weight="700" fill="#0b1f3a">Kept on the device</text>
+  <text x="58" y="462" font-size="12" fill="#3a4252">IndexedDB: My Files and the Music room's pieces, never uploaded</text>
+  <text x="58" y="481" font-size="12" fill="#3a4252">localStorage: look, text size, room colours, last folder in each room</text>
+  <text x="58" y="500" font-size="12" fill="#3a4252">Sabbath programs and meetings: here first, then the owner's own copy</text>
+  <text x="58" y="519" font-size="12" fill="#3a4252">Service worker (app/sw.js): the app shell, so rooms open with no signal</text>
+  <text x="58" y="545" font-size="12" font-weight="700" fill="#0b1f3a">Same in both halves</text>
+
+  <!-- Supabase -->
+  <rect x="620" y="20" width="320" height="400" rx="14" fill="#f1f5fb" stroke="#2a4f86" stroke-width="1.5"/>
+  <text x="640" y="52" font-size="17" font-weight="700" fill="#0b1f3a">The church's own Supabase</text>
+  <text x="640" y="74" font-size="12.5" fill="#5b6474">One project per church, or one for many.</text>
+  <rect x="640" y="92" width="280" height="96" rx="8" fill="#ffffff" stroke="#c7d4e8"/>
+  <text x="656" y="116" font-size="13.5" font-weight="700" fill="#0b1f3a">Postgres, with row-level security</text>
+  <text x="656" y="137" font-size="12" fill="#3a4252">Every table has policies; a policy is</text>
+  <text x="656" y="154" font-size="12" fill="#3a4252">a sentence in supabase/migrations/.</text>
+  <text x="656" y="173" font-size="12" fill="#3a4252">141 migrations, applied in name order.</text>
+  <rect x="640" y="198" width="135" height="58" rx="8" fill="#ffffff" stroke="#c7d4e8"/>
+  <text x="654" y="222" font-size="13" font-weight="700" fill="#0b1f3a">Auth</text>
+  <text x="654" y="242" font-size="11.5" fill="#3a4252">sign-in, sessions</text>
+  <rect x="785" y="198" width="135" height="58" rx="8" fill="#ffffff" stroke="#c7d4e8"/>
+  <text x="799" y="222" font-size="13" font-weight="700" fill="#0b1f3a">Storage</text>
+  <text x="799" y="242" font-size="11.5" fill="#3a4252">photos, voice, files</text>
+  <rect x="640" y="266" width="135" height="58" rx="8" fill="#ffffff" stroke="#c7d4e8"/>
+  <text x="654" y="290" font-size="13" font-weight="700" fill="#0b1f3a">Realtime</text>
+  <text x="654" y="310" font-size="11.5" fill="#3a4252">a screen keeps up</text>
+  <rect x="785" y="266" width="135" height="58" rx="8" fill="#ffffff" stroke="#c7d4e8"/>
+  <text x="799" y="290" font-size="13" font-weight="700" fill="#0b1f3a">Edge functions</text>
+  <text x="799" y="310" font-size="11.5" fill="#3a4252">invite · notify · places</text>
+  <text x="640" y="352" font-size="12" fill="#3a4252">The browser holds only the public anon key.</text>
+  <text x="640" y="370" font-size="12" fill="#3a4252">The service key lives in the edge functions,</text>
+  <text x="640" y="388" font-size="12" fill="#3a4252">where no browser can see it.</text>
+
+  <line x1="560" y1="250" x2="618" y2="200" stroke="#0b1f3a" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="566" y="214" font-size="11" fill="#0b1f3a">HTTPS</text>
+
+  <!-- Host and mail -->
+  <rect x="620" y="440" width="150" height="140" rx="12" fill="#fbf7ea" stroke="#e6d49a"/>
+  <text x="636" y="468" font-size="14" font-weight="700" fill="#0b1f3a">The web host</text>
+  <text x="636" y="490" font-size="11.5" fill="#3a4252">Vercel, or any Node</text>
+  <text x="636" y="507" font-size="11.5" fill="#3a4252">host, or Docker.</text>
+  <text x="636" y="530" font-size="11.5" fill="#3a4252">Serves the pages and</text>
+  <text x="636" y="547" font-size="11.5" fill="#3a4252">sets the security</text>
+  <text x="636" y="564" font-size="11.5" fill="#3a4252">headers.</text>
+
+  <rect x="790" y="440" width="150" height="140" rx="12" fill="#f2f8f1" stroke="#c4dcc0"/>
+  <text x="806" y="468" font-size="14" font-weight="700" fill="#0b1f3a">Email</text>
+  <text x="806" y="490" font-size="11.5" fill="#3a4252">Supabase's own mail,</text>
+  <text x="806" y="507" font-size="11.5" fill="#3a4252">or Brevo, or any SMTP.</text>
+  <text x="806" y="530" font-size="11.5" fill="#3a4252">Invitations and</text>
+  <text x="806" y="547" font-size="11.5" fill="#3a4252">password links.</text>
+
+  <line x1="855" y1="420" x2="855" y2="438" stroke="#0b1f3a" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="618" y1="510" x2="584" y2="510" stroke="#0b1f3a" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

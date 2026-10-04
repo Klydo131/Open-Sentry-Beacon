@@ -1594,9 +1594,9 @@ Read this section before making a change. It states what is true, what must stay
 ### Prove it before you claim it
 
 ```
-npm run verify        # 173 checks: types, build, security, privacy, licences,
-                      # copy, email, install, phones, sessions, safeguarding
-npm run verify:all    # the same, plus 69 browser walks: 242 in all
+npm run verify        # types, build, and every static check: security, privacy,
+                      # licences, copy, email, install, phones, sessions, safeguarding
+npm run verify:all    # the same, plus every browser walk in tests/e2e/
 npm run build         # must pass before anything is pushed
 ```
 

@@ -1,0 +1,344 @@
+[
+ {
+  "file": "screenshots/complete/phone-front-door.jpg",
+  "device": "phone",
+  "role": "Visitor",
+  "room": "Front door",
+  "folder": "",
+  "caption": "The front door, before signing in",
+  "group": "start"
+ },
+ {
+  "file": "screenshots/complete/phone-login.jpg",
+  "device": "phone",
+  "role": "Visitor",
+  "room": "Sign in",
+  "folder": "",
+  "caption": "Signing in to the sample church: choose who to be",
+  "group": "start"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-profile.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "Profile",
+  "folder": "",
+  "caption": "Explorer · Profile",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-home.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "Home",
+  "folder": "",
+  "caption": "Explorer · Home",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-my-journey.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "My Journey",
+  "folder": "",
+  "caption": "Explorer · My Journey",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-this-sabbath.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "This Sabbath",
+  "folder": "",
+  "caption": "Explorer · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-study-room.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "Study Room",
+  "folder": "",
+  "caption": "Explorer · Study Room",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-music.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "Music",
+  "folder": "",
+  "caption": "Explorer · Music",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-my-files.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "My Files",
+  "folder": "",
+  "caption": "Explorer · My Files",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-mail.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "Mail",
+  "folder": "",
+  "caption": "Explorer · Mail",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-explorer-settings.jpg",
+  "device": "tablet",
+  "role": "Explorer",
+  "room": "Settings",
+  "folder": "",
+  "caption": "Explorer · Settings",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-profile.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "Profile",
+  "folder": "",
+  "caption": "Guide · Profile",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-home.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "",
+  "caption": "Guide · Home",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-my-explorers.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "My Explorers",
+  "folder": "",
+  "caption": "Guide · My Explorers",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-office.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "Office",
+  "folder": "",
+  "caption": "Guide · Office",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-this-sabbath.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "This Sabbath",
+  "folder": "",
+  "caption": "Guide · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-music.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "Music",
+  "folder": "",
+  "caption": "Guide · Music",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-my-files.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "My Files",
+  "folder": "",
+  "caption": "Guide · My Files",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-mail.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "Mail",
+  "folder": "",
+  "caption": "Guide · Mail",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/tablet-guide-settings.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "Settings",
+  "folder": "",
+  "caption": "Guide · Settings",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/phone-look-classic.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Classic",
+  "caption": "The Classic look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-beacon.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Beacon",
+  "caption": "The Beacon look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-study.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Study",
+  "caption": "The Study look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-focus.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Focus",
+  "caption": "The Focus look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-aero-eco.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Frutiger Eco",
+  "caption": "The Frutiger Eco look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-aero-dark.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Dark Aero",
+  "caption": "The Dark Aero look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-aero-technozen.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Technozen",
+  "caption": "The Technozen look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-aero-dorfic.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "DORFic",
+  "caption": "The DORFic look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/phone-look-aero-colors.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Four Colors",
+  "caption": "The Four Colors look, on a phone",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-classic.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Classic",
+  "caption": "The Classic look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-beacon.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Beacon",
+  "caption": "The Beacon look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-study.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Study",
+  "caption": "The Study look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-focus.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Focus",
+  "caption": "The Focus look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-aero-eco.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Frutiger Eco",
+  "caption": "The Frutiger Eco look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-aero-dark.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Dark Aero",
+  "caption": "The Dark Aero look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-aero-technozen.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Technozen",
+  "caption": "The Technozen look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-aero-dorfic.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "DORFic",
+  "caption": "The DORFic look, on a computer",
+  "group": "looks"
+ },
+ {
+  "file": "screenshots/complete/computer-look-aero-colors.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Four Colors",
+  "caption": "The Four Colors look, on a computer",
+  "group": "looks"
+ }
+]

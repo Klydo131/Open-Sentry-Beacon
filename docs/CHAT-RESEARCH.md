@@ -117,7 +117,7 @@ owner.
 | A small PNG or WebP kept its location data; HEIC is sent as it is | Medium | **PNG and WebP fixed** at the byte level, checked by decoding in Chromium; HEIC is for the owner |
 | `react_to` said "taken back" before asking whose the message was | Low | **Fixed**: one answer for "not yours" and "no such message" |
 | Cancel, or leaving, during the microphone prompt still started recording | Low | **Fixed** |
-| File titles could hide a reversed name (`photo&lt;U+202E&gt;gnp.js` style) and run on | Low | **Fixed**: refused by the database, cleaned before drawing, 200 characters |
+| File titles could hide a reversed name (`photo<U+202E>gnp.js` style) and run on | Low | **Fixed**: refused by the database, cleaned before drawing, 200 characters |
 | A link to a look-alike address in another alphabet showed as the real name | Low | **Fixed**: such a host is shown as the address the browser will open |
 | An ended pairing can still be written to; message text on the lock screen; a nonce-based Content-Security-Policy | Low | **For the owner** / later |
 

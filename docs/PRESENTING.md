@@ -411,7 +411,7 @@ Step 5 is the moment that lands. Everything before it is setup.
 | 15 | Open `lib/demo/store.tsx`, show `Ctx` | The backend contract |
 | 16 | Open `docs/examples/schema.sql` | Tables and permission rules, already run |
 | 17 | Run `prove-the-rules.sql` | Sixteen attacks from a second account, all refused |
-| 18 | `npm test` | 13 checks; `npm run verify:all` adds 18 browser walks |
+| 18 | `npm test` | Every static check (178 on 4 October 2026); `npm run verify:all` adds every browser walk (74) |
 
 ---
 

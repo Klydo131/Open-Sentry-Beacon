@@ -1,0 +1,947 @@
+[
+ {
+  "file": "screenshots/complete/computer-explorer-profile.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Profile",
+  "folder": "",
+  "caption": "Explorer · Profile",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-home-1-notices.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Home",
+  "folder": "Notices",
+  "caption": "Explorer · Home · Notices",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-home-2-blog.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Home",
+  "folder": "Blog",
+  "caption": "Explorer · Home · Blog",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-home-3-prayer-wall.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Home",
+  "folder": "Prayer wall",
+  "caption": "Explorer · Home · Prayer wall",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-my-journey-1-my-guide.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "My Journey",
+  "folder": "My Guide",
+  "caption": "Explorer · My Journey · My Guide",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-my-journey-2-study.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "My Journey",
+  "folder": "Study",
+  "caption": "Explorer · My Journey · Study",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-my-journey-3-church.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "My Journey",
+  "folder": "Church",
+  "caption": "Explorer · My Journey · Church",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-my-journey-4-prayer.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "My Journey",
+  "folder": "Prayer",
+  "caption": "Explorer · My Journey · Prayer",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-this-sabbath.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "This Sabbath",
+  "folder": "",
+  "caption": "Explorer · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-study-room.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Study Room",
+  "folder": "",
+  "caption": "Explorer · Study Room",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-music-1-listen.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Music",
+  "folder": "Listen",
+  "caption": "Explorer · Music · Listen",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-music-2-tuner.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Music",
+  "folder": "Tuner",
+  "caption": "Explorer · Music · Tuner",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-music-3-conductor.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Music",
+  "folder": "Conductor",
+  "caption": "Explorer · Music · Conductor",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-music-4-pieces.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Music",
+  "folder": "Pieces",
+  "caption": "Explorer · Music · Pieces",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-my-files-1-browse.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "My Files",
+  "folder": "Browse",
+  "caption": "Explorer · My Files · Browse",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-my-files-2-featured.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "My Files",
+  "folder": "Featured",
+  "caption": "Explorer · My Files · Featured",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-my-files-3-on-this-device.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "My Files",
+  "folder": "On this device",
+  "caption": "Explorer · My Files · On this device",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-mail-1-inbox.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Mail",
+  "folder": "Inbox",
+  "caption": "Explorer · Mail · Inbox",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-mail-2-sent.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Mail",
+  "folder": "Sent",
+  "caption": "Explorer · Mail · Sent",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-settings-1-general.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Settings",
+  "folder": "General",
+  "caption": "Explorer · Settings · General",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-explorer-settings-2-help.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Settings",
+  "folder": "Help",
+  "caption": "Explorer · Settings · Help",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-profile.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Profile",
+  "folder": "",
+  "caption": "Guide · Profile",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-home-1-notices.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Notices",
+  "caption": "Guide · Home · Notices",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-home-2-blog.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Blog",
+  "caption": "Guide · Home · Blog",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-home-3-prayer-wall.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Home",
+  "folder": "Prayer wall",
+  "caption": "Guide · Home · Prayer wall",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-my-explorers-1-my-explorers.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "My Explorers",
+  "folder": "My Explorers",
+  "caption": "Guide · My Explorers · My Explorers",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-my-explorers-2-next-7-days.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "My Explorers",
+  "folder": "Next 7 days",
+  "caption": "Guide · My Explorers · Next 7 days",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-office-1-numbers.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Office",
+  "folder": "Numbers",
+  "caption": "Guide · Office · Numbers",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-office-2-lesson-studies.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Office",
+  "folder": "Lesson studies",
+  "caption": "Guide · Office · Lesson studies",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-office-3-sabbath-program.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Office",
+  "folder": "Sabbath program",
+  "caption": "Guide · Office · Sabbath program",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-office-4-evangelistic-meetings.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Office",
+  "folder": "Evangelistic meetings",
+  "caption": "Guide · Office · Evangelistic meetings",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-office-5-reports.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Office",
+  "folder": "Reports",
+  "caption": "Guide · Office · Reports",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-this-sabbath.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "This Sabbath",
+  "folder": "",
+  "caption": "Guide · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-music-1-listen.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Music",
+  "folder": "Listen",
+  "caption": "Guide · Music · Listen",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-music-2-tuner.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Music",
+  "folder": "Tuner",
+  "caption": "Guide · Music · Tuner",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-music-3-conductor.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Music",
+  "folder": "Conductor",
+  "caption": "Guide · Music · Conductor",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-music-4-pieces.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Music",
+  "folder": "Pieces",
+  "caption": "Guide · Music · Pieces",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-my-files-1-browse.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "My Files",
+  "folder": "Browse",
+  "caption": "Guide · My Files · Browse",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-my-files-2-featured.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "My Files",
+  "folder": "Featured",
+  "caption": "Guide · My Files · Featured",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-my-files-3-on-this-device.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "My Files",
+  "folder": "On this device",
+  "caption": "Guide · My Files · On this device",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-mail-1-inbox.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Mail",
+  "folder": "Inbox",
+  "caption": "Guide · Mail · Inbox",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-mail-2-sent.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Mail",
+  "folder": "Sent",
+  "caption": "Guide · Mail · Sent",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-settings-1-general.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Settings",
+  "folder": "General",
+  "caption": "Guide · Settings · General",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-settings-2-help.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Settings",
+  "folder": "Help",
+  "caption": "Guide · Settings · Help",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-profile.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Profile",
+  "folder": "",
+  "caption": "Director · Profile",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-home-1-notices.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Home",
+  "folder": "Notices",
+  "caption": "Director · Home · Notices",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-home-2-blog.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Home",
+  "folder": "Blog",
+  "caption": "Director · Home · Blog",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-home-3-prayer-wall.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Home",
+  "folder": "Prayer wall",
+  "caption": "Director · Home · Prayer wall",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-home-4-the-numbers.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Home",
+  "folder": "The numbers",
+  "caption": "Director · Home · The numbers",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-1-approvals.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "Approvals",
+  "caption": "Director · Admin · Approvals",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-2-people-pairing.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "People & Pairing",
+  "caption": "Director · Admin · People & Pairing",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-3-materials.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "Materials",
+  "caption": "Director · Admin · Materials",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-4-mail.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "Mail",
+  "caption": "Director · Admin · Mail",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-5-safeguarding.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "Safeguarding",
+  "caption": "Director · Admin · Safeguarding",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-6-analytics.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "Analytics",
+  "caption": "Director · Admin · Analytics",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-office-1-numbers.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Office",
+  "folder": "Numbers",
+  "caption": "Director · Office · Numbers",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-office-2-lesson-studies.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Office",
+  "folder": "Lesson studies",
+  "caption": "Director · Office · Lesson studies",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-office-3-sabbath-program.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Office",
+  "folder": "Sabbath program",
+  "caption": "Director · Office · Sabbath program",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-office-4-evangelistic-meetings.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Office",
+  "folder": "Evangelistic meetings",
+  "caption": "Director · Office · Evangelistic meetings",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-office-5-reports.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Office",
+  "folder": "Reports",
+  "caption": "Director · Office · Reports",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-this-sabbath.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "This Sabbath",
+  "folder": "",
+  "caption": "Director · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-music-1-listen.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Music",
+  "folder": "Listen",
+  "caption": "Director · Music · Listen",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-music-2-tuner.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Music",
+  "folder": "Tuner",
+  "caption": "Director · Music · Tuner",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-music-3-conductor.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Music",
+  "folder": "Conductor",
+  "caption": "Director · Music · Conductor",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-music-4-pieces.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Music",
+  "folder": "Pieces",
+  "caption": "Director · Music · Pieces",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-my-files-1-browse.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "My Files",
+  "folder": "Browse",
+  "caption": "Director · My Files · Browse",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-my-files-2-featured.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "My Files",
+  "folder": "Featured",
+  "caption": "Director · My Files · Featured",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-my-files-3-on-this-device.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "My Files",
+  "folder": "On this device",
+  "caption": "Director · My Files · On this device",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-reports.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin Reports",
+  "folder": "",
+  "caption": "Director · Admin Reports",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-mail-1-inbox.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Mail",
+  "folder": "Inbox",
+  "caption": "Director · Mail · Inbox",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-mail-2-sent.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Mail",
+  "folder": "Sent",
+  "caption": "Director · Mail · Sent",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-mail-3-everyones-mail.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Mail",
+  "folder": "Everyone’s mail",
+  "caption": "Director · Mail · Everyone’s mail",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-settings-1-general.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Settings",
+  "folder": "General",
+  "caption": "Director · Settings · General",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-settings-2-church.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Settings",
+  "folder": "Church",
+  "caption": "Director · Settings · Church",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-settings-3-help.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Settings",
+  "folder": "Help",
+  "caption": "Director · Settings · Help",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-profile.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Profile",
+  "folder": "",
+  "caption": "Executive Director · Profile",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-home-1-notices.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Home",
+  "folder": "Notices",
+  "caption": "Executive Director · Home · Notices",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-home-2-blog.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Home",
+  "folder": "Blog",
+  "caption": "Executive Director · Home · Blog",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-home-3-prayer-wall.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Home",
+  "folder": "Prayer wall",
+  "caption": "Executive Director · Home · Prayer wall",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-home-4-the-numbers.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Home",
+  "folder": "The numbers",
+  "caption": "Executive Director · Home · The numbers",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-1-approvals.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "Approvals",
+  "caption": "Executive Director · Admin · Approvals",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-2-people-pairing.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "People & Pairing",
+  "caption": "Executive Director · Admin · People & Pairing",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-3-materials.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "Materials",
+  "caption": "Executive Director · Admin · Materials",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-4-mail.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "Mail",
+  "caption": "Executive Director · Admin · Mail",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-5-safeguarding.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "Safeguarding",
+  "caption": "Executive Director · Admin · Safeguarding",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-6-analytics.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "Analytics",
+  "caption": "Executive Director · Admin · Analytics",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-office-1-numbers.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Office",
+  "folder": "Numbers",
+  "caption": "Executive Director · Office · Numbers",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-office-2-lesson-studies.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Office",
+  "folder": "Lesson studies",
+  "caption": "Executive Director · Office · Lesson studies",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-office-3-sabbath-program.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Office",
+  "folder": "Sabbath program",
+  "caption": "Executive Director · Office · Sabbath program",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-office-4-evangelistic-meetings.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Office",
+  "folder": "Evangelistic meetings",
+  "caption": "Executive Director · Office · Evangelistic meetings",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-office-5-reports.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Office",
+  "folder": "Reports",
+  "caption": "Executive Director · Office · Reports",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-this-sabbath.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "This Sabbath",
+  "folder": "",
+  "caption": "Executive Director · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-music-1-listen.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Music",
+  "folder": "Listen",
+  "caption": "Executive Director · Music · Listen",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-music-2-tuner.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Music",
+  "folder": "Tuner",
+  "caption": "Executive Director · Music · Tuner",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-music-3-conductor.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Music",
+  "folder": "Conductor",
+  "caption": "Executive Director · Music · Conductor",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-music-4-pieces.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Music",
+  "folder": "Pieces",
+  "caption": "Executive Director · Music · Pieces",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-my-files-1-browse.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "My Files",
+  "folder": "Browse",
+  "caption": "Executive Director · My Files · Browse",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-my-files-2-featured.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "My Files",
+  "folder": "Featured",
+  "caption": "Executive Director · My Files · Featured",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-my-files-3-on-this-device.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "My Files",
+  "folder": "On this device",
+  "caption": "Executive Director · My Files · On this device",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-reports.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin Reports",
+  "folder": "",
+  "caption": "Executive Director · Admin Reports",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-mail-1-inbox.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Mail",
+  "folder": "Inbox",
+  "caption": "Executive Director · Mail · Inbox",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-mail-2-sent.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Mail",
+  "folder": "Sent",
+  "caption": "Executive Director · Mail · Sent",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-mail-3-everyones-mail.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Mail",
+  "folder": "Everyone’s mail",
+  "caption": "Executive Director · Mail · Everyone’s mail",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-settings-1-general.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Settings",
+  "folder": "General",
+  "caption": "Executive Director · Settings · General",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-settings-2-help.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Settings",
+  "folder": "Help",
+  "caption": "Executive Director · Settings · Help",
+  "group": "rooms"
+ }
+]
