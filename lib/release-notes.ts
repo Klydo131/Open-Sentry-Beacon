@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-concert-pitch-you-can-hear',
+    date: '2026-10-04',
+    title: 'Concert pitch you can hear',
+    items: [
+      'In the Music room\'s Tuner, every change of concert pitch now plays the new A, and says in plain words what it does to every note.',
+      'The common pitches are one tap away: 415 for baroque music, 432, 440 the standard, and 442 for many orchestras.',
+      'Compare with 440 plays the standard A, then yours, so you can hear the difference.',
+      'Listen for the A: ask the organist or pianist to hold an A, and the app measures it and offers it as your concert pitch. Nothing is recorded.',
+      'The tuner shows the pitch it measures against, and the starting note shows the frequency it will play.',
+    ],
+  },
+  {
     id: '2026-10-04-music-room',
     date: '2026-10-04',
     title: 'A Music room, for the choir and everyone who loves music',

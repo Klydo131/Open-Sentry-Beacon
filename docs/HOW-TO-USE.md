@@ -117,6 +117,10 @@ has four folders.
   flat or sharp. Tap **Start listening**; your phone asks once whether the app
   may use the microphone. Tap **Stop listening** when you are done. It records
   nothing. **Starting note** plays a note for the choir, like a pitch pipe.
+  **Concert pitch** is where the choir's A sits: 440 is the standard. Tap 442
+  or 432 and you hear the new A, with a line saying what it does to every note;
+  **Compare with 440** plays the standard A, then yours. To match an organ or a
+  piano, ask for its A and tap **Listen for the A**.
 - **Conductor** keeps a steady beat and draws the conductor's hand for 2, 3, 4
   or 6 beats. Tap **Tap the beat** a few times in time and the tempo follows
   you. Untick **Sound the clicks** to follow the hand in silence.

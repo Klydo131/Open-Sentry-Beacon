@@ -52,9 +52,32 @@ with their picture, and keep playing when you walk to another room.
 4. Tap **Stop listening** when you are done.
 
 **Starting note** plays a note for two seconds, like a pitch pipe, so a choir
-can find its first note. **Concert pitch** moves the A that everything is
-measured against from 440 Hz to anything between 400 and 480, for an
-instrument or a recording tuned differently; the phone remembers it.
+can find its first note. It shows the frequency it will play.
+
+### Concert pitch: where the choir's A sits
+
+Concert pitch is the A that every other note is tuned from. 440 Hz is the
+standard most choirs, pianos and recordings use. An older organ, a baroque
+group or an orchestra may use another, and then everything else should follow
+it: the tuner should call a note in tune when it matches that instrument, and
+the starting note should sound like it.
+
+1. Tap one of the common pitches: **415 Hz** (Baroque), **432 Hz**, **440 Hz**
+   (Standard) or **442 Hz** (Orchestra). Or move it one hertz at a time with
+   **− 1** and **+ 1**. Every change plays the new A, so you hear it.
+2. Read the line under it. It says what the change does to every note, such as
+   *2 Hz above the standard 440: every note sounds about 8 cents higher*. A
+   hundred cents is one semitone, one key on a piano.
+3. Tap **Compare with 440** to hear the standard A and then yours, one after
+   the other.
+
+**To match an instrument**, ask the organist or pianist to hold an A, tap
+**Listen for the A**, and hold the phone near it. Once the A has been steady for
+a moment, the app says what it heard, such as *The A you played is 441.6 Hz*,
+and offers **Use 442 Hz**. Nothing changes until you tap it, and nothing is
+recorded.
+
+The phone remembers your concert pitch until you change it.
 
 > **IMPORTANT** · What the microphone does, and does not do
 >

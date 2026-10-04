@@ -10,6 +10,9 @@
 //   - the Tuner hears a 440 Hz tone as A4 in tune, follows a change of
 //     concert pitch, and lets the microphone go on Stop, on leaving the
 //     folder and when the phone locks
+//   - concert pitch is heard: a choice plays its A and says what it does, the
+//     starting note follows it, Compare plays 440 then yours, and Listen for
+//     the A takes an instrument's A and offers it
 //   - the Conductor's baton moves on the beat, follows tapped tempo and a
 //     change of time signature, runs silent, and closes its audio on Stop
 //   - a score file opens, plays, follows your part and a change of tempo
@@ -188,7 +191,9 @@ async function deskPhoto(page) {
         await page.reload({ waitUntil: 'networkidle' });
         await openFolder(page, 'Tuner');
         ok(/A = 445 Hz/.test(await say(page, '[data-tuner-a4]')), `${size}: the chosen concert pitch is remembered on the phone`);
-        await page.getByRole('button', { name: 'Back to 440' }).click();
+        await page.locator('[data-pitch-choice="440"]').click();
+        // That choice plays its A; let it finish before counting audio clocks.
+        await page.waitForTimeout(1300);
         // Stop lets the microphone go.
         await page.getByRole('button', { name: /Start listening/ }).click();
         await page.waitForTimeout(800);
@@ -233,9 +238,52 @@ async function deskPhoto(page) {
         ok(listening || said, `${size}: Start either listens or says why it cannot (${engineName} has no fake microphone)`);
         if (listening) await page.getByRole('button', { name: /Stop listening/ }).click();
       }
+      // CONCERT PITCH YOU CAN HEAR (asked for on 4 October 2026: "I just put
+      // the Hertz and nothing much is happening").
+      ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && /standard/.test(await say(page, '[data-pitch-words]')),
+         `${size}: concert pitch is back at 440, called the standard`);
+      await page.locator('[data-pitch-choice="442"]').click();
+      await page.waitForTimeout(150);
+      ok(/A at 442 Hz/.test(await say(page, '[data-pitch-now]')), `${size}: choosing 442 plays its A (${(await say(page, '[data-pitch-now]')).trim() || 'nothing'})`);
+      ok(/A = 442 Hz/.test(await say(page, '[data-tuner-a4]')) && /8 cents higher/.test(await say(page, '[data-pitch-words]')),
+         `${size}: and says what it does (${(await say(page, '[data-pitch-words]')).trim()})`);
+      ok((await page.locator('[data-pitch-choice="442"]').getAttribute('aria-pressed')) === 'true', `${size}: the 442 choice is shown as chosen`);
+      ok(/C4 sounds at 262\.8 Hz, from your concert pitch A = 442 Hz/.test(await say(page, '[data-pipe-hz]')),
+         `${size}: the starting note follows it (${(await say(page, '[data-pipe-hz]')).trim()})`);
+      ok(/A = 442/.test(await say(page, '[data-tuner-against]')), `${size}: and the tuner says what it measures against`);
+      await page.waitForTimeout(1000);
+      await page.getByRole('button', { name: /Compare with 440/ }).click();
+      await page.waitForTimeout(400);
+      const first = (await say(page, '[data-pitch-now]')).trim();
+      await page.waitForTimeout(1500);
+      const second = (await say(page, '[data-pitch-now]')).trim();
+      ok(/standard A, 440/.test(first) && /your A, 442/.test(second), `${size}: Compare plays 440, then yours (${first} / ${second})`);
+      await page.waitForTimeout(1600);
+      ok(!(await say(page, '[data-pitch-now]')).trim() && (await clocksOpen(page)) === 0, `${size}: and goes quiet by itself, closing its audio`);
+      // Matching an instrument: the fake microphone holds an A at 440.
+      if (fakeMic) {
+        await page.getByRole('button', { name: /Listen for the A/ }).click();
+        await page.waitForFunction(() => /The A you played is/.test(document.querySelector('[data-pitch-heard]')?.textContent || ''), null, { timeout: 9000 }).catch(() => {});
+        const heard = (await say(page, '[data-pitch-heard]')).trim();
+        ok(/The A you played is 4(39\.\d|40\.\d) Hz/.test(heard), `${size}: Listen for the A hears the instrument's A (${heard || 'nothing'})`);
+        ok((await micsLive(page)) === 0, `${size}: and lets the microphone go once it has heard it`);
+        await page.getByRole('button', { name: 'Use 440 Hz' }).click();
+        ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && /Concert pitch is now A = 440 Hz/.test(await say(page, '[data-pitch-heard]')),
+           `${size}: Use 440 Hz makes it the concert pitch`);
+        await page.waitForTimeout(1200);
+      } else {
+        await page.getByRole('button', { name: /Listen for the A/ }).click();
+        await page.waitForTimeout(1500);
+        const listening = await page.getByRole('button', { name: /Stop listening for the A/ }).isVisible();
+        const said = await page.locator('[data-music-tuner] [role="alert"]').isVisible();
+        ok(listening || said, `${size}: Listen for the A either listens or says why it cannot (${engineName} has no fake microphone)`);
+        if (listening) await page.getByRole('button', { name: /Stop listening for the A/ }).click();
+        await page.locator('[data-pitch-choice="440"]').click();
+        await page.waitForTimeout(1200);
+      }
       // The pitch pipe sounds and goes quiet by itself.
       await page.getByRole('button', { name: /Play C4/ }).click();
-      ok(await page.locator('[data-music-tuner]').getByRole('button', { name: '■ Stop' }).isVisible(), `${size}: the starting note sounds`);
+      ok(await page.locator('[data-music-tuner]').getByRole('button', { name: '■ Stop', exact: true }).isVisible(), `${size}: the starting note sounds`);
       await page.waitForTimeout(2800);
       ok(await page.getByRole('button', { name: /Play C4/ }).isVisible() && (await clocksOpen(page)) === 0,
          `${size}: and stops by itself, closing its audio`);

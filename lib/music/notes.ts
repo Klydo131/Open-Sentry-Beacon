@@ -68,3 +68,71 @@ export function readFrequency(hz: number, a4 = A4_DEFAULT): Reading | null {
  * tell apart on a held note; a tuner that demanded zero would never say yes.
  */
 export const IN_TUNE_CENTS = 5;
+
+// ---------------------------------------------------------------------------
+// CONCERT PITCH, IN WORDS AND IN SOUND
+//
+// Asked for on 4 October 2026, with a picture of the Concert pitch card: "I
+// just put the Hertz and nothing much is happening, can you develop that
+// where users can really feel it?" Changing A moved only the tuner's
+// reference, which nobody can see until they sing. So the card now says what
+// the change does, plays it, compares it with 440, and can take its A from
+// the instrument in the room. The arithmetic for all of that is here.
+// ---------------------------------------------------------------------------
+
+/** How far apart two frequencies are, in cents: 100 to a semitone, 1200 to an octave. */
+export function centsBetween(hz: number, from: number): number {
+  return 1200 * Math.log2(hz / from);
+}
+
+/** The concert pitches choirs actually meet, each with what it is for. */
+export const CONCERT_PITCHES = [
+  { hz: 415, name: 'Baroque', about: 'Early music, about a semitone lower' },
+  { hz: 432, name: 'Some choirs', about: 'A little lower; some choirs prefer it' },
+  { hz: 440, name: 'Standard', about: 'Most choirs, pianos and recordings' },
+  { hz: 442, name: 'Orchestra', about: 'Many orchestras; a touch brighter' },
+] as const;
+
+/** What a concert pitch does to every note, in a sentence a singer can use. */
+export function pitchWords(a4: number): string {
+  const hz = clampA4(a4);
+  if (hz === A4_DEFAULT) return 'The standard most choirs, pianos and recordings use.';
+  const up = hz > A4_DEFAULT;
+  const cents = Math.round(Math.abs(centsBetween(hz, A4_DEFAULT)));
+  const how = cents >= 85 && cents <= 115 ? 'about a semitone' : `about ${cents} cents`;
+  return `${Math.abs(hz - A4_DEFAULT)} Hz ${up ? 'above' : 'below'} the standard 440: every note sounds ${how} ${up ? 'higher' : 'lower'}.`;
+}
+
+/**
+ * A frequency moved by octaves into the range a reference A may take, or null
+ * when no octave of it lands there. An organ's A2, A3, A4 or A5 all fold to
+ * the same A; a C or an E folds nowhere, which is how "that was not an A" is
+ * told without naming notes against a reference that may itself be wrong.
+ */
+export function foldToA4(hz: number): number | null {
+  if (!Number.isFinite(hz) || hz <= 0) return null;
+  let f = hz;
+  while (f > A4_MAX) f /= 2;
+  while (f < A4_MIN) f *= 2;
+  return f >= A4_MIN && f <= A4_MAX ? f : null;
+}
+
+/** Readings a held A must give before it is believed: about two-thirds of a second. */
+export const STEADY_READINGS = 12;
+/** And how close together they must be. A held organ note is far steadier than this. */
+export const STEADY_CENTS = 10;
+
+/**
+ * The A an instrument is holding, from the tuner's latest readings: their
+ * middle value, to a tenth of a hertz, once the last STEADY_READINGS all fold
+ * to an A and lie within STEADY_CENTS of each other. Null until then.
+ */
+export function heardA(readings: number[]): number | null {
+  if (readings.length < STEADY_READINGS) return null;
+  const folded = readings.slice(-STEADY_READINGS).map(foldToA4);
+  if (folded.some((f) => f === null)) return null;
+  const sorted = (folded as number[]).sort((a, b) => a - b);
+  const middle = sorted[Math.floor(sorted.length / 2)];
+  if (centsBetween(sorted[sorted.length - 1], sorted[0]) > STEADY_CENTS) return null;
+  return Math.round(middle * 10) / 10;
+}

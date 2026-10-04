@@ -62,6 +62,31 @@ const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml
 }
 
 // ---------------------------------------------------------------------------
+// 1b. CONCERT PITCH: what a change does, said in words, and an A taken from
+//     an instrument. Asked for on 4 October 2026: "I just put the Hertz and
+//     nothing much is happening ... develop that where users can really feel it".
+// ---------------------------------------------------------------------------
+{
+  ok(Math.abs(M.centsBetween(880, 440) - 1200) < 1e-9 && Math.round(M.centsBetween(442, 440)) === 8, 'cents: an octave is 1200, and 442 is 8 cents above 440');
+  ok(M.pitchWords(440) === 'The standard most choirs, pianos and recordings use.', 'A 440 is called the standard');
+  ok(/^2 Hz above the standard 440: every note sounds about 8 cents higher\.$/.test(M.pitchWords(442)), `A 442 is said as higher, in cents (${M.pitchWords(442)})`);
+  ok(/below .* about 32 cents lower/.test(M.pitchWords(432)), `A 432 is said as lower (${M.pitchWords(432)})`);
+  ok(/about a semitone lower/.test(M.pitchWords(415)) && /about 165 cents lower/.test(M.pitchWords(400)), 'baroque 415 is about a semitone; 400 is said in cents, not rounded to one');
+  ok(M.CONCERT_PITCHES.map((p) => p.hz).join(',') === '415,432,440,442' && M.CONCERT_PITCHES.every((p) => M.clampA4(p.hz) === p.hz),
+     'the common pitches are 415, 432, 440 and 442, all inside the range a tuner takes');
+  ok(M.foldToA4(220) === 440 && M.foldToA4(880) === 440 && M.foldToA4(110.4) === 441.6, "an A in any octave folds to the A above middle C");
+  ok(M.foldToA4(261.63) === null && M.foldToA4(329.63) === null && M.foldToA4(0) === null && M.foldToA4(NaN) === null, 'a C or an E is not taken for an A');
+  const held = (hz, n = M.STEADY_READINGS) => Array(n).fill(hz);
+  ok(M.heardA(held(441.6)) === 441.6, 'a held A is heard, to a tenth of a hertz');
+  ok(M.heardA(held(441.6, M.STEADY_READINGS - 1)) === null, 'not before it has been held for a moment');
+  ok(M.heardA([...held(440, M.STEADY_READINGS - 1), 470]) === null, 'not while it wavers');
+  ok(M.heardA(held(261.63)) === null, 'not when the note held is not an A');
+  ok(M.heardA(Array.from({ length: M.STEADY_READINGS }, (_, i) => (i % 2 ? 220.8 : 441.6))) === 441.6,
+     'a tuner jumping an octave on a held A still hears one A');
+  ok(M.heardA([...held(261.63, 20), ...held(442)]) === 442, 'only the latest readings count, so the A is heard once it starts');
+}
+
+// ---------------------------------------------------------------------------
 // 2. THE BEAT: drift-free scheduling, tap tempo, the baton
 // ---------------------------------------------------------------------------
 {
@@ -254,6 +279,16 @@ function zip(files) {
   ok(/echoCancellation: false/.test(tuner) && /video: false/.test(tuner), 'it asks for sound only, as it is');
   ok(/turn\.current \+= 1/.test(tuner) && /if \(mine !== turn\.current\) \{[\s\S]*?getTracks\(\)\.forEach\(\(t\) => t\.stop\(\)\)/.test(tuner),
      'a microphone allowed after the tuner was left is let go at once, never left listening');
+  const panel = code('components/music/TunerPanel.tsx');
+  const calibrate = (panel.match(/const calibrate = [\s\S]*?\n  \};/) || [''])[0];
+  ok(/tone\.play\(/.test(calibrate), 'every change of concert pitch plays the new A');
+  ok(/data-pitch-words[\s\S]{0,40}pitchWords\(a4\)/.test(panel) && /Compare with 440/.test(panel) && /data-tuner-against/.test(panel) && /data-pipe-hz/.test(panel),
+     'the card says what the change does, compares it with 440, and the tuner and the starting note show the pitch they follow');
+  ok(!/getUserMedia/.test(panel) && /void listen\(\)/.test(panel), "Listen for the A uses the tuner's own microphone, not a second one");
+  ok(/if \(openedMic\.current\) \{ openedMic\.current = false; stopListening\(\); \}/.test(panel),
+     'and lets it go as soon as the A is heard, when it was the one that opened it');
+  ok((panel.match(/disabled=\{matching/g) || []).length >= 4, 'nothing plays while it listens for the A, so it never hears its own speaker');
+  ok(/Use \{clampA4\(match\.hz\)\} Hz/.test(panel) && /Keep \{a4\} Hz/.test(panel), "an instrument's A is offered, never set without asking");
   for (const f of ['lib/music/metronome.ts', 'lib/music/score-player.ts']) {
     ok(/visibilitychange/.test(code(f)) && /return \(\) => \{[\s\S]*stop\(\);/.test(code(f)), `${f}: silent when the room is left or the phone locks`);
   }
