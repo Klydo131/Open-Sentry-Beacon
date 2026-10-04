@@ -303,6 +303,9 @@ function zip(files) {
   ok(!/capture=/.test(scanner) && /accept="image\/\*"/.test(scanner), 'the scanner uses the photo picker, never the camera directly');
   ok(/savePiece\('page', [^,]+, page\.blob\)/.test(scanner) && !/savePiece\([^)]*file/.test(scanner),
      'only the clean page is kept, never the photo (so nothing the camera wrote into it is kept either)');
+  const store = code('lib/music/pieces.ts');
+  ok(/blobs\.put\(stored, piece\.id\)/.test(store) && !/blobs\.put\(blob/.test(store) && /new Blob\(\[stored\.bytes\]/.test(store),
+     'pieces are kept as bytes, not Blobs, which WebKit (Safari) refuses to store');
   const pieces = code('components/music/PiecesPanel.tsx');
   ok(/scoreFromText\(await blob\.text\(\)/.test(pieces), 'a score kept on the phone is checked again every time it is opened');
 

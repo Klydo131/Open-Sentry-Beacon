@@ -12,7 +12,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4414
 //   node tests/e2e/the-desktop-layout.js 4414
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 
 const PORT = process.argv[2] || '4414';
 const BASE = `http://localhost:${PORT}`;
@@ -83,8 +83,10 @@ const topOf = (page) => page.evaluate(() => {
     try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 24 * 60 * 60 * 1000)); } catch { /* fine */ }
   });
   const page = await context.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
+  // Through the shared filter, which leaves out what the walk itself cut
+  // short: on WebKit a sidebar link's prefetch, cancelled by the next page,
+  // is reported as a page error (seen on /mail, 4 October 2026).
+  const pageErrorsSeen = pageErrors(page);
 
   // 1. A COMPUTER, WITH NOTHING CHOSEN: Classic, and Classic's computer layout.
   await signInAs(page, 'Maria Santos');
@@ -199,6 +201,7 @@ const topOf = (page) => page.evaluate(() => {
   await page.waitForTimeout(1000);
   ok((await page.evaluate(() => getComputedStyle(document.body).paddingLeft)) === '0px', 'the sign-in page keeps its own width');
 
+  const errors = pageErrorsSeen.list();
   ok(errors.length === 0, `no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
   await browser.close();
   console.log(bad ? `RESULT: ${bad} BAD` : 'RESULT: ALL OK');

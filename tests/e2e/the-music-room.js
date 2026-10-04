@@ -72,6 +72,14 @@ const WATCH = () => {
       const s = await ask(c); window.__mics.push(s); return s;
     };
   }
+  // Refuse a Blob in IndexedDB the way WebKit does, on every engine, so a
+  // store that forgets it fails here and not only on Safari (4 October 2026:
+  // the room's pieces did exactly that).
+  const put = IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put = function (value, key) {
+    if (value instanceof Blob) throw new DOMException('A Blob cannot be stored here (as on WebKit).', 'DataCloneError');
+    return put.call(this, value, key);
+  };
   // about:blank has no storage, and this runs there too.
   try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864000000)); } catch { /* not a page of the app */ }
 };
@@ -257,7 +265,8 @@ async function deskPhoto(page) {
       await openRoom(page, 'Pieces');
       await page.locator('[data-score-input]').setInputFiles(FIXTURE);
       await page.locator('[data-panel="score-view"]').waitFor({ timeout: 8000 }).catch(() => {});
-      ok(/Sing, my soul/.test(await say(page, '[data-score-title]')), `${size}: a MusicXML score opens with its own title`);
+      const refused = await page.locator('[data-music-pieces] [role="alert"]').innerText().catch(() => '');
+      ok(/Sing, my soul/.test(await say(page, '[data-score-title]')), `${size}: a MusicXML score opens with its own title${refused ? ` (it said: ${refused})` : ''}`);
       const parts = await page.locator('[data-panel="score-view"] li').count();
       ok(parts === 4, `${size}: every part is listed (${parts})`);
       ok(/96/.test(await say(page, '[data-score-tempo]')), `${size}: at the tempo the score asks for`);
@@ -350,7 +359,7 @@ async function deskPhoto(page) {
         const open = indexedDB.open('beacon-music');
         open.onsuccess = () => {
           const t = open.result.transaction('blobs', 'readonly').objectStore('blobs').getAll();
-          t.onsuccess = () => { done(t.result.map((b) => b.type)); open.result.close(); };
+          t.onsuccess = () => { done(t.result.map((b) => (b instanceof Blob ? `blob:${b.type}` : b.mime))); open.result.close(); };
         };
       }));
       ok(kept.length === 2 && kept.includes('image/png') && kept.includes('text/xml'), `${size}: the phone holds the clean page and the score, and not the photo (${kept.join(', ')})`);

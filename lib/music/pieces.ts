@@ -4,6 +4,13 @@
 // scanner, and score files. A store of its own (IndexedDB "beacon-music"),
 // apart from My Files, so a choir's pages do not fill somebody's media list
 // and My Files stays exactly as it was. Nothing here is uploaded.
+//
+// THE BYTES ARE STORED, NOT THE BLOB. WebKit will not put a Blob into
+// IndexedDB at all, and says so with a null error: lib/localMedia.ts found
+// that the hard way and tests/e2e/webkit-idb-probe.js proves it. This store
+// first went out storing Blobs, and on Safari no score or page could be kept
+// (the Safari walk of 4 October 2026). So: an ArrayBuffer and its type, put
+// back together as a Blob on the way out.
 
 import { uuid } from '@/lib/uuid';
 
@@ -49,6 +56,11 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
+interface StoredBytes {
+  bytes: ArrayBuffer;
+  mime: string;
+}
+
 /** One transaction over both stores; resolves when it has committed. */
 function run<T>(mode: IDBTransactionMode, work: (meta: IDBObjectStore, blobs: IDBObjectStore) => IDBRequest<T> | void): Promise<T | undefined> {
   return openDb().then((db) => new Promise<T | undefined>((resolve, reject) => {
@@ -56,9 +68,11 @@ function run<T>(mode: IDBTransactionMode, work: (meta: IDBObjectStore, blobs: ID
     const req = work(t.objectStore(META), t.objectStore(BLOBS));
     let result: T | undefined;
     if (req) req.onsuccess = () => { result = req.result; };
+    // WebKit aborts with a null error: always reject with a sentence.
+    const why = () => t.error ?? new PieceError('This phone would not keep it.');
     t.oncomplete = () => { db.close(); resolve(result); };
-    t.onerror = () => { db.close(); reject(t.error); };
-    t.onabort = () => { db.close(); reject(t.error ?? new PieceError('This phone would not keep it.')); };
+    t.onerror = () => { db.close(); reject(why()); };
+    t.onabort = () => { db.close(); reject(why()); };
   }));
 }
 
@@ -78,12 +92,17 @@ export async function savePiece(kind: PieceKind, title: string, blob: Blob): Pro
     size: blob.size,
     created_at: new Date().toISOString(),
   };
-  await run('readwrite', (meta, blobs) => { meta.put(piece); blobs.put(blob, piece.id); });
+  // Read before the transaction opens: one idle await inside it and it closes.
+  const stored: StoredBytes = { bytes: await blob.arrayBuffer(), mime: piece.mime };
+  await run('readwrite', (meta, blobs) => { meta.put(piece); blobs.put(stored, piece.id); });
   return piece;
 }
 
 export async function pieceBlob(id: string): Promise<Blob | undefined> {
-  return run<Blob>('readonly', (_meta, blobs) => blobs.get(id));
+  const stored = await run<StoredBytes | Blob>('readonly', (_meta, blobs) => blobs.get(id));
+  if (!stored) return undefined;
+  if (stored instanceof Blob) return stored;
+  return stored.bytes ? new Blob([stored.bytes], { type: stored.mime || '' }) : undefined;
 }
 
 export async function deletePiece(id: string): Promise<void> {
