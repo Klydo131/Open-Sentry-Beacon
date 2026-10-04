@@ -24,7 +24,7 @@
 // Plain Node, no Playwright — it must run anywhere, including a machine that has
 // never installed a browser.
 
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import net from 'node:net';
 
 let bad = 0;
@@ -66,7 +66,10 @@ let log = '';
 dev.stdout.on('data', (d) => (log += d));
 dev.stderr.on('data', (d) => (log += d));
 
+let stopped = false;
 const stop = () => {
+  if (stopped) return;
+  stopped = true;
   // By PID, never by pattern. `pkill -f run-next` once matched the shell that
   // was running it and killed a sibling test suite mid-flight, producing nine
   // failures that looked like a regression and were not.
@@ -74,7 +77,7 @@ const stop = () => {
   // The negative PID is the process GROUP: npm is only the wrapper, and the
   // `next dev` it spawns is what actually holds the port.
   try {
-    if (NEEDS_SHELL) process.kill(dev.pid);
+    if (NEEDS_SHELL) execFileSync('taskkill', ['/PID', String(dev.pid), '/T', '/F'], { stdio: 'ignore' });
     else process.kill(-dev.pid, 'SIGTERM');
   } catch {
     /* already gone */
@@ -147,19 +150,16 @@ if (ready) {
     // deliberately not a dependency of this project (see tests/e2e/_playwright),
     // so this is a bonus rather than a requirement.
     let browser = null;
+    let launchOptions = {};
     try {
-      ({ chromium: browser } = await import('./e2e/_playwright.js').then((m) => m.default ?? m));
+      ({ chromium: browser, launchOptions } = await import('./e2e/_playwright.js').then((m) => m.default ?? m));
     } catch {
       browser = null;
     }
     if (browser) {
       let rendered = 0;
       try {
-        const b = await browser.launch(
-          process.env.PLAYWRIGHT_BROWSERS_PATH
-            ? { executablePath: '/opt/pw-browsers/chromium' }
-            : {},
-        );
+        const b = await browser.launch(launchOptions);
         const pg = await b.newPage();
         await pg.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
         await pg.waitForTimeout(2500);
@@ -180,6 +180,19 @@ if (ready) {
 }
 
 stop();
+
+// The wrapper ending is not proof that its server and port ended with it.
+let released = false;
+for (let attempt = 0; attempt < 30 && !released; attempt++) {
+  released = await new Promise((resolve) => {
+    const probe = net.connect({ port, host: '127.0.0.1' });
+    probe.once('connect', () => { probe.destroy(); resolve(false); });
+    probe.once('error', (error) => resolve(error.code === 'ECONNREFUSED'));
+    probe.setTimeout(250, () => { probe.destroy(); resolve(false); });
+  });
+  if (!released) await new Promise((resolve) => setTimeout(resolve, 100));
+}
+ok(released, 'stopping the development check releases its server port');
 
 // Production must NOT get the relaxation. Checked from the config source rather
 // than by running a second server: the conditional is the invariant.

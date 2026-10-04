@@ -340,12 +340,12 @@ function isCancelledPrefetch(message) {
  *
  * So the rule is about ORDER, not words: the message, then the main page
  * navigating within CUT_SHORT_MS. The same words with no navigation after
- * them, another address, or any other error still fail the walk.
+ * them, another address, another path, or any other error still fail the walk.
  */
 const CUT_SHORT_MS = 500;
 
 function isCutShortMessage(message) {
-  return /cannot load https?:\s?\/\/?(localhost|127\.0\.0\.1)(:\d+)?\/\S* due to access control checks/i
+  return /cannot load https?:\s?\/\/?(localhost|127\.0\.0\.1)(:\d+)?\/(?:version\.json|sw\.js)(?:\?\S*)? due to access control checks/i
     .test(String(message));
 }
 
@@ -363,6 +363,14 @@ function pageErrors(page, now = Date.now) {
   const errors = [];
   // Cut-short messages waiting to see whether a navigation follows.
   let waiting = [];
+  let documentRequest = null;
+
+  page.on('request', (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documentRequest = request;
+  });
+  page.on('requestfailed', (request) => {
+    if (request === documentRequest) documentRequest = null;
+  });
 
   page.on('pageerror', (err) => {
     const text = String(err);
@@ -372,7 +380,9 @@ function pageErrors(page, now = Date.now) {
   });
 
   page.on('framenavigated', (frame) => {
-    if (frame !== page.mainFrame()) return;
+    // History and hash changes also emit framenavigated, but cancel no fetch.
+    if (frame !== page.mainFrame() || !documentRequest) return;
+    documentRequest = null;
     const navigatedAt = now();
     const tooLongAgo = waiting.filter((w) => navigatedAt - w.at > CUT_SHORT_MS);
     errors.push(...tooLongAgo.map((w) => w.text));
