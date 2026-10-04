@@ -244,10 +244,33 @@ async function deskPhoto(page) {
       const b = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
       ok(a !== b, `${size}: the baton moves (${a} then ${b})`);
       ok(await page.locator('[data-baton] circle.fill-teal-700').count() === 1, `${size}: the beat it is on is lit`);
-      // Four taps half a second apart: 120 a minute, give or take a tap.
+      // Tap the beat five times, and check the tempo against when the taps
+      // actually landed, not against the half second the walk meant: on a
+      // busy CI machine a click can arrive hundreds of milliseconds late
+      // (Safari's runner read 63 for taps meant as 120, 4 October 2026).
+      // The arithmetic of tap tempo is held by tests/the-music-room.mjs;
+      // this holds the wiring.
+      await page.evaluate(() => {
+        window.__tapsAt = [];
+        document.addEventListener('click', (e) => {
+          if (e.target instanceof Element && e.target.closest('button')?.textContent?.includes('Tap the beat')) window.__tapsAt.push(performance.now());
+        }, true);
+      });
       for (let i = 0; i < 5; i += 1) { await page.getByRole('button', { name: /Tap the beat/ }).click(); await page.waitForTimeout(500); }
       const tapped = Number((await say(page, '[data-tempo]')).trim());
-      ok(tapped >= 105 && tapped <= 125, `${size}: tapping every half second sets about 120 (${tapped})`);
+      const expected = await page.evaluate(() => {
+        // The rule in lib/music/beat.ts: a pause over two seconds starts a new
+        // count; the last four gaps are averaged; 30 to 240.
+        let kept = [];
+        for (const at of window.__tapsAt) {
+          if (kept.length && at - kept[kept.length - 1] > 2000) kept = [];
+          kept = [...kept, at].slice(-5);
+        }
+        const gaps = kept.slice(1).map((t, i) => t - kept[i]);
+        const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+        return Math.min(240, Math.max(30, Math.round(60000 / mean)));
+      });
+      ok(Math.abs(tapped - expected) <= 1, `${size}: the tempo follows the taps (${tapped}, from taps that landed at ${expected} a minute)`);
       await page.getByRole('button', { name: '3/4' }).click();
       ok((await page.locator('[data-baton] circle').count()) === 4, `${size}: 3/4 draws three beats`);
       await page.locator('#conductor-sound').uncheck();
