@@ -20,6 +20,7 @@ import { createServer } from 'node:net';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const withE2e = process.argv.includes('--all');
@@ -714,7 +715,9 @@ if (withE2e) {
     }
 
     console.log(`\nStarting the app on port ${port}…`);
-    const server = spawn(process.execPath, ['scripts/run-next.mjs', 'start', '-p', String(port)], {
+    // Own Next's PID directly, so stopping the check also stops its server.
+    const cli = createRequire(import.meta.url).resolve('next/dist/bin/next');
+    const server = spawn(process.execPath, [cli, 'start', '-p', String(port)], {
       cwd: root,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, NEXT_TELEMETRY_DISABLED: '1' },

@@ -43,6 +43,7 @@ export function ChurchBillboard() {
     <div className="space-y-6">
       {/* Masthead */}
       <div
+        data-church-masthead
         className="overflow-hidden rounded-2xl p-6 text-white sm:p-8"
         style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #2b3d6b 100%)` }}
       >

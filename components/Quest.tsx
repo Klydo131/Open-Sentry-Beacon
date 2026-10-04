@@ -102,7 +102,7 @@ function headerBottom(): number {
   const h = document.querySelector('header');
   if (!h) return 12;
   const r = h.getBoundingClientRect();
-  return r.top <= 1 ? r.bottom + 12 : 12;
+  return Math.max(12, r.bottom + 12);
 }
 
 export function Quest() {
@@ -239,7 +239,9 @@ export function Quest() {
       // to see or press. When what comes next is outside an open chat, the
       // chat is put down first, as a person would.
       const sheet = document.querySelector('[data-talk-sheet]');
-      if (el && sheet && !sheet.contains(el)) closeTalk();
+      // Message is still the fallback while a conversation's controls arrive.
+      // That fallback is outside Talk, but the step itself still belongs in it.
+      if (el && sheet && !step.target.startsWith('chat-') && !sheet.contains(el)) closeTalk();
 
       targetEl.current = el;
 
@@ -279,16 +281,9 @@ export function Quest() {
       const vh = window.innerHeight - tabBarHeight();
       const pnl = panelRef.current?.getBoundingClientRect();
       if (pnl && place !== 'mini') expandedH.current = pnl.height;
-      // Bounded, for two reasons that compound into a latch.
-      //
-      // The height is only re-measured while the panel is expanded, so once it
-      // shrinks to a title bar the large old measurement is what keeps getting
-      // reserved, which keeps it shrunk. Adding the teaching text made the panel
-      // tall enough to trigger that, and it never recovered: every step showed
-      // as a bare title with the explanation hidden behind a toggle nobody was
-      // told about. Capping it means a wordy step cannot reserve most of the
-      // screen, and the body scrolls instead.
-      const hExp = Math.min(expandedH.current || 220, vh * 0.45);
+      // Reserve what is drawn. Only the panel's body is height-capped; treating
+      // the whole panel as 45% left its header and footer over the target.
+      const hExp = expandedH.current || 220;
 
       let r = el.getBoundingClientRect();
 
@@ -616,7 +611,7 @@ export function Quest() {
            the inset is zero. */
         className={`fixed z-[60] mx-auto w-full max-w-md bg-white p-3 lift-3 ring-1 ring-black/10 sm:inset-x-auto sm:right-4 sm:w-96 sm:rounded-2xl sm:p-4 ${
           place === 'top'
-            ? 'inset-x-0 top-0 rounded-b-2xl sm:top-4'
+            ? 'inset-x-0 top-[calc(var(--beacon-chrome-top,0px)+var(--app-header,64px)+12px)] rounded-b-2xl'
             : 'quest-dock inset-x-0 rounded-t-2xl'
         }`}
         role="dialog"

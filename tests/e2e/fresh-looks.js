@@ -45,6 +45,12 @@ async function menuFingerprint(page) {
         await choose(page, look);
         await readable(page.locator(`[data-ui-theme-choice="${look}"]`), `${look} chosen option`);
         await readable(page.locator('[data-ui-theme-choice="classic"]'), `${look} other option`);
+        for (const preview of ['beacon', 'study', 'focus']) {
+          assert.ok(await page.locator(`[data-ui-theme-choice="${preview}"]`).evaluate((el) =>
+            getComputedStyle(el, '::before').backgroundImage.includes(`/themes/${el.dataset.uiThemeChoice}.svg`)),
+          `${preview} has a local picture preview under ${look}`);
+        }
+        await page.screenshot({ path: path.join(shots, `${look}-settings-${size}.png`), fullPage: true });
         await page.reload({ waitUntil: 'networkidle' });
         await page.waitForFunction((id) => document.documentElement.dataset.uiTheme === id, look);
         await page.goto(`${BASE}/menu`, { waitUntil: 'networkidle' });
@@ -91,14 +97,22 @@ async function menuFingerprint(page) {
         await readable(page.locator('[data-chat-meta]').first(), `${look} message metadata`);
         await page.keyboard.press('Escape');
         await page.goto(`${BASE}/dm?room=people`, { waitUntil: 'networkidle' });
+        if (look === 'focus' && process.argv.includes('--negative-prayer')) {
+          await page.locator('[data-prayer-waiting]').first().evaluate((el) => el.style.setProperty('color', '#7C3AED', 'important'));
+        }
+        await readable(page.locator('[data-prayer-waiting]').first(), `${look} prayer request on the actual Guide screen`);
         const danger = page.locator('[data-danger]').first();
         await readable(danger, `${look} destructive control`);
         assert.ok(await danger.evaluate((el) => {
           const [r, g, b] = getComputedStyle(el).color.match(/\d+/g).map(Number);
           return r > g + 20 && r > b + 20;
         }), `${look} destructive control stays red`);
+        await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+        await readable(page.locator('[data-church-masthead] .text-white\\/50'), `${look} church banner label`);
+        await readable(page.locator('[data-church-masthead] .text-white\\/70'), `${look} church banner explanation`);
       }
       await choose(page, 'classic');
+      assert.equal(await page.locator('[data-ui-theme-choice="focus"]').evaluate((el) => getComputedStyle(el, '::before').content), 'none', 'Classic keeps its original Settings choices');
       await page.goto(`${BASE}/menu`, { waitUntil: 'networkidle' });
       assert.deepEqual(await menuFingerprint(page), classic, `Classic returns unchanged at ${size}`);
       if (size === 'phone') {

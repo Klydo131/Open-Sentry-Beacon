@@ -222,7 +222,7 @@ export function LiveGuidePage() {
                         on this row that is asking something of the Guide, so it
                         takes the line; the path is context and yields to it. */}
                     {waiting > 0 ? (
-                      <p className="mt-0.5 text-sm font-semibold" style={{ color: '#7C3AED' }}>
+                      <p data-prayer-waiting className="mt-0.5 text-sm font-semibold" style={{ color: '#7C3AED' }}>
                         🙏 Asked for prayer{waiting > 1 ? ` ×${waiting}` : ''}
                       </p>
                     ) : (

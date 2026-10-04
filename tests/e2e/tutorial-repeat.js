@@ -15,7 +15,10 @@ const read = (p) => p.evaluate(() => {
   const ring=[...document.querySelectorAll('div')].find(d=>(d.style.boxShadow||'').includes('9999px'));
   let tq=null;
   if(ring){const rr=ring.getBoundingClientRect();const e=document.elementFromPoint(rr.left+rr.width/2,rr.top+rr.height/2);const q=e&&e.closest('[data-quest]');tq=q?q.getAttribute('data-quest'):null;}
-  return {title:(panel.querySelector('p')?.textContent||'').trim(), tq, hasRing:!!ring,
+  // Read the instruction in both panel sizes, not the breadcrumb or an empty bar.
+  const title=(panel.querySelector('p.font-bold.text-navy')||
+    panel.firstElementChild?.querySelector('span.truncate'))?.textContent.trim()||'';
+  return {title, tq, hasRing:!!ring,
     hasFinish:[...panel.querySelectorAll('button')].some(b=>/Finish/i.test(b.textContent||'')),
     hasRoute:[...panel.querySelectorAll('button')].some(b=>/Go to My Seekers/i.test(b.textContent||'')),
     path:location.pathname};
@@ -71,10 +74,11 @@ const settle=async(p,ms=6000)=>{
       if(k===last){rep++;}else{rep=0;last=k;}
       if(rep>=2){seq.push('STUCK:'+k);break;}
       seq.push(k);
+      ok(!!st.title,`run ${run} step has a readable instruction`);
       if(st.hasRoute&&!st.tq){await page.getByRole('button',{name:/Go to My Seekers/i}).first().click();await page.waitForTimeout(1600);continue;}
       // Key on the quest target, never on the panel's rendered text. The
       // panel gained a location breadcrumb above the title when the tutorial
-      // started teaching where you are, so `title` is now the breadcrumb and
+      // started teaching where you are, so the old title reader returned it and
       // a /send a message/ match here silently stopped firing — the step then
       // fell through to the generic click, which pressed Send on an empty box
       // and reported the tutorial as stuck when it was not.

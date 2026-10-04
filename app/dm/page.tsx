@@ -350,7 +350,7 @@ function Dashboard() {
                             because it is a person asking for something rather
                             than a task the Guide set themselves. */}
                         {unprayed.length > 0 && (
-                          <span className="font-semibold" style={{ color: '#7C3AED' }}>
+                          <span data-prayer-waiting className="font-semibold" style={{ color: '#7C3AED' }}>
                             🙏 asked for prayer
                             {unprayed.length > 1 ? ` ×${unprayed.length}` : ''}
                           </span>

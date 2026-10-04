@@ -49,9 +49,10 @@ styles, and every selector starts with that look's root attribute. Styles are
 screen-only; printed pages keep their existing design. Shared global styles,
 Tailwind configuration and Classic's markup and classes are unchanged.
 
-FreshMenu renders nothing unless one of the three new looks is chosen. The original MenuList rendering and Classic desktop layout remain in place.
+FreshMenu renders nothing unless an optional look is chosen. The original MenuList rendering and Classic desktop layout remain in place.
 
-The three decorative SVGs in `public/themes/` are original native artwork.
+The three landscapes and five Aero illustrations in `public/themes/` are
+original native artwork made for this app.
 They have no external references, text, scripts, member details or new fonts.
 Greeting text sits on an opaque panel beside the artwork. No dependency or
 database change is needed.
@@ -61,7 +62,8 @@ tab until reload. The component tree and the page colors use the same choice.
 
 ## Review and validation
 
-Run `npm run verify`, then start the production build and run:
+Run `npm run verify:all` for the complete standard gate. To review these looks
+on the second engine, start the production build, set `E2E_BROWSER=webkit`, and run:
 
 ```sh
 node tests/e2e/fresh-looks.js 4414
@@ -116,3 +118,19 @@ Settings' buttons and the "Which Beacon is this" box used inline white
 backgrounds with class-coloured text, which read at 1.1:1 under Focus; they now
 use `bg-white` and `bg-gray-50`, and `tests/text-and-ground-change-together.mjs`
 refuses the pattern.
+
+## Texture and small details
+
+The optional looks show their local landscape previews above the Look choices.
+Beacon uses a daylight halo and water reflections, Study uses a small paper
+pattern and window light, and Focus uses moonlight and a night reflection.
+These are original native SVG shapes and gradients, with no raster downloads,
+filters, animation, dependencies or external assets. The greeting and room text
+remain on solid surfaces, including when a desk palette recolours them.
+
+The Home masthead follows each look's header colour. Its secondary text stays
+opaque white so it clears normal-text contrast. Focus's waiting-prayer label
+uses a lighter violet on both the sample and live Guide screens. The added
+data attributes draw nothing themselves; Classic's component classes and Look
+choices are unchanged. The fresh-looks browser walk checks the actual Guide
+prayer label, Home banner text, local previews and Classic restoration.

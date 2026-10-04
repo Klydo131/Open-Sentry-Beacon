@@ -74,13 +74,18 @@ const readDemo = (page) => page.evaluate(() => ({
   // Change something inside the tutorial, so a leak would be visible.
   await page.goto(`${BASE}/dm/pair-john`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);
+  // This test edits the tutorial's data, independently of its current step.
+  // Use the real collapse control so the teaching panel cannot cover Journey.
+  const shrink = page.getByRole('button', { name: 'Shrink tutorial', exact: true });
+  if (await shrink.isVisible()) await shrink.click();
   // The sections of this page are a drop-down (30 September 2026).
-  await openRoom(page, /Journey/i);
+  ok(await openRoom(page, /Journey/i), 'Journey opens through its real menu');
   const advance = page.getByRole('button', { name: /Advance to/i }).first();
-  const changed = await advance.count() > 0;
-  if (changed) { await advance.click(); await page.waitForTimeout(1300); }
+  await advance.waitFor({ state: 'visible' });
+  await advance.click();
+  await page.waitForTimeout(1300);
   const mutated = await readDemo(page);
-  ok(changed && mutated.stages !== during.stages,
+  ok(mutated.stages !== during.stages,
      `something was changed inside the tutorial, so a leak would show (${mutated.stages})`);
 
   // ---- Finish it ----------------------------------------------------------

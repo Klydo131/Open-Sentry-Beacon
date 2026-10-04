@@ -40,6 +40,7 @@ const REAL_ERROR = "TypeError: undefined is not an object (evaluating 'a.b')";
 function pretendPage() {
   const page = new EventEmitter();
   const mainFrame = {};
+  const documentRequest = { isNavigationRequest: () => true, frame: () => mainFrame };
   page.mainFrame = () => mainFrame;
   let clock = 0;
   const errors = pageErrors(page, () => clock);
@@ -47,7 +48,9 @@ function pretendPage() {
     errors,
     threw: (message) => page.emit('pageerror', new Error(message)),
     wait: (ms) => { clock += ms; },
-    navigate: () => page.emit('framenavigated', mainFrame),
+    navigate: () => { page.emit('request', documentRequest); page.emit('framenavigated', mainFrame); },
+    changeHistory: () => page.emit('framenavigated', mainFrame),
+    failNavigation: () => { page.emit('request', documentRequest); page.emit('requestfailed', documentRequest); page.emit('framenavigated', mainFrame); },
     navigateEmbeddedFrame: () => page.emit('framenavigated', {}),
   };
 }
@@ -81,6 +84,16 @@ const CASES = [
     errors: 1,
   },
   {
+    name: 'a history or hash change does not cancel a request: counted',
+    steps: (p) => { p.threw(SW); p.wait(20); p.changeHistory(); },
+    errors: 1,
+  },
+  {
+    name: 'a failed document navigation cannot forgive an error: counted',
+    steps: (p) => { p.threw(SW); p.wait(20); p.failNavigation(); },
+    errors: 1,
+  },
+  {
     name: 'the same words for another address: counted',
     steps: (p) => { p.threw(ELSEWHERE); p.wait(20); p.navigate(); },
     errors: 1,
@@ -91,8 +104,33 @@ const CASES = [
     errors: 1,
   },
   {
+    name: 'an unrelated local API error followed by a page load: counted',
+    steps: (p) => { p.threw('Fetch API cannot load http://localhost:49222/api/posts due to access control checks.'); p.wait(20); p.navigate(); },
+    errors: 1,
+  },
+  {
+    name: 'a local release-like filename is still another path: counted',
+    steps: (p) => { p.threw('Cannot load http://localhost:49222/sw.js.map due to access control checks.'); p.wait(20); p.navigate(); },
+    errors: 1,
+  },
+  {
+    name: 'a broken local build asset followed by a page load: counted',
+    steps: (p) => { p.threw('Cannot load http://localhost:49222/_next/static/broken.js due to access control checks.'); p.wait(20); p.navigate(); },
+    errors: 1,
+  },
+  {
+    name: 'a release filename in another directory is not the release check: counted',
+    steps: (p) => { p.threw('Cannot load http://localhost:49222/uploads/version.json due to access control checks.'); p.wait(20); p.navigate(); },
+    errors: 1,
+  },
+  {
     name: 'forgiving one does not forgive the next one',
     steps: (p) => { p.threw(SW); p.wait(20); p.navigate(); p.wait(2000); p.threw(SW); },
+    errors: 1,
+  },
+  {
+    name: 'a stale error survives later navigations and a new cancelled check',
+    steps: (p) => { p.threw(SW); p.wait(CUT_SHORT_MS + 1); p.navigate(); p.threw(VERSION); p.wait(20); p.navigate(); },
     errors: 1,
   },
   {

@@ -81,6 +81,7 @@ export function LiveBillboard({ churchName, between }: {
       {/* Masthead */}
       <div
         className="overflow-hidden rounded-2xl p-6 text-white sm:p-8"
+        data-church-masthead
         style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #2b3d6b 100%)` }}
       >
         <p className="text-sm font-semibold uppercase tracking-wider text-white/50">Church home</p>

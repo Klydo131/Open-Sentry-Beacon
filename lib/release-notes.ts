@@ -18,6 +18,25 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-tutorial-talk-arrives',
+    date: '2026-10-04',
+    title: 'Keep your tutorial conversation open',
+    items: [
+      'The tutorial keeps Talk open while its typing box loads, so you can send a message without opening the conversation again.',
+      'Prayer requests are easier to read in Dark Aero, and Settings pictures stay tidy when moving between looks.',
+    ],
+  },
+  {
+    id: '2026-10-04-look-details',
+    date: '2026-10-04',
+    title: 'A little more character in your chosen look',
+    items: [
+      'Beacon has softer daylight, Study has warm paper details, and Focus has a quiet moonlit landscape. Picture previews help you choose in Settings.',
+      'Church banners follow your chosen look, and prayer requests are easier to read in Focus. Classic keeps its familiar appearance.',
+      'The tutorial makes room for the control it is showing you.',
+    ],
+  },
+  {
     id: '2026-10-04-frutiger-aero',
     date: '2026-10-04',
     title: 'Five new Frutiger Aero looks',

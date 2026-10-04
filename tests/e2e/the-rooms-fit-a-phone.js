@@ -340,7 +340,7 @@ async function go(page, locator, url) {
        && (ownLook ? !!geo.sheet && geo.reportTop - geo.sheet.top < 48 : geo.reportTop < geo.vh / 3),
        `bubble (${label}): Report is at the top of it (${geo.reportTop}px${ownLook ? `, the panel at ${geo.sheet?.top}px` : ''})`);
     await page.getByRole('button', { name: 'Close the chat' }).first().click();
-    await page.waitForTimeout(500);
+      await page.locator('[data-talk-sheet]').waitFor({ state: 'detached', timeout: 4000 }).catch(() => {});
     ok(!(await page.locator('[data-talk-sheet]').count())
        && (ownLook ? (await sidebar(page).isVisible()) && !(await bar(page).isVisible()) : await bar(page).isVisible()),
        `bubble (${label}): closing it puts the page${ownLook ? ' and the rooms' : ' and the bar'} back`);
