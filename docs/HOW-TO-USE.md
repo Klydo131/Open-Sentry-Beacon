@@ -104,6 +104,30 @@ are in and how many there are; tap it to see them all, then tap one to go there.
 
 ![A folder list, open. It says you are in My Guide, 1 of 4, and lists the rest.](screenshots/walkthrough/20-subrooms.png)
 
+### Music
+
+**Music**, in the Menu, is for everybody: the choir, and anybody who loves
+music. Everything in it happens on your phone, and nothing is sent anywhere. It
+has four folders.
+
+- **Listen** plays your own music and videos, in playlists if you like, and has
+  calming sounds for the background. Your music is still in My Files as well,
+  and each file there has its own Play button for a quick listen.
+- **Tuner** tells you which note you are singing or playing and whether it is
+  flat or sharp. Tap **Start listening**; your phone asks once whether the app
+  may use the microphone. Tap **Stop listening** when you are done. It records
+  nothing. **Starting note** plays a note for the choir, like a pitch pipe.
+- **Conductor** keeps a steady beat and draws the conductor's hand for 2, 3, 4
+  or 6 beats. Tap **Tap the beat** a few times in time and the tempo follows
+  you. Untick **Sound the clicks** to follow the hand in silence.
+- **Pieces** keeps your choir's music. **Scan a page**: take a photo of a printed
+  page, drag the four dots onto its corners, and tap **Make a clean page**.
+  **Open a score file**: a MusicXML file from MuseScore, Sibelius, Finale or
+  Dorico. Choose **Your part** to hear it louder, slow it down, and tap the notes
+  to start from anywhere.
+
+![The Music room's Conductor. The pattern for four beats, numbered where the hand falls, with the tempo beside it.](screenshots/walkthrough/40-music-room.png)
+
 ---
 
 ## Part 2 — If you are an Explorer

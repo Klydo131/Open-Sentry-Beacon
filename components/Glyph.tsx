@@ -589,3 +589,14 @@ export function ReactGlyph(props: GlyphProps) {
     </Svg>
   );
 }
+
+/** Two quavers beamed together: the Music room. */
+export function MusicGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 17.5V5.5l11-2.5v12" />
+      <ellipse cx="6.5" cy="17.5" rx="2.5" ry="2" />
+      <ellipse cx="17.5" cy="15" rx="2.5" ry="2" />
+    </Svg>
+  );
+}

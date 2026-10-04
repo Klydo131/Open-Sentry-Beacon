@@ -419,6 +419,18 @@ const SHOTS = [
       await p.evaluate(() => window.scrollBy(0, -90));
       await settle(p, 600);
     } },
+  // The Music room, 4 October 2026: "another room for music for music lovers
+  // and choir". The Conductor, with the baton drawn at rest on beat one.
+  { file: '40-music-room.png', what: 'The Music room: the Conductor folder, the baton pattern and the tempo', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.goto(`${BASE}/music?room=conductor`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      // The baton and the tempo under it, clear of the bar along the bottom.
+      await p.locator('[data-baton]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy(0, -24));
+      await settle(p, 600);
+    } },
 ];
 
 /** Maria plans three nights of meetings for shots 28 to 30: invented names only. */

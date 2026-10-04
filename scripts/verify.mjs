@@ -664,6 +664,11 @@ const staticChecks = [
   // No needless work in the frame a screen opens (4 October 2026: "can we even
   // make our UI animations smoother please").
   ['screens open without a hitch', 'tests/screens-open-without-a-hitch.mjs'],
+  // The Music room (4 October 2026): a tuner, a conductor's beat, a page
+  // scanner and a score to learn a part from, with the player moved out of
+  // My Files. Hostile scores and zips, the microphone let go, nothing sent.
+  // The browser half is tests/e2e/the-music-room.js.
+  ['the music room', 'tests/the-music-room.mjs'],
   // Plan and show, test, polish, and the owner is aware before anything
   // reaches main, for people and AI tools alike (30 September 2026).
   ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],

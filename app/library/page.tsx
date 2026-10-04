@@ -28,8 +28,6 @@ import { HeartGlyph, SearchGlyph } from '@/components/Glyph';
 // because renaming either would touch every screen to settle an argument this
 // comment settles.
 import { RoomTabs, useRoom as useSubroom, type Room } from '@/components/Rooms';
-import { Playlists } from '@/components/Playlists';
-import { PlayerPanel } from '@/components/PlayerBar';
 import { useRoom } from '@/lib/room-theme';
 import { saveFilesFromInput, savedMessage } from '@/lib/save-media';
 import { useDemo } from '@/lib/demo/store';
@@ -38,7 +36,8 @@ import { TabBar } from '@/components/TabBar';
 import { useIsLive } from '@/lib/tutorial';
 import { STARTER_KIT, starterKitFor } from '@/lib/starter-kit';
 import type { Material } from '@/lib/types';
-import { PlayGlyph } from '@/components/Glyph';
+import { MusicGlyph, PlayGlyph } from '@/components/Glyph';
+import Link from 'next/link';
 
 const ICON: Record<string, string> = {
   pdf: '📄',
@@ -557,13 +556,24 @@ export default function LibraryPage() {
             <p className="mt-2 text-sm leading-relaxed text-gray-600">Files and links below are stored only on this device. {APP_SHORT_NAME} does not upload them to a server.</p>
           </div>
 
+          {/* THE PLAYER MOVED TO THE MUSIC ROOM on 4 October 2026 ("take out the
+              audio tools from the library"): the full player, both kinds of
+              playlist and the calming sounds. The files did not move, and each
+              one here keeps its own Play button for a quick listen. */}
           <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-            <PlayerPanel
-              vault={items}
-              theme={theme}
-              onAddMedia={() => fileRef.current?.click()}
-              onVaultChanged={() => void refresh()}
-            />
+            <Card className="p-5" data-panel="music-moved">
+              <h3 className="flex items-center gap-2 text-xl font-bold text-navy"><MusicGlyph size={22} /> Music has its own room</h3>
+              <p className="mt-1 text-sm text-gray-600">
+                The media player, playlists and calming sounds are in the Music room now, with a tuner and a
+                conductor&rsquo;s beat for the choir. Your music is still here, and each file still plays on its own.
+              </p>
+              <Link
+                href="/music"
+                className="tap-sm mt-4 inline-flex items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
+              >
+                Open the Music room
+              </Link>
+            </Card>
 
             <Card className="p-5">
               <h3 className="text-xl font-bold text-navy">Add to this device</h3>
@@ -602,10 +612,6 @@ export default function LibraryPage() {
           </div>
 
           {toast && <p role="status" className="mt-4 rounded-xl bg-navy px-4 py-3 text-center font-semibold text-white">{toast}</p>}
-
-          {ready && items.some((item) => item.type === 'audio' || item.type === 'video') && (
-            <div className="mt-5"><Playlists items={items} onRefresh={refresh} /></div>
-          )}
 
           <div className="mt-5">
             {!ready ? (

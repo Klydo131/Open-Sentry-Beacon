@@ -161,6 +161,12 @@ export function railGroupsFor(
   // accessible to all devices, offline and online").
   const thisSabbath = { href: '/sabbath', label: 'This Sabbath', icon: '🗓️' };
 
+  // MUSIC, for everybody, asked for on 4 October 2026: "another room for music
+  // for music lovers and choir". The player, playlists and calming sounds moved
+  // here from My Files, beside a tuner, a conductor's metronome and the
+  // choir's pieces. Nothing in it touches the church's database.
+  const music = { href: '/music', label: 'Music', icon: '🎵' };
+
   if (role === 'ds') {
     return [
       {
@@ -170,6 +176,7 @@ export function railGroupsFor(
           { href: '/ds', label: 'My Journey', icon: '🎯' },
           thisSabbath,
           studyRoom,
+          music,
           myFiles,
         ],
       },
@@ -186,6 +193,7 @@ export function railGroupsFor(
           { href: '/dm', label: 'My Explorers', icon: '🤝', badge: counts.seekers },
           office,
           thisSabbath,
+          music,
           myFiles,
         ],
       },
@@ -202,6 +210,7 @@ export function railGroupsFor(
         { href: '/admin', label: 'Admin', icon: '🛡️', badge: counts.approvals },
         office,
         thisSabbath,
+        music,
         myFiles,
         cases,
       ],

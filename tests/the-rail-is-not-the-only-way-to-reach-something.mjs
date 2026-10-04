@@ -21,8 +21,9 @@
 // home that is not behind the same gate.
 //
 // The player is the worked example of doing it right: PlayerStrip is in the
-// rail AND PlayerPanel is in the Library room, so a phone can still play
-// something. The pocket had no such home until it was given one.
+// rail AND PlayerPanel is in the Music room (in My Files until 4 October 2026),
+// so a phone can still play something. The pocket had no such home until it
+// was given one.
 //
 //   node tests/the-rail-is-not-the-only-way-to-reach-something.mjs
 // ---------------------------------------------------------------------------
@@ -97,10 +98,15 @@ if (hiddenBelow) {
       return uses.some((u) => new RegExp(`${breakpoint}:hidden`).test(u));
     });
 
+    // A page, or a room component a page draws whole (components/music is the
+    // Music room, drawn by app/music/page.tsx at every width).
     const elsewhere = panel.alsoSatisfiedBy
-      ? fs.readdirSync(path.join(root, 'app'), { recursive: true })
-          .filter((f) => typeof f === 'string' && f.endsWith('page.tsx'))
-          .some((f) => read(path.join('app', f)).includes(panel.alsoSatisfiedBy))
+      ? [
+          ...fs.readdirSync(path.join(root, 'app'), { recursive: true })
+            .filter((f) => typeof f === 'string' && f.endsWith('page.tsx'))
+            .map((f) => path.join('app', f)),
+          ...fs.readdirSync(path.join(root, 'components/music')).map((f) => path.join('components/music', f)),
+        ].some((f) => read(f).includes(`<${panel.alsoSatisfiedBy}`))
       : false;
 
     ok(placed || elsewhere,

@@ -239,6 +239,12 @@ export default function PrivacyPage() {
             <li><strong>Files you save under <em>On this device</em></strong> in My Files
               stay on your phone and are passed straight to the other person; they never
               reach a server.</li>
+            <li><strong>The Music room</strong> works entirely on your phone. Its tuner asks
+              to use your microphone only when you tap Start listening, measures the sound
+              there and throws it away, and lets go of the microphone when you stop, leave
+              the tuner, or your phone locks; nothing is recorded or sent. A page you scan
+              is kept on your phone as the clean page only, never the photo, and scores you
+              open are kept on your phone too.</li>
           </ul>
         </Card>
 

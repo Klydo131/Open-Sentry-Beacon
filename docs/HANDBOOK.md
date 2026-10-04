@@ -851,7 +851,7 @@ There is one player, in two sizes, and they are two views of the same thing rath
 
 **The small one** sits in the right-hand column of every room. Shut, it shows what is playing and the volume. The **⋯** at its top right opens it, and it remembers which you chose on that device. Open, it has the same three tabs as the full one.
 
-**The full one** is the first thing on **My Library**, and it is the only place it appears. It used to sit on My Journey and on a Guide's workspace as well, where it was the largest card on a screen meant to be about somebody's next step.
+**The full one** is the first thing in the **Music** room, in its **Listen** folder, and it is the only place it appears. It moved there from My Files on 4 October 2026, with the playlists and the calming sounds (see *The Music room* below); each file in My Files keeps its own Play button for a quick listen. Before that it had also sat on My Journey and on a Guide's workspace, where it was the largest card on a screen meant to be about somebody's next step.
 
 It is a real player, not a play button. Both sizes have:
 
@@ -862,7 +862,7 @@ It is a real player, not a play button. Both sizes have:
 
 Pressing previous once restarts the track you are on, the way every player people already use behaves. Pressing it again goes back a track.
 
-**Video plays too, with a picture.** A video's picture appears in whichever player you are looking at, and follows you: start one in the Library, go back to your room, and it keeps playing with its picture in the rail.
+**Video plays too, with a picture.** A video's picture appears in whichever player you are looking at, and follows you: start one in the Music room, go back to your room, and it keeps playing with its picture in the rail.
 
 Three tabs, in the order most people want them.
 
@@ -870,15 +870,32 @@ Three tabs, in the order most people want them.
 - **Playlists** are your own, saved on the device and never uploaded: name one, then add whatever is playing to it. A playlist can mix ambience and your own recordings, so rainfall behind a sermon is one list.
 - **Ambience** is **made on the device as it plays**. There is no file to download, it costs no data, and it works with no signal. It has no progress bar, because it has no end; the player says so rather than showing a bar that never moves. It comes in **two groups, and the split is the point**: *Calm* (rainfall, distant surf, night wind) is made to sit with while you read, and *White noise* (soft hush, plain hush) is brighter and flatter to cover the people talking around you. They used to be one list of three, and people looking for something restful kept landing on the flattest thing in it and reporting that the sound was unpleasant. Each one now says what it sounds like underneath its name, including the honest warning on the harshest.
 
-Both sizes drive the same element, so starting a track in the Library and walking back to your room keeps it playing.
+Both sizes drive the same element, so starting a track in the Music room and walking back to your room keeps it playing.
 
 What somebody listens to while they read is nobody else's business, which is why the vault and the playlists stay on the device rather than in the church's database.
+
+### The Music room
+
+Asked for on 4 October 2026: "another room for music for music lovers and choir". **Music** is a room for every role, in the Menu and down the left on a computer, and it works the same on the live app and in the sample church because it never touches the church's database. Its four folders:
+
+- **Listen**: the full player above, its playlists, and the calming sounds. Music added here is saved with the rest of your files on the device, so My Files lists it too.
+- **Tuner**: sing or play a held note and it names the note (A, C♯) and its octave, with a needle that leans left when you are flat and right when you are sharp, and says so in words. **Concert pitch** moves A from 440 Hz (anything from 400 to 480) for an instrument tuned differently, and the phone remembers the choice. **Starting note** plays a note for two seconds, like a pitch pipe.
+- **Conductor**: a metronome from 30 to 240 beats a minute, with its Italian name (Largo, Andante, Allegro), and a drawing of the conductor's hand for 2/4, 3/4, 4/4 and 6/8 that falls into each beat. **Tap the beat** sets the tempo from your own taps. Untick **Sound the clicks** to follow the hand in silence. The screen stays on while it runs.
+- **Pieces**: **Scan a page** turns a photo of printed music into a clean page: straightened, cropped to the paper, black on white, even with a shadow across it. **Open a score file** reads MusicXML (.musicxml, .xml, or compressed .mxl) and plays every part, with **Your part** louder, any part silent, any tempo, from any beat you tap. Both are kept on the phone.
+
+> **GOOD TO KNOW** · The microphone, and what is kept
+>
+> The tuner asks for the microphone only when **Start listening** is tapped. It measures the sound on the phone and throws it away: nothing is recorded, kept or sent. It lets go of the microphone on **Stop listening**, on leaving the Tuner, and when the phone locks or another app comes to the front, which turns the phone's recording light off. A scanned page is kept as the clean page only, never the photo, so nothing the camera wrote into the photo (such as where it was taken) is kept.
+
+> **GOOD TO KNOW** · What is not there yet
+>
+> The score is drawn as notes on a strip (higher notes higher, longer notes longer), not as printed music: printed notation needs a library this app's security rules do not allow. A scanned page does not play; turning a photo into notes is a decision the owner has not made yet. `docs/MUSIC-RESEARCH.md` has both reasons in full.
 
 ### How you get around: Menu, People, My Files
 
 On a phone and an iPad, a bar along the bottom of the screen has three words on it, and it **is** the navigation. On a computer the same rooms are listed down the left side instead, and a light bar runs across the top (see *The look* below). So does a large iPad turned sideways, which is as wide as a laptop: the owner chose to keep the sidebar there (3 October 2026, "keep the sidebar on large iPads"):
 
-- **Menu** lists every room you have, written out: Home (with its **Blog** and **Announcements** folders), your own screen, **This Sabbath**, My Files; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. **Signing out ends that sign-in for good**, not only on the screen in front of you: the app tells the sign-in server too, for this device only, so your other devices stay signed in. If the phone is offline it still signs out, and the server's copy runs out on its own. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
+- **Menu** lists every room you have, written out: Home (with its **Blog** and **Announcements** folders), your own screen, **This Sabbath**, **Music**, My Files; the **Study Room** for Explorers; the **Office** for Guides and leadership; and **Admin Reports** for leadership. Your profile is at the top; Settings is under **You**; the way out (Sign out) is at the bottom. **Signing out ends that sign-in for good**, not only on the screen in front of you: the app tells the sign-in server too, for this device only, so your other devices stay signed in. If the phone is offline it still signs out, and the server's copy runs out on its own. The sample church also has **Mail** under You, a pretend inbox; a church's own app does not.
 - **People** opens your own people: a Guide's Explorers, an Explorer's Guide, a Director's Admin.
 - **My Files** opens your own files.
 

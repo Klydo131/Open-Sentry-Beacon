@@ -18,6 +18,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-music-room',
+    date: '2026-10-04',
+    title: 'A Music room, for the choir and everyone who loves music',
+    items: [
+      'Music is a new room for everybody, in your Menu and down the left on a computer.',
+      'Listen: the media player, playlists and calming sounds are here now. Your music stays in My Files too, and each file there still has its own Play button.',
+      'Tuner: sing or play a note and see which note it is and whether it is flat or sharp. There is a starting note for the choir, like a pitch pipe, and you can change concert pitch from A 440 for an older organ.',
+      'Conductor: a steady beat with a picture of the conductor\'s hand for 2, 3, 4 and 6 beats. Tap the beat to set the tempo, or turn the clicks off and follow the hand in silence.',
+      'Pieces: photograph a page of music and get it back straight and clean, black on white. Or open a MusicXML score file to hear every part, make yours louder, slow it down and start from anywhere.',
+      'Everything in the Music room happens on your phone. The tuner uses the microphone only while it is listening, records nothing and sends nothing.',
+    ],
+  },
+  {
     id: '2026-10-04-frutiger-aero',
     date: '2026-10-04',
     title: 'Five new Frutiger Aero looks',

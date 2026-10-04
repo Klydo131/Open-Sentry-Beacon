@@ -6,6 +6,9 @@
 // be testing the stubs. The one thing worth knowing — does the next track
 // start? — only a browser can answer.
 //
+// The playlists live in the Music room's Listen folder (they were in My Files
+// until 4 October 2026), which needs somebody signed in to the sample church.
+//
 //   npm run build && node scripts/run-next.mjs start -p 4330
 //   node tests/e2e/playlists.mjs 4330
 
@@ -14,6 +17,7 @@ import fs from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
+const { signIn } = require('./_looks.js');
 
 const PORT = process.argv[2] || '4330';
 const BASE = `http://localhost:${PORT}`;
@@ -41,7 +45,8 @@ const browser = await chromium.launch(executablePath ? { executablePath } : {});
 const context = await browser.newContext({ viewport: { width: 1100, height: 900 }, serviceWorkers: 'block' });
 const page = await context.newPage();
 
-await page.goto(`${BASE}/library`, { waitUntil: 'networkidle' });
+await signIn(page, BASE, 'Maria Santos');
+await page.goto(`${BASE}/music?room=listen`, { waitUntil: 'networkidle' });
 
 // Three tiny WAVs written straight into the app's own IndexedDB store, because
 // the point is to exercise the real read path — getBlob() and an <audio> element

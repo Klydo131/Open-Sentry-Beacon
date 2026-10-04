@@ -1,0 +1,221 @@
+'use client';
+
+// A score to learn a part from: every line of a MusicXML file, drawn as notes
+// on a strip (higher notes higher, longer notes longer) and played by the
+// phone, with your own part louder, any part silent, at any tempo, from any
+// point you tap.
+//
+// NOT PRINTED NOTATION, AND THAT IS A DECISION WITH A REASON. Drawing real
+// staves, clefs and beams needs an engraving library, and the one built for
+// the web (OpenSheetMusicDisplay) brings 82 packages, a megabyte and a half
+// of code, and evaluated code this app's security rules forbid
+// (docs/MUSIC-RESEARCH.md). A singer learning a part needs to hear it and
+// see where it goes; the printed page is what the scanner is for.
+//
+// Everything a person wrote into the file (titles, part names) reaches the
+// screen as text, never as markup.
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Card } from '@/components/ui';
+import { useScorePlayer, type Mix } from '@/lib/music/score-player';
+import { midiName } from '@/lib/music/notes';
+import { TEMPO_MAX, TEMPO_MIN } from '@/lib/music/beat';
+import type { Score } from '@/lib/music/musicxml';
+
+/** A quarter note's width on the strip, and a semitone's height. */
+const PX = 28;
+const ROW = 6;
+const PAD = 10;
+const xOf = (quarter: number) => PAD + quarter * PX;
+
+const MIXES: Mix[] = ['normal', 'loud', 'off'];
+const MIX_LABEL: Record<Mix, string> = { normal: 'Normal', loud: 'Louder', off: 'Silent' };
+
+function lowHigh(midis: number[]): [number, number] | null {
+  if (!midis.length) return null;
+  let low = midis[0];
+  let high = midis[0];
+  for (const m of midis) { if (m < low) low = m; if (m > high) high = m; }
+  return [low, high];
+}
+
+function minutes(quarters: number, bpm: number): string {
+  const s = Math.round((quarters * 60) / bpm);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+export function ScoreView({ score, onClose }: { score: Score; onClose: () => void }) {
+  const player = useScorePlayer(score);
+  const { playing, tempo, mix, position } = player;
+  const [mine, setMine] = useState('');
+  const [from, setFrom] = useState(0);
+  const head = useRef<SVGLineElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+
+  const [low, high] = useMemo(
+    () => lowHigh(score.lines.flatMap((l) => l.notes.map((n) => n.midi))) ?? [60, 72],
+    [score],
+  );
+  const yOf = (midi: number) => PAD + (high - midi) * ROW;
+  const width = xOf(Math.max(1, score.length)) + PAD;
+  const height = yOf(low) + ROW + PAD;
+
+  // The playhead, every frame while playing, and the strip scrolled to keep it in view.
+  useEffect(() => {
+    const line = head.current;
+    if (!playing || !line) { line?.setAttribute('visibility', 'hidden'); return; }
+    let frame = 0;
+    const draw = () => {
+      const at = position();
+      if (at !== null) {
+        const x = String(xOf(at));
+        line.setAttribute('x1', x);
+        line.setAttribute('x2', x);
+        line.setAttribute('visibility', 'visible');
+        const box = scroller.current;
+        const px = xOf(at);
+        if (box && (px < box.scrollLeft || px > box.scrollLeft + box.clientWidth - 48)) {
+          box.scrollLeft = Math.max(0, px - 48);
+        }
+      }
+      frame = requestAnimationFrame(draw);
+    };
+    frame = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(frame);
+  }, [playing, position]);
+
+  const chooseMine = (id: string) => {
+    const changes: Record<string, Mix> = {};
+    if (mine && mine !== id) changes[mine] = 'normal';
+    if (id) changes[id] = 'loud';
+    setMine(id);
+    if (Object.keys(changes).length) player.setMix(changes);
+  };
+
+  const startAt = (event: React.MouseEvent<SVGSVGElement>) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    const quarter = Math.floor(((event.clientX - box.left) / box.width) * width / PX - PAD / PX);
+    const at = Math.max(0, Math.min(Math.floor(score.length), quarter));
+    setFrom(at);
+    if (playing) player.play(at);
+  };
+
+  const fill = (lineId: string) => {
+    if ((mix[lineId] ?? 'normal') === 'off') return { className: 'fill-slate-400', opacity: 0.25 };
+    if (lineId === mine) return { className: 'fill-teal-700', opacity: 1 };
+    return { className: 'fill-navy', opacity: 0.5 };
+  };
+  // Your part drawn last, on top of the others where they cross.
+  const drawOrder = [...score.lines].sort((a, b) => Number(a.id === mine) - Number(b.id === mine));
+
+  return (
+    <Card className="p-5" data-panel="score-view">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="break-words text-xl font-bold text-navy" data-score-title>{score.title}</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            {score.lines.length} {score.lines.length === 1 ? 'part' : 'parts'} · about {minutes(score.length, tempo)} at this tempo
+          </p>
+        </div>
+        <Button variant="ghost" onClick={() => { player.stop(); onClose(); }}>Close</Button>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        {playing
+          ? <Button variant="ghost" onClick={player.stop}>■ Stop</Button>
+          : <Button onClick={() => { player.play(from); }}>▶ Play{from > 0 ? ` from beat ${from + 1}` : ''}</Button>}
+        {from > 0 && <Button variant="ghost" onClick={() => setFrom(0)}>Back to the start</Button>}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-end gap-4">
+        <label className="block">
+          <span className="text-sm font-bold text-navy">Your part</span>
+          <select
+            id="score-mine"
+            value={mine}
+            onChange={(e) => chooseMine(e.target.value)}
+            className="tap mt-1 block rounded-xl bg-white px-4 text-base font-semibold text-navy ring-1 ring-navy/20"
+          >
+            <option value="">All parts the same</option>
+            {score.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          </select>
+        </label>
+        <div>
+          <p className="text-sm font-bold text-navy">Tempo, beats a minute</p>
+          <div className="mt-1 flex items-center gap-2">
+            <Button variant="ghost" className="px-4" onClick={() => player.setTempo(tempo - 5)} disabled={tempo <= TEMPO_MIN}>− 5</Button>
+            <p className="min-w-12 text-center text-lg font-bold tabular-nums text-navy" data-score-tempo>{tempo}</p>
+            <Button variant="ghost" className="px-4" onClick={() => player.setTempo(tempo + 5)} disabled={tempo >= TEMPO_MAX}>+ 5</Button>
+          </div>
+          {tempo !== score.tempo && (
+            <button type="button" onClick={() => player.setTempo(score.tempo)} className="mt-1 text-sm font-semibold text-teal-700 underline">
+              Back to the score&rsquo;s {score.tempo}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm text-gray-600">Tap the notes to start from that beat. Your part is drawn in green.</p>
+      <div ref={scroller} className="mt-2 overflow-x-auto rounded-xl bg-gray-50 ring-1 ring-navy/10">
+        <svg
+          width={width}
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          onClick={startAt}
+          className="block cursor-pointer"
+          role="img"
+          aria-label={`The notes of ${score.title}, every part, from left to right`}
+          data-score-roll
+        >
+          {/* A faint line at every C, named, so the strip has a way to read up and down. */}
+          {Array.from({ length: high - low + 1 }, (_, i) => low + i).filter((m) => m % 12 === 0).map((m) => (
+            <g key={m}>
+              <line x1={0} x2={width} y1={yOf(m) + ROW / 2} y2={yOf(m) + ROW / 2} className="stroke-navy/15" strokeWidth={1} />
+              <text x={2} y={yOf(m) + ROW / 2 - 2} fontSize={9} className="fill-slate-500">{midiName(m)}</text>
+            </g>
+          ))}
+          {drawOrder.map((line) => {
+            const f = fill(line.id);
+            return (
+              <g key={line.id} className={f.className} opacity={f.opacity} data-line={line.id}>
+                {line.notes.map((n, i) => (
+                  <rect key={i} x={xOf(n.start) + 0.5} y={yOf(n.midi)} width={Math.max(2, n.length * PX - 1)} height={ROW - 1} rx={1.5} />
+                ))}
+              </g>
+            );
+          })}
+          {from > 0 && <line x1={xOf(from)} x2={xOf(from)} y1={0} y2={height} className="stroke-teal-700" strokeWidth={2} strokeDasharray="4 3" />}
+          <line ref={head} x1={PAD} x2={PAD} y1={0} y2={height} className="stroke-rose-600" strokeWidth={2} visibility="hidden" data-playhead />
+        </svg>
+      </div>
+
+      <ul className="mt-5 space-y-3">
+        {score.lines.map((line) => {
+          const range = lowHigh(line.notes.map((n) => n.midi));
+          const heard = mix[line.id] ?? 'normal';
+          return (
+            <li key={line.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-3 ring-1 ring-navy/10">
+              <div className="min-w-0">
+                <p className="break-words font-bold text-navy">{line.name}</p>
+                <p className="text-sm text-gray-500">{range ? `${midiName(range[0])} to ${midiName(range[1])}` : 'No notes'}</p>
+              </div>
+              <div className="flex gap-1" role="group" aria-label={`How ${line.name} is heard`}>
+                {MIXES.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => player.setMix({ [line.id]: m })}
+                    aria-pressed={heard === m}
+                    className={`tap-sm rounded-lg px-3 text-sm font-bold ring-1 ${heard === m ? 'bg-navy text-white ring-navy' : 'bg-white text-navy ring-navy/20 hover:bg-sky-50'}`}
+                  >
+                    {MIX_LABEL[m]}
+                  </button>
+                ))}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
+  );
+}

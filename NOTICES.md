@@ -33,6 +33,22 @@ that already lives in `lib/localMedia.ts`.
 
 ---
 
+## pitchy and fft.js — the Music room's tuner
+
+**Upstream:** <https://github.com/ianprime0509/pitchy> (pitchy 4.1.0) and
+<https://github.com/indutny/fft.js> (fft.js 4.0.4, which pitchy uses)
+**Licence:** MIT, both
+
+`lib/music/tuner.ts` finds the pitch of what the microphone hears with pitchy,
+which implements the McLeod pitch method (McLeod and Wyvill, "A smarter way to
+find pitch", 2005). Used as published, pinned to an exact version and locked by
+hash; neither package runs anything when it is installed. Everything else in
+the Music room (the score reader, the zip reader, the page scanner, the
+metronome) is written for this project; `docs/MUSIC-RESEARCH.md` says what was
+looked at and why it was not used.
+
+---
+
 ## Fonts
 
 The app itself loads no web fonts: it uses each device's own system fonts.

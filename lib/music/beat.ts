@@ -1,0 +1,131 @@
+// The conductor's beat: when each click falls, which beat of the bar it is,
+// and where the baton is between them. Pure functions, no browser, so
+// tests/the-music-room.mjs runs them.
+//
+// WHY THE CLICKS ARE SCHEDULED, NOT TIMED. A browser timer (setTimeout) can
+// fire tens of milliseconds late whenever the phone is busy, and a metronome
+// that wanders by that much is worse than none: a choir hears it at once. The
+// Web Audio clock does not wander. So a cheap timer wakes every 25 ms and
+// hands the audio clock every click due in the next tenth of a second, each at
+// its exact time ("A tale of two clocks", web.dev/articles/audio-scheduling).
+// `due` below is that hand-over, written so it can be tested.
+
+export const TEMPO_MIN = 30;
+export const TEMPO_MAX = 240;
+export const TEMPO_DEFAULT = 80;
+
+export function clampTempo(bpm: number): number {
+  if (!Number.isFinite(bpm)) return TEMPO_DEFAULT;
+  return Math.min(TEMPO_MAX, Math.max(TEMPO_MIN, Math.round(bpm)));
+}
+
+/**
+ * The word printed over the music for a tempo, so a number means something to
+ * somebody who reads "Andante" on the page and not "92". The bands are the
+ * ones most metronomes print; composers disagree at the edges, and that is
+ * fine for a label.
+ */
+export function tempoName(bpm: number): string {
+  if (bpm < 66) return 'Largo';
+  if (bpm < 76) return 'Adagio';
+  if (bpm < 108) return 'Andante';
+  if (bpm < 120) return 'Moderato';
+  if (bpm < 168) return 'Allegro';
+  return 'Presto';
+}
+
+/**
+ * The patterns a conductor beats. Six is beaten as two groups of three on the
+ * page of most choir handbooks; it is drawn here as six, so a choir counting
+ * quavers in 6/8 sees every one.
+ */
+export const METERS = [2, 3, 4, 6] as const;
+export type Meter = (typeof METERS)[number];
+
+export interface Click {
+  /** On the audio clock, in seconds. */
+  at: number;
+  /** 0 for the first beat of the bar, which is accented. */
+  beat: number;
+}
+
+/** Where the scheduler has got to: the next click not yet handed over. */
+export interface BeatState {
+  nextAt: number;
+  nextBeat: number;
+}
+
+/**
+ * Every click due before `until`, and where to carry on from. One click at a
+ * time, each a beat after the last at the tempo of that moment, so changing
+ * the tempo mid-song carries on from the next beat instead of jumping.
+ */
+export function due(state: BeatState, bpm: number, meter: number, until: number): { clicks: Click[]; state: BeatState } {
+  const step = 60 / clampTempo(bpm);
+  const clicks: Click[] = [];
+  let { nextAt, nextBeat } = state;
+  while (nextAt < until && clicks.length < 64) {
+    clicks.push({ at: nextAt, beat: nextBeat % meter });
+    nextAt += step;
+    nextBeat = (nextBeat + 1) % meter;
+  }
+  return { clicks, state: { nextAt, nextBeat } };
+}
+
+/**
+ * Which beat the hand is on at `now`, and how far towards the next (0 to 1),
+ * from the clicks already handed over. Null before the first.
+ */
+export function beatAt(clicks: Click[], bpm: number, now: number): { beat: number; phase: number } | null {
+  let last: Click | undefined;
+  for (const click of clicks) if (click.at <= now) last = click;
+  if (!last) return null;
+  const step = 60 / clampTempo(bpm);
+  return { beat: last.beat, phase: Math.min(1, (now - last.at) / step) };
+}
+
+// ---- TAP TEMPO ------------------------------------------------------------
+//
+// A choir director taps the beat they want and the metronome takes it up. The
+// last four gaps are averaged, so one rushed tap does not throw it; a pause of
+// two seconds starts a new count, so yesterday's taps do not either.
+
+const TAP_FORGET_MS = 2000;
+const TAP_KEEP = 4;
+
+/** The taps to keep after one more, and the tempo they give (null until two). */
+export function tap(taps: number[], at: number): { taps: number[]; bpm: number | null } {
+  const recent = taps.length && at - taps[taps.length - 1] > TAP_FORGET_MS ? [] : taps;
+  const kept = [...recent, at].slice(-(TAP_KEEP + 1));
+  if (kept.length < 2) return { taps: kept, bpm: null };
+  const gaps = kept.slice(1).map((t, i) => t - kept[i]);
+  const mean = gaps.reduce((sum, g) => sum + g, 0) / gaps.length;
+  return { taps: kept, bpm: clampTempo(60000 / mean) };
+}
+
+// ---- THE BATON ------------------------------------------------------------
+//
+// Where a conductor's hand is on each beat of each pattern, on a 100 by 100
+// square, the way the diagrams in a choir handbook draw them: the first beat
+// always comes down to the bottom, the last always rises to the top. Drawn as
+// points, and the hand moves between them in an arc that dips to the beat, so
+// the moment of the beat is the bottom of each bounce.
+
+export const PATTERNS: Record<Meter, [number, number][]> = {
+  2: [[50, 88], [50, 22]],
+  3: [[50, 88], [84, 70], [50, 22]],
+  4: [[50, 88], [16, 66], [84, 66], [50, 22]],
+  6: [[50, 88], [32, 74], [16, 60], [84, 60], [68, 74], [50, 22]],
+};
+
+/** The hand's position at `phase` of the way from beat `beat` to the next. */
+export function batonAt(meter: Meter, beat: number, phase: number): [number, number] {
+  const points = PATTERNS[meter];
+  const [x0, y0] = points[beat % points.length];
+  const [x1, y1] = points[(beat + 1) % points.length];
+  const p = Math.min(1, Math.max(0, phase));
+  // Rise out of the beat and fall into the next one: a parabola that lifts
+  // the hand by a fifth of the square at the middle of the way.
+  const lift = 4 * p * (1 - p) * 20;
+  return [x0 + (x1 - x0) * p, y0 + (y1 - y0) * p - lift];
+}

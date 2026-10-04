@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- A test piece written for Hope Beacon's checks: two bars, four lines.
+     Public domain (CC0). It holds what the reader must get right: two voices
+     on one staff (backup), a tie across the bar, a chord, a rest, lyrics and
+     a tempo. tests/the-music-room.mjs says what each line should hold. -->
+<score-partwise version="4.0">
+  <work><work-title>Sing, my soul (test piece)</work-title></work>
+  <part-list>
+    <score-part id="P1"><part-name>Women</part-name></score-part>
+    <score-part id="P2"><part-name>Tenor</part-name></score-part>
+    <score-part id="P3"><part-name>Bass</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>2</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+      <direction><sound tempo="96"/></direction>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><lyric number="1"><text>Sing,</text></lyric></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><lyric number="1"><text>my</text></lyric></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="start"/><voice>1</voice><lyric number="1"><text>soul,</text></lyric></note>
+      <backup><duration>8</duration></backup>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><lyric number="1"><text>Sing,</text></lyric></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><lyric number="1"><text>my</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><lyric number="1"><text>soul,</text></lyric></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/><voice>1</voice></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><lyric number="1"><text>a-</text></lyric></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><lyric number="1"><text>rise!</text></lyric></note>
+      <backup><duration>8</duration></backup>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><lyric number="1"><text>a-</text></lyric></note>
+      <note><pitch><step>B</step><octave>3</octave></pitch><duration>4</duration><voice>2</voice><lyric number="1"><text>rise!</text></lyric></note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes><divisions>2</divisions></attributes>
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice></note>
+      <note><chord/><pitch><step>C</step><octave>4</octave></pitch><duration>8</duration><voice>1</voice></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>4</duration><voice>1</voice></note>
+      <note><rest/><duration>4</duration><voice>1</voice></note>
+    </measure>
+  </part>
+  <part id="P3">
+    <measure number="1">
+      <attributes><divisions>2</divisions></attributes>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><voice>1</voice></note>
+      <note><pitch><step>G</step><octave>2</octave></pitch><duration>4</duration><voice>1</voice></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice></note>
+    </measure>
+  </part>
+</score-partwise>

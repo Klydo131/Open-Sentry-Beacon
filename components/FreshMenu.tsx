@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { MenuListProps } from '@/components/MenuList';
 import { Avatar } from '@/components/ui';
-import { ChevronGlyph, CalendarGlyph, DocGlyph, FolderGlyph, PeopleGlyph } from '@/components/Glyph';
+import { ChevronGlyph, CalendarGlyph, DocGlyph, FolderGlyph, MusicGlyph, PeopleGlyph } from '@/components/Glyph';
 import { useChosenLook } from '@/components/UiTheme';
 import { isFreshLook } from '@/lib/ui-themes';
 import { emitQuest } from '@/lib/quest';
@@ -14,6 +14,7 @@ export function FreshRoomIcon({ href }: { href: string }) {
   if (href === '/mail') return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 6 9 7 9-7" /></svg>;
   if (href === '/settings') return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1" /></svg>;
   const Icon = href.startsWith('/sabbath') ? CalendarGlyph
+    : href === '/music' ? MusicGlyph
     : href === '/office' || href === '/library' ? FolderGlyph
     : href === '/dm' || href === '/admin' || href === '/ds' ? PeopleGlyph : DocGlyph;
   return <Icon size={24} />;
@@ -27,6 +28,7 @@ const descriptions: Record<string, string> = {
   '/office': 'Plans, tasks and resources',
   '/sabbath': 'Worship and preparation',
   '/library': 'Your personal files',
+  '/music': 'Listen, tune, keep the beat',
   '/study': 'Read, write and reflect',
 };
 
