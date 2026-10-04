@@ -86,6 +86,9 @@ export async function readEntry(bytes: Uint8Array, entry: Entry): Promise<Uint8A
 
   if (entry.method === 0) return data.slice(0, ceiling);
   if (entry.method !== 8) throw new ZipError('This archive is compressed in a way a score never is.');
+  if (typeof DecompressionStream === 'undefined') {
+    throw new ZipError('This browser cannot open a compressed score (.mxl). Save it as .musicxml and open that instead.');
+  }
 
   // A copy into its own buffer: Blob wants an ArrayBuffer, not a view that
   // could be shared memory.

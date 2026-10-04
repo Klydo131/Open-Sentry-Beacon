@@ -138,17 +138,17 @@ const moved = (await page.locator('ol li').allInnerTexts())[0];
 ok(/Track 2/.test(moved), `moving a track down reorders it (top is now ${moved.split('\n')[0]})`);
 
 // THE ONE THAT MATTERS: does the next track start on its own?
-await page.getByRole('button', { name: '▶ Play all' }).click();
+await page.getByRole('button', { name: 'Play all' }).click();
 await page.waitForTimeout(800);
 const first = await page.locator('text=/Track \\d of 3/').innerText().catch(() => '');
 ok(/Track 1 of 3/.test(first), `the player opens on the first track (${first})`);
 
-await page.getByRole('button', { name: 'Next ⏭' }).click();
+await page.getByRole('button', { name: 'Next', exact: true }).click();
 await page.waitForTimeout(700);
 const second = await page.locator('text=/Track \\d of 3/').innerText().catch(() => '');
 ok(/Track 2 of 3/.test(second), `Next advances the queue (${second})`);
 
-await page.getByRole('button', { name: '⏮ Previous' }).click();
+await page.getByRole('button', { name: 'Previous', exact: true }).click();
 await page.waitForTimeout(700);
 const back = await page.locator('text=/Track \\d of 3/').innerText().catch(() => '');
 ok(/Track 1 of 3/.test(back), `Previous goes back (${back})`);

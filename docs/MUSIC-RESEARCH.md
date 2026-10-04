@@ -72,6 +72,29 @@ reason comes from what the project says about itself.
 | `lib/music/pieces.ts` | Keeps pages and scores on the phone (IndexedDB `beacon-music`) | Apart from My Files; 12 MB a piece, 500 pieces; a kept score is checked again every time it is opened |
 | `lib/music/score-player.ts` | Plays the parts, one louder, one silent, any tempo | Same audio clock as the metronome; silent when the page is hidden |
 
+## Fast and light, by the owner's rule
+
+"I dont want the app to be bloated, I want the app to be fast and stable"
+(4 October 2026). So:
+
+- **Opening Music costs what opening any room costs.** Only the Listen folder
+  is in the page. The Tuner (and pitchy with it), the Conductor and Pieces (the
+  score and zip readers and the scanner) are fetched once the room has opened,
+  while the phone is idle, and kept by the service worker, so every folder
+  still opens with no signal. `/music` itself is kept for offline use with the
+  other rooms.
+- **Nothing in the room is in any other page.** My Files lost the player and the
+  playlists, and nothing of the Music room was added to the shared code every
+  page loads.
+- **The tuner works out the pitch about thirty times a second** rather than on
+  every screen frame, and tells the screen at most twenty times a second.
+- **The scanner reads the photo as grey once** and makes no array per pixel:
+  straightening a 2000 by 1500 photo went from 119 ms to 83 ms on the machine
+  that measured it (a phone is slower; the order is the same).
+- **A score of thousands of notes is drawn once.** Play, the playhead and the
+  start beat do not redraw a single note; only choosing your part or a line's
+  volume does. The playhead moves without React at all.
+
 `tests/the-music-room.mjs` runs the arithmetic, reads a test piece written for
 the purpose (`tests/fixtures/music/four-parts.musicxml`, CC0), throws hostile
 scores and archives at the readers, and reads the code for the promises in the

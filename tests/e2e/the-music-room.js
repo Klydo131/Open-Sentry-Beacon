@@ -65,7 +65,12 @@ const WATCH = () => {
   const md = navigator.mediaDevices;
   if (md && md.getUserMedia) {
     const ask = md.getUserMedia.bind(md);
-    md.getUserMedia = async (c) => { const s = await ask(c); window.__mics.push(s); return s; };
+    // window.__micDelay holds the answer back, as a person reading the
+    // browser's question does, so the walk can leave before it comes.
+    md.getUserMedia = async (c) => {
+      if (window.__micDelay) await new Promise((r) => setTimeout(r, window.__micDelay));
+      const s = await ask(c); window.__mics.push(s); return s;
+    };
   }
   // about:blank has no storage, and this runs there too.
   try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864000000)); } catch { /* not a page of the app */ }
@@ -191,6 +196,19 @@ async function deskPhoto(page) {
         await page.waitForTimeout(200);
         ok((await micsLive(page)) === 0, `${size}: the phone locking lets the microphone go`);
         await page.evaluate(() => { delete document.hidden; });
+        // Left while the browser was still asking: the answer arrives after,
+        // and the microphone must not start listening behind the person's back.
+        await page.reload({ waitUntil: 'networkidle' });
+        await openRoom(page, 'Tuner');
+        await page.evaluate(() => { window.__micDelay = 1200; });
+        await page.getByRole('button', { name: /Start listening/ }).click();
+        await page.waitForTimeout(150);
+        await openRoom(page, 'Conductor');
+        await page.waitForTimeout(1700);
+        ok((await page.evaluate(() => window.__mics.length)) === 1 && (await micsLive(page)) === 0,
+           `${size}: a microphone allowed after leaving the Tuner is let go at once`);
+        await page.evaluate(() => { window.__micDelay = 0; });
+        await openRoom(page, 'Tuner');
       } else {
         await page.waitForTimeout(1500);
         const listening = await page.getByRole('button', { name: /Stop listening/ }).isVisible();
@@ -256,6 +274,9 @@ async function deskPhoto(page) {
       await page.locator('[data-panel="score-view"]').getByRole('button', { name: '■ Stop' }).click();
       await page.waitForTimeout(200);
       ok((await clocksOpen(page)) === 0, `${size}: Stop closes the score's audio`);
+      await page.locator('#score-from').fill('3');
+      ok(/beat 4/.test(await page.locator('[data-panel="score-view"]').getByRole('button', { name: /Play/ }).innerText()),
+         `${size}: the start beat can be chosen without tapping the notes`);
       ok((await sideways(page)) <= 1, `${size}: the score fits; only its strip of notes scrolls`);
       await page.locator('[data-panel="score-view"]').getByRole('button', { name: 'Close' }).click();
       ok(/Sing, my soul/.test(await say(page, '[data-piece-list]')), `${size}: the score is kept in Pieces`);

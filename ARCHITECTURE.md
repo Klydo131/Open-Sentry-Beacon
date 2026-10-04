@@ -85,6 +85,7 @@ ships and the code that is checked.
 | `lib/study/` | The Explorer's study room. AFFiNE's editor is MIT and its server is not, so the workspace and the place documents are kept are ours: `workspace.ts` implements BlockSuite's `Workspace` over its public pieces, `doc-source.ts` keeps pages in `study_docs`, `memory-source.ts` is the tutorial's, and forgets. |
 | `lib/quest.ts` | The guided tutorial: one walk per role. |
 | `lib/talk/` | The conversation's own rules, shared by both halves: days and runs (`thread.ts`), the six reactions (`reactions.ts`, the same six the database allows), and recording a voice message (`voice.ts`). Drawn by `components/talk/ChatView.tsx`, which the sample chat (`components/Chat.tsx`) and the live one (`components/live/shared.tsx`) both feed. |
+| `lib/music/` | The Music room's engine, all on the phone and none of it talking to a server: notes and cents (`notes.ts`), the tuner (`tuner.ts`, pitchy), the beat and the baton (`beat.ts`, `metronome.ts`, `audio.ts`), the MusicXML and .mxl readers (`musicxml.ts`, `zip.ts`, `score-file.ts`), the page scanner (`page-scan.ts`), the score player and the kept pieces. Drawn by `components/music/`; `docs/MUSIC-RESEARCH.md` says why each part is ours. |
 | `lib/types.ts` | Every shape in the app, in one file. |
 | `supabase/migrations/` | The schema and every permission rule, in order. |
 | `supabase/functions/` | Server-side work the browser must not do — invitations. |

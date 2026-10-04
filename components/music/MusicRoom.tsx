@@ -24,12 +24,26 @@
 // The hooks also stop themselves when the phone locks or the app goes to the
 // background, so nothing here keeps listening or ticking in a pocket.
 
+import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { Listen } from '@/components/music/Listen';
-import { TunerPanel } from '@/components/music/TunerPanel';
-import { ConductorPanel } from '@/components/music/ConductorPanel';
-import { PiecesPanel } from '@/components/music/PiecesPanel';
+import { BeaconSpinner } from '@/components/BeaconLoader';
 import type { RoomTheme } from '@/lib/room-theme';
+
+// ONLY LISTEN IS IN THE PAGE ITSELF. The other three folders (the pitch
+// finder, the score and zip readers, the scanner) are fetched when the room
+// has finished opening, while the phone is idle, so opening Music costs no
+// more than opening any other room. Fetched, not merely deferred: the
+// service worker keeps what is fetched, so once the room has been opened
+// with a signal every folder opens with none.
+const loadTuner = () => import('@/components/music/TunerPanel').then((m) => m.TunerPanel);
+const loadConductor = () => import('@/components/music/ConductorPanel').then((m) => m.ConductorPanel);
+const loadPieces = () => import('@/components/music/PiecesPanel').then((m) => m.PiecesPanel);
+const opening = () => <BeaconSpinner inline label="Opening" />;
+const TunerPanel = dynamic(loadTuner, { ssr: false, loading: opening });
+const ConductorPanel = dynamic(loadConductor, { ssr: false, loading: opening });
+const PiecesPanel = dynamic(loadPieces, { ssr: false, loading: opening });
 
 const ROOMS: Room[] = [
   { id: 'listen', label: '🎧 Listen' },
@@ -40,6 +54,18 @@ const ROOMS: Room[] = [
 
 export function MusicRoom({ theme }: { theme?: RoomTheme }) {
   const [room, choose] = useRoom(ROOMS, 'beacon:music-room');
+
+  useEffect(() => {
+    const warm = () => { void loadTuner().catch(() => {}); void loadConductor().catch(() => {}); void loadPieces().catch(() => {}); };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(warm, { timeout: 4000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const id = window.setTimeout(warm, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
+
   return (
     <div className="space-y-5" data-music-room>
       <div>

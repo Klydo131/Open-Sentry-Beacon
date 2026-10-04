@@ -57,6 +57,7 @@ export function useMetronome(): Metronome {
       state.current = next;
       // Silent still keeps time: the clicks are counted, only not sounded, so
       // the baton follows the same clock either way.
+      if (!clicks.length) return;
       if (heard) for (const c of clicks) click(audio, c.at, c.beat === 0);
       recent.current = [...recent.current, ...clicks].slice(-16);
     });

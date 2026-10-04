@@ -252,6 +252,8 @@ function zip(files) {
   ok(!/connect\(audio\.destination\)|connect\(ctx\.destination\)/.test(tuner) && !/MediaRecorder/.test(tuner),
      'what the microphone hears is measured, never played back or recorded');
   ok(/echoCancellation: false/.test(tuner) && /video: false/.test(tuner), 'it asks for sound only, as it is');
+  ok(/turn\.current \+= 1/.test(tuner) && /if \(mine !== turn\.current\) \{[\s\S]*?getTracks\(\)\.forEach\(\(t\) => t\.stop\(\)\)/.test(tuner),
+     'a microphone allowed after the tuner was left is let go at once, never left listening');
   for (const f of ['lib/music/metronome.ts', 'lib/music/score-player.ts']) {
     ok(/visibilitychange/.test(code(f)) && /return \(\) => \{[\s\S]*stop\(\);/.test(code(f)), `${f}: silent when the room is left or the phone locks`);
   }
@@ -303,6 +305,13 @@ function zip(files) {
      'only the clean page is kept, never the photo (so nothing the camera wrote into it is kept either)');
   const pieces = code('components/music/PiecesPanel.tsx');
   ok(/scoreFromText\(await blob\.text\(\)/.test(pieces), 'a score kept on the phone is checked again every time it is opened');
+
+  // FAST: opening Music costs no more than another room. Only Listen is in the
+  // page; the rest arrive in idle time and are kept for offline use.
+  ok(['TunerPanel', 'ConductorPanel', 'PiecesPanel'].every((p) => new RegExp(`import\\('@/components/music/${p}'\\)`).test(room)
+     && !new RegExp(`^import \\{ ${p} \\}`, 'm').test(room)) && /requestIdleCallback/.test(room),
+     'only Listen loads with the page; the other folders load when the phone is idle');
+  ok(/'\/music'/.test(read('app/sw.js/route.ts')), 'the Music room is kept for opening with no signal');
 
   const conductor = code('components/music/ConductorPanel.tsx');
   ok(/wakeLock/.test(conductor) && /release\(\)/.test(conductor), 'the conductor keeps the screen on only while the baton moves');

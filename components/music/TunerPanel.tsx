@@ -63,7 +63,7 @@ export function TunerPanel() {
 
         <div className="mt-5 rounded-2xl bg-gray-50 p-5 text-center" data-tuner-reading>
           <p className="text-6xl font-extrabold tabular-nums text-navy" aria-label={reading ? `${reading.name} ${reading.octave}` : 'No note'}>
-            {reading ? <>{reading.name}<span className="text-3xl text-gray-500">{reading.octave}</span></> : '–'}
+            {reading ? <>{reading.name}<span className="text-3xl text-gray-500">{reading.octave}</span></> : '·'}
           </p>
           <Needle cents={reading ? cents : null} inTune={inTune} />
           <p className={`mt-8 min-h-6 font-bold ${inTune ? 'text-teal-700' : 'text-navy'}`} data-tuner-verdict>

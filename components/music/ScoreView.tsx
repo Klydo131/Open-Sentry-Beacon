@@ -15,12 +15,12 @@
 // Everything a person wrote into the file (titles, part names) reaches the
 // screen as text, never as markup.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Card } from '@/components/ui';
 import { useScorePlayer, type Mix } from '@/lib/music/score-player';
 import { midiName } from '@/lib/music/notes';
 import { TEMPO_MAX, TEMPO_MIN } from '@/lib/music/beat';
-import type { Score } from '@/lib/music/musicxml';
+import type { Score, ScoreLine } from '@/lib/music/musicxml';
 
 /** A quarter note's width on the strip, and a semitone's height. */
 const PX = 28;
@@ -43,6 +43,39 @@ function minutes(quarters: number, bpm: number): string {
   const s = Math.round((quarters * 60) / bpm);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
+
+/**
+ * Every note of every line, drawn once. A large score is thousands of
+ * rectangles, so this is kept apart from the controls around it: pressing
+ * Play, moving the start or changing the tempo does not redraw a single note.
+ * Only choosing your part or changing how a line is heard does.
+ */
+const NoteLayer = memo(function NoteLayer({ lines, mine, mix, high }: {
+  lines: ScoreLine[];
+  mine: string;
+  mix: Record<string, Mix>;
+  high: number;
+}) {
+  const yOf = (midi: number) => PAD + (high - midi) * ROW;
+  // Your part drawn last, on top of the others where they cross.
+  const order = [...lines].sort((a, b) => Number(a.id === mine) - Number(b.id === mine));
+  return (
+    <>
+      {order.map((line) => {
+        const off = (mix[line.id] ?? 'normal') === 'off';
+        const className = off ? 'fill-slate-400' : line.id === mine ? 'fill-teal-700' : 'fill-navy';
+        const opacity = off ? 0.25 : line.id === mine ? 1 : 0.5;
+        return (
+          <g key={line.id} className={className} opacity={opacity} data-line={line.id}>
+            {line.notes.map((n, i) => (
+              <rect key={i} x={xOf(n.start) + 0.5} y={yOf(n.midi)} width={Math.max(2, n.length * PX - 1)} height={ROW - 1} rx={1.5} />
+            ))}
+          </g>
+        );
+      })}
+    </>
+  );
+});
 
 export function ScoreView({ score, onClose }: { score: Score; onClose: () => void }) {
   const player = useScorePlayer(score);
@@ -94,19 +127,15 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
 
   const startAt = (event: React.MouseEvent<SVGSVGElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
-    const quarter = Math.floor(((event.clientX - box.left) / box.width) * width / PX - PAD / PX);
-    const at = Math.max(0, Math.min(Math.floor(score.length), quarter));
+    startFrom(Math.floor(((event.clientX - box.left) / box.width) * width / PX - PAD / PX));
+  };
+
+  const lastBeat = Math.max(0, Math.floor(score.length) - 1);
+  const startFrom = (beat: number) => {
+    const at = Math.max(0, Math.min(lastBeat, Math.round(beat)));
     setFrom(at);
     if (playing) player.play(at);
   };
-
-  const fill = (lineId: string) => {
-    if ((mix[lineId] ?? 'normal') === 'off') return { className: 'fill-slate-400', opacity: 0.25 };
-    if (lineId === mine) return { className: 'fill-teal-700', opacity: 1 };
-    return { className: 'fill-navy', opacity: 0.5 };
-  };
-  // Your part drawn last, on top of the others where they cross.
-  const drawOrder = [...score.lines].sort((a, b) => Number(a.id === mine) - Number(b.id === mine));
 
   return (
     <Card className="p-5" data-panel="score-view">
@@ -155,7 +184,7 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
         </div>
       </div>
 
-      <p className="mt-4 text-sm text-gray-600">Tap the notes to start from that beat. Your part is drawn in green.</p>
+      <p className="mt-4 text-sm text-gray-600">Tap the notes, or use the slider under them, to start from that beat. Your part is drawn in green.</p>
       <div ref={scroller} className="mt-2 overflow-x-auto rounded-xl bg-gray-50 ring-1 ring-navy/10">
         <svg
           width={width}
@@ -174,20 +203,24 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
               <text x={2} y={yOf(m) + ROW / 2 - 2} fontSize={9} className="fill-slate-500">{midiName(m)}</text>
             </g>
           ))}
-          {drawOrder.map((line) => {
-            const f = fill(line.id);
-            return (
-              <g key={line.id} className={f.className} opacity={f.opacity} data-line={line.id}>
-                {line.notes.map((n, i) => (
-                  <rect key={i} x={xOf(n.start) + 0.5} y={yOf(n.midi)} width={Math.max(2, n.length * PX - 1)} height={ROW - 1} rx={1.5} />
-                ))}
-              </g>
-            );
-          })}
+          <NoteLayer lines={score.lines} mine={mine} mix={mix} high={high} />
           {from > 0 && <line x1={xOf(from)} x2={xOf(from)} y1={0} y2={height} className="stroke-teal-700" strokeWidth={2} strokeDasharray="4 3" />}
           <line ref={head} x1={PAD} x2={PAD} y1={0} y2={height} className="stroke-rose-600" strokeWidth={2} visibility="hidden" data-playhead />
         </svg>
       </div>
+
+      <label className="mt-3 block">
+        <span className="text-sm font-bold text-navy">Start from beat {from + 1}</span>
+        <input
+          id="score-from"
+          type="range"
+          min={0}
+          max={lastBeat}
+          value={from}
+          onChange={(e) => startFrom(Number(e.target.value))}
+          className="mt-1 w-full accent-teal-700"
+        />
+      </label>
 
       <ul className="mt-5 space-y-3">
         {score.lines.map((line) => {

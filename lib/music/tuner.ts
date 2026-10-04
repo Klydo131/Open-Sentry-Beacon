@@ -30,6 +30,8 @@ const SMOOTH = 5;
  * frame; drawing it sixty times a second only made the phone warm.
  */
 const SHOW_EVERY_MS = 50;
+/** The pitch is worked out this often: half the frames, and no reading is lost. */
+const LISTEN_EVERY_MS = 30;
 
 export type TunerStatus = 'off' | 'asking' | 'listening' | 'denied' | 'unavailable';
 
@@ -56,10 +58,16 @@ export function useTuner(): Tuner {
   const frame = useRef(0);
   const heard = useRef<number[]>([]);
   const shownAt = useRef(0);
+  const heardAt = useRef(0);
+  // Every start and every stop takes a new number. A start whose permission
+  // prompt is answered after a stop (the room left, the phone locked) finds
+  // its number stale and lets the microphone go at once.
+  const turn = useRef(0);
   const a4Now = useRef(a4);
   a4Now.current = a4;
 
   const stop = useCallback(() => {
+    turn.current += 1;
     cancelAnimationFrame(frame.current);
     // Every track stopped: this is what turns the browser's recording light off.
     stream.current?.getTracks().forEach((t) => t.stop());
@@ -73,6 +81,7 @@ export function useTuner(): Tuner {
 
   const start = useCallback(async () => {
     stop();
+    const mine = turn.current;
     if (!navigator.mediaDevices?.getUserMedia) { setStatus('unavailable'); return; }
     setStatus('asking');
     let media: MediaStream;
@@ -84,7 +93,12 @@ export function useTuner(): Tuner {
         video: false,
       });
     } catch {
-      setStatus('denied');
+      if (mine === turn.current) setStatus('denied');
+      return;
+    }
+    if (mine !== turn.current) {
+      // Stopped while the browser was asking: never start listening late.
+      media.getTracks().forEach((t) => t.stop());
       return;
     }
     const W = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext };
@@ -104,13 +118,16 @@ export function useTuner(): Tuner {
     setStatus('listening');
 
     const listen = () => {
+      frame.current = requestAnimationFrame(listen);
+      const now = performance.now();
+      if (now - heardAt.current < LISTEN_EVERY_MS) return;
+      heardAt.current = now;
       analyser.getFloatTimeDomainData(buffer);
       const [hz, clarity] = detector.findPitch(buffer, audio.sampleRate);
       if (clarity >= CLARITY && hz >= LOWEST_HZ && hz <= HIGHEST_HZ) {
         heard.current = [...heard.current, hz].slice(-SMOOTH);
-        const at = performance.now();
-        if (at - shownAt.current >= SHOW_EVERY_MS) {
-          shownAt.current = at;
+        if (now - shownAt.current >= SHOW_EVERY_MS) {
+          shownAt.current = now;
           setReading(readFrequency(median(heard.current), a4Now.current));
         }
       } else if (heard.current.length) {
@@ -118,7 +135,6 @@ export function useTuner(): Tuner {
         heard.current = heard.current.slice(1);
         if (!heard.current.length) setReading(null);
       }
-      frame.current = requestAnimationFrame(listen);
     };
     frame.current = requestAnimationFrame(listen);
   }, [stop]);
