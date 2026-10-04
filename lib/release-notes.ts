@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-smoother',
+    date: '2026-10-04',
+    title: 'Smoother on your phone',
+    items: [
+      'Moving between pages, and opening a conversation, now has less work to do in the moment the screen slides in, so it stutters less.',
+      'Scrolling is lighter in the Beacon, Study and Focus looks.',
+    ],
+  },
+  {
     id: '2026-10-04-write-from-home',
     date: '2026-10-04',
     title: 'Write a post straight from Home',

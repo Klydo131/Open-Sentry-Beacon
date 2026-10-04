@@ -115,6 +115,15 @@ export function MessageBox({
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // EMPTY IS ONE LINE, AND NEEDS NO MEASURING. Reading scrollHeight makes the
+    // browser lay out the whole page there and then, and the box is empty at
+    // exactly the moment that costs most: when a conversation has just opened
+    // and every message in it is new on the page (4 October 2026).
+    if (!value) {
+      el.style.height = '';
+      el.style.overflowY = 'hidden';
+      return;
+    }
     el.style.height = 'auto';
     const cap = Math.max(120, Math.round(window.innerHeight * MAX_SHARE));
     const next = Math.min(el.scrollHeight, cap);

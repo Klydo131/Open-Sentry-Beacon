@@ -152,6 +152,10 @@
 :root[data-ui-theme="study"] .tab-bar {
   background: var(--look-panel);
   border-top-color: var(--look-line);
+  /* The panel is solid, so the blur behind it shows nothing and only costs
+     the phone work on every frame of scrolling. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 :root[data-ui-theme="study"] .tab-bar-tab {
   color: var(--look-soft);

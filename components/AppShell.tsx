@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { usePublishedHeight } from '@/lib/published-height';
 import { useDemo } from '@/lib/demo/store';
 import { roleLabel, NAVY, APP_SHORT_NAME } from '@/lib/brand';
 import { unseenCount } from '@/lib/release-notes';
@@ -155,24 +156,9 @@ function DemoAppShell({
   // the Menu now) rendered fewer hooks than the render before it, which React
   // treats as an error. With no header drawn the effect simply finds no
   // element and does nothing.
-  const headerRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const publish = () =>
-      document.documentElement.style.setProperty(
-        '--app-header',
-        `${Math.ceil(el.getBoundingClientRect().height)}px`,
-      );
-    publish();
-    // The row rewraps at `sm`, so the height is not a constant.
-    const ro = new ResizeObserver(publish);
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      document.documentElement.style.removeProperty('--app-header');
-    };
-  });
+  // The row rewraps at `sm`, so the height is not a constant; see
+  // lib/published-height.ts for how it is measured.
+  const headerRef = usePublishedHeight('--app-header');
 
   if (!currentUser || !allow.includes(currentUser.role)) return null;
 
