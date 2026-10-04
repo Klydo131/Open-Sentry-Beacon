@@ -5,52 +5,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { browser: engine, launchOptions, openChat, pageErrors } = require('./_playwright');
+const looks = require('./_looks');
 const BASE = `http://localhost:${process.argv[2] || '4414'}`;
 const shots = path.resolve('.ui-check/looks', process.env.E2E_BROWSER || 'chromium');
 fs.mkdirSync(shots, { recursive: true });
 
-async function signIn(page, name) {
-  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
-  await page.getByText(name, { exact: true }).first().click();
-  await page.waitForTimeout(1000);
-  const consent = page.getByRole('button', { name: /I understand, continue/i });
-  if (await consent.isVisible()) await consent.click();
-}
-
-async function choose(page, id) {
-  await page.goto(`${BASE}/settings?room=general`, { waitUntil: 'networkidle' });
-  const button = page.locator(`[data-ui-theme-choice="${id}"]`);
-  await button.click();
-  await page.waitForFunction((look) => document.documentElement.dataset.uiTheme === look, id);
-  assert.equal(await button.getAttribute('aria-checked'), 'true');
-}
-
-// Measure the actual foreground against the nearest painted background,
-// compositing translucent fills rather than assuming every card is white.
-async function readable(locator, label) {
-  assert.ok(await locator.isVisible(), `${label} is visible`);
-  const ratio = await locator.evaluate((el) => {
-    const rgba = (value) => {
-      const n = value.match(/[\d.]+/g)?.map(Number) ?? [];
-      return [n[0] ?? 0, n[1] ?? 0, n[2] ?? 0, n[3] ?? 1];
-    };
-    const layers = [];
-    for (let at = el; at; at = at.parentElement) layers.unshift(rgba(getComputedStyle(at).backgroundColor));
-    let bg = [255, 255, 255];
-    for (const c of layers) bg = bg.map((v, i) => c[i] * c[3] + v * (1 - c[3]));
-    const color = rgba(getComputedStyle(el).color);
-    let opacity = color[3];
-    for (let at = el; at; at = at.parentElement) opacity *= Number(getComputedStyle(at).opacity);
-    const fg = bg.map((v, i) => color[i] * opacity + v * (1 - opacity));
-    const lum = (c) => c.map((v) => {
-      v /= 255;
-      return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-    }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
-    const a = lum(fg), b = lum(bg);
-    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-  });
-  assert.ok(ratio >= 4.5, `${label}: ${ratio.toFixed(2)}:1, requires 4.5:1`);
-}
+// Signing in, choosing a look and measuring text are shared with the Frutiger
+// Aero walk (_looks.js); BASE is this walk's server.
+const signIn = (page, name) => looks.signIn(page, BASE, name);
+const choose = (page, id) => looks.choose(page, BASE, id);
+const { readable } = looks;
 
 async function menuFingerprint(page) {
   return page.evaluate(() => ['body', 'header', '.room-surface', '.menu-group', '.menu-row', 'h1', '.tab-bar'].map((selector) => {

@@ -17,6 +17,31 @@ drawer. The right desk
 continues to show its real local tools; no simulated activity, appointments,
 search or progress widgets were added to reproduce the reference pictures.
 
+## Frutiger Aero, a family of five
+
+Asked for on 4 October 2026 with four design sheets. Settings lists the family
+as one row (`UI_FAMILIES` in `lib/ui-themes.ts`) that opens to show its looks,
+each with its drawn picture (`public/themes/aero-*.svg`) and description:
+Frutiger Eco, Dark Aero, Technozen, DORFic and Four Colors.
+
+- `app/themes/aero.css` holds what the five share: the glass, the sheen, the
+  gloss on buttons, the glows behind the page and the Menu's shape. Every rule
+  starts with `:root[data-ui-theme^="aero-"]`.
+- `app/themes/aero-<name>.css` holds each look's ten `--look-*` colours, its
+  `--aero-*` settings (how solid the glass, how bright the sheen and gloss, the
+  rim, shadow, roundness, icon tile and glows) and anything only it has: Dark
+  Aero's light-on-dark notes and warnings, DORFic's and Four Colors' tiles.
+- No `backdrop-filter` and no photographs: glass is a card a little
+  see-through over drawn glows, so scrolling costs a phone nothing extra.
+- `tests/themes-are-readable.mjs` measures each look's button labels on the
+  brightest of their gloss and text on glass over every glow;
+  `tests/e2e/frutiger-aero-looks.js` walks the row and all five looks.
+
+The design sheets showed Menu, People and My Files at the top of the computer
+sidebar; on the owner's word that stays on phones and tablets only. Their
+"Continue", "Today", "Recent Activity" and search panels are not part of the
+looks: those would be new features with real data behind them.
+
 ## Preserve Classic
 
 `lib/ui-themes.ts` registers the looks. `app/themes/<id>.css` owns each look's

@@ -30,14 +30,26 @@ const descriptions: Record<string, string> = {
   '/study': 'Read, write and reflect',
 };
 
+/**
+ * The line under the welcome, in each look's own voice. The Frutiger Aero
+ * lines are the owner's, from the design sheets of 4 October 2026.
+ */
+const WELCOME_LINES: Record<string, string> = {
+  study: 'Take a little time to read, reflect and grow.',
+  focus: 'A quiet space for the people and work that matter.',
+  'aero-dark': 'Even in quiet moments, there is a light that still leads the way.',
+  'aero-technozen': 'Take time to study, reflect and grow.',
+  'aero-dorfic': 'You are making a difference in someone\'s journey.',
+  'aero-colors': 'Your spaces for faith, growth and meaningful connection.',
+};
+const WELCOME_LINE = 'Small steps of faith lead to bigger stories of hope.';
+
 /** Absent on Classic. Links and counts come from the real menu. */
 export function FreshMenu({ name, role, photo, avatar, groups, footer }: MenuListProps) {
   const look = useChosenLook();
   if (!isFreshLook(look)) return null;
   const firstName = name.trim().split(/\s+/)[0] || 'friend';
-  const copy = look === 'study' ? 'Take a little time to read, reflect and grow.'
-    : look === 'focus' ? 'A quiet space for the people and work that matter.'
-    : 'Small steps of faith lead to bigger stories of hope.';
+  const copy = WELCOME_LINES[look] ?? WELCOME_LINE;
   return (
     <div className="fresh-menu" data-fresh-menu>
       <h1 className="fresh-page-title">Menu</h1>

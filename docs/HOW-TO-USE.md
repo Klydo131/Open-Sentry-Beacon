@@ -74,6 +74,14 @@ choice is kept on this phone or computer, and **Classic** takes you back.
 
 ![Look in Settings: Classic, Beacon, Study and Focus. Focus is chosen here.](screenshots/walkthrough/36-looks.png)
 
+Below them is **Frutiger Aero**, a row that opens to show five more looks,
+each with a picture and a line about it: **Frutiger Eco** (sky, water and
+leaves), **Dark Aero** (deep blue glass), **Technozen** (calm and minimal),
+**DORFic** (playful, early-2000s blue) and **Four Colors** (a bright colour for
+each room). Tap the row to open it, then tap the one you like.
+
+![Frutiger Aero opened in Settings: five looks, each with its picture. Frutiger Eco is chosen here.](screenshots/walkthrough/39-frutiger-aero.png)
+
 ![A conversation with Text size at its largest. The words grow and still fit the screen.](screenshots/walkthrough/22-text-size-large.png)
 
 ### Signing in

@@ -34,6 +34,19 @@
 //   4. Do not edit the shared styles (globals.css, tailwind.config.ts, the
 //      components' own classes) to make a look work. That is changing Classic.
 //
+// A FAMILY IS SEVERAL LOOKS LISTED TOGETHER, under one name in Settings that
+// opens to show them (Frutiger Aero, asked for on 4 October 2026 with four
+// design sheets: "make more UI theme for fruteger aero, as sub file for
+// 'look' so people can see the difference"). For a family:
+//
+//   1. Add it to UI_FAMILIES. Its id is lowercase letters, no hyphens.
+//   2. Every look in it has `family` set to that id and an id that begins
+//      with it and a hyphen ("aero-eco"), so one selector can reach them all.
+//   3. What the looks share lives once, in app/themes/<family>.css, and every
+//      rule in it starts with :root[data-ui-theme^="<family>-"]. Each look
+//      still has its own app/themes/<id>.css for its colours and whatever is
+//      only its own, scoped to it exactly as above.
+//
 // tests/the-classic-look-stays.mjs fails the build if Classic stops being the
 // first look, Classic gains a stylesheet, or any look's rules are not
 // scoped to that look; tests/e2e/the-classic-look-stays.js checks in a browser
@@ -46,6 +59,18 @@ export interface UiTheme {
   /** What data-ui-theme says on <html>. Lowercase letters and hyphens. */
   id: string;
   /** What Settings calls it. */
+  name: string;
+  /** One line under the name, in Settings. */
+  description: string;
+  /** The family it is listed under in Settings (UI_FAMILIES), if it has one. */
+  family?: string;
+}
+
+/** Looks listed together under one name in Settings, which opens to show them. */
+export interface UiFamily {
+  /** Lowercase letters. Every look in the family has an id beginning `<id>-`. */
+  id: string;
+  /** What Settings calls the family. */
   name: string;
   /** One line under the name, in Settings. */
   description: string;
@@ -75,6 +100,46 @@ export const UI_THEMES: readonly UiTheme[] = [
     name: 'Focus',
     description: 'A quiet night sky, dark surfaces and clear room cards.',
   },
+  // FRUTIGER AERO. The descriptions are the owner's, from the design sheets.
+  {
+    id: 'aero-eco',
+    family: 'aero',
+    name: 'Frutiger Eco',
+    description: 'Nature-inspired, clean and fresh. Glass, light and vibrant colour that bring hope, growth and clarity.',
+  },
+  {
+    id: 'aero-dark',
+    family: 'aero',
+    name: 'Dark Aero',
+    description: 'Sleek, immersive and modern. Glass, glowing light and depth for long, focused sessions.',
+  },
+  {
+    id: 'aero-technozen',
+    family: 'aero',
+    name: 'Technozen',
+    description: 'Calm, minimal and balanced. A modern, peaceful space for study and reflection.',
+  },
+  {
+    id: 'aero-dorfic',
+    family: 'aero',
+    name: 'DORFic',
+    description: 'Playful, optimistic and futuristic. A nostalgic yet modern take on early-2000s design.',
+  },
+  {
+    id: 'aero-colors',
+    family: 'aero',
+    name: 'Four Colors',
+    description: 'Clean and colourful clarity: bright glass tiles in blue, green, orange and purple.',
+  },
+];
+
+/** Families of looks, in the order Settings lists them, after the looks of their own. */
+export const UI_FAMILIES: readonly UiFamily[] = [
+  {
+    id: 'aero',
+    name: 'Frutiger Aero',
+    description: 'Glass, light, water and sky, with the gloss of the early 2000s. Five moods to choose from.',
+  },
 ];
 
 // WHAT A DEVICE SHOWS UNTIL SOMEBODY CHOOSES: Classic. It was Desktop for a
@@ -92,9 +157,17 @@ export const UI_THEME_EVENT = 'beacon-ui-theme';
 // so the selected component tree and the page's colours still agree.
 let unstoredLook: string | undefined;
 
-/** These looks have their own menu and extra destinations in the computer rail. */
+/**
+ * Every look but Classic draws its own Menu (components/FreshMenu.tsx) and
+ * shows the desk's palettes in its own light (lib/room-theme.ts).
+ */
 export function isFreshLook(id: string): boolean {
-  return id === 'beacon' || id === 'study' || id === 'focus';
+  return id !== CLASSIC && UI_THEMES.some((t) => t.id === id);
+}
+
+/** The looks in one family, in the order Settings lists them. */
+export function looksIn(family: string): UiTheme[] {
+  return UI_THEMES.filter((t) => t.family === family);
 }
 
 /**

@@ -34,7 +34,8 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui';
 import { useLocale, LANGUAGES } from '@/lib/i18n';
-import { UI_THEMES, saveUiTheme } from '@/lib/ui-themes';
+import { UI_FAMILIES, UI_THEMES, looksIn, saveUiTheme, type UiFamily, type UiTheme } from '@/lib/ui-themes';
+import { ChevronGlyph } from '@/components/Glyph';
 import { useChosenLook } from '@/components/UiTheme';
 
 // The same four steps the demo has always offered. 0.9 to 1.3 against an 18px
@@ -183,7 +184,7 @@ export function TextSizeCard() {
 // called Desktop until the owner: "this is the classic". How a look is added
 // without touching Classic is in lib/ui-themes.ts.
 export function LookCard() {
-  // This device's choice, or the default (Desktop) when nothing is chosen.
+  // This device's choice, or the default (Classic) when nothing is chosen.
   const look = useChosenLook();
   return (
     // data-panel, not a data- attribute of its own: Card passes on only the
@@ -192,36 +193,101 @@ export function LookCard() {
     <Card className="p-5" data-panel="look-settings">
       <h2 className="mb-1 text-xl font-bold text-navy">🎨 Look</h2>
       <p className="mb-4 text-sm text-gray-500">
-        How the app looks on this device. If new looks are added, they appear here, and Classic stays
-        exactly as it is.
+        How the app looks on this device. A family of looks opens to show them side by side, and Classic
+        stays exactly as it is.
       </p>
       <div role="radiogroup" aria-label="Look" className="grid gap-2 sm:grid-cols-2">
-        {UI_THEMES.map((theme) => {
-          const chosen = look === theme.id;
-          return (
-            <button
-              key={theme.id}
-              type="button"
-              role="radio"
-              aria-checked={chosen}
-              data-ui-theme-choice={theme.id}
-              onClick={() => saveUiTheme(theme.id)}
-              className="tap rounded-xl px-4 py-3 text-left"
-              style={chosen ? { backgroundColor: '#1E2A4A', color: '#fff' } : { backgroundColor: '#EEF1F7', color: '#1E2A4A' }}
-            >
-              <span className="flex items-baseline justify-between gap-3">
-                <span className="text-lg font-bold">{theme.name}</span>
-                {/* Said in words as well as coloured, as the text size is. */}
-                {chosen && <span className="text-sm font-semibold">Chosen</span>}
-              </span>
-              <span className="mt-0.5 block text-sm" style={{ opacity: 0.85 }}>
-                {theme.description}
-              </span>
-            </button>
-          );
-        })}
+        {UI_THEMES.filter((theme) => !theme.family).map((theme) => (
+          <LookChoice key={theme.id} theme={theme} chosen={look === theme.id} />
+        ))}
       </div>
+      {UI_FAMILIES.map((family) => <LookFamily key={family.id} family={family} look={look} />)}
     </Card>
+  );
+}
+
+/** One look to choose: its name, said in words when it is chosen, and what it is like. */
+function LookChoice({ theme, chosen, picture = false }: { theme: UiTheme; chosen: boolean; picture?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={chosen}
+      data-ui-theme-choice={theme.id}
+      onClick={() => saveUiTheme(theme.id)}
+      className="tap rounded-xl px-4 py-3 text-left"
+      style={chosen ? { backgroundColor: '#1E2A4A', color: '#fff' } : { backgroundColor: '#EEF1F7', color: '#1E2A4A' }}
+    >
+      {picture && (
+        // The look's own drawn art (public/themes/<id>.svg), so the difference
+        // can be seen before choosing. Decoration: the name says which it is.
+        <img
+          src={`/themes/${theme.id}.svg`}
+          alt=""
+          aria-hidden
+          width={600}
+          height={320}
+          loading="lazy"
+          className="mb-2 block h-24 w-full rounded-lg object-cover"
+        />
+      )}
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="text-lg font-bold">{theme.name}</span>
+        {/* Said in words as well as coloured, as the text size is. */}
+        {chosen && <span className="text-sm font-semibold">Chosen</span>}
+      </span>
+      <span className="mt-0.5 block text-sm" style={{ opacity: 0.85 }}>
+        {theme.description}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * A FAMILY OF LOOKS: one row that opens to show them, each with its picture
+ * and what it is like. Asked for on 4 October 2026: "as sub file for 'look'
+ * so people can see the difference ... with drop down on it (with
+ * description)".
+ *
+ * Open by itself while one of its looks is chosen, until somebody opens or
+ * closes it. Closed, its looks are still on the page, hidden, so anything that
+ * reads every look Settings offers (tests/e2e/the-first-paint.js) finds them.
+ */
+function LookFamily({ family, look }: { family: UiFamily; look: string }) {
+  const looks = looksIn(family.id);
+  const chosen = looks.find((theme) => theme.id === look);
+  const [toggled, setToggled] = useState<boolean | null>(null);
+  const open = toggled ?? !!chosen;
+  const panel = `look-family-${family.id}`;
+  return (
+    <div className="mt-3" data-look-family={family.id}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panel}
+        onClick={() => setToggled(!open)}
+        className="tap flex w-full items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-left text-navy"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span className="text-lg font-bold">{family.name}</span>
+            <span className="text-sm font-semibold">{chosen ? `${chosen.name} chosen` : `${looks.length} looks`}</span>
+          </span>
+          <span className="mt-0.5 block text-sm" style={{ opacity: 0.85 }}>
+            {family.description}
+          </span>
+        </span>
+        <ChevronGlyph open={open} size={20} />
+      </button>
+      {/* The grid is inside, so `hidden` is not undone by a display class. */}
+      <div id={panel} hidden={!open}>
+        <div role="radiogroup" aria-label={`${family.name} looks`} className="mt-2 grid gap-2 sm:grid-cols-2">
+          {looks.map((theme) => (
+            <LookChoice key={theme.id} theme={theme} chosen={look === theme.id} picture />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-04-frutiger-aero',
+    date: '2026-10-04',
+    title: 'Five new Frutiger Aero looks',
+    items: [
+      'Settings, General, Look has a new row, Frutiger Aero. Tap it to see five looks side by side, each with a picture and a line about it.',
+      'Frutiger Eco, Dark Aero, Technozen, DORFic and Four Colors: glass, light and a gentle shine, from fresh and green to deep blue.',
+      'Your rooms and everything in them stay the same. Classic is still one tap away.',
+    ],
+  },
+  {
     id: '2026-10-04-computer-sidebar',
     date: '2026-10-04',
     title: 'A tidier column on computers',
