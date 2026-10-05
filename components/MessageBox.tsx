@@ -146,7 +146,7 @@ export function MessageBox({
           id="emoji-suggestions"
           role="listbox"
           aria-label="Emoji suggestions"
-          className="absolute bottom-full left-0 z-20 mb-1.5 flex max-w-full gap-1 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-lg ring-1 ring-black/10"
+          className="absolute bottom-full left-0 z-20 mb-1.5 flex max-w-full gap-1 overflow-x-auto rounded-2xl solid-panel bg-white p-1.5 shadow-lg ring-1 ring-black/10"
         >
           {picks.map((e, i) => (
             <li key={e.char} role="none">

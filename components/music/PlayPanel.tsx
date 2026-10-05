@@ -303,7 +303,7 @@ function Chords({ clock, a4, timbre }: { clock: Clock; a4: number; timbre: Timbr
             </button>
           ))}
         </div>
-        <p className="mt-2 min-h-5 text-sm font-semibold text-teal-700" aria-live="polite" data-play-chord-now>
+        <p className="mt-2 min-h-5 text-sm font-semibold text-[color:var(--music-accent)]" aria-live="polite" data-play-chord-now>
           {last ? `Playing ${last}` : ''}
         </p>
       </div>
@@ -440,7 +440,7 @@ function BeatMaker({ clock }: { clock: Clock }) {
                       onClick={() => toggle(d, i)}
                       aria-pressed={on}
                       aria-label={`${DRUM_NAME[d]}, step ${i + 1}`}
-                      className={`h-9 rounded-lg ring-1 ${on ? 'bg-navy ring-navy' : i % 4 === 0 ? 'bg-gray-100 ring-navy/20' : 'bg-white ring-navy/20'} ${now ? 'outline outline-2 outline-teal-500' : ''}`}
+                      className={`h-9 rounded-lg ring-1 ${on ? 'bg-navy ring-navy' : i % 4 === 0 ? 'bg-gray-100 ring-navy/20' : 'bg-white ring-navy/20'} ${now ? 'outline outline-2 outline-[color:var(--music-accent)]' : ''}`}
                       data-step={i}
                     />
                   );

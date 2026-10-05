@@ -65,10 +65,20 @@ const NoteLayer = memo(function NoteLayer({ lines, mine, mix, high }: {
     <>
       {order.map((line) => {
         const off = (mix[line.id] ?? 'normal') === 'off';
-        const className = off ? 'fill-slate-400' : line.id === mine ? 'fill-teal-700' : 'fill-navy';
-        const opacity = off ? 0.25 : line.id === mine ? 1 : 0.5;
+        const yours = line.id === mine && !off;
+        // The other parts in the look's ink, yours in the Music room's green
+        // (--music-accent, globals.css), which is a deeper green on a light look
+        // and a brighter one on a dark look, so both read on every panel.
+        const opacity = off ? 0.25 : yours ? 1 : 0.55;
         return (
-          <g key={line.id} className={className} opacity={opacity} data-line={line.id}>
+          <g
+            key={line.id}
+            fill={yours ? undefined : 'currentColor'}
+            style={yours ? { fill: 'var(--music-accent)' } : undefined}
+            opacity={opacity}
+            data-line={line.id}
+            data-mine={yours ? '' : undefined}
+          >
             {line.notes.map((n, i) => (
               <rect key={i} x={xOf(n.start) + 0.5} y={yOf(n.midi)} width={Math.max(2, n.length * PX - 1)} height={ROW - 1} rx={1.5} />
             ))}
@@ -177,7 +187,7 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
         {from > 0 && <Button variant="ghost" onClick={() => setFrom(0)}>Back to the start</Button>}
       </div>
       {advanced && (loop || player.transpose !== 0) && (
-        <p className="mt-2 text-sm font-semibold text-teal-700" data-score-playing-as>
+        <p className="mt-2 text-sm font-semibold text-[color:var(--music-accent)]" data-score-playing-as>
           {[loop ? `Looping beats ${loop.from + 1} to ${loop.to}` : '', player.transpose ? `${player.transpose > 0 ? 'up' : 'down'} ${Math.abs(player.transpose)} ${Math.abs(player.transpose) === 1 ? 'semitone' : 'semitones'}` : ''].filter(Boolean).join(', ')}
         </p>
       )}
@@ -203,7 +213,7 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
             <Button variant="ghost" className="px-4" onClick={() => player.setTempo(tempo + 5)} disabled={tempo >= TEMPO_MAX}>+ 5</Button>
           </div>
           {tempo !== score.tempo && (
-            <button type="button" onClick={() => player.setTempo(score.tempo)} className="mt-1 text-sm font-semibold text-teal-700 underline">
+            <button type="button" onClick={() => player.setTempo(score.tempo)} className="mt-1 text-sm font-semibold text-[color:var(--music-accent)] underline">
               Back to the score&rsquo;s {score.tempo}
             </button>
           )}
@@ -217,7 +227,7 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           onClick={startAt}
-          className="block cursor-pointer"
+          className="block cursor-pointer text-navy"
           role="img"
           aria-label={`The notes of ${score.title}, every part, from left to right`}
           data-score-roll
@@ -225,13 +235,14 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
           {/* A faint line at every C, named, so the strip has a way to read up and down. */}
           {Array.from({ length: high - low + 1 }, (_, i) => low + i).filter((m) => m % 12 === 0).map((m) => (
             <g key={m}>
-              <line x1={0} x2={width} y1={yOf(m) + ROW / 2} y2={yOf(m) + ROW / 2} className="stroke-navy/15" strokeWidth={1} />
-              <text x={2} y={yOf(m) + ROW / 2 - 2} fontSize={9} className="fill-slate-500">{midiName(m)}</text>
+              <line x1={0} x2={width} y1={yOf(m) + ROW / 2} y2={yOf(m) + ROW / 2} stroke="currentColor" opacity={0.18} strokeWidth={1} />
+              <text x={2} y={yOf(m) + ROW / 2 - 2} fontSize={9} fill="currentColor" opacity={0.7}>{midiName(m)}</text>
             </g>
           ))}
           <NoteLayer lines={score.lines} mine={mine} mix={mix} high={high} />
-          {from > 0 && <line x1={xOf(from)} x2={xOf(from)} y1={0} y2={height} className="stroke-teal-700" strokeWidth={2} strokeDasharray="4 3" />}
-          <line ref={head} x1={PAD} x2={PAD} y1={0} y2={height} className="stroke-rose-600" strokeWidth={2} visibility="hidden" data-playhead />
+          {from > 0 && <line x1={xOf(from)} x2={xOf(from)} y1={0} y2={height} style={{ stroke: 'var(--music-accent)' }} strokeWidth={2} strokeDasharray="4 3" />}
+          {/* The playhead in the look's own ink, not a colour of its own. */}
+          <line ref={head} x1={PAD} x2={PAD} y1={0} y2={height} stroke="currentColor" strokeWidth={2.5} visibility="hidden" data-playhead />
         </svg>
       </div>
 
@@ -291,13 +302,13 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
             <p className="text-sm text-gray-600">Move every part up or down, to suit your voices.</p>
             <div className="mt-2 flex items-center gap-2">
               <Button variant="ghost" className="px-4" onClick={() => player.setTranspose(player.transpose - 1)} disabled={player.transpose <= -TRANSPOSE_MAX}>
-                <span aria-hidden>− 1</span><span className="sr-only">Down a semitone</span>
+                <span aria-hidden className="whitespace-nowrap">− 1</span><span className="sr-only">Down a semitone</span>
               </Button>
               <p className="min-w-24 text-center font-bold tabular-nums text-navy" data-score-transpose>
                 {player.transpose === 0 ? 'As written' : `${player.transpose > 0 ? '+' : '−'}${Math.abs(player.transpose)} semitone${Math.abs(player.transpose) === 1 ? '' : 's'}`}
               </p>
               <Button variant="ghost" className="px-4" onClick={() => player.setTranspose(player.transpose + 1)} disabled={player.transpose >= TRANSPOSE_MAX}>
-                <span aria-hidden>+ 1</span><span className="sr-only">Up a semitone</span>
+                <span aria-hidden className="whitespace-nowrap">+ 1</span><span className="sr-only">Up a semitone</span>
               </Button>
             </div>
           </div>

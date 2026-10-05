@@ -46,6 +46,7 @@ const bundle = async (entries, name) => {
 };
 const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml', 'lib/music/zip', 'lib/music/page-scan', 'lib/music/play'], 'music');
 const SP = await bundle(['lib/music/score-player'], 'score-player');
+const PT = await bundle(['lib/music/pitch-tracker'], 'pitch-tracker');
 
 // ---------------------------------------------------------------------------
 // 1. NOTES: frequencies, names and cents
@@ -85,6 +86,103 @@ const SP = await bundle(['lib/music/score-player'], 'score-player');
   ok(M.heardA(Array.from({ length: M.STEADY_READINGS }, (_, i) => (i % 2 ? 220.8 : 441.6))) === 441.6,
      'a tuner jumping an octave on a held A still hears one A');
   ok(M.heardA([...held(261.63, 20), ...held(442)]) === 442, 'only the latest readings count, so the A is heard once it starts');
+}
+
+// ---------------------------------------------------------------------------
+// 1c. THE TUNER'S EAR (lib/music/pitch-tracker.ts), on made-up voices.
+//
+// Reworked on 6 October 2026: "It should be fast and perfectly accurate like a
+// real perfect pitch tuner." These are the numbers it is held to, measured on
+// sounds made here: a pure tone, a voice-like tone (six harmonics and noise),
+// the same with a singer's vibrato, a change of note, a bass whose second
+// harmonic is louder than its note, and a room with nobody singing. The tuner
+// it replaced, on the same sounds, was as accurate (under a cent) but showed a
+// new note after 152 ms, and its needle spread 4.1 cents on a vibrato.
+// ---------------------------------------------------------------------------
+{
+  const SR = 48000;
+  let seed = 7;
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const gauss = () => { let t = 0; for (let i = 0; i < 6; i++) t += rand(); return (t - 3) / Math.sqrt(0.5); };
+  const cents = (a, b) => 1200 * Math.log2(a / b);
+  const note = (hz) => Math.round(69 + 12 * Math.log2(hz / 440));
+  // A sound: [seconds, hz or null for silence] pieces, with harmonics, vibrato and noise.
+  const render = (pieces, { vib = 0, harm = [1], noise = 0 } = {}) => {
+    seed = 7; // every sound made the same way each time, whatever ran before it
+    const x = new Float32Array(Math.round(pieces.reduce((t, p) => t + p[0], 0) * SR));
+    const phases = harm.map(() => rand() * 6.28);
+    let ph = 0, i = 0;
+    for (const [sec, hz] of pieces) {
+      for (let k = 0, m = Math.round(sec * SR); k < m; k++, i++) {
+        let v = 0;
+        if (hz) {
+          ph += (2 * Math.PI * hz * 2 ** ((vib * Math.sin(2 * Math.PI * 5.5 * (i / SR))) / 1200)) / SR;
+          harm.forEach((a, h) => { v += a * Math.sin((h + 1) * ph + phases[h]); });
+          v *= 0.3;
+        }
+        x[i] = v + noise * gauss();
+      }
+    }
+    return x;
+  };
+  // Fed as the tuner feeds it: the newest window, sixty times a second.
+  const run = (x) => {
+    const tracker = new PT.PitchTracker(SR);
+    const out = [];
+    for (let end = PT.LONG_WINDOW; end <= x.length; end += 800) {
+      const r = tracker.push(x.subarray(end - PT.LONG_WINDOW, end), (end / SR) * 1000);
+      out.push({ t: end / SR, hz: r ? r.hz : null, held: r ? r.held : false });
+    }
+    return out;
+  };
+  const voice = [1, 0.7, 0.5, 0.35, 0.25, 0.15];
+  const freqs = [82.41, 98, 123.47, 146.83, 220, 329.63, 440, 523.25, 880, 1046.5];
+  const worst = (opts) => Math.max(...freqs.map((f) => {
+    const hz = f * 2 ** (7 / 1200);
+    const got = run(render([[1.5, hz]], opts)).filter((o) => o.t > 0.3);
+    if (got.some((o) => !o.hz)) return Infinity;
+    return Math.abs(got.reduce((t, o) => t + cents(o.hz, hz), 0) / got.length);
+  }));
+  const pure = worst({});
+  ok(pure < 1, `a pure tone is read within a cent, bass E2 to soprano C6 (worst ${pure.toFixed(2)})`);
+  const sung = worst({ harm: voice, noise: 0.01, vib: 25 });
+  ok(sung < 2, `a voice with harmonics, noise and vibrato is read within 2 cents, and never drops out (worst ${sung.toFixed(2)})`);
+  {
+    const got = run(render([[2, 220]], { harm: voice, noise: 0.01, vib: 25 })).filter((o) => o.t > 0.4 && o.hz).map((o) => cents(o.hz, 220));
+    const mean = got.reduce((a, b) => a + b, 0) / got.length;
+    const spread = Math.sqrt(got.reduce((t, v) => t + (v - mean) ** 2, 0) / got.length);
+    ok(spread < 4.1, `the needle is steadier on a vibrato than the old tuner's 4.1 cents (${spread.toFixed(1)})`);
+  }
+  const onset = (f) => {
+    const first = run(render([[0.3, null], [1, f]], { harm: voice, noise: 0.005 })).find((o) => o.t > 0.3 && o.hz && note(o.hz) === note(f));
+    return first ? (first.t - 0.3) * 1000 : Infinity;
+  };
+  {
+    const first = run(render([[0.3, null], [1, 440]])).find((o) => o.t > 0.3 && o.hz);
+    const ms = first ? (first.t - 0.3) * 1000 : Infinity;
+    ok(ms <= 20, `a clean, clear note shows on its very first reading, without waiting for a second (${Math.round(ms)} ms)`);
+  }
+  const onsets = [98, 220, 440, 880].map(onset);
+  ok(Math.max(...onsets) <= 60, `a note sung after silence shows within 60 ms (${onsets.map((m) => Math.round(m)).join(', ')} ms)`);
+  const change = (a, b) => {
+    const after = run(render([[0.8, a], [1, b]], { harm: voice, noise: 0.005 })).filter((o) => o.t > 0.8);
+    const k = after.findIndex((o, i) => after.slice(i).every((q) => q.hz && note(q.hz) === note(b)));
+    return k < 0 ? Infinity : (after[k].t - 0.8) * 1000;
+  };
+  const changes = [[220, 329.63], [146.83, 110], [523.25, 587.33], [98, 130.81]].map(([a, b]) => change(a, b));
+  ok(Math.max(...changes) <= 110, `a change of note shows within 110 ms, where the old tuner took 152 (${changes.map((m) => Math.round(m)).join(', ')} ms)`);
+  {
+    const got = run(render([[2, 98]], { harm: [0.6, 1.2, 0.5, 0.3], noise: 0.01, vib: 15 })).filter((o) => o.t > 0.2 && o.hz);
+    ok(got.length > 50 && got.every((o) => Math.abs(note(o.hz) - note(98)) < 11), 'a bass whose second harmonic is louder than its note is never read an octave up');
+  }
+  ok(run(render([[2, null]], { noise: 0.05 })).every((o) => !o.hz), 'a room with nobody singing shows no note');
+  {
+    const out = run(render([[1, 330], [1, null]], { harm: voice, noise: 0.002 }));
+    const held = out.filter((o) => o.t > 1 && o.held);
+    const gone = out.find((o) => o.t > 1 && !o.hz);
+    ok(held.length > 0 && gone && (gone.t - 1) * 1000 <= PT.HOLD_MS + (PT.LONG_WINDOW / SR) * 1000 + 40 && held.every((o) => note(o.hz) === note(330)),
+       'when the singing stops, the last note is held for a moment, then cleared');
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -278,6 +376,12 @@ function zip(files) {
   ok(!/connect\(audio\.destination\)|connect\(ctx\.destination\)/.test(tuner) && !/MediaRecorder/.test(tuner),
      'what the microphone hears is measured, never played back or recorded');
   ok(/echoCancellation: false/.test(tuner) && /video: false/.test(tuner), 'it asks for sound only, as it is');
+  ok(/new PitchTracker\(audio\.sampleRate\)/.test(tuner) && /tracker\.push\(buffer, now\)/.test(tuner) && !/LISTEN_EVERY_MS/.test(tuner),
+     'the tuner reads every frame through the pitch tracker, not every other frame');
+  ok(/data-tuner-zone/.test(code('components/music/TunerPanel.tsx')) && /data-tuner-centre/.test(code('components/music/TunerPanel.tsx')),
+     'the scale marks the in-tune zone and its centre line');
+  ok(/!reading \|\| held\) return;/.test(code('components/music/TunerPanel.tsx')) && /reading=\{held \? null : reading\}/.test(code('components/music/TunerPanel.tsx')),
+     'a note held after the singing stops is never taken as an A, nor drawn on the trail');
   ok(/turn\.current \+= 1/.test(tuner) && /if \(mine !== turn\.current\) \{[\s\S]*?getTracks\(\)\.forEach\(\(t\) => t\.stop\(\)\)/.test(tuner),
      'a microphone allowed after the tuner was left is let go at once, never left listening');
   const panel = code('components/music/TunerPanel.tsx');

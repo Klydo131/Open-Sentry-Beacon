@@ -37,7 +37,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { browser: engine, engineName, launchOptions, openRoom, pageErrors } = require('./_playwright');
-const { signIn } = require('./_looks');
+const { signIn, choose } = require('./_looks');
 
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
 const FIXTURE = path.join(__dirname, '..', 'fixtures', 'music', 'four-parts.musicxml');
@@ -99,6 +99,32 @@ const micsLive = (page) => page.evaluate(() => window.__mics.flatMap((s) => s.ge
 const clocksOpen = (page) => page.evaluate(() => window.__clocks.filter((c) => c.state !== 'closed').length);
 const sideways = (page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 const say = (page, sel) => page.locator(sel).first().innerText().catch(() => '');
+
+/**
+ * How well a drawn thing shows: its colour (`prop`, as the browser resolved it,
+ * so currentColor and a look's variables are real colours here), faded by every
+ * opacity it sits under, against what is painted behind it, translucent glass
+ * included. `self` measures against the element's own background (a canvas).
+ */
+const shows = (page, sel, prop, self = false) => page.locator(sel).first().evaluate((el, [prop, self]) => {
+  const rgba = (v) => {
+    const n = v.match(/[\d.]+/g)?.map(Number) ?? [];
+    const k = /^color\(srgb\b/.test(v) ? 255 : 1;
+    return [(n[0] ?? 0) * k, (n[1] ?? 0) * k, (n[2] ?? 0) * k, n[3] ?? 1];
+  };
+  const layers = [];
+  for (let at = self ? el : el.parentElement; at; at = at.parentElement) layers.unshift(rgba(getComputedStyle(at).backgroundColor));
+  let bg = [255, 255, 255];
+  for (const c of layers) bg = bg.map((v, i) => c[i] * c[3] + v * (1 - c[3]));
+  const c = rgba(getComputedStyle(el)[prop]);
+  let opacity = c[3];
+  for (let at = el; at && at !== document.body; at = at.parentElement) opacity *= Number(getComputedStyle(at).opacity);
+  const fg = bg.map((v, i) => c[i] * opacity + v * (1 - opacity));
+  const lum = (x) => x.map((v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; })
+    .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const a = lum(fg), b = lum(bg);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}, [prop, self]);
 
 // The Tuner, Conductor and Pieces are fetched when first needed (the audit of
 // 4 October 2026), so opening one shows "Opening" for a moment on a slow
@@ -448,7 +474,7 @@ async function deskPhoto(page) {
       ok(await page.locator('[data-playhead]').getAttribute('visibility') === 'visible', `${size}: it plays, and the playhead moves`);
       await page.locator('#score-mine').selectOption({ index: 1 });
       const mineId = await page.locator('#score-mine').inputValue();
-      ok(await page.locator(`[data-line="${mineId}"].fill-teal-700`).count() === 1, `${size}: your part is drawn apart from the rest`);
+      ok(await page.locator(`[data-line="${mineId}"][data-mine]`).count() === 1, `${size}: your part is drawn apart from the rest`);
       await page.getByRole('button', { name: '+ 5' }).click();
       await page.waitForTimeout(300);
       ok(/101/.test(await say(page, '[data-score-tempo]')) && await page.locator('[data-panel="score-view"]').getByRole('button', { name: '■ Stop' }).isVisible(),
@@ -622,6 +648,64 @@ async function deskPhoto(page) {
       await page.locator('[data-panel="music-moved"] a[href="/music"]').click();
       await page.waitForURL(/\/music/);
       ok(/\/music/.test(page.url()), `${size}: and one tap goes there`);
+
+      // 7. SEEN IN EVERY KIND OF LOOK ----------------------------------------
+      // Reported 6 October 2026, with a picture: the conductor's hand was navy
+      // on Dark Aero's navy panel, so it could not be seen at all, and the
+      // score's other parts and lines vanished the same way. Each drawn thing
+      // is measured against what is really behind it, in a light look and in
+      // both dark ones: 3:1 is what a line or a shape needs to be seen.
+      // And the room's folder list, open over the page in Dark Aero, is solid,
+      // so the page's words do not show through it.
+      if (size === 'phone') {
+        for (const look of ['classic', 'focus', 'aero-dark']) {
+          await choose(page, BASE, look);
+          await page.evaluate(() => { try { localStorage.setItem('beacon:music-advanced:tuner', '1'); } catch { /* */ } });
+          await page.goto(`${BASE}/music`, { waitUntil: 'networkidle' });
+          if (fakeMic) {
+            await openFolder(page, 'Tuner');
+            await page.getByRole('button', { name: /Start listening/ }).click();
+            await page.waitForTimeout(1500);
+            const trail = await shows(page, '[data-tuner-trail] canvas', 'borderTopColor', true);
+            ok(trail >= 3, `${look}: the trail of your voice shows (${trail.toFixed(1)}:1)`);
+            // "I can't see where's the fine line for perfect pitch" (6 October 2026).
+            const centre = await shows(page, '[data-tuner-centre]', 'backgroundColor');
+            const needle = await shows(page, '[data-tuner-needle]', 'backgroundColor');
+            const words = await shows(page, '[data-tuner-verdict]', 'color');
+            ok(centre >= 3 && needle >= 3 && words >= 4.5 && /In tune/.test(await say(page, '[data-tuner-verdict]')),
+               `${look}: the tuner's centre line, its needle and "In tune" all show (${centre.toFixed(1)}, ${needle.toFixed(1)}, ${words.toFixed(1)}:1)`);
+            await page.getByRole('button', { name: /Stop listening/ }).click();
+          }
+          await openFolder(page, 'Conductor');
+          await page.getByRole('button', { name: '▶ Start' }).click();
+          await page.waitForTimeout(400);
+          const hand = await shows(page, '[data-baton-hand]', 'fill');
+          ok(hand >= 3, `${look}: the conductor's hand shows (${hand.toFixed(1)}:1)`);
+          await page.getByRole('button', { name: '■ Stop' }).click();
+          await openFolder(page, 'Pieces');
+          await page.locator('[data-score-input]').setInputFiles(FIXTURE);
+          await page.locator('[data-score-roll]').waitFor({ timeout: 10000 });
+          await page.locator('#score-mine').selectOption({ index: 1 });
+          const yours = await shows(page, '[data-line][data-mine] rect', 'fill');
+          const others = await shows(page, '[data-line]:not([data-mine]) rect', 'fill');
+          await page.getByRole('button', { name: /^▶ Play/ }).click();
+          await page.waitForTimeout(500);
+          const head = await shows(page, '[data-playhead]', 'stroke');
+          await page.getByRole('button', { name: /Stop/ }).first().click();
+          ok(yours >= 3 && others >= 3 && head >= 3,
+             `${look}: on the score, your part, the other parts and the playhead all show (${yours.toFixed(1)}, ${others.toFixed(1)}, ${head.toFixed(1)}:1)`);
+          await page.locator('[data-subroom-toggle]').click();
+          const list = page.locator('[data-subroom-menu] [role="listbox"]');
+          await list.waitFor();
+          const alpha = await list.evaluate((el) => {
+            const n = getComputedStyle(el).backgroundColor.match(/[\d.]+/g)?.map(Number) ?? [];
+            return n.length > 3 ? n[3] : 1;
+          });
+          ok(alpha === 1, `${look}: the folder list is solid, so the page does not show through it (alpha ${alpha})`);
+          await page.keyboard.press('Escape');
+        }
+        await choose(page, BASE, 'classic');
+      }
 
       const thrown = errors.list();
       ok(thrown.length === 0, `${size}: nothing threw${thrown.length ? `: ${thrown.join(' | ')}` : ''}`);

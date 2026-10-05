@@ -47,7 +47,7 @@ type Match =
 
 export function TunerPanel() {
   const tuner = useTuner();
-  const { status, reading, a4, setA4, start: listen, stop: stopListening } = tuner;
+  const { status, reading, held, a4, setA4, start: listen, stop: stopListening } = tuner;
   const tone = useTone();
   const [advanced, setAdvanced] = useAdvanced('tuner');
   const [instrument, setInstrumentState] = useState<InstrumentKey>('C');
@@ -102,11 +102,11 @@ export function TunerPanel() {
     if (status !== 'listening') { openedMic.current = true; void listen(); }
   };
   useEffect(() => {
-    if (match.state !== 'listening' || !reading) return;
+    if (match.state !== 'listening' || !reading || held) return;
     samples.current = [...samples.current, reading.hz].slice(-STEADY_READINGS * 2);
     const hz = heardA(samples.current);
     if (hz !== null) endMatch({ state: 'heard', hz });
-  }, [reading, match.state, endMatch]);
+  }, [reading, held, match.state, endMatch]);
   // The microphone refused, or Stop listening pressed on the Tuner card: no match.
   const was = useRef(status);
   useEffect(() => {
@@ -146,7 +146,10 @@ export function TunerPanel() {
             : <Button onClick={() => void tuner.start()} disabled={status === 'asking'}>🎙️ Start listening</Button>}
         </div>
 
-        <div className="mt-5 rounded-2xl bg-gray-50 p-5 text-center" data-tuner-reading>
+        <div
+          className={`mt-5 rounded-2xl bg-gray-50 p-5 text-center transition-shadow ${inTune ? 'ring-2 ring-[color:var(--music-accent)]' : ''}`}
+          data-tuner-reading
+        >
           <p className="text-6xl font-extrabold tabular-nums text-navy" aria-label={shown ? `${shown.name} ${shown.octave}` : 'No note'}>
             {shown ? <>{shown.name}<span className="text-3xl text-gray-500">{shown.octave}</span></> : '·'}
           </p>
@@ -156,14 +159,14 @@ export function TunerPanel() {
             </p>
           )}
           <Needle cents={reading ? cents : null} inTune={inTune} />
-          <p className={`mt-8 min-h-6 font-bold ${inTune ? 'text-teal-700' : 'text-navy'}`} data-tuner-verdict>
+          <p className={`mt-9 min-h-6 font-bold ${inTune ? 'text-[color:var(--music-accent)]' : 'text-navy'}`} data-tuner-verdict>
             {inTune ? '✓ ' : ''}{verdict}
           </p>
           <p className="mt-1 text-sm tabular-nums text-gray-500">
             {reading ? `${reading.hz.toFixed(1)} Hz` : ' '}
           </p>
           {a4 !== A4_DEFAULT && (
-            <p className="mt-1 text-xs font-semibold text-teal-700" data-tuner-against>
+            <p className="mt-1 text-xs font-semibold text-[color:var(--music-accent)]" data-tuner-against>
               Measured against your concert pitch, A = {a4} Hz
             </p>
           )}
@@ -252,7 +255,7 @@ export function TunerPanel() {
                 </>
               )}
           </div>
-          <p role="status" aria-live="polite" className="mt-2 min-h-5 text-sm font-semibold text-teal-700" data-pitch-now>
+          <p role="status" aria-live="polite" className="mt-2 min-h-5 text-sm font-semibold text-[color:var(--music-accent)]" data-pitch-now>
             {tone.now ? `Playing ${tone.now}` : ''}
           </p>
 
@@ -291,7 +294,7 @@ export function TunerPanel() {
                 </div>
               )}
               {match.state === 'used' && (
-                <p className="font-semibold text-teal-700">✓ Concert pitch is now A = {match.hz} Hz, from your instrument.</p>
+                <p className="font-semibold text-[color:var(--music-accent)]">✓ Concert pitch is now A = {match.hz} Hz, from your instrument.</p>
               )}
             </div>
           </div>
@@ -310,7 +313,7 @@ export function TunerPanel() {
       </Card>
       {advanced && (
         <>
-          <PitchTrail reading={reading} a4={a4} listening={listening} />
+          <PitchTrail reading={held ? null : reading} a4={a4} listening={listening} />
           <Drone a4={a4} />
           <InstrumentChoice value={instrument} onChange={setInstrument} />
         </>
@@ -384,15 +387,22 @@ function useTone() {
 }
 
 /**
- * How far off, drawn as a line with the centre marked. Flat to the left,
- * sharp to the right, and said in words beside it, so colour is never the
- * only way to tell.
+ * How far off, drawn as a scale with the in-tune zone marked. Flat to the
+ * left, sharp to the right, and said in words beside it, so colour is never
+ * the only way to tell.
+ *
+ * Redrawn on 6 October 2026, when the owner, in Dark Aero, reported: "I can't
+ * see where's the fine line for perfect pitch." The centre was a hairline at
+ * half strength. Now: the zone that counts as in tune (IN_TUNE_CENTS either
+ * side) is a band in the Music room's green, the centre is a bold line in the
+ * look's own ink, there is a tick every ten cents, and the needle turns green
+ * inside the zone. Ink and green both follow the look, light or dark.
  */
 function Needle({ cents, inTune }: { cents: number | null; inTune: boolean }) {
   const at = cents === null ? 50 : 50 + Math.max(-50, Math.min(50, cents));
   return (
     <div
-      className="relative mx-auto mt-4 h-10 max-w-md"
+      className="relative mx-auto mt-6 h-16 max-w-md text-navy"
       role="meter"
       aria-label="How far off the note"
       aria-valuemin={-50}
@@ -400,14 +410,29 @@ function Needle({ cents, inTune }: { cents: number | null; inTune: boolean }) {
       aria-valuenow={cents ?? 0}
       aria-valuetext={cents === null ? 'No note' : inTune ? 'In tune' : `${cents} cents`}
     >
-      {/* In the text colour, so a dark look draws the line light. */}
-      <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-current text-navy opacity-20" />
-      <div className="absolute top-0 h-full w-0.5 -translate-x-1/2 bg-current text-navy opacity-50" style={{ left: '50%' }} />
-      <span className="absolute -bottom-5 left-0 text-xs text-gray-500">flat</span>
-      <span className="absolute -bottom-5 right-0 text-xs text-gray-500">sharp</span>
+      <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs font-bold text-[color:var(--music-accent)]">in tune</span>
+      {/* The zone that counts as in tune. */}
+      <div
+        className={`absolute inset-y-1 -translate-x-1/2 rounded-md ${inTune ? 'opacity-50' : 'opacity-30'}`}
+        style={{ left: '50%', width: `${IN_TUNE_CENTS * 2}%`, background: 'var(--music-accent)' }}
+        data-tuner-zone
+      />
+      {/* The scale: a line, a tick every ten cents, the ends and the middle longer. */}
+      <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-current opacity-30" />
+      {Array.from({ length: 11 }, (_, i) => i * 10).map((x) => (
+        <div
+          key={x}
+          className={`absolute top-1/2 w-px -translate-x-1/2 -translate-y-1/2 bg-current ${x === 50 ? 'hidden' : x % 50 === 0 ? 'h-6 opacity-60' : 'h-3 opacity-40'}`}
+          style={{ left: `${x}%` }}
+        />
+      ))}
+      {/* Perfect pitch: the bold line in the middle. */}
+      <div className="absolute inset-y-0 w-[3px] -translate-x-1/2 rounded-full bg-current" style={{ left: '50%' }} data-tuner-centre />
+      <span className="absolute -bottom-6 left-0 text-xs font-semibold text-gray-500">♭ flat</span>
+      <span className="absolute -bottom-6 right-0 text-xs font-semibold text-gray-500">sharp ♯</span>
       {cents !== null && (
         <div
-          className={`absolute top-1/2 h-8 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-[left] duration-75 ${inTune ? 'bg-teal-600' : 'bg-navy'}`}
+          className={`absolute top-1/2 h-14 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white/70 transition-[left] duration-75 ${inTune ? 'bg-[color:var(--music-accent)]' : 'bg-current'}`}
           style={{ left: `${at}%` }}
           data-tuner-needle
         />

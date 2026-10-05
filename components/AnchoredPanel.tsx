@@ -153,7 +153,7 @@ export function AnchoredPanel({
       style={style}
       // In from the button's corner and back into it: globals.css, "Things
       // that hang off a button".
-      className={`${leaving ? 'anchored-out' : 'anchored-in'} z-40 rounded-2xl bg-white text-left lift-3 ring-1 ring-black/10 ${className}`}
+      className={`${leaving ? 'anchored-out' : 'anchored-in'} z-40 rounded-2xl solid-panel bg-white text-left lift-3 ring-1 ring-black/10 ${className}`}
     >
       {children}
     </div>

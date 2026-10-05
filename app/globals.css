@@ -1620,3 +1620,39 @@ body:has([data-conversation-screen]) .tab-bar {
     padding-bottom: 1rem;
   }
 }
+
+/* A PANEL THAT FLOATS OVER WORDS IS SOLID, IN EVERY LOOK (6 October 2026).
+
+   The Frutiger Aero looks paint every white panel as glass, 86 to 90 per cent
+   opaque, which is right for a card lying on the page: only the sky is behind
+   it. It is wrong for a panel that opens on top of other words. The owner,
+   with a picture of the room's folder list open in Dark Aero: "some words in
+   the transparent glass overlaps with each other which sometimes confuses some
+   users". The folder names sat on top of the page's own heading and buttons.
+
+   So anything that floats (a drop-down, a sheet, a dialog, the chat) carries
+   `solid-panel` and is painted in the look's panel colour, fully opaque. The
+   look's sheen and rim still apply; only the see-through goes. It names no
+   look (the looks' own rules stay in app/themes/, tests/the-classic-look-
+   stays.mjs), and outweighs the glass rule by naming its class twice rather
+   than by coming later, so the order the stylesheets load in cannot undo it.
+   Under Classic, Beacon, Study and Focus the panel colour is the one their
+   `bg-white` already uses, so nothing there changes. */
+:root .solid-panel.solid-panel.bg-white:not([data-look-preview]) {
+  background-color: var(--look-panel, #ffffff) !important;
+}
+
+/* THE MUSIC ROOM'S GREEN (6 October 2026): your part on the score, the trail
+   of your voice, the beat a score starts from. No one green reads on both a
+   light and a dark panel (measured on all ten looks: teal-700 is 2.4:1 on
+   Focus, teal-400 is 1.5:1 on Classic), so a light look gets the deep green
+   and a dark look (color-scheme: dark, which Focus and Dark Aero set) the
+   bright one. A browser too old for light-dark() keeps the middle green. */
+:root {
+  --music-accent: #0d9488;
+}
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    --music-accent: light-dark(#0f766e, #2dd4bf);
+  }
+}

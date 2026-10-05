@@ -101,7 +101,11 @@ export function ConductorPanel() {
         <div className="mt-4 grid items-center gap-5 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
           <svg
             viewBox="0 0 100 100"
-            className="mx-auto aspect-square w-full max-w-72 rounded-2xl bg-gray-50"
+            // text-navy is the look's own ink (navy here, near-white in a dark
+            // look), and the hand and its path are drawn in it, so they show on
+            // every look's panel. A fixed navy vanished on Focus and Dark Aero
+            // (reported 6 October 2026, with a picture).
+            className="mx-auto aspect-square w-full max-w-72 rounded-2xl bg-gray-50 text-navy"
             role="img"
             aria-label={`${METER_LABEL[meter]} beat pattern${beat !== null ? `, beat ${beat + 1}` : ''}`}
             data-baton
@@ -111,7 +115,7 @@ export function ConductorPanel() {
               points={[...points, points[0]].map(([x, y]) => `${x},${y}`).join(' ')}
               fill="none"
               stroke="currentColor"
-              className="text-navy/15"
+              opacity={0.35}
               strokeWidth="1"
               strokeDasharray="2 2"
             />
@@ -130,7 +134,7 @@ export function ConductorPanel() {
                 </text>
               </g>
             ))}
-            <circle ref={hand} cx={restX} cy={restY} r="4" className="fill-navy" opacity={running ? 0.9 : 0} data-baton-hand />
+            <circle ref={hand} cx={restX} cy={restY} r="4.5" fill="currentColor" opacity={running ? 1 : 0} data-baton-hand />
           </svg>
 
           <div className="space-y-4">

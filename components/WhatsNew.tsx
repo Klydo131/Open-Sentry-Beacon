@@ -77,7 +77,7 @@ function WhatsNewPanel({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="animate-drop overlay-sheet w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white sm:rounded-2xl"
+        className="animate-drop overlay-sheet w-full max-w-lg overflow-y-auto rounded-t-2xl solid-panel bg-white sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div

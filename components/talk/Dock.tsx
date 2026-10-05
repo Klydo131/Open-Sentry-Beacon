@@ -210,7 +210,7 @@ export function TalkSheet({ leaving, children }: { leaving: boolean; children: R
       aria-label="Talk"
       data-talk-sheet
     >
-      <div className={`talk-sheet ${leaving ? 'talk-panel-out' : 'talk-panel-in'} flex h-full w-full flex-col overflow-hidden bg-white ring-1 ring-black/10 xl:h-[32rem] xl:w-[22rem] xl:rounded-2xl xl:lift-3`}>
+      <div className={`talk-sheet ${leaving ? 'talk-panel-out' : 'talk-panel-in'} flex h-full w-full flex-col overflow-hidden solid-panel bg-white ring-1 ring-black/10 xl:h-[32rem] xl:w-[22rem] xl:rounded-2xl xl:lift-3`}>
         {children}
       </div>
     </div>

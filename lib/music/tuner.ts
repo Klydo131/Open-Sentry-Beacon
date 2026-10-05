@@ -11,54 +11,44 @@
 // room, or the phone locks or switches apps.
 //
 // THE PITCH is found by the McLeod pitch method ("A smarter way to find pitch",
-// McLeod and Wyvill, 2005), through pitchy (MIT, github.com/ianprime0509/pitchy):
-// accurate on a held voice or instrument, and quick enough for every frame.
+// McLeod and Wyvill, 2005), through pitchy (MIT, github.com/ianprime0509/pitchy),
+// on every frame. What to show from those readings (which window, when a note
+// has changed, how steady to hold the needle) is lib/music/pitch-tracker.ts,
+// reworked on 6 October 2026 to be quicker on a change of note and steadier on
+// a held one.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PitchDetector } from 'pitchy';
 import { clampA4, readFrequency, A4_DEFAULT, type Reading } from '@/lib/music/notes';
+import { LONG_WINDOW, PitchTracker } from '@/lib/music/pitch-tracker';
 
-/** Below this, the sound is too noisy to name a note. pitchy's clarity is 0 to 1. */
-const CLARITY = 0.88;
-/** The range a choir and its instruments live in, bass's low E to a soprano's top C and beyond. */
-const LOWEST_HZ = 55;
-const HIGHEST_HZ = 1600;
-/** Readings smoothed over, so the needle does not shiver. */
-const SMOOTH = 5;
 /**
- * The screen is told at most this often. The pitch is still measured every
- * frame; drawing it sixty times a second only made the phone warm.
+ * The screen is told at most this often, about thirty times a second: as fast
+ * as an eye follows a needle. The pitch is still measured every frame.
  */
-const SHOW_EVERY_MS = 50;
-/** The pitch is worked out this often: half the frames, and no reading is lost. */
-const LISTEN_EVERY_MS = 30;
+const SHOW_EVERY_MS = 33;
 
 export type TunerStatus = 'off' | 'asking' | 'listening' | 'denied' | 'unavailable';
 
 export interface Tuner {
   status: TunerStatus;
   reading: Reading | null;
+  /** The sound has stopped and the last note is being held for a moment. */
+  held: boolean;
   a4: number;
   setA4: (hz: number) => void;
   start: () => Promise<void>;
   stop: () => void;
 }
 
-const median = (values: number[]) => {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)];
-};
-
 export function useTuner(): Tuner {
   const [status, setStatus] = useState<TunerStatus>('off');
   const [reading, setReading] = useState<Reading | null>(null);
+  const [held, setHeld] = useState(false);
   const [a4, setA4State] = useState(A4_DEFAULT);
   const stream = useRef<MediaStream | null>(null);
   const ctx = useRef<AudioContext | null>(null);
   const frame = useRef(0);
-  const heard = useRef<number[]>([]);
   const shownAt = useRef(0);
-  const heardAt = useRef(0);
   // Every start and every stop takes a new number. A start whose permission
   // prompt is answered after a stop (the room left, the phone locked) finds
   // its number stale and lets the microphone go at once.
@@ -74,8 +64,8 @@ export function useTuner(): Tuner {
     stream.current = null;
     if (ctx.current && ctx.current.state !== 'closed') void ctx.current.close().catch(() => {});
     ctx.current = null;
-    heard.current = [];
     setReading(null);
+    setHeld(false);
     setStatus((s) => (s === 'denied' || s === 'unavailable' ? s : 'off'));
   }, []);
 
@@ -107,34 +97,32 @@ export function useTuner(): Tuner {
     const audio = new C();
     void audio.resume().catch(() => {});
     const analyser = audio.createAnalyser();
-    analyser.fftSize = 4096;
+    analyser.fftSize = LONG_WINDOW;
     // Into the analyser only: nothing is connected to the speakers, so the
     // tuner never plays the room back to itself.
     audio.createMediaStreamSource(media).connect(analyser);
-    const detector = PitchDetector.forFloat32Array(analyser.fftSize);
-    const buffer = new Float32Array(detector.inputLength);
+    const tracker = new PitchTracker(audio.sampleRate);
+    const buffer = new Float32Array(LONG_WINDOW);
     stream.current = media;
     ctx.current = audio;
     setStatus('listening');
 
+    let showing = false;
     const listen = () => {
       frame.current = requestAnimationFrame(listen);
       const now = performance.now();
-      if (now - heardAt.current < LISTEN_EVERY_MS) return;
-      heardAt.current = now;
       analyser.getFloatTimeDomainData(buffer);
-      const [hz, clarity] = detector.findPitch(buffer, audio.sampleRate);
-      if (clarity >= CLARITY && hz >= LOWEST_HZ && hz <= HIGHEST_HZ) {
-        heard.current = [...heard.current, hz].slice(-SMOOTH);
-        if (now - shownAt.current >= SHOW_EVERY_MS) {
-          shownAt.current = now;
-          setReading(readFrequency(median(heard.current), a4Now.current));
-        }
-      } else if (heard.current.length) {
-        // Silence for a moment empties the smoothing, so the next note is read fresh.
-        heard.current = heard.current.slice(1);
-        if (!heard.current.length) setReading(null);
+      const heard = tracker.push(buffer, now);
+      if (!heard) {
+        // Cleared at once when the held note runs out, not on the next tick.
+        if (showing) { showing = false; setReading(null); setHeld(false); }
+        return;
       }
+      if (now - shownAt.current < SHOW_EVERY_MS) return;
+      shownAt.current = now;
+      showing = true;
+      setReading(readFrequency(heard.hz, a4Now.current));
+      setHeld(heard.held);
     };
     frame.current = requestAnimationFrame(listen);
   }, [stop]);
@@ -156,5 +144,5 @@ export function useTuner(): Tuner {
   // Stable, so a screen can call it from an effect without running it again.
   const setA4 = useCallback((hz: number) => setA4State(clampA4(hz)), []);
 
-  return { status, reading, a4, setA4, start, stop };
+  return { status, reading, held, a4, setA4, start, stop };
 }

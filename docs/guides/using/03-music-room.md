@@ -53,7 +53,12 @@ with their picture, and keep playing when you walk to another room.
    yes; it is asked only once.
 3. Sing or play a steady note. The tuner names it (such as *A* or *C♯*) and its
    octave, and a needle leans **left when you are flat** and **right when you
-   are sharp**. It says so in words as well, so nobody has to read a dial.
+   are sharp**. The green band in the middle is *in tune* (within 5 cents),
+   and the bold line through it is the note exactly. Inside the band the
+   needle turns green and the reading gets a green ring. It says so in words
+   as well, so nobody has to read a dial. A new note shows in about a tenth of
+   a second, and when you stop, the last note stays for a moment so you can
+   read it.
 4. Tap **Stop listening** when you are done.
 
 **Starting note** plays a note for two seconds, like a pitch pipe, so a choir

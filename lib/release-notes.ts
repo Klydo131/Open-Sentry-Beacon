@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-06-music-in-every-look',
+    date: '2026-10-06',
+    title: 'A quicker tuner, and the Music room in every look',
+    items: [
+      'The tuner moves to a new note in about a tenth of a second, keeps its needle steady while you sing, and holds the last note for a moment when you stop.',
+      'Its scale now shows the in-tune zone as a green band, with a bold line for the exact note, easy to see in the dark looks too.',
+      'In dark looks, the conductor\'s hand, every part on a score and the play line can all be seen now.',
+      'Drop-down lists, sheets and the chat no longer let the page show through them in the Frutiger Aero looks, so their words never mix with the words behind.',
+    ],
+  },
+  {
     id: '2026-10-05-music-advanced-and-play',
     date: '2026-10-05',
     title: 'Advanced settings in the Music room, and a new Play folder',

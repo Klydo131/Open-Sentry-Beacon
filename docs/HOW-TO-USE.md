@@ -115,7 +115,7 @@ folder for more, and untick it to put the folder back as it was.
   calming sounds for the background. Your music is still in My Files as well,
   and each file there has its own Play button for a quick listen.
 - **Tuner** tells you which note you are singing or playing and whether it is
-  flat or sharp. Tap **Start listening**; your phone asks once whether the app
+  flat or sharp: the green band in the middle is in tune. Tap **Start listening**; your phone asks once whether the app
   may use the microphone. Tap **Stop listening** when you are done. It records
   nothing. **Starting note** plays a note for the choir, like a pitch pipe.
   **Concert pitch** is where the choir's A sits: 440 is the standard. Tap 442

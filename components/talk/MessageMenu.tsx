@@ -85,7 +85,7 @@ export function MessageMenu({
       <div
         role="dialog"
         aria-label={`Options for ${title}`}
-        className="menu-sheet-in mx-auto w-full max-w-md rounded-t-[28px] bg-white px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-2 lift-3"
+        className="menu-sheet-in mx-auto w-full max-w-md rounded-t-[28px] solid-panel bg-white px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-2 lift-3"
       >
         <span aria-hidden className="mx-auto mb-2 block h-1 w-10 rounded-full bg-slate-200" />
         <p className={`mb-2 line-clamp-2 rounded-2xl px-3 py-2 text-[0.778rem] leading-snug text-slate-700 ${

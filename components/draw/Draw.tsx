@@ -21,7 +21,7 @@ export const DrawingBoard = dynamic(
     ssr: false,
     // FULL SCREEN WHILE IT ARRIVES, because what it is loading is full screen.
     loading: () => (
-      <div className="fixed inset-0 z-[100] grid place-items-center bg-white">
+      <div className="fixed inset-0 z-[100] grid place-items-center solid-panel bg-white">
         <BeaconSpinner inline label="Opening the drawing board" />
       </div>
     ),

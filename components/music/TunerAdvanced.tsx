@@ -58,6 +58,9 @@ export function PitchTrail({ reading, a4, listening }: { reading: Reading | null
         <canvas
           ref={canvas}
           className="mt-3 block h-44 w-full rounded-2xl bg-gray-50 text-navy"
+          // A canvas cannot read a CSS variable, so the Music room's green is
+          // put on a border nobody sees and read back as a colour (paint, below).
+          style={{ borderColor: 'var(--music-accent)' }}
           role="img"
           aria-label={reading ? `Your voice now: ${reading.name}${reading.octave}` : 'Your voice: nothing heard yet'}
         />
@@ -87,6 +90,7 @@ function paint(c: HTMLCanvasElement, g: CanvasRenderingContext2D, points: { t: n
   const xOf = (t: number) => left + (1 - (now - t) / (TRAIL_SECONDS * 1000)) * (w - left - 6);
   // The text colour of the look, so a dark look draws the lines light.
   const ink = getComputedStyle(c).color || '#1e2a4a';
+  const green = getComputedStyle(c).borderTopColor || '#0d9488';
   g.font = '10px system-ui, sans-serif';
   g.textBaseline = 'middle';
   for (let m = Math.ceil(low); m <= Math.floor(high); m++) {
@@ -104,7 +108,7 @@ function paint(c: HTMLCanvasElement, g: CanvasRenderingContext2D, points: { t: n
     }
   }
   g.globalAlpha = 1;
-  g.strokeStyle = '#0d9488';
+  g.strokeStyle = green;
   g.lineWidth = 3;
   g.lineJoin = 'round';
   g.beginPath();
@@ -117,7 +121,7 @@ function paint(c: HTMLCanvasElement, g: CanvasRenderingContext2D, points: { t: n
   g.stroke();
   const last = recent[recent.length - 1];
   if (last && now - last.t < BREATH_MS) {
-    g.fillStyle = '#0d9488';
+    g.fillStyle = green;
     g.beginPath();
     g.arc(xOf(last.t), yOf(last.s), 5, 0, Math.PI * 2);
     g.fill();

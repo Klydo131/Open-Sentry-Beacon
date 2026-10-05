@@ -173,7 +173,7 @@ export function DrawingBoard({ name, title, initial, onSave, onClose }: {
       data-drawing-board=""
       // ABOVE EVERYTHING, like the study room: the walkthrough's banner sits at
       // z-50 and must not cover Save.
-      className="fixed inset-0 z-[100] flex flex-col bg-white"
+      className="fixed inset-0 z-[100] flex flex-col solid-panel bg-white"
     >
       <header
         className="flex shrink-0 items-center gap-2 border-b border-navy/10 bg-white px-3"

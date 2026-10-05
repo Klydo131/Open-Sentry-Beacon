@@ -172,7 +172,7 @@ export function SubroomMenu({
           role="listbox"
           aria-label={label}
           onKeyDown={onListKey}
-          className="subroom-menu-in absolute left-0 right-0 z-40 mt-2 max-h-[70vh] overflow-y-auto rounded-2xl bg-white p-1.5 ring-1 ring-black/10 lift-3 [max-height:70dvh]"
+          className="subroom-menu-in absolute left-0 right-0 z-40 mt-2 max-h-[70vh] overflow-y-auto rounded-2xl solid-panel bg-white p-1.5 ring-1 ring-black/10 lift-3 [max-height:70dvh]"
         >
           {items.map((item) => {
             const on = item.id === current.id;
