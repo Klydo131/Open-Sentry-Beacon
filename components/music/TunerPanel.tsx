@@ -19,12 +19,16 @@ import { Button, Card } from '@/components/ui';
 import { useTuner } from '@/lib/music/tuner';
 import {
   A4_DEFAULT, A4_MAX, A4_MIN, CONCERT_PITCHES, IN_TUNE_CENTS, STEADY_READINGS,
-  clampA4, heardA, midiName, midiToHz, pitchWords,
+  clampA4, heardA, midiName, midiToHz, pitchWords, writtenFor, type InstrumentKey,
 } from '@/lib/music/notes';
 import { closeAudio, note, openAudio } from '@/lib/music/audio';
+import { AdvancedToggle, useAdvanced } from '@/components/music/Advanced';
+import { Drone, InstrumentChoice, PitchTrail } from '@/components/music/TunerAdvanced';
 
 /** The calibration a choir chose, remembered on this phone. A convenience only. */
 const A4_KEY = 'beacon:music-a4';
+/** The instrument whose notes the tuner shows (Advanced), remembered on this phone. */
+const INSTRUMENT_KEY = 'beacon:music-instrument';
 
 /** The pitch pipe's notes: low C for the basses to high C for the sopranos. */
 const PIPE_NOTES = Array.from({ length: 25 }, (_, i) => 48 + i);
@@ -45,6 +49,21 @@ export function TunerPanel() {
   const tuner = useTuner();
   const { status, reading, a4, setA4, start: listen, stop: stopListening } = tuner;
   const tone = useTone();
+  const [advanced, setAdvanced] = useAdvanced('tuner');
+  const [instrument, setInstrumentState] = useState<InstrumentKey>('C');
+  useEffect(() => {
+    try {
+      const kept = localStorage.getItem(INSTRUMENT_KEY);
+      if (kept === 'Bb' || kept === 'Eb' || kept === 'F') setInstrumentState(kept);
+    } catch { /* a convenience only */ }
+  }, []);
+  const setInstrument = (k: InstrumentKey) => {
+    setInstrumentState(k);
+    try { localStorage.setItem(INSTRUMENT_KEY, k); } catch { /* a convenience only */ }
+  };
+  // What the big letter shows: the note as it sounds, or as a transposing instrument reads it.
+  const reads = advanced && instrument !== 'C' && reading ? writtenFor(reading.midi, instrument) : null;
+  const shown = reads !== null ? { name: midiName(reads).replace(/-?\d+$/, ''), octave: Number(midiName(reads).match(/-?\d+$/)?.[0]) } : reading;
 
   // Remembered calibration, read after mount (no storage on the server).
   useEffect(() => {
@@ -128,9 +147,14 @@ export function TunerPanel() {
         </div>
 
         <div className="mt-5 rounded-2xl bg-gray-50 p-5 text-center" data-tuner-reading>
-          <p className="text-6xl font-extrabold tabular-nums text-navy" aria-label={reading ? `${reading.name} ${reading.octave}` : 'No note'}>
-            {reading ? <>{reading.name}<span className="text-3xl text-gray-500">{reading.octave}</span></> : '·'}
+          <p className="text-6xl font-extrabold tabular-nums text-navy" aria-label={shown ? `${shown.name} ${shown.octave}` : 'No note'}>
+            {shown ? <>{shown.name}<span className="text-3xl text-gray-500">{shown.octave}</span></> : '·'}
           </p>
+          {reads !== null && reading && (
+            <p className="mt-1 text-sm font-semibold text-gray-600" data-tuner-sounds>
+              As your instrument reads it. Sounds as {reading.name}{reading.octave}.
+            </p>
+          )}
           <Needle cents={reading ? cents : null} inTune={inTune} />
           <p className={`mt-8 min-h-6 font-bold ${inTune ? 'text-teal-700' : 'text-navy'}`} data-tuner-verdict>
             {inTune ? '✓ ' : ''}{verdict}
@@ -275,6 +299,22 @@ export function TunerPanel() {
       </Card>
 
       <PitchPipe a4={a4} />
+
+      <Card className="p-5">
+        <AdvancedToggle
+          folder="tuner"
+          on={advanced}
+          onChange={setAdvanced}
+          what="A trail of your voice over ten seconds, a drone to sing against, and notes as a clarinet, trumpet, saxophone or horn reads them."
+        />
+      </Card>
+      {advanced && (
+        <>
+          <PitchTrail reading={reading} a4={a4} listening={listening} />
+          <Drone a4={a4} />
+          <InstrumentChoice value={instrument} onChange={setInstrument} />
+        </>
+      )}
     </div>
   );
 }

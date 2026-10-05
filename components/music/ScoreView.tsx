@@ -17,7 +17,9 @@
 
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Card } from '@/components/ui';
-import { useScorePlayer, type Mix } from '@/lib/music/score-player';
+import { useScorePlayer, TRANSPOSE_MAX, type Mix } from '@/lib/music/score-player';
+import { TIMBRES, TIMBRE_NAME, type Timbre } from '@/lib/music/audio';
+import { AdvancedToggle, useAdvanced } from '@/components/music/Advanced';
 import { midiName } from '@/lib/music/notes';
 import { TEMPO_MAX, TEMPO_MIN } from '@/lib/music/beat';
 import type { Score, ScoreLine } from '@/lib/music/musicxml';
@@ -84,6 +86,16 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
   const [from, setFrom] = useState(0);
   const head = useRef<SVGLineElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
+  const [advanced, keepAdvanced] = useAdvanced('pieces');
+  // Turning Advanced off plays the score as written again.
+  const setAdvanced = (on: boolean) => {
+    keepAdvanced(on);
+    if (!on) {
+      player.setTranspose(0);
+      player.setLoop(null);
+      player.setTimbre('voice');
+    }
+  };
 
   const [low, high] = useMemo(
     () => lowHigh(score.lines.flatMap((l) => l.notes.map((n) => n.midi))) ?? [60, 72],
@@ -131,6 +143,15 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
   };
 
   const lastBeat = Math.max(0, Math.floor(score.length) - 1);
+  const beats = lastBeat + 1;
+  const loop = player.loop;
+  const setLoopBeats = (first: number, last: number) => {
+    const a = Math.max(1, Math.min(beats, Math.round(first)));
+    const b = Math.max(a, Math.min(beats, Math.round(last)));
+    player.setLoop({ from: a - 1, to: b });
+  };
+  const mineSilent = !!mine && mix[mine] === 'off';
+  const singMine = (on: boolean) => { if (mine) player.setMix({ [mine]: on ? 'off' : 'loud' }); };
   const startFrom = (beat: number) => {
     const at = Math.max(0, Math.min(lastBeat, Math.round(beat)));
     setFrom(at);
@@ -155,6 +176,11 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
           : <Button onClick={() => { player.play(from); }}>▶ Play{from > 0 ? ` from beat ${from + 1}` : ''}</Button>}
         {from > 0 && <Button variant="ghost" onClick={() => setFrom(0)}>Back to the start</Button>}
       </div>
+      {advanced && (loop || player.transpose !== 0) && (
+        <p className="mt-2 text-sm font-semibold text-teal-700" data-score-playing-as>
+          {[loop ? `Looping beats ${loop.from + 1} to ${loop.to}` : '', player.transpose ? `${player.transpose > 0 ? 'up' : 'down'} ${Math.abs(player.transpose)} ${Math.abs(player.transpose) === 1 ? 'semitone' : 'semitones'}` : ''].filter(Boolean).join(', ')}
+        </p>
+      )}
 
       <div className="mt-4 flex flex-wrap items-end gap-4">
         <label className="block">
@@ -249,6 +275,107 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
           );
         })}
       </ul>
+
+      <div className="mt-5 border-t border-navy/10 pt-4">
+        <AdvancedToggle
+          folder="pieces"
+          on={advanced}
+          onChange={setAdvanced}
+          what="Move the music up or down, loop a hard passage, silence your own part to sing it yourself, and choose a sound."
+        />
+      </div>
+      {advanced && (
+        <div className="mt-4 grid gap-4 md:grid-cols-2" data-score-advanced>
+          <div className="rounded-xl bg-gray-50 p-4">
+            <p className="font-bold text-navy">Transpose</p>
+            <p className="text-sm text-gray-600">Move every part up or down, to suit your voices.</p>
+            <div className="mt-2 flex items-center gap-2">
+              <Button variant="ghost" className="px-4" onClick={() => player.setTranspose(player.transpose - 1)} disabled={player.transpose <= -TRANSPOSE_MAX}>
+                <span aria-hidden>− 1</span><span className="sr-only">Down a semitone</span>
+              </Button>
+              <p className="min-w-24 text-center font-bold tabular-nums text-navy" data-score-transpose>
+                {player.transpose === 0 ? 'As written' : `${player.transpose > 0 ? '+' : '−'}${Math.abs(player.transpose)} semitone${Math.abs(player.transpose) === 1 ? '' : 's'}`}
+              </p>
+              <Button variant="ghost" className="px-4" onClick={() => player.setTranspose(player.transpose + 1)} disabled={player.transpose >= TRANSPOSE_MAX}>
+                <span aria-hidden>+ 1</span><span className="sr-only">Up a semitone</span>
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-gray-50 p-4">
+            <label className="flex items-start gap-3 text-navy">
+              <input
+                id="score-loop"
+                type="checkbox"
+                checked={!!loop}
+                onChange={(e) => (e.target.checked ? setLoopBeats(from + 1, Math.min(beats, from + 8)) : player.setLoop(null))}
+                className="mt-0.5 h-5 w-5 shrink-0 accent-teal-700"
+              />
+              <span>
+                <span className="block font-bold">Loop a passage</span>
+                <span className="block text-sm text-gray-600">Play the same beats over and over, to learn them.</span>
+              </span>
+            </label>
+            {loop && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-navy" data-score-loop>
+                <label htmlFor="score-loop-from" className="text-sm font-semibold">From beat</label>
+                <input
+                  id="score-loop-from"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={beats}
+                  value={loop.from + 1}
+                  onChange={(e) => setLoopBeats(Number(e.target.value), Math.max(Number(e.target.value), loop.to))}
+                  className="tap w-20 rounded-xl bg-white px-3 text-base font-bold tabular-nums ring-1 ring-navy/20"
+                />
+                <label htmlFor="score-loop-to" className="text-sm font-semibold">to</label>
+                <input
+                  id="score-loop-to"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={beats}
+                  value={loop.to}
+                  onChange={(e) => setLoopBeats(loop.from + 1, Number(e.target.value))}
+                  className="tap w-20 rounded-xl bg-white px-3 text-base font-bold tabular-nums ring-1 ring-navy/20"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-xl bg-gray-50 p-4">
+            <label className="flex items-start gap-3 text-navy">
+              <input
+                id="score-sing-mine"
+                type="checkbox"
+                checked={mineSilent}
+                disabled={!mine}
+                onChange={(e) => singMine(e.target.checked)}
+                className="mt-0.5 h-5 w-5 shrink-0 accent-teal-700"
+              />
+              <span>
+                <span className="block font-bold">I sing my part</span>
+                <span className="block text-sm text-gray-600">
+                  {mine ? 'Your part goes silent and the others play, so you sing it against them.' : 'Choose Your part, above, first.'}
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div className="rounded-xl bg-gray-50 p-4">
+            <label htmlFor="score-sound" className="block font-bold text-navy">Sound</label>
+            <select
+              id="score-sound"
+              value={player.timbre}
+              onChange={(e) => player.setTimbre(e.target.value as Timbre)}
+              className="tap mt-2 block w-full rounded-xl bg-white px-4 text-base font-semibold text-navy ring-1 ring-navy/20"
+            >
+              {TIMBRES.map((t) => <option key={t} value={t}>{TIMBRE_NAME[t]}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

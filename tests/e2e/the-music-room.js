@@ -13,6 +13,11 @@
 //   - concert pitch is heard: a choice plays its A and says what it does, the
 //     starting note follows it, Compare plays 440 then yours, and Listen for
 //     the A takes an instrument's A and offers it
+//   - Advanced settings (5 October 2026), off until ticked: the Tuner's trail,
+//     drone and transposing instruments; the Conductor's clicks between beats,
+//     silent beats, count-in, speed trainer and saved tempos, counted by the
+//     sounds actually made; the score's transpose, loop, sound and silent
+//     part; and the Play folder's keyboard, chords and beat maker
 //   - the Conductor's baton moves on the beat, follows tapped tempo and a
 //     change of time signature, runs silent, and closes its audio on Stop
 //   - a score file opens, plays, follows your part and a change of tempo
@@ -62,6 +67,10 @@ const WATCH = () => {
     const Watched = class extends Clock {
       constructor(...args) { super(...args); window.__clocks.push(this); }
     };
+    // Every tone made, so a click can be counted rather than assumed.
+    window.__osc = 0;
+    const make = Clock.prototype.createOscillator;
+    Watched.prototype.createOscillator = function (...args) { window.__osc += 1; return make.apply(this, args); };
     window.AudioContext = Watched;
     if (window.webkitAudioContext) window.webkitAudioContext = Watched;
   }
@@ -94,7 +103,7 @@ const say = (page, sel) => page.locator(sel).first().innerText().catch(() => '')
 // The Tuner, Conductor and Pieces are fetched when first needed (the audit of
 // 4 October 2026), so opening one shows "Opening" for a moment on a slow
 // machine. Open the folder, then wait for what it draws, as a person would.
-const FOLDER = { Tuner: '[data-music-tuner]', Conductor: '[data-music-conductor]', Pieces: '[data-music-pieces]', Listen: '[data-music-listen]' };
+const FOLDER = { Tuner: '[data-music-tuner]', Conductor: '[data-music-conductor]', Pieces: '[data-music-pieces]', Listen: '[data-music-listen]', Play: '[data-music-play]' };
 async function openFolder(page, name) {
   await openRoom(page, name);
   await page.locator(FOLDER[name]).first().waitFor({ timeout: 15000 }).catch(() => {});
@@ -281,6 +290,37 @@ async function deskPhoto(page) {
         await page.locator('[data-pitch-choice="440"]').click();
         await page.waitForTimeout(1200);
       }
+      // THE TUNER'S ADVANCED SETTINGS: off until ticked.
+      ok(!(await page.locator('[data-tuner-trail]').count()), `${size}: the Tuner is simple until Advanced is ticked`);
+      await page.locator('#music-advanced-tuner').check();
+      ok(await page.locator('[data-tuner-trail]').isVisible() && await page.locator('[data-tuner-drone]').isVisible() && await page.locator('[data-tuner-instrument]').isVisible(),
+         `${size}: Advanced opens the trail, the drone and the instrument`);
+      await page.getByRole('button', { name: /Start the drone/ }).click();
+      await page.waitForTimeout(300);
+      ok((await clocksOpen(page)) === 1 && await page.getByRole('button', { name: /Stop the drone/ }).isVisible(), `${size}: the drone sounds`);
+      await page.getByRole('button', { name: /Stop the drone/ }).click();
+      await page.waitForTimeout(600);
+      ok((await clocksOpen(page)) === 0, `${size}: and stops, closing its audio`);
+      if (fakeMic) {
+        await page.locator('#tuner-instrument').selectOption('Bb');
+        await page.getByRole('button', { name: /Start listening/ }).click();
+        await page.waitForFunction(() => /B\s*4/.test(document.querySelector('[data-tuner-reading] p')?.textContent || ''), null, { timeout: 8000 }).catch(() => {});
+        ok(/^B\s*4$/.test((await say(page, '[data-tuner-reading] p')).trim()) && /Sounds as A4/.test(await say(page, '[data-tuner-sounds]')),
+           `${size}: for a B♭ clarinet, a concert A reads as B (${(await say(page, '[data-tuner-reading] p')).trim()}; ${(await say(page, '[data-tuner-sounds]')).trim()})`);
+        await page.waitForTimeout(600);
+        const inked = await page.locator('[data-tuner-trail] canvas').evaluate((c) => {
+          const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+          let n = 0;
+          for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200 && d[i + 1] > d[i] + 60) n += 1;
+          return n;
+        });
+        ok(inked > 30, `${size}: the trail draws the voice (${inked} pixels of line)`);
+        await page.getByRole('button', { name: /Stop listening/ }).click();
+        await page.locator('#tuner-instrument').selectOption('C');
+      }
+      await page.locator('#music-advanced-tuner').uncheck();
+      ok(!(await page.locator('[data-tuner-trail]').count()), `${size}: unticked, the Tuner is simple again`);
+      await page.waitForTimeout(300);
       // The pitch pipe sounds and goes quiet by itself.
       await page.getByRole('button', { name: /Play C4/ }).click();
       ok(await page.locator('[data-music-tuner]').getByRole('button', { name: '■ Stop', exact: true }).isVisible(), `${size}: the starting note sounds`);
@@ -341,6 +381,59 @@ async function deskPhoto(page) {
       ok((await clocksOpen(page)) === 0, `${size}: Stop closes the conductor's audio`);
       ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in the Conductor`);
 
+      // 3b. THE CONDUCTOR'S ADVANCED SETTINGS, heard: each tone the page makes is counted.
+      await page.locator('#conductor-sound').check();
+      await page.getByRole('button', { name: '4/4' }).click();
+      await page.locator('#conductor-tempo').fill('120');
+      await page.locator('#music-advanced-conductor').check();
+      ok(await page.locator('[data-conductor-subdivision]').isVisible(), `${size}: Advanced opens the Conductor's extra settings`);
+      const tones = async (ms) => {
+        await page.evaluate(() => { window.__osc = 0; });
+        await page.getByRole('button', { name: '▶ Start' }).click();
+        await page.waitForTimeout(ms);
+        await page.getByRole('button', { name: '■ Stop' }).click();
+        await page.waitForTimeout(150);
+        return page.evaluate(() => window.__osc);
+      };
+      const plain = await tones(2000);
+      await page.getByRole('button', { name: '2 to a beat' }).click();
+      const halves = await tones(2000);
+      ok(plain >= 3 && halves >= plain * 1.6, `${size}: two clicks to a beat doubles the clicks (${plain}, then ${halves})`);
+      await page.getByRole('button', { name: 'Beats only' }).click();
+      for (const n of [2, 3, 4]) await page.getByRole('button', { name: new RegExp(`^Beat ${n}: Normal`) }).click();
+      const firstOnly = await tones(2000);
+      ok(firstOnly <= Math.ceil(plain / 4) + 1, `${size}: silent beats make no sound (${firstOnly} clicks where there were ${plain})`);
+      for (const n of [2, 3, 4]) {
+        await page.getByRole('button', { name: new RegExp(`^Beat ${n}: Silent`) }).click();
+        await page.getByRole('button', { name: new RegExp(`^Beat ${n}: Loud`) }).click();
+      }
+      await page.locator('#conductor-count-in').check();
+      const counted = await tones(3200);
+      ok(counted >= 3 && counted <= 5, `${size}: count-in sounds one bar, then the hand alone (${counted} clicks in 3.2 seconds at 120)`);
+      await page.locator('#conductor-count-in').uncheck();
+      await page.locator('#conductor-trainer').check();
+      for (let i = 0; i < 3; i += 1) await page.getByRole('button', { name: 'Less: Every' }).click();
+      await page.getByRole('button', { name: '▶ Start' }).click();
+      await page.waitForTimeout(4400);
+      const trained = Number((await say(page, '[data-tempo]')).trim());
+      await page.getByRole('button', { name: '■ Stop' }).click();
+      ok(trained >= 122, `${size}: the speed trainer gets faster bar by bar (120, then ${trained})`);
+      await page.locator('#conductor-trainer').uncheck();
+      const keptBpm = (await say(page, '[data-tempo]')).trim();
+      await page.locator('#conductor-tempo-name').fill('Hymn 100');
+      await page.getByRole('button', { name: /^Save \d+ in/ }).click();
+      ok((await page.locator('[data-saved-tempo]').filter({ hasText: 'Hymn 100' }).count()) === 1, `${size}: a tempo is saved with its name`);
+      await page.locator('#conductor-tempo').fill('70');
+      await page.locator('[data-saved-tempo]').filter({ hasText: 'Hymn 100' }).click();
+      ok((await say(page, '[data-tempo]')).trim() === keptBpm, `${size}: and one tap brings it back (${keptBpm})`);
+      await page.reload({ waitUntil: 'networkidle' });
+      await openFolder(page, 'Conductor');
+      ok(await page.locator('#music-advanced-conductor').isChecked() && (await page.locator('[data-saved-tempo]').filter({ hasText: 'Hymn 100' }).count()) === 1,
+         `${size}: Advanced and the saved tempo are remembered on the phone`);
+      await page.locator('#music-advanced-conductor').uncheck();
+      ok(!(await page.locator('[data-conductor-subdivision]').count()), `${size}: unticked, the Conductor is simple again`);
+      ok((await clocksOpen(page)) === 0 && (await sideways(page)) <= 1, `${size}: nothing left sounding, nothing sideways`);
+
       // 4. PIECES: a score file ----------------------------------------------
       await openFolder(page, 'Pieces');
       await page.locator('[data-score-input]').setInputFiles(FIXTURE);
@@ -363,6 +456,33 @@ async function deskPhoto(page) {
       await page.locator('[data-panel="score-view"]').getByRole('button', { name: '■ Stop' }).click();
       await page.waitForTimeout(200);
       ok((await clocksOpen(page)) === 0, `${size}: Stop closes the score's audio`);
+      // THE SCORE'S ADVANCED SETTINGS.
+      await page.locator('#music-advanced-pieces').check();
+      ok(await page.locator('[data-score-advanced]').isVisible(), `${size}: Advanced opens transpose, loop, sound and singing your part`);
+      await page.getByRole('button', { name: 'Up a semitone' }).click();
+      await page.getByRole('button', { name: 'Up a semitone' }).click();
+      ok(/\+2 semitones/.test(await say(page, '[data-score-transpose]')), `${size}: the music moves up two semitones`);
+      await page.locator('#score-loop').check();
+      await page.locator('#score-loop-from').fill('1');
+      await page.locator('#score-loop-to').fill('2');
+      ok(/Looping beats 1 to 2, up 2 semitones/.test(await say(page, '[data-score-playing-as]')), `${size}: it says what it will play (${(await say(page, '[data-score-playing-as]')).trim()})`);
+      await page.getByRole('button', { name: '▶ Play' }).click();
+      await page.waitForTimeout(2600);
+      const at = Number(await page.locator('[data-playhead]').getAttribute('x1'));
+      ok(at >= 10 && at <= 10 + 2 * 28 + 3, `${size}: the loop keeps playing beats 1 and 2 (the playhead is at ${Math.round(at)})`);
+      await page.locator('#score-sound').selectOption('organ');
+      ok(await page.locator('[data-panel="score-view"]').getByRole('button', { name: '■ Stop' }).isVisible(), `${size}: a new sound carries on playing`);
+      await page.locator('[data-panel="score-view"]').getByRole('button', { name: '■ Stop' }).click();
+      await page.locator('#score-sing-mine').check();
+      ok((await page.locator(`[data-line="${mineId}"]`).getAttribute('opacity')) === '0.25', `${size}: I sing my part silences it`);
+      await page.locator('#score-sing-mine').uncheck();
+      await page.locator('#music-advanced-pieces').uncheck();
+      await page.locator('#music-advanced-pieces').check();
+      ok(/As written/.test(await say(page, '[data-score-transpose]')) && !(await page.locator('#score-loop').isChecked()),
+         `${size}: unticking Advanced plays the score as written again`);
+      await page.locator('#music-advanced-pieces').uncheck();
+      await page.waitForTimeout(200);
+      ok((await clocksOpen(page)) === 0, `${size}: and nothing is left sounding`);
       await page.locator('#score-from').fill('3');
       ok(/beat 4/.test(await page.locator('[data-panel="score-view"]').getByRole('button', { name: /Play/ }).innerText()),
          `${size}: the start beat can be chosen without tapping the notes`);
@@ -451,6 +571,49 @@ async function deskPhoto(page) {
       await page.waitForTimeout(300);
       ok((await page.locator('[data-piece-list] li').filter({ hasText: 'Hymn 100' }).count()) === 0, `${size}: and then it is gone`);
       ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in Pieces`);
+
+      // 5b. PLAY ----------------------------------------------------------------
+      await openFolder(page, 'Play');
+      ok(await page.locator('[data-play-keyboard]').isVisible() && !(await page.locator('[data-play-chords]').count()),
+         `${size}: Play opens on a keyboard, and nothing more until Advanced`);
+      const c4 = page.locator('[data-key="C4"]');
+      await c4.dispatchEvent('pointerdown', { pointerId: 7, isPrimary: true, bubbles: true });
+      await page.waitForTimeout(150);
+      ok((await c4.getAttribute('aria-pressed')) === 'true' && (await say(page, '[data-play-last]')).trim() === 'C4' && (await clocksOpen(page)) === 1,
+         `${size}: holding a key sounds it and lights it`);
+      await c4.dispatchEvent('pointerup', { pointerId: 7, isPrimary: true, bubbles: true });
+      await page.waitForTimeout(100);
+      ok((await c4.getAttribute('aria-pressed')) === 'false', `${size}: letting go stops it`);
+      await page.getByRole('button', { name: 'Higher' }).click();
+      ok(/From C5/.test(await say(page, '[data-play-octave]')), `${size}: the keyboard moves up an octave`);
+      await page.locator('#music-advanced-play').check();
+      await page.locator('[data-chord="G"]').click();
+      ok(/Playing G/.test(await say(page, '[data-play-chord-now]')), `${size}: a chord plays`);
+      await page.locator('#play-key').selectOption('F');
+      ok((await page.locator('[data-chord="B♭"]').count()) === 1, `${size}: and the chords follow the key (F has B♭)`);
+      const firstKick = page.locator('[data-play-beats] [aria-label="Bass drum, step 2"]');
+      const was = await firstKick.getAttribute('aria-pressed');
+      await firstKick.click();
+      ok((await firstKick.getAttribute('aria-pressed')) !== was, `${size}: a square of the beat turns on and off`);
+      await page.getByRole('button', { name: '▶ Play the beat' }).click();
+      await page.waitForTimeout(800);
+      ok((await page.locator('[data-play-beats] button.outline').count()) >= 1, `${size}: the beat plays, lighting each step`);
+      await page.locator('[data-play-beats]').getByRole('button', { name: '+ 5' }).click();
+      ok((await say(page, '[data-play-tempo]')).trim() === '95', `${size}: its tempo changes while it plays`);
+      await page.locator('#play-pattern-name').fill('Sunday groove');
+      await page.getByRole('button', { name: 'Save this beat' }).click();
+      await page.getByRole('button', { name: '■ Stop the beat' }).click();
+      ok(await page.getByRole('button', { name: '▶ Play the beat' }).isVisible(), `${size}: and stops`);
+      await openFolder(page, 'Listen');
+      await page.waitForTimeout(300);
+      ok((await clocksOpen(page)) === 0, `${size}: leaving Play closes its audio`);
+      await page.reload({ waitUntil: 'networkidle' });
+      await openFolder(page, 'Play');
+      ok(await page.locator('#music-advanced-play').isChecked() && (await page.locator('#play-pattern option', { hasText: 'Sunday groove' }).count()) === 1,
+         `${size}: Advanced and the saved beat are remembered on the phone`);
+      ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in Play`);
+      await page.locator('#music-advanced-play').uncheck();
+      ok(!(await page.locator('[data-play-chords]').count()), `${size}: unticked, Play is a keyboard again`);
 
       // 6. MY FILES -----------------------------------------------------------
       await page.goto(`${BASE}/library?room=mine`, { waitUntil: 'networkidle' });

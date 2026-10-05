@@ -136,3 +136,51 @@ export function heardA(readings: number[]): number | null {
   if (centsBetween(sorted[sorted.length - 1], sorted[0]) > STEADY_CENTS) return null;
   return Math.round(middle * 10) / 10;
 }
+
+// ---------------------------------------------------------------------------
+// ADVANCED: what a transposing instrument reads, and the pitch trail
+// ---------------------------------------------------------------------------
+
+/**
+ * Instruments whose music is written higher than it sounds. A clarinet's
+ * written C sounds as the B♭ below it, so a clarinettist tuning wants to see
+ * the note they would read, not the note the piano would call it.
+ */
+export const INSTRUMENT_KEYS = [
+  { id: 'C', name: 'Voice, piano, organ (as it sounds)', shift: 0 },
+  { id: 'Bb', name: 'B♭: clarinet, trumpet', shift: 2 },
+  { id: 'Eb', name: 'E♭: alto saxophone', shift: 9 },
+  { id: 'F', name: 'F: French horn', shift: 7 },
+] as const;
+export type InstrumentKey = (typeof INSTRUMENT_KEYS)[number]['id'];
+
+/** The note a player of an instrument in `key` reads for a sounding MIDI note. */
+export function writtenFor(midi: number, key: InstrumentKey): number {
+  const found = INSTRUMENT_KEYS.find((k) => k.id === key);
+  return Math.round(midi) + (found ? found.shift : 0);
+}
+
+/** A frequency as a semitone number (MIDI, with the fraction kept): what the trail draws. */
+export function toSemitones(hz: number, a4 = A4_DEFAULT): number | null {
+  if (!Number.isFinite(hz) || hz <= 0) return null;
+  return A4_MIDI + 12 * Math.log2(hz / a4);
+}
+
+/**
+ * The band of notes the pitch trail shows: the notes sung, with room above
+ * and below, at least an octave tall so a held note is not drawn as a mountain
+ * range, and at most three octaves so one stray reading cannot shrink the rest.
+ */
+export function trailBand(semitones: number[]): [number, number] {
+  const sung = semitones.filter((s) => Number.isFinite(s));
+  if (!sung.length) return [57, 69];
+  let low = Math.floor(Math.min(...sung)) - 2;
+  let high = Math.ceil(Math.max(...sung)) + 2;
+  if (high - low < 12) {
+    const middle = Math.round((low + high) / 2);
+    low = middle - 6;
+    high = middle + 6;
+  }
+  if (high - low > 36) low = high - 36;
+  return [low, high];
+}

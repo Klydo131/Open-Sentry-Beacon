@@ -15,7 +15,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, Card } from '@/components/ui';
 import { useMetronome } from '@/lib/music/metronome';
-import { METERS, PATTERNS, TEMPO_MAX, TEMPO_MIN, batonAt, tap, tempoName, type Meter } from '@/lib/music/beat';
+import { METERS, PATTERNS, TEMPO_MAX, TEMPO_MIN, batonAt, defaultAccents, tap, tempoName, type Meter } from '@/lib/music/beat';
+import { AdvancedToggle, useAdvanced } from '@/components/music/Advanced';
+import { ConductorAdvanced } from '@/components/music/ConductorAdvanced';
 import { prefersLessMotion } from '@/lib/motion';
 
 const METER_LABEL: Record<Meter, string> = { 2: '2/4', 3: '3/4', 4: '4/4', 6: '6/8' };
@@ -26,6 +28,18 @@ export function ConductorPanel() {
   const hand = useRef<SVGCircleElement>(null);
   const taps = useRef<number[]>([]);
   const [beat, setBeat] = useState<number | null>(null);
+  const [advanced, keepAdvanced] = useAdvanced('conductor');
+  // Turning Advanced off puts the metronome back exactly as it was.
+  const setAdvanced = (on: boolean) => {
+    keepAdvanced(on);
+    if (!on) {
+      metronome.setSubdivision(1);
+      metronome.setAccents(defaultAccents(meter));
+      metronome.setCountIn(false);
+      metronome.setTrainer(null);
+    }
+  };
+  const silentBeat = (i: number) => advanced && metronome.accents[i] === 'silent';
 
   // The baton, every frame while running.
   useEffect(() => {
@@ -103,7 +117,7 @@ export function ConductorPanel() {
             />
             {points.map(([x, y], i) => (
               <g key={i}>
-                <circle cx={x} cy={y} r="5.5" className={beat === i ? 'fill-teal-700' : 'fill-white'} stroke="currentColor" strokeWidth="0.8" />
+                <circle cx={x} cy={y} r="5.5" className={beat === i ? 'fill-teal-700' : 'fill-white'} stroke="currentColor" strokeWidth="0.8" opacity={silentBeat(i) ? 0.4 : 1} />
                 <text
                   x={x}
                   y={y + 2.2}
@@ -175,6 +189,16 @@ export function ConductorPanel() {
           </span>
         </label>
       </Card>
+
+      <Card className="p-5">
+        <AdvancedToggle
+          folder="conductor"
+          on={advanced}
+          onChange={setAdvanced}
+          what="Clicks between beats, loud or silent beats, a count-in, a speed trainer, and saved tempos for your hymns."
+        />
+      </Card>
+      {advanced && <ConductorAdvanced metronome={metronome} />}
     </div>
   );
 }

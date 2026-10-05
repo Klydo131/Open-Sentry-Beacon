@@ -13,6 +13,8 @@
 //   Conductor  a metronome that beats the pattern a conductor's hand draws
 //   Pieces     a photo of a page made clean, and a score file played part by
 //              part so a singer can learn theirs
+//   Play       a keyboard; with Advanced, chords in any key and a beat maker
+//              (asked for on 5 October 2026, "to play and be more creative")
 //
 // EVERYTHING HAPPENS ON THE PHONE. Nothing in this room talks to the church's
 // database or to anybody else: the microphone is measured and thrown away, a
@@ -31,7 +33,7 @@ import { Listen } from '@/components/music/Listen';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import type { RoomTheme } from '@/lib/room-theme';
 
-// ONLY LISTEN IS IN THE PAGE ITSELF. The other three folders (the pitch
+// ONLY LISTEN IS IN THE PAGE ITSELF. The other folders (the pitch
 // finder, the score and zip readers, the scanner) are fetched when the room
 // has finished opening, while the phone is idle, so opening Music costs no
 // more than opening any other room. Fetched, not merely deferred: the
@@ -40,23 +42,31 @@ import type { RoomTheme } from '@/lib/room-theme';
 const loadTuner = () => import('@/components/music/TunerPanel').then((m) => m.TunerPanel);
 const loadConductor = () => import('@/components/music/ConductorPanel').then((m) => m.ConductorPanel);
 const loadPieces = () => import('@/components/music/PiecesPanel').then((m) => m.PiecesPanel);
+const loadPlay = () => import('@/components/music/PlayPanel').then((m) => m.PlayPanel);
 const opening = () => <BeaconSpinner inline label="Opening" />;
 const TunerPanel = dynamic(loadTuner, { ssr: false, loading: opening });
 const ConductorPanel = dynamic(loadConductor, { ssr: false, loading: opening });
 const PiecesPanel = dynamic(loadPieces, { ssr: false, loading: opening });
+const PlayPanel = dynamic(loadPlay, { ssr: false, loading: opening });
 
 const ROOMS: Room[] = [
   { id: 'listen', label: '🎧 Listen' },
   { id: 'tuner', label: '🎯 Tuner' },
   { id: 'conductor', label: '🎼 Conductor' },
   { id: 'pieces', label: '📄 Pieces' },
+  { id: 'play', label: '🎹 Play' },
 ];
 
 export function MusicRoom({ theme }: { theme?: RoomTheme }) {
   const [room, choose] = useRoom(ROOMS, 'beacon:music-room');
 
   useEffect(() => {
-    const warm = () => { void loadTuner().catch(() => {}); void loadConductor().catch(() => {}); void loadPieces().catch(() => {}); };
+    const warm = () => {
+      void loadTuner().catch(() => {});
+      void loadConductor().catch(() => {});
+      void loadPieces().catch(() => {});
+      void loadPlay().catch(() => {});
+    };
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
     if (w.requestIdleCallback) {
       const id = w.requestIdleCallback(warm, { timeout: 4000 });
@@ -79,6 +89,7 @@ export function MusicRoom({ theme }: { theme?: RoomTheme }) {
       {room === 'tuner' && <TunerPanel />}
       {room === 'conductor' && <ConductorPanel />}
       {room === 'pieces' && <PiecesPanel />}
+      {room === 'play' && <PlayPanel />}
     </div>
   );
 }

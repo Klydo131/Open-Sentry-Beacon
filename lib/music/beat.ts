@@ -47,38 +47,53 @@ export interface Click {
   at: number;
   /** 0 for the first beat of the bar, which is accented. */
   beat: number;
+  /** 0 on the beat; 1, 2, 3 for the clicks between beats (Advanced). */
+  sub?: number;
 }
 
 /** Where the scheduler has got to: the next click not yet handed over. */
 export interface BeatState {
   nextAt: number;
   nextBeat: number;
+  /** Which click between beats comes next; 0 is the beat itself. */
+  nextSub?: number;
 }
+
+/** Clicks to a beat (Advanced): 1 the beat alone, 2 halves, 3 triplets, 4 quarters of a beat. */
+export const SUBDIVISIONS = [1, 2, 3, 4] as const;
+export type Subdivision = (typeof SUBDIVISIONS)[number];
 
 /**
  * Every click due before `until`, and where to carry on from. One click at a
- * time, each a beat after the last at the tempo of that moment, so changing
- * the tempo mid-song carries on from the next beat instead of jumping.
+ * time, each a beat (or a part of one) after the last at the tempo of that
+ * moment, so changing the tempo mid-song carries on from the next click
+ * instead of jumping.
  */
-export function due(state: BeatState, bpm: number, meter: number, until: number): { clicks: Click[]; state: BeatState } {
-  const step = 60 / clampTempo(bpm);
+export function due(state: BeatState, bpm: number, meter: number, until: number, subdivision = 1): { clicks: Click[]; state: BeatState } {
+  const parts = Math.max(1, Math.min(4, Math.round(subdivision) || 1));
+  const step = 60 / clampTempo(bpm) / parts;
   const clicks: Click[] = [];
   let { nextAt, nextBeat } = state;
+  let nextSub = state.nextSub ?? 0;
+  // Fewer parts chosen part-way through a beat: carry on from the next beat.
+  if (nextSub >= parts) { nextSub = 0; nextBeat = (nextBeat + 1) % meter; }
   while (nextAt < until && clicks.length < 64) {
-    clicks.push({ at: nextAt, beat: nextBeat % meter });
+    clicks.push({ at: nextAt, beat: nextBeat % meter, sub: nextSub });
     nextAt += step;
-    nextBeat = (nextBeat + 1) % meter;
+    nextSub += 1;
+    if (nextSub >= parts) { nextSub = 0; nextBeat = (nextBeat + 1) % meter; }
   }
-  return { clicks, state: { nextAt, nextBeat } };
+  return { clicks, state: { nextAt, nextBeat, nextSub } };
 }
 
 /**
  * Which beat the hand is on at `now`, and how far towards the next (0 to 1),
- * from the clicks already handed over. Null before the first.
+ * from the clicks already handed over. Null before the first. Only the beats
+ * count: the clicks between them do not move the hand.
  */
 export function beatAt(clicks: Click[], bpm: number, now: number): { beat: number; phase: number } | null {
   let last: Click | undefined;
-  for (const click of clicks) if (click.at <= now) last = click;
+  for (const click of clicks) if (click.at <= now && !click.sub) last = click;
   if (!last) return null;
   const step = 60 / clampTempo(bpm);
   return { beat: last.beat, phase: Math.min(1, (now - last.at) / step) };
@@ -128,4 +143,82 @@ export function batonAt(meter: Meter, beat: number, phase: number): [number, num
   // the hand by a fifth of the square at the middle of the way.
   const lift = 4 * p * (1 - p) * 20;
   return [x0 + (x1 - x0) * p, y0 + (y1 - y0) * p - lift];
+}
+
+// ---- ADVANCED: accents, the speed trainer, saved tempos -------------------
+//
+// Asked for on 5 October 2026, with the rest of the Music room's Advanced
+// settings: "more dynamic but also simple ... for users to play and be more
+// creative". Off by default; the Conductor is exactly as simple without them.
+
+/** How a beat sounds: loud, ordinary, or not at all. Tapping a beat goes round these. */
+export type Accent = 'loud' | 'normal' | 'silent';
+export const ACCENT_CYCLE: readonly Accent[] = ['loud', 'normal', 'silent'];
+
+/** The first beat loud and the rest ordinary: what every metronome does. */
+export function defaultAccents(meter: Meter): Accent[] {
+  return Array.from({ length: meter }, (_, i) => (i === 0 ? 'loud' : 'normal'));
+}
+
+export function nextAccent(accent: Accent): Accent {
+  return ACCENT_CYCLE[(ACCENT_CYCLE.indexOf(accent) + 1) % ACCENT_CYCLE.length];
+}
+
+/** The speed trainer: faster by `step` every `every` bars, up to `target`. */
+export interface Trainer {
+  step: number;
+  every: number;
+  target: number;
+}
+
+export const TRAINER_DEFAULT: Trainer = { step: 2, every: 4, target: 120 };
+
+/**
+ * The tempo after `bars` whole bars of the speed trainer. It only ever gets
+ * faster, and never past the target: a target slower than the start leaves
+ * the start alone.
+ */
+export function trainerTempo(start: number, bars: number, trainer: Trainer): number {
+  const from = clampTempo(start);
+  const target = clampTempo(trainer.target);
+  const every = Math.max(1, Math.round(trainer.every) || 1);
+  const step = Math.max(1, Math.round(trainer.step) || 1);
+  if (target <= from) return from;
+  return Math.min(target, from + Math.floor(Math.max(0, bars) / every) * step);
+}
+
+/** A tempo kept on the phone for one tap later: "Hymn 100" at 88, in 3/4. */
+export interface SavedTempo {
+  name: string;
+  bpm: number;
+  meter: Meter;
+}
+
+export const SAVED_TEMPOS_MAX = 50;
+const NAME_MAX = 60;
+
+/** A name as somebody typed it, without control characters, trimmed to fit. */
+export function cleanName(raw: unknown): string {
+  if (typeof raw !== 'string') return '';
+  // eslint-disable-next-line no-control-regex
+  return raw.replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim().slice(0, NAME_MAX);
+}
+
+/**
+ * Saved tempos as read back from the phone's storage, which anything on the
+ * phone could have written: only well-formed entries, one per name (the
+ * latest wins), at most SAVED_TEMPOS_MAX.
+ */
+export function cleanTempos(raw: unknown): SavedTempo[] {
+  if (!Array.isArray(raw)) return [];
+  const byName = new Map<string, SavedTempo>();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const { name, bpm, meter } = item as Record<string, unknown>;
+    const clean = cleanName(name);
+    if (!clean || typeof bpm !== 'number' || !METERS.includes(meter as Meter)) continue;
+    byName.delete(clean);
+    byName.set(clean, { name: clean, bpm: clampTempo(bpm), meter: meter as Meter });
+  }
+  return [...byName.values()].slice(-SAVED_TEMPOS_MAX);
 }

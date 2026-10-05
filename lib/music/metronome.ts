@@ -5,7 +5,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { closeAudio, click, openAudio, schedule } from '@/lib/music/audio';
-import { beatAt, clampTempo, due, TEMPO_DEFAULT, type BeatState, type Click, type Meter } from '@/lib/music/beat';
+import {
+  beatAt, clampTempo, defaultAccents, due, trainerTempo, TEMPO_DEFAULT,
+  type Accent, type BeatState, type Click, type Meter, type Subdivision, type Trainer,
+} from '@/lib/music/beat';
 
 export interface Metronome {
   running: boolean;
@@ -20,6 +23,20 @@ export interface Metronome {
   stop: () => void;
   /** The beat and how far towards the next, now; null when stopped. Read every frame. */
   now: () => { beat: number; phase: number } | null;
+
+  // ADVANCED. All of these leave the metronome exactly as it was until changed.
+  /** Clicks to a beat: 1, 2, 3 or 4. */
+  subdivision: Subdivision;
+  setSubdivision: (s: Subdivision) => void;
+  /** How each beat of the bar sounds. */
+  accents: Accent[];
+  setAccents: (a: Accent[]) => void;
+  /** Sound the first bar only, then keep time in silence. */
+  countIn: boolean;
+  setCountIn: (on: boolean) => void;
+  /** Get faster as it goes; null for off. */
+  trainer: Trainer | null;
+  setTrainer: (t: Trainer | null) => void;
 }
 
 export function useMetronome(): Metronome {
@@ -27,13 +44,21 @@ export function useMetronome(): Metronome {
   const [bpm, setBpmState] = useState(TEMPO_DEFAULT);
   const [meter, setMeterState] = useState<Meter>(4);
   const [sound, setSound] = useState(true);
+  const [subdivision, setSubdivision] = useState<Subdivision>(1);
+  const [accents, setAccents] = useState<Accent[]>(defaultAccents(4));
+  const [countIn, setCountIn] = useState(false);
+  const [trainer, setTrainer] = useState<Trainer | null>(null);
   const ctx = useRef<AudioContext | null>(null);
   const halt = useRef<(() => void) | null>(null);
   const state = useRef<BeatState>({ nextAt: 0, nextBeat: 0 });
   const recent = useRef<Click[]>([]);
+  // First beats heard since Start (1 during the first bar), and the tempo it
+  // started at: what the count-in and the speed trainer go by.
+  const downbeats = useRef(0);
+  const startBpm = useRef(bpm);
   // Read by the scheduler on every wake, so a change applies from the next click.
-  const live = useRef({ bpm, meter, sound });
-  live.current = { bpm, meter, sound };
+  const live = useRef({ bpm, meter, sound, subdivision, accents, countIn, trainer });
+  live.current = { bpm, meter, sound, subdivision, accents, countIn, trainer };
 
   const stop = useCallback(() => {
     halt.current?.();
@@ -50,16 +75,33 @@ export function useMetronome(): Metronome {
     if (!audio) return false;
     ctx.current = audio;
     // A short breath before the first click, so it is not clipped.
-    state.current = { nextAt: audio.currentTime + 0.1, nextBeat: 0 };
+    state.current = { nextAt: audio.currentTime + 0.1, nextBeat: 0, nextSub: 0 };
+    downbeats.current = 0;
+    startBpm.current = live.current.bpm;
     halt.current = schedule(audio, (until) => {
-      const { bpm: b, meter: m, sound: heard } = live.current;
-      const { clicks, state: next } = due(state.current, b, m, until);
+      const { bpm: b, meter: m, sound: heard, subdivision: parts, accents: loud, countIn: counting, trainer: training } = live.current;
+      const { clicks, state: next } = due(state.current, b, m, until, parts);
       state.current = next;
       // Silent still keeps time: the clicks are counted, only not sounded, so
       // the baton follows the same clock either way.
       if (!clicks.length) return;
-      if (heard) for (const c of clicks) click(audio, c.at, c.beat === 0);
-      recent.current = [...recent.current, ...clicks].slice(-16);
+      for (const c of clicks) {
+        if (c.beat === 0 && !c.sub) {
+          // A new bar. The trainer moves the tempo on from the next wake.
+          downbeats.current += 1;
+          const played = downbeats.current - 1;
+          if (training && played > 0) {
+            const faster = trainerTempo(startBpm.current, played, training);
+            if (faster !== live.current.bpm) { live.current = { ...live.current, bpm: faster }; setBpmState(faster); }
+          }
+        }
+        const accent = loud[c.beat] ?? (c.beat === 0 ? 'loud' : 'normal');
+        const inCount = !counting || downbeats.current <= 1;
+        if (!heard || !inCount || accent === 'silent') continue;
+        if (c.sub) click(audio, c.at, false, 0.3);
+        else click(audio, c.at, accent === 'loud');
+      }
+      recent.current = [...recent.current, ...clicks].slice(-32);
     });
     setRunning(true);
     return true;
@@ -90,13 +132,22 @@ export function useMetronome(): Metronome {
     setBpm: (b) => setBpmState(clampTempo(b)),
     setMeter: (m) => {
       setMeterState(m);
+      setAccents(defaultAccents(m));
       // A new pattern starts on its first beat.
-      state.current = { ...state.current, nextBeat: 0 };
+      state.current = { ...state.current, nextBeat: 0, nextSub: 0 };
     },
     sound,
     setSound,
     start,
     stop,
     now,
+    subdivision,
+    setSubdivision,
+    accents,
+    setAccents,
+    countIn,
+    setCountIn,
+    trainer,
+    setTrainer,
   };
 }

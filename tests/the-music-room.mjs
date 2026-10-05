@@ -44,7 +44,8 @@ const bundle = async (entries, name) => {
   });
   return import(pathToFileURL(file).href);
 };
-const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml', 'lib/music/zip', 'lib/music/page-scan'], 'music');
+const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml', 'lib/music/zip', 'lib/music/page-scan', 'lib/music/play'], 'music');
+const SP = await bundle(['lib/music/score-player'], 'score-player');
 
 // ---------------------------------------------------------------------------
 // 1. NOTES: frequencies, names and cents
@@ -305,6 +306,106 @@ function zip(files) {
 }
 
 // ---------------------------------------------------------------------------
+// 6b. ADVANCED SETTINGS: asked for on 5 October 2026, "more dynamic but also
+//     simple in Advance mode ... for users to play and be more creative".
+//     Every folder stays as simple as it was; a tick box opens the rest.
+// ---------------------------------------------------------------------------
+{
+  // The Conductor: clicks between beats, accents, the speed trainer, saved tempos.
+  let st = { nextAt: 0, nextBeat: 0 };
+  const halves = [];
+  for (let t = 0; t < 2.05; t += 0.025) { const r = M.due(st, 120, 4, t + 0.12, 2); st = r.state; halves.push(...r.clicks); }
+  const gaps = halves.slice(1).map((c, i) => c.at - halves[i].at);
+  ok(gaps.every((g) => Math.abs(g - 0.25) < 1e-9), `two clicks to a beat at 120 is a click every quarter second (${halves.length} clicks)`);
+  ok(halves.slice(0, 6).map((c) => `${c.beat}.${c.sub}`).join(' ') === '0.0 0.1 1.0 1.1 2.0 2.1', 'they alternate beat, between, beat, between');
+  const triplets = M.due({ nextAt: 0, nextBeat: 0 }, 60, 3, 2.9, 3).clicks;
+  ok(triplets.map((c) => c.sub).join('') === '012012012', 'three to a beat are triplets');
+  const fewer = M.due({ nextAt: 0, nextBeat: 1, nextSub: 3 }, 60, 4, 0.5, 2).clicks;
+  ok(fewer[0].beat === 2 && fewer[0].sub === 0, 'fewer clicks chosen part-way through a beat carries on from the next beat');
+  ok(M.beatAt([{ at: 0, beat: 0, sub: 0 }, { at: 0.25, beat: 0, sub: 1 }], 120, 0.3).beat === 0
+     && Math.abs(M.beatAt([{ at: 0, beat: 0, sub: 0 }, { at: 0.25, beat: 0, sub: 1 }], 120, 0.3).phase - 0.6) < 1e-9,
+     'the hand follows the beats, not the clicks between them');
+  ok(M.defaultAccents(3).join() === 'loud,normal,normal' && M.nextAccent('loud') === 'normal' && M.nextAccent('normal') === 'silent' && M.nextAccent('silent') === 'loud',
+     'the first beat is loud; a tap goes loud, normal, silent and round');
+  const trainer = { step: 2, every: 4, target: 90 };
+  ok([0, 3, 4, 8, 19, 400].map((b) => M.trainerTempo(80, b, trainer)).join() === '80,80,82,84,88,90',
+     'the speed trainer goes up by 2 every 4 bars and stops at its target');
+  ok(M.trainerTempo(100, 50, trainer) === 100, 'a target below the start leaves the tempo alone: it only ever speeds up');
+  const kept = M.cleanTempos([
+    { name: 'Hymn 100', bpm: 88, meter: 3 },
+    { name: '  Hymn\u0000 100 ', bpm: 92, meter: 3 },
+    { name: 'Too fast', bpm: 900, meter: 4 },
+    { name: 'Odd meter', bpm: 80, meter: 5 },
+    { name: '', bpm: 80, meter: 4 },
+    'nonsense', null,
+  ]);
+  ok(kept.length === 2 && kept[0].name === 'Hymn 100' && kept[0].bpm === 92 && kept[1].bpm === M.TEMPO_MAX,
+     `saved tempos are cleaned when read: one per name, the latest kept, tempos in range, nonsense dropped (${JSON.stringify(kept)})`);
+  ok(M.cleanTempos(Array.from({ length: 80 }, (_, i) => ({ name: `T${i}`, bpm: 80, meter: 4 }))).length === M.SAVED_TEMPOS_MAX && M.cleanTempos('x').length === 0,
+     'and there are never more than 50');
+  ok(M.cleanName('a\u202eb\u200bc') === 'abc' && M.cleanName('x'.repeat(200)).length === 60, 'a name loses hidden characters and is cut to 60');
+
+  // The Tuner: transposing instruments and the trail.
+  ok(M.midiName(M.writtenFor(69, 'Bb')) === 'B4' && M.midiName(M.writtenFor(69, 'Eb')) === 'F♯5' && M.midiName(M.writtenFor(69, 'F')) === 'E5' && M.writtenFor(69, 'C') === 69,
+     'a concert A reads as B on a clarinet, F sharp on an alto sax, E on a horn');
+  ok(Math.abs(M.toSemitones(440) - 69) < 1e-9 && Math.abs(M.toSemitones(466.16) - 70) < 0.01 && M.toSemitones(0) === null, 'the trail draws a frequency as its note number');
+  const band = M.trailBand([69, 69.2]);
+  ok(band[1] - band[0] === 12 && band[0] <= 69 && band[1] >= 70, `a held note gets an octave of room around it (${band})`);
+  ok(M.trailBand([30, 100])[1] - M.trailBand([30, 100])[0] === 36 && M.trailBand([]).join() === '57,69', 'never more than three octaves, and a sensible band with nothing sung');
+
+  // Play: chords in a key, the beat maker.
+  ok(M.chordsInKey('C').map((c) => c.name).join(' ') === 'C Dm Em F G Am', 'the chords of C are C, Dm, Em, F, G and Am');
+  ok(M.chordsInKey('G').map((c) => c.name).join(' ') === 'G Am Bm C D Em' && M.chordsInKey('F').map((c) => c.name).join(' ') === 'F Gm Am B♭ C Dm',
+     'G and F have theirs, flats in a flat key');
+  ok(M.chordsInKey('E')[5].name === 'C♯m' && M.SONG_KEYS.every((k) => M.chordsInKey(k.id).every((c) => c.midis.length === 3 && c.midis.every((m) => m >= 53 && m <= 79))),
+     'every chord in every key is three notes near middle C');
+  ok(M.chordsInKey('C')[0].midis.join() === '60,64,67' && M.chordsInKey('C')[1].midis.join() === '62,65,69', 'a major chord is root, major third, fifth; a minor one root, minor third, fifth');
+  ok(M.cleanPatterns(M.STARTER_PATTERNS).length === M.STARTER_PATTERNS.length, 'the starting beats are all well formed');
+  const pats = M.cleanPatterns([
+    { name: 'Mine', bpm: 500, steps: { kick: Array(16).fill(true), snare: Array(16).fill(1), hat: Array(16).fill(false) } },
+    { name: 'Short', bpm: 90, steps: { kick: [true], snare: [], hat: [] } },
+    { name: 'No steps', bpm: 90 },
+  ]);
+  ok(pats.length === 1 && pats[0].bpm === M.BEAT_TEMPO_MAX && pats[0].steps.snare.every((v) => v === false),
+     'saved beats are cleaned when read: sixteen steps a drum, true only when true, tempo in range');
+  const sixteenths = M.stepsDue({ nextAt: 0, nextStep: 14 }, 120, 0.5).steps;
+  ok(sixteenths.map((x) => x.step).join() === '14,15,0,1' && Math.abs(sixteenths[1].at - 0.125) < 1e-9, 'the beat maker steps a quarter of a beat at a time and goes round after sixteen');
+  ok(M.octaveC(4) === 60 && M.clampOctave(9) === M.OCTAVE_MAX && M.clampOctave(-3) === M.OCTAVE_MIN, 'the keyboard starts at middle C and moves between C2 and C6');
+
+  // Pieces: transpose and loop.
+  ok(SP.clampTranspose(20) === 12 && SP.clampTranspose(-20) === -12 && SP.clampTranspose(NaN) === 0, 'transpose moves at most an octave either way');
+  ok(JSON.stringify(SP.cleanLoop({ from: 8, to: 16 }, 32)) === '{"from":8,"to":16}' && JSON.stringify(SP.cleanLoop({ from: 30, to: 99 }, 32)) === '{"from":30,"to":32}'
+     && JSON.stringify(SP.cleanLoop({ from: 5, to: 2 }, 32)) === '{"from":5,"to":6}' && SP.cleanLoop(null, 32) === null,
+     'a loop stays inside the piece and is at least a beat long');
+  ok(SP.loopPosition({ from: 8, to: 12 }, 0) === 8 && SP.loopPosition({ from: 8, to: 12 }, 5) === 9 && SP.loopPosition({ from: 8, to: 12 }, 12) === 8,
+     'a loop goes round: four beats in, it is back at its start');
+
+  // The screens: off until ticked, back as they were when unticked, silent when left.
+  const adv = code('components/music/Advanced.tsx');
+  ok(/useState\(false\)/.test(adv) && /=== '1'/.test(adv), 'Advanced is off until somebody ticks it, and remembered on this phone only');
+  for (const [file, folder] of [['components/music/TunerPanel.tsx', 'tuner'], ['components/music/ConductorPanel.tsx', 'conductor'], ['components/music/ScoreView.tsx', 'pieces'], ['components/music/PlayPanel.tsx', 'play']]) {
+    ok(new RegExp(`<AdvancedToggle[\\s\\S]{0,40}folder="${folder}"`).test(code(file)), `${folder}: has its own Advanced settings`);
+  }
+  const conductor = code('components/music/ConductorPanel.tsx');
+  ok(/if \(!on\) \{[\s\S]*setSubdivision\(1\)[\s\S]*setAccents\(defaultAccents\(meter\)\)[\s\S]*setCountIn\(false\)[\s\S]*setTrainer\(null\)/.test(conductor),
+     'turning the Conductor\'s Advanced off puts the metronome back as it was');
+  const score = code('components/music/ScoreView.tsx');
+  ok(/if \(!on\) \{[\s\S]*setTranspose\(0\)[\s\S]*setLoop\(null\)[\s\S]*setTimbre\('voice'\)/.test(score), 'and the score\'s, plays it as written again');
+  for (const f of ['components/music/TunerAdvanced.tsx', 'components/music/PlayPanel.tsx']) {
+    ok(/visibilitychange/.test(code(f)) && /closeAudio\(ctx\.current\)/.test(code(f)), `${f}: silent and closed when the folder is left or the phone locks`);
+  }
+  ok(/IDLE_MS = 30_000/.test(code('components/music/PlayPanel.tsx')) && /if \(holders\.current\.size === 0\) close\(\)/.test(code('components/music/PlayPanel.tsx')),
+     'Play closes its audio after half a minute of quiet, unless the beat is playing');
+  ok(/clock\.busy\('keys', true\)/.test(code('components/music/PlayPanel.tsx')) && /if \(held\.current\.size === 0\) clock\.busy\('keys', false\)/.test(code('components/music/PlayPanel.tsx')),
+     'and a key held down keeps it open, until the last finger is lifted');
+  ok(/cleanTempos\(JSON\.parse/.test(code('components/music/ConductorAdvanced.tsx')) && /cleanPatterns\(JSON\.parse/.test(code('components/music/PlayPanel.tsx')),
+     'saved tempos and beats are cleaned every time they are read back from the phone');
+  const metronome = code('lib/music/metronome.ts');
+  ok(/accent === 'silent'/.test(metronome) && /inCount = !counting \|\| downbeats\.current <= 1/.test(metronome) && /trainerTempo\(startBpm\.current, played, training\)/.test(metronome),
+     'the metronome sounds silent beats as silence, counts in one bar, and follows the trainer bar by bar');
+}
+
+// ---------------------------------------------------------------------------
 // 7. THE ROOM IN THE APP: who reaches it, and what moved out of My Files
 // ---------------------------------------------------------------------------
 {
@@ -325,7 +426,7 @@ function zip(files) {
      'everybody may open it, on the live app and in the sample church alike');
 
   const room = code('components/music/MusicRoom.tsx');
-  ok(['listen', 'tuner', 'conductor', 'pieces'].every((r) => new RegExp(`room === '${r}' && <`).test(room)),
+  ok(['listen', 'tuner', 'conductor', 'pieces', 'play'].every((r) => new RegExp(`room === '${r}' && <`).test(room)),
      'one folder at a time, so leaving the Tuner unmounts it and that releases the microphone');
 
   const library = code('app/library/page.tsx');
@@ -346,7 +447,7 @@ function zip(files) {
 
   // FAST: opening Music costs no more than another room. Only Listen is in the
   // page; the rest arrive in idle time and are kept for offline use.
-  ok(['TunerPanel', 'ConductorPanel', 'PiecesPanel'].every((p) => new RegExp(`import\\('@/components/music/${p}'\\)`).test(room)
+  ok(['TunerPanel', 'ConductorPanel', 'PiecesPanel', 'PlayPanel'].every((p) => new RegExp(`import\\('@/components/music/${p}'\\)`).test(room)
      && !new RegExp(`^import \\{ ${p} \\}`, 'm').test(room)) && /requestIdleCallback/.test(room),
      'only Listen loads with the page; the other folders load when the phone is idle');
   ok(/'\/music'/.test(read('app/sw.js/route.ts')), 'the Music room is kept for opening with no signal');

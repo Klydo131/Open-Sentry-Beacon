@@ -108,7 +108,8 @@ are in and how many there are; tap it to see them all, then tap one to go there.
 
 **Music**, in the Menu, is for everybody: the choir, and anybody who loves
 music. Everything in it happens on your phone, and nothing is sent anywhere. It
-has four folders.
+has five folders. Each opens simple; tick **Advanced settings** at the end of a
+folder for more, and untick it to put the folder back as it was.
 
 - **Listen** plays your own music and videos, in playlists if you like, and has
   calming sounds for the background. Your music is still in My Files as well,
@@ -120,15 +121,25 @@ has four folders.
   **Concert pitch** is where the choir's A sits: 440 is the standard. Tap 442
   or 432 and you hear the new A, with a line saying what it does to every note;
   **Compare with 440** plays the standard A, then yours. To match an organ or a
-  piano, ask for its A and tap **Listen for the A**.
+  piano, ask for its A and tap **Listen for the A**. In **Advanced**: a line
+  drawing your voice over the last ten seconds, a **drone** to sing against,
+  and the notes as a clarinet, trumpet, saxophone or horn reads them.
 - **Conductor** keeps a steady beat and draws the conductor's hand for 2, 3, 4
   or 6 beats. Tap **Tap the beat** a few times in time and the tempo follows
-  you. Untick **Sound the clicks** to follow the hand in silence.
+  you. Untick **Sound the clicks** to follow the hand in silence. In
+  **Advanced**: clicks between the beats, loud or silent beats, a one-bar
+  count-in, a speed trainer that gets a little faster bar by bar, and tempos
+  saved by name, such as *Hymn 100*.
 - **Pieces** keeps your choir's music. **Scan a page**: take a photo of a printed
   page, drag the four dots onto its corners, and tap **Make a clean page**.
   **Open a score file**: a MusicXML file from MuseScore, Sibelius, Finale or
   Dorico. Choose **Your part** to hear it louder, slow it down, and tap the notes
-  to start from anywhere.
+  to start from anywhere. In **Advanced**: move it up or down to suit your
+  voices, loop a hard passage, silence your own part to sing it, and choose
+  the sound.
+- **Play** is a piano keyboard: press and hold a key to hear it. In
+  **Advanced**: the chords of any key a tap each, and a beat maker with a bass
+  drum, snare and hi-hat, with your own beats saved by name.
 
 ![The Music room's Conductor. The pattern for four beats, numbered where the hand falls, with the tempo beside it.](screenshots/walkthrough/40-music-room.png)
 

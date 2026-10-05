@@ -9,8 +9,13 @@ Two promises hold for the whole room:
 - **Nothing is sent anywhere.** Everything in it is worked out on the phone or
   computer you are holding. It never talks to the church's database, so it
   works the same in a church's own app and in the sample church.
-- **It works with no signal.** Once the room has been opened, all four of its
+- **It works with no signal.** Once the room has been opened, all five of its
   folders open again in a church hall with no connection.
+
+Every folder opens simple. At the end of the Tuner, the Conductor, a score and
+Play there is a tick box, **Advanced settings**, that opens the rest. It is off
+until you tick it, the phone remembers it, and unticking it puts that folder
+back exactly as it was.
 
 ![Listen and Tuner on a phone.](../../screenshots/complete/phone-guide-music-1-listen.jpg) ![](../../screenshots/complete/phone-guide-music-2-tuner.jpg)
 
@@ -79,6 +84,25 @@ recorded.
 
 The phone remembers your concert pitch until you change it.
 
+### Advanced: your voice as a line, a drone, and your instrument's notes
+
+Tick **Advanced settings** under the starting note and three more cards open.
+
+- **Your voice, the last 10 seconds.** While the tuner listens, your voice is
+  drawn as a line across the notes. A flat line is a steady note; a wave is a
+  wobble; a slope is a slide into the note. It is the quickest way to see what
+  your voice does on a long note. Only the last ten seconds are drawn, and they
+  are forgotten when you leave the Tuner.
+- **Drone.** One note held for as long as you like, to sing against. Choose
+  the note and the sound (soft voice, organ or flute) and tap **Start the
+  drone**. When your voice drifts you hear it rub against the drone. With the
+  tuner listening at the same time, wear headphones, or the tuner hears the
+  drone instead of you.
+- **Your instrument.** A clarinet or trumpet, an alto saxophone or a French
+  horn reads its music higher than it sounds. Choose yours and the tuner shows
+  the note you would read, with the note it sounds underneath: a concert A on
+  a B♭ clarinet reads *B*.
+
 > **IMPORTANT** · What the microphone does, and does not do
 >
 > The tuner listens only after you tap **Start listening**. It measures the
@@ -102,6 +126,23 @@ To set the tempo by feel, tap **Tap the beat** four or five times in time with
 the music in your head; the tempo follows your taps. To follow the hand in
 silence, during a rehearsal say, untick **Sound the clicks**. The screen stays
 on while the conductor runs.
+
+### Advanced: clicks between beats, quiet beats, a count-in, a speed trainer
+
+Tick **Advanced settings** under **Sound the clicks**.
+
+- **Clicks between beats.** *2 to a beat*, *3 to a beat* (for triplets) or
+  *4 to a beat* adds quieter clicks between the beats, for fast notes.
+- **Each beat.** Tap a beat to make it **Loud**, **Normal** or **Silent**. A
+  silent beat still moves the hand. Beat one starts loud and the rest normal.
+- **Count in, then silent.** One bar of clicks to start the choir, then the
+  hand keeps time without a sound.
+- **Speed trainer.** For learning a hard passage: it starts at the tempo you
+  set and gets a little faster as you go. Choose how much faster, how often
+  (every so many bars), and the tempo to stop at. It never goes past that.
+- **Saved tempos.** Give the tempo a name, such as *Hymn 100*, and tap
+  **Save**. One tap on the name brings back its tempo and its beats in a bar.
+  Kept on this phone.
 
 ## Pieces: the choir's music, on the phone
 
@@ -128,12 +169,50 @@ the photo (such as where it was taken) is kept either.
 The score is drawn as notes on a strip, higher notes higher and longer notes
 longer: what a singer learning a part needs. It is not printed notation.
 
+**Advanced, for a score.** Tick **Advanced settings** under the parts.
+
+- **Transpose**: move every part up or down, a semitone at a time (up to an
+  octave each way), to suit your voices. The strip moves with it.
+- **Loop a passage**: choose the first and last beat and it plays them over
+  and over, to learn them.
+- **I sing my part**: your part goes silent and is drawn faintly, so you sing
+  it against the others. Choose **Your part** first.
+- **Sound**: a soft voice, an organ or a flute.
+
+Above the strip it says what it will play, such as *Looping beats 1 to 2, up 2
+semitones*. Unticking Advanced plays the score as written again.
+
 > **NOTE** · A scanned page does not play
 >
 > Turning a photo of printed music into notes that play needs either a server
 > to send the photo to, or software the app's security rules do not allow on a
 > phone. The project decided to leave it out for now: scanned pages are for
 > reading, and scores play from MusicXML files.
+
+## Play: a keyboard, chords and your own beat
+
+**Play** is for making music, not only practising it.
+
+**The keyboard.** An octave of piano keys. Press and hold a key and it sounds
+for as long as you hold it; several fingers play several notes. **Lower** and
+**Higher** move the keyboard an octave at a time. It plays at your concert
+pitch.
+
+Tick **Advanced settings** and three more cards open.
+
+- **Sound**: a soft voice, an organ or a flute, for the keyboard and the
+  chords.
+- **Chords**: choose a key, and the six chords most songs in it are built from
+  are a tap each (in C: C, Dm, Em, F, G and Am). Tap them in time to accompany
+  a tune.
+- **Beat maker**: three drums (bass drum, snare, hi-hat) in rows of sixteen
+  squares, each square a quarter of a beat. Tap squares to turn them on, then
+  **Play the beat**; it goes round and round, lighting each square as it
+  plays, and the tempo can change while it plays. **Start from** a ready-made
+  beat (*Steady four*, *Rock*, *Ballad*, *Praise*) or an empty grid, and save
+  your own with a name. Kept on this phone.
+
+Leaving Play, or locking the phone, stops every sound.
 
 ## For a choir director: a rehearsal with the room
 
@@ -154,7 +233,7 @@ longer: what a singer learning a part needs. It is not printed notation.
 | --- | --- | --- |
 | Your music, video and playlists | On this device | Only you, on this device |
 | Your clean pages and scores | On this device, in the Music room's own store | Only you, on this device |
-| Concert pitch and the conductor's settings | On this device | Only you |
+| Concert pitch, the conductor's settings, saved tempos and beats, and which folders have Advanced open | On this device | Only you |
 | Sound from the microphone | Nowhere: measured and thrown away | Nobody |
 
 Because it is all on the device, a new phone starts with an empty Music room.

@@ -18,6 +18,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-05-music-advanced-and-play',
+    date: '2026-10-05',
+    title: 'Advanced settings in the Music room, and a new Play folder',
+    items: [
+      'Every Music folder opens as simple as before. Tick Advanced settings at the end of one for more, and untick it to put it back.',
+      'Tuner: watch your voice as a line over the last ten seconds, sing against a held drone note, and see notes as a clarinet, trumpet, saxophone or horn reads them.',
+      'Conductor: clicks between the beats, loud or silent beats, a one-bar count-in, a speed trainer that gets a little faster as you go, and tempos saved by name.',
+      'Pieces: move a score up or down to suit your voices, loop a hard passage, silence your own part to sing it, and choose the sound.',
+      'Play is a new folder: a piano keyboard to play with your fingers, the chords of any key a tap each, and a beat maker with a bass drum, snare and hi-hat.',
+      'As before, it all happens on your phone, and what you save stays there.',
+    ],
+  },
+  {
     id: '2026-10-04-concert-pitch-you-can-hear',
     date: '2026-10-04',
     title: 'Concert pitch you can hear',
