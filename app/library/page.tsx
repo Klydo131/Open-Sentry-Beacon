@@ -638,13 +638,15 @@ export default function LibraryPage() {
               </p>
               <p className="mt-1 hidden text-sm text-gray-500 xl:block">Upload a book, video, music, or image. You can also add a safe https:// link.</p>
               <input ref={fileRef} type="file" multiple onChange={onFiles} className="hidden" />
+              {/* On a phone the two do not fit side by side, so each takes the
+                  full width rather than stacking at two different widths. */}
               <div className="mt-3 flex flex-wrap gap-2 xl:mt-4">
-                <Button variant="gold" className="max-xl:px-4 max-xl:text-base" disabled={busy} onClick={() => fileRef.current?.click()}>
+                <Button variant="gold" className="max-sm:w-full max-xl:px-4 max-xl:text-base" disabled={busy} onClick={() => fileRef.current?.click()}>
                   {busy ? 'Saving…' : '⬆️ Upload files'}
                 </Button>
                 {/* The link form is three boxes and a button: on a phone it
                     waits behind this until somebody wants it. */}
-                <Button variant="ghost" className="max-xl:px-4 max-xl:text-base xl:hidden" aria-expanded={linkOpen} onClick={() => setLinkOpen((o) => !o)}>
+                <Button variant="ghost" className="max-sm:w-full max-xl:px-4 max-xl:text-base xl:hidden" aria-expanded={linkOpen} onClick={() => setLinkOpen((o) => !o)}>
                   🔗 {linkOpen ? 'Close' : 'Add a link'}
                 </Button>
               </div>

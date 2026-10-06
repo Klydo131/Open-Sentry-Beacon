@@ -78,6 +78,13 @@ const SIZES = [['phone', 390, 844], ['pad', 820, 1180], ['computer', 1280, 900]]
         await page.goto(`${BASE}/library?room=mine`, { waitUntil: 'networkidle' });
         await page.getByRole('button', { name: /Upload files/ }).waitFor({ timeout: 10000 });
         ok(!(await page.locator('[data-link-form]').isVisible()), `${size}: the link form waits until it is asked for`);
+        if (width < 640) {
+          // Too wide to sit side by side on a phone: one under the other, at
+          // one width, not two buttons of two widths.
+          const across = await Promise.all([/Upload files/, /Add a link/].map(async (name) => (await page.getByRole('button', { name }).boundingBox())?.width ?? 0));
+          ok(across[0] > 0 && Math.abs(across[0] - across[1]) <= 1,
+             `${size}: Upload files and Add a link are one width (${across.map(Math.round).join(' and ')} px)`);
+        }
         const top = async (sel) => (await page.locator(sel).first().boundingBox())?.y ?? -1;
         const addAt = await top('[data-device-note]');
         const emptyAt = await top('text=Your device library is empty');
