@@ -463,7 +463,7 @@ Six rooms work this way now. Measured on a phone, with the sample church in them
 
 | Room | Was | Now |
 | --- | --- | --- |
-| **The Library** | 11 screens of scrolling | 3 folders: Browse, Featured, On this device |
+| **The Library** | 11 screens of scrolling | 3 folders: Browse, Featured, On this device. On a phone (6 October 2026) a title instead of a banner and one row of filter chips: Browse went from 5.6 screens to 3.6, and the first resource is on the first screen |
 | **Settings** | 7 screens | 4 or 5 folders: General (installing, alerts, language, text size, look, the source code), Password, Admin Reports, Church for leadership, Help. The sample church has General, Help and, for leadership, Church |
 | **My Journey**, an Explorer's own screen | 7 screens | 4 folders: My Guide, Study, Church, Prayer |
 | **The Church** | 5 screens | 3 folders: Notices, Community Blogs, The numbers |

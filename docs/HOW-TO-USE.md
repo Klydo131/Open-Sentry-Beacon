@@ -95,7 +95,10 @@ are and the app takes you to your own part of it.
 
 Along the bottom of every screen are three words. **Menu** lists every place you
 can go, written out. **People** opens the people you walk with. **My Files**
-opens your own files.
+opens the church's resources and your own files. On a phone or a pad, tap a chip
+under the search box (Bible study, Devotion and the rest) to narrow the list,
+and choose **On this device** for your own files: **Upload files** or **Add a
+link** at the top, and Delete asks a second time before anything goes.
 
 ![The Menu. Every room is written out, with your own profile at the top.](screenshots/walkthrough/19-menu.png)
 

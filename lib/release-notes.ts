@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-06-my-files-on-a-phone',
+    date: '2026-10-06',
+    title: 'My Files, simpler on a phone and a pad',
+    items: [
+      'My Files opens with a short title instead of a big banner, so the first resource is on the first screen.',
+      'The filters are one row of chips with a count on each, and the list says which one you chose.',
+      'On this device puts Upload files and Add a link at the top, with your files right below.',
+      'Deleting one of your files now asks a second time, since nothing can bring it back.',
+    ],
+  },
+  {
     id: '2026-10-06-music-pdfs',
     date: '2026-10-06',
     title: 'Music PDFs, read on your phone',

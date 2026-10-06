@@ -227,6 +227,11 @@ const data = strip(read('lib/live/data.ts'));
      && /order-1 p-4 xl:order-none/.test(page) && /order-3 xl:mt-5/.test(page) && /order-4 p-4 xl:order-none[^"]*" data-panel="music-moved"/.test(page),
      'on a phone, adding comes first, then the files, then the note about Music; a computer keeps its order');
   ok(/max-xl:px-4 max-xl:text-base/.test(page), 'the buttons are a size smaller below 1280px only, so Upload and Add a link sit side by side');
+  // The card's topic label was teal-700 in every look: 5.5:1 on Classic's
+  // white, and dim on a dark look's panel. The accent is that same teal in a
+  // light look and a bright one in a dark look (app/globals.css).
+  ok(/uppercase tracking-wide text-\[color:var\(--music-accent\)\]/.test(page) && !/uppercase tracking-wide text-teal-700/.test(page),
+     'a resource\'s topic label is readable in the dark looks too');
 }
 
 console.log(bad ? `\n${bad} problem(s).` : '\nRESULT: ALL OK');

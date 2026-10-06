@@ -110,7 +110,7 @@ function ResourceCard({
           {ICON[item.type] ?? ICON.link}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-teal-700">
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--music-accent)]">
             {item.topics.slice(0, 2).join(' · ') || 'Resource'}
           </p>
           <h3 className="mt-0.5 font-bold leading-snug text-navy">{item.title}</h3>
