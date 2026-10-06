@@ -18,6 +18,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-06-look-from-the-first-moment',
+    date: '2026-10-06',
+    title: 'Your look, from the first moment',
+    items: [
+      'On a slow connection the page could show Classic for a moment before the look you chose. Now your look is there from the very first moment.',
+    ],
+  },
+  {
     id: '2026-10-06-my-files-on-a-phone',
     date: '2026-10-06',
     title: 'My Files, simpler on a phone and a pad',

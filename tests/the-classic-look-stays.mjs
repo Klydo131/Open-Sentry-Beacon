@@ -227,7 +227,7 @@ function cssFiles() {
 // 5. THE CHOSEN LOOK IS ON THE PAGE BEFORE THE FIRST FRAME
 //
 // The owner, 3 October 2026: "fix the first paint flash too". The script runs
-// at the top of <body>, so it is checked here by running it: in a stand-in
+// in <head>, so it is checked here by running it: in a stand-in
 // browser, for every kind of stored value, it must put on <html> exactly what
 // knownTheme() would. tests/e2e/the-first-paint.js checks it in a real one.
 // ---------------------------------------------------------------------------
@@ -258,11 +258,15 @@ function cssFiles() {
   ok(L.UI_THEMES.every((t) => run(t.id) === t.id), 'every registered look, Classic included, is applied before paint');
   ok(run('anything', true) === L.DEFAULT_LOOK, 'and a browser that refuses storage gets the default, as readUiTheme() gives it');
 
+  // In <head>, not at the top of <body>: a page that arrives in parts can be
+  // drawn as soon as <body> has begun, before a script further down has run
+  // (6 October 2026, lib/look-before-paint.ts). No frame is drawn before
+  // <body> exists.
   const layout = code('app/layout.tsx');
-  const body = layout.slice(layout.indexOf('<body>'));
-  const firstDrawn = body.search(/<(DemoProvider|LocaleProvider|LiveSessionProvider|TutorialModeProvider|main|div)\b/);
-  ok(/<LookBeforePaint \/>/.test(body) && body.indexOf('<LookBeforePaint />') < firstDrawn,
-     'the script is in <body> ahead of anything the page draws');
+  const head = layout.slice(layout.indexOf('<head>'), layout.indexOf('</head>'));
+  ok(layout.indexOf('<head>') > -1 && layout.indexOf('</head>') < layout.indexOf('<body>')
+     && /<LookBeforePaint \/>/.test(head) && (layout.match(/<LookBeforePaint \/>/g) || []).length === 1,
+     'the script is in <head>, once, so it runs before <body> exists');
   ok(/__html: LOOK_BEFORE_PAINT \}/.test(code('components/LookBeforePaint.tsx')),
      'and what it writes into the page is the constant, nothing else');
 }

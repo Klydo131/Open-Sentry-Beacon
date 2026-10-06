@@ -9,9 +9,19 @@
 // the whole page (a dark one) would flash Classic's light ground on every
 // load, the sign-in page included.
 //
-// So this runs first, as a script at the top of <body>
-// (components/LookBeforePaint.tsx): it reads the stored look and puts it on
-// <html> before the page below it is parsed or painted.
+// So this runs first, as a script in <head> (components/LookBeforePaint.tsx):
+// it reads the stored look and puts it on <html> before <body> exists, and a
+// browser lays nothing out until <body> exists.
+//
+// WHY <head> AND NOT THE TOP OF <body>, where it was until 6 October 2026. A
+// page can arrive in parts, as it does over a slow network, and the browser
+// draws the part it has while it waits for the rest. Once <body> has begun,
+// that first frame can come before a script further down has run, so a look
+// set in <body> could be a frame late: Classic first, the chosen look after.
+// tests/e2e/the-first-paint.js caught it on GitHub now and then, one look in
+// about every other run; sending the page in two parts, cut after the first
+// script in <body>, made it happen every time (20 of 20 first frames in
+// Classic, the look a quarter of a second later). In <head> it was 0 of 20.
 //
 // THE SAME RULE AS knownTheme(), FROM THE SAME REGISTRY. The list of looks and
 // the default are taken from lib/ui-themes.ts when the app is built, so a look

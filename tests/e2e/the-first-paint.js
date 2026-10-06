@@ -13,6 +13,10 @@
 // animation-frame tick can fall in that wait, when nothing is drawn. The
 // browser's first-paint entry is when something actually reached the screen.
 //
+// And once over a slow network, where the page arrives in two parts and the
+// browser draws the first part while it waits: that is how a look set at the
+// top of <body> was a frame late (6 October 2026), and why it is in <head>.
+//
 // lib/look-before-paint.ts is what makes it pass. While Classic is the only
 // look the server and the script agree, so what is checked today is that the
 // script's rule holds (an old "desktop" in storage is Classic at first paint)
@@ -56,6 +60,44 @@ function recordFrames() {
     if (frames.length < 400) requestAnimationFrame(look);
   };
   requestAnimationFrame(look);
+}
+
+/**
+ * A stand-in for a slow network, on a port of its own: everything passes
+ * through to the app, except that a page is sent in two parts 400 ms apart,
+ * cut just after the first script in <body>. `cut()` says whether it cut one.
+ */
+function twoPartPages() {
+  const http = require('http');
+  let cuts = 0;
+  const server = http.createServer((req, res) => {
+    const up = http.request({ host: '127.0.0.1', port: PORT, path: req.url, method: req.method,
+      headers: { ...req.headers, host: `localhost:${PORT}`, 'accept-encoding': 'identity' } }, (r) => {
+      const headers = { ...r.headers };
+      delete headers['content-length'];
+      delete headers['transfer-encoding'];
+      res.writeHead(r.statusCode, headers);
+      if (!(r.headers['content-type'] || '').includes('text/html')) { r.pipe(res); return; }
+      const parts = [];
+      r.on('data', (d) => parts.push(d));
+      r.on('end', () => {
+        const html = Buffer.concat(parts).toString('utf8');
+        const body = html.indexOf('<body');
+        const cut = body < 0 ? -1 : html.indexOf('</script>', body);
+        if (cut < 0) { res.end(html); return; }
+        cuts += 1;
+        res.write(html.slice(0, cut + 9));
+        setTimeout(() => res.end(html.slice(cut + 9)), 400);
+      });
+    });
+    up.on('error', () => res.destroy());
+    req.pipe(up);
+  });
+  return new Promise((resolve) => server.listen(0, () => resolve({
+    port: server.address().port,
+    cut: () => cuts > 0,
+    close: () => server.close(),
+  })));
 }
 
 async function device({ width, height, mobile, stored }) {
@@ -163,6 +205,32 @@ async function framesOf(page, url) {
        && door.filter((f) => f.t >= door.firstPaint).every((f) => f.look === look),
        `${look}: the sign-in page first paints in it, and stays in it (${door.lookAtFirstPaint})`);
     await browser.close();
+  }
+
+  // 5. A SLOW NETWORK: the page arrives in two parts, cut just after the first
+  // script in <body>, and the browser draws what it has while it waits for the
+  // rest. A look set anywhere in <body> is then late. Until 6 October 2026 the
+  // script was at the top of <body>: GitHub's runs caught it by chance, one
+  // look in about every other run, and this cut caught it every time (20 of 20
+  // first frames in Classic, the look a quarter of a second later). In <head>
+  // it runs before <body> exists, and nothing is drawn before that.
+  const slowLook = otherLooks[0];
+  if (!slowLook) console.log('    (no look but Classic to try over a slow network)');
+  else {
+    const proxy = await twoPartPages();
+    const { browser, page } = await device({ width: 390, height: 844, mobile: true, stored: slowLook });
+    await page.goto(`http://localhost:${proxy.port}/login`, { waitUntil: 'load' });
+    await page.waitForTimeout(1500);
+    const seen = await page.evaluate(() => {
+      const entries = performance.getEntriesByType('paint');
+      const paint = entries.find((e) => e.name === 'first-paint') || entries.find((e) => e.name === 'first-contentful-paint');
+      const before = paint ? window.__lookChanges.filter((c) => c.t <= paint.startTime) : [];
+      return { paint: paint ? Math.round(paint.startTime) : null, look: before.length ? before[before.length - 1].look : 'classic', set: window.__lookChanges[0] ? Math.round(window.__lookChanges[0].t) : null };
+    });
+    ok(proxy.cut() && seen.paint !== null && seen.look === slowLook,
+       `${slowLook}: a page that arrives in two parts first paints in it (${seen.look} at ${seen.paint}ms, the look set at ${seen.set}ms)`);
+    await browser.close();
+    proxy.close();
   }
 
   console.log(bad ? `RESULT: ${bad} BAD` : 'RESULT: ALL OK');
