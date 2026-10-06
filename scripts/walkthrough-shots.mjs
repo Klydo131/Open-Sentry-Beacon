@@ -431,6 +431,41 @@ const SHOTS = [
       await p.evaluate(() => window.scrollBy(0, -24));
       await settle(p, 600);
     } },
+  // A music PDF read on the phone, 6 October 2026: the owner chose "Read music
+  // PDFs on phone". The test hymn's PDF (CC0, tests/fixtures/music), its note
+  // that it was read from the print, and About this piece below it.
+  { file: '41-music-pdf.png', what: 'Pieces: a choir PDF read on the phone, with About this piece', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.goto(`${BASE}/music?room=pieces`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-score-input]').setInputFiles(new URL('../tests/fixtures/music/hymn-in-g.pdf', import.meta.url).pathname);
+      await p.locator('[data-piece-explained]').waitFor({ timeout: 20000 });
+      await settle(p, 800);
+      // The title, the note under it and the start of About this piece.
+      await p.locator('[data-score-title]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy(0, -90));
+      await settle(p, 600);
+    } },
+  // Concert pitch you can hear, 5 October 2026: "I just put the Hertz and
+  // nothing much is happening". The Tuner's concert pitch card, A = 440.
+  { file: '42-tuner-pitch.png', what: 'The Tuner: concert pitch, one tap for each common A, and Compare with 440', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-tuner-a4]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // My Files on a phone, 6 October 2026: "The Library (My files) are not UI
+  // friendly for Mobile and Pad users". On this device: adding first, at one
+  // width, then the files, then the note about Music.
+  { file: '43-my-files-device.png', what: 'My Files on a phone: On this device, Upload files and Add a link first', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.goto(`${BASE}/library?room=mine`, { waitUntil: 'networkidle' });
+      await settle(p, 1400);
+    } },
 ];
 
 /** Maria plans three nights of meetings for shots 28 to 30: invented names only. */

@@ -43,7 +43,9 @@ aware".
    people, the owner decides.
 2. **Test it.** See below. Break your new check on purpose and watch it go red.
 3. **Polish it.** Run it and look at it. For anything somebody sees, attach
-   screenshots at a phone, a pad and a desktop size.
+   screenshots at a phone, a pad and a desktop size. If it changes a screen
+   that the guides show, `npm run docs:refresh` retakes every picture and
+   reprints every guide in one go; look at what changed before committing.
 4. **The owner is told, and merges.** Your pull request says what changed, what
    passed, and what you could not check. Nothing reaches `main` except through a
    pull request the owner merges.
@@ -175,7 +177,9 @@ worth reading before you build another room like it:
 | `lib/brand.ts` | The app's name and colours. Change here, nowhere else. |
 | `lib/quest.ts` | The guided walks, one per role. |
 | `lib/types.ts` | Every shape in the app, in one file. |
+| `app/themes/` | The looks other than Classic, one stylesheet each (see AGENTS.md). |
 | `tests/`, `tests/e2e/` | Guardrails, unit checks, real-browser walks. |
+| `docs/`, `scripts/refresh-docs.mjs` | The guides and manuals, and the one command that retakes their pictures and reprints them. |
 
 [ARCHITECTURE.md](./ARCHITECTURE.md) explains how the pieces fit.
 [docs/BACKENDS.md](./docs/BACKENDS.md) covers connecting a real one.

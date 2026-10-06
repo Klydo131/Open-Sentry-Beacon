@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-75 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+76 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-phone-can-insert-things.js`
 
@@ -493,6 +493,14 @@ The study room opens, and somebody can write in it.
 WHY THIS WALK EXISTS AND THE OTHER CHECKS DO NOT COVER IT. The static checks assert the editor is imported lazily, gated behind a button, and that the build is configured to read BlockSuite at all. Every one of those can be true while the room opens to a blank box, because the editor is assembled at runtime from about a hundred custom elements and the failure mode is silence: no error, no text, nothing.
 
 It failed that way three times while being built -- once on a decorator, once on the `accessor` keyword, once on vanilla-extract -- and each time the page simply rendered nothing. So the only honest test is to open it and type.
+
+#### `the-words-can-be-read-in-every-look.js`
+
+The words can be read, in every look.
+
+Asked for on 6 October 2026: "Make sure the aesthetic for all theme UI is good and organize, we have sensitive users when it comes to design so please be careful."
+
+What was wrong. Every look was photographed on every room one person can reach, on a phone, a pad and a computer, and every piece of writing was measured against the pixels actually behind it. Some of what was found:
 
 #### `this-sabbath-reaches-explorers-offline.js`
 

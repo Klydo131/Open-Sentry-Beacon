@@ -211,6 +211,8 @@ markings:
 **Conduct this piece** opens the Conductor already set to the score's time and
 tempo (6/8 is beaten in six, 2/2 in two, 12/8 in four).
 
+![A choir PDF opened on a phone: the note under the title says it was read from the printed notes, and About this piece begins below it.](../../screenshots/walkthrough/41-music-pdf.png)
+
 **Advanced, for a score.** Tick **Advanced settings** under the parts.
 
 - **Transpose**: move every part up or down, a semitone at a time (up to an
@@ -235,6 +237,8 @@ semitones*. Unticking Advanced plays the score as written again.
 ## Play: a keyboard, chords and your own beat
 
 **Play** is for making music, not only practising it.
+
+![Play on a phone: an octave of keys at the choir's concert pitch.](../../screenshots/complete/phone-guide-music-5-play.jpg)
 
 **The keyboard.** An octave of piano keys. Press and hold a key and it sounds
 for as long as you hold it; several fingers play several notes. **Lower** and

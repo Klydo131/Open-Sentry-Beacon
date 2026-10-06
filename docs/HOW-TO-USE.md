@@ -100,6 +100,8 @@ under the search box (Bible study, Devotion and the rest) to narrow the list,
 and choose **On this device** for your own files: **Upload files** or **Add a
 link** at the top, and Delete asks a second time before anything goes.
 
+![My Files on a phone, On this device: Upload files and Add a link at the top, then your own files.](screenshots/walkthrough/43-my-files-device.png)
+
 ![The Menu. Every room is written out, with your own profile at the top.](screenshots/walkthrough/19-menu.png)
 
 Some screens hold several **folders**. The button at the top names the one you
@@ -147,6 +149,10 @@ folder for more, and untick it to put the folder back as it was.
   drum, snare and hi-hat, with your own beats saved by name.
 
 ![The Music room's Conductor. The pattern for four beats, numbered where the hand falls, with the tempo beside it.](screenshots/walkthrough/40-music-room.png)
+
+![The Tuner's Concert pitch. One tap for each common A, the one chosen shown as chosen, and Compare with 440.](screenshots/walkthrough/42-tuner-pitch.png)
+
+![Pieces with a choir PDF opened on the phone. Under the title it says it was read from the printed notes, and About this piece explains it.](screenshots/walkthrough/41-music-pdf.png)
 
 ---
 

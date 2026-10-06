@@ -24,6 +24,18 @@ room added later appears in the next edition without anybody listing it.
 
 ## Making a new edition
 
+One command does all of it, for these two books and every other picture in the
+repository (the README, the setup guide, the illustrated walkthrough, and the
+printed HANDBOOK and HOW-TO-USE):
+
+```bash
+npm run docs:refresh                 # build, take every picture, print every PDF
+npm run docs:refresh -- --no-build   # the same, with the build already in .next
+```
+
+`scripts/refresh-docs.mjs` says what it runs and where each file lands. By hand,
+for these two books only:
+
 ```bash
 npm run build && node scripts/run-next.mjs start -p 4321    # in one terminal
 node scripts/complete-guide-shots.mjs 4321                  # every screen, for every role

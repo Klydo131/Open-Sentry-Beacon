@@ -126,6 +126,15 @@
   "group": "rooms"
  },
  {
+  "file": "screenshots/complete/computer-explorer-music-5-play.jpg",
+  "device": "computer",
+  "role": "Explorer",
+  "room": "Music",
+  "folder": "Play",
+  "caption": "Explorer · Music · Play",
+  "group": "rooms"
+ },
+ {
   "file": "screenshots/complete/computer-explorer-my-files-1-browse.jpg",
   "device": "computer",
   "role": "Explorer",
@@ -330,6 +339,15 @@
   "room": "Music",
   "folder": "Pieces",
   "caption": "Guide · Music · Pieces",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-guide-music-5-play.jpg",
+  "device": "computer",
+  "role": "Guide",
+  "room": "Music",
+  "folder": "Play",
+  "caption": "Guide · Music · Play",
   "group": "rooms"
  },
  {
@@ -582,6 +600,15 @@
   "room": "Music",
   "folder": "Pieces",
   "caption": "Director · Music · Pieces",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-music-5-play.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Music",
+  "folder": "Play",
+  "caption": "Director · Music · Play",
   "group": "rooms"
  },
  {
@@ -861,6 +888,15 @@
   "room": "Music",
   "folder": "Pieces",
   "caption": "Executive Director · Music · Pieces",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-music-5-play.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Music",
+  "folder": "Play",
+  "caption": "Executive Director · Music · Play",
   "group": "rooms"
  },
  {

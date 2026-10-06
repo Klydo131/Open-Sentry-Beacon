@@ -33,7 +33,8 @@
     "lint": "node scripts/lint.mjs",
     "prebuild": "node scripts/stamp-build.mjs && node scripts/excalidraw-assets.mjs && node scripts/third-party-notices.mjs",
     "verify": "node scripts/verify.mjs",
-    "verify:all": "node scripts/verify.mjs --all"
+    "verify:all": "node scripts/verify.mjs --all",
+    "docs:refresh": "node scripts/refresh-docs.mjs"
   },
   "dependencies": {
     "@blocksuite/affine": "^0.22.4",

@@ -2396,6 +2396,14 @@ npm run build && node scripts/run-next.mjs start -p 4320 node scripts/live-scree
 
 Needs NEXT_PUBLIC_SUPABASE_URL and _ANON_KEY set at BUILD time, because that is what puts the app in live mode. It does not need the database to answer: a screen that renders its own loading state has proved the point, and a screen showing the placeholder has proved the opposite.
 
+#### `scripts/refresh-docs.mjs`
+
+Every picture and every printed guide, in one command.
+
+npm run docs:refresh build, then every picture and every PDF npm run docs:refresh -- --no-build use the build already in .next npm run docs:refresh -- --pictures pictures only, no PDFs
+
+WHY ONE COMMAND. Until 6 October 2026 a new edition was eight commands run by hand in the right order against a server started by hand: four picture scripts (the README, the setup guide, the illustrated walkthrough, the complete guides in three parts), the reference appendices, the two complete guides, and the two printed manuals, which were then copied by hand from docs/handbook/pdf/ to the names the README links to. That last step was written down nowhere. A church that copies this app, or a developer who changes a screen, should be able to bring every picture and every guide up to date without knowing any of that.
+
 #### `scripts/run-next.mjs`
 
 *No header comment.*

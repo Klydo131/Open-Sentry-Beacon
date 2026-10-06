@@ -16,6 +16,7 @@
 | `npm run prebuild` | `node scripts/stamp-build.mjs && node scripts/excalidraw-assets.mjs && node scripts/third-party-notices.mjs` |
 | `npm run verify` | `node scripts/verify.mjs` |
 | `npm run verify:all` | `node scripts/verify.mjs --all` |
+| `npm run docs:refresh` | `node scripts/refresh-docs.mjs` |
 
 ## F.2 Every runtime dependency, pinned
 

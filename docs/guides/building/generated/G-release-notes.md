@@ -1,6 +1,15 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 36 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 37 releases, as members read them in Settings, What's new.
+
+### Easier to read, in every look
+
+*2026-10-06*
+
+- Small grey writing (dates, hints, "Report") is a shade darker, so it reads easily.
+- A profile's banner is a deeper green or blue, so the name and the line under it stand out.
+- Labels on coloured shapes, such as journey stages and the bars in The numbers, now pick dark or white writing, whichever reads.
+- In Focus and Dark Aero, the featured resources, the bell's count, the Music player's buttons and a prayer request from your Guide could be almost invisible. They read clearly now.
 
 ### Your look, from the first moment
 
