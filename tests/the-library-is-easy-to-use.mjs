@@ -197,5 +197,37 @@ const data = strip(read('lib/live/data.ts'));
   ok(/←\s*Back to app/.test(header), 'with an arrow that points the way it goes');
 }
 
+// ---------------------------------------------------------------------------
+// 5. MY FILES ON A PHONE AND A PAD
+// ---------------------------------------------------------------------------
+// Asked for on 6 October 2026: "The Library (My files) are not UI friendly for
+// Mobile and Pad users, can we make it more aesthetic and simple use please.
+// Desktop and Mac is ok for now." Below 1280px (where the bar along the bottom
+// is) the page is calmer; from 1280px it is what it was. The browser half is
+// tests/e2e/my-files-on-a-phone-and-pad.js.
+{
+  const page = strip(read('app/library/page.tsx'));
+  const header = page.slice(page.indexOf('<header'), page.indexOf('</header>'));
+  ok(/<span className="sm:hidden"><SentryBeaconWordmark size=\{30\} nameClass="text-base" \/><\/span>/.test(header)
+     && /<span className="hidden sm:block"><SentryBeaconWordmark [^>]*subtitle=/.test(header),
+     'on a phone the header shows the name without the tagline that ran off the edge');
+  ok(/<div className="xl:hidden" data-library-title>/.test(page) && /<section className="hidden [^"]*xl:grid/.test(page),
+     'a phone or pad gets a title; the banner is a computer\'s only');
+  ok(/xl:!mt-0 xl:grid/.test(page), 'and the banner keeps its place on a computer though a hidden title comes first');
+  ok(/data-library-chips/.test(page) && /overflow-x-auto[^"]*xl:hidden/.test(page) && /aria-pressed=\{active\}[\s\S]{0,80}aria-label=\{`\$\{option\.label\}, \$\{count\}`\}/.test(page),
+     'the six filters are one row of chips below 1280px, each saying its name and count');
+  ok(/<div className="hidden gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid">/.test(page), 'and the six cards are a computer\'s only');
+  ok(/line-clamp-3[^"]*xl:line-clamp-none/.test(page) && !/className="[^"]*\bline-clamp-3\b[^"]*\bflex-1\b|className="[^"]*\bflex-1\b[^"]*\bline-clamp-3\b/.test(page),
+     'a card\'s description is held to three lines, and is not also stretched (which showed a fourth line under the ellipsis)');
+  ok(/sure \? onRemove\(\) : setSure\(true\)/.test(page) && /'Tap again to delete'/.test(page),
+     'deleting a file kept only on this device takes a second tap');
+  ok(/linkOpen \? 'grid' : 'hidden xl:grid'/.test(page) && /aria-expanded=\{linkOpen\}/.test(page),
+     'on a phone the link form waits behind a button; a computer shows it as before');
+  ok(/className="flex flex-col gap-4 xl:block/.test(page) && /className="contents xl:mt-5 xl:grid/.test(page)
+     && /order-1 p-4 xl:order-none/.test(page) && /order-3 xl:mt-5/.test(page) && /order-4 p-4 xl:order-none[^"]*" data-panel="music-moved"/.test(page),
+     'on a phone, adding comes first, then the files, then the note about Music; a computer keeps its order');
+  ok(/max-xl:px-4 max-xl:text-base/.test(page), 'the buttons are a size smaller below 1280px only, so Upload and Add a link sit side by side');
+}
+
 console.log(bad ? `\n${bad} problem(s).` : '\nRESULT: ALL OK');
 process.exit(bad ? 1 : 0);
