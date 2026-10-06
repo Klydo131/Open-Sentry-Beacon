@@ -48,6 +48,29 @@ const LIGHT = /backgroundColor:[^,}]*['"]#[0-9a-f]{3,8}['"]/i;
 // The text classes the looks recolour (app/themes/*.css).
 const RECOLOURED = /\btext-(?:navy|room|room-soft|gray-[4-9]00|slate-[4-9]00)\b/;
 
+/** What sits directly inside an element: its words and {expressions}, not its child elements'. */
+function directText(jsx) {
+  const inner = jsx.replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '');
+  let out = '';
+  let depth = 0;
+  for (let k = 0; k < inner.length; k++) {
+    if (inner[k] === '<' && /[A-Za-z/]/.test(inner[k + 1] || '')) {
+      const closing = inner[k + 1] === '/';
+      let brace = 0;
+      let j = k + 1;
+      for (; j < inner.length; j++) {
+        if (inner[j] === '{') brace++;
+        else if (inner[j] === '}') brace--;
+        else if (inner[j] === '>' && brace === 0) break;
+      }
+      if (closing) depth--;
+      else if (inner[j - 1] !== '/') depth++;
+      k = j;
+    } else if (depth === 0) out += inner[k];
+  }
+  return out;
+}
+
 const halfAndHalf = [];
 let looked = 0;
 for (const file of files) {
@@ -102,7 +125,13 @@ for (const file of files) {
     // A child that sets its own inline colour or ground is its own pair.
     const innerClasses = [...inner.matchAll(/<[A-Za-z][^>]*?className=(?:"([^"]*)"|\{`([^`]*)`\})(?![^>]*style=)/g)]
       .map((m) => m[1] ?? m[2]).join(' ');
-    if (!textInline && (RECOLOURED.test(classes) || RECOLOURED.test(innerClasses))) {
+    // Or the words sit directly inside it and take no colour at all, so they
+    // inherit the look's: the profile's avatar circles were a fixed pale grey
+    // with the emoji left to inherit, and where a phone draws an emoji in plain
+    // ink, a dark look drew it pale on pale (6 October 2026).
+    const ownInk = /(?:^|\s)text-(?:white|black|navy|room|\[[^\]]+\]|[a-z]+-[1-9]00)(?:\/\d+)?(?=\s|$)/.test(classes);
+    const inherits = !textInline && !ownInk && /[\p{L}\p{N}\p{Extended_Pictographic}]|\{/u.test(directText(inner));
+    if ((!textInline && (RECOLOURED.test(classes) || RECOLOURED.test(innerClasses))) || inherits) {
       const line = src.slice(0, i).split('\n').length;
       halfAndHalf.push(`${path.relative(root, file)}:${line}`);
     }

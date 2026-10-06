@@ -173,8 +173,11 @@ function Editor() {
                   setSaved(false);
                 }}
                 className="grid h-11 w-11 place-items-center rounded-full text-2xl ring-2"
+                // Its ink beside its ground: a phone that draws an emoji in
+                // plain ink drew it pale on this pale circle in a dark look.
                 style={{
                   backgroundColor: avatar === a ? '#E8B84B' : '#EEF1F7',
+                  color: '#1E2A4A',
                   borderColor: 'transparent',
                 }}
               >
