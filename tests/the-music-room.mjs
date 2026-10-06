@@ -602,5 +602,114 @@ function zip(files) {
   ok(/wakeLock/.test(conductor) && /release\(\)/.test(conductor), 'the conductor keeps the screen on only while the baton moves');
 }
 
+/** A one-page PDF of plain words in Helvetica: no music font, as a bulletin or a scan's text layer. */
+function wordsOnlyPdf(words) {
+  const stream = `BT /F1 24 Tf 72 700 Td (${words}) Tj ET`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ];
+  let body = '%PDF-1.4\n';
+  const offsets = objects.map((o, i) => { const at = body.length; body += `${i + 1} 0 obj\n${o}\nendobj\n`; return at; });
+  const xref = body.length;
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}`;
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return new TextEncoder().encode(body);
+}
+
+// ---------------------------------------------------------------------------
+// 10. MUSIC PDFs: chosen on 6 October 2026, "Read music PDFs on phone". The
+//     two fixture PDFs are our own CC0 test scores, engraved by MuseScore 3.2
+//     (its fonts are embedded under their font exceptions: MScore GPL-2 with
+//     font exception, MScoreText and Bravura OFL-1.1, FreeSerif GPL-3 with
+//     font exception). Read back, each must give exactly what its MusicXML
+//     gives. Measured more widely while it was built: 220 Bach chorales from
+//     the music21 corpus, kept out of this repository because of their terms.
+// ---------------------------------------------------------------------------
+{
+  const PDF = await bundle(['lib/music/pdf-ink', 'lib/music/pdf-score'], 'pdf');
+  const pdfjs = await import(pathToFileURL(path.join(root, 'node_modules/pdfjs-dist/legacy/build/pdf.mjs')).href);
+  const fromPdf = async (file) => PDF.readPdfScore(await PDF.readPdfInk(pdfjs, new Uint8Array(fs.readFileSync(path.join(root, file)))));
+  const fromXml = (file) => M.readScore(tree(read(file)));
+  const notes = (line) => line.notes.map((n) => `${n.start}:${n.midi}/${n.length}${n.lyric ? `"${n.lyric}${n.joins ? '-' : ''}"` : ''}`).join(' ');
+
+  for (const name of ['hymn-in-g', 'four-parts']) {
+    const truth = fromXml(`tests/fixtures/music/${name}.musicxml`);
+    const { score, report } = await fromPdf(`tests/fixtures/music/${name}.pdf`);
+    ok(score.lines.length === truth.lines.length && truth.lines.every((l, i) => notes(score.lines[i]) === notes(l)),
+       `${name}.pdf: every note of every part reads as the MusicXML has it: pitch, start, length and words (${truth.lines.reduce((n, l) => n + l.notes.length, 0)} notes)`);
+    ok(score.lines.every((l, i) => l.name === truth.lines[i].name), `${name}.pdf: the parts keep their names (${score.lines.map((l) => l.name).join(', ')})`);
+    ok(score.title === truth.title, `${name}.pdf: the title is read from the page ("${score.title}")`);
+    ok(score.key?.fifths === (truth.key?.fifths ?? 0) && score.time?.beats === truth.time?.beats && score.time?.beatType === truth.time?.beatType && score.tempo === truth.tempo,
+       `${name}.pdf: key, time and tempo read as written (${score.key?.fifths} fifths, ${score.time?.beats}/${score.time?.beatType}, ${score.tempo} a minute)`);
+    ok(JSON.stringify(score.bars) === JSON.stringify(truth.bars) && score.length === truth.length && report.unevenBars === 0,
+       `${name}.pdf: the bars fall where they do in the score, and every bar adds up`);
+    // four-parts.musicxml declares no key; its page shows an empty key
+    // signature, which is C, so that is what the two are compared with.
+    const same = M.explain({ ...truth, key: truth.key ?? { fifths: 0 } }).summary;
+    ok(M.explain(score).summary === same, `${name}.pdf: About this piece says the same as for the MusicXML (${M.explain(score).summary})`);
+  }
+  const hymn = (await fromPdf('tests/fixtures/music/hymn-in-g.pdf')).score;
+  const truthMarks = fromXml('tests/fixtures/music/hymn-in-g.musicxml').marks ?? [];
+  const markText = (marks) => marks.filter((m) => m.kind !== 'tempo').map((m) => `${m.at}:${m.kind}:${m.text}`).sort().join(' ');
+  ok(markText(hymn.marks ?? []) === markText(truthMarks), `the hymn's loud and soft read where they are written (${markText(hymn.marks ?? [])})`);
+
+  // Refusals, in sentences a person can act on.
+  const refused = async (work) => { try { await work(); return ''; } catch (e) { return e instanceof Error ? e.message : String(e); } };
+  ok(/could not be opened as a PDF/.test(await refused(() => PDF.readPdfInk(pdfjs, new TextEncoder().encode('<score-partwise/>')))),
+     'a file that is not a PDF is refused as one');
+  ok(/no music characters.*scan or a photo/.test(await refused(async () => PDF.readPdfScore(await PDF.readPdfInk(pdfjs, wordsOnlyPdf('Order of service'))))),
+     'a PDF with words and no music (a scan, a photo, a bulletin) is told so');
+
+  // Limits: a hostile file can make the room say no, never hang it.
+  const fake = (numPages, ops) => ({
+    OPS: pdfjs.OPS,
+    getDocument: () => ({
+      promise: Promise.resolve({
+        numPages,
+        getPage: async () => ({
+          getViewport: () => ({ width: 600, height: 800 }),
+          getTextContent: async () => ({ items: [] }),
+          getOperatorList: async () => ops,
+        }),
+      }),
+      destroy: async () => {},
+    }),
+  });
+  ok(/more than 60 pages/.test(await refused(() => PDF.readPdfInk(fake(61, { fnArray: [], argsArray: [] }), new Uint8Array(8)))), 'a PDF of more than 60 pages is refused');
+  const line = new Float32Array([0, 0, 0, 1, 10, 10]);
+  const many = { fnArray: Array(PDF.PDF_LIMITS.perPage + 1).fill(pdfjs.OPS.constructPath), argsArray: Array(PDF.PDF_LIMITS.perPage + 1).fill([pdfjs.OPS.stroke, [line], null]) };
+  ok(/more than the room can read/.test(await refused(() => PDF.readPdfInk(fake(1, many), new Uint8Array(8)))), `a page of more than ${PDF.PDF_LIMITS.perPage} marks is refused`);
+  ok(/larger than/.test(await refused(() => PDF.readPdfInk(fake(1, { fnArray: [], argsArray: [] }), new Uint8Array(PDF.PDF_LIMITS.bytes + 1)))), 'a PDF larger than the room keeps is refused');
+
+  // The promises that keep it safe and light.
+  const ink = code('lib/music/pdf-ink.ts');
+  ok(/useWasm: false/.test(ink) && /disableFontFace: true/.test(ink), 'pdf.js runs with no WebAssembly and puts no fonts into the page');
+  // pdf.js 6 builds no code from strings; the security policy would refuse it,
+  // inside its worker too, where a browser walk cannot see the refusal. Its
+  // own files are read instead: the one Function() left is core-js's way of
+  // finding the global object on a browser too old to have globalThis.
+  const generated = ['pdf.mjs', 'pdf.worker.min.mjs'].flatMap((f) => [...read(`node_modules/pdfjs-dist/legacy/build/${f}`)
+    .matchAll(/(?<![\w$.])(?:new\s+)?(?:Function|eval)\s*\([^)]{0,40}\)?/g)].map((m) => m[0]))
+    .filter((m) => !/^Function\((['"])return this\1\)$/.test(m));
+  ok(generated.length === 0, `pdf.js builds no code from strings${generated.length ? ` (found ${generated.join(', ')})` : ''}`);
+  const scoreFile = code('lib/music/score-file.ts');
+  const staticImports = ['app', 'components', 'lib'].flatMap((d) => fs.readdirSync(path.join(root, d), { recursive: true })
+    .filter((f) => /\.(tsx?|mjs)$/.test(f)).map((f) => path.join(d, f)))
+    .filter((f) => /^import [^;]*['"](pdfjs-dist[^'"]*|@\/lib\/music\/pdf-(read|ink|score))['"]/m.test(code(f)) && !/lib[\\/]music[\\/]pdf-/.test(f));
+  ok(/await import\('@\/lib\/music\/pdf-read'\)/.test(scoreFile) && staticImports.length === 0,
+     `pdf.js and the reader load only when somebody opens a PDF${staticImports.length ? ` (imported up front by ${staticImports.join(', ')})` : ''}`);
+  ok(/new URL\('pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs', import\.meta\.url\)/.test(code('lib/music/pdf-read.ts')),
+     "pdf.js's worker is a file of this site, which the security policy allows");
+  ok(/"pdfjs-dist": "\d+\.\d+\.\d+"/.test(read('package.json')), 'pdf.js is pinned to one exact version');
+  ok(/bytes\.slice\(\)/.test(scoreFile) && /new Blob\(\[file\]/.test(scoreFile),
+     'the PDF kept on the phone is the file itself, not the bytes pdf.js takes over');
+  ok(/piece\.kind === 'score' && piece\.mime === PDF_MIME\) \{[\s\S]{0,200}?scoreFromPdfBytes\(new Uint8Array\(await blob\.arrayBuffer\(\)\)/.test(code('components/music/PiecesPanel.tsx')),
+     'a PDF kept on the phone is read again, and checked again, every time it is opened');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

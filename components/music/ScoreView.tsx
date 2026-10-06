@@ -90,7 +90,13 @@ const NoteLayer = memo(function NoteLayer({ lines, mine, mix, high }: {
   );
 });
 
-export function ScoreView({ score, onClose, onConduct }: { score: Score; onClose: () => void; onConduct?: (set: ConductSet) => void }) {
+export function ScoreView({ score, onClose, onConduct, note }: {
+  score: Score;
+  onClose: () => void;
+  onConduct?: (set: ConductSet) => void;
+  /** A word about where the notes came from: a PDF is read from its print. */
+  note?: string;
+}) {
   const player = useScorePlayer(score);
   const { playing, tempo, mix, position } = player;
   const [mine, setMine] = useState('');
@@ -177,6 +183,7 @@ export function ScoreView({ score, onClose, onConduct }: { score: Score; onClose
           <p className="mt-1 text-sm text-gray-600">
             {score.lines.length} {score.lines.length === 1 ? 'part' : 'parts'} · about {minutes(score.length, tempo)} at this tempo
           </p>
+          {note && <p className="mt-1 text-sm text-gray-600" data-score-note>{note}</p>}
         </div>
         <Button variant="ghost" onClick={() => { player.stop(); onClose(); }}>Close</Button>
       </div>

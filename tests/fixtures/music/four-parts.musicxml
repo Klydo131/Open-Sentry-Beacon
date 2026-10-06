@@ -3,7 +3,12 @@
 <!-- A test piece written for Hope Beacon's checks: two bars, four lines.
      Public domain (CC0). It holds what the reader must get right: two voices
      on one staff (backup), a tie across the bar, a chord, a rest, lyrics and
-     a tempo. tests/the-music-room.mjs says what each line should hold. -->
+     a tempo. tests/the-music-room.mjs says what each line should hold. Each
+     note also names its <type>, the tie is drawn (<tied>) as well as heard
+     (<tie>), and the men have their clefs, as notation programs expect:
+     tests/fixtures/music/four-parts.pdf is this piece, engraved by MuseScore
+     3.2, and without them it engraves every note a quarter, no tie, and the
+     bass in the treble clef. -->
 <score-partwise version="4.0">
   <work><work-title>Sing, my soul (test piece)</work-title></work>
   <part-list>
@@ -15,42 +20,42 @@
     <measure number="1">
       <attributes><divisions>2</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
       <direction><sound tempo="96"/></direction>
-      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><lyric number="1"><text>Sing,</text></lyric></note>
-      <note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><lyric number="1"><text>my</text></lyric></note>
-      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="start"/><voice>1</voice><lyric number="1"><text>soul,</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><lyric number="1"><text>Sing,</text></lyric></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><lyric number="1"><text>my</text></lyric></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="start"/><voice>1</voice><type>half</type><notations><tied type="start"/></notations><lyric number="1"><text>soul,</text></lyric></note>
       <backup><duration>8</duration></backup>
-      <note><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><lyric number="1"><text>Sing,</text></lyric></note>
-      <note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><lyric number="1"><text>my</text></lyric></note>
-      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><lyric number="1"><text>soul,</text></lyric></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><lyric number="1"><text>Sing,</text></lyric></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><lyric number="1"><text>my</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><lyric number="1"><text>soul,</text></lyric></note>
     </measure>
     <measure number="2">
-      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/><voice>1</voice></note>
-      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><lyric number="1"><text>a-</text></lyric></note>
-      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><lyric number="1"><text>rise!</text></lyric></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/><voice>1</voice><type>quarter</type><notations><tied type="stop"/></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><lyric number="1"><text>a-</text></lyric></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><lyric number="1"><text>rise!</text></lyric></note>
       <backup><duration>8</duration></backup>
-      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><lyric number="1"><text>a-</text></lyric></note>
-      <note><pitch><step>B</step><octave>3</octave></pitch><duration>4</duration><voice>2</voice><lyric number="1"><text>rise!</text></lyric></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><lyric number="1"><text>a-</text></lyric></note>
+      <note><pitch><step>B</step><octave>3</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><lyric number="1"><text>rise!</text></lyric></note>
     </measure>
   </part>
   <part id="P2">
     <measure number="1">
-      <attributes><divisions>2</divisions></attributes>
-      <note><pitch><step>G</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice></note>
-      <note><chord/><pitch><step>C</step><octave>4</octave></pitch><duration>8</duration><voice>1</voice></note>
+      <attributes><divisions>2</divisions><clef><sign>G</sign><line>2</line><clef-octave-change>-1</clef-octave-change></clef></attributes>
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type></note>
+      <note><chord/><pitch><step>C</step><octave>4</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type></note>
     </measure>
     <measure number="2">
-      <note><pitch><step>G</step><octave>3</octave></pitch><duration>4</duration><voice>1</voice></note>
-      <note><rest/><duration>4</duration><voice>1</voice></note>
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>4</duration><voice>1</voice><type>half</type></note>
+      <note><rest/><duration>4</duration><voice>1</voice><type>half</type></note>
     </measure>
   </part>
   <part id="P3">
     <measure number="1">
-      <attributes><divisions>2</divisions></attributes>
-      <note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><voice>1</voice></note>
-      <note><pitch><step>G</step><octave>2</octave></pitch><duration>4</duration><voice>1</voice></note>
+      <attributes><divisions>2</divisions><clef><sign>F</sign><line>4</line></clef></attributes>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><voice>1</voice><type>half</type></note>
+      <note><pitch><step>G</step><octave>2</octave></pitch><duration>4</duration><voice>1</voice><type>half</type></note>
     </measure>
     <measure number="2">
-      <note><pitch><step>C</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type></note>
     </measure>
   </part>
 </score-partwise>

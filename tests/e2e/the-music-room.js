@@ -25,6 +25,8 @@
 //     is refused in words
 //   - a photo of a page becomes a clean page, is kept without the photo,
 //     and is deleted with two taps
+//   - a music PDF (6 October 2026) is read on the phone under the site's own
+//     security policy, explains itself, is kept as itself and read again
 //
 // THE MICROPHONE IS FAKE, AND ONLY ON CHROMIUM: Chromium can be handed a WAV
 // file to use as the microphone. WebKit cannot, so on Safari the walk checks
@@ -42,6 +44,7 @@ const { signIn, choose } = require('./_looks');
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
 const FIXTURE = path.join(__dirname, '..', 'fixtures', 'music', 'four-parts.musicxml');
 const HYMN = path.join(__dirname, '..', 'fixtures', 'music', 'hymn-in-g.musicxml');
+const HYMN_PDF = path.join(__dirname, '..', 'fixtures', 'music', 'hymn-in-g.pdf');
 
 let bad = 0;
 const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
@@ -603,7 +606,55 @@ async function deskPhoto(page) {
       ok((await page.locator('[data-piece-list] li').filter({ hasText: 'Hymn 100' }).count()) === 0, `${size}: and then it is gone`);
       ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in Pieces`);
 
-      // 5a. ABOUT THIS PIECE, and conducting it (6 October 2026) ---------------
+      // 5a. A MUSIC PDF (6 October 2026): read on the phone, under the site's
+      //     own security policy (this walk runs against `next start`), and
+      //     kept as itself. tests/the-music-room.mjs holds what it must read.
+      // A refusal by the page's security policy is an event on the document
+      // (Chromium does not log it as a console message a walk can read). One
+      // inside pdf.js's worker is not seen here at all; tests/the-music-room.mjs
+      // reads pdf.js's files for that side instead.
+      await page.evaluate(() => {
+        window.__refused = [];
+        document.addEventListener('securitypolicyviolation', (e) => window.__refused.push(`${e.violatedDirective} ${e.blockedURI}`));
+      });
+      const workerFiles = () => page.evaluate(() => performance.getEntriesByType('resource').map((r) => r.name).filter((u) => /pdf\.worker/.test(u)));
+      ok((await page.evaluate(() => typeof globalThis.pdfjsLib)) === 'undefined' && (await workerFiles()).length === 0,
+         `${size}: the PDF reader is not downloaded until somebody opens a PDF`);
+      await page.locator('[data-score-input]').setInputFiles(HYMN_PDF);
+      await page.locator('[data-score-note]').waitFor({ timeout: 20000 });
+      const fromPdf = await say(page, '[data-piece-summary]');
+      ok(/^Unhurried and bright: Andante, 72 a minute, in G major, for two voices\. It begins soft \(p\), grows to loud \(f\) at bar 5/.test(fromPdf)
+         && (await say(page, '[data-score-title]')) === 'Praise the Lord (test hymn)',
+         `${size}: a music PDF is read on the phone, and explains itself as its MusicXML does (${fromPdf})`);
+      ok(/^Read from the PDF’s printed notes, on this phone\. Check it against the page/.test(await say(page, '[data-score-note]')),
+         `${size}: and says it was read from the print, to be checked against the page`);
+      const workers = await workerFiles();
+      const origin = await page.evaluate(() => location.origin);
+      ok(workers.length > 0 && workers.every((u) => u.startsWith(`${origin}/_next/static/`)),
+         `${size}: pdf.js's worker is a file of this site (${workers.map((u) => new URL(u).pathname).join(', ')})`);
+      const csp = await page.evaluate(() => window.__refused);
+      ok(csp.length === 0, `${size}: the page's security policy refused nothing while the PDF was read${csp.length ? ` (${csp.join(' | ')})` : ''}`);
+      const keptPdf = await page.evaluate(() => new Promise((done) => {
+        const open = indexedDB.open('beacon-music');
+        open.onsuccess = () => {
+          const t = open.result.transaction('blobs', 'readonly').objectStore('blobs').getAll();
+          t.onsuccess = () => { done(t.result.map((b) => b.mime)); open.result.close(); };
+        };
+      }));
+      ok(keptPdf.includes('application/pdf'), `${size}: the phone keeps the PDF itself (${keptPdf.join(', ')})`);
+      await page.locator('[data-panel="score-view"]').getByRole('button', { name: 'Close' }).click();
+      const pdfRow = page.locator('[data-piece-list] li').filter({ hasText: 'Score from a PDF' });
+      ok((await pdfRow.count()) === 1 && /Praise the Lord \(test hymn\)/.test(await pdfRow.innerText()), `${size}: the list says it is a score from a PDF`);
+      await pdfRow.getByRole('button', { name: 'Open' }).click();
+      await page.locator('[data-score-note]').waitFor({ timeout: 20000 });
+      ok(/in G major, for two voices/.test(await say(page, '[data-piece-summary]')), `${size}: opened again from the list, it is read again`);
+      await page.locator('[data-panel="score-view"]').getByRole('button', { name: 'Close' }).click();
+      await pdfRow.getByRole('button', { name: 'Delete' }).click();
+      await pdfRow.getByRole('button', { name: 'Tap again to delete' }).click();
+      await page.waitForTimeout(300);
+      ok((await page.locator('[data-piece-list] li').filter({ hasText: 'Score from a PDF' }).count()) === 0, `${size}: and it deletes like any piece`);
+
+      // 5b. ABOUT THIS PIECE, and conducting it (6 October 2026) ---------------
       await page.locator('[data-score-input]').setInputFiles(HYMN);
       await page.locator('[data-piece-explained]').waitFor({ timeout: 10000 });
       const about = await say(page, '[data-piece-summary]');

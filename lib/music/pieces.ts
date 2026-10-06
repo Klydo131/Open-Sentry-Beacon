@@ -25,7 +25,7 @@ export interface Piece {
   id: string;
   kind: PieceKind;
   title: string;
-  /** image/png for a page; text/xml for a score (kept as its MusicXML text). */
+  /** image/png for a page; text/xml for a score kept as its MusicXML text; application/pdf for a score kept as its PDF. */
   mime: string;
   size: number;
   created_at: string;

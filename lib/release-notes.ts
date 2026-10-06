@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-06-music-pdfs',
+    date: '2026-10-06',
+    title: 'Music PDFs, read on your phone',
+    items: [
+      'Pieces now opens a PDF that MuseScore, Dorico or a similar program made, and reads it note by note: every part\'s notes and rhythm, the key, time and tempo, the words, and the loud and soft.',
+      'It then plays, explains itself and can be conducted like any score. Under its title it says it was read from the print, so check it against the page before the choir learns from it.',
+      'A scanned PDF is only a picture, and Pieces says so. Older Sibelius and Finale PDFs are not read yet.',
+      'The reader is downloaded only the first time you open a PDF, and the PDF stays on your phone.',
+    ],
+  },
+  {
     id: '2026-10-06-music-in-every-look',
     date: '2026-10-06',
     title: 'A quicker tuner, and the Music room in every look',

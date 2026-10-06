@@ -132,8 +132,10 @@ folder for more, and untick it to put the folder back as it was.
   saved by name, such as *Hymn 100*.
 - **Pieces** keeps your choir's music. **Scan a page**: take a photo of a printed
   page, drag the four dots onto its corners, and tap **Make a clean page**.
-  **Open a score file**: a MusicXML file from MuseScore, Sibelius, Finale or
-  Dorico. Choose **Your part** to hear it louder, slow it down, and tap the notes
+  **Open a score or PDF**: a MusicXML file from MuseScore, Sibelius, Finale or
+  Dorico, or a PDF that MuseScore or Dorico made, read note by note on the
+  phone (check it against the page; a scanned PDF stays a picture). Choose
+  **Your part** to hear it louder, slow it down, and tap the notes
   to start from anywhere. In **Advanced**: move it up or down to suit your
   voices, loop a hard passage, silence your own part to sing it, and choose
   the sound.

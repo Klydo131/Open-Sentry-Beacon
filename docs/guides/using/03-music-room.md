@@ -165,14 +165,35 @@ the photo (such as where it was taken) is kept either.
 
 **A score that plays.**
 
-1. Tap **Open a score file** and choose a MusicXML file (`.musicxml`, `.xml` or
-   a compressed `.mxl`). MuseScore, Sibelius, Finale and Dorico all save them.
+1. Tap **Open a score or PDF** and choose either:
+   - a MusicXML file (`.musicxml`, `.xml` or a compressed `.mxl`), which
+     MuseScore, Sibelius, Finale and Dorico all save; or
+   - a **PDF that a notation program made**, such as MuseScore or Dorico. It is
+     read note by note on the phone: the notes and rhythms of every part, the
+     key, time and tempo, ties, two voices on one staff, the words, and the
+     loud and soft markings.
 2. Choose **Your part**. It plays louder than the others; any part can also be
    silenced.
 3. Slow it down to learn it, and tap any note to start from there.
 
 The score is drawn as notes on a strip, higher notes higher and longer notes
 longer: what a singer learning a part needs. It is not printed notation.
+
+A score read from a PDF says so under its title: *Read from the PDF's printed
+notes, on this phone. Check it against the page before the choir learns from
+it.* If any bar did not add up to the time signature, it says how many, so you
+know where to look. The PDF itself is kept on the phone and read again each
+time you open it.
+
+> **NOTE** · Which PDFs can be read
+>
+> A PDF exported by a notation program carries its notes as exact symbols, and
+> those are read. On 80 Bach chorales made with MuseScore that it had never
+> seen, it read 99.78% of the notes exactly right. A **scanned** PDF, or
+> a photo saved as a PDF, is only a picture: Pieces says so, and you can keep it
+> with **Scan a page** to read from instead. PDFs from older Sibelius and Finale
+> use their own music fonts and are not read yet. Tuplets, repeats, second
+> verses and grace notes are not read.
 
 **About this piece.** Above the strip, the score explains itself, from its own
 markings:
@@ -208,7 +229,8 @@ semitones*. Unticking Advanced plays the score as written again.
 > Turning a photo of printed music into notes that play needs either a server
 > to send the photo to, or software the app's security rules do not allow on a
 > phone. The project decided to leave it out for now: scanned pages are for
-> reading, and scores play from MusicXML files.
+> reading, and scores play from MusicXML files and from PDFs that notation
+> programs made.
 
 ## Play: a keyboard, chords and your own beat
 
