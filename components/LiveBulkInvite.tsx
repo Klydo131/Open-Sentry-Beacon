@@ -515,7 +515,7 @@ export function LiveBulkInvite({ roles }: { roles: Role[] }) {
             {rows.map((p, i) => (
               <li
                 key={`${p.email}-${i}`}
-                className={p.heading ? 'text-gray-400' : p.problem ? 'text-amber-800' : 'text-gray-700'}
+                className={p.heading ? 'text-gray-500' : p.problem ? 'text-amber-800' : 'text-gray-700'}
               >
                 {p.heading ? '· ' : p.problem ? '⚠️ ' : '· '}
                 {p.heading ? (
@@ -573,7 +573,7 @@ export function LiveBulkInvite({ roles }: { roles: Role[] }) {
           <button
             type="button"
             onClick={() => setResults(null)}
-            className="text-xs font-semibold text-gray-400 underline"
+            className="text-xs font-semibold text-gray-500 underline"
           >
             Dismiss
           </button>

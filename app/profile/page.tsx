@@ -22,11 +22,13 @@ const ALL: Role[] = ['executive', 'admin', 'dm', 'ds'];
 const AVATARS = ['🙂', '😊', '🧑', '👩', '👨', '🧕', '👵', '👴', '🌱', '✝️', '📖', '🕊️', '🙏', '⭐'];
 
 // A distinct look per role, so an Admin's profile reads differently from a DS's.
+// The green and blue were deepened on 6 October 2026 so white writing reads on
+// them: 5.5:1 and 5.7:1, from 2.6:1 and 3.9:1.
 const ROLE_STYLE: Record<Role, { bg: string; icon: string; blurb: string }> = {
   executive: { bg: '#0F172A', icon: '⭐', blurb: 'Executive admin. Oversees all churches.' },
   admin: { bg: '#1E2A4A', icon: '🛡️', blurb: 'Church coordinator. Full access.' },
-  dm: { bg: '#2F80ED', icon: '🤝', blurb: 'Guide. Walks with people, one at a time.' },
-  ds: { bg: '#7FB03A', icon: '🌱', blurb: 'Exploring faith at your own pace.' },
+  dm: { bg: '#1F5FD6', icon: '🤝', blurb: 'Guide. Walks with people, one at a time.' },
+  ds: { bg: '#47741A', icon: '🌱', blurb: 'Exploring faith at your own pace.' },
 };
 
 export default function ProfilePage() {
@@ -125,11 +127,11 @@ function Editor() {
             <h1 className="truncate text-2xl font-extrabold">
               {f.full_name || me.full_name}
             </h1>
-            <p className="text-white/80">
+            <p className="text-white/90">
               {rs.icon}
               {roleLabel(me.role, me.role) ? ` ${roleLabel(me.role, me.role)}` : ''}
             </p>
-            <p className="text-sm text-white/60">{rs.blurb}</p>
+            <p className="text-sm text-white/85">{rs.blurb}</p>
           </div>
         </div>
 

@@ -65,7 +65,7 @@ export function FollowUps({ pairingId }: { pairingId: string }) {
 
       <div className="mt-4 space-y-2">
         {open.length === 0 && done.length === 0 && (
-          <p className="text-gray-400">Nothing to follow up on.</p>
+          <p className="text-gray-500">Nothing to follow up on.</p>
         )}
 
         {open.map((f) => {
@@ -103,7 +103,7 @@ export function FollowUps({ pairingId }: { pairingId: string }) {
               </div>
               <button
                 onClick={() => deleteFollowUp(f.id)}
-                className="text-sm font-semibold text-gray-400 underline hover:text-red-600"
+                className="text-sm font-semibold text-gray-500 underline hover:text-red-600"
               >
                 Delete
               </button>
@@ -113,7 +113,7 @@ export function FollowUps({ pairingId }: { pairingId: string }) {
 
         {done.length > 0 && (
           <details className="pt-1">
-            <summary className="cursor-pointer text-sm font-semibold text-gray-400">
+            <summary className="cursor-pointer text-sm font-semibold text-gray-500">
               {done.length} done
             </summary>
             <div className="mt-2 space-y-2">
@@ -129,12 +129,12 @@ export function FollowUps({ pairingId }: { pairingId: string }) {
                     aria-label={`Mark "${f.title}" not done`}
                     className="h-5 w-5 shrink-0 accent-green-600"
                   />
-                  <p className="min-w-0 flex-1 text-gray-400 line-through">
+                  <p className="min-w-0 flex-1 text-gray-500 line-through">
                     {f.title}
                   </p>
                   <button
                     onClick={() => deleteFollowUp(f.id)}
-                    className="text-sm font-semibold text-gray-400 underline hover:text-red-600"
+                    className="text-sm font-semibold text-gray-500 underline hover:text-red-600"
                   >
                     Delete
                   </button>

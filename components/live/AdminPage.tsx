@@ -998,9 +998,9 @@ export function LiveAdminPage() {
             }`}
           >
             {loading ? <BeaconSpinner inline label="Loading accounts" /> : approved.length === 0 ? (
-              <p className="text-gray-400">No approved accounts to manage.</p>
+              <p className="text-gray-500">No approved accounts to manage.</p>
             ) : approvedShown.length === 0 ? (
-              <p className="text-gray-400">Nobody here matches “{findApproved.trim()}”.</p>
+              <p className="text-gray-500">Nobody here matches “{findApproved.trim()}”.</p>
             ) : approvedShown.map((member) => (
               <div key={member.id} className="rounded-xl bg-gray-50 px-4 py-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -1126,7 +1126,7 @@ export function LiveAdminPage() {
           </div>
           <div className="mt-4 space-y-2">
             {loading ? <BeaconSpinner inline label="Loading requests" /> : pending.length === 0 ? (
-              <p className="text-gray-400">Nobody is waiting.</p>
+              <p className="text-gray-500">Nobody is waiting.</p>
             ) : pending.map((member) => (
               <div key={member.id} className="flex flex-col gap-3 rounded-xl bg-gray-50 px-4 py-3 sm:flex-row sm:items-center">
                 <Avatar name={member.full_name || 'Member'} photo={faceOf(faces, member.photo_path)} avatar={member.avatar ?? undefined} />
@@ -1267,7 +1267,7 @@ export function LiveAdminPage() {
                   {proposal.map((row) => (
                     <div key={row.ds_id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-navy/5">
                       <span className="font-semibold text-navy">{row.dm_name}</span>
-                      <span className="text-gray-400">with</span>
+                      <span className="text-gray-500">with</span>
                       <span className="font-semibold text-navy">{row.ds_name}</span>
                       <span className="ml-auto text-xs text-gray-500">
                         {row.dm_load_now === 0
@@ -1344,7 +1344,7 @@ export function LiveAdminPage() {
                 >
                   {pairing.dm_name}
                 </button>
-                <span className="text-gray-400">walking with</span>
+                <span className="text-gray-500">walking with</span>
                 <button
                   type="button"
                   onClick={() => setOpenId(pairing.ds_id)}
@@ -1456,7 +1456,7 @@ export function LiveAdminPage() {
                       >
                         {p.dm_name}
                       </button>
-                      <span className="text-gray-400">walked with</span>
+                      <span className="text-gray-500">walked with</span>
                       <button
                         type="button"
                         onClick={() => setOpenId(p.ds_id)}

@@ -136,7 +136,7 @@ export function Meetings({ pairingId }: { pairingId: string }) {
 
       <div className="mt-4 space-y-2">
         {upcoming.length === 0 ? (
-          <p className="text-gray-400">No meetings scheduled yet.</p>
+          <p className="text-gray-500">No meetings scheduled yet.</p>
         ) : (
           upcoming.map((m) => {
             const d = new Date(m.when);
@@ -195,7 +195,7 @@ export function Meetings({ pairingId }: { pairingId: string }) {
                 </div>
                 <button
                   onClick={() => cancelMeeting(m.id)}
-                  className="shrink-0 self-start text-sm font-semibold text-gray-400 underline"
+                  className="shrink-0 self-start text-sm font-semibold text-gray-500 underline"
                 >
                   Cancel
                 </button>

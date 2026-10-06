@@ -28,7 +28,7 @@ import { saveFilesFromInput, savedMessage } from '@/lib/save-media';
 // preference about this screen rather than anything about the account.
 const STRIP_OPEN_KEY = 'beacon.player.rail-open';
 import { Button, Card } from '@/components/ui';
-import type { RoomTheme } from '@/lib/room-theme';
+import { inkOn, type RoomTheme } from '@/lib/room-theme';
 import {
   BackGlyph, ForwardGlyph, NextGlyph, PauseGlyph, PlayGlyph, PreviousGlyph, CloseGlyph,
   ChevronGlyph,
@@ -235,8 +235,8 @@ function Transport({ accent, compact = false }: { accent: string; compact?: bool
         type="button"
         onClick={() => (current ? toggle() : player.play(AMBIENCE[0], AMBIENCE))}
         aria-label={playing ? 'Pause' : 'Play'}
-        className={`grid shrink-0 place-items-center rounded-full text-white ${big}`}
-        style={{ backgroundColor: accent }}
+        className={`grid shrink-0 place-items-center rounded-full ${big}`}
+        style={{ backgroundColor: accent, color: inkOn(accent) }}
       >
         {/* The spinner replaces the glyph rather than sitting beside it, so the
             button never changes size while a track is loading. */}
@@ -452,7 +452,7 @@ export function PlayerStrip({ theme }: { theme: RoomTheme }) {
                 className="rounded-xl px-2 py-2 text-xs font-bold"
                 style={
                   tab === t
-                    ? { backgroundColor: theme.accent, color: '#fff' }
+                    ? { backgroundColor: theme.accent, color: inkOn(theme.accent) }
                     : { backgroundColor: theme.line, color: theme.ink }
                 }
               >
@@ -563,8 +563,8 @@ export function PlayerStrip({ theme }: { theme: RoomTheme }) {
                 type="button"
                 disabled={busy}
                 onClick={() => fileRef.current?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                style={{ backgroundColor: theme.accent }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold disabled:opacity-50"
+                style={{ backgroundColor: theme.accent, color: inkOn(theme.accent) }}
               >
                 {busy ? 'Saving…' : '⬆️ Save music or video'}
               </button>
@@ -792,9 +792,12 @@ export function PlayerPanel({
             onClick={() => setTab(t)}
             aria-pressed={tab === t}
             className={`tap-sm rounded-xl px-3 py-2 text-sm font-bold ${
-              tab === t ? 'text-white' : 'bg-gray-100 text-navy hover:bg-gray-200'
+              tab === t ? '' : 'bg-gray-100 text-navy hover:bg-gray-200'
             }`}
-            style={tab === t ? { backgroundColor: accent } : undefined}
+            // The writing the accent can carry: white on Classic's deep
+            // accents, dark ink on a light one (6 October 2026: white on
+            // Warm Office's gold read 3.0:1, and on Focus's light blue 1.6:1).
+            style={tab === t ? { backgroundColor: accent, color: inkOn(accent) } : undefined}
           >
             {TAB_LABEL[t]}
           </button>
@@ -821,8 +824,8 @@ export function PlayerPanel({
                 <button
                   type="button"
                   onClick={onAddMedia}
-                  className="tap mt-2 inline-flex items-center justify-center gap-2 rounded-xl px-5 text-lg font-semibold text-white"
-                  style={{ backgroundColor: accent }}
+                  className="tap mt-2 inline-flex items-center justify-center gap-2 rounded-xl px-5 text-lg font-semibold"
+                  style={{ backgroundColor: accent, color: inkOn(accent) }}
                 >
                   ⬆️ Save music or video
                 </button>
@@ -874,7 +877,7 @@ export function PlayerPanel({
                         type="button"
                         onClick={() => setDropping(m.id)}
                         aria-label={`Remove ${m.title} from this device`}
-                        className="shrink-0 px-3 py-1.5 text-sm text-gray-400 hover:text-red-700"
+                        className="shrink-0 px-3 py-1.5 text-sm text-gray-500 hover:text-red-700"
                       >
                         <CloseGlyph size={16} />
                       </button>

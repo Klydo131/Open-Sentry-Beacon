@@ -54,7 +54,7 @@ export function MySeries() {
         <Card className="p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-bold uppercase tracking-wide" style={{ color: '#B08419' }}>
+              <p className="text-sm font-bold uppercase tracking-wide text-amber-700">
                 {series.topic}
               </p>
               <h2 className="text-xl font-bold text-navy">{series.title}</h2>
@@ -133,7 +133,7 @@ export function MySeries() {
                     <div className="min-w-0 flex-1">
                       <p
                         className={`font-semibold ${
-                          locked ? 'text-gray-400' : 'text-navy'
+                          locked ? 'text-gray-500' : 'text-navy'
                         }`}
                       >
                         {lesson.title}
@@ -156,14 +156,14 @@ export function MySeries() {
                           {assignment && (
                             <button
                               onClick={() => completeLesson(assignment.id)}
-                              className="tap-sm rounded-lg px-4 text-sm font-bold text-navy"
-                              style={{ backgroundColor: '#E8B84B' }}
+                              className="tap-sm rounded-lg px-4 text-sm font-bold"
+                              style={{ backgroundColor: '#E8B84B', color: '#1E2A4A' }}
                             >
                               Mark done
                             </button>
                           )}
                           {!assignment && (
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-gray-500">
                               Your Guide will open this one for you next.
                             </p>
                           )}

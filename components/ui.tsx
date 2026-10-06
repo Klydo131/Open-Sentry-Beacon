@@ -1,6 +1,7 @@
 'use client';
 
 import { NAVY } from '@/lib/brand';
+import { inkOn } from '@/lib/room-theme';
 import { SubroomMenu } from '@/components/SubroomMenu';
 
 // Small, dependency-free building blocks. Senior-friendly by default:
@@ -231,8 +232,8 @@ export function Badge({
 }) {
   return (
     <span
-      className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold text-white"
-      style={{ backgroundColor: color }}
+      className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold"
+      style={{ backgroundColor: color, color: inkOn(color) }}
     >
       {children}
     </span>

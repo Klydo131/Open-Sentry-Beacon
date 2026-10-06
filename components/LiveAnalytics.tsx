@@ -548,7 +548,7 @@ export function LiveAnalytics({ churchName }: { churchName?: string }) {
                         <td className="border-b border-gray-100 p-2">
                           {c.latest}
                           {c.pct !== null && (
-                            <span className={`ml-1 text-xs font-semibold ${c.pct > 0 ? 'text-green-700' : c.pct < 0 ? 'text-amber-800' : 'text-gray-400'}`}>
+                            <span className={`ml-1 text-xs font-semibold ${c.pct > 0 ? 'text-green-700' : c.pct < 0 ? 'text-amber-800' : 'text-gray-500'}`}>
                               {c.pct > 0 ? '+' : ''}{c.pct}%
                             </span>
                           )}
@@ -616,7 +616,7 @@ export function LiveAnalytics({ churchName }: { churchName?: string }) {
             >
               <p className="font-bold text-navy">{x.icon} {x.label}</p>
               <p className="mt-0.5 text-xs text-gray-500">{x.blurb}</p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                 {x.opens}
               </p>
             </button>

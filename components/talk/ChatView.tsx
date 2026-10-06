@@ -518,7 +518,7 @@ export function ChatView({
           to their Guide. One line on a phone, the full stack from `sm` up, and
           an X once it has been read. */}
       {showPrivacy && (
-        <div className="flex items-center gap-2.5 border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 px-4 py-2 sm:gap-3 sm:px-5 sm:py-3">
+        <div className="flex items-center gap-2.5 border-b border-teal-800/10 wash-teal-sky px-4 py-2 sm:gap-3 sm:px-5 sm:py-3">
           <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-teal-700 text-sm shadow-sm sm:h-10 sm:w-10 sm:rounded-2xl sm:text-lg">💬</span>
           <div className="min-w-0">
             <h2 className="text-[0.722rem] font-extrabold leading-tight text-navy sm:text-base">

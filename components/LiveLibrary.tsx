@@ -196,7 +196,7 @@ function Item({ m, children }: { m: live.Material; children?: React.ReactNode })
           {m.description && <p className="mt-0.5 text-sm text-gray-600">{m.description}</p>}
           {/* Where it goes, in plain sight -- as a site, see siteOf, or as the
               file somebody added. */}
-          <p className="mt-0.5 truncate text-xs text-gray-400">{whereItIs(m)}</p>
+          <p className="mt-0.5 truncate text-xs text-gray-500">{whereItIs(m)}</p>
           {failed && <p className="mt-1 text-xs font-semibold text-red-700">{failed}</p>}
         </div>
       </div>
@@ -637,7 +637,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
           <p className="text-lg font-extrabold text-teal-800">Drop to add to the shelf</p>
         </div>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-teal-800/10 wash-teal-sky p-5 sm:p-6">
         <div className="flex min-w-0 items-start gap-3">
           <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal-700 text-xl shadow-sm">📚</span>
           <div className="min-w-0">
@@ -675,7 +675,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
             </ul>
           )}
 
-          <p className="my-4 text-center text-xs font-bold uppercase tracking-wide text-gray-400">or</p>
+          <p className="my-4 text-center text-xs font-bold uppercase tracking-wide text-gray-500">or</p>
 
           {/* THE ADDRESS FIRST, because it is the thing in somebody's hand: they
               have just copied it. The name and the reason appear once there is
@@ -1145,7 +1145,7 @@ export function LiveSharedWithMe({ pairingId, heading, intro }: {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-blue-800/10 bg-gradient-to-r from-sky-50 via-white to-teal-50 p-5 sm:p-6">
+      <div className="border-b border-blue-800/10 wash-sky-teal p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-700 text-xl shadow-sm">🎁</span>
           <div>

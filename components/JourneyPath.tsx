@@ -88,7 +88,7 @@ export function JourneyPath({
                 >
                   {s.label}
                 </p>
-                <p className="hidden text-xs text-gray-400 sm:block">{s.blurb}</p>
+                <p className="hidden text-xs text-gray-500 sm:block">{s.blurb}</p>
                 {/* Holds the row's height on mobile, where the only label is
                     absolutely positioned. */}
                 <span className="block h-4 sm:hidden" aria-hidden />

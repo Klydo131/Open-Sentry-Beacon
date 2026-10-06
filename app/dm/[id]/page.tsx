@@ -295,7 +295,7 @@ function Detail() {
               you both see how far along they are.
             </p>
             {available.length === 0 ? (
-              <p className="text-gray-400">
+              <p className="text-gray-500">
                 No series on the shelf yet. An admin builds them under Admin ›
                 Materials.
               </p>
@@ -309,7 +309,7 @@ function Detail() {
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="font-bold text-navy">{sr.title}</p>
-                          <p className="text-sm font-semibold" style={{ color: '#B08419' }}>
+                          <p className="text-sm font-semibold text-amber-700">
                             {sr.topic} · {sr.lesson_ids.length} lessons
                           </p>
                         </div>
@@ -420,7 +420,7 @@ function Detail() {
               Pray with them, and let them know they’re being held.
             </p>
             {prayers.length === 0 ? (
-              <p className="text-gray-400">No requests yet.</p>
+              <p className="text-gray-500">No requests yet.</p>
             ) : (
               <div className="space-y-2">
                 {prayers.map((r) => (
@@ -450,7 +450,7 @@ function Detail() {
                         </span>
                       )}
                       {r.share_with_board && (
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-gray-500">
                           · on the church prayer wall
                         </span>
                       )}
@@ -458,7 +458,7 @@ function Detail() {
                         <button
                           type="button"
                           onClick={() => setReportingPrayer(r.id)}
-                          className="ml-auto px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+                          className="ml-auto px-2 text-sm text-gray-500 underline underline-offset-2 hover:text-red-600"
                         >
                           Report
                         </button>
@@ -540,7 +540,7 @@ function Detail() {
             </p>
             <div className="space-y-2">
               {library.length === 0 ? (
-                <p className="text-gray-400">
+                <p className="text-gray-500">
                   No published resources yet. An admin adds these.
                 </p>
               ) : (
@@ -593,7 +593,7 @@ function Detail() {
               Their own notes and media. Study these together.
             </p>
             {shelf.length === 0 ? (
-              <p className="text-gray-400">Nothing on their shelf yet.</p>
+              <p className="text-gray-500">Nothing on their shelf yet.</p>
             ) : (
               <div className="space-y-2">
                 {shelf.map((m) => (
@@ -635,7 +635,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 function Detail_({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-gray-400">{label}</dt>
+      <dt className="text-gray-500">{label}</dt>
       <dd className="font-semibold text-navy">{value}</dd>
     </div>
   );

@@ -129,7 +129,7 @@ export function TextSizeCard() {
 
       {/* Drawn at the size being tried, in pixels, whatever the app is at now. */}
       <div className="mt-5 rounded-xl bg-gray-50 p-4" data-text-size-preview>
-        <p className="mb-1 text-sm text-gray-400">Preview: {nameOf(trying)}</p>
+        <p className="mb-1 text-sm text-gray-500">Preview: {nameOf(trying)}</p>
         <p className="font-semibold text-navy" style={{ fontSize: `${18 * trying * 1.125}px`, lineHeight: 1.35 }}>
           {t('appTagline')}
         </p>

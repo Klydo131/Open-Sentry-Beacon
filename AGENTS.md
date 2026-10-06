@@ -236,6 +236,21 @@ lists the looks. Classic is first and is the app exactly as it is, with no
 stylesheet of its own; the page says which look it is as `data-ui-theme` on
 `<html>`. What a device shows until somebody chooses is `DEFAULT_LOOK`, Classic.
 
+**Classic's faint writing was made readable, on the owner's decision.** On 6
+October 2026 every look was measured on every screen, and Classic itself had
+writing under 3:1. Asked, the owner chose to make the faint grey writing, the
+profile banners, and coloured words and labels a shade deeper, and to keep
+Classic otherwise exactly as it was. So: no `text-gray-400` on words (it is
+`text-gray-500`; icons and placeholders keep the 400), the Explorer and Guide
+banners are `#47741A` and `#1F5FD6`, a label on a coloured fill takes its ink
+from `inkOn()` in `lib/room-theme.ts`, and a ground set inline sets its ink
+inline beside it (`tests/text-and-ground-change-together.mjs`). Colours,
+layout and everything else in Classic are as they were.
+`tests/e2e/the-words-can-be-read-in-every-look.js` photographs the screens
+that were fixed in every look and measures each word against the pixels
+behind it; nothing may fall under 3:1. A new look is measured the day it is
+registered.
+
 **On a computer, Classic is the desktop design**, under every look: the rooms
 down the left (`components/DesktopNav.tsx`) and a light top bar
 (`app/desktop-layout.css`), from 1280px. It was a look of its own, Desktop, for

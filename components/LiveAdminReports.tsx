@@ -120,7 +120,7 @@ function Thread({ report, me, onChanged }: {
                   <p className="mb-0.5 text-[11px] font-bold opacity-70">{m.author_name}</p>
                 )}
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                <p className={`mt-0.5 text-[10px] ${mine ? 'text-white/60' : 'text-gray-400'}`}>
+                <p className={`mt-0.5 text-[10px] ${mine ? 'text-white/60' : 'text-gray-500'}`}>
                   {when(m.created_at)}
                 </p>
               </div>

@@ -140,7 +140,7 @@ export function BeaconSpinner({
       aria-live="polite"
     >
       <Mark size={size} />
-      <p className="text-sm font-semibold text-gray-400">{label}</p>
+      <p className="text-sm font-semibold text-gray-500">{label}</p>
     </div>
   );
 }

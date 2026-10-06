@@ -358,7 +358,7 @@ function Recommendations() {
                     )
                       declineRecommendation(r.id);
                   }}
-                  className="tap rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-600 hover:bg-red-100"
+                  className="tap rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-700 hover:bg-red-100"
                 >
                   Not now
                 </button>
@@ -554,7 +554,7 @@ function Pairing() {
           </div>
         </div>
         {unpairedDs.length === 0 && (
-          <p className="mt-3 text-sm text-gray-400">
+          <p className="mt-3 text-sm text-gray-500">
             Every approved Explorer is already paired.
           </p>
         )}
@@ -694,7 +694,7 @@ function Materials() {
                 <p className="font-semibold text-navy">{m.title}</p>
                 <p className="text-sm text-gray-500">{m.description}</p>
               </div>
-              <span className="text-sm uppercase text-gray-400">{m.type}</span>
+              <span className="text-sm uppercase text-gray-500">{m.type}</span>
             </Card>
           ))}
         </div>

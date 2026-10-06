@@ -134,7 +134,7 @@ export function LiveExplorerPage() {
     <LiveAppShell allow={['ds']}>
       <div className="space-y-5">
         <div className="rounded-2xl p-6 text-white" style={{ background: `linear-gradient(135deg, ${NAVY}, #2F80ED)` }}>
-          <p className="text-white/70">Welcome,</p>
+          <p className="text-white/85">Welcome,</p>
           <h1 className="text-3xl font-extrabold">{profile?.full_name.split(' ')[0]}</h1>
           <p className="mt-3 text-white/80">Your journey is a relationship, not a score.</p>
         </div>

@@ -78,7 +78,7 @@ export function DataManager() {
           📊 Export Explorer roster (CSV)
         </Button>
       </div>
-      <p className="mt-2 text-xs text-gray-400">
+      <p className="mt-2 text-xs text-gray-500">
         The backup is a complete copy (everything). The roster is a simple
         spreadsheet of Explorers and their journey. It opens in Excel or
         Google Sheets.

@@ -99,7 +99,9 @@ function ResourceCard({
   return (
     <article
       className={`flex h-full flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy/10 ${
-        featured ? 'bg-gradient-to-br from-white to-sky-50/80' : ''
+        // wash-featured (app/globals.css): clear under a dark look, so the
+        // look's own card shows instead of a pale wash under pale writing.
+        featured ? 'wash-featured' : ''
       }`}
     >
       <div className="flex items-start gap-3">
@@ -460,11 +462,11 @@ export default function LibraryPage() {
           <div className="grid grid-cols-2 gap-3 self-end">
             <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
               <p className="text-2xl font-extrabold">{kit.length}</p>
-              <p className="mt-1 text-sm text-white/75">Published resources</p>
+              <p className="mt-1 text-sm text-white/90">Published resources</p>
             </div>
             <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
               <p className="text-2xl font-extrabold">{favoriteIds.length}</p>
-              <p className="mt-1 text-sm text-white/75">Saved favorites</p>
+              <p className="mt-1 text-sm text-white/90">Saved favorites</p>
             </div>
           </div>
         </section>
@@ -542,9 +544,9 @@ export default function LibraryPage() {
                     <span aria-hidden className={`grid h-10 w-10 place-items-center rounded-xl text-xl ${active ? 'bg-white/15' : 'bg-sky-50'}`}>{option.icon}</span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2 font-bold">
-                        <span>{option.label}</span><span className={active ? 'text-teal-100' : 'text-teal-700'}>{count}</span>
+                        <span>{option.label}</span><span className={active ? 'text-teal-100' : 'text-[color:var(--music-accent)]'}>{count}</span>
                       </span>
-                      <span className={`mt-1 block text-sm ${active ? 'text-white/75' : 'text-gray-500'}`}>{option.description}</span>
+                      <span className={`mt-1 block text-sm ${active ? 'text-white/90' : 'text-gray-500'}`}>{option.description}</span>
                     </span>
                   </div>
                 </button>
@@ -561,7 +563,7 @@ export default function LibraryPage() {
                 <p className="mt-1 text-sm text-gray-600">A helpful place to begin from this selection.</p>
               </div>
               {filter !== 'all' && (
-                <button type="button" onClick={() => setFilter('all')} className="text-sm font-bold text-teal-700 underline underline-offset-2">
+                <button type="button" onClick={() => setFilter('all')} className="text-sm font-bold text-[color:var(--music-accent)] underline underline-offset-2">
                   Show all resources
                 </button>
               )}
@@ -606,7 +608,7 @@ export default function LibraryPage() {
 
         {room === 'mine' && <section id="your-device-library" aria-labelledby="your-device-library-heading" className="flex flex-col gap-4 xl:block xl:border-t xl:border-navy/10 xl:pt-8">
           <div className="hidden max-w-3xl xl:block">
-            <p className="text-sm font-bold uppercase tracking-[0.15em] text-teal-700">Your device library</p>
+            <p className="text-sm font-bold uppercase tracking-[0.15em] text-[color:var(--music-accent)]">Your device library</p>
             <h2 id="your-device-library-heading" className="mt-1 text-2xl font-extrabold text-navy">Keep your own media close.</h2>
             <p className="mt-2 text-sm leading-relaxed text-gray-600">Files and links below are stored only on this device. {APP_SHORT_NAME} does not upload them to a server.</p>
           </div>
@@ -681,7 +683,7 @@ export default function LibraryPage() {
 
           <div className="order-3 xl:mt-5">
             {!ready ? (
-              <p className="text-center text-gray-400">Loading your device library…</p>
+              <p className="text-center text-gray-500">Loading your device library…</p>
             ) : items.length === 0 ? (
               <EmptyState title="Your device library is empty" hint="Upload a file or add a link to get started." />
             ) : (

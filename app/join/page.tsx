@@ -186,7 +186,7 @@ function Join() {
                 // point is to confirm it is yours.
                 className="tap mt-1 w-full cursor-not-allowed rounded-xl bg-gray-100 px-4 text-base text-gray-500 outline-none"
               />
-              <span id="email-why" className="mt-1 block text-xs text-gray-400">
+              <span id="email-why" className="mt-1 block text-xs text-gray-500">
                 This is the address your invitation was sent to.
               </span>
             </label>

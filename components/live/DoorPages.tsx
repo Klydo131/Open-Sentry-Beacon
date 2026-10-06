@@ -1092,7 +1092,7 @@ export function LiveJoinPage() {
                   aria-describedby="join-email-why"
                   className="tap mt-1 w-full cursor-not-allowed rounded-xl bg-gray-100 px-4 text-base text-gray-500 outline-none"
                 />
-                <span id="join-email-why" className="mt-1 block text-xs text-gray-400">
+                <span id="join-email-why" className="mt-1 block text-xs text-gray-500">
                   This is the address your invitation was sent to.
                 </span>
               </label>
@@ -1155,7 +1155,7 @@ export function LiveJoinPage() {
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
-                <span className="mt-1 block text-xs text-gray-400">At least 10 characters.</span>
+                <span className="mt-1 block text-xs text-gray-500">At least 10 characters.</span>
               </label>
 
               <label className="block">

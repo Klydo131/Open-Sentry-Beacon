@@ -50,7 +50,7 @@ export interface SubroomItem {
 }
 
 function badgeTone(tone: SubroomItem['tone'], onDark: boolean): string {
-  if (tone === 'urgent') return 'bg-red-500 text-white';
+  if (tone === 'urgent') return 'bg-red-600 text-white';
   if (tone === 'waiting') return 'bg-gold text-navy';
   return onDark ? 'bg-white/20 text-white' : 'bg-navy/10 text-navy';
 }
@@ -153,7 +153,7 @@ export function SubroomMenu({
         {waitingElsewhere > 0 && (
           <span
             className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-extrabold ${
-              urgentElsewhere ? 'bg-red-500 text-white' : 'bg-gold text-navy'}`}
+              urgentElsewhere ? 'bg-red-600 text-white' : 'bg-gold text-navy'}`}
             title={`${waitingElsewhere} waiting in another room`}
           >
             {waitingElsewhere}

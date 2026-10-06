@@ -55,13 +55,13 @@ export function SeekerNotes({
 
       <div className="mt-4 space-y-2">
         {mine.length === 0 ? (
-          <p className="text-gray-400">No notes yet.</p>
+          <p className="text-gray-500">No notes yet.</p>
         ) : (
           mine.map((n) => (
             <div key={n.id} className="rounded-xl bg-gray-50 px-4 py-3">
               <p className="whitespace-pre-wrap text-navy">{n.body}</p>
               <div className="mt-2 flex items-center gap-3">
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-500">
                   {new Date(n.created_at).toLocaleString([], {
                     month: 'short',
                     day: 'numeric',
@@ -71,7 +71,7 @@ export function SeekerNotes({
                 </span>
                 <button
                   onClick={() => deleteNote(n.id)}
-                  className="text-xs font-semibold text-gray-400 underline hover:text-red-600"
+                  className="text-xs font-semibold text-gray-500 underline hover:text-red-600"
                 >
                   Delete
                 </button>

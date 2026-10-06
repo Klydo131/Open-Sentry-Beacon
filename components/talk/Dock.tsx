@@ -349,7 +349,7 @@ export function ThreadList({
             <span className="min-w-0 flex-1">
               <span className="flex items-baseline gap-2">
                 <span className="truncate font-bold text-navy">{t.other_name}</span>
-                <span className="ml-auto shrink-0 text-xs text-gray-400">{shortWhen(t.last_at)}</span>
+                <span className="ml-auto shrink-0 text-xs text-gray-500">{shortWhen(t.last_at)}</span>
               </span>
               <span className="mt-0.5 flex items-center gap-2">
                 <span className={`min-w-0 flex-1 truncate text-sm ${

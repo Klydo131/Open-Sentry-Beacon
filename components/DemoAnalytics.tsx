@@ -60,10 +60,12 @@ export function Analytics() {
 
   return (
     <div className="space-y-5">
+      {/* Smaller on a phone: at full size "Local (this device)" broke a word
+          a line beside its twin. A computer's is as it was. */}
       <div className="flex gap-2">
         <button
           onClick={() => setScope('local')}
-          className="tap flex-1 rounded-xl px-4 text-base font-semibold"
+          className="tap flex-1 rounded-xl px-3 text-sm font-semibold leading-tight sm:px-4 sm:text-base"
           style={
             scope === 'local'
               ? { backgroundColor: '#1E2A4A', color: '#fff' }
@@ -74,7 +76,7 @@ export function Analytics() {
         </button>
         <button
           onClick={() => setScope('global')}
-          className="tap flex-1 rounded-xl px-4 text-base font-semibold"
+          className="tap flex-1 rounded-xl px-3 text-sm font-semibold leading-tight sm:px-4 sm:text-base"
           style={
             scope === 'global'
               ? { backgroundColor: '#1E2A4A', color: '#fff' }
@@ -147,7 +149,7 @@ function LocalAnalytics({
                 {nameOf(e.user_id)}
               </span>
               <span className="flex-1 text-gray-600">{EVENT_LABEL[e.type]}</span>
-              <span className="text-gray-400">
+              <span className="text-gray-500">
                 {new Date(e.at).toLocaleString([], {
                   month: 'short',
                   day: 'numeric',
@@ -166,7 +168,7 @@ function LocalAnalytics({
           What Explorers are adding to their own shelves.
         </p>
         {db.seeker_media.length === 0 ? (
-          <p className="text-gray-400">No explorer uploads yet.</p>
+          <p className="text-gray-500">No explorer uploads yet.</p>
         ) : (
           <ul className="space-y-2">
             {[...db.seeker_media]
@@ -178,7 +180,7 @@ function LocalAnalytics({
                     {nameOf(m.ds_id)}
                   </span>
                   <span className="flex-1 truncate text-gray-600">{m.title}</span>
-                  <span className="text-gray-400">
+                  <span className="text-gray-500">
                     {new Date(m.created_at).toLocaleDateString()}
                   </span>
                 </li>

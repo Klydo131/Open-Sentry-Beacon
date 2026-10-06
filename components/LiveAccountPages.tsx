@@ -38,13 +38,14 @@ import { LiveAdminReports } from '@/components/LiveAdminReports';
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
 
-// A distinct look per role, so a Director's profile reads differently from an
+// A distinct look per role (the green and blue deepened on 6 October 2026 so
+// white writing reads on them: 5.5:1 and 5.7:1, from 2.6:1 and 3.9:1), so a Director's profile reads differently from an
 // Explorer's at a glance.
 const ROLE_STYLE: Record<Role, { bg: string; icon: string; blurb: string }> = {
   executive: { bg: '#0F172A', icon: '⭐', blurb: 'Oversees every church.' },
   admin: { bg: '#1E2A4A', icon: '🛡️', blurb: 'Keeps the church running.' },
-  dm: { bg: '#2F80ED', icon: '🤝', blurb: 'Walking with people, one at a time.' },
-  ds: { bg: '#7FB03A', icon: '🌱', blurb: 'Exploring faith at your own pace.' },
+  dm: { bg: '#1F5FD6', icon: '🤝', blurb: 'Walking with people, one at a time.' },
+  ds: { bg: '#47741A', icon: '🌱', blurb: 'Exploring faith at your own pace.' },
 };
 
 // ---------------------------------------------------------------------------
@@ -148,7 +149,7 @@ export function LiveProfilePage() {
             <p className="mt-1 font-semibold text-white/90">
               <span aria-hidden>{style.icon}</span> {roleNoun(profile.role)}
             </p>
-            <p className="mt-1 text-white/70">{style.blurb}</p>
+            <p className="mt-1 text-white/85">{style.blurb}</p>
           </div>
         </div>
       </div>
@@ -214,7 +215,7 @@ export function LiveProfilePage() {
             lock_privileged_profile_columns resets them for an unprivileged
             caller. A form that cannot even express them is one less thing
             leaning on that wall. */}
-        <p className="mt-4 text-sm text-gray-400">
+        <p className="mt-4 text-sm text-gray-500">
           Your role and your church are set by your church&rsquo;s team, not here.
         </p>
       </Card>
@@ -872,7 +873,7 @@ function AboutCard() {
       >
         View the source on GitHub ↗
       </a>
-      <p className="mt-4 text-xs text-gray-400">
+      <p className="mt-4 text-xs text-gray-500">
         Signed in on this device. <Link href="/login" className="underline">Switch account</Link>
       </p>
     </Card>
@@ -911,7 +912,7 @@ function SelectField({
           <option key={o} value={o}>{o}</option>
         ))}
       </select>
-      {hint && <span className="mt-1 block text-sm text-gray-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-sm text-gray-500">{hint}</span>}
     </label>
   );
 }
@@ -932,7 +933,7 @@ function Field({
         type={type} value={value} onChange={onChange}
         className="tap w-full min-w-0 rounded-xl bg-gray-100 px-4 text-lg outline-none focus:ring-2 focus:ring-gold"
       />
-      {hint && <span className="mt-1 block text-sm text-gray-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-sm text-gray-500">{hint}</span>}
     </label>
   );
 }

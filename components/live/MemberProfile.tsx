@@ -44,13 +44,13 @@ function age(birthday?: string): number | null {
 function Row({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
       {value ? (
         <p className="break-words font-semibold text-navy">{value}</p>
       ) : (
         // Said, not blank. "Not given" is a fact about the person; an empty row
         // is a fact about the screen, and a Director cannot tell them apart.
-        <p className="text-gray-400">Not given</p>
+        <p className="text-gray-500">Not given</p>
       )}
     </div>
   );
@@ -192,7 +192,7 @@ export function MemberProfile({
 
       {(person.topics_of_interest ?? []).length > 0 && (
         <div className="mt-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Interested in</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Interested in</p>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {person.topics_of_interest.map((topic) => (
               <span key={topic} className="rounded-full bg-teal-50 px-3 py-1 text-sm font-semibold text-teal-800">

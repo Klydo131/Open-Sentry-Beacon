@@ -115,7 +115,8 @@ function Hearing({ t, onJoin, busy }: {
               speak or decide. Saying which one somebody is, is the difference
               between a hearing and a crowd. */}
           {t.i_am_judge ? (
-            <span className="rounded-full bg-gold px-3 py-1 text-xs font-bold text-navy">
+            <span className="rounded-full px-3 py-1 text-xs font-bold"
+            style={{ backgroundColor: '#E8B84B', color: '#1E2A4A' }}>
               You are hearing this case
             </span>
           ) : t.i_am_watching ? (

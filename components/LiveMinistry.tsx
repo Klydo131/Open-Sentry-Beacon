@@ -242,7 +242,7 @@ export function LiveFollowUps({ pairings }: { pairings: { id: string; ds_name: s
       )}
 
       <div className="mt-4 space-y-2">
-        {open.length === 0 && rows !== null && <p className="text-sm text-gray-400">Nothing outstanding.</p>}
+        {open.length === 0 && rows !== null && <p className="text-sm text-gray-500">Nothing outstanding.</p>}
         {open.map((r) => (
           <div key={r.id} className="flex items-center gap-2 rounded-xl bg-gray-50 p-3">
             <input type="checkbox" onChange={() => act(() => live.toggleFollowUp(r.id, true))} />
@@ -349,7 +349,7 @@ export function LiveLessonSeries({ manage = false }: { manage?: boolean }) {
       )}
 
       <div className="mt-4 space-y-4">
-        {rows?.length === 0 && <p className="text-sm text-gray-400">No series yet.</p>}
+        {rows?.length === 0 && <p className="text-sm text-gray-500">No series yet.</p>}
         {Object.entries(byTopic).map(([t, list]) => (
           <div key={t}>
             <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500">{t}</h3>

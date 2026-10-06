@@ -266,7 +266,7 @@ function FeedbackPanel({
               {receipt.id}
             </p>
             <time
-              className="mt-1 block text-xs text-gray-400"
+              className="mt-1 block text-xs text-gray-500"
               dateTime={receipt.createdAt}
             >
               Saved {new Date(receipt.createdAt).toLocaleString()}
@@ -336,7 +336,7 @@ function FeedbackPanel({
                 className="mb-1 block text-sm font-semibold text-navy"
               >
                 How to reach you{' '}
-                <span className="font-normal text-gray-400">(optional)</span>
+                <span className="font-normal text-gray-500">(optional)</span>
               </label>
               <input
                 id="feedback-contact"

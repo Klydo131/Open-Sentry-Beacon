@@ -168,7 +168,7 @@ export function BlogDesk({ userId }: { userId: string }) {
                   onChange={() => setAudience('church')}
                 />
                 Everyone in the church
-                <span className="text-gray-400">(it goes on the church home screen)</span>
+                <span className="text-gray-500">(it goes on the church home screen)</span>
               </label>
               <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
                 <input
@@ -178,7 +178,7 @@ export function BlogDesk({ userId }: { userId: string }) {
                   onChange={() => setAudience('all')}
                 />
                 Only the people I walk with
-                <span className="text-gray-400">
+                <span className="text-gray-500">
                   ({explorers.length} {explorers.length === 1 ? 'person' : 'people'}, and anyone paired with me later)
                 </span>
               </label>
@@ -259,7 +259,7 @@ export function BlogDesk({ userId }: { userId: string }) {
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-gray-400">{when(p.created_at)}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{when(p.created_at)}</p>
             <Body text={p.body} />
 
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">

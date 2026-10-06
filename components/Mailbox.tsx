@@ -107,7 +107,7 @@ export function Mailbox() {
                 onClick={() => {
                   if (confirm('Empty the simulated mailbox?')) clearEmails();
                 }}
-                className="text-sm font-semibold text-gray-400 underline"
+                className="text-sm font-semibold text-gray-500 underline"
               >
                 Empty mailbox
               </button>
@@ -187,7 +187,7 @@ function Letter({
           <span className="flex flex-wrap items-center gap-2">
             <span className="font-bold text-navy">{m.subject}</span>
             {!m.opened_at && (
-              <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+              <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
                 New
               </span>
             )}
@@ -206,7 +206,7 @@ function Letter({
           <span className="block truncate text-sm text-gray-500">
             From {m.from_name} · to {m.to_name}
           </span>
-          <span className="block text-xs text-gray-400">
+          <span className="block text-xs text-gray-500">
             {k.label} ·{' '}
             {new Date(m.created_at).toLocaleString([], {
               month: 'short',
@@ -248,7 +248,7 @@ function Letter({
                       if (confirm(`Decline ${who}? Their sign-up is removed.`))
                         actOnEmail(m.id, 'disapprove');
                     }}
-                    className="tap rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-600 hover:bg-red-100"
+                    className="tap rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-700 hover:bg-red-100"
                   >
                     Decline
                   </button>
@@ -273,7 +273,7 @@ function Letter({
                       )
                         declineRecommendation(rec.id);
                     }}
-                    className="tap rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-600 hover:bg-red-100"
+                    className="tap rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-700 hover:bg-red-100"
                   >
                     Not now
                   </button>
@@ -309,14 +309,14 @@ function Letter({
               {cta && k.cta && (
                 <a
                   href={cta}
-                  className="tap inline-flex items-center justify-center rounded-xl px-5 text-base font-bold text-navy"
-                  style={{ backgroundColor: '#E8B84B' }}
+                  className="tap inline-flex items-center justify-center rounded-xl px-5 text-base font-bold"
+                  style={{ backgroundColor: '#E8B84B', color: '#1E2A4A' }}
                 >
                   {k.cta}
                 </a>
               )}
 
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 Sent by {db.church_name} through Beacon. If you were not
                 expecting this, you can ignore it.
               </p>
@@ -445,7 +445,7 @@ function Recommend() {
                 className="flex flex-wrap items-center gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm"
               >
                 <span className="font-semibold text-navy">{r.full_name}</span>
-                <span className="text-gray-400">{r.email}</span>
+                <span className="text-gray-500">{r.email}</span>
                 <span
                   className={`ml-auto rounded-full px-2 py-0.5 text-xs font-bold ${
                     r.status === 'invited'

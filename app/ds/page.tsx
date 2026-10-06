@@ -88,11 +88,11 @@ function Home() {
         className="rounded-2xl p-6 text-white"
         style={{ background: `linear-gradient(135deg, ${NAVY}, #2F80ED)` }}
       >
-        <p className="text-white/70">Welcome home,</p>
+        <p className="text-white/85">Welcome home,</p>
         <h1 className="text-3xl font-extrabold">{me.full_name.split(' ')[0]}</h1>
         <div className="mt-4 rounded-xl bg-white/10 p-4">
           <p className="text-lg italic">{verse[0]}</p>
-          <p className="mt-1 text-sm text-white/70">{verse[1]}</p>
+          <p className="mt-1 text-sm text-white/85">{verse[1]}</p>
         </div>
       </div>
 
@@ -196,7 +196,7 @@ function MyLessons() {
                   </p>
                 </div>
                 {isDone && (
-                  <span className="text-sm font-semibold text-green-600">
+                  <span className="text-sm font-semibold text-green-700">
                     ✓ Done
                   </span>
                 )}
@@ -234,10 +234,12 @@ function MyLessons() {
   );
 }
 
-const PRAYER_STATUS: Record<string, { label: string; color: string }> = {
-  open: { label: 'Shared', color: '#5B6675' },
-  praying: { label: 'Being prayed for', color: '#2F80ED' },
-  answered: { label: 'Answered 🙌', color: '#7FB03A' },
+// Classes, not inline colours, so a look can repaint them (6 October 2026:
+// the inline blue read at 3.7:1 on white).
+const PRAYER_STATUS: Record<string, { label: string; className: string }> = {
+  open: { label: 'Shared', className: 'text-gray-600' },
+  praying: { label: 'Being prayed for', className: 'text-blue-700' },
+  answered: { label: 'Answered 🙌', className: 'text-green-700' },
 };
 
 // A seeker's prayer corner: send a request to their missionary, optionally to
@@ -281,9 +283,11 @@ function PrayerCorner() {
         <div className="mb-4 space-y-2" aria-label="Your Guide asked you to pray">
           {asked.map((r) => {
             const first = nameOf(prayerAuthor(r)).split(' ')[0];
+            // Emerald, not teal: the dark looks repaint emerald's pale fill and its
+            // ink together, and left teal's card pale under pale writing (6 October 2026).
             return (
-              <div key={r.id} data-asked-by-guide={r.id} className="rounded-xl bg-teal-50 px-4 py-3 ring-1 ring-teal-700/15">
-                <p className="text-sm font-semibold text-teal-900">{first} asked you to pray for them</p>
+              <div key={r.id} data-asked-by-guide={r.id} className="rounded-xl bg-emerald-50 px-4 py-3 ring-1 ring-emerald-700/15">
+                <p className="text-sm font-semibold text-emerald-900">{first} asked you to pray for them</p>
                 <p className="mt-1 text-navy">{r.body}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-3">
                   {r.status === 'open' ? (
@@ -291,13 +295,13 @@ function PrayerCorner() {
                       🙏 I am praying for this
                     </Button>
                   ) : (
-                    <span className="text-sm font-semibold text-teal-800">🙏 You told {first} you are praying</span>
+                    <span className="text-sm font-semibold text-emerald-800">🙏 You told {first} you are praying</span>
                   )}
                   {reporting !== r.id && (
                     <button
                       type="button"
                       onClick={() => setReporting(r.id)}
-                      className="ml-auto px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+                      className="ml-auto px-2 text-sm text-gray-500 underline underline-offset-2 hover:text-red-600"
                     >
                       Report
                     </button>
@@ -352,7 +356,7 @@ function PrayerCorner() {
 
       <div className="mt-4 space-y-2">
         {mine.length === 0 ? (
-          <p className="text-gray-400">Your requests will appear here.</p>
+          <p className="text-gray-500">Your requests will appear here.</p>
         ) : (
           mine.map((r) => {
             const st = PRAYER_STATUS[r.status];
@@ -360,11 +364,11 @@ function PrayerCorner() {
               <div key={r.id} data-my-prayer={r.id} className="rounded-xl bg-gray-50 px-4 py-3">
                 <p className="text-navy">{r.body}</p>
                 <div className="mt-1 flex items-center gap-2 text-sm">
-                  <span className="font-semibold" style={{ color: st.color }}>
+                  <span className={`font-semibold ${st.className}`}>
                     {st.label}
                   </span>
                   {r.share_with_board && (
-                    <span className="text-gray-400">· on the church prayer wall</span>
+                    <span className="text-gray-500">· on the church prayer wall</span>
                   )}
                 </div>
               </div>
@@ -618,7 +622,7 @@ function StudyShelf() {
 
       <div className="mt-4 space-y-2">
         {mine.length === 0 ? (
-          <p className="text-gray-400">Nothing yet. Add your first note above.</p>
+          <p className="text-gray-500">Nothing yet. Add your first note above.</p>
         ) : (
           mine.map((m) => {
             const url = safeExternalUrl(m.external_url);

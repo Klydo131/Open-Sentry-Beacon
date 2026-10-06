@@ -109,8 +109,9 @@ export function NotificationBell() {
         <span aria-hidden>{prefs.inApp ? '🔔' : '🔕'}</span>
         {showBadge && (
           <span
-            className="absolute right-0 top-0.5 grid h-5 w-5 place-items-center rounded-full text-[11px] font-bold text-navy"
-            style={{ backgroundColor: '#E8B84B' }}
+            className="absolute right-0 top-0.5 grid h-5 w-5 place-items-center rounded-full text-[11px] font-bold"
+            // Ground and ink set together: a look repaints text-navy, not this gold.
+            style={{ backgroundColor: '#E8B84B', color: '#1E2A4A' }}
           >
             {unread}
           </span>
@@ -144,7 +145,7 @@ export function NotificationBell() {
               <p className="mt-2 font-semibold text-gray-500">
                 Notifications are paused
               </p>
-              <p className="mt-1 text-sm text-gray-400">
+              <p className="mt-1 text-sm text-gray-500">
                 Turn them back on to see alerts here.
               </p>
               <button
@@ -158,7 +159,7 @@ export function NotificationBell() {
           ) : (
             <div>
               {mine.length === 0 ? (
-                <p className="px-4 py-8 text-center text-gray-400">
+                <p className="px-4 py-8 text-center text-gray-500">
                   No notifications yet.
                 </p>
               ) : (
@@ -180,7 +181,7 @@ export function NotificationBell() {
                           {n.body}
                         </span>
                       )}
-                      <span className="block text-xs text-gray-400">
+                      <span className="block text-xs text-gray-500">
                         {new Date(n.created_at).toLocaleString([], {
                           month: 'short',
                           day: 'numeric',
@@ -214,7 +215,7 @@ export function NotificationBell() {
                     onChange={(v) => updatePrefs({ push: v })}
                   />
                 ) : perm === 'denied' ? (
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500">
                     Device alerts are blocked in your browser settings.
                   </p>
                 ) : (

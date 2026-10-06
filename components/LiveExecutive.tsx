@@ -113,7 +113,7 @@ export function LiveChurchOverview() {
       </Card>
     );
   }
-  if (!n) return <Card className="p-5 text-gray-400">Loading the numbers…</Card>;
+  if (!n) return <Card className="p-5 text-gray-500">Loading the numbers…</Card>;
 
   return (
     <Card className="p-5">

@@ -444,7 +444,7 @@ export function LiveMailPage() {
 
       <Card className="p-5">
         <h2 className="text-xl font-bold text-navy">
-          Waiting to accept {invites && <span className="text-gray-400">· {waiting.length}</span>}
+          Waiting to accept {invites && <span className="text-gray-500">· {waiting.length}</span>}
         </h2>
         <p className="mt-1 text-sm text-gray-500">
           Everybody here still needs to set a password of their own. An
@@ -623,7 +623,7 @@ export function LiveMailPage() {
       {removed.length > 0 && (
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">
-            Account since removed <span className="text-gray-400">· {removed.length}</span>
+            Account since removed <span className="text-gray-500">· {removed.length}</span>
           </h2>
           <p className="mt-1 text-sm text-gray-600">
             These invitations were used and the account was later deleted. They are
@@ -666,7 +666,7 @@ export function LiveMailPage() {
 
       <Card className="p-5">
         <h2 className="text-xl font-bold text-navy">
-          Accepted {invites && <span className="text-gray-400">· {joined.length}</span>}
+          Accepted {invites && <span className="text-gray-500">· {joined.length}</span>}
         </h2>
         {!invites ? (
           <BeaconSpinner inline label="Loading" className="mt-4" />

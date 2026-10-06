@@ -289,7 +289,7 @@ export function LiveAppShell({
               scrolled to the end). Reproduced in the sample church by adding
               the same footer under the row: the desk went from 136 to 90,
               under a header ending at 118. Inside the column it stays put. */}
-          <footer className="mt-10 border-t border-black/5 py-5 text-center text-xs text-gray-400">
+          <footer className="mt-10 border-t border-black/5 py-5 text-center text-xs text-gray-500">
             Invitation-only. Access is enforced by the church database.
           </footer>
 

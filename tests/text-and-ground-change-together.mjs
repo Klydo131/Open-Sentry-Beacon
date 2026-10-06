@@ -37,9 +37,14 @@ const walk = (dir) => {
 walk(path.join(root, 'components'));
 walk(path.join(root, 'app'));
 
-// A light inline ground: white, near-white greys, the pale red of a warning,
-// whether written plainly or as one side of a condition.
-const LIGHT = /backgroundColor:[^,}]*['"]#(?:fff|ffffff|f9fafb|f3f4f6|fef2f2)['"]/i;
+// An inline ground of ANY colour, whether written plainly or as one side of a
+// condition. Until 6 October 2026 this looked only for white and near-white
+// greys, and missed the header bell's count: gold set inline, its number left
+// to text-navy, so under Focus and Dark Aero the number turned pale on gold
+// (1.7:1, on every screen). A ground no look can reach needs its ink set beside
+// it, whatever its colour; the same widening found two gold buttons and a gold
+// pill.
+const LIGHT = /backgroundColor:[^,}]*['"]#[0-9a-f]{3,8}['"]/i;
 // The text classes the looks recolour (app/themes/*.css).
 const RECOLOURED = /\btext-(?:navy|room|room-soft|gray-[4-9]00|slate-[4-9]00)\b/;
 
@@ -104,7 +109,7 @@ for (const file of files) {
   }
 }
 
-ok(looked > 0, `found the elements that set a light background inline (${looked}), so this checks something`);
+ok(looked > 0, `found the elements that set a background inline (${looked}), so this checks something`);
 ok(halfAndHalf.length === 0,
    `none of them leaves its text to a class the looks recolour${halfAndHalf.length ? `: ${halfAndHalf.join(', ')}` : ''}`);
 

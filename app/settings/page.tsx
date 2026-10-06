@@ -129,7 +129,7 @@ function TutorialCard() {
             ✦ Start a tutorial
           </Button>
           {mine && (
-            <p className="mt-2 text-sm text-gray-400">
+            <p className="mt-2 text-sm text-gray-500">
               You are signed in as {TRACK_LABELS[mine]}. Starting a walk for a
               different person signs you in as that sample account, and you can
               switch back any time from the top-right menu.
@@ -252,7 +252,7 @@ function NotificationCard() {
             ) : perm === 'denied' ? (
               <div className="rounded-xl bg-gray-50 p-3">
                 <p className="text-sm font-semibold text-gray-500">Device alerts</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-500">
                   Blocked in your browser settings. Open your browser's site
                   settings to allow notifications for this app.
                 </p>
@@ -291,7 +291,7 @@ function SettingsToggle({
     <div className="compact-ui flex items-start justify-between gap-3 rounded-xl bg-gray-50 p-3">
       <div className="min-w-0">
         <p className="text-sm font-semibold text-navy">{label}</p>
-        <p className="text-sm text-gray-400">{hint}</p>
+        <p className="text-sm text-gray-500">{hint}</p>
       </div>
       <button
         role="switch"
@@ -378,7 +378,7 @@ function VersionCard() {
       <div className="mb-3 flex items-center justify-between rounded-xl bg-gray-50 p-4">
         <div>
           <p className="text-sm font-semibold text-navy">Connection</p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500">
             Beacon keeps working offline. Your saved files and this device&rsquo;s
             data are always available.
           </p>
@@ -418,7 +418,7 @@ function VersionCard() {
             it looks identical to one that can. This says which. */}
         <InstallSource /> 
         {checkedAt && (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500">
             Last checked {new Date(checkedAt).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
@@ -461,7 +461,7 @@ function VersionCard() {
             Force a fresh copy
           </button>
         </div>
-        <p className="mt-2 text-sm text-gray-400">
+        <p className="mt-2 text-sm text-gray-500">
           If this screen keeps showing an old date after a new release, the app is
           stuck on a cached copy. &ldquo;Force a fresh copy&rdquo; clears it. Your
           saved files and data are not touched.
@@ -492,7 +492,7 @@ function InstallSource() {
   if (!host) return null;
 
   return (
-    <p className={`text-sm ${canUpdate ? 'text-gray-400' : 'font-semibold text-amber-700'}`}>
+    <p className={`text-sm ${canUpdate ? 'text-gray-500' : 'font-semibold text-amber-700'}`}>
       {installed ? 'Installed from' : 'Running from'}{' '}
       <span className="font-mono">{host}</span>
       {canUpdate

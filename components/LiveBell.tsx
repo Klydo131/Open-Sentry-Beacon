@@ -369,14 +369,14 @@ export function LiveBell({ me }: { me: Profile }) {
               >
                 <p className="text-sm font-semibold text-navy">{n.title}</p>
                 {n.body && <p className="text-xs text-gray-600">{n.body}</p>}
-                <p className="mt-0.5 text-[11px] font-semibold text-gray-400">Tap to open</p>
+                <p className="mt-0.5 text-[11px] font-semibold text-gray-500">Tap to open</p>
               </button>
             ))}
           </div>
           <Link
             href="/settings"
             onClick={() => setOpen(false)}
-            className="mt-2 block text-center text-xs font-semibold text-gray-400 underline"
+            className="mt-2 block text-center text-xs font-semibold text-gray-500 underline"
           >
             More notification settings
           </Link>

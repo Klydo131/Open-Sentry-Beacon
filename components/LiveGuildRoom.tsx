@@ -157,7 +157,7 @@ export function LiveAskToWalkWith() {
           is not something anybody should have to read about themselves. */}
       {mine.some((a) => a.status !== 'pending') && (
         <div className="mt-4 border-t border-gray-100 pt-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
             Answered
           </p>
           <ul className="mt-1 space-y-1">
@@ -371,9 +371,9 @@ export function LiveGuildRoom() {
                   <p className="text-sm font-bold text-navy">
                     {mine ? 'You' : (names[m.author_id ?? ''] ?? 'Someone')}
                   </p>
-                  <p className="text-xs text-gray-400">{when(m.created_at)}</p>
+                  <p className="text-xs text-gray-500">{when(m.created_at)}</p>
                   {m.edited_at && !m.deleted_at && (
-                    <p className="text-xs italic text-gray-400">edited</p>
+                    <p className="text-xs italic text-gray-500">edited</p>
                   )}
                   {/* NOTHING TO DO TO A MESSAGE THAT IS ALREADY GONE. */}
                   {canDrop && !m.deleted_at && (

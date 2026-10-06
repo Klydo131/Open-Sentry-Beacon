@@ -116,7 +116,7 @@ function WhatsNewPanel({ onClose }: { onClose: () => void }) {
                     </span>
                   )}
                 </div>
-                <p className="mb-2 text-xs font-semibold text-gray-400">
+                <p className="mb-2 text-xs font-semibold text-gray-500">
                   {new Date(n.date).toLocaleDateString([], {
                     day: 'numeric',
                     month: 'long',

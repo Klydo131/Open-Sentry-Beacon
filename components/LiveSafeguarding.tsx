@@ -64,7 +64,7 @@ export function LiveReportControl({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+        className="px-2 text-sm text-gray-500 underline underline-offset-2 hover:text-red-600"
       >
         Report {subjectName}
       </button>
@@ -270,7 +270,7 @@ export function LiveReportsForDirector({ onRemove }: { onRemove?: (id: string, n
                             📎 {f.name}
                           </button>
                           {!!f.size_bytes && (
-                            <span className="ml-2 text-xs text-gray-400">
+                            <span className="ml-2 text-xs text-gray-500">
                               {f.size_bytes > 1024 * 1024
                                 ? `${(f.size_bytes / 1024 / 1024).toFixed(1)} MB`
                                 : `${Math.max(1, Math.round(f.size_bytes / 1024))} KB`}

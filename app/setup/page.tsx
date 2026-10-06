@@ -177,7 +177,7 @@ export default function Setup() {
         <Card className="p-5" data-panel="setup-status">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+              <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                 Right now
               </p>
               <p className="mt-1 text-xl font-bold text-navy">

@@ -106,7 +106,7 @@ export function MemberReading({ memberId, name }: { memberId: string; name?: str
   useKeepUp(KEEP_UP_STUDIES, load);
 
   if (failed) return null;
-  if (!reading) return <p className="text-sm text-gray-400">Counting the studies…</p>;
+  if (!reading) return <p className="text-sm text-gray-500">Counting the studies…</p>;
   if (reading.total === 0) return null;
 
   return (

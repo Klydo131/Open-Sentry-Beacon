@@ -73,7 +73,7 @@ export function QuestPicker({ onPicked }: { onPicked?: () => void }) {
             {/* The count is per walk now. Naming one number for all of them is
                 what once put "4-step" on the front door while the panel counted
                 to six. */}
-            <span className="shrink-0 text-sm text-gray-400">
+            <span className="shrink-0 text-sm text-gray-500">
               {taskCount(track.key)} steps
             </span>
           </span>

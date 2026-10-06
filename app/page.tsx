@@ -339,14 +339,14 @@ function DemoHome() {
               and is about to leave. */}
           <div className="mt-8 border-t border-black/5 pt-6">
             <FeedbackButton className="tap" label="Send feedback" />
-            <p className="mt-2 text-sm text-gray-400">
+            <p className="mt-2 text-sm text-gray-500">
               Anything confusing or broken, tell us. It takes a sentence.
             </p>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-black/5 py-6 text-center text-sm text-gray-400">
+      <footer className="border-t border-black/5 py-6 text-center text-sm text-gray-500">
         {APP_SHORT_NAME} · a local-church discipleship app
       </footer>
     </div>

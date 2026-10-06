@@ -181,7 +181,7 @@ export function LiveBlogDesk() {
               <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
                 <input type="radio" name="lblog-aud" checked={audience === 'church'} onChange={() => setAudience('church')} />
                 Everyone in the church
-                <span className="text-gray-400">(it goes on the church home screen)</span>
+                <span className="text-gray-500">(it goes on the church home screen)</span>
               </label>
               {/* SAID BEFORE THEY PRESS PUBLISH, not discovered afterwards. A
                   church-wide post is signed with the writer's name and role, and
@@ -196,7 +196,7 @@ export function LiveBlogDesk() {
               <label className="mt-1 flex items-center gap-2 text-sm text-gray-700">
                 <input type="radio" name="lblog-aud" checked={audience === 'all'} onChange={() => setAudience('all')} />
                 Only the people I walk with
-                <span className="text-gray-400">
+                <span className="text-gray-500">
                   {people.length === 0
                     ? '(whoever you are paired with)'
                     : `(${people.length} ${people.length === 1 ? 'person' : 'people'}, and anyone paired with me later)`}
@@ -270,7 +270,7 @@ export function LiveBlogDesk() {
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-gray-400">{when(p.created_at)}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{when(p.created_at)}</p>
             <Body text={p.body} />
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
               {/* A draft has no readers, and "0 readers" about something nobody
@@ -469,7 +469,7 @@ export function LiveBlogFeed({ selfId }: { selfId?: string }) {
                     of audience and the writer should be able to see which one
                     they actually chose. */}
                 {p.author_id === selfId && p.audience !== 'church' && (
-                  <span className="text-gray-400">
+                  <span className="text-gray-500">
                     {p.audience === 'all' ? ' · only the people you walk with' : ' · chosen people'}
                   </span>
                 )}

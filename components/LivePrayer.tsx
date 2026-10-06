@@ -125,7 +125,7 @@ function ReportPrayerLink({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="tap-sm ml-auto px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+      className="tap-sm ml-auto px-2 text-sm text-gray-500 underline underline-offset-2 hover:text-red-600"
     >
       Report
     </button>
@@ -203,7 +203,7 @@ export function LiveAskForPrayer({ guide }: {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-emerald-700/10 bg-gradient-to-r from-emerald-50 via-white to-teal-50 p-5 sm:p-6">
+      <div className="border-b border-emerald-700/10 wash-emerald-teal p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-600 text-2xl shadow-sm">🙏</span>
           <div>
@@ -272,7 +272,7 @@ export function LiveAskForPrayer({ guide }: {
       <div className="mt-4 space-y-2">
         {mine === null && <BeaconSpinner inline label="Loading" className="mt-2" />}
         {mine?.length === 0 && !error && (
-          <p className="text-sm text-gray-400">Nothing yet. You can ask for anything.</p>
+          <p className="text-sm text-gray-500">Nothing yet. You can ask for anything.</p>
         )}
         {mine?.map((r) => (
           <div key={r.id} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
@@ -391,7 +391,7 @@ export function LivePrayerForGuide({
 
   return (
     <Card id="prayer" className="overflow-hidden p-0">
-      <div className="border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 p-5 sm:p-6">
+      <div className="border-b border-teal-800/10 wash-teal-sky p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-2xl shadow-sm">🙏</span>
           <div>
@@ -610,7 +610,7 @@ export function LivePrayerWall() {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-emerald-700/10 bg-gradient-to-r from-emerald-50 via-white to-teal-50 p-5 sm:p-6">
+      <div className="border-b border-emerald-700/10 wash-emerald-teal p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-600 text-2xl shadow-sm">🙏</span>
           <div>

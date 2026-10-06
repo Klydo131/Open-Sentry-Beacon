@@ -182,7 +182,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 p-5 sm:p-6">
+      <div className="border-b border-teal-800/10 wash-teal-sky p-5 sm:p-6">
         <div className="flex flex-wrap items-start gap-3">
           <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-2xl shadow-sm">📅</span>
           <div className="min-w-0 flex-1">
@@ -357,7 +357,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
         </div>
         <div className="space-y-3">
         {rows !== null && upcoming.length === 0 && (
-          <p className="text-sm text-gray-400">Nothing arranged yet.</p>
+          <p className="text-sm text-gray-500">Nothing arranged yet.</p>
         )}
         {upcoming.map((m) => {
           const join = joinUrl(m.mode, m.location);

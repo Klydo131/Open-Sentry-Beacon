@@ -125,7 +125,7 @@ export function LessonSeriesLibrary() {
       {/* THE SHELF FIRST, THE BUILDER WHEN ASKED FOR -- the same shape as the
           live Lesson studies card. The builder used to be the whole top of the
           page, open on every visit, above the series people came to look at. */}
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-blue-800/10 bg-gradient-to-r from-sky-50 via-white to-teal-50 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-blue-800/10 wash-sky-teal p-5">
         <div className="min-w-0">
           <h2 className="text-xl font-extrabold text-navy">📖 Lesson studies</h2>
           <p className="mt-0.5 text-sm text-gray-600">
@@ -204,7 +204,7 @@ export function LessonSeriesLibrary() {
                   <span
                     aria-hidden
                     className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold ${
-                      on ? 'bg-gold text-navy' : 'bg-gray-100 text-gray-400'
+                      on ? 'bg-gold text-navy' : 'bg-gray-100 text-gray-500'
                     }`}
                     style={on ? { backgroundColor: '#E8B84B', color: '#1E2A4A' } : undefined}
                   >
@@ -213,7 +213,7 @@ export function LessonSeriesLibrary() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{l.title}</span>
                     <span
-                      className={`block truncate text-xs ${on ? 'text-white/70' : 'text-gray-400'}`}
+                      className={`block truncate text-xs ${on ? 'text-white/70' : 'text-gray-500'}`}
                     >
                       {/* Deliberately NOT <Linked>. This row is a toggle button,
                           and an anchor inside a button is invalid HTML whose tap
@@ -284,13 +284,16 @@ export function LessonSeriesLibrary() {
                     type="button"
                     onClick={() => setOpen(opened ? '' : s.id)}
                     aria-expanded={opened}
-                    className="min-w-0 flex-1 text-left"
+                    // A width of its own before it grows: with flex-1 (no width
+                    // at all) a phone kept the button beside it and squeezed
+                    // the title to a word a line. Now the button wraps under.
+                    className="min-w-0 grow basis-48 text-left"
                   >
                     <span className="block font-bold text-navy">
                       <span aria-hidden className="mr-1 text-xs text-gray-400">{opened ? '▾' : '▸'}</span>
                       {s.title}
                     </span>
-                    <span className="block text-sm font-semibold" style={{ color: '#B08419' }}>
+                    <span className="block text-sm font-semibold text-amber-700">
                       {s.topic} · {s.lesson_ids.length} lessons
                     </span>
                   </button>
@@ -340,7 +343,7 @@ export function LessonSeriesLibrary() {
                       if (!l) return null;
                       return (
                         <li key={id} className="flex items-center gap-2 text-sm text-gray-600">
-                          <span className="w-5 shrink-0 text-right font-bold text-gray-400">
+                          <span className="w-5 shrink-0 text-right font-bold text-gray-500">
                             {i + 1}
                           </span>
                           <span className="min-w-0 truncate">{l.title}</span>

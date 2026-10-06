@@ -59,7 +59,7 @@ export function WhichApp() {
     // inline white this box kept its white under Focus while its text went
     // pale, and read at 1.1:1 (found 4 October 2026).
     <div className={`rounded-xl p-4 ${wrong ? 'bg-red-50' : 'bg-gray-50'}`}>
-      <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+      <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
         Which Beacon is this
       </p>
       <p className={`mt-1 font-bold ${wrong ? 'text-red-700' : 'text-navy'}`}>
@@ -133,7 +133,7 @@ export function WhichApp() {
                 url: canonicalUrl('/'),
               }}
             />
-            <p className="mt-1.5 text-xs text-gray-400">
+            <p className="mt-1.5 text-xs text-gray-500">
               Sends the permanent address, so whoever installs it keeps getting
               updates.
             </p>

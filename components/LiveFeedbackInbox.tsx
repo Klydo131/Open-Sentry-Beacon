@@ -87,7 +87,7 @@ export function LiveFeedbackInbox() {
             of reproducing a bug. Quiet, because they mean nothing to most
             readers and everything to whoever fixes it. */}
         {(f.page || f.build) && (
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-gray-500">
             {[f.page, f.build].filter(Boolean).join(' · ')}
           </p>
         )}
@@ -102,7 +102,7 @@ export function LiveFeedbackInbox() {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-teal-800/10 bg-gradient-to-r from-teal-50 via-white to-sky-50 p-5 sm:p-6">
+      <div className="border-b border-teal-800/10 wash-teal-sky p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-2xl shadow-sm">📣</span>
           <div>
@@ -124,7 +124,7 @@ export function LiveFeedbackInbox() {
         )}
         {items === null && <BeaconSpinner inline label="Loading" />}
         {items?.length === 0 && !error && (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500">
             Nothing yet. Anything sent from the feedback button will appear here.
           </p>
         )}
@@ -139,7 +139,7 @@ export function LiveFeedbackInbox() {
         )}
         {done.length > 0 && (
           <>
-            <p className="mt-5 text-xs font-bold uppercase tracking-wide text-gray-400">
+            <p className="mt-5 text-xs font-bold uppercase tracking-wide text-gray-500">
               Dealt with · {done.length}
             </p>
             <div className="mt-2 space-y-2 opacity-70">{done.map(row)}</div>

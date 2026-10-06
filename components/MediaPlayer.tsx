@@ -116,7 +116,7 @@ export function MediaPlayer({ item, theme }: { item: MediaMeta; theme: RoomTheme
   }
 
   if (!url) {
-    return <p className="text-sm text-gray-400">Opening…</p>;
+    return <p className="text-sm text-gray-500">Opening…</p>;
   }
 
   if (item.type === 'video') {

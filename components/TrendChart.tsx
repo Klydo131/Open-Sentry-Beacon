@@ -50,7 +50,7 @@ export function TrendChart({
           const h = Math.max(3, Math.round((p.total / max) * (height - 18)));
           return (
             <div key={p.start} className="flex flex-1 flex-col items-center justify-end gap-1">
-              <span className="text-[10px] font-bold leading-none text-gray-400">
+              <span className="text-[10px] font-bold leading-none text-gray-500">
                 {p.total > 0 ? p.total : ''}
               </span>
               <div
@@ -71,7 +71,7 @@ export function TrendChart({
         {points.map((p, i) => (
           <span
             key={p.start}
-            className="flex-1 truncate text-center text-[10px] text-gray-400"
+            className="flex-1 truncate text-center text-[10px] text-gray-500"
           >
             {/* Every other label on a narrow screen, or they collide. */}
             {i % 2 === 0 || points.length <= 5 ? p.label : ''}

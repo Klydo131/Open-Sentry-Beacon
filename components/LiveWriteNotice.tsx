@@ -234,7 +234,7 @@ export function LiveWriteNotice() {
           Taking one down happens on the church screen beside the notice
           itself, which is where you are when you decide it has served. */}
       <div className="mt-5 border-t border-gray-100 pt-4">
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
           {leads ? 'Already pinned' : 'Yours, already pinned'}
         </p>
         {mine === null ? (
@@ -248,7 +248,7 @@ export function LiveWriteNotice() {
                 <span aria-hidden>{n.icon}</span>
                 <span className="min-w-0 flex-1 truncate font-semibold text-navy">{n.title}</span>
                 {!n.is_pinned && (
-                  <span className="shrink-0 text-xs text-gray-400">taken down</span>
+                  <span className="shrink-0 text-xs text-gray-500">taken down</span>
                 )}
               </li>
             ))}

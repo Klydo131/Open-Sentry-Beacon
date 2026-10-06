@@ -1656,3 +1656,23 @@ body:has([data-conversation-screen]) .tab-bar {
     --music-accent: light-dark(#0f766e, #2dd4bf);
   }
 }
+
+/* PALE WASHES (6 October 2026). The header strip of a card, washed from one
+   pale colour through white to another, and the featured card in My Files. A
+   look repaints a card's white and its writing, but not a gradient drawn over
+   them, so under a dark look (Focus, Dark Aero) the wash stayed pale beneath
+   writing the look had turned pale: Featured titles measured 1.03:1, a lesson
+   count 1.6:1. In a light look, Classic included, these are exactly the
+   Tailwind gradients they replace; in a dark look (color-scheme: dark) they
+   are clear and the look's own card shows. A browser too old for light-dark()
+   keeps the wash everywhere, as before. */
+.wash-sky-teal { background-image: linear-gradient(to right, #f0f9ff, #ffffff, #f0fdfa); }
+.wash-teal-sky { background-image: linear-gradient(to right, #f0fdfa, #ffffff, #f0f9ff); }
+.wash-emerald-teal { background-image: linear-gradient(to right, #ecfdf5, #ffffff, #f0fdfa); }
+.wash-featured { background-image: linear-gradient(to bottom right, #ffffff, rgb(240 249 255 / 0.8)); }
+@supports (color: light-dark(#000, #fff)) {
+  .wash-sky-teal { background-image: linear-gradient(to right, light-dark(#f0f9ff, transparent), light-dark(#ffffff, transparent), light-dark(#f0fdfa, transparent)); }
+  .wash-teal-sky { background-image: linear-gradient(to right, light-dark(#f0fdfa, transparent), light-dark(#ffffff, transparent), light-dark(#f0f9ff, transparent)); }
+  .wash-emerald-teal { background-image: linear-gradient(to right, light-dark(#ecfdf5, transparent), light-dark(#ffffff, transparent), light-dark(#f0fdfa, transparent)); }
+  .wash-featured { background-image: linear-gradient(to bottom right, light-dark(#ffffff, transparent), light-dark(rgb(240 249 255 / 0.8), transparent)); }
+}

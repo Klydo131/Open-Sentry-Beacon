@@ -305,7 +305,7 @@ export function LiveGuildActivity() {
                           <>
                             <p className="mt-1 break-words whitespace-pre-wrap text-[15px] leading-relaxed text-gray-700">{entry.body}</p>
                             {entry.edited_at && (
-                              <p className="mt-0.5 text-xs italic text-gray-400">edited</p>
+                              <p className="mt-0.5 text-xs italic text-gray-500">edited</p>
                             )}
                           </>
                         )}
@@ -368,7 +368,7 @@ export function LiveGuildActivity() {
                         <button
                           type="button"
                           onClick={() => setReporting(reporting === entry.id ? '' : entry.id)}
-                          className="tap-sm px-2 text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+                          className="tap-sm px-2 text-sm text-gray-500 underline underline-offset-2 hover:text-red-600"
                         >
                           Report this post
                         </button>

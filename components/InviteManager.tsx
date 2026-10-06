@@ -147,7 +147,7 @@ export function InviteManager() {
 
       {invites.length > 0 && (
         <div className="mt-5">
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-gray-400">
+          <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-gray-500">
             Invitations
           </h3>
           <div className="space-y-2">
@@ -173,7 +173,7 @@ export function InviteManager() {
                     </button>
                     <button
                       onClick={() => revoke(inv.id)}
-                      className="text-sm font-semibold text-red-500 underline hover:text-red-700"
+                      className="text-sm font-semibold text-red-600 underline hover:text-red-700"
                     >
                       Disapprove
                     </button>

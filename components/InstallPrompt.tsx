@@ -658,7 +658,7 @@ export function InstallPrompt() {
             )}
             <button
               onClick={alreadyHave}
-              className="w-full rounded-xl py-2 text-sm font-semibold text-gray-400 hover:text-gray-600"
+              className="w-full rounded-xl py-2 text-sm font-semibold text-gray-500 hover:text-gray-600"
             >
               I already have Beacon installed
             </button>
@@ -667,7 +667,7 @@ export function InstallPrompt() {
                 already installed something they have not. Said the other way
                 round it is a note for the person it applies to and invisible
                 noise to everybody else. */}
-            <p className="text-xs leading-snug text-gray-400">
+            <p className="text-xs leading-snug text-gray-500">
               Already have the icon and still seeing this? It probably came from
               a preview address, which the browser treats as a separate app.
               Settings shows which one you are in.
@@ -812,7 +812,7 @@ export function InstallPrompt() {
             )}
             <button
               onClick={alreadyHave}
-              className="mt-1 w-full rounded-xl py-2 text-xs font-semibold text-gray-400"
+              className="mt-1 w-full rounded-xl py-2 text-xs font-semibold text-gray-500"
             >
               I already have it installed
             </button>

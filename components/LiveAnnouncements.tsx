@@ -87,7 +87,7 @@ export function LiveAnnouncements({
       )}
 
       {!error && shown.length === 0 ? (
-        <Card className="p-6 text-center text-gray-400">
+        <Card className="p-6 text-center text-gray-500">
           {mayPost
             ? 'No notices yet. Write the first one in Announcements, above.'
             : 'Nothing pinned at the moment.'}
@@ -100,7 +100,7 @@ export function LiveAnnouncements({
               <p className="mt-1 font-bold text-navy">{n.title}</p>
               {n.body && <p className="text-sm text-gray-600">{n.body}</p>}
               {n.when_text && (
-                <p className="mt-2 text-xs font-semibold text-gray-400">{n.when_text}</p>
+                <p className="mt-2 text-xs font-semibold text-gray-500">{n.when_text}</p>
               )}
               {(leads || n.author_id === profile?.id) && (
                 <div className="mt-2 flex flex-wrap gap-3">

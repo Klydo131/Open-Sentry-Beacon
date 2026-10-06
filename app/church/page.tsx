@@ -12,6 +12,7 @@ import { BlogDesk, BlogFeed } from '@/components/Blog';
 import { WritePostPrompt } from '@/components/WritePost';
 import { FeedbackButton } from '@/components/Feedback';
 import { STAGES, roleLabel } from '@/lib/brand';
+import { inkOn } from '@/lib/room-theme';
 import type { Role } from '@/lib/types';
 
 // The church home — the shared board every account lands on. The activity
@@ -126,7 +127,7 @@ function Body() {
             </p>
             {wall.length === 0 ? (
               <Card className="p-4">
-                <p className="text-gray-400">No requests right now.</p>
+                <p className="text-gray-500">No requests right now.</p>
               </Card>
             ) : (
               <div className="space-y-2">
@@ -134,15 +135,12 @@ function Body() {
                   <Card key={r.id} className="p-4">
                     <p className="text-navy">“{r.body}”</p>
                     <p
-                      className="mt-1 text-sm font-semibold"
-                      style={{
-                        color:
-                          r.status === 'answered'
-                            ? '#7FB03A'
-                            : r.status === 'praying'
-                              ? '#2F80ED'
-                              : '#5B6675',
-                      }}
+                      // Classes, not inline colours, so a look can repaint them
+                      // (6 October 2026: the inline blue read at 3.9:1 on white
+                      // and the grey at 2.7:1 on a dark look's card).
+                      className={`mt-1 text-sm font-semibold ${
+                        r.status === 'answered' ? 'text-green-700' : r.status === 'praying' ? 'text-blue-700' : 'text-gray-600'
+                      }`}
                     >
                       {r.status === 'answered'
                         ? 'Answered. Praise God 🙌'
@@ -182,8 +180,8 @@ function Body() {
               </span>
               <div className="h-6 flex-1 rounded-full bg-gray-100">
                 <div
-                  className="flex h-6 items-center justify-end rounded-full px-2 text-sm font-bold text-white"
-                  style={{ width: `${Math.max(8, (c.n / max) * 100)}%`, backgroundColor: c.color }}
+                  className="flex h-6 items-center justify-end rounded-full px-2 text-sm font-bold"
+                  style={{ width: `${Math.max(8, (c.n / max) * 100)}%`, backgroundColor: c.color, color: inkOn(c.color) }}
                 >
                   {c.n}
                 </div>
@@ -192,7 +190,7 @@ function Body() {
           ))}
         </div>
         )}
-        <p className="mt-3 text-sm text-gray-400">
+        <p className="mt-3 text-sm text-gray-500">
           Counts only. No names or personal details appear on the general board.
         </p>
       </Card>

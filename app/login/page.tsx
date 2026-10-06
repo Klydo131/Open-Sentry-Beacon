@@ -138,7 +138,7 @@ function DemoLogin() {
 
         <button
           onClick={resetDemo}
-          className="mx-auto block text-sm text-gray-400 underline"
+          className="mx-auto block text-sm text-gray-500 underline"
         >
           Reset demo data
         </button>

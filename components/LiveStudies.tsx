@@ -83,7 +83,7 @@ function FileRow({ file, canRemove, onRemove }: {
       >
         📎 {file.name}
       </button>
-      <span className="text-xs text-gray-400">{kb(file.size_bytes)}</span>
+      <span className="text-xs text-gray-500">{kb(file.size_bytes)}</span>
       {canRemove && (
         <button type="button" onClick={onRemove} className="text-xs font-semibold text-red-700 underline">
           Remove
@@ -171,7 +171,7 @@ function HeldFiles({ files, busy, onRemove, onReplace }: {
           ) : (
             <div className="flex items-center gap-2">
               <span className="min-w-0 flex-1 break-words font-semibold text-navy">📎 {f.name}</span>
-              <span className="text-xs text-gray-400">{kb(f.size)}</span>
+              <span className="text-xs text-gray-500">{kb(f.size)}</span>
               <button
                 type="button"
                 disabled={busy}
@@ -349,7 +349,7 @@ function SeriesBody({ series, mine, ownSeries }: {
       {error && <p className="mb-2 rounded-xl bg-red-50 p-2 text-sm text-red-800">{error}</p>}
 
       {lessons !== null && lessons.length === 0 && (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           {mine ? 'No studies in here yet. Tap + Add a study to write the first one.' : 'Nothing in here yet.'}
         </p>
       )}
@@ -1010,7 +1010,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-blue-800/10 bg-gradient-to-r from-sky-50 via-white to-teal-50 p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-blue-800/10 wash-sky-teal p-5 sm:p-6">
         <div className="flex min-w-0 items-start gap-3">
           <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-700 text-xl shadow-sm">📖</span>
           <div className="min-w-0">
@@ -1048,7 +1048,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
       </datalist>
 
       <div className="space-y-4">
-        {rows === null && <p className="text-sm text-gray-400">Loading…</p>}
+        {rows === null && <p className="text-sm text-gray-500">Loading…</p>}
         {rows?.length === 0 && (
           <p className="text-sm text-gray-500">
             {canWrite ? 'No series yet. Tap + New series to write the first one.' : 'No studies yet.'}
