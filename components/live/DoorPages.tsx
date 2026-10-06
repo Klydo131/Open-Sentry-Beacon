@@ -438,7 +438,10 @@ export function LiveLoginPage() {
               what changes is that it appears at the moment they are stuck and
               describes their situation instead of a different one. */}
           {couldBeUnfinished && (
-            <div className="mt-4 rounded-xl bg-sky-50 p-4 ring-1 ring-sky-200">
+            // Blue, not sky: a dark look repaints blue-50 under its own pale
+            // ink, and left sky-50 pale under it, so this heading vanished on
+            // the screen where somebody is already stuck (6 October 2026).
+            <div className="mt-4 rounded-xl bg-blue-50 p-4 ring-1 ring-blue-200">
               <p className="text-sm font-semibold text-navy">
                 Never set a password yet?
               </p>
@@ -1110,7 +1113,7 @@ export function LiveJoinPage() {
                 </label>
               )}
 
-              <div id="new-password-help" className="rounded-xl bg-sky-50 p-4 text-sm leading-relaxed text-slate-700 ring-1 ring-sky-100">
+              <div id="new-password-help" className="rounded-xl bg-blue-50 p-4 text-sm leading-relaxed text-slate-700 ring-1 ring-blue-100">
                 <p className="font-semibold text-navy">Choose a password only you know.</p>
                 <p className="mt-1">
                   On iPhone, iPad, or Mac, Safari may offer a strong password. That suggestion comes from your device,
