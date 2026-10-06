@@ -44,7 +44,7 @@ const bundle = async (entries, name) => {
   });
   return import(pathToFileURL(file).href);
 };
-const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml', 'lib/music/zip', 'lib/music/page-scan', 'lib/music/play'], 'music');
+const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml', 'lib/music/zip', 'lib/music/page-scan', 'lib/music/play', 'lib/music/explain'], 'music');
 const SP = await bundle(['lib/music/score-player'], 'score-player');
 const PT = await bundle(['lib/music/pitch-tracker'], 'pitch-tracker');
 
@@ -273,6 +273,48 @@ function tree(xml) {
   ok(throws(() => M.readScore(tree(many)), /more than 24 voices/), 'more voices than a choir has is refused');
   const name = M.readScore(tree('<score-partwise><part-list><score-part id="P1"><part-name><img src=x onerror=alert(1)>' + 'x'.repeat(500) + '</part-name></score-part></part-list><part id="P1"><measure><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note></measure></part></score-partwise>')).lines[0].name;
   ok(name.length <= 80, 'a name is cut to 80 characters, and reaches the screen as text');
+}
+
+// ---------------------------------------------------------------------------
+// 3b. EXPLAINING A PIECE (lib/music/explain.ts), on a hymn written for it.
+//
+// Asked for on 6 October 2026: the choir and the conductor should "understand
+// how the piece works already". What is checked is what the explanation
+// claims: each of its sentences has to be true of the score it describes.
+// ---------------------------------------------------------------------------
+{
+  const hymn = M.readScore(tree(read('tests/fixtures/music/hymn-in-g.musicxml')));
+  ok(hymn.key?.fifths === 1 && hymn.key?.mode === 'major' && hymn.time?.beats === 3 && hymn.time?.beatType === 4,
+     `the key and the time are read (${JSON.stringify(hymn.key)}, ${JSON.stringify(hymn.time)})`);
+  ok(hymn.bars?.join(',') === '0,3,6,9,12,15,18,21', `every bar's start is read (${hymn.bars?.join(',')})`);
+  ok((hymn.marks ?? []).map((m) => `${m.kind}:${m.text}@${m.at}`).join(' ') === 'tempo:Andante@0 tempo:quarter = 72@0 dynamic:p@0 hairpin:cresc.@6 dynamic:f@12 tempo:rit.@18 dynamic:pp@21',
+     `the markings are read, in order (${(hymn.marks ?? []).map((m) => `${m.kind}:${m.text}@${m.at}`).join(' ')})`);
+  const e = M.explain(hymn);
+  ok(e.tempo === 'Andante, 72 a minute' && e.key === 'G major' && e.time === '3/4: three quarter-note beats in a bar' && e.bars === 8 && e.seconds === 20,
+     `tempo, key, time and length are said (${e.tempo}; ${e.key}; ${e.time}; ${e.bars} bars, ${e.seconds} s)`);
+  ok(e.conductor?.meter === 3 && e.conductor?.bpm === 72, 'the Conductor is set to beat three at 72');
+  ok(e.journey.map((j) => `${j.where}: ${j.text}`).join(' | ') === 'bar 1: soft (p) | bar 3: getting louder (cresc.) | bar 5: loud (f) | bar 7: slowing down (rit.) | bar 8: very soft (pp)',
+     `loud and soft, and the slowing, are told bar by bar (${e.journey.map((j) => `${j.where}: ${j.text}`).join(' | ')})`);
+  ok(e.summary === 'Unhurried and bright: Andante, 72 a minute, in G major, for two voices. It begins soft (p), grows to loud (f) at bar 5, and ends very soft (pp). It slows down at bar 7 (rit.).',
+     `the character is said from the markings, and only from them (${e.summary})`);
+  const [sop, bass] = e.parts;
+  ok(sop.range === 'D4 to D5, an octave' && sop.leap?.name === 'an octave' && sop.leap?.where === 'bar 5, beat 2' && sop.leap?.hard,
+     `the soprano's range, and its octave leap in bar 5 marked as one to practise (${sop.range}; ${sop.leap?.name} at ${sop.leap?.where})`);
+  ok(bass.range === 'G2 to E3, a major sixth' && bass.leap?.name === 'a fifth' && !bass.leap?.hard, `the bass's range and its widest leap, not marked hard (${bass.range}; ${bass.leap?.name})`);
+  ok(e.words[0]?.text === 'Praise the Lord, all you Hallelujah! Sing out with one voice, Hallelujah!', `the words are joined back into words (${e.words[0]?.text})`);
+  // With no mode written, the key is told by where the bass ends.
+  const unmarked = M.readScore(tree(read('tests/fixtures/music/hymn-in-g.musicxml').replace('<mode>major</mode>', '')));
+  ok(M.explain(unmarked).key === 'G major', 'with no mode written, the key is still told, from where the bass ends');
+  ok(M.keyName({ ...unmarked, key: { fifths: -3 }, lines: [{ id: 'x', name: 'x', notes: [{ start: 0, length: 1, midi: 60 }] }] }) === 'C minor'
+     && M.keyName({ ...unmarked, key: { fifths: 2 }, lines: [{ id: 'x', name: 'x', notes: [{ start: 0, length: 1, midi: 61 }] }] }) === 'two sharps',
+     'three flats ending on C is C minor; a key that cannot be told is named by its sharps');
+  // The four-part test piece has no key, no markings: the explanation says only what is there.
+  const plain = M.explain(M.readScore(tree(read('tests/fixtures/music/four-parts.musicxml'))));
+  ok(plain.key === null && plain.journey.length === 0 && /No loud or soft markings are written/.test(plain.summary) && plain.conductor?.meter === 4 && plain.conductor?.bpm === 96,
+     `a score without markings is not given any (${plain.summary})`);
+  ok(M.conductorFor({ ...hymn, time: { beats: 6, beatType: 8 }, tempo: 60 }).bpm === 120 && M.conductorFor({ ...hymn, time: { beats: 2, beatType: 2 }, tempo: 120 }).bpm === 60
+     && M.conductorFor({ ...hymn, time: { beats: 12, beatType: 8 }, tempo: 90 }).meter === 4 && M.conductorFor({ ...hymn, time: { beats: 5, beatType: 4 } }) === null,
+     '6/8 beats eighths, 2/2 halves, 12/8 four dotted quarters; a time with no pattern is said, not guessed');
 }
 
 // ---------------------------------------------------------------------------

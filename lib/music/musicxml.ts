@@ -4,8 +4,10 @@
 // MusicXML is the score format every notation program exports (MuseScore,
 // Finale, Sibelius, Dorico). Only the partwise form is read, which is what
 // they all write by default. What is read is what practising a part needs:
-// pitches, lengths, voices, ties, the first verse's lyrics, the tempo. Dynamics,
-// slurs and the rest of the engraving are not.
+// pitches, lengths, voices, ties, the first verse's lyrics, the tempo; and,
+// since 6 October 2026, what explaining the piece needs (lib/music/explain.ts):
+// the key, the time, where each bar starts, the tempo's words, and the loud
+// and soft markings. Slurs and the rest of the engraving are not read.
 //
 // REPEATS ARE PLAYED ONCE, straight through. Following repeat signs, voltas and
 // D.C. al Fine correctly is a project of its own; the room says so.
@@ -36,6 +38,17 @@ export interface ScoreNote {
   midi: number;
   /** The first verse's syllable, if it has one. */
   lyric?: string;
+  /** The syllable runs on into the next one ("Hal-" of "Hal-le-lu-jah"). */
+  joins?: boolean;
+}
+
+/** A marking over the music: loud or soft, the tempo's words, anything else written. */
+export interface ScoreMark {
+  /** Where, in quarter notes from the beginning. */
+  at: number;
+  kind: 'dynamic' | 'hairpin' | 'tempo' | 'words';
+  /** As written: "p", "mf", "cresc.", "Andante", "rit.". */
+  text: string;
 }
 
 export interface ScoreLine {
@@ -53,6 +66,14 @@ export interface Score {
   lines: ScoreLine[];
   /** The whole piece, in quarter notes. */
   length: number;
+  /** The key at the start: sharps (positive) or flats (negative), and the mode if the file says. */
+  key?: { fifths: number; mode?: 'major' | 'minor' };
+  /** The time signature at the start. */
+  time?: { beats: number; beatType: number };
+  /** Where each bar starts, in quarter notes. */
+  bars?: number[];
+  /** The markings, in order. */
+  marks?: ScoreMark[];
 }
 
 export class ScoreError extends Error {
@@ -72,7 +93,15 @@ export const LIMITS = {
   length: 15_000,
   /** Characters of text kept for a name or a syllable. */
   text: 80,
+  /** Markings and bars kept. */
+  marks: 600,
+  bars: 4_000,
 } as const;
+
+/** Every dynamic MusicXML names, softest to loudest where it has a place. */
+const DYNAMICS = ['pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff', 'ffff', 'sf', 'sfz', 'sfp', 'fp', 'rf', 'rfz', 'fz', 'sffz', 'pf'] as const;
+/** Words that set a tempo, as a choir's music writes them. */
+const TEMPO_WORDS = /^(grave|largo|larghetto|lento|adagio|adagietto|andante|andantino|moderato|allegretto|allegro|vivace|presto|prestissimo|maestoso|a tempo|tempo i|rit|ritard|ritardando|rall|rallentando|accel|accelerando|slowly|slow|gently|moderately|brightly|joyfully|quickly|fast|lively|steady|reverently|with movement|flowing)\b/i;
 
 const STEPS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
@@ -131,6 +160,36 @@ function titleOf(root: XmlNode): string {
     || clean(child(root, 'movement-title')?.text ?? '');
 }
 
+/** A direction's markings, at `at`. */
+function marksOf(direction: XmlNode, at: number): ScoreMark[] {
+  const out: ScoreMark[] = [];
+  for (const type of children(direction, 'direction-type')) {
+    for (const d of children(type, 'dynamics')) {
+      for (const k of d.kids) {
+        const name = k.name === 'other-dynamics' ? clean(k.text) : k.name;
+        if ((DYNAMICS as readonly string[]).includes(name) || (k.name === 'other-dynamics' && name)) out.push({ at, kind: 'dynamic', text: name });
+      }
+    }
+    for (const w of children(type, 'wedge')) {
+      const t = w.attr('type');
+      if (t === 'crescendo') out.push({ at, kind: 'hairpin', text: 'cresc.' });
+      else if (t === 'diminuendo') out.push({ at, kind: 'hairpin', text: 'dim.' });
+    }
+    for (const w of children(type, 'words')) {
+      const text = clean(w.text);
+      if (!text) continue;
+      if (/^(cresc|crescendo)\.?$/i.test(text)) out.push({ at, kind: 'hairpin', text: 'cresc.' });
+      else if (/^(dim|dimin|diminuendo|decresc|decrescendo)\.?$/i.test(text)) out.push({ at, kind: 'hairpin', text: 'dim.' });
+      else out.push({ at, kind: TEMPO_WORDS.test(text) ? 'tempo' : 'words', text });
+    }
+    for (const m of children(type, 'metronome')) {
+      const per = number(child(m, 'per-minute')?.text);
+      if (per > 0) out.push({ at, kind: 'tempo', text: `${clean(child(m, 'beat-unit')?.text ?? 'quarter')} = ${Math.round(per)}` });
+    }
+  }
+  return out;
+}
+
 /** Read a parsed MusicXML document. Throws ScoreError with a sentence a person can act on. */
 export function readScore(root: XmlNode, fallbackTitle = 'Untitled piece'): Score {
   if (root.name === 'score-timewise') {
@@ -152,6 +211,11 @@ export function readScore(root: XmlNode, fallbackTitle = 'Untitled piece'): Scor
   const lines = new Map<string, ScoreLine>();
   let notes = 0;
   let length = 0;
+  let key: Score['key'];
+  let time: Score['time'];
+  const bars: number[] = [];
+  const marks: ScoreMark[] = [];
+  let firstPart = true;
 
   for (const part of children(root, 'part')) {
     const partId = part.attr('id') ?? `P${lines.size + 1}`;
@@ -163,10 +227,31 @@ export function readScore(root: XmlNode, fallbackTitle = 'Untitled piece'): Scor
     const open = new Map<string, ScoreNote>(); // tied notes waiting for their end, by voice and pitch
 
     for (const measure of children(part, 'measure')) {
+      // The bars, and the key and time they start in, are read from the first part.
+      if (firstPart && bars.length < LIMITS.bars) bars.push(cursor / divisions);
       for (const item of measure.kids) {
         if (item.name === 'attributes') {
           const d = number(child(item, 'divisions')?.text);
           if (d > 0) divisions = d;
+          if (firstPart && bars.length === 1) {
+            // (the divisions just read apply to this bar, which starts at 0)
+            const k = child(item, 'key');
+            const fifths = number(child(k ?? item, 'fifths')?.text);
+            if (k && Number.isFinite(fifths) && Math.abs(fifths) <= 7 && !key) {
+              const mode = clean(child(k, 'mode')?.text ?? '').toLowerCase();
+              key = { fifths, ...(mode === 'major' || mode === 'minor' ? { mode } : {}) };
+            }
+            const t = child(item, 'time');
+            const beats = number(child(t ?? item, 'beats')?.text);
+            const beatType = number(child(t ?? item, 'beat-type')?.text);
+            if (t && beats > 0 && beats <= 32 && [1, 2, 4, 8, 16, 32].includes(beatType) && !time) time = { beats, beatType };
+          }
+        } else if (item.name === 'direction') {
+          for (const mark of marksOf(item, cursor / divisions)) {
+            if (marks.length >= LIMITS.marks) break;
+            // The same marking written in every part is one marking.
+            if (!marks.some((m) => Math.abs(m.at - mark.at) < 1e-6 && m.text === mark.text)) marks.push(mark);
+          }
         } else if (item.name === 'backup' || item.name === 'forward') {
           const d = number(child(item, 'duration')?.text);
           if (d > 0) cursor = Math.max(0, cursor + (item.name === 'backup' ? -d : d));
@@ -204,8 +289,11 @@ export function readScore(root: XmlNode, fallbackTitle = 'Untitled piece'): Scor
             held.length += len;
             note = held;
           } else {
-            const lyric = clean(child(children(item, 'lyric')[0] ?? item, 'text')?.text ?? '');
-            note = { start: at, length: len, midi, ...(lyric ? { lyric } : {}) };
+            const verse = children(item, 'lyric')[0];
+            const lyric = clean(child(verse ?? item, 'text')?.text ?? '');
+            const syllabic = clean(child(verse ?? item, 'syllabic')?.text ?? '');
+            const joins = !!lyric && (syllabic === 'begin' || syllabic === 'middle');
+            note = { start: at, length: len, midi, ...(lyric ? { lyric } : {}), ...(joins ? { joins } : {}) };
             lines.get(key)!.notes.push(note);
             if (++notes > LIMITS.notes) throw new ScoreError('This score has more notes than the room can play on a phone.');
           }
@@ -217,6 +305,7 @@ export function readScore(root: XmlNode, fallbackTitle = 'Untitled piece'): Scor
       }
     }
 
+    firstPart = false;
     // A part sung by one voice is called by the part's name. A part with two
     // (a women's staff with sopranos and altos) is called by both.
     if (voicesHere.size > 1) {
@@ -231,5 +320,15 @@ export function readScore(root: XmlNode, fallbackTitle = 'Untitled piece'): Scor
   if (!found.length) throw new ScoreError('No notes were found in this score.');
   for (const line of found) line.notes.sort((a, b) => a.start - b.start || b.midi - a.midi);
 
-  return { title: titleOf(root) || fallbackTitle, tempo: tempoOf(root), lines: found, length };
+  marks.sort((a, b) => a.at - b.at);
+  return {
+    title: titleOf(root) || fallbackTitle,
+    tempo: tempoOf(root),
+    lines: found,
+    length,
+    ...(key ? { key } : {}),
+    ...(time ? { time } : {}),
+    ...(bars.length ? { bars } : {}),
+    ...(marks.length ? { marks } : {}),
+  };
 }

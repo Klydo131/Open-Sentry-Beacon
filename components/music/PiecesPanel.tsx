@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Card, EmptyState } from '@/components/ui';
 import { PageScanner } from '@/components/music/PageScanner';
+import type { ConductSet } from '@/components/music/PieceExplained';
 import { ScoreView } from '@/components/music/ScoreView';
 import { deletePiece, listPieces, pieceBlob, savePiece, type Piece } from '@/lib/music/pieces';
 import { SCORE_ACCEPT, readScoreFile, scoreFromText } from '@/lib/music/score-file';
@@ -25,7 +26,7 @@ type Open =
 
 const KIND_LABEL: Record<Piece['kind'], string> = { page: 'Clean page', score: 'Score' };
 
-export function PiecesPanel() {
+export function PiecesPanel({ onConduct }: { onConduct?: (set: ConductSet) => void } = {}) {
   const scoreRef = useRef<HTMLInputElement>(null);
   const [pieces, setPieces] = useState<Piece[] | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -101,7 +102,7 @@ export function PiecesPanel() {
     );
   }
 
-  if (open?.kind === 'score') return <ScoreView score={open.score} onClose={() => setOpen(null)} />;
+  if (open?.kind === 'score') return <ScoreView score={open.score} onClose={() => setOpen(null)} onConduct={onConduct} />;
 
   if (open?.kind === 'page') {
     return (

@@ -41,6 +41,7 @@ const { signIn, choose } = require('./_looks');
 
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
 const FIXTURE = path.join(__dirname, '..', 'fixtures', 'music', 'four-parts.musicxml');
+const HYMN = path.join(__dirname, '..', 'fixtures', 'music', 'hymn-in-g.musicxml');
 
 let bad = 0;
 const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
@@ -278,7 +279,9 @@ async function deskPhoto(page) {
       ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && /standard/.test(await say(page, '[data-pitch-words]')),
          `${size}: concert pitch is back at 440, called the standard`);
       await page.locator('[data-pitch-choice="442"]').click();
-      await page.waitForTimeout(150);
+      // Waited for, not looked at once: on Safari on GitHub's Mac machines the
+      // status took longer than a fixed 150 ms to appear (run of 5 October 2026).
+      await page.locator('[data-pitch-now]').filter({ hasText: /A at 442 Hz/ }).waitFor({ timeout: 4000 }).catch(() => {});
       ok(/A at 442 Hz/.test(await say(page, '[data-pitch-now]')), `${size}: choosing 442 plays its A (${(await say(page, '[data-pitch-now]')).trim() || 'nothing'})`);
       ok(/A = 442 Hz/.test(await say(page, '[data-tuner-a4]')) && /8 cents higher/.test(await say(page, '[data-pitch-words]')),
          `${size}: and says what it does (${(await say(page, '[data-pitch-words]')).trim()})`);
@@ -466,7 +469,8 @@ async function deskPhoto(page) {
       await page.locator('[data-panel="score-view"]').waitFor({ timeout: 8000 }).catch(() => {});
       const refused = await page.locator('[data-music-pieces] [role="alert"]').innerText().catch(() => '');
       ok(/Sing, my soul/.test(await say(page, '[data-score-title]')), `${size}: a MusicXML score opens with its own title${refused ? ` (it said: ${refused})` : ''}`);
-      const parts = await page.locator('[data-panel="score-view"] li').count();
+      // The parts to sing and mix; About this piece lists them again, and is not counted.
+      const parts = await page.locator('[data-panel="score-view"] li').evaluateAll((els) => els.filter((e) => !e.closest('[data-piece-explained]')).length);
       ok(parts === 4, `${size}: every part is listed (${parts})`);
       ok(/96/.test(await say(page, '[data-score-tempo]')), `${size}: at the tempo the score asks for`);
       await page.getByRole('button', { name: '▶ Play' }).click();
@@ -529,7 +533,8 @@ async function deskPhoto(page) {
         mimeType: 'application/xml',
         buffer: Buffer.from('<?xml version="1.0"?><!DOCTYPE s [<!ENTITY a "aaaaaaaa"><!ENTITY b "&a;&a;&a;&a;">]><score-partwise><part-list/></score-partwise>'),
       });
-      await page.waitForTimeout(600);
+      // Waited for: a fixed 600 ms was not always enough on Safari's runners.
+      await page.locator('[data-music-pieces] [role="alert"]').waitFor({ timeout: 6000 }).catch(() => {});
       ok(await page.locator('[data-music-pieces] [role="alert"]').isVisible(), `${size}: a booby-trapped score is refused, and says so`);
       ok((await page.locator('[data-piece-list] li').count()) === 1, `${size}: and nothing is kept from it`);
 
@@ -597,6 +602,21 @@ async function deskPhoto(page) {
       await page.waitForTimeout(300);
       ok((await page.locator('[data-piece-list] li').filter({ hasText: 'Hymn 100' }).count()) === 0, `${size}: and then it is gone`);
       ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in Pieces`);
+
+      // 5a. ABOUT THIS PIECE, and conducting it (6 October 2026) ---------------
+      await page.locator('[data-score-input]').setInputFiles(HYMN);
+      await page.locator('[data-piece-explained]').waitFor({ timeout: 10000 });
+      const about = await say(page, '[data-piece-summary]');
+      ok(/^Unhurried and bright: Andante, 72 a minute, in G major, for two voices\. It begins soft \(p\), grows to loud \(f\) at bar 5/.test(about),
+         `${size}: a score explains itself (${about})`);
+      ok(/bar 3: getting louder/.test(await say(page, '[data-piece-journey]')) && /Practise this/.test(await say(page, '[data-piece-parts]'))
+         && /Hallelujah! Sing out/.test(await say(page, '[data-piece-words]')),
+         `${size}: with its loud and soft, the leap to practise, and its words`);
+      await page.getByRole('button', { name: '🎼 Conduct this piece' }).click();
+      await page.locator('[data-conductor-preset]').waitFor({ timeout: 10000 });
+      ok(/Set for Praise the Lord \(test hymn\): 3 beats at 72/.test(await say(page, '[data-conductor-preset]')) && (await say(page, '[data-tempo]')).trim() === '72',
+         `${size}: Conduct this piece opens the Conductor on three beats at 72`);
+      ok((await sideways(page)) <= 1, `${size}: nothing scrolls sideways in the Conductor`);
 
       // 5b. PLAY ----------------------------------------------------------------
       await openFolder(page, 'Play');

@@ -26,12 +26,13 @@
 // The hooks also stop themselves when the phone locks or the app goes to the
 // background, so nothing here keeps listening or ticking in a pocket.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { Listen } from '@/components/music/Listen';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import type { RoomTheme } from '@/lib/room-theme';
+import type { ConductSet } from '@/components/music/PieceExplained';
 
 // ONLY LISTEN IS IN THE PAGE ITSELF. The other folders (the pitch
 // finder, the score and zip readers, the scanner) are fetched when the room
@@ -59,6 +60,8 @@ const ROOMS: Room[] = [
 
 export function MusicRoom({ theme }: { theme?: RoomTheme }) {
   const [room, choose] = useRoom(ROOMS, 'beacon:music-room');
+  // A piece's time and tempo, handed from Pieces to the Conductor by "Conduct this piece".
+  const [conduct, setConduct] = useState<ConductSet | null>(null);
 
   useEffect(() => {
     const warm = () => {
@@ -87,8 +90,8 @@ export function MusicRoom({ theme }: { theme?: RoomTheme }) {
       <RoomTabs rooms={ROOMS} room={room} onChoose={choose} />
       {room === 'listen' && <Listen theme={theme} />}
       {room === 'tuner' && <TunerPanel />}
-      {room === 'conductor' && <ConductorPanel />}
-      {room === 'pieces' && <PiecesPanel />}
+      {room === 'conductor' && <ConductorPanel preset={conduct} />}
+      {room === 'pieces' && <PiecesPanel onConduct={(set) => { setConduct(set); choose('conductor'); }} />}
       {room === 'play' && <PlayPanel />}
     </div>
   );

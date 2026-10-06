@@ -26,6 +26,8 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       'Its scale now shows the in-tune zone as a green band, with a bold line for the exact note, easy to see in the dark looks too.',
       'In dark looks, the conductor\'s hand, every part on a score and the play line can all be seen now.',
       'Drop-down lists, sheets and the chat no longer let the page show through them in the Frutiger Aero looks, so their words never mix with the words behind.',
+      'A score in Pieces now explains itself: its tempo, time and key, where it is loud and soft, how high and low each part goes and its hardest leap, its words, and a sentence on its character, read from the score\'s own markings.',
+      'Conduct this piece opens the Conductor already set to the score\'s time and tempo.',
     ],
   },
   {

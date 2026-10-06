@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- A short hymn written for Hope Beacon's checks: eight bars, two parts.
+     Public domain (CC0). It holds what explaining a piece must get right: a
+     key and its mode, 3/4, a tempo in words and in numbers, soft, a
+     crescendo, loud, rit. and very soft, syllables that join into words, and
+     an octave leap. tests/the-music-room.mjs says what each should read as. -->
+<score-partwise version="4.0">
+  <work><work-title>Praise the Lord (test hymn)</work-title></work>
+  <part-list>
+    <score-part id="P1"><part-name>Soprano</part-name></score-part>
+    <score-part id="P2"><part-name>Bass</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions><key><fifths>1</fifths><mode>major</mode></key><time><beats>3</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+      <direction placement="above"><direction-type><words>Andante</words></direction-type></direction>
+      <direction placement="above"><direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>72</per-minute></metronome></direction-type><sound tempo="72"/></direction>
+      <direction placement="below"><direction-type><dynamics><p/></dynamics></direction-type></direction>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>Praise</text></lyric></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>the</text></lyric></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>Lord,</text></lyric></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><lyric number="1"><syllabic>single</syllabic><text>all</text></lyric></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>you</text></lyric></note>
+    </measure>
+    <measure number="3">
+      <direction placement="below"><direction-type><wedge type="crescendo"/></direction-type></direction>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>begin</syllabic><text>Hal</text></lyric></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>middle</syllabic><text>le</text></lyric></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>middle</syllabic><text>lu</text></lyric></note>
+    </measure>
+    <measure number="4">
+      <direction placement="below"><direction-type><wedge type="stop"/></direction-type></direction>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/><lyric number="1"><syllabic>end</syllabic><text>jah!</text></lyric></note>
+    </measure>
+    <measure number="5">
+      <direction placement="below"><direction-type><dynamics><f/></dynamics></direction-type></direction>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>Sing</text></lyric></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><lyric number="1"><syllabic>single</syllabic><text>out</text></lyric></note>
+    </measure>
+    <measure number="6">
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>with</text></lyric></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>one</text></lyric></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>single</syllabic><text>voice,</text></lyric></note>
+    </measure>
+    <measure number="7">
+      <direction placement="above"><direction-type><words>rit.</words></direction-type></direction>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>begin</syllabic><text>Hal</text></lyric></note>
+      <note><pitch><step>F</step><alter>1</alter><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><accidental>sharp</accidental><lyric number="1"><syllabic>middle</syllabic><text>le</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><lyric number="1"><syllabic>middle</syllabic><text>lu</text></lyric></note>
+    </measure>
+    <measure number="8">
+      <direction placement="below"><direction-type><dynamics><pp/></dynamics></direction-type></direction>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/><lyric number="1"><syllabic>end</syllabic><text>jah!</text></lyric></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes><divisions>1</divisions><key><fifths>1</fifths><mode>major</mode></key><time><beats>3</beats><beat-type>4</beat-type></time><clef><sign>F</sign><line>4</line></clef></attributes>
+      <note><pitch><step>G</step><octave>2</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>G</step><octave>2</octave></pitch><duration>2</duration><voice>1</voice><type>half</type></note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/></note>
+    </measure>
+    <measure number="4">
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/></note>
+    </measure>
+    <measure number="5">
+      <note><pitch><step>B</step><octave>2</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/></note>
+    </measure>
+    <measure number="6">
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>2</duration><voice>1</voice><type>half</type></note>
+    </measure>
+    <measure number="7">
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>2</duration><voice>1</voice><type>half</type></note>
+    </measure>
+    <measure number="8">
+      <note><pitch><step>G</step><octave>2</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>

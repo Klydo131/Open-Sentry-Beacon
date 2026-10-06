@@ -174,6 +174,22 @@ the photo (such as where it was taken) is kept either.
 The score is drawn as notes on a strip, higher notes higher and longer notes
 longer: what a singer learning a part needs. It is not printed notation.
 
+**About this piece.** Above the strip, the score explains itself, from its own
+markings:
+
+- one or two sentences on its character, such as *Unhurried and bright:
+  Andante, 72 a minute, in G major, for two voices. It begins soft (p), grows
+  to loud (f) at bar 5, and ends very soft (pp).* It says what the composer
+  wrote, in plain words, and no more;
+- its tempo, time, key and length;
+- **Loud, soft and speed**: each marking, bar by bar;
+- **Each part**: how low and high it goes, and its widest leap, marked
+  *Practise this* when it is a sixth or more (or a tritone);
+- **The words** of your part, joined back into words.
+
+**Conduct this piece** opens the Conductor already set to the score's time and
+tempo (6/8 is beaten in six, 2/2 in two, 12/8 in four).
+
 **Advanced, for a score.** Tick **Advanced settings** under the parts.
 
 - **Transpose**: move every part up or down, a semitone at a time (up to an

@@ -20,6 +20,7 @@ import { Button, Card } from '@/components/ui';
 import { useScorePlayer, TRANSPOSE_MAX, type Mix } from '@/lib/music/score-player';
 import { TIMBRES, TIMBRE_NAME, type Timbre } from '@/lib/music/audio';
 import { AdvancedToggle, useAdvanced } from '@/components/music/Advanced';
+import { PieceExplained, type ConductSet } from '@/components/music/PieceExplained';
 import { midiName } from '@/lib/music/notes';
 import { TEMPO_MAX, TEMPO_MIN } from '@/lib/music/beat';
 import type { Score, ScoreLine } from '@/lib/music/musicxml';
@@ -89,7 +90,7 @@ const NoteLayer = memo(function NoteLayer({ lines, mine, mix, high }: {
   );
 });
 
-export function ScoreView({ score, onClose }: { score: Score; onClose: () => void }) {
+export function ScoreView({ score, onClose, onConduct }: { score: Score; onClose: () => void; onConduct?: (set: ConductSet) => void }) {
   const player = useScorePlayer(score);
   const { playing, tempo, mix, position } = player;
   const [mine, setMine] = useState('');
@@ -179,6 +180,8 @@ export function ScoreView({ score, onClose }: { score: Score; onClose: () => voi
         </div>
         <Button variant="ghost" onClick={() => { player.stop(); onClose(); }}>Close</Button>
       </div>
+
+      <PieceExplained score={score} mine={mine} onConduct={onConduct ? (set) => { player.stop(); onConduct(set); } : undefined} />
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {playing

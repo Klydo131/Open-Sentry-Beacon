@@ -17,13 +17,23 @@ import { Button, Card } from '@/components/ui';
 import { useMetronome } from '@/lib/music/metronome';
 import { METERS, PATTERNS, TEMPO_MAX, TEMPO_MIN, batonAt, defaultAccents, tap, tempoName, type Meter } from '@/lib/music/beat';
 import { AdvancedToggle, useAdvanced } from '@/components/music/Advanced';
+import type { ConductSet } from '@/components/music/PieceExplained';
 import { ConductorAdvanced } from '@/components/music/ConductorAdvanced';
 import { prefersLessMotion } from '@/lib/motion';
 
 const METER_LABEL: Record<Meter, string> = { 2: '2/4', 3: '3/4', 4: '4/4', 6: '6/8' };
 
-export function ConductorPanel() {
+export function ConductorPanel({ preset }: { preset?: ConductSet | null } = {}) {
   const metronome = useMetronome();
+  // Opened from a piece's "Conduct this piece": its time and tempo, once.
+  const [setFor, setSetFor] = useState<ConductSet | null>(null);
+  useEffect(() => {
+    if (!preset) return;
+    metronome.setMeter(preset.meter);
+    metronome.setBpm(preset.bpm);
+    setSetFor(preset);
+    // Once per piece handed over; the metronome's setters are stable enough here.
+  }, [preset]);
   const { running, bpm, meter, setBpm, setMeter, sound, setSound, now } = metronome;
   const hand = useRef<SVGCircleElement>(null);
   const taps = useRef<number[]>([]);
@@ -92,6 +102,11 @@ export function ConductorPanel() {
           <div>
             <h2 className="text-xl font-bold text-navy">Conductor</h2>
             <p className="mt-1 text-sm text-gray-600">Keeps the beat, and shows it the way a conductor&rsquo;s hand does.</p>
+            {setFor && (
+              <p className="mt-1 text-sm font-semibold text-[color:var(--music-accent)]" data-conductor-preset>
+                Set for {setFor.title}: {setFor.meter} beats at {setFor.bpm} a minute.
+              </p>
+            )}
           </div>
           {running
             ? <Button variant="ghost" onClick={metronome.stop}>■ Stop</Button>
