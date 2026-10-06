@@ -77,6 +77,17 @@ const WATCH = () => {
     Watched.prototype.createOscillator = function (...args) { window.__osc += 1; return make.apply(this, args); };
     window.AudioContext = Watched;
     if (window.webkitAudioContext) window.webkitAudioContext = Watched;
+    // And when each tone is due on the audio clock, so a rate can be measured
+    // in the music's own time: a slow machine stretches the walk's waiting,
+    // never the clock the clicks are scheduled on.
+    window.__oscAt = [];
+    if (window.OscillatorNode) {
+      const begin = OscillatorNode.prototype.start;
+      OscillatorNode.prototype.start = function (when, ...rest) {
+        window.__oscAt.push(typeof when === 'number' && when > 0 ? when : this.context.currentTime);
+        return begin.call(this, when, ...rest);
+      };
+    }
   }
   const md = navigator.mediaDevices;
   if (md && md.getUserMedia) {
@@ -385,21 +396,33 @@ async function deskPhoto(page) {
           if (e.target instanceof Element && e.target.closest('button')?.textContent?.includes('Tap the beat')) window.__tapsAt.push(performance.now());
         }, true);
       });
-      for (let i = 0; i < 5; i += 1) { await page.getByRole('button', { name: /Tap the beat/ }).click(); await page.waitForTimeout(500); }
-      const tapped = Number((await say(page, '[data-tempo]')).trim());
-      const expected = await page.evaluate(() => {
-        // The rule in lib/music/beat.ts: a pause over two seconds starts a new
-        // count; the last four gaps are averaged; 30 to 240.
+      const tempoBefore = Number((await say(page, '[data-tempo]')).trim());
+      // The rule in lib/music/beat.ts: a pause over two seconds starts a new
+      // count; the last four gaps are averaged; 30 to 240; and a lone tap
+      // after a pause leaves the tempo as it was. On a slow runner a tap can
+      // land more than two seconds after the one before (Safari's runner did,
+      // 6 October 2026), so the walk taps again until two land together.
+      const landed = () => page.evaluate((start) => {
         let kept = [];
+        let bpm = start;
+        let counted = false;
         for (const at of window.__tapsAt) {
           if (kept.length && at - kept[kept.length - 1] > 2000) kept = [];
           kept = [...kept, at].slice(-5);
+          if (kept.length < 2) continue;
+          const gaps = kept.slice(1).map((t, i) => t - kept[i]);
+          bpm = Math.min(240, Math.max(30, Math.round(60000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length))));
+          counted = true;
         }
-        const gaps = kept.slice(1).map((t, i) => t - kept[i]);
-        const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
-        return Math.min(240, Math.max(30, Math.round(60000 / mean)));
-      });
-      ok(Math.abs(tapped - expected) <= 1, `${size}: the tempo follows the taps (${tapped}, from taps that landed at ${expected} a minute)`);
+        return { bpm, counted };
+      }, tempoBefore);
+      let expected = { bpm: tempoBefore, counted: false };
+      for (let round = 0; round < 3 && !expected.counted; round += 1) {
+        for (let i = 0; i < 5; i += 1) { await page.getByRole('button', { name: /Tap the beat/ }).click(); await page.waitForTimeout(500); }
+        expected = await landed();
+      }
+      const tapped = Number((await say(page, '[data-tempo]')).trim());
+      ok(expected.counted && Math.abs(tapped - expected.bpm) <= 1, `${size}: the tempo follows the taps (${tapped}, from taps that landed at ${expected.counted ? expected.bpm : 'no two together'} a minute)`);
       await page.getByRole('button', { name: '3/4' }).click();
       ok((await page.locator('[data-baton] circle').count()) === 4, `${size}: 3/4 draws three beats`);
       await page.locator('#conductor-sound').uncheck();
@@ -420,17 +443,26 @@ async function deskPhoto(page) {
       await page.locator('#music-advanced-conductor').check();
       ok(await page.locator('[data-conductor-subdivision]').isVisible(), `${size}: Advanced opens the Conductor's extra settings`);
       const tones = async (ms) => {
-        await page.evaluate(() => { window.__osc = 0; });
+        await page.evaluate(() => { window.__osc = 0; window.__oscAt = []; });
         await page.getByRole('button', { name: '▶ Start' }).click();
         await page.waitForTimeout(ms);
         await page.getByRole('button', { name: '■ Stop' }).click();
         await page.waitForTimeout(150);
         return page.evaluate(() => window.__osc);
       };
+      // Clicks a second, on the audio clock: from the first click due to the
+      // last, however long the walk took to press Stop.
+      const perSecond = () => page.evaluate(() => {
+        const at = [...new Set(window.__oscAt.map((t) => Math.round(t * 1000)))].sort((a, b) => a - b);
+        return at.length < 3 ? 0 : Math.round(((at.length - 1) / ((at[at.length - 1] - at[0]) / 1000)) * 100) / 100;
+      });
       const plain = await tones(2000);
+      const plainRate = await perSecond();
       await page.getByRole('button', { name: '2 to a beat' }).click();
-      const halves = await tones(2000);
-      ok(plain >= 3 && halves >= plain * 1.6, `${size}: two clicks to a beat doubles the clicks (${plain}, then ${halves})`);
+      await tones(2000);
+      const halvesRate = await perSecond();
+      ok(plain >= 3 && Math.abs(plainRate - 2) <= 0.2 && Math.abs(halvesRate - 4) <= 0.4,
+         `${size}: two clicks to a beat doubles the clicks (at 120: ${plainRate} a second, then ${halvesRate})`);
       await page.getByRole('button', { name: 'Beats only' }).click();
       for (const n of [2, 3, 4]) await page.getByRole('button', { name: new RegExp(`^Beat ${n}: Normal`) }).click();
       const firstOnly = await tones(2000);
