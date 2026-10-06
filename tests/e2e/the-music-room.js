@@ -47,7 +47,15 @@ const HYMN = path.join(__dirname, '..', 'fixtures', 'music', 'hymn-in-g.musicxml
 const HYMN_PDF = path.join(__dirname, '..', 'fixtures', 'music', 'hymn-in-g.pdf');
 
 let bad = 0;
-const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
+// What the audio clocks were doing at the last count, said under a check that
+// fails, so a failure on a machine nobody can watch says what it saw.
+let clocksSaw = '';
+const ok = (c, m) => {
+  if (!c) bad++;
+  console.log(`${c ? 'OK ' : 'BAD'} ${m}`);
+  if (!c && clocksSaw) console.log(`    audio clocks not closed yet: ${clocksSaw}`);
+  clocksSaw = '';
+};
 
 /** Two seconds of A 440 Hz, as a 16-bit mono WAV: the fake microphone's sound. */
 function toneWav(hz, seconds = 2, rate = 44100) {
@@ -69,7 +77,9 @@ const WATCH = () => {
   const Clock = window.AudioContext || window.webkitAudioContext;
   if (Clock) {
     const Watched = class extends Clock {
-      constructor(...args) { super(...args); window.__clocks.push(this); }
+      constructor(...args) { super(...args); this.__born = performance.now(); window.__clocks.push(this); }
+      // When the app asked it to close: the app's part. Closing finishes later.
+      close(...args) { if (this.__shut === undefined) this.__shut = performance.now(); return super.close(...args); }
     };
     // Every tone made, so a click can be counted rather than assumed.
     window.__osc = 0;
@@ -111,7 +121,25 @@ const WATCH = () => {
   try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864000000)); } catch { /* not a page of the app */ }
 };
 const micsLive = (page) => page.evaluate(() => window.__mics.flatMap((s) => s.getTracks()).filter((t) => t.readyState !== 'ended').length);
-const clocksOpen = (page) => page.evaluate(() => window.__clocks.filter((c) => c.state !== 'closed').length);
+// A clock counts as open until the app asks it to close. Asking is the app's
+// part; the browser then finishes closing it in its own time. Safari on
+// GitHub's Mac machines counted one clock too many on the phone (6 October
+// 2026), and this count could not tell an app that forgot a clock from a
+// browser still closing one. Now it tells them apart, and a failing check says
+// which it was: "never asked to close" is the app's fault.
+const clocksOpen = async (page) => {
+  const { left, saw } = await page.evaluate(() => {
+    const now = performance.now();
+    const ago = (t) => `${((now - t) / 1000).toFixed(1)} s ago`;
+    const notShut = window.__clocks.filter((c) => c.state !== 'closed');
+    return {
+      left: notShut.filter((c) => c.__shut === undefined).length,
+      saw: notShut.map((c) => `${c.state}, opened ${ago(c.__born)}, ${c.__shut === undefined ? 'never asked to close' : `asked to close ${ago(c.__shut)}`}`).join('; '),
+    };
+  });
+  clocksSaw = saw;
+  return left;
+};
 const sideways = (page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 const say = (page, sel) => page.locator(sel).first().innerText().catch(() => '');
 
