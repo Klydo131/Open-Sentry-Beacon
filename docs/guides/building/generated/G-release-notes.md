@@ -1,6 +1,62 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 30 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 36 releases, as members read them in Settings, What's new.
+
+### Your look, from the first moment
+
+*2026-10-06*
+
+- On a slow connection the page could show Classic for a moment before the look you chose. Now your look is there from the very first moment.
+
+### My Files, simpler on a phone and a pad
+
+*2026-10-06*
+
+- My Files opens with a short title instead of a big banner, so the first resource is on the first screen.
+- The filters are one row of chips with a count on each, and the list says which one you chose.
+- On this device puts Upload files and Add a link at the top, with your files right below.
+- Deleting one of your files now asks a second time, since nothing can bring it back.
+
+### Music PDFs, read on your phone
+
+*2026-10-06*
+
+- Pieces now opens a PDF that MuseScore, Dorico or a similar program made, and reads it note by note: every part's notes and rhythm, the key, time and tempo, the words, and the loud and soft.
+- It then plays, explains itself and can be conducted like any score. Under its title it says it was read from the print, so check it against the page before the choir learns from it.
+- A scanned PDF is only a picture, and Pieces says so. Older Sibelius and Finale PDFs are not read yet.
+- The reader is downloaded only the first time you open a PDF, and the PDF stays on your phone.
+
+### A quicker tuner, and the Music room in every look
+
+*2026-10-06*
+
+- The tuner moves to a new note in about a tenth of a second, keeps its needle steady while you sing, and holds the last note for a moment when you stop.
+- Its scale now shows the in-tune zone as a green band, with a bold line for the exact note, easy to see in the dark looks too.
+- In dark looks, the conductor's hand, every part on a score and the play line can all be seen now.
+- Drop-down lists, sheets and the chat no longer let the page show through them in the Frutiger Aero looks, so their words never mix with the words behind.
+- A score in Pieces now explains itself: its tempo, time and key, where it is loud and soft, how high and low each part goes and its hardest leap, its words, and a sentence on its character, read from the score's own markings.
+- Conduct this piece opens the Conductor already set to the score's time and tempo.
+
+### Advanced settings in the Music room, and a new Play folder
+
+*2026-10-05*
+
+- Every Music folder opens as simple as before. Tick Advanced settings at the end of one for more, and untick it to put it back.
+- Tuner: watch your voice as a line over the last ten seconds, sing against a held drone note, and see notes as a clarinet, trumpet, saxophone or horn reads them.
+- Conductor: clicks between the beats, loud or silent beats, a one-bar count-in, a speed trainer that gets a little faster as you go, and tempos saved by name.
+- Pieces: move a score up or down to suit your voices, loop a hard passage, silence your own part to sing it, and choose the sound.
+- Play is a new folder: a piano keyboard to play with your fingers, the chords of any key a tap each, and a beat maker with a bass drum, snare and hi-hat.
+- As before, it all happens on your phone, and what you save stays there.
+
+### Concert pitch you can hear
+
+*2026-10-04*
+
+- In the Music room's Tuner, every change of concert pitch now plays the new A, and says in plain words what it does to every note.
+- The common pitches are one tap away: 415 for baroque music, 432, 440 the standard, and 442 for many orchestras.
+- Compare with 440 plays the standard A, then yours, so you can hear the difference.
+- Listen for the A: ask the organist or pianist to hold an A, and the app measures it and offers it as your concert pitch. Nothing is recorded.
+- The tuner shows the pitch it measures against, and the starting note shows the frequency it will play.
 
 ### A Music room, for the choir and everyone who loves music
 

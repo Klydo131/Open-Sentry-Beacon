@@ -30,6 +30,7 @@ Exact versions, as `package.json` holds them. `tests/dependency-licences.mjs` fa
 | `@vanilla-extract/next-plugin` | ^2.5.2 |
 | `lit` | ^3.3.3 |
 | `next` | ^15.5.20 |
+| `pdfjs-dist` | 6.4.299 |
 | `pitchy` | 4.1.0 |
 | `react` | 19.0.0 |
 | `react-dom` | 19.0.0 |

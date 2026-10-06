@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-74 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+75 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-phone-can-insert-things.js`
 
@@ -228,6 +228,14 @@ WHAT THIS PROVES AND WHAT IT DOES NOT. It runs Chromium with each device's viewp
 
 It is NOT Safari. iOS runs WebKit, and no amount of Chromium emulation is WebKit — engine bugs (video fullscreen behaviour, IndexedDB in private mode, date parsing) will not show up here. Those are covered by source assertions in tests/realtime-and-media.mjs and by the CI matrix, and where neither can reach, they are listed honestly as untested rather than assumed.
 
+#### `my-files-on-a-phone-and-pad.js`
+
+My Files on a phone and a pad, and a computer's My Files as it was.
+
+Asked for on 6 October 2026: "The Library (My files) are not UI friendly for Mobile and Pad users, can we make it more aesthetic and simple use please. Desktop and Mac is ok for now."
+
+What was wrong, measured on a 390px phone before the change: the header's tagline ran off the right-hand edge ("Live church. Real conne"); a welcome banner filled the whole first screen; six filter cards, each 112px tall, filled the second; the first resource began on the third; Browse was 5.6 screens long; and Delete on a file kept only on this device took one tap.
+
 #### `no-sideways-scroll.js`
 
 No screen scrolls sideways on a phone.
@@ -396,7 +404,7 @@ The Music room, walked the way a choir member would.
 
 Asked for on 4 October 2026: "another room for music for music lovers and choir ... take out the audio tools from the library ... I want a tuner, a piece scanner, and beat maker (where you can track the beat like a conductor)". tests/the-music-room.mjs holds the arithmetic and the code's promises; this proves the screens do what they say, in a browser:
 
-- everybody finds Music in their rooms, and My Files points to it - the Tuner hears a 440 Hz tone as A4 in tune, follows a change of concert pitch, and lets the microphone go on Stop, on leaving the folder and when the phone locks - the Conductor's baton moves on the beat, follows tapped tempo and a change of time signature, runs silent, and closes its audio on Stop - a score file opens, plays, follows your part and a change of tempo while playing, is kept, and opens again after a reload; a hostile one is refused in words - a photo of a page becomes a clean page, is kept without the photo, and is deleted with two taps
+- everybody finds Music in their rooms, and My Files points to it - the Tuner hears a 440 Hz tone as A4 in tune, follows a change of concert pitch, and lets the microphone go on Stop, on leaving the folder and when the phone locks - concert pitch is heard: a choice plays its A and says what it does, the starting note follows it, Compare plays 440 then yours, and Listen for the A takes an instrument's A and offers it - Advanced settings (5 October 2026), off until ticked: the Tuner's trail, drone and transposing instruments; the Conductor's clicks between beats, silent beats, count-in, speed trainer and saved tempos, counted by the sounds actually made; the score's transpose, loop, sound and silent part; and the Play folder's keyboard, chords and beat maker - the Conductor's baton moves on the beat, follows tapped tempo and a change of time signature, runs silent, and closes its audio on Stop - a score file opens, plays, follows your part and a change of tempo while playing, is kept, and opens again after a reload; a hostile one is refused in words - a photo of a page becomes a clean page, is kept without the photo, and is deleted with two taps - a music PDF (6 October 2026) is read on the phone under the site's own security policy, explains itself, is kept as itself and read again
 
 #### `the-office-reports-files-and-calendars.js`
 

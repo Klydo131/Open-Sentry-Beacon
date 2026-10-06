@@ -714,7 +714,7 @@ The take-down controls stayed on the billboard, beside the notice they act on. D
 
 #### `components/LookBeforePaint.tsx`
 
-Puts this device's look on <html> before the first frame (lib/look-before-paint.ts says why). Rendered first in <body> by app/layout.tsx, so it runs before anything below it is drawn.
+Puts this device's look on <html> before the first frame (lib/look-before-paint.ts says why). Rendered in <head> by app/layout.tsx, so it runs before <body> exists, and nothing is drawn before that.
 
 #### `components/Mailbox.tsx`
 
@@ -1122,6 +1122,16 @@ WHAT IT DELIBERATELY IS NOT. This is not a rebuild of anybody's messenger. The s
 
 *No header comment.*
 
+#### `components/music/Advanced.tsx`
+
+The Music room's Advanced settings: one tick box per folder.
+
+Asked for on 5 October 2026: "How do we make it more dynamic but also simple in Advance mode or setting for users to play and be more creative in music play?" The same answer the Sabbath program and the blog already give: every folder is exactly as simple as it was, and a tick box at the end opens the rest. It is off until somebody ticks it, remembered on this phone only, and turning it off puts that folder back as it was.
+
+#### `components/music/ConductorAdvanced.tsx`
+
+The Conductor's Advanced settings: clicks between beats, how each beat sounds, a count-in, a speed trainer, and tempos kept for the hymns a choir sings often. Every one leaves the metronome as it was until it is changed, and turning Advanced off puts them all back.
+
 #### `components/music/ConductorPanel.tsx`
 
 The Conductor folder: a metronome that beats the way a conductor does.
@@ -1142,7 +1152,7 @@ The Music room: for everybody who sings, plays, or only listens.
 
 Asked for on 4 October 2026: "another room for music for music lovers and choir. Put the main audio tools to it ... I want a tuner, a piece scanner, and beat maker (where you can track the beat like a conductor)." Four folders, one per job:
 
-Listen the media player, playlists and calming sounds, moved here from My Files (which keeps a Play button on each file) Tuner which note you are singing or playing, and how far off Conductor a metronome that beats the pattern a conductor's hand draws Pieces a photo of a page made clean, and a score file played part by part so a singer can learn theirs
+Listen the media player, playlists and calming sounds, moved here from My Files (which keeps a Play button on each file) Tuner which note you are singing or playing, and how far off Conductor a metronome that beats the pattern a conductor's hand draws Pieces a photo of a page made clean, and a score file played part by part so a singer can learn theirs Play a keyboard; with Advanced, chords in any key and a beat maker (asked for on 5 October 2026, "to play and be more creative")
 
 EVERYTHING HAPPENS ON THE PHONE. Nothing in this room talks to the church's database or to anybody else: the microphone is measured and thrown away, a photo is straightened on the phone, a score is read on the phone, and what is kept is kept on the phone. tests/the-music-room.mjs holds that line.
 
@@ -1154,13 +1164,25 @@ THE PHOTO NEVER LEAVES THE PHONE AND IS NOT KEPT. It is read into memory, shrunk
 
 THE PHOTO PICKER, NOT THE CAMERA. A plain image input lets somebody take a picture or pick one they already have, and the browser asks nothing. Using the camera directly would need a camera permission this app does not ask for anywhere (next.config.mjs: camera=()).
 
+#### `components/music/PieceExplained.tsx`
+
+"About this piece": what the score says about itself, in plain words, above the notes. Asked for on 6 October 2026, so that "the choir singers and conductors understand how the piece works already". The words come from lib/music/explain.ts, read from the score's own markings on the phone; nothing here is sent anywhere, and nothing is shown as HTML.
+
 #### `components/music/PiecesPanel.tsx`
 
 The Pieces folder: the choir's music, kept on this phone. Two kinds:
 
-a clean page, made from a photo by the scanner (components/music/PageScanner) a score file (MusicXML), opened to see and hear every part (ScoreView)
+a clean page, made from a photo by the scanner (components/music/PageScanner) a score, opened to see and hear every part (ScoreView): a MusicXML file, or a PDF from a notation program, read on the phone (lib/music/pdf-read.ts)
 
-Kept in the room's own store (lib/music/pieces.ts), apart from My Files. A saved score is checked again every time it is opened, exactly as when it was first chosen: what is on the phone is trusted no more than a new file.
+Kept in the room's own store (lib/music/pieces.ts), apart from My Files. A saved score is checked again every time it is opened, exactly as when it was first chosen: what is on the phone is trusted no more than a new file. A PDF is kept as itself and read again each time.
+
+#### `components/music/PlayPanel.tsx`
+
+The Play folder: somewhere to make music, not only learn it.
+
+Asked for on 5 October 2026: "more dynamic but also simple ... for users to play and be more creative in music play". Simple is a keyboard: an octave to pick out a tune, played by touch, several keys at once. Advanced adds a choice of sound, chord buttons in the keys a church sings in, and a beat maker: sixteen steps of bass drum, snare and hi-hat, kept on the phone.
+
+One audio clock for the whole folder, opened by the first tap (an iPhone allows nothing else), closed when the folder is left or the phone locks, and closed again after half a minute of quiet so it never runs in a pocket.
 
 #### `components/music/ScoreView.tsx`
 
@@ -1170,11 +1192,19 @@ NOT PRINTED NOTATION, AND THAT IS A DECISION WITH A REASON. Drawing real staves,
 
 Everything a person wrote into the file (titles, part names) reaches the screen as text, never as markup.
 
+#### `components/music/TunerAdvanced.tsx`
+
+The Tuner's Advanced settings: a trail of your voice, a drone to sing against, and notes as a transposing instrument reads them.
+
+The trail draws only what the tuner has already measured; it keeps the last ten seconds in memory and nothing else, and forgets it when the folder is left. The drone is made on the phone like every other sound in the room.
+
 #### `components/music/TunerPanel.tsx`
 
 The Tuner folder: the note you are singing or playing, how far off it is, and a pitch pipe to give the choir its starting note.
 
 The microphone is opened by lib/music/tuner.ts only after Start is pressed, and released on Stop, on leaving this folder, and when the phone locks. What it hears is measured on the phone and thrown away.
+
+CONCERT PITCH YOU CAN HEAR. It used to be a number and two buttons, and changing it moved only the tuner's reference, which nobody notices until they sing (the owner, 4 October 2026: "I just put the Hertz and nothing much is happening"). Now every change plays the new A, the card says in words what it does to every note, it compares the choir's A with 440 side by side, and it can take its A from the organ or piano in the room.
 
 #### `components/study/StudyInsertBar.tsx`
 
@@ -1680,9 +1710,7 @@ THE CHOSEN LOOK IS ON THE PAGE BEFORE ANYTHING IS DRAWN.
 
 Asked for on 3 October 2026: "fix the first paint flash too". The server cannot know what this device chose, because the choice lives in the browser's storage, so every page arrived as `data-ui-theme="classic"` and components/UiTheme.tsx corrected it once React had loaded, about a tenth of a second later. Measured in the sample church on a computer, that tenth of a second was a blank page, so with Desktop nobody saw it. A look that colours the whole page (a dark one) would flash Classic's light ground on every load, the sign-in page included.
 
-So this runs first, as a script at the top of <body> (components/LookBeforePaint.tsx): it reads the stored look and puts it on <html> before the page below it is parsed or painted.
-
-THE SAME RULE AS knownTheme(), FROM THE SAME REGISTRY. The list of looks and the default are taken from lib/ui-themes.ts when the app is built, so a look registered there is applied before paint with no change here, and anything not registered (a typo, an old look, somebody's tampering) is the default. tests/the-classic-look-stays.mjs runs this script against knownTheme() for every kind of stored value.
+So this runs first, as a script in <head> (components/LookBeforePaint.tsx): it reads the stored look and puts it on <html> before <body> exists, and a browser lays nothing out until <body> exists.
 
 #### `lib/minor.ts`
 
@@ -1724,6 +1752,14 @@ The conductor's beat: when each click falls, which beat of the bar it is, and wh
 
 WHY THE CLICKS ARE SCHEDULED, NOT TIMED. A browser timer (setTimeout) can fire tens of milliseconds late whenever the phone is busy, and a metronome that wanders by that much is worse than none: a choir hears it at once. The Web Audio clock does not wander. So a cheap timer wakes every 25 ms and hands the audio clock every click due in the next tenth of a second, each at its exact time ("A tale of two clocks", web.dev/articles/audio-scheduling). `due` below is that hand-over, written so it can be tested.
 
+#### `lib/music/explain.ts`
+
+What a score says about itself, in words a choir can use: how fast and in what time, which key, where it is loud and where soft, how high and low each part goes and where its hardest leap is, the words it sings, and one or two sentences on the piece's character.
+
+Asked for on 6 October 2026: "the choir singers and conductors understand how the piece works already". Everything here is read from the score's own markings, on the phone. The character sentence is put together from those markings (tempo, key, loud and soft), not from listening to the music or from any service: it says what the composer wrote, in plain words, and no more than that.
+
+Pure: a Score in, an Explanation out. tests/the-music-room.mjs holds it.
+
 #### `lib/music/metronome.ts`
 
 The conductor's metronome: clicks on the audio clock, and where the baton is for the picture. lib/music/beat.ts holds the arithmetic; this holds the clock.
@@ -1732,7 +1768,7 @@ The conductor's metronome: clicks on the audio clock, and where the baton is for
 
 Reading a MusicXML score into lines a choir can practise: each voice of each part, as notes on a timeline, with its lyrics and the tempo.
 
-MusicXML is the score format every notation program exports (MuseScore, Finale, Sibelius, Dorico). Only the partwise form is read, which is what they all write by default. What is read is what practising a part needs: pitches, lengths, voices, ties, the first verse's lyrics, the tempo. Dynamics, slurs and the rest of the engraving are not.
+MusicXML is the score format every notation program exports (MuseScore, Finale, Sibelius, Dorico). Only the partwise form is read, which is what they all write by default. What is read is what practising a part needs: pitches, lengths, voices, ties, the first verse's lyrics, the tempo; and, since 6 October 2026, what explaining the piece needs (lib/music/explain.ts): the key, the time, where each bar starts, the tempo's words, and the loud and soft markings. Slurs and the rest of the engraving are not read.
 
 REPEATS ARE PLAYED ONCE, straight through. Following repeat signs, voltas and D.C. al Fine correctly is a project of its own; the room says so.
 
@@ -1752,15 +1788,51 @@ HOW. The person drags four corners onto the corners of the paper (the room start
 
 Pure arithmetic on pixel arrays: no browser, no library, nothing sent anywhere. tests/the-music-room.mjs runs it.
 
+#### `lib/music/pdf-ink.ts`
+
+A music PDF's ink: every music symbol, every word, every straight line and every filled shape, with where it sits on the page. The first half of reading a PDF score on the phone; lib/music/pdf-score.ts turns the ink into notes.
+
+Chosen by the owner on 6 October 2026, from four ways of turning a PDF into notes: "Read music PDFs on phone". The PDFs that notation programs export (MuseScore, Dorico, and others that use a SMuFL music font) are not pictures: each notehead, clef and rest is a character of the music font, at an exact place, and every staff line, stem and beam is drawn as a line or a shape. Reading those back is exact, needs no AI and nothing leaves the phone. A scan or a photo saved as a PDF has none of this, and is said so.
+
+THE PDF IS UNTRUSTED. It is opened by Mozilla's pdf.js (Apache-2.0), in its worker, which runs under the site's own security policy: no code built from strings (pdf.js 6 has none left to build; tests/the-music-room.mjs reads its files to keep it so) and no WebAssembly (turned off below). Its fonts are never installed into the page and nothing is fetched. Pages, symbols and lines are capped, so a hostile file can make the room say no, never hang it.
+
+#### `lib/music/pdf-read.ts`
+
+Reading a music PDF on the phone: the one way into lib/music/pdf-ink.ts and lib/music/pdf-score.ts from a browser. lib/music/score-file.ts imports this module only when somebody opens a PDF, so pdf.js (Mozilla, Apache-2.0) and the reader are a separate download that nobody else ever fetches.
+
+pdf.js reads the file in a worker. The build gives the worker its own file on this site, and the security policy allows workers from 'self'; nothing is fetched from anywhere else, and nothing about the PDF leaves the phone.
+
+#### `lib/music/pdf-score.ts`
+
+From a music PDF's ink (lib/music/pdf-ink.ts) to a Score the room can play and explain: staves, clefs, keys, times, notes, rhythms, voices, ties, words, loudness and tempo.
+
+Chosen by the owner on 6 October 2026 ("Read music PDFs on phone"), after being told plainly that no reader of printed music is perfect, the paid ones included. This one reads the PDFs that notation programs export with a SMuFL music font (MuseScore, Dorico and others): there, every symbol is a known character at an exact place, so the reading is geometry, not guesswork. How well it does is measured, not assumed: tests/the-music-room.mjs reads PDFs MuseScore made from scores whose notes are known, and counts what it gets right.
+
+What it does not read yet, and says so: tuplets, repeats (it plays straight through, as the MusicXML reader does), lyrics beyond the first verse, cross-staff notes, and the fonts of programs that do not use SMuFL (older Sibelius and Finale). Grace notes are left out on purpose: they take no time of their own.
+
 #### `lib/music/pieces.ts`
 
 The Music room's pieces, kept on this device: clean pages made by the scanner, and score files. A store of its own (IndexedDB "beacon-music"), apart from My Files, so a choir's pages do not fill somebody's media list and My Files stays exactly as it was. Nothing here is uploaded.
 
 THE BYTES ARE STORED, NOT THE BLOB. WebKit will not put a Blob into IndexedDB at all, and says so with a null error: lib/localMedia.ts found that the hard way and tests/e2e/webkit-idb-probe.js proves it. This store first went out storing Blobs, and on Safari no score or page could be kept (the Safari walk of 4 October 2026). So: an ArrayBuffer and its type, put back together as a Blob on the way out.
 
+#### `lib/music/pitch-tracker.ts`
+
+From a stream of microphone windows to one steady, quick pitch: the part of the tuner between "pitchy found a frequency in these samples" and "this is the note to show".
+
+Reworked on 6 October 2026, when the owner reported: "detecting its notes is not accurate and fast enough which most users dont like it. It should be fast and perfectly accurate like a real perfect pitch tuner." The first tuner took the median of its last five readings, 30 ms apart, so a new note showed only once three of them agreed; it always listened over 85 ms, which only a bass's low notes need; and it threw away readings a breathy voice makes. This one, measured by tests/the-music-room.mjs on the same sounds:
+
+- LISTENS OVER THE SHORTEST WINDOW THAT IS ENOUGH. A note above about 190 Hz (a tenor's G and up) is read from the newest 2048 samples; a lower one, or a doubtful one, from 4096. A window needs a few cycles of the note in it, and a low note's cycles are longer. - JUMPS TO A NEW NOTE AT ONCE, ONCE TWO READINGS AGREE. A reading more than half a semitone from the one shown is held back for one frame; if the next agrees, the display moves straight to it. One stray reading never moves it. - IGNORES OCTAVE SLIPS. The McLeod method can, on a single frame, land an octave off; a reading an octave from two that agree is dropped. - SMOOTHS ONLY WITHIN A NOTE, in cents, so the needle is steady on a held note without lagging behind a change of note. - HOLDS THE LAST NOTE FOR A MOMENT after the sound stops, so it can be read, then clears.
+
+#### `lib/music/play.ts`
+
+The Play folder's arithmetic: the keyboard's keys, the chords of a key, and the beat maker's grid. Pure functions, no browser, so tests/the-music-room.mjs runs them.
+
+Asked for on 5 October 2026: a place "for users to play and be more creative in music play", simple first and Advanced when wanted. Simple is a keyboard; Advanced adds chord buttons in any key and a beat maker.
+
 #### `lib/music/score-file.ts`
 
-Opening a score file somebody chose: the one way into lib/music/musicxml.ts from a browser. Checks the kind and size first, unzips a .mxl (lib/music/zip.ts), parses with the browser's own XML parser, and hands the tree to readScore. Every refusal is a sentence a person can act on.
+Opening a score file somebody chose: the one way into lib/music/musicxml.ts from a browser. Checks the kind and size first, unzips a .mxl (lib/music/zip.ts), parses with the browser's own XML parser, and hands the tree to readScore. A PDF goes to lib/music/pdf-read.ts, loaded only then. Every refusal is a sentence a person can act on.
 
 #### `lib/music/score-player.ts`
 
@@ -1772,7 +1844,7 @@ The tuner: listen through the microphone and say which note is sounding and how 
 
 THE MICROPHONE, AND WHAT HAPPENS TO WHAT IT HEARS. It is opened only when somebody presses Start, and the browser asks them first. The sound is measured on the phone, a few thousand samples at a time, and thrown away: nothing is recorded, kept or sent anywhere. The microphone is released (the browser's recording light goes off) the moment they press Stop, leave the room, or the phone locks or switches apps.
 
-THE PITCH is found by the McLeod pitch method ("A smarter way to find pitch", McLeod and Wyvill, 2005), through pitchy (MIT, github.com/ianprime0509/pitchy): accurate on a held voice or instrument, and quick enough for every frame.
+THE PITCH is found by the McLeod pitch method ("A smarter way to find pitch", McLeod and Wyvill, 2005), through pitchy (MIT, github.com/ianprime0509/pitchy), on every frame. What to show from those readings (which window, when a note has changed, how steady to hold the needle) is lib/music/pitch-tracker.ts, reworked on 6 October 2026 to be quicker on a change of note and steadier on a held one.
 
 #### `lib/music/zip.ts`
 
