@@ -1093,6 +1093,23 @@ export async function advanceStage(pairingId: string): Promise<Stage | null> {
   return next;
 }
 
+/**
+ * Give an Explorer a different Guide, in one step.
+ *
+ * The owner, 7 October 2026: "EDs and Directors can change pairs but they
+ * can't see the Guide and Explorer's chat or communication." So this is not an
+ * edit of the pairing -- the database refuses that now -- but the old pairing
+ * ending and a new one beginning, done together by change_guide(). The
+ * Explorer keeps their place on the journey; the new Guide starts with an
+ * empty conversation; what the Explorer and the first Guide wrote stays
+ * between those two.
+ */
+export async function changeGuide(pairingId: string, newGuideId: string): Promise<string> {
+  const { data, error } = await db().rpc('change_guide', { p_pairing: pairingId, p_new_guide: newGuideId });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
 export async function endPairing(id: string): Promise<void> {
   const { error } = await db().from('pairings').update({ status: 'archived' }).eq('id', id);
   if (error) throw new Error(error.message);

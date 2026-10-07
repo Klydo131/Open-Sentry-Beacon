@@ -73,6 +73,9 @@ export function LiveAdminPage() {
   const [dmId, setDmId] = useState('');
   const [dsId, setDsId] = useState('');
   const [busy, setBusy] = useState('');
+  // The pairing whose Guide is being changed, and the Guide chosen for it.
+  const [changing, setChanging] = useState('');
+  const [nextGuide, setNextGuide] = useState('');
   // Set when the invitation could not be emailed and must be passed on by hand.
   const [handLink, setHandLink] = useState<
     { to: string; url: string; why: string; wait?: number; pass?: string } | null
@@ -1383,6 +1386,16 @@ export function LiveAdminPage() {
                     one could only be corrected in SQL. Archiving rather than
                     deleting keeps the conversation history intact -- the two
                     people simply stop being connected. */}
+                {/* CHANGE GUIDE. The owner, 7 October 2026: "EDs and
+                    Directors can change pairs but they can't see the Guide
+                    and Explorer's chat". The first pairing ends and a new one
+                    starts; the conversation stays with the first two. */}
+                <Button
+                  variant="ghost"
+                  onClick={() => { setChanging(changing === pairing.id ? '' : pairing.id); setNextGuide(''); }}
+                >
+                  {changing === pairing.id ? 'Keep this Guide' : 'Change Guide'}
+                </Button>
                 <Button
                   variant="danger"
                   disabled={busy === `unpair-${pairing.id}`}
@@ -1408,6 +1421,46 @@ export function LiveAdminPage() {
                 >
                   Disconnect
                 </Button>
+                {changing === pairing.id && (
+                  <div className="mt-2 w-full space-y-2 rounded-xl bg-white p-3 ring-1 ring-navy/10" data-change-guide>
+                    <SelectPerson
+                      label={`New Guide for ${pairing.ds_name}`}
+                      value={nextGuide}
+                      onChange={setNextGuide}
+                      people={guides.filter((guide) => guide.id !== pairing.dm_id)}
+                      emptyLabel="No other approved Guide in this church yet."
+                    />
+                    <p className="text-xs text-gray-600">
+                      {pairing.ds_name} keeps their place on the journey. Their conversation
+                      with {pairing.dm_name} stays between the two of them; the new Guide
+                      starts a new one.
+                    </p>
+                    <Button
+                      variant="gold"
+                      disabled={!nextGuide || busy === `change-${pairing.id}`}
+                      onClick={() => {
+                        void (async () => {
+                          setBusy(`change-${pairing.id}`);
+                          setError('');
+                          try {
+                            await live.changeGuide(pairing.id, nextGuide);
+                            const who = guides.find((guide) => guide.id === nextGuide)?.full_name || 'The new Guide';
+                            setNotice(`${who} is now walking with ${pairing.ds_name}.`);
+                            setChanging('');
+                            setNextGuide('');
+                            await load();
+                          } catch (cause) {
+                            setError(errorText(cause));
+                          } finally {
+                            setBusy('');
+                          }
+                        })();
+                      }}
+                    >
+                      {busy === `change-${pairing.id}` ? 'Changing…' : 'Change Guide'}
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

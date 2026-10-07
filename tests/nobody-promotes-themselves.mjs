@@ -111,5 +111,25 @@ ok(liveFiles.length > 20 && offenders.length === 0,
 ok(/useDemo\(\)/.test(readFileSync('components/RoleSwitcher.tsx', 'utf8')),
   'and the switcher itself only ever talks to the sample app\'s own store');
 
+// NOR DOES ANYBODY PROMOTE SOMEBODY ELSE PAST THEMSELVES, OR MOVE A PAIRING.
+// Found by the second agent's security review on 7 October 2026: a Director
+// could make anybody an Executive Director, and could set themselves as the
+// Guide in a pairing and read its conversation. The database change closes
+// both; supabase/tests/a-leader-stays-within-their-rank.sql proves it as
+// invented people on every fresh install in CI. These lines make sure that
+// proof cannot quietly stop running.
+const fix = readFileSync('supabase/migrations/20261007130000_a_leader_cannot_raise_a_rank_or_move_a_pairing.sql', 'utf8');
+ok(/create trigger aa_guard_profile_writes\s+before update on public\.profiles/.test(fix)
+   && /revoke update on public\.profiles from authenticated/.test(fix),
+   'a browser changes only the account columns its sender is entitled to');
+ok(/new\.role in \('admin', 'executive'\)\s+and not i_lead_executively/.test(fix),
+   'only an Executive Director makes somebody a Director or an Executive Director');
+ok(/new\.dm_id is distinct from old\.dm_id/.test(fix) && /new\.ds_id is distinct from old\.ds_id/.test(fix)
+   && /grant update \(journey_stage, track, status, updated_at\) on public\.pairings/.test(fix),
+   'nobody moves a pairing onto other people');
+ok(/create or replace function public\.change_guide/.test(fix), 'leadership changes a Guide by ending one pairing and starting another');
+ok(/a-leader-stays-within-their-rank\.sql/.test(readFileSync('scripts/fresh-install.sh', 'utf8')),
+   'and CI runs the proof, as invented people, on every fresh install');
+
 console.log(bad === 0 ? '\nNobody promotes themselves.' : `\n${bad} failed.`);
 process.exit(bad === 0 ? 0 : 1);

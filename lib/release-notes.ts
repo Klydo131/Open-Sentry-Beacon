@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-07-roles-and-pairings-kept-safe',
+    date: '2026-10-07',
+    title: 'Who can do what, kept by the church\'s own rules',
+    items: [
+      'Only an Executive Director can make somebody a Director or an Executive Director. A Director looks after Guides and Explorers.',
+      'Directors can give an Explorer a different Guide with Change Guide. The Explorer keeps their place on the journey, the new Guide starts a fresh conversation, and nobody else ever reads what the two wrote to each other.',
+    ],
+  },
+  {
     id: '2026-10-07-home-is-a-billboard',
     date: '2026-10-07',
     title: 'Home is a billboard',
