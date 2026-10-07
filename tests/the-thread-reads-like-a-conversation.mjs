@@ -184,11 +184,57 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
   const faint = talk.filter(([n]) => n !== 'Composer')
     .flatMap(([n, t]) => [...t.matchAll(/text-(?:slate|gray)-(?:300|400)\b/g)].map((m) => `${n}: ${m[0]}`));
   ok(faint.length === 0, faint.length ? `text too pale to read: ${faint.join(', ')}` : 'no chat text is slate-400 or paler');
-  ok(/text-\[#9A5A1C\]/.test(src) && !/text-\[#C2762B\]/.test(src), 'their name on a quoted reply is a dark enough amber (5.2:1)');
+  // A quoted reply takes its bubble's own writing colour (7 October 2026): on
+  // your blue bubble a coloured name would be one colour on another, and the
+  // bubble's own writing is already 5.7:1 or better in every look.
+  ok(/className="bubble-quote [^"]*"/.test(src) && !/text-\[#9A5A1C\]|text-\[#C2762B\]/.test(src),
+     'the name on a quoted reply is written in its bubble\'s own colour, which is measured below');
   ok(/chat-more grid h-11 min-h-0 w-11/.test(src), 'the ⋯ button is 44px');
   ok(/before:-inset-y-2\.5/.test(src) && /data-reactions/.test(src), 'the reaction pill has a 44px hit area round it');
   ok(/type="range"[\s\S]{0,400}className="block h-11 w-full/.test(talk.find(([n]) => n === 'ChatAttachment')[1]),
      'and the voice message\'s position bar is 44px tall to grab');
+}
+
+// ---------------------------------------------------------------------------
+// WHOSE WORDS ARE WHOSE (7 October 2026)
+// ---------------------------------------------------------------------------
+// "I can't distinguished the bubble if I am the one talking or the other
+// account. Can we have the white and blue as the standard bubbles? (also
+// create an alternative for dark themes in all UI themes)". Under the two dark
+// looks both bubbles had been repainted the same slate, measured at the same
+// rgb on a phone; in the light ones they were a pale teal and a pale peach.
+{
+  const view = read('components/talk/ChatView.tsx');
+  const css = read('app/globals.css');
+  const hex = (name, block) => (block.match(new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`, 'i')) || [])[1];
+  const lum = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+    .reduce((t, v, i) => t + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+
+  ok(/const tint = mine \? 'bubble-mine' : 'bubble-theirs';/.test(view) && !/E4F0F5|FCEEDF/.test(view + read('components/talk/ChatAttachment.tsx') + read('components/talk/MessageMenu.tsx')),
+     'your bubble and theirs are the chat\'s own two classes, not tints a look repaints');
+  const light = css.slice(css.indexOf('CHAT BUBBLES: WHOSE WORDS'), css.indexOf(".chat-ground {"));
+  const base = light.slice(light.indexOf(':root {'), light.indexOf('}', light.indexOf(':root {')));
+  const darkStart = light.indexOf("data-ui-theme='focus'");
+  const dark = light.slice(darkStart, light.indexOf('}', darkStart));
+  ok(hex('bubble-theirs', base)?.toLowerCase() === '#ffffff' && lum(hex('bubble-mine', base)) < 0.2 && parseInt(hex('bubble-mine', base).slice(5, 7), 16) > 150,
+     'white for theirs and blue for yours, as asked');
+  ok(ratio(hex('bubble-mine-ink', base), hex('bubble-mine', base)) >= 4.5 && ratio(hex('bubble-theirs-ink', base), hex('bubble-theirs', base)) >= 4.5
+       && ratio(hex('bubble-theirs-ink', dark), hex('bubble-theirs', dark)) >= 4.5,
+     'and the writing in each, in light and dark looks, is 4.5:1 or better');
+  ok(hex('bubble-theirs', dark) && hex('bubble-theirs', dark) !== hex('bubble-mine', base) && lum(hex('bubble-theirs', dark)) < 0.1,
+     'a dark look has its own bubble for them, dark, and still not your blue');
+  // EVERY DARK LOOK, including one added later: a look is dark when its file
+  // says color-scheme: dark, and each of those must be named in the dark block.
+  const themes = fs.readdirSync(path.join(root, 'app/themes')).filter((f) => f.endsWith('.css'));
+  const darkLooks = themes.filter((f) => /color-scheme:\s*dark/.test(read(`app/themes/${f}`)))
+    .flatMap((f) => [...read(`app/themes/${f}`).matchAll(/data-ui-theme="([a-z-]+)"\]\s*\{[^}]*color-scheme:\s*dark/g)].map((m) => m[1]));
+  const missing = darkLooks.filter((id) => !light.includes(`data-ui-theme='${id}'`));
+  ok(darkLooks.length >= 2 && missing.length === 0,
+     `every dark look has the dark bubbles (${darkLooks.join(', ')}${missing.length ? `; MISSING ${missing.join(', ')}` : ''})`);
+  ok(/textarea[\s\S]{0,1600}className=\{`tap block w-full/.test(read('components/MessageBox.tsx')),
+     'the writing box is a block, so it lines up with the paperclip and the send button');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

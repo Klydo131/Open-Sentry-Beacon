@@ -537,7 +537,7 @@ export function ChatView({
       <div
         ref={box}
         data-live-thread
-        className="chat-thread overflow-y-auto overscroll-contain bg-[#FBFAF8] px-3 pb-3 pt-2 sm:px-4"
+        className="chat-thread chat-ground overflow-y-auto overscroll-contain px-3 pb-3 pt-2 sm:px-4"
         onScroll={() => {
           const el = box.current;
           if (!el) return;
@@ -608,7 +608,9 @@ export function ChatView({
           const corners = mine
             ? `rounded-[20px] ${startsRun ? '' : 'rounded-tr-[6px]'} rounded-br-[6px]`
             : `rounded-[20px] ${startsRun ? '' : 'rounded-tl-[6px]'} rounded-bl-[6px]`;
-          const tint = mine ? 'bg-[#E4F0F5]' : 'bg-[#FCEEDF]';
+          // BLUE FOR YOU, WHITE FOR THEM, as every phone draws a conversation,
+          // with a dark version for the dark looks (app/globals.css, Chat bubbles).
+          const tint = mine ? 'bubble-mine' : 'bubble-theirs';
 
           const message = entry.kind === 'message' ? entry : undefined;
           const bigEmoji = !!message && !message.deletedAt && !message.replyTo
@@ -684,19 +686,18 @@ export function ChatView({
                         {meta && <p className="mt-0.5 text-right text-[0.722rem] text-slate-500">{meta}</p>}
                       </div>
                     ) : (
-                      <div className={`${corners} ${tint} px-3.5 pb-2 pt-2 text-slate-800`}>
+                      <div className={`${corners} ${tint} px-3.5 pb-2 pt-2`}>
                         {message?.replyTo && (
                           <button
                             type="button"
                             onClick={() => showOriginal(message.replyTo as string)}
-                            className={`mb-1.5 block w-full rounded-xl border-l-[3px] bg-white/65 px-2.5 py-1.5 text-left ${
-                              quoted?.who === me ? 'border-[#1F7A8C]' : 'border-[#C2762B]'}`}
+                            className="bubble-quote mb-1.5 block w-full rounded-xl px-2.5 py-1.5 text-left"
                             data-reply-quote
                           >
-                            <span className={`block text-[0.722rem] font-bold ${quoted?.who === me ? 'text-[#1F7A8C]' : 'text-[#9A5A1C]'}`}>
+                            <span className="block text-[0.722rem] font-bold">
                               {quoted ? nameOf(quoted.who) : 'Reply'}
                             </span>
-                            <span className="line-clamp-2 block break-words text-[0.722rem] leading-snug text-slate-600">
+                            <span className="bubble-meta line-clamp-2 block break-words text-[0.722rem] leading-snug">
                               {snippetOf(quoted)}
                             </span>
                           </button>
@@ -711,7 +712,7 @@ export function ChatView({
                             {meta && <span aria-hidden className="invisible ml-2 inline-block text-[0.722rem]">{meta}</span>}
                           </p>
                           {meta && (
-                            <span className="absolute bottom-[1px] right-0 text-[0.722rem] leading-none text-slate-600" data-chat-meta>
+                            <span className="bubble-meta absolute bottom-[1px] right-0 text-[0.722rem] leading-none" data-chat-meta>
                               {meta}
                             </span>
                           )}

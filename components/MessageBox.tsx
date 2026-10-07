@@ -197,8 +197,11 @@ export function MessageBox({
         aria-autocomplete="list"
         aria-activedescendant={open ? `emoji-option-${chosen}` : undefined}
         // `resize-none` because the box sizes itself; a drag handle that fights
-        // the measurement above just looks broken.
-        className={`tap w-full resize-none rounded-xl bg-gray-100 px-4 py-4 text-base leading-snug outline-none focus:ring-2 focus:ring-gold ${className}`}
+        // the measurement above just looks broken. `block` because a textarea
+        // is inline by default and sits on a text line, which leaves a gap
+        // under it: in the chat that lifted the box 8px above the paperclip
+        // and the send button beside it (seen on a phone, 7 October 2026).
+        className={`tap block w-full resize-none rounded-xl bg-gray-100 px-4 py-4 text-base leading-snug outline-none focus:ring-2 focus:ring-gold ${className}`}
         onKeyDown={(event) => {
           // THE SUGGESTIONS GET THE KEYS FIRST, AND ENTER IS THE WHOLE REASON
           // THIS BLOCK IS ABOVE THE SEND BRANCH RATHER THAN BELOW IT.

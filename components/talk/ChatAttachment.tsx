@@ -142,7 +142,7 @@ export function ChatAttachment({
 
   if (shape === 'video' && !broken) {
     return (
-      <div className={`overflow-hidden rounded-[18px] ${mine ? 'bg-[#E4F0F5]' : 'bg-[#FCEEDF]'}`}>
+      <div className={`overflow-hidden rounded-[18px] ${mine ? 'bubble-file-mine' : 'bubble-file-theirs'}`}>
         {url ? (
           // playsInline: without it iOS pulls the video out of the conversation
           // and plays it over everything.
@@ -164,7 +164,7 @@ export function ChatAttachment({
 
   if ((shape === 'voice' || shape === 'audio') && !broken) {
     return (
-      <div className={`rounded-[20px] px-3 py-2.5 ${mine ? 'bg-[#E4F0F5]' : 'bg-[#FCEEDF]'}`}>
+      <div className={`rounded-[20px] px-3 py-2.5 ${mine ? 'bubble-file-mine' : 'bubble-file-theirs'}`}>
         <VoicePlayer file={file} onBroken={() => setBroken(true)} />
         {meta && <p className="mt-1 text-right text-[0.722rem] leading-none text-slate-600">{meta}</p>}
       </div>
@@ -179,7 +179,7 @@ function FileCard({ file, mine, meta, missing }: { file: ChatFile; mine: boolean
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState('');
   return (
-    <div className={`rounded-[20px] px-3 py-2.5 ${mine ? 'bg-[#E4F0F5]' : 'bg-[#FCEEDF]'}`}>
+    <div className={`rounded-[20px] px-3 py-2.5 ${mine ? 'bubble-file-mine' : 'bubble-file-theirs'}`}>
       <button
         type="button"
         disabled={busy}

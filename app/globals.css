@@ -1276,6 +1276,78 @@ body:has([role='dialog']) [data-install-prompt='card'] {
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * CHAT BUBBLES: WHOSE WORDS ARE WHOSE (7 October 2026)
+ * ---------------------------------------------------------------------------
+ * Asked for in these words: "I can't distinguished the bubble if I am the one
+ * talking or the other account. Can we have the white and blue as the
+ * standard bubbles? (also create an alternative for dark themes in all UI
+ * themes)".
+ *
+ * Before, yours was a pale teal and theirs a pale peach, near enough one
+ * colour on a phone in daylight, and under the two dark looks both were
+ * repainted the same slate, so they WERE one colour. Now yours is blue with
+ * white writing and theirs is white, as every phone draws a conversation, on
+ * a ground a shade darker than white so a white bubble has an edge. A dark
+ * look keeps your blue and makes theirs a lifted slate.
+ *
+ * THE CHAT'S OWN CLASSES, so a look cannot repaint them by accident: the looks
+ * repaint the shared grey and white classes, which is how both bubbles came
+ * to be one slate. A dark look is one whose file says `color-scheme: dark`;
+ * tests/whose-words-are-whose.mjs holds every such look to the line below.
+ *
+ * Measured: white on your blue 5.7:1, the time under it 4.3:1; their writing
+ * 15.9:1 on white and 11.1:1 on the dark slate.
+ * ------------------------------------------------------------------------- */
+:root {
+  --bubble-mine: #1d5fd6;
+  --bubble-mine-ink: #ffffff;
+  --bubble-theirs: #ffffff;
+  --bubble-theirs-ink: #1a2233;
+  --bubble-edge: rgba(26, 34, 51, 0.1);
+  --bubble-file-mine: #dce8fb;
+  --chat-ground: var(--look-page, #eef2f7);
+}
+:root[data-ui-theme='focus'],
+:root[data-ui-theme='aero-dark'] {
+  --bubble-theirs: #26354d;
+  --bubble-theirs-ink: #eef3fa;
+  --bubble-edge: rgba(255, 255, 255, 0.1);
+  --bubble-file-mine: #1e3a66;
+}
+.chat-ground {
+  background: var(--chat-ground);
+}
+.bubble-mine {
+  background: var(--bubble-mine);
+  color: var(--bubble-mine-ink);
+}
+.bubble-theirs {
+  background: var(--bubble-theirs);
+  color: var(--bubble-theirs-ink);
+  box-shadow: 0 0 0 1px var(--bubble-edge);
+}
+/* The time and a quoted line take the bubble's own writing colour, softened. */
+.bubble-meta {
+  color: inherit;
+  opacity: 0.8;
+}
+.bubble-quote {
+  color: inherit;
+  border-left: 3px solid currentColor;
+  background: rgba(127, 127, 127, 0.14);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+/* A file, a recording or a video: a quieter tint of the same two, because the
+   player and the file's name inside keep the page's own writing colours. */
+.bubble-file-mine {
+  background: var(--bubble-file-mine);
+}
+.bubble-file-theirs {
+  background: var(--bubble-theirs);
+  box-shadow: 0 0 0 1px var(--bubble-edge);
+}
+
 /* THE CHAT'S MOTION OFF, HERE, AFTER IT IS SWITCHED ON. The block near the top
    of this file that names these classes under prefers-reduced-motion comes
    BEFORE the rules that set them, and a media query adds no weight: two rules
