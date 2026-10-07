@@ -225,6 +225,13 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
   ok(ratio(hex('bubble-mine-ink', base), hex('bubble-mine', base)) >= 4.5 && ratio(inkLight, theirsLight) >= 4.5
        && theirsDark && ratio(inkDark, theirsDark) >= 4.5,
      'and the writing in each, in light and dark looks, is 4.5:1 or better');
+  // The time under a message is the bubble's writing made softer with opacity,
+  // so it is measured as what reaches the eye: the writing mixed into the bubble.
+  const fade = Number((css.match(/\.bubble-meta \{[^}]*opacity:\s*([\d.]+)/) || [])[1]);
+  const mix = (fg, bg, a) => '#' + [1, 3, 5].map((i) => Math.round(a * parseInt(fg.slice(i, i + 2), 16)
+    + (1 - a) * parseInt(bg.slice(i, i + 2), 16)).toString(16).padStart(2, '0')).join('');
+  const timeOnMine = fade ? ratio(mix(hex('bubble-mine-ink', base), hex('bubble-mine', base), fade), hex('bubble-mine', base)) : 0;
+  ok(timeOnMine >= 4.5, `and so is the time under a message, on your blue (${timeOnMine.toFixed(2)}:1 at opacity ${fade})`);
   ok(theirsDark && theirsDark !== hex('bubble-mine', base) && lum(theirsDark) < 0.1,
      'a dark look has its own bubble for them, dark, and still not your blue');
   // EVERY DARK LOOK, including one added later, WITHOUT NAMING ONE: the dark

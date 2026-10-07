@@ -1299,7 +1299,7 @@ body:has([role='dialog']) [data-install-prompt='card'] {
  * bubbles without anybody remembering this file. A browser too old for
  * light-dark() keeps white for theirs everywhere, which still reads.
  *
- * Measured: white on your blue 5.7:1, the time under it 4.3:1; their writing
+ * Measured: white on your blue 5.7:1, the time under it 5.0:1; their writing
  * 15.9:1 on white and 11.1:1 on the dark slate.
  * ------------------------------------------------------------------------- */
 :root {
@@ -1331,10 +1331,12 @@ body:has([role='dialog']) [data-install-prompt='card'] {
   color: var(--bubble-theirs-ink);
   box-shadow: 0 0 0 1px var(--bubble-edge);
 }
-/* The time and a quoted line take the bubble's own writing colour, softened. */
+/* The time and a quoted line take the bubble's own writing colour, softened.
+   Softened only to 0.9: at 0.8 the time on your blue measured 4.3:1, under the
+   4.5:1 small writing needs (caught by tests/e2e/fresh-looks.js in Beacon). */
 .bubble-meta {
   color: inherit;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 .bubble-quote {
   color: inherit;
