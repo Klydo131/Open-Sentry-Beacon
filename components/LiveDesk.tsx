@@ -31,6 +31,7 @@ import type { Profile } from '@/lib/types';
 import type { RoomTheme } from '@/lib/room-theme';
 import { openBell } from '@/lib/open-bell';
 import { joinLabel, joinUrl } from '@/lib/live/meeting-link';
+import { clearedMeetings } from '@/lib/live/cleared-meetings';
 import { useKeepUp, KEEP_UP_PEOPLE } from '@/lib/live/keep-up';
 
 interface DeskItem {
@@ -105,7 +106,9 @@ export function LiveDesk({ me, theme }: { me: Profile; theme: RoomTheme }) {
     // cannot be pressed makes somebody go looking for the person it is with,
     // and the looking is where things get dropped. A Guide lands on that
     // Explorer's page; an Explorer has one conversation, so they land on it.
-    setComing(meetings.map((m) => ({
+    // Not one this person has cleared from their list (lib/live/cleared-meetings.ts).
+    const cleared = clearedMeetings();
+    setComing(meetings.filter((m) => !(cleared.has(m.id) && !live.isStillOn(m))).map((m) => ({
       key: m.id,
       when: whenLabel(m.starts_at),
       what: m.title?.trim() || 'A time together',

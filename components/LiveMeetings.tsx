@@ -29,6 +29,7 @@ import {
 import { useKeepUp, KEEP_UP_MEETINGS } from '@/lib/live/keep-up';
 import { PlaceSearch } from '@/components/PlaceSearch';
 import { ExternalGlyph, PinGlyph } from '@/components/Glyph';
+import { clearMeeting, clearedMeetings } from '@/lib/live/cleared-meetings';
 import { nearOf, pinOf } from '@/lib/live/place-pin';
 
 function when(iso: string): string {
@@ -106,6 +107,9 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   // same way, as the share note in the library a day earlier.
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
+  // What this person has cleared from their list on this device (lib/live/cleared-meetings.ts).
+  const [cleared, setCleared] = useState<Set<string>>(() => new Set());
+  useEffect(() => setCleared(clearedMeetings()), []);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -153,9 +157,10 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   const all = rows ?? [];
   const past = (m: live.Meeting) => new Date(m.starts_at).getTime() <= Date.now() - STILL_ON;
 
-  const upcoming = all.filter((m) => !past(m));
   // Only what is still on is counted or offers a way in (live.isStillOn).
   const stillOn = live.isStillOn;
+  // A called-off or declined one this person has cleared is gone from their list.
+  const upcoming = all.filter((m) => !past(m) && !(cleared.has(m.id) && !stillOn(m)));
 
   // A TIME THAT CAME AND WENT WITHOUT AN ANSWER.
   //
@@ -552,6 +557,20 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                     className="text-sm text-gray-500 underline underline-offset-2 disabled:opacity-40"
                   >
                     Call it off
+                  </button>
+                )}
+                {/* AND ONCE IT IS OFF, A WAY TO CLEAR IT. Asked for in these
+                    words: "when I call off online meeting I dont have the
+                    option to exit it". Off this person's list only: the other
+                    person still sees who said no until its time passes. */}
+                {!stillOn(m) && (
+                  <button
+                    type="button"
+                    onClick={() => setCleared(clearMeeting(m.id))}
+                    data-meeting-clear
+                    className="text-sm text-gray-500 underline underline-offset-2"
+                  >
+                    Clear from my list
                   </button>
                 )}
               </div>

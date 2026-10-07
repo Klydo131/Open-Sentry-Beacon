@@ -145,7 +145,7 @@ const data = strip(read('lib/live/data.ts'));
 {
   ok(/STILL_ON = 60 \* 60 \* 1000/.test(code),
      'a meeting already under way stays on the card for an hour');
-  ok(/upcoming = all\.filter\(\(m\) => !past\(m\)\)/.test(code),
+  ok(/upcoming = all\.filter\(\(m\) => !past\(m\) && /.test(code),
      'and what is ahead is still what the card leads with');
 
   // AND AN ANSWERED ONE STAYS ON IT, which is the opposite of what this file
@@ -183,6 +183,20 @@ const data = strip(read('lib/live/data.ts'));
   const desk = strip(read('components/LiveDesk.tsx'));
   ok(/join: live\.isStillOn\(m\) \? joinUrl\(/.test(desk) && /off: m\.status === 'cancelled' \? 'Called off'/.test(desk) && /\{c\.off && /.test(desk),
      'on the desk, a called-off appointment says so and offers no join link');
+  // AND ONCE IT IS OFF, IT CAN BE CLEARED: "when I call off online meeting I
+  // dont have the option to exit it". From this person's list only, on this
+  // device: the other person may not have seen who said no yet, and deleting
+  // the row would take that away from them.
+  const cleared = strip(read('lib/live/cleared-meetings.ts'));
+  ok(/!stillOn\(m\) && \( <button[^>]*onClick=\{\(\) => setCleared\(clearMeeting\(m\.id\)\)\}/.test(code) && /Clear from my list/.test(code),
+     'a called-off or declined appointment has Clear from my list');
+  ok(/upcoming = all\.filter\(\(m\) => !past\(m\) && !\(cleared\.has\(m\.id\) && !stillOn\(m\)\)\)/.test(code)
+       && /meetings\.filter\(\(m\) => !\(cleared\.has\(m\.id\) && !live\.isStillOn\(m\)\)\)/.test(desk),
+     'and once cleared it is gone from the card and the desk, but only if it is off');
+  ok(/localStorage\.setItem\(KEY/.test(cleared) && !/deleteMeeting|\.delete\(\)/.test(code + cleared),
+     'clearing deletes nothing: the other person keeps the record');
+  ok(/slice\(-MOST\)/.test(cleared) && /catch/.test(cleared),
+     'and the cleared list is bounded and survives storage being unavailable');
   // The dark looks repaint grey writing light and leave a grey-200 fill light,
   // which made "Called off" pale on pale. A white pill is repainted as a panel.
   ok(!/bg-slate-200[^"]*text-slate-700/.test(code) && (code.match(/bg-white px-2 py-0\.5 text-xs font-bold text-slate-700 ring-1 ring-navy\/10/g) ?? []).length === 2,
