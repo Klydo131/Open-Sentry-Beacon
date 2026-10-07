@@ -214,25 +214,27 @@ const code = src.replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
 
   ok(/const tint = mine \? 'bubble-mine' : 'bubble-theirs';/.test(view) && !/E4F0F5|FCEEDF/.test(view + read('components/talk/ChatAttachment.tsx') + read('components/talk/MessageMenu.tsx')),
      'your bubble and theirs are the chat\'s own two classes, not tints a look repaints');
-  const light = css.slice(css.indexOf('CHAT BUBBLES: WHOSE WORDS'), css.indexOf(".chat-ground {"));
-  const base = light.slice(light.indexOf(':root {'), light.indexOf('}', light.indexOf(':root {')));
-  const darkStart = light.indexOf("data-ui-theme='focus'");
-  const dark = light.slice(darkStart, light.indexOf('}', darkStart));
-  ok(hex('bubble-theirs', base)?.toLowerCase() === '#ffffff' && lum(hex('bubble-mine', base)) < 0.2 && parseInt(hex('bubble-mine', base).slice(5, 7), 16) > 150,
+  const block = css.slice(css.indexOf('CHAT BUBBLES: WHOSE WORDS'), css.indexOf('.chat-ground {'));
+  const base = block.slice(block.indexOf(':root {'), block.indexOf('}', block.indexOf(':root {')));
+  const both = (name) => (block.match(new RegExp(`--${name}:\\s*light-dark\\((#[0-9a-f]{6}),\\s*(#[0-9a-f]{6})\\)`, 'i')) || []).slice(1);
+  const [theirsLight, theirsDark] = both('bubble-theirs');
+  const [inkLight, inkDark] = both('bubble-theirs-ink');
+  ok(hex('bubble-theirs', base)?.toLowerCase() === '#ffffff' && theirsLight?.toLowerCase() === '#ffffff'
+       && lum(hex('bubble-mine', base)) < 0.2 && parseInt(hex('bubble-mine', base).slice(5, 7), 16) > 150,
      'white for theirs and blue for yours, as asked');
-  ok(ratio(hex('bubble-mine-ink', base), hex('bubble-mine', base)) >= 4.5 && ratio(hex('bubble-theirs-ink', base), hex('bubble-theirs', base)) >= 4.5
-       && ratio(hex('bubble-theirs-ink', dark), hex('bubble-theirs', dark)) >= 4.5,
+  ok(ratio(hex('bubble-mine-ink', base), hex('bubble-mine', base)) >= 4.5 && ratio(inkLight, theirsLight) >= 4.5
+       && theirsDark && ratio(inkDark, theirsDark) >= 4.5,
      'and the writing in each, in light and dark looks, is 4.5:1 or better');
-  ok(hex('bubble-theirs', dark) && hex('bubble-theirs', dark) !== hex('bubble-mine', base) && lum(hex('bubble-theirs', dark)) < 0.1,
+  ok(theirsDark && theirsDark !== hex('bubble-mine', base) && lum(theirsDark) < 0.1,
      'a dark look has its own bubble for them, dark, and still not your blue');
-  // EVERY DARK LOOK, including one added later: a look is dark when its file
-  // says color-scheme: dark, and each of those must be named in the dark block.
+  // EVERY DARK LOOK, including one added later, WITHOUT NAMING ONE: the dark
+  // colours come from light-dark(), which follows the color-scheme a look's
+  // own file sets. Naming looks here is what tests/the-classic-look-stays.mjs
+  // forbids outside app/themes/, and it would miss the next dark look.
   const themes = fs.readdirSync(path.join(root, 'app/themes')).filter((f) => f.endsWith('.css'));
-  const darkLooks = themes.filter((f) => /color-scheme:\s*dark/.test(read(`app/themes/${f}`)))
-    .flatMap((f) => [...read(`app/themes/${f}`).matchAll(/data-ui-theme="([a-z-]+)"\]\s*\{[^}]*color-scheme:\s*dark/g)].map((m) => m[1]));
-  const missing = darkLooks.filter((id) => !light.includes(`data-ui-theme='${id}'`));
-  ok(darkLooks.length >= 2 && missing.length === 0,
-     `every dark look has the dark bubbles (${darkLooks.join(', ')}${missing.length ? `; MISSING ${missing.join(', ')}` : ''})`);
+  const darkLooks = themes.filter((f) => /color-scheme:\s*dark/.test(read(`app/themes/${f}`)));
+  ok(/@supports \(color: light-dark\(#000, #fff\)\)/.test(block) && !/data-ui-theme/.test(block) && darkLooks.length >= 2,
+     `the dark bubbles follow each look's own color-scheme, so every dark look has them (${darkLooks.join(', ')}) and none is named`);
   ok(/textarea[\s\S]{0,1600}className=\{`tap block w-full/.test(read('components/MessageBox.tsx')),
      'the writing box is a block, so it lines up with the paperclip and the send button');
 }

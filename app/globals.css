@@ -1293,8 +1293,11 @@ body:has([role='dialog']) [data-install-prompt='card'] {
  *
  * THE CHAT'S OWN CLASSES, so a look cannot repaint them by accident: the looks
  * repaint the shared grey and white classes, which is how both bubbles came
- * to be one slate. A dark look is one whose file says `color-scheme: dark`;
- * tests/whose-words-are-whose.mjs holds every such look to the line below.
+ * to be one slate. And NO LOOK NAMED HERE: a dark look is one that says
+ * `color-scheme: dark` in its own file, and light-dark() reads that, as the
+ * Music room's green does below. A dark look added later gets the dark
+ * bubbles without anybody remembering this file. A browser too old for
+ * light-dark() keeps white for theirs everywhere, which still reads.
  *
  * Measured: white on your blue 5.7:1, the time under it 4.3:1; their writing
  * 15.9:1 on white and 11.1:1 on the dark slate.
@@ -1308,12 +1311,13 @@ body:has([role='dialog']) [data-install-prompt='card'] {
   --bubble-file-mine: #dce8fb;
   --chat-ground: var(--look-page, #eef2f7);
 }
-:root[data-ui-theme='focus'],
-:root[data-ui-theme='aero-dark'] {
-  --bubble-theirs: #26354d;
-  --bubble-theirs-ink: #eef3fa;
-  --bubble-edge: rgba(255, 255, 255, 0.1);
-  --bubble-file-mine: #1e3a66;
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    --bubble-theirs: light-dark(#ffffff, #26354d);
+    --bubble-theirs-ink: light-dark(#1a2233, #eef3fa);
+    --bubble-edge: light-dark(rgba(26, 34, 51, 0.1), rgba(255, 255, 255, 0.1));
+    --bubble-file-mine: light-dark(#dce8fb, #1e3a66);
+  }
 }
 .chat-ground {
   background: var(--chat-ground);
