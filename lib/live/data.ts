@@ -1740,7 +1740,12 @@ export async function attachPostMedia(postId: string, media: PostMedia[]): Promi
   let missed = 0;
   for (const [position, m] of media.entries()) {
     try {
-      const blob = await readPostFile(m.src);
+      const kept = await readPostFile(m.src);
+      // The picker already shrank it; asked again here, as every upload is,
+      // so a photo that reached the device another way still loses its
+      // location. A photo that is already small and clean comes back as it is.
+      const photo = kept && m.kind === 'image' ? new File([kept], 'photo', { type: kept.type }) : null;
+      const blob = photo ? await shrinkImage(photo) : kept;
       const mime = blob?.type || '';
       const ext = (POST_EXT[mime] ?? '').replace(/[^a-z0-9]/gi, '');
       if (!blob || !ext) { missed++; continue; }
