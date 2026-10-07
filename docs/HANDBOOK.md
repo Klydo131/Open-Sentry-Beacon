@@ -375,6 +375,16 @@ Directors keep the same control over everything, which is what running the churc
 
 **Taking a notice down happens on Home**, in the notice itself: tap it, and its writer or anybody in leadership sees **Take down** and **Delete** at the foot. A notice that is down is no longer on Home, so **Put back up** is in the Announcements folder, beside it in the list of ones you have pinned (which also has Take down and Delete).
 
+### Questions people ask
+
+The owner, 7 October 2026: "I want a complete FAQ in the app too please before users login and inside the app in settings."
+
+**Anybody can read them, signed in or not**, at `/faq`: the front door, the sign-in screen and the invitation page all link there, so somebody holding an invitation can find out what they are joining, and who can see what, before they join. Signed in, the same answers are in **Settings**, under **Help**. Fifty-seven questions in eight groups: about the app, joining and signing in, your Guide and your conversation, your information and the law, using the app, for Guides, for Directors and Executive Directors, and trying it out.
+
+**Search narrows the list** and says how many matched, and when three or fewer are left their answers are already open. A link to one answer, such as `/faq#faq-sign-out`, opens that answer, so a Director can send somebody straight to it.
+
+**One file holds every answer**, `lib/faq.ts`. A church that changes how its copy works (a different limit, a rule of its own) changes the answer there too, and both places follow. The answers about what the app is and who looks after it are the invitation e-mail's own sentences, and the limits on a post are read from the code that enforces them, so those cannot drift; everything else is a promise, and `tests/data-protection.mjs` holds the ones about privacy to what the privacy notice says.
+
 ### Home is a billboard
 
 The owner, 7 October 2026: "It should look the Home Screen where people can see blogs and announcements right away please like a Bill board you can just see the image and photos right away and you can scroll on it."
