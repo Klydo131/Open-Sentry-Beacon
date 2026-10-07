@@ -163,5 +163,31 @@ const data = strip(read('lib/live/data.ts'));
      'and there is a way to say no, not only a way to say yes');
 }
 
+// ---------------------------------------------------------------------------
+// 5. A CALLED-OFF APPOINTMENT OFFERS NO WAY IN (7 October 2026)
+// ---------------------------------------------------------------------------
+//
+// Seen on a phone: an online call that had been called off still sat under
+// "Upcoming appointments", counted as one, with "Join on Google Meet" on it.
+// It stays on the list, as a record of who said no; but it is not ahead of
+// anybody, and a button into the call sends somebody into an empty room.
+{
+  ok(/isStillOn = \(m: Pick<Meeting, 'status'>\): boolean => m\.status === 'proposed' \|\| m\.status === 'confirmed'/.test(data) && /const stillOn = live\.isStillOn/.test(code),
+     'still on means proposed or agreed: not called off, not declined');
+  ok(/const join = stillOn\(m\) \? joinUrl\(/.test(code) && /const map = stillOn\(m\) \? placeUrl\(/.test(code),
+     'a called-off or declined appointment offers no join button and no map');
+  ok(/upcoming\.filter\(stillOn\)\.length/.test(code) && !/>\{upcoming\.length\}</.test(code),
+     'the number beside Upcoming appointments counts only what is still on');
+  // The desk's Coming up rail draws the same appointments: there too, one that
+  // is off says so and has no join link.
+  const desk = strip(read('components/LiveDesk.tsx'));
+  ok(/join: live\.isStillOn\(m\) \? joinUrl\(/.test(desk) && /off: m\.status === 'cancelled' \? 'Called off'/.test(desk) && /\{c\.off && /.test(desk),
+     'on the desk, a called-off appointment says so and offers no join link');
+  // The dark looks repaint grey writing light and leave a grey-200 fill light,
+  // which made "Called off" pale on pale. A white pill is repainted as a panel.
+  ok(!/bg-slate-200[^"]*text-slate-700/.test(code) && (code.match(/bg-white px-2 py-0\.5 text-xs font-bold text-slate-700 ring-1 ring-navy\/10/g) ?? []).length === 2,
+     '"Called off" and "Not this time" are drawn so every look can read them');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);
