@@ -178,3 +178,15 @@ body editor-host .truncate:not([class*="self-"]) {
   --affine-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
 }
+
+/* ---------------------------------------------------------------------------
+ * IN A DARK LOOK, AFFiNE'S OWN DARK PALETTE, ON THE LOOK'S OWN PAGE.
+ *
+ * The room sets data-theme="dark" on itself when the look is dark
+ * (StudyWorkspaceShell), which switches every --affine-* colour to the dark set
+ * @toeverything/theme ships. The writing then sits on the look's page, not on
+ * AFFiNE's own near-black, so the open page is the same ground as the shelf.
+ * --------------------------------------------------------------------------- */
+.sr[data-theme='dark'] {
+  --affine-background-primary-color: var(--sr-bg);
+}

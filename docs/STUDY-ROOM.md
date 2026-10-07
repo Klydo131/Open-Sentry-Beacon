@@ -18,6 +18,28 @@ no Save button anywhere in this room and there does not need to be.
 
 ---
 
+## Simple and Advanced
+
+The room starts **Simple**: your pages, **+ New page**, search, and the **Bin**.
+On a page you get its name, the writing, and four things to add: a heading, a
+list, a to-do and a quote. That is all most people need, and it is all a new
+Explorer is shown.
+
+Tap **Advanced**, under the room's name, for everything else: **Starred** and
+the **Journal**, folders, tags and saved views, the star on each page, the
+**whiteboard**, the rest of the things you can add to a page, and taking your
+pages to and from Obsidian. Tap **Simple** to put them away again.
+
+The choice is remembered on that phone or computer. Switching never hides or
+changes anything you have written: a page you filed in a folder or tagged in
+Advanced keeps its folder and tags, they are only out of sight in Simple. The
+rest of this guide describes Advanced where it mentions those.
+
+In **Focus** and **Dark Aero**, the looks with a dark page, the writing on a
+page is light. Until 7 October 2026 it stayed almost black, on almost black.
+
+---
+
 ## The shelf
 
 The room opens on your pages rather than on a page, the same way the Library
@@ -26,13 +48,14 @@ opens on books.
 **Each row is one page** and shows its name, the first line of what you have
 written on it, and when you last wrote in it. Tap a row to open it.
 
-**The three places** are along the top on a phone and down the side on a bigger
-screen:
+**The places** are along the top on a phone and down the side on a bigger
+screen. Simple shows the first and the last; Advanced shows all four:
 
 | | |
 |---|---|
 | **All pages** | Everything you have, newest writing first |
-| **Starred** | The ones you tap the star on |
+| **Starred** | The ones you tap the star on (Advanced) |
+| **Journal** | A page for each day (Advanced) |
 | **Bin** | Pages you have put away |
 
 **Search** looks at both the name and the words on the page, so you can find a

@@ -56,6 +56,9 @@ export const GUIDE_LINES: Line[] = [
   { kind: 'todo', words: 'Press / on a computer to open the menu of everything you can add' },
   { kind: 'todo', words: 'On a phone, use the row of buttons above the page instead' },
   { kind: 'todo', words: 'Select some words, and use the bar that appears to make them bold' },
+  // The three below are Advanced (components/study/StudyModeSwitch.tsx), and
+  // the room opens Simple, so the way to them comes first (7 October 2026).
+  { kind: 'todo', words: 'Tap Advanced, under Study Room on the list of pages, for the three below' },
   { kind: 'todo', words: 'Add a tag under the page name, so you can find this again' },
   { kind: 'todo', words: 'Open Journal, then Today’s page, and write one line about today' },
   { kind: 'todo', words: 'Press Whiteboard at the top of a page, to draw instead of type' },

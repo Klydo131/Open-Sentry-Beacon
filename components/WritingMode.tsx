@@ -26,47 +26,77 @@ import { useSyncExternalStore, type KeyboardEvent } from 'react';
 
 export type WritingMode = 'simple' | 'advanced';
 
-const KEY = 'beacon.writing-mode';
-const listeners = new Set<() => void>();
-// Held here too, so a browser that refuses storage still keeps the choice for
-// as long as the tab is open.
-let remembered: WritingMode | null = null;
+/**
+ * One remembered Simple-or-Advanced choice, kept in this browser under its own
+ * key. Two of them exist: a Guide's study-writing form, below, and an
+ * Explorer's study room (components/study/StudyModeSwitch.tsx), which are
+ * different people choosing about different screens.
+ */
+function modeStore(key: string) {
+  const listeners = new Set<() => void>();
+  // Held here too, so a browser that refuses storage still keeps the choice for
+  // as long as the tab is open.
+  let remembered: WritingMode | null = null;
 
-function read(): WritingMode {
-  if (remembered) return remembered;
-  try {
-    const saved = localStorage.getItem(KEY);
-    if (saved === 'advanced' || saved === 'simple') remembered = saved;
-  } catch {
-    // Storage blocked: Simple, which is the safe answer for anybody.
-  }
-  return remembered ?? 'simple';
+  const read = (): WritingMode => {
+    if (remembered) return remembered;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved === 'advanced' || saved === 'simple') remembered = saved;
+    } catch {
+      // Storage blocked: Simple, which is the safe answer for anybody.
+    }
+    return remembered ?? 'simple';
+  };
+
+  const subscribe = (changed: () => void): (() => void) => {
+    listeners.add(changed);
+    // Another tab changing it changes it here too.
+    const other = (e: StorageEvent) => {
+      if (e.key !== key) return;
+      remembered = null;
+      changed();
+    };
+    window.addEventListener('storage', other);
+    return () => {
+      listeners.delete(changed);
+      window.removeEventListener('storage', other);
+    };
+  };
+
+  const set = (mode: WritingMode): void => {
+    remembered = mode;
+    try { localStorage.setItem(key, mode); } catch { /* kept in memory above */ }
+    for (const changed of listeners) changed();
+  };
+
+  return { read, subscribe, set };
 }
 
-function subscribe(changed: () => void): () => void {
-  listeners.add(changed);
-  // Another tab changing it changes it here too.
-  const other = (e: StorageEvent) => {
-    if (e.key !== KEY) return;
-    remembered = null;
-    changed();
-  };
-  window.addEventListener('storage', other);
-  return () => {
-    listeners.delete(changed);
-    window.removeEventListener('storage', other);
-  };
-}
+const writing = modeStore('beacon.writing-mode');
 
 export function setWritingMode(mode: WritingMode): void {
-  remembered = mode;
-  try { localStorage.setItem(KEY, mode); } catch { /* kept in memory above */ }
-  for (const changed of listeners) changed();
+  writing.set(mode);
 }
 
 /** The current setting. Simple until somebody chooses otherwise. */
 export function useWritingMode(): WritingMode {
-  return useSyncExternalStore(subscribe, read, () => 'simple');
+  return useSyncExternalStore(writing.subscribe, writing.read, () => 'simple');
+}
+
+/**
+ * The Explorer's study room has its own (7 October 2026: "the study room is way
+ * complicated for a new user of the app, it must have simple UI and advance
+ * UI"). Simple there too until somebody chooses otherwise.
+ */
+const study = modeStore('beacon.study-mode');
+
+export function setStudyMode(mode: WritingMode): void {
+  study.set(mode);
+}
+
+export function useStudyMode(): WritingMode {
+  return useSyncExternalStore(study.subscribe, study.read, () => 'simple');
 }
 
 const OPTIONS: Array<{ id: WritingMode; label: string }> = [

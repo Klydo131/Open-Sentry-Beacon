@@ -56,6 +56,7 @@ import { StudyShelf, type ShelfView } from '@/components/study/StudyShelf';
 import { StudyInsertBar, type InsertKind } from '@/components/study/StudyInsertBar';
 import { StudyTags } from '@/components/study/StudyTags';
 import { StudyWorkspaceShell } from '@/components/study/StudyWorkspaceShell';
+import { useStudyMode } from '@/components/WritingMode';
 
 /** One room per person. The id is stable so the same room reopens every time. */
 const WORKSPACE = 'study-room';
@@ -101,6 +102,8 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   const [entries, setEntries] = useState<ShelfEntry[]>([]);
   const [openPage, setOpenPage] = useState('');
   const [view, setView] = useState<ShelfView>('all');
+  // SIMPLE OR ADVANCED (components/study/StudyModeSwitch.tsx).
+  const simple = useStudyMode() === 'simple';
   const [tag, setTag] = useState('');
   const [folder, setFolder] = useState('');
   const [collection, setCollection] = useState('');
@@ -109,6 +112,18 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   // ways of looking at ONE page rather than two kinds of page: the same blocks,
   // laid out in a column or placed on a canvas.
   const [mode, setMode] = useState<'page' | 'edgeless'>('page');
+  // BACK TO SIMPLE PUTS THE ROOM WHERE SIMPLE CAN SEE IT. A tag, a folder or a
+  // saved view chosen in Advanced would otherwise go on narrowing the list
+  // with no control left on screen to undo it, and Starred, the Journal and
+  // the whiteboard are not places Simple shows. Nothing written changes.
+  useEffect(() => {
+    if (!simple) return;
+    setTag('');
+    setFolder('');
+    setCollection('');
+    setView((v) => (v === 'favourites' || v === 'journal' ? 'all' : v));
+    setMode('page');
+  }, [simple]);
   // THE EDITOR IS ON ITS WAY. Only true while the chunk is being fetched, and
   // it is the difference between a blank rectangle and a page that says it is
   // coming -- which is what a blank rectangle was reported as, three times.
@@ -814,7 +829,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         {/* PAGE OR WHITEBOARD: one page, two ways of looking at it, so it is a
             segmented control rather than two buttons. Nothing is copied between
             them because there is nothing to copy. */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        {!simple && <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
           <div role="group" aria-label="How to look at this page" className="sr-seg sr-seg--inline">
             {([['page', 'Page', DocGlyph], ['edgeless', 'Whiteboard', BoardGlyph]] as const).map(([id, label, Icon]) => (
               <button
@@ -829,14 +844,14 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
               </button>
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* WHICH FOLDER, AND WHAT IT IS ABOUT, as one quiet line of pills under
             the switch rather than two labelled rows above the writing. The
             folder is offered from the ones that already exist AND is free
             text, so the first page of a new study makes the folder by being
             filed. */}
-        {!board && (
+        {!board && !simple && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <label className="sr-field">
               <FolderGlyph size={16} />
@@ -872,7 +887,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         {/* A direct child of the page's column, not wrapped: a sticky element
             only sticks within its parent, and a wrapper as tall as the bar
             gives it nowhere to go. */}
-        {!board && <StudyInsertBar onInsert={insert} />}
+        {!board && <StudyInsertBar onInsert={insert} simple={simple} />}
 
         {drawing && (
           <div className="grid place-items-center py-12">

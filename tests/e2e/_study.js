@@ -34,7 +34,16 @@ async function signInAsExplorer(page, BASE) {
  * if that is the hidden one it waits forever. The search field exists once, and
  * only once the shelf is actually up.
  */
-async function openStudyRoom(page, BASE) {
+/*
+ * AND IN ADVANCED, UNLESS ASKED OTHERWISE. The room opens Simple for a new
+ * Explorer (components/study/StudyModeSwitch.tsx, 7 October 2026), and the
+ * walks that use this helper are about the full room: folders, the journal,
+ * the whiteboard, the whole insert bar. They choose Advanced the way a person
+ * would have it remembered, before the room loads; the-study-room-starts-
+ * simple.js walks Simple itself.
+ */
+async function openStudyRoom(page, BASE, mode = 'advanced') {
+  await page.evaluate((m) => { try { localStorage.setItem('beacon.study-mode', m); } catch { /* about:blank */ } }, mode).catch(() => {});
   await page.goto(`${BASE}/study`, { waitUntil: 'networkidle' });
   // The chunk is most of a megabyte; a short timeout here makes a flaky suite
   // rather than a true answer.

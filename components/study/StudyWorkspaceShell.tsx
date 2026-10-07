@@ -24,11 +24,12 @@
 // of Hope Beacon is written in, so walking in does not feel like leaving.
 // ---------------------------------------------------------------------------
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import '@/components/study/study-shell.css';
 
 import { APP_NAME } from '@/lib/brand';
+import { useStudyMode } from '@/components/WritingMode';
 import type { ShelfView } from '@/components/study/StudyShelf';
 import {
   CalendarGlyph, ChevronLeftGlyph, DocGlyph, GridGlyph, PlusGlyph, StarGlyph, TrashGlyph,
@@ -48,6 +49,15 @@ export const PLACES: Array<{ id: ShelfView; label: string; Icon: typeof DocGlyph
   { id: 'journal', label: 'Journal', Icon: CalendarGlyph },
   { id: 'trash', label: 'Bin', Icon: TrashGlyph },
 ];
+
+/**
+ * The places a Simple room shows (components/study/StudyModeSwitch.tsx): the
+ * pages, and the bin, so a page moved there by mistake can always be put
+ * back. Starred and the Journal are Advanced.
+ */
+export function placesFor(simple: boolean) {
+  return simple ? PLACES.filter((p) => p.id === 'all' || p.id === 'trash') : PLACES;
+}
 
 export function StudyWorkspaceShell({
   view,
@@ -86,6 +96,23 @@ export function StudyWorkspaceShell({
     return () => { document.body.style.overflow = previous; };
   }, []);
 
+  // THE WRITING IN A DARK LOOK. The editor's colours are AFFiNE's own, which
+  // no look reaches: under Focus and Aero dark an open page was near-black
+  // writing on a near-black page, 1.01:1 (7 October 2026, "the text are dark
+  // too"). AFFiNE has a dark palette of its own, switched on by data-theme;
+  // the room turns it on whenever the look says it is dark, which every
+  // look's file does with color-scheme, so a dark look added later is dark
+  // here too without anybody remembering this file.
+  const places = placesFor(useStudyMode() === 'simple');
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const read = () => setDark(getComputedStyle(document.documentElement).colorScheme.includes('dark'));
+    read();
+    const watch = new MutationObserver(read);
+    watch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-ui-theme'] });
+    return () => watch.disconnect();
+  }, []);
+
   const countOf = (id: ShelfView) => (
     id === 'all' ? counts.all
       : id === 'favourites' ? counts.favourites
@@ -101,6 +128,7 @@ export function StudyWorkspaceShell({
       // control somebody must always be able to reach. A room that takes the
       // screen has to actually take it.
       className="sr fixed inset-0 z-[100]"
+      data-theme={dark ? 'dark' : 'light'}
     >
       {/* THE WAY OUT IS THE FIRST THING ON THE SCREEN, and it says where it
           goes. "Close" would leave somebody guessing what closing means when
@@ -161,7 +189,7 @@ export function StudyWorkspaceShell({
           >
             <p className="px-2 pb-3 text-[22px] font-bold tracking-tight">Study Room</p>
             <ul className="space-y-0.5">
-              {PLACES.map(({ id, label, Icon }) => (
+              {places.map(({ id, label, Icon }) => (
                 <li key={id}>
                   <button
                     type="button"

@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-07-whose-words-and-a-simpler-study-room',
+    date: '2026-10-07',
+    title: 'Clearer conversations, a simpler Study Room',
+    items: [
+      'In a conversation your messages are blue and the other person\'s are white, so you can always tell who said what. The dark looks have a dark version of the same two.',
+      'The box you write a message in now lines up with the paperclip and the send button.',
+      'The Study Room starts Simple: your pages, New page and search, and on a page the writing and a few basics. Tap Advanced for folders, tags, Starred, the Journal and the whiteboard. Nothing you have written is hidden by switching.',
+      'In Focus and Dark Aero the writing on a Study Room page was almost black on black. It is light now.',
+      'An appointment that was called off no longer shows a Join button or counts as coming up, and Clear from my list takes it off your list once you have seen it.',
+    ],
+  },
+  {
     id: '2026-10-06-easier-to-read',
     date: '2026-10-06',
     title: 'Easier to read, in every look',

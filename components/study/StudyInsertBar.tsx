@@ -51,7 +51,14 @@ const BUTTONS: Array<{ kind: InsertKind; label: string; hint: string; Icon?: typ
   { kind: 'callout', label: 'Note', hint: 'Note, to set something apart', Icon: CalloutGlyph },
 ];
 
-export function StudyInsertBar({ onInsert }: { onInsert: (kind: InsertKind) => void }) {
+/** What Simple keeps: the four a first page of notes is made of. The rest is Advanced. */
+const SIMPLE: InsertKind[] = ['h2', 'bulleted', 'todo', 'quote'];
+
+export function StudyInsertBar({ onInsert, simple = false }: {
+  onInsert: (kind: InsertKind) => void;
+  /** Simple or Advanced, from components/study/StudyModeSwitch.tsx. */
+  simple?: boolean;
+}) {
   return (
     <div className="sr-formatbar mt-4">
       <div
@@ -59,7 +66,7 @@ export function StudyInsertBar({ onInsert }: { onInsert: (kind: InsertKind) => v
         aria-label="Add to this page"
         className="thin-scroll flex items-center gap-2 overflow-x-auto"
       >
-        {BUTTONS.map((button) => (
+        {BUTTONS.filter((b) => !simple || SIMPLE.includes(b.kind)).map((button) => (
           <button
             key={button.kind}
             type="button"
