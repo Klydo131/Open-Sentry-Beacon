@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useDemo } from '@/lib/demo/store';
 import { NAVY } from '@/lib/brand';
+import { oversightPoints } from '@/lib/oversight';
 
 // A one-time, plain-language privacy notice shown to a seeker before they begin.
 // Honest about the little activity we keep, clear about who sees what, and it
 // requires an explicit "I understand" to continue — trust first.
 export function ConsentNotice() {
-  const { currentUser, giveConsent, signOut } = useDemo();
+  const { db, currentUser, giveConsent, signOut } = useDemo();
   const router = useRouter();
   const me = currentUser!;
 
@@ -26,15 +27,20 @@ export function ConsentNotice() {
         </div>
 
         <div className="space-y-3 p-6">
-          <Point icon="🔒" text="What you say to your Guide stays between the two of you. Nobody else can read it." />
-          <Point icon="📚" text="What you are reading, and how far you have come, is seen by your Guide and your church Director. Nobody else." />
-          <Point icon="📊" text="Church leaders see counts only. Never your name, and never what you wrote." />
-          <Point icon="🏠" text="Your information stays with the church, not outsiders." />
-          <Point icon="💛" text="We keep a little activity (like when you open a reading) so the church can care for you better." />
+          {/* THE SAME WORDS AS THE INVITATION AND THE REAL SIGN-UP
+              (lib/oversight.ts). This said "Church leaders see counts only.
+              Never your name", which was not true: a Director approves people
+              and pairs them by name. A sample that promises more than the app
+              keeps teaches the wrong thing about the real one. */}
+          {oversightPoints(db.church_name).map((point) => (
+            <Point key={point.icon} icon={point.icon} text={point.text} />
+          ))}
+          <Point icon="💛" text="The app keeps a little activity (like when you open a reading) so your Guide can care for you better." />
           <Point icon="🖐️" text="You can change your details whenever you need to. If you ever want to leave, ask a Director and they will remove you." />
 
-          <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-500">
-            Questions? Just ask your Guide or the church Director.
+          <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
+            Questions? Just ask your Guide or the church Director, or read the{' '}
+            <a href="/privacy" className="font-semibold text-navy underline">privacy notice</a>.
           </div>
 
           <div className="flex flex-col gap-2 pt-2">

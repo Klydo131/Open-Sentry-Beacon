@@ -136,6 +136,13 @@ const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // HTTPS, REMEMBERED (7 October 2026, written into docs/PRIVACY-MANUAL.md
+  // for the National Privacy Commission). The host already redirects plain
+  // HTTP, but a redirect is one plain request that somebody on the same café
+  // network can answer first. This tells the browser never to make it again
+  // for two years. No includeSubDomains: a church's copy may live on a
+  // subdomain of a domain whose other subdomains it does not control.
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000' },
   // THE MICROPHONE FOR THIS SITE ONLY, for voice messages (1 October 2026,
   // lib/talk/voice.ts). `(self)`, not `*`: no embedded frame -- the YouTube and
   // Facebook players frame-src allows -- can ask for it. It is requested on the

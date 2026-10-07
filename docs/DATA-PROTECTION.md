@@ -14,7 +14,7 @@ They need a decision by whoever runs the church.
 2012, and its Implementing Rules and Regulations; and the GDPR, because a
 congregation with one member in Europe is inside it.
 
-**Last checked:** 1 September 2026, against the live schema.
+**Last checked:** 1 September 2026, against the live schema; updated 7 October 2026 with the privacy manual ([`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md)), the erase list and the rank rules below.
 
 ---
 
@@ -205,6 +205,21 @@ These are properties of the running system, not intentions:
   handouts (`private.room_to_upload`, 20260925120000). Conversation photos and
   safeguarding evidence are not counted.
 - **A weekly backup is encrypted** before it leaves the machine.
+- **What is deleted leaves no file behind** (7 October 2026). Whenever a row
+  that points at a stored file is deleted, however it went, the file is written
+  to an erase list, and the `erase` function removes it from storage each night
+  (`20261007150000`; `supabase/tests/what-is-deleted-leaves-no-file-behind.sql`).
+  Before this, a removed member's conversation photos and resources stayed in
+  storage, unreadable but kept.
+- **A leader stays within their rank, and a conversation keeps its two people**
+  (7 October 2026). A browser may change only the columns its sender is entitled
+  to; only an Executive Director appoints a Director or an Executive Director; and
+  nobody can move a pairing onto other people to read its conversation
+  (`20261007130000`; `supabase/tests/a-leader-stays-within-their-rank.sql`).
+- **Everybody is told who looks after the app before they agree to anything**,
+  in the same words in the invitation e-mail, the sign-up page and the privacy
+  notice (`lib/oversight.ts`), and the sign-up's consent says specifically what
+  it covers.
 - **A member can download their own data**, from their Profile screen, without
   asking anybody. It is assembled in the browser from queries that person could
   already run, so no privileged path exists that could be made to hand over
@@ -223,9 +238,9 @@ Ordered by how much it matters, not by how hard it is.
 | 1 | **No privacy notice.** Nothing tells a member what is collected, why, who sees it, how long it is kept, or how to complain. RA 10173 §16(a) and GDPR Art. 13 both require it before collection. | `/privacy` now exists as a draft in the app. The blanks in it must be filled: who the controller is, the DPO's name and contact, the retention periods, the hosting region. | Owner, then a lawyer |
 | ~~2~~ | ~~**No way for a member to get a copy of their own data.**~~ **Built, 1 September 2026.** *A copy of your information* on the Profile screen produces a JSON file with the profile, the conversation, prayer requests, meetings, posts, library shares, notifications and every change to their own details. | Nothing. See below for what it deliberately leaves out. | Done |
 | 3 | **No named Data Protection Officer.** Expected where sensitive personal information is processed. | A person, an email address, and the NPC filing if the church passes 1,000 members. | Owner |
-| 4 | **No breach procedure.** RA 10173 requires notification to the NPC and to affected people **within 72 hours** of knowing. There is no written procedure and no rehearsal. | One page: who decides it is a breach, who is told, in what order, and the wording. | Owner |
+| 4 | **Breach procedure written, not yet rehearsed.** RA 10173 and Circular 16-03 require notification to the NPC and to affected people **within 72 hours** of knowing. Section VII of [`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md) is the procedure; the team's names are the church's to fill in. | Fill in the team; rehearse once. | Owner |
 | 5 | **Processor terms unchecked.** Supabase, Vercel, Brevo and GitHub all hold or see personal data, and komoot sees the words typed into the meet-up place box. The hosting region is now recorded: Seoul. | Confirm each one's data-processing terms. | Owner |
-| 6 | **Retention is undefined** for everything except the library record. A message from four years ago is still there because nothing deletes it, not because anybody decided it should stay. | A retention period per table, written down, then enforced. | Owner decides, engineering enforces |
+| 6 | **Retention periods are the church's to decide.** Destruction now works end to end (deleted rows take their files with them, through the erase list), but nothing is deleted on a timer except the link record. Section V-C of the privacy manual has the table with the blank. | A period for ended pairings' conversations, written down, then enforced. | Owner decides, engineering enforces |
 | 7 | **Erasure conflicts with the safeguarding record**, and the conflict is unstated. | Write the lawful basis for the exception into the notice, and make the app say so when an account is deleted. | Owner, then engineering |
 | 8 | **No record of who read what.** A Director can open a reported conversation and nothing records that they did. | An access log for the one place where a third party reads a private thread. | Engineering |
 

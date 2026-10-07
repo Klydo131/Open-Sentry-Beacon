@@ -1,5 +1,6 @@
 'use client';
 
+import { oversightPoints } from '@/lib/oversight';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -1195,6 +1196,21 @@ export function LiveJoinPage() {
                       asks somebody to trust it. Unticked by default -- a box
                       that arrives already ticked is not consent, it is a
                       default nobody noticed. */}
+                  {/* WHO LOOKS AFTER THIS APP, said before the box is ticked
+                      (7 October 2026). The same words as the invitation e-mail
+                      and the sample church's welcome; see lib/oversight.ts. */}
+                  <div className="space-y-2 rounded-xl bg-gray-50 p-4" data-oversight>
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-600">How this app is looked after</p>
+                    {oversightPoints(churchName).map((point) => (
+                      <p key={point.icon} className="flex gap-2 text-sm leading-relaxed text-gray-700">
+                        <span aria-hidden>{point.icon}</span>
+                        <span>{point.text}</span>
+                      </p>
+                    ))}
+                    <Link href="/privacy" className="inline-block text-sm font-semibold text-navy underline">
+                      Read the full privacy notice
+                    </Link>
+                  </div>
                   <label className="flex items-start gap-3 rounded-xl bg-navy/5 p-4">
                     <input
                       type="checkbox"
@@ -1202,12 +1218,21 @@ export function LiveJoinPage() {
                       onChange={(event) => setConsent(event.target.checked)}
                       className="mt-1 h-5 w-5 shrink-0"
                     />
+                    {/* WHAT IS BEING AGREED TO, SPECIFICALLY. It used to name
+                        contact details only, while the app also keeps what a
+                        person tells their Guide and their place on the journey,
+                        and being in a church's discipleship app at all is a
+                        religious affiliation -- sensitive personal information
+                        under the Act, for which consent must be specific and
+                        informed (section 13; NPC Circular 2023-04). */}
                     <span className="text-sm leading-relaxed text-gray-700">
                       I give permission for <strong>{churchName || 'my church'}</strong> to
-                      keep my contact details so someone from the church can stay in touch
-                      with me about my studies. I can update them whenever I need to, I
-                      will keep them truthful, and my Guide and my church&rsquo;s
-                      leadership can see when I change them.{' '}
+                      keep and use my information in Hope Beacon for one-to-one discipleship
+                      and the church&rsquo;s ministry: my name and contact details, what I
+                      choose to share with my Guide, and my place on the journey. I
+                      understand this shows my connection with the church. I can update my
+                      details whenever I need to, I will keep them truthful, and my Guide and
+                      my church&rsquo;s leadership can see when I change them.{' '}
                       <span className="text-red-600">*</span>
                     </span>
                   </label>

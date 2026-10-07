@@ -118,6 +118,11 @@ psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-leader-stays-within-their-rank.sql"
 
+# WHAT IS DELETED LEAVES NO FILE BEHIND: removing somebody queues every file
+# their rows pointed at, and only the service role can read or clear the list.
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/what-is-deleted-leaves-no-file-behind.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

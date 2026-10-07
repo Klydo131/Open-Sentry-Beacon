@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { NAVY, APP_NAME, APP_SHORT_NAME } from '@/lib/brand';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { Card } from '@/components/ui';
+import { oversightPoints } from '@/lib/oversight';
 
 function Blank({ what }: { what: string }) {
   return (
@@ -60,6 +61,20 @@ export default function PrivacyPage() {
             notice carrying a plausible wrong name would be worse than one that says it
             is unfinished. Everything else below is decided and applies as written.
           </p>
+        </Card>
+
+        {/* WHAT THIS APP IS, AND WHO LOOKS AFTER IT: the same words as the
+            invitation e-mail and the sign-up (lib/oversight.ts). */}
+        <Card className="p-5" data-oversight>
+          <h2 className="text-xl font-bold text-navy">What this app is, and who looks after it</h2>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            {oversightPoints(null).map((point) => (
+              <li key={point.icon} className="flex gap-2">
+                <span aria-hidden>{point.icon}</span>
+                <span>{point.text}</span>
+              </li>
+            ))}
+          </ul>
         </Card>
 
         <Card className="p-5">
@@ -171,7 +186,9 @@ export default function PrivacyPage() {
               automatically.</li>
             <li><strong>Everything else: for as long as you have an account.</strong>{' '}
               When it is removed, what is in it goes at once rather than after a waiting
-              period, and your photographs are deleted before the account itself.</li>
+              period. Every stored file that belonged to it, or to a conversation that
+              went with it, goes too: your pictures straight away, and the rest at the
+              nightly clean-up, which removes each file whose record is gone.</li>
             <li><strong>Safeguarding reports and the record of a removal are kept
               permanently</strong>, including after an account is deleted. A church has
               to be able to show that it acted, and a record the person it describes can

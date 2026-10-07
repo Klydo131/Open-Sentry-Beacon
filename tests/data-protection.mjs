@@ -140,5 +140,100 @@ const strip = (src) => src
   ok(/not legal advice/i.test(doc), 'while saying it is not legal advice');
 }
 
+// ---------------------------------------------------------------------------
+// EVERYBODY IS TOLD WHO LOOKS AFTER THE APP, BEFORE THEY AGREE TO ANYTHING
+// ---------------------------------------------------------------------------
+// Everybody is told, before they agree to anything, what this app is and who
+// looks after it, in the same true words everywhere.
+//
+// The owner, 7 October 2026: "Make sure when a user is invited, the email
+// invitation has transparency letting all users know that this app is well
+// monitored by the church because we don't want any legal troubles when it
+// comes to policies. This is a 1 on 1 discipleship private app and only used
+// for ministry." The Data Privacy Act asks for the same thing before personal
+// information is collected (RA 10173 section 16), and for consent to sensitive
+// personal information to be specific and informed (section 13; NPC Circular
+// 2023-04). Being in a church's discipleship app is a religious affiliation.
+//
+// What is held here: the three places a person is told (the invitation
+// e-mail, the real sign-up, the sample church's welcome) carry the same four
+// statements, the sign-up's permission says specifically what it covers, and
+// nothing anywhere promises a privacy the database does not keep.
+{
+const read = (p) => readFileSync(p, 'utf8');
+// The four statements, as they read with the church's name taken out.
+const STATEMENTS = [
+  'is a private app for one-to-one discipleship and the ministry of',
+  'It is overseen by the church.',
+  "Directors and Executive Directors approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.",
+  "What you write to the person you walk with stays between the two of you. Nobody else can read it, the church\\'s leaders included, unless one of you reports a message; a reported message goes to leadership so they can keep everybody safe.",
+  'keeps your information under the Data Privacy Act of 2012 (Republic Act 10173). You can ask for a copy of it, have it corrected, or have your account removed.',
+];
+
+const app = read('lib/oversight.ts');
+const email = read('supabase/functions/invite/email.ts');
+for (const sentence of STATEMENTS) {
+  ok(app.includes(sentence), `the app says: "${sentence.slice(0, 60)}…"`);
+  ok(email.includes(sentence), '  and so does the invitation e-mail, word for word');
+}
+
+// The e-mail carries them in both its versions, not only in a helper nobody calls.
+ok(/const oversight = oversightLines\(churchName, appUrl\);/.test(email) && /oversight\.lines\.map/.test(email),
+   'the e-mail\'s HTML version shows them');
+ok(/oversightLines\(churchName, appUrl\)\.lines\.flatMap/.test(email),
+   'and so does its plain-text version');
+ok(/\$\{appUrl\}\/privacy/.test(email), 'and it links the full privacy notice');
+
+// The real sign-up: told first, then asked, specifically.
+const door = read('components/live/DoorPages.tsx');
+const told = door.indexOf('{oversightPoints(churchName).map');
+const asked = door.indexOf('checked={consent}');
+ok(told > 0 && asked > told, 'the sign-up says who looks after the app before the permission box');
+ok(/href="\/privacy"/.test(door.slice(told, asked)), 'and links the full privacy notice there');
+const permission = door.slice(asked, door.indexOf('</label>', asked));
+ok(/one-to-one discipleship/.test(permission) && /what I\s+choose to share with my Guide/.test(permission)
+   && /my place on the journey/.test(permission) && /connection with the church/.test(permission),
+   'the permission names what it covers: discipleship, what is shared with the Guide, the journey, and the connection with the church');
+ok(/useState\(false\)/.test(door.slice(door.indexOf('const [consent'), door.indexOf('const [consent') + 60)),
+   'and the box starts unticked');
+
+// The sample church says the same, and no longer promises what is not true.
+const sample = read('components/ConsentNotice.tsx').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+ok(/oversightPoints\(db\.church_name\)/.test(sample), 'the sample church\'s welcome uses the same words');
+ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
+   'and no longer says leaders see "counts only, never your name", which a Director approving people by name disproves');
+
+}
+
+// ---------------------------------------------------------------------------
+// WHAT IS DELETED LEAVES NO FILE BEHIND
+// ---------------------------------------------------------------------------
+// The owner, 7 October 2026: "Make sure we have a system of in and out (exit)
+// of data when it's deleted." A row deleted, its file queued; the `erase`
+// function removes queued files with the Storage API, the only way that
+// removes both halves. supabase/tests/what-is-deleted-leaves-no-file-behind.sql
+// proves the queue as invented people on every fresh install; these lines keep
+// that proof running and the function narrow.
+{
+  const mig = readFileSync('supabase/migrations/20261007150000_what_is_deleted_leaves_no_file_behind.sql', 'utf8');
+  for (const table of ['pairing_media', 'materials', 'lesson_files', 'report_files', 'profiles']) {
+    ok(new RegExp(`create trigger zz_queue_file_for_erasure after delete[^;]*on public\\.${table}\\b`).test(mig),
+       `deleting a ${table} row queues its file for erasure`);
+  }
+  ok(/revoke all on private\.files_to_erase from public, anon, authenticated/.test(mig)
+     && /grant execute on function public\.files_waiting_to_be_erased\(integer\) to service_role;/.test(mig)
+     && !/files_waiting_to_be_erased\(integer\) to authenticated/.test(mig),
+     'only the service role reads the list');
+  ok(/cron\.schedule\('erase-deleted-files'/.test(mig), 'and the database asks for it to be emptied every night');
+  const fn = readFileSync('supabase/functions/erase/index.ts', 'utf8');
+  ok(/bearer !== SERVICE_KEY/.test(fn), 'the erase function answers only the database');
+  ok(/files_waiting_to_be_erased/.test(fn) && !/await req\.json\(\)/.test(fn),
+     'and removes only what the list names, taking no path from the request');
+  ok(/what-is-deleted-leaves-no-file-behind\.sql/.test(readFileSync('scripts/fresh-install.sh', 'utf8')),
+     'and CI proves the queue on every fresh install');
+  ok(/deploy erase/.test(readFileSync('docs/PRIVACY-MANUAL.md', 'utf8')),
+     'and the privacy manual tells the church how to switch it on');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

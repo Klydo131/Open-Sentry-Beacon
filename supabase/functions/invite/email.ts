@@ -139,6 +139,36 @@ export function subjectFor(role: InviteRole): string {
   return ROLE_COPY[role].subject;
 }
 
+/**
+ * WHAT THIS APP IS, AND WHO LOOKS AFTER IT, said in the invitation itself.
+ *
+ * The owner, 7 October 2026: "Make sure when a user is invited, the email
+ * invitation has transparency letting all users know that this app is well
+ * monitored by the church ... This is a 1 on 1 discipleship private app and
+ * only used for ministry." The Data Privacy Act asks the same thing in its own
+ * words: a person is told what is done with their information, and by whom,
+ * before it is collected (RA 10173, section 16; NPC Circular 2023-04).
+ *
+ * EVERY SENTENCE IS ONE THE DATABASE KEEPS TRUE. Leaders see counts and dates
+ * (tests/leadership-can-measure-without-reading.mjs) and never a conversation
+ * (supabase/tests/a-leader-stays-within-their-rank.sql); a reported message is
+ * the one thing that reaches them, because that is what reporting is for. An
+ * invitation that promised more privacy than the app keeps, or threatened more
+ * watching than it does, would be the legal trouble this is meant to prevent.
+ */
+export function oversightLines(churchName: string, appUrl: string): { heading: string; lines: string[] } {
+  const church = churchName || 'Your church';
+  return {
+    heading: 'How this app is looked after',
+    lines: [
+      `Hope Beacon is a private app for one-to-one discipleship and the ministry of ${church}. It is used for nothing else.`,
+      `It is overseen by the church. ${church}'s Directors and Executive Directors approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.`,
+      'What you write to the person you walk with stays between the two of you. Nobody else can read it, the church\'s leaders included, unless one of you reports a message; a reported message goes to leadership so they can keep everybody safe.',
+      `${church} keeps your information under the Data Privacy Act of 2012 (Republic Act 10173). You can ask for a copy of it, have it corrected, or have your account removed. The full privacy notice is at ${appUrl}/privacy`,
+    ],
+  };
+}
+
 export function roleWord(role: InviteRole): string {
   return ROLE_COPY[role].word;
 }
@@ -234,6 +264,7 @@ export function inviteHtml(
   const afterLine = AFTER[role];
   const waitLine = WAITS[role] ?? '';
   const hello = greetingName(fullName);
+  const oversight = oversightLines(churchName, appUrl);
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EEF1F6;margin:0;padding:0;width:100%;">
   <tr>
     <td align="center" style="padding:28px 12px;">
@@ -294,6 +325,13 @@ export function inviteHtml(
             ${esc(afterLine)} To add Hope&nbsp;Beacon to your Home Screen, open <strong>Settings</strong> inside the app.
           </p>
 
+        </td></tr>
+      </table>
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+        <tr><td style="padding:18px 28px 0 28px;font-family:Helvetica,Arial,sans-serif;">
+          <p style="margin:0 0 8px 0;font-size:13px;font-weight:bold;color:#1E2A4A;letter-spacing:0.6px;text-transform:uppercase;">${esc(oversight.heading)}</p>
+          ${oversight.lines.map((line) => `<p style="margin:0 0 8px 0;font-size:14px;line-height:1.55;color:#3D4552;">${esc(line)}</p>`).join('\n          ')}
         </td></tr>
       </table>
 
@@ -381,6 +419,8 @@ export function inviteText(
     '',
     wrap('To add Hope Beacon to your Home Screen, open Settings inside the app.'),
     '',
+    oversightLines(churchName, appUrl).heading.toUpperCase(),
+    ...oversightLines(churchName, appUrl).lines.flatMap((line) => [wrap(line), '']),
     wrap(`You received this because a leader at ${church} invited you, and an `
       + 'account was created for you at this address. If you were not expecting '
       + 'it, you can ignore this message, or ask the church to remove the account.'),
