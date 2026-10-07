@@ -194,7 +194,10 @@ Access is enforced by the database itself, not by the screens, so it cannot be
 bypassed with a browser's developer tools. A leader acts only within their rank:
 a Director cannot make anybody a Director or an Executive Director, cannot act on
 another Director, and nobody can change their own role
-(`supabase/tests/a-leader-stays-within-their-rank.sql`).
+(`supabase/tests/a-leader-stays-within-their-rank.sql`). A Director or an
+Executive Director can give an Explorer a different Guide; the first
+conversation stays between its two people and the new Guide starts a new one,
+so changing a pair never opens a conversation to anybody.
 
 ### E. Disclosure and sharing
 
@@ -228,7 +231,18 @@ they chose. A safeguarding report reaches the leaders who handle it.
 6. **Records.** The app keeps its own record of approvals, suspensions and
    removals (`discipline_log`), of changes to a person's details
    (`profile_changes`), and of account security events.
-7. **Review.** This manual is reviewed [yearly] and whenever the app changes what
+7. **Who answers for whom.** The Director who brought a Guide or an Explorer
+   into the app, by inviting or approving them, is responsible for them. If
+   something goes wrong between a Guide and an Explorer, that Director looks
+   into it first, through the leadership tools (pairings, journey stages,
+   counts and dates, reported messages), never by reading the conversation.
+   The app records who sent each invitation (`invites.invited_by`) and who
+   approved each person (`profiles.approved_by`), so that Director can always
+   be found. Any Director in the church can still act at once to keep somebody
+   safe, by suspending an account or ending a pairing; the responsible Director
+   then follows up. The follow-up is the church's procedure; the app does not
+   enforce it.
+8. **Review.** This manual is reviewed [yearly] and whenever the app changes what
    it collects.
 
 ### B. Physical security measures
