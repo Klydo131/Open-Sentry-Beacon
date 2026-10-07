@@ -45,7 +45,7 @@ There is no public sign-up and there never will be. Somebody at the church enter
 
 ### A conversation belongs to two people
 
-What an Explorer says to their Guide is readable by those two and nobody else. Not other Guides, not Directors, not the person who owns the server. The only exception is a safeguarding report, which a Director may read in place, and the app says so plainly on the screen where a report is made.
+What an Explorer says to their Guide is readable by those two and no other account in the app. Not other Guides, not Directors. It is encrypted on its way and where it is stored, but not end to end: whoever runs the church's database could reach it there, outside the app, which is why the privacy manual limits who that is. The only exception is a safeguarding report, which a Director may read in place, and the app says so plainly on the screen where a report is made.
 
 ![A conversation, in the sample church. The line at the top says who can read it: the two people walking together, and nobody else.](screenshots/walkthrough/09-conversation.png)
 

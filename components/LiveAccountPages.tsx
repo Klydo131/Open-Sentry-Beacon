@@ -26,6 +26,7 @@ import { BeaconSpinner } from '@/components/BeaconLoader';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { showLocalNotification } from '@/lib/push';
 import { LiveMyData } from '@/components/LiveMyData';
+import { FaqCard } from '@/components/Faq';
 import { WhatsNewButton } from '@/components/WhatsNew';
 import { FeedbackButton } from '@/components/Feedback';
 import { humanError } from '@/lib/live/errors';
@@ -297,6 +298,7 @@ export function LiveSettingsPage() {
   const [room, chooseRoom] = useRoom(rooms, `beacon:settings-room:${profile?.role ?? 'none'}`, {
     install: 'general',
     tutorial: 'help',
+    faq: 'help',
     // The invitation e-mail and the reminder card both send people to
     // /settings#password. Without this they would land on the Install folder.
     password: 'account',
@@ -415,6 +417,7 @@ export function LiveSettingsPage() {
               the tutorial made the journey, so on a real church deployment the
               two buttons simply ceased to exist. */}
           <HelpCard />
+          <FaqCard />
           <AboutCard />
         </>
       )}

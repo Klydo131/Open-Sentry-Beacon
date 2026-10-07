@@ -25,6 +25,7 @@ import { WhatsNewButton } from '@/components/WhatsNew';
 import { WhichApp } from '@/components/WhichApp';
 import { FeedbackButton } from '@/components/Feedback';
 import { DataManager } from '@/components/DataManager';
+import { FaqCard } from '@/components/Faq';
 import { pushSupported, permission as pushPermission, requestPermission, subscribeToPush, showLocalNotification, iosNeedsInstall } from '@/lib/push';
 import { rememberThisDevice, forgetThisDevice } from '@/lib/live/push-devices';
 import { APP_SHORT_NAME } from '@/lib/brand';
@@ -538,6 +539,7 @@ function Body() {
   const [room, chooseRoom] = useRoom(rooms, 'beacon:demo-settings-room', {
     install: 'general',
     tutorial: 'help',
+    faq: 'help',
   });
 
   return (
@@ -584,9 +586,12 @@ function Body() {
       )}
 
       {room === 'help' && (
-        <div id="tutorial">
-          <TutorialCard />
-        </div>
+        <>
+          <div id="tutorial">
+            <TutorialCard />
+          </div>
+          <FaqCard />
+        </>
       )}
 
       {/* Language and text size are how the app READS, so they belong with the

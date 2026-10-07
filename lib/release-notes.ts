@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-07-questions-people-ask',
+    date: '2026-10-07',
+    title: 'Questions people ask',
+    items: [
+      'Answers to the questions people ask: what the app is, who can see what, signing in, your information and the law, and finding your way around. Search them, or tap a question to read its answer.',
+      'They are on the front door and the sign-in screen for anybody, before signing in, and in Settings, under Help, once you are in.',
+      'The privacy notice now says plainly that conversations are encrypted on their way and where they are kept, but not end to end.',
+    ],
+  },
+  {
     id: '2026-10-07-roles-and-pairings-kept-safe',
     date: '2026-10-07',
     title: 'Who can do what, kept by the church\'s own rules',

@@ -235,5 +235,68 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
      'and the privacy manual tells the church how to switch it on');
 }
 
+// ---------------------------------------------------------------------------
+// QUESTIONS PEOPLE ASK, BEFORE AND AFTER SIGNING IN
+// ---------------------------------------------------------------------------
+// The owner, 7 October 2026: "I want a complete FAQ in the app too please
+// before users login and inside the app in settings." The law's side of the
+// same thing: a person is told what is done with their information before it
+// is collected (RA 10173 §16). So the answers are one list (lib/faq.ts), open
+// to anybody at /faq, linked from every screen a signed-out person sees, and in
+// both halves' Settings, Help; and the answers about privacy say no more and no
+// less than the notice does. The browser half is
+// tests/e2e/questions-answered.js.
+{
+  const faq = readFileSync('lib/faq.ts', 'utf8');
+  const code = strip(faq);
+  ok(existsSync('app/faq/page.tsx'), 'the questions have a page of their own');
+  const page = strip(readFileSync('app/faq/page.tsx', 'utf8'));
+  ok(!/AppShell|useLiveSession|useDemo/.test(page) && /<Faq \/>/.test(page),
+     'and it needs nobody to be signed in');
+  for (const [file, where] of [
+    ['components/live/DoorPages.tsx', 'a real church\'s front door, sign-in and invitation pages link to it'],
+    ['app/page.tsx', 'the sample front door links to it'],
+    ['app/login/page.tsx', 'the sample sign-in links to it'],
+    ['app/privacy/page.tsx', 'the privacy notice links to it'],
+  ]) {
+    ok(/href="\/faq"/.test(readFileSync(file, 'utf8')), where);
+  }
+  const door = readFileSync('components/live/DoorPages.tsx', 'utf8');
+  ok((door.match(/href="\/faq"/g) || []).length >= 3, 'all three of the real church\'s signed-out pages, not one');
+  for (const [file, where] of [['app/settings/page.tsx', 'the sample church'], ['components/LiveAccountPages.tsx', 'a real church']]) {
+    const src = strip(readFileSync(file, 'utf8'));
+    const help = src.slice(src.indexOf("room === 'help'"));
+    ok(/<FaqCard \/>/.test(help.slice(0, 600)), `Settings, Help, in ${where}, holds the same answers`);
+    ok(/faq: 'help'/.test(src), `and /settings#faq lands on that folder in ${where}`);
+  }
+
+  // One source for what the app is and who sees what: the oversight words the
+  // invitation and the sign-up use, not a third version of them.
+  ok(/oversightPoints\(null\)/.test(code), 'the answers about the app and its oversight are the invitation\'s own words');
+  // Numbers read from the code that enforces them.
+  ok(/\$\{POST_FILES_MOST\}/.test(code) && /CLIP_MOST_BYTES/.test(code) && !/up to 10 photos/.test(code),
+     'the limits on a post are read from the code that enforces them');
+  // Nothing promised that the app does not keep.
+  ok(!/runs the server|owns the server/.test(faq), 'no answer promises that nobody running the server could reach a conversation');
+  ok(/not end-to-end encrypted/.test(faq), 'and the answer about encryption says what it is not');
+  const notice = readFileSync('app/privacy/page.tsx', 'utf8').replace(/\s+/g, ' ');
+  ok(!/not the person who runs the server/.test(notice) && /not end to end/.test(notice),
+     'the privacy notice says the same about the server');
+  ok(/one short clip on a post/.test(notice), 'and no longer says video is never kept, now a post carries a clip');
+  ok(!/dangerouslySetInnerHTML/.test(readFileSync('components/Faq.tsx', 'utf8')), 'the answers are drawn as text, never as HTML');
+
+  // Every link goes somewhere real: a page in this app, or the source code.
+  const links = [...code.matchAll(/href: ('[^']*'|SOURCE_URL)/g)].map((m) => m[1]);
+  ok(links.length >= 5, `the answers carry links (${links.length})`);
+  for (const href of new Set(links)) {
+    if (href === 'SOURCE_URL') continue;
+    const path = href.replace(/^'|'$/g, '');
+    ok(path.startsWith('/') && existsSync(`app${path}/page.tsx`), `${href} is a page that exists`);
+  }
+  // Every question can be linked to, so its id is unique.
+  const ids = [...code.matchAll(/^\s+id: '([a-z0-9-]+)'/gm)].map((m) => m[1]);
+  ok(ids.length >= 55 && new Set(ids).size === ids.length, `every group and question has its own address (${ids.length})`);
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

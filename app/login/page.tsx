@@ -67,6 +67,9 @@ function DemoLogin() {
             invitation link, open it to complete your sign-up. There is no public
             registration.
           </p>
+          <Link href="/faq" className="mt-3 inline-block font-semibold text-navy underline underline-offset-4" data-faq-link>
+            Questions people ask
+          </Link>
         </Card>
 
         {/*

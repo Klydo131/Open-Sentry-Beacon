@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDemo } from '@/lib/demo/store';
 import { QuestPicker } from '@/components/QuestPicker';
@@ -147,6 +148,13 @@ function DemoHome() {
               >
                 Forgot your password?
               </button>
+            </p>
+            {/* The same questions the real front door links, before anybody
+                chooses a sample person (app/faq/page.tsx). */}
+            <p>
+              <Link href="/faq" className="font-semibold text-white underline underline-offset-4" data-faq-link>
+                Questions? Read the answers
+              </Link>
             </p>
           </div>
 

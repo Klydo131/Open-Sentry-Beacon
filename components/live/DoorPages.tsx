@@ -98,6 +98,12 @@ export function LiveHomePage() {
           By invitation. Someone from your church brings you in, so there is
           nothing to sign up for here.
         </p>
+        {/* QUESTIONS, BEFORE ANYBODY SIGNS IN. Somebody holding an invitation
+            should be able to find out what they are joining, and who can see
+            what, before they join (app/faq/page.tsx). */}
+        <Link href="/faq" className="mt-3 text-sm font-semibold underline underline-offset-4" data-faq-link>
+          Questions? Read the answers
+        </Link>
 
         {/* THE WAY INTO THE TUTORIAL, AND IT HAS TO BE ON THIS SCREEN.
             "Invitation only, there is no public sign-up" is true and it is also
@@ -485,6 +491,11 @@ export function LiveLoginPage() {
           <Link href="/signup" className="mt-3 inline-block font-semibold text-navy underline">
             Invitation help
           </Link>
+          <p className="mt-2">
+            <Link href="/faq" className="text-sm font-semibold text-navy underline" data-faq-link>
+              Questions people ask
+            </Link>
+          </p>
         </Card>
       </div>
     </div>
@@ -514,6 +525,10 @@ export function LiveSignupPage() {
         <p className="text-center text-sm text-gray-500">
           Already set a password?{' '}
           <Link href="/login" className="font-semibold text-navy underline">Sign in</Link>
+        </p>
+        <p className="text-center text-sm text-gray-500">
+          What am I joining?{' '}
+          <Link href="/faq" className="font-semibold text-navy underline" data-faq-link>Questions people ask</Link>
         </p>
       </div>
     </div>

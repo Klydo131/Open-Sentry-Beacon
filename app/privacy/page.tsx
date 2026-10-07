@@ -115,10 +115,13 @@ export default function PrivacyPage() {
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Who can see it</h2>
           <ul className="mt-3 space-y-2 text-gray-700">
-            <li><strong>Your conversation is yours and your Guide&rsquo;s.</strong> Not
-              other Guides, not Directors, not the person who runs the server. The one
+            <li><strong>Your conversation is yours and your Guide&rsquo;s.</strong> No
+              other account in the app can open it: not other Guides, not Directors. The one
               exception is a safeguarding report, and the screen where you make one says
-              so before you make it.</li>
+              so before you make it. It is encrypted on its way and where it is stored, but
+              not end to end: the church&rsquo;s server keeps it, so the few people who run
+              the church&rsquo;s database could reach it there, outside the app. Who they
+              are is the church&rsquo;s to limit, and its privacy manual says how.</li>
             <li><strong>Your Guide</strong> sees your profile and what you write to them.</li>
             <li><strong>Your Directors</strong> see the church&rsquo;s members and its
               numbers, safeguarding reports, and a 30-day record of which links people
@@ -251,8 +254,12 @@ export default function PrivacyPage() {
             <li><strong>A reaction</strong> to a message (🙏, a heart and four others) is
               seen by the two of you, like the conversation itself.</li>
             <li><strong>Each file can be up to 10 MB</strong>, and each person can keep up
-              to 300 files or 200 MB of resources and handouts. Video is not kept; share a
-              link to it instead.</li>
+              to 300 files or 200 MB of resources and handouts. Apart from one short clip
+              on a post, video is not kept; share a link to it instead.</li>
+            <li><strong>Photos and a short video on a post</strong> are kept by the church
+              where only the people who may read that post can open them: up to ten photos
+              and one clip of about a minute (50 MB at most), and up to 40 files or 200 MB
+              for each person. Deleting the post deletes them.</li>
             <li><strong>Files you save under <em>On this device</em></strong> in My Files
               stay on your phone and are passed straight to the other person; they never
               reach a server.</li>
@@ -280,7 +287,10 @@ export default function PrivacyPage() {
           </p>
         </Card>
 
-        <div className="pb-10 text-center">
+        <div className="flex flex-col items-center gap-3 pb-10 text-center">
+          <Link href="/faq" className="font-semibold text-navy underline underline-offset-4" data-faq-link>
+            Questions people ask
+          </Link>
           <Link href="/" className="font-semibold text-navy underline underline-offset-4">
             ← Back to {APP_SHORT_NAME}
           </Link>
