@@ -25,6 +25,8 @@
 // notice that promised more privacy than the app keeps, or threatened more
 // watching than it does, is the legal trouble this exists to prevent.
 
+import { APP_NAME } from '@/lib/brand';
+
 export interface OversightPoint {
   icon: string;
   text: string;
@@ -35,7 +37,7 @@ export function oversightPoints(churchName?: string | null): OversightPoint[] {
   return [
     {
       icon: '⛪',
-      text: `Hope Beacon is a private app for one-to-one discipleship and the ministry of ${church}. It is used for nothing else.`,
+      text: `${APP_NAME} is a private app for one-to-one discipleship and the ministry of ${church}. It is used for nothing else.`,
     },
     {
       icon: '🛡️',

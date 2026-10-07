@@ -1,6 +1,7 @@
 'use client';
 
 import { oversightPoints } from '@/lib/oversight';
+import { APP_NAME } from '@/lib/brand';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -1227,7 +1228,7 @@ export function LiveJoinPage() {
                         informed (section 13; NPC Circular 2023-04). */}
                     <span className="text-sm leading-relaxed text-gray-700">
                       I give permission for <strong>{churchName || 'my church'}</strong> to
-                      keep and use my information in Hope Beacon for one-to-one discipleship
+                      keep and use my information in {APP_NAME} for one-to-one discipleship
                       and the church&rsquo;s ministry: my name and contact details, what I
                       choose to share with my Guide, and my place on the journey. I
                       understand this shows my connection with the church. I can update my

@@ -457,6 +457,21 @@ const GUARDRAILS = new Set([
   // Supabase creates, so it has to name them to select them. It reads the
   // catalogue only; it holds no key and no hostname.
   'supabase/tests/fingerprint.sql',
+  // What is deleted leaves no file behind (7 October 2026). The list of files
+  // to erase is read and cleared by the server role alone: the migration
+  // revokes both functions from every browser role by name and grants them to
+  // that role, the `erase` function reads the key from its own environment as
+  // `notify` does, and the tests check exactly that grant. Naming the role is
+  // the security property of all four lines. The credential-shape scan above
+  // still applies to them.
+  'supabase/migrations/20261007150000_what_is_deleted_leaves_no_file_behind.sql',
+  'supabase/functions/erase/index.ts',
+  'supabase/tests/what-is-deleted-leaves-no-file-behind.sql',
+  'tests/data-protection.mjs',
+  // Photos and a clip on a post: the two helper functions evaluated inside its
+  // storage rules are revoked from every browser role by name and granted to
+  // the roles that evaluate rules, the same shape as room_to_upload above.
+  'supabase/migrations/20261007160000_a_post_can_carry_photos_and_a_clip.sql',
 ]);
 // AN EXEMPTION IS FOR NAMING, NOT FOR CARRYING. Until 1 October 2026 a file on
 // the list above skipped every term, the live-hostname patterns included, so a
