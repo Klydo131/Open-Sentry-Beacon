@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="A long table laid for a meal, under a string of lights">
+  <rect width="800" height="500" fill="#f7dcc0"/>
+  <rect y="330" width="800" height="170" fill="#e9c39d"/>
+  <path d="M0 70 Q200 150 400 80 T800 70" fill="none" stroke="#7a5a3a" stroke-width="3"/>
+  <g fill="#ffd36b">
+    <circle cx="60" cy="96" r="11"/><circle cx="160" cy="118" r="11"/><circle cx="260" cy="115" r="11"/>
+    <circle cx="360" cy="90" r="11"/><circle cx="460" cy="78" r="11"/><circle cx="560" cy="98" r="11"/>
+    <circle cx="660" cy="96" r="11"/><circle cx="750" cy="76" r="11"/>
+  </g>
+  <rect x="70" y="270" width="660" height="34" rx="6" fill="#ffffff"/>
+  <rect x="70" y="300" width="660" height="60" fill="#d9e6f5"/>
+  <rect x="110" y="360" width="16" height="110" fill="#8a6440"/>
+  <rect x="674" y="360" width="16" height="110" fill="#8a6440"/>
+  <ellipse cx="170" cy="262" rx="62" ry="20" fill="#2f6b4f"/>
+  <ellipse cx="170" cy="252" rx="54" ry="14" fill="#7fb03a"/>
+  <ellipse cx="320" cy="250" rx="70" ry="30" fill="#d98b3a"/>
+  <path d="M262 252 q58 -40 116 0" fill="#e9a65a"/>
+  <rect x="430" y="176" width="54" height="90" rx="14" fill="#5b8dd6"/>
+  <path d="M484 196 q30 10 0 44" fill="none" stroke="#5b8dd6" stroke-width="10"/>
+  <ellipse cx="600" cy="262" rx="64" ry="20" fill="#b44a3a"/>
+  <ellipse cx="600" cy="252" rx="54" ry="14" fill="#e8b84b"/>
+  <g fill="#ffffff" opacity="0.9"><circle cx="560" cy="250" r="7"/><circle cx="600" cy="246" r="7"/><circle cx="638" cy="250" r="7"/></g>
+</svg>

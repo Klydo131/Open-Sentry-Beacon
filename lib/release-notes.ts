@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-07-home-is-a-billboard',
+    date: '2026-10-07',
+    title: 'Home is a billboard',
+    items: [
+      'Home opens on the church\'s announcements and its newest blog posts, as cards you swipe sideways. A post with a picture shows the picture.',
+      'Tap a card to read the whole thing, with its photos and any YouTube or Facebook video in it.',
+      'The church\'s banner is shorter on a phone, so the cards are on the first screen.',
+      'Whoever pinned a notice, or anybody in leadership, can take it down from the notice itself. Put back up is in the Announcements folder.',
+    ],
+  },
+  {
     id: '2026-10-07-whose-words-and-a-simpler-study-room',
     date: '2026-10-07',
     title: 'Clearer conversations, a simpler Study Room',

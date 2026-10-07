@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useDemo } from '@/lib/demo/store';
 import { Card } from '@/components/ui';
+import { HomeBoard, postedWhen, type BoardItem } from '@/components/HomeBoard';
+import { postsVisibleTo } from '@/components/Blog';
 import { NAVY, GOLD } from '@/lib/brand';
 import {
   churchFeed,
@@ -31,8 +33,27 @@ const TONE_RING: Record<string, string> = {
 };
 
 export function ChurchBillboard() {
-  const { db, currentUser } = useDemo();
+  const { db, currentUser, recordBlogView } = useDemo();
   const me = currentUser!;
+  // THE BILLBOARD (7 October 2026): the church's notices and what people have
+  // written, as pictures, before anything else. See components/HomeBoard.tsx.
+  const nameOf = (id: string) => db.profiles.find((p) => p.id === id)?.full_name ?? 'Someone';
+  const notices: BoardItem[] = ANNOUNCEMENTS.map((a) => ({
+    key: a.id, kind: 'notice', title: a.title, byline: a.when, text: a.body, icon: a.icon,
+  }));
+  const posts: BoardItem[] = postsVisibleTo(db, me.id)
+    .slice()
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 12)
+    .map((p) => ({
+      key: p.id,
+      kind: 'post',
+      title: p.title,
+      byline: `${nameOf(p.author_id)} · ${postedWhen(p.created_at)}`,
+      text: p.body,
+      media: p.media,
+      onOpen: () => recordBlogView(p.id),
+    }));
   const feed = churchFeed(db).slice(0, 12);
   const coming = upcomingCount(db);
   const privileged = isPrivileged(me.role);
@@ -41,22 +62,24 @@ export function ChurchBillboard() {
 
   return (
     <div className="space-y-6">
-      {/* Masthead */}
+      {/* Masthead. SMALLER ON A PHONE (7 October 2026), so the billboard under
+          it is on the first screen: the church's name and its counts stay,
+          the sentence about the board waits for a wider screen. */}
       <div
-        className="overflow-hidden rounded-2xl p-6 text-white sm:p-8"
+        className="overflow-hidden rounded-2xl p-5 text-white sm:p-6"
         style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #2b3d6b 100%)` }}
       >
-        <p className="text-sm font-semibold uppercase tracking-wider text-white/50">
+        <p className="text-xs font-semibold uppercase tracking-wider text-white/50 sm:text-sm">
           Church home
         </p>
-        <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">
+        <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">
           {db.church_name}
         </h1>
-        <p className="mt-2 max-w-xl text-white/70">
+        <p className="mt-2 hidden max-w-xl text-white/70 sm:block">
           Everything happening across the church, in one place. Everyone sees this
           board. No one’s private journey is ever shown here.
         </p>
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 sm:mt-4 sm:gap-2">
           <Chip label={`${coming} conversation${coming === 1 ? '' : 's'} this week`} />
           <Chip
             label={`${
@@ -70,6 +93,14 @@ export function ChurchBillboard() {
           />
         </div>
       </div>
+
+      <HomeBoard name="notices" heading="📌 Announcements" items={notices} />
+      <HomeBoard
+        name="posts"
+        heading="✍️ From the blog"
+        items={posts}
+        more={<Link href="/church?room=blogs" className="text-sm font-semibold text-room underline underline-offset-2">All posts</Link>}
+      />
 
       {/* Privileged strip — Admin / Executive. */}
       {privileged && (
@@ -139,23 +170,6 @@ export function ChurchBillboard() {
         </div>
       )}
 
-      {/* Announcements — church-wide notices, pinned above the live stream. */}
-      <div>
-        <h2 className="mb-3 text-xl font-bold text-room">📌 Announcements</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {ANNOUNCEMENTS.map((a) => (
-            <Card key={a.id} className="p-4">
-              <span className="text-2xl" aria-hidden>
-                {a.icon}
-              </span>
-              <p className="mt-1 font-bold text-navy">{a.title}</p>
-              <p className="text-sm text-gray-600">{a.body}</p>
-              <p className="mt-2 text-xs font-semibold text-gray-400">{a.when}</p>
-            </Card>
-          ))}
-        </div>
-      </div>
-
       {/* The live stream. */}
       <div>
         <h2 className="mb-3 text-xl font-bold text-room">🔔 Latest across the church</h2>
@@ -194,7 +208,7 @@ export function ChurchBillboard() {
 
 function Chip({ label }: { label: string }) {
   return (
-    <span className="rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-white/90">
+    <span className="text-sm font-semibold text-white/80 sm:rounded-full sm:bg-white/10 sm:px-3 sm:py-1.5 sm:text-white/90">
       {label}
     </span>
   );

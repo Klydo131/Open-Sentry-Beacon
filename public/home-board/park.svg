@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Green hills and trees under a morning sun">
+  <rect width="800" height="500" fill="#cfe8f7"/>
+  <circle cx="650" cy="110" r="56" fill="#ffd36b"/>
+  <path d="M0 300 Q180 210 380 290 T800 260 V500 H0Z" fill="#9ccb6a"/>
+  <path d="M0 360 Q240 300 470 360 T800 340 V500 H0Z" fill="#7fb03a"/>
+  <path d="M0 430 Q300 390 800 430 V500 H0Z" fill="#5f9a2c"/>
+  <g fill="#7a5a3a"><rect x="142" y="250" width="14" height="70"/><rect x="262" y="260" width="14" height="66"/><rect x="560" y="236" width="14" height="74"/></g>
+  <g fill="#2f6b4f"><circle cx="149" cy="236" r="40"/><circle cx="269" cy="246" r="34"/><circle cx="567" cy="220" r="44"/></g>
+  <g fill="#3f8a5f"><circle cx="128" cy="250" r="26"/><circle cx="590" cy="236" r="28"/></g>
+  <path d="M380 470 q40 -110 120 -150" fill="none" stroke="#e9d7a8" stroke-width="26" stroke-linecap="round"/>
+  <g><path d="M640 392 l18 -40 h36 l18 40z" fill="#1e2a4a"/><rect x="664" y="342" width="24" height="12" rx="4" fill="#1e2a4a"/></g>
+  <g><path d="M700 404 l14 -32 h28 l14 32z" fill="#34508a"/><rect x="719" y="364" width="18" height="10" rx="3" fill="#34508a"/></g>
+</svg>

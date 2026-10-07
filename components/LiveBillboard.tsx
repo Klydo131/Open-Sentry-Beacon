@@ -18,7 +18,7 @@
 // same thing without pointing at anybody.
 
 import { useCallback, useEffect, useState } from 'react';
-import { useKeepUp, KEEP_UP_ROSTER } from '@/lib/live/keep-up';
+import { useKeepUp, KEEP_UP_ROSTER, KEEP_UP_CHURCH } from '@/lib/live/keep-up';
 import Link from 'next/link';
 import * as live from '@/lib/live/data';
 import type { Profile } from '@/lib/types';
@@ -26,7 +26,7 @@ import { useLiveSession } from '@/lib/live/session';
 import { Button, Card } from '@/components/ui';
 import { NAVY, GOLD } from '@/lib/brand';
 import { humanError } from '@/lib/live/errors';
-import { LiveAnnouncements } from '@/components/LiveAnnouncements';
+import { HomeBoard, postedWhen, type BoardItem } from '@/components/HomeBoard';
 
 function message(cause: unknown): string {
   return humanError(cause, 'That did not work.');
@@ -34,7 +34,7 @@ function message(cause: unknown): string {
 
 function Chip({ label }: { label: string }) {
   return (
-    <span className="rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-white/90">
+    <span className="text-sm font-semibold text-white/80 sm:rounded-full sm:bg-white/10 sm:px-3 sm:py-1.5 sm:text-white/90">
       {label}
     </span>
   );
@@ -43,12 +43,12 @@ function Chip({ label }: { label: string }) {
 export function LiveBillboard({ churchName, between }: {
   churchName?: string | null;
   /**
-   * Rendered between the masthead and the notices.
+   * Rendered at the foot of the board, after the billboard's two rows.
    *
-   * The church home reads masthead, then Community Blogs, then Announcements,
-   * and the blogs are not this component's business. Passing them in beats
-   * either importing them here or splitting the billboard into two exports
-   * that a caller has to remember to use in the right order.
+   * It once put Community Blogs between the masthead and the notices. The
+   * blog is on the billboard itself now (components/HomeBoard.tsx), and
+   * nothing passes this today; it is kept as the one place a caller can add
+   * to Home without this file knowing about it.
    */
   between?: React.ReactNode;
 }) {
@@ -72,25 +72,82 @@ export function LiveBillboard({ churchName, between }: {
   useKeepUp(KEEP_UP_ROSTER, load);
 
 
+  // THE BILLBOARD (7 October 2026): what the church has pinned and what people
+  // have written, as pictures, straight under the masthead. Loaded apart from
+  // the roster so a member who cannot read the roster still gets the board.
+  const mayPost = leads || profile?.role === 'dm';
+  const [notices, setNotices] = useState<live.Announcement[] | null>(null);
+  const [posts, setPosts] = useState<live.FeedPost[] | null>(null);
+  const [boardError, setBoardError] = useState('');
+  const loadBoard = useCallback(async () => {
+    const failures: unknown[] = [];
+    const kept = <T,>(p: Promise<T>) => p.catch((cause) => { failures.push(cause); return null; });
+    const [n, p] = await Promise.all([kept(live.listAnnouncements()), kept(live.listBlogFeed(12))]);
+    setNotices(n);
+    setPosts(p);
+    // Said only when neither row could load: one row missing is a quieter
+    // board, both missing is a broken one.
+    setBoardError(n === null && p === null ? message(failures[0]) : '');
+  }, []);
+  useEffect(() => { void loadBoard(); }, [loadBoard]);
+  useKeepUp(KEEP_UP_CHURCH, loadBoard);
+
+  // What somebody may do to a notice from its open sheet: the same two things,
+  // for the same people, as the cards here used to carry.
+  const change = async (fn: () => Promise<void>) => {
+    try { await fn(); } catch (cause) { throw new Error(message(cause)); }
+    await loadBoard();
+  };
+  const manage = (n: live.Announcement): BoardItem['actions'] =>
+    leads || n.author_id === profile?.id
+      ? [
+          { label: 'Take down', run: () => change(() => live.pinAnnouncement(n.id, false)) },
+          { label: 'Delete', danger: true, run: () => change(() => live.deleteAnnouncement(n.id)) },
+        ]
+      : undefined;
+
+  // Only what is up. A notice that was taken down waits in the Announcements
+  // folder, where whoever took it down can put it back.
+  const noticeItems: BoardItem[] = (notices ?? []).filter((n) => n.is_pinned).map((n) => ({
+    key: n.id,
+    kind: 'notice',
+    title: n.title,
+    byline: n.when_text || postedWhen(n.created_at),
+    text: n.body,
+    icon: n.icon,
+    actions: manage(n),
+  }));
+  const postItems: BoardItem[] = (posts ?? []).map((p) => ({
+    key: p.id,
+    kind: 'post',
+    title: p.title,
+    byline: `${p.author_name || 'Someone'} · ${postedWhen(p.created_at)}`,
+    text: p.body,
+    pinned: p.pinned,
+    onOpen: () => void live.recordBlogView(p.id),
+  }));
+
   const guides = members?.filter((m) => m.role === 'dm' && m.is_approved).length;
   const explorers = members?.filter((m) => m.role === 'ds' && m.is_approved).length;
   const waiting = members?.filter((m) => !m.is_approved) ?? [];
 
   return (
     <div className="space-y-6">
-      {/* Masthead */}
+      {/* Masthead. SMALLER ON A PHONE (7 October 2026), so the billboard under
+          it is on the first screen: the church's name and its counts stay,
+          the sentence about the board waits for a wider screen. */}
       <div
-        className="overflow-hidden rounded-2xl p-6 text-white sm:p-8"
+        className="overflow-hidden rounded-2xl p-5 text-white sm:p-6"
         style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #2b3d6b 100%)` }}
       >
-        <p className="text-sm font-semibold uppercase tracking-wider text-white/50">Church home</p>
-        <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{churchName || 'Our church'}</h1>
-        <p className="mt-2 max-w-xl text-white/70">
+        <p className="text-xs font-semibold uppercase tracking-wider text-white/50 sm:text-sm">Church home</p>
+        <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">{churchName || 'Our church'}</h1>
+        <p className="mt-2 hidden max-w-xl text-white/70 sm:block">
           Everything the whole church shares, in one place. Nobody&rsquo;s private
           journey is ever shown here.
         </p>
         {(guides !== undefined || explorers !== undefined) && (
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 sm:mt-4 sm:gap-2">
             {explorers !== undefined && (
               <Chip label={`${explorers} Explorer${explorers === 1 ? '' : 's'} walking`} />
             )}
@@ -102,6 +159,37 @@ export function LiveBillboard({ churchName, between }: {
       </div>
 
       {error && <Card className="p-4 text-sm text-red-800">{error}</Card>}
+      {boardError && <Card className="p-4 text-sm text-red-800">{boardError}</Card>}
+
+      {notices !== null && (
+        <HomeBoard
+          name="notices"
+          heading="📌 Announcements"
+          items={noticeItems}
+          more={mayPost && (
+            <Link href="/church?room=announcements" className="text-sm font-semibold text-room underline underline-offset-2">
+              Write one
+            </Link>
+          )}
+          empty={mayPost && (
+            <Card className="p-5 text-sm text-gray-600">
+              Nothing pinned yet. What you write in Announcements shows here, for the whole church.
+            </Card>
+          )}
+        />
+      )}
+      {posts !== null && (
+        <HomeBoard
+          name="posts"
+          heading="✍️ From the blog"
+          items={postItems}
+          more={postItems.length > 0 && (
+            <Link href="/church?room=blogs" className="text-sm font-semibold text-room underline underline-offset-2">
+              All posts
+            </Link>
+          )}
+        />
+      )}
 
       {/* For a Director to action. Drawn only when there is something to do:
           a permanent "nothing waiting" panel is furniture. */}
@@ -127,12 +215,6 @@ export function LiveBillboard({ churchName, between }: {
       )}
 
       {between}
-
-      {/* THE NOTICES MOVED TO components/LiveAnnouncements.tsx, so the same
-          list can sit on a home screen without dragging this masthead along
-          with it. Second time this file has given a piece away; see
-          LiveWriteNotice for the first. */}
-      <LiveAnnouncements />
 
     </div>
   );

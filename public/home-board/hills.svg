@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="A path winding over quiet hills at dawn, with sheep grazing">
+  <rect width="800" height="500" fill="#fbe3c8"/>
+  <rect width="800" height="220" fill="#f6c99a"/>
+  <circle cx="400" cy="230" r="70" fill="#ffe7a8"/>
+  <path d="M0 250 Q200 170 420 240 T800 220 V500 H0Z" fill="#b9cf8e"/>
+  <path d="M0 320 Q260 250 520 320 T800 300 V500 H0Z" fill="#8fb36a"/>
+  <path d="M0 400 Q320 350 800 410 V500 H0Z" fill="#6f9a4c"/>
+  <path d="M330 500 C360 430 470 410 430 350 S470 280 420 250" fill="none" stroke="#efdcb4" stroke-width="22" stroke-linecap="round"/>
+  <g>
+    <g fill="#ffffff"><circle cx="170" cy="370" r="20"/><circle cx="194" cy="362" r="22"/><circle cx="218" cy="372" r="19"/><circle cx="196" cy="382" r="20"/></g>
+    <ellipse cx="152" cy="372" rx="11" ry="9" fill="#3a3a3a"/>
+    <g fill="#3a3a3a"><rect x="176" y="394" width="6" height="18"/><rect x="208" y="394" width="6" height="18"/></g>
+  </g>
+  <g>
+    <g fill="#ffffff"><circle cx="590" cy="350" r="16"/><circle cx="610" cy="344" r="18"/><circle cx="630" cy="352" r="15"/><circle cx="612" cy="360" r="16"/></g>
+    <ellipse cx="646" cy="352" rx="9" ry="8" fill="#3a3a3a"/>
+    <g fill="#3a3a3a"><rect x="596" y="370" width="5" height="14"/><rect x="622" y="370" width="5" height="14"/></g>
+  </g>
+</svg>

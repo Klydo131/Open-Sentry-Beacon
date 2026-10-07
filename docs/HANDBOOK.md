@@ -367,7 +367,23 @@ Directors keep the same control over everything, which is what running the churc
 
 **Announcements.** A title, the words and **Pin it**, and the notice sits at the top of everybody's Home. Tick **Advanced settings** to add when it happens ("This Sabbath, 9:00 AM"). Below are the ones you have pinned already. An Explorer has no Announcements folder: notices are pinned by Guides and leadership, and what an Explorer wants to say goes in their blog, which everybody reads too.
 
-**Taking a notice down still happens in Notices**, beside the notice itself. Deleting is about the thing in front of you; writing is something you go and do.
+**Taking a notice down happens on Home**, in the notice itself: tap it, and its writer or anybody in leadership sees **Take down** and **Delete** at the foot. A notice that is down is no longer on Home, so **Put back up** is in the Announcements folder, beside it in the list of ones you have pinned (which also has Take down and Delete).
+
+### Home is a billboard
+
+The owner, 7 October 2026: "It should look the Home Screen where people can see blogs and announcements right away please like a Bill board you can just see the image and photos right away and you can scroll on it."
+
+**Home opens on two rows you swipe sideways**, straight under the church's name: **📌 Announcements**, then **✍️ From the blog**. Each card is most of the screen's width, so the edge of the next one says there is more. On a computer, two arrows beside each heading move the row, because a mouse has no sideways swipe.
+
+**A card is its picture first.** A post with a photo shows the photo; one with a short clip shows its first frame; one with a YouTube or Facebook link shows a play button. A row where nothing has a picture stays short, each card its words with its emoji beside them, so a few notices do not push the blog's pictures off a phone's first screen.
+
+**Tap a card and it opens whole**, in a sheet over Home: every photo, the clip or the video, and all the writing, with who wrote it and when. Close it with the cross, the Escape key, or a tap outside it. Opening a post from Home counts as reading it, the same as opening the Blog folder, so its writer's reader count goes up by one person, never by name.
+
+**What is on it.** Announcements that are up, newest first. The blog row is the twelve newest posts you may read, with any a Director has pinned at the front (marked **Start here**), by the same rule as the Blog folder: a draft is never there, and a post addressed to named people reaches only them. **All posts** beside the heading opens the Blog folder. Somebody who can pin notices sees **Write one** beside Announcements, and when nothing is pinned the row tells them where to write the first; everybody else sees no row at all on an empty day.
+
+**The banner is shorter on a phone.** The church's name and its counts stay; the sentence about the board waits for a wider screen. That is what lets both rows start on the first screen of a phone.
+
+**The sample church** has two posts for the whole church and one from the sample Guide with pictures drawn for the app, so the billboard has something on it the first time anybody opens it. They are drawings, not photographs of anybody.
 
 ![Write a post, on a phone, after the tap on Home: the cursor in Title, Publish, and Advanced settings under it.](screenshots/walkthrough/34-home-blog.png)
 

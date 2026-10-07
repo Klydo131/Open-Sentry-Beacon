@@ -104,5 +104,48 @@ const notice = code('components/LiveWriteNotice.tsx');
 ok(/data-notice-advanced/.test(notice) && /\{advanced && \(\s*<Field\s+label="When"/.test(notice),
    'the announcement asks for a title and the words; When is under Advanced settings');
 
+// 5. HOME IS A BILLBOARD
+//
+// The owner, 7 October 2026: "It should look the Home Screen where people can
+// see blogs and announcements right away please like a Bill board you can just
+// see the image and photos right away and you can scroll on it." The sample
+// half is walked in tests/e2e/home-is-a-billboard.js; the live half reads a
+// database, so its wiring is held here.
+const board = code('components/HomeBoard.tsx');
+ok(!/@\/lib\/live\/data|useDemo|\bdb\(\)/.test(board), 'the billboard draws what it is handed and reads no database itself');
+const liveBoard = code('components/LiveBillboard.tsx');
+ok(/<HomeBoard\s+name="notices"/.test(liveBoard) && /<HomeBoard\s+name="posts"/.test(liveBoard) && !/<LiveAnnouncements/.test(liveBoard),
+   'live Home: a row of announcements and a row of blog posts, in place of the old grid of notices');
+ok(/live\.listAnnouncements\(\)/.test(liveBoard) && /live\.listBlogFeed\(12\)/.test(liveBoard) && /useKeepUp\(KEEP_UP_CHURCH, loadBoard\)/.test(liveBoard),
+   'live Home: both rows come from the database the feed already uses, and keep up when somebody posts');
+ok(/\.filter\(\(n\) => n\.is_pinned\)/.test(liveBoard), 'live Home: only notices that are up are on the board');
+ok(/onOpen: \(\) => void live\.recordBlogView\(p\.id\)/.test(liveBoard), 'live Home: opening a post from the board counts as reading it');
+ok(/leads \|\| n\.author_id === profile\?\.id\s*\?\s*\[[\s\S]{0,120}'Take down'[\s\S]{0,160}'Delete', danger: true/.test(liveBoard),
+   'live Home: Take down and Delete, in the open notice, only for its writer and leadership; Delete in the small red style');
+ok(/\{\s*n\.is_pinned \? 'Take down' : 'Put back up'\s*\}/.test(code('components/LiveWriteNotice.tsx')),
+   'a notice that is down can be put back up from the Announcements folder, since it is no longer on Home');
+const sampleBoard = code('components/ChurchBillboard.tsx');
+ok(/postsVisibleTo\(db, me\.id\)/.test(sampleBoard) && /onOpen: \(\) => recordBlogView\(p\.id\)/.test(sampleBoard),
+   'sample Home: the posts this person may read, by the same rule as the feed, and opening one is reading it');
+for (const [file, src] of [['components/LiveBillboard.tsx', liveBoard], ['components/ChurchBillboard.tsx', sampleBoard]]) {
+  const masthead = src.indexOf('<h1');
+  const first = src.indexOf('<HomeBoard');
+  const action = src.indexOf('For you to action');
+  ok(masthead > 0 && first > masthead && first < action, `${file}: the board comes straight after the church's name, before anything else`);
+}
+
+// The sample posts' covers are drawn for this app, and an SVG is a document
+// that can carry script: each one is plain shapes, with nothing that runs and
+// nothing fetched from elsewhere.
+const seed = fs.readFileSync(path.join(root, 'lib/demo/seed.ts'), 'utf8');
+const covers = [...seed.matchAll(/src: '(\/home-board\/[a-z-]+\.svg)'/g)].map((m) => m[1]);
+ok(covers.length >= 3, `the sample church has posts with pictures (${covers.length})`);
+for (const cover of covers) {
+  const file = path.join(root, 'public', cover);
+  const svg = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+  ok(svg.length > 0 && svg.length < 4000 && !/<script|\bon[a-z]+\s*=|href\s*=|url\(|<foreignObject|<image/i.test(svg),
+     `${cover}: there, small, and only shapes: no script, no links, no outside pictures`);
+}
+
 console.log(bad ? `\nRESULT: ${bad} FAILURE(S)` : '\nRESULT: ALL OK');
 process.exit(bad ? 1 : 0);

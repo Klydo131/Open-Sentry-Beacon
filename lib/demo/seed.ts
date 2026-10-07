@@ -616,6 +616,37 @@ export function makeSeed(): DB {
         visibility: 'published',
         audience: 'all',
         created_at: iso(60 * 26),
+        media: [{ kind: 'image', src: '/home-board/hills.svg', alt: 'A path winding over quiet hills at dawn, with sheep grazing' }],
+      },
+      // TWO POSTS FOR THE WHOLE CHURCH, so Home's billboard has pictures on it
+      // the first time anybody opens the sample church. The covers are drawn
+      // for this app (public/home-board/), not photographs of anybody.
+      {
+        id: 'blog-potluck',
+        author_id: 'admin-1',
+        title: 'Fellowship lunch after worship this Sabbath',
+        body:
+          'Everybody is welcome to stay after the service. Bring a dish if you '
+          + 'can, and come anyway if you cannot. There is always enough.\n\n'
+          + 'The tables go up in the hall at 12:15. If you can help set up or '
+          + 'wash up, find me after the sermon.',
+        visibility: 'published',
+        audience: 'church',
+        created_at: iso(60 * 4),
+        media: [{ kind: 'image', src: '/home-board/potluck.svg', alt: 'A long table laid for a meal, under a string of lights' }],
+      },
+      {
+        id: 'blog-park',
+        author_id: 'dm-david',
+        title: 'Thank you to everybody who came to the park clean-up',
+        body:
+          'Twenty-three of us, eleven bags, and one very muddy Pathfinder banner.\n\n'
+          + 'A neighbour stopped to ask who we were and stayed for an hour. That '
+          + 'is the part I keep thinking about.',
+        visibility: 'published',
+        audience: 'church',
+        created_at: iso(60 * 50),
+        media: [{ kind: 'image', src: '/home-board/park.svg', alt: 'Green hills and trees under a morning sun' }],
       },
       {
         id: 'blog-draft',

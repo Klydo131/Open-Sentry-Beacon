@@ -364,6 +364,22 @@ export interface BlogPost {
   audience: BlogAudienceKind;
   created_at: string;
   updated_at?: string;
+  /** Photos and a short clip, shown on Home's billboard and in the post. */
+  media?: PostMedia[];
+}
+
+/**
+ * A photo or a short clip on a post or a notice.
+ *
+ * `src` is whatever the browser can show: a picture shipped with the app for a
+ * sample post, a blob: for one kept on this device, or a short-lived signed
+ * link to the church's own storage.
+ */
+export interface PostMedia {
+  kind: 'image' | 'video';
+  src: string;
+  /** Said for a photo, for anybody who cannot see it. */
+  alt?: string;
 }
 
 /** Only used when audience === 'selected'. One row per named Explorer. */

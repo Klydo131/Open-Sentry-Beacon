@@ -228,6 +228,18 @@ Report is in the bubble's header, in words, never beside Send), and **a
 Guide sees the church's notices above the row rather than inside a folder** —
 both were asked for in those terms and both are checked.
 
+**Home opens on a billboard.** Asked for on 7 October 2026: "It should look the
+Home Screen where people can see blogs and announcements right away please like
+a Bill board you can just see the image and photos right away and you can
+scroll on it." Under the church's name, two rows you swipe sideways,
+announcements then blog posts, each card its picture first; a card opens the
+whole post in a sheet. `components/HomeBoard.tsx` draws it for both halves and
+reads no database; `components/LiveBillboard.tsx` and
+`components/ChurchBillboard.tsx` hand it their rows. Those two files moved from
+Codex's lane to Claude's on the owner's decision that day. Checked by
+`tests/e2e/home-is-a-billboard.js` and section 5 of
+`tests/blog-and-announcements-are-home.mjs`.
+
 **Classic is the app's look, and a new look never changes it.** Asked for on 3
 October 2026: "I want the current UI to be called "classic" in the settings
 right now, ChatGPT or Codex will introduce new theme UI that users can pick, but

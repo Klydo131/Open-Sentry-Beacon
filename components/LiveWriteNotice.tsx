@@ -126,6 +126,11 @@ export function LiveWriteNotice() {
     } catch (cause) { setError(message(cause)); } finally { setBusy(false); }
   };
 
+  const change = async (fn: () => Promise<void>) => {
+    setBusy(true); setError(''); setFlash('');
+    try { await fn(); await load(); } catch (cause) { setError(message(cause)); } finally { setBusy(false); }
+  };
+
   const ownOrAll = (mine ?? []).filter((n) => leads || n.author_id === profile?.id);
 
   return (
@@ -231,8 +236,9 @@ export function LiveWriteNotice() {
       </div>
 
       {/* WHAT IS ALREADY UP, so somebody does not pin the same thing twice.
-          Taking one down happens on the church screen beside the notice
-          itself, which is where you are when you decide it has served. */}
+          Taking one down also happens on Home, in the notice's own sheet,
+          which is where you are when you decide it has served. A notice that
+          is down is no longer on Home, so putting it back up is here. */}
       <div className="mt-5 border-t border-gray-100 pt-4">
         <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
           {leads ? 'Already pinned' : 'Yours, already pinned'}
@@ -250,6 +256,22 @@ export function LiveWriteNotice() {
                 {!n.is_pinned && (
                   <span className="shrink-0 text-xs text-gray-500">taken down</span>
                 )}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void change(() => live.pinAnnouncement(n.id, !n.is_pinned))}
+                  className="tap-sm shrink-0 px-1 text-xs font-semibold text-navy underline"
+                >
+                  {n.is_pinned ? 'Take down' : 'Put back up'}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void change(() => live.deleteAnnouncement(n.id))}
+                  className="tap-sm shrink-0 px-1 text-xs font-semibold text-red-700 underline"
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
