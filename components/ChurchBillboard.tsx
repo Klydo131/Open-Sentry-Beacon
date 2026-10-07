@@ -66,6 +66,7 @@ export function ChurchBillboard() {
           it is on the first screen: the church's name and its counts stay,
           the sentence about the board waits for a wider screen. */}
       <div
+        data-church-masthead
         className="overflow-hidden rounded-2xl p-5 text-white sm:p-6"
         style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #2b3d6b 100%)` }}
       >

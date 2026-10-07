@@ -142,6 +142,7 @@ export function LiveBillboard({ churchName, between }: {
           the sentence about the board waits for a wider screen. */}
       <div
         className="overflow-hidden rounded-2xl p-5 text-white sm:p-6"
+        data-church-masthead
         style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #2b3d6b 100%)` }}
       >
         <p className="text-xs font-semibold uppercase tracking-wider text-white/50 sm:text-sm">Church home</p>
