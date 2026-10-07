@@ -47,7 +47,8 @@ import { isSafeStoragePath, safeStoragePath } from '@/lib/live/storage-path';
 import { NotOnThisDatabaseYet, isMissingFromDatabase } from '@/lib/live/not-yet';
 import type { PlaceSuggestion } from '@/lib/live/place-pin';
 import type { Session } from '@supabase/supabase-js';
-import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode } from '@/lib/types';
+import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode, PostMedia } from '@/lib/types';
+import { forgetPostFile, readPostFile } from '@/lib/post-media';
 import type { Reaction, ReactionTarget } from '@/lib/talk/reactions';
 import { plainTitle } from '@/lib/talk/thread';
 import { STAGE_ORDER } from '@/lib/brand';
@@ -1692,6 +1693,99 @@ export async function createBlogPost(m: {
     if (audErr) throw new Error(audErr.message);
   }
   return data.id as string;
+}
+
+// ---------------------------------------------------------------------------
+// Photos and a short clip on a post (database change 20261007160000).
+//
+// The owner, 7 October 2026: "writing blog post should be easy with added
+// features like photos and videos". The writer picks them first; they wait on
+// the device (lib/post-media.ts) until the post exists, then go to the church's
+// own private bucket under <church>/<post>/<uuid>.<ext>, the only shape the
+// database accepts, and the device copy is forgotten. Reading one asks the
+// database for its row first, so a photo reaches exactly the people who may
+// read the post, and a draft's photos stay with its writer.
+//
+// UNTIL THE CHANGE IS APPLIED the table is missing, postPhotosReady() says no,
+// and the writing box shows no photo buttons. Nothing else changes.
+// ---------------------------------------------------------------------------
+
+const POST_BUCKET = 'post-media';
+const POST_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp',
+  'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov',
+};
+
+let photosReady: Promise<boolean> | null = null;
+/** Whether this church's database takes photos on posts yet. Asked once per page load. */
+export function postPhotosReady(): Promise<boolean> {
+  photosReady ??= Promise.resolve(db().from('post_media').select('id').limit(1))
+    .then(({ error }) => !error || !isMissingFromDatabase(error))
+    .catch(() => false);
+  return photosReady;
+}
+
+/**
+ * Put a written post's photos and clip in the church's storage, in order.
+ * Returns how many could not go, so the writer can be told; the post itself is
+ * already published and is not taken back over a photo.
+ */
+export async function attachPostMedia(postId: string, media: PostMedia[]): Promise<number> {
+  if (media.length === 0) return 0;
+  const supabase = db();
+  const me = await uid();
+  const { data: mine } = await supabase.from('profiles').select('church_id').eq('id', me).maybeSingle();
+  const church = mine?.church_id as string | undefined;
+  if (!church) return media.length;
+  let missed = 0;
+  for (const [position, m] of media.entries()) {
+    try {
+      const blob = await readPostFile(m.src);
+      const mime = blob?.type || '';
+      const ext = (POST_EXT[mime] ?? '').replace(/[^a-z0-9]/gi, '');
+      if (!blob || !ext) { missed++; continue; }
+      const path = `${church}/${postId}/${uuid()}.${ext}`;
+      const up = await supabase.storage.from(POST_BUCKET).upload(path, blob, { contentType: mime, upsert: false });
+      if (up.error) { missed++; continue; }
+      const { error } = await supabase.from('post_media').insert({
+        church_id: church, post_id: postId, owner_id: me,
+        kind: m.kind, mime, size: blob.size, path, alt: (m.alt ?? '').slice(0, 300), position,
+      });
+      if (error) {
+        await supabase.storage.from(POST_BUCKET).remove([path]).catch(() => undefined);
+        missed++;
+        continue;
+      }
+      await forgetPostFile(m.src).catch(() => undefined);
+    } catch {
+      missed++;
+    }
+  }
+  return missed;
+}
+
+/**
+ * The photos and clips on some posts, as addresses this person may open for an
+ * hour. Posts with none are simply absent from the map.
+ */
+export async function mediaForPosts(postIds: string[]): Promise<Map<string, PostMedia[]>> {
+  const found = new Map<string, PostMedia[]>();
+  if (postIds.length === 0 || !(await postPhotosReady())) return found;
+  const supabase = db();
+  const { data, error } = await supabase.from('post_media')
+    .select('post_id, kind, path, alt, position')
+    .in('post_id', postIds)
+    .order('position', { ascending: true });
+  if (error || !data?.length) return found;
+  const rows = data as { post_id: string; kind: 'image' | 'video'; path: string; alt: string }[];
+  const signed = await supabase.storage.from(POST_BUCKET).createSignedUrls(rows.map((r) => r.path), 60 * 60);
+  const urlFor = new Map((signed.data ?? []).map((x) => [x.path, x.signedUrl] as const));
+  for (const r of rows) {
+    const src = urlFor.get(r.path);
+    if (!src) continue;
+    found.set(r.post_id, [...(found.get(r.post_id) ?? []), { kind: r.kind, src, alt: r.alt || undefined }]);
+  }
+  return found;
 }
 
 /** Publish a draft, or take a post off the front page without losing it. */

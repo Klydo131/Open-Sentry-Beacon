@@ -21,7 +21,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useKeepUp, KEEP_UP_ROSTER, KEEP_UP_CHURCH } from '@/lib/live/keep-up';
 import Link from 'next/link';
 import * as live from '@/lib/live/data';
-import type { Profile } from '@/lib/types';
+import type { PostMedia, Profile } from '@/lib/types';
 import { useLiveSession } from '@/lib/live/session';
 import { Button, Card } from '@/components/ui';
 import { NAVY, GOLD } from '@/lib/brand';
@@ -78,6 +78,7 @@ export function LiveBillboard({ churchName, between }: {
   const mayPost = leads || profile?.role === 'dm';
   const [notices, setNotices] = useState<live.Announcement[] | null>(null);
   const [posts, setPosts] = useState<live.FeedPost[] | null>(null);
+  const [pictures, setPictures] = useState<Map<string, PostMedia[]>>(new Map());
   const [boardError, setBoardError] = useState('');
   const loadBoard = useCallback(async () => {
     const failures: unknown[] = [];
@@ -85,6 +86,8 @@ export function LiveBillboard({ churchName, between }: {
     const [n, p] = await Promise.all([kept(live.listAnnouncements()), kept(live.listBlogFeed(12))]);
     setNotices(n);
     setPosts(p);
+    // The pictures after the words, so the board draws at once and fills in.
+    if (p?.length) void live.mediaForPosts(p.map((x) => x.id)).then(setPictures).catch(() => {});
     // Said only when neither row could load: one row missing is a quieter
     // board, both missing is a broken one.
     setBoardError(n === null && p === null ? message(failures[0]) : '');
@@ -124,6 +127,7 @@ export function LiveBillboard({ churchName, between }: {
     byline: `${p.author_name || 'Someone'} · ${postedWhen(p.created_at)}`,
     text: p.body,
     pinned: p.pinned,
+    media: pictures.get(p.id),
     onOpen: () => void live.recordBlogView(p.id),
   }));
 

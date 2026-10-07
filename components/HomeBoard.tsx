@@ -30,6 +30,9 @@ import { scrollMotion } from '@/lib/motion';
 import { Linked } from '@/components/Linked';
 import { CloseGlyph } from '@/components/Glyph';
 import { Button } from '@/components/ui';
+import { PostClip, PostGallery, PostPhoto } from '@/components/PostMedia';
+import { shareItem } from '@/lib/share';
+import { APP_NAME } from '@/lib/brand';
 import type { PostMedia } from '@/lib/types';
 
 export type BoardMedia = PostMedia;
@@ -72,18 +75,9 @@ function Cover({ item }: { item: BoardItem }) {
   const photo = item.media?.find((m) => m.kind === 'image');
   const clip = item.media?.find((m) => m.kind === 'video');
   const link = !photo && !clip ? videoIn(item.text) : null;
-  if (photo) {
-    return (
-      // A plain <img>: the photos are the church's own, already small, and
-      // next/image would need every storage address listed in the config.
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={photo.src} alt={photo.alt ?? ''} loading="lazy" decoding="async" className="h-full w-full object-cover" />
-    );
-  }
-  if (clip) {
-    // The clip's first frame, still and silent, until the card is opened.
-    return <video src={clip.src} muted playsInline preload="metadata" className="h-full w-full object-cover" aria-hidden />;
-  }
+  if (photo) return <PostPhoto media={photo} lazy className="h-full w-full object-cover" />;
+  // The clip's first frame, still and silent, until the card is opened.
+  if (clip) return <PostClip media={clip} still className="h-full w-full object-cover" />;
   // A drawn cover, not a picture: navy for a post, the church's gold for a
   // notice. Its own colours, so every look shows it the same, and the writing
   // on it is chosen for that colour rather than for the look.
@@ -143,6 +137,18 @@ function Reader({ item, onClose }: { item: BoardItem; onClose: () => void }) {
     };
   }, [onClose]);
   const link = videoIn(item.text);
+  const [shared, setShared] = useState('');
+  const share = async () => {
+    const url = `${window.location.origin}/church?room=notices#post-${encodeURIComponent(item.key)}`;
+    const how = await shareItem({
+      title: item.title,
+      text: `${item.kind === 'notice' ? 'An announcement' : 'A post'} in ${APP_NAME}: ${item.title}`,
+      url,
+    });
+    setShared(how === 'copied' ? 'Link copied. Only people in your church can open it.'
+      : how === 'shared' ? 'Shared. Only people in your church can open it.'
+      : how === 'cancelled' ? '' : `Copy this link to share it: ${url}`);
+  };
   // An action that fails says so here, in the sheet it was pressed in. The
   // caller words the message; this only shows it.
   const act = async (run: () => void | Promise<void>) => {
@@ -177,12 +183,7 @@ function Reader({ item, onClose }: { item: BoardItem; onClose: () => void }) {
           </button>
         </div>
         <div className="space-y-3 px-5 pb-6">
-          {item.media?.map((m, i) => (m.kind === 'image' ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={m.src} alt={m.alt ?? ''} className="w-full rounded-xl object-cover" />
-          ) : (
-            <video key={i} src={m.src} controls playsInline preload="metadata" className="w-full rounded-xl bg-black" />
-          )))}
+          <PostGallery media={item.media} />
           {link && (
             <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ aspectRatio: '16 / 9' }}>
               <iframe
@@ -201,6 +202,14 @@ function Reader({ item, onClose }: { item: BoardItem; onClose: () => void }) {
               <Linked text={item.text} />
             </p>
           )}
+          {/* SHARE: the title and a link, never the words or the photos.
+              The link opens only for somebody signed in to this church who may
+              read it, so passing it on cannot carry a member's post outside
+              the church. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" onClick={() => void share()}>Share</Button>
+            {shared && <span className="break-all text-sm text-gray-600" role="status">{shared}</span>}
+          </div>
           {item.actions && item.actions.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
               {failed && <p role="alert" className="w-full text-sm font-semibold text-red-700">{failed}</p>}
@@ -237,6 +246,15 @@ export function HomeBoard({ items, heading, name, more, empty }: {
   // One function for the life of the row, so the open sheet's keyboard and
   // scroll lock are set up once, not again on every redraw of Home.
   const shut = useCallback(() => setOpen(null), []);
+  // A SHARED LINK OPENS THE POST it points at (#post-<key>), once, when the
+  // row first has it.
+  const opened = useRef(false);
+  useEffect(() => {
+    if (opened.current || typeof window === 'undefined') return;
+    const wanted = decodeURIComponent(window.location.hash.replace(/^#post-/, ''));
+    const found = window.location.hash.startsWith('#post-') ? items.find((i) => i.key === wanted) : undefined;
+    if (found) { opened.current = true; found.onOpen?.(); setOpen(found); }
+  }, [items]);
   if (items.length === 0 && !empty) return null;
 
   // A ROW OF WORDS STAYS SHORT. Picture-sized covers are for pictures: in a
@@ -272,7 +290,7 @@ export function HomeBoard({ items, heading, name, more, empty }: {
       {items.length === 0 && empty}
       {items.length > 0 && <ul ref={strip} className="thin-scroll -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 md:mx-0 md:px-0">
         {items.map((item) => (
-          <li key={item.key} className="w-[84%] max-w-[22rem] shrink-0 snap-start">
+          <li key={item.key} data-key={item.key} className="w-[84%] max-w-[22rem] shrink-0 snap-start">
             <button
               type="button"
               onClick={() => { item.onOpen?.(); setOpen(item); }}

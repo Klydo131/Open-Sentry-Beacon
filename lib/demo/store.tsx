@@ -31,6 +31,7 @@ import type {
   Track,
   BlogVisibility,
   BlogAudienceKind,
+  PostMedia,
 } from '../types';
 import { nextStage, roleLabel, canKick } from '../brand';
 
@@ -46,6 +47,7 @@ function welcomeLine(role: string): string {
 }
 import { publishDb, subscribeDb } from '../realtime';
 import { deleteMedia, newMediaId, putMedia, typeFromMime } from '../localMedia';
+import { forgetPostFile } from '../post-media';
 import { makeSeed } from './seed';
 import { REACTIONS, type ReactionTarget } from '../talk/reactions';
 import { plainTitle } from '../talk/thread';
@@ -321,6 +323,7 @@ export interface Ctx {
     visibility: BlogVisibility;
     audience: BlogAudienceKind;
     dsIds?: string[];
+    media?: PostMedia[];
   }) => void;
   setBlogVisibility: (id: string, visibility: BlogVisibility) => void;
   deleteBlogPost: (id: string) => void;
@@ -1493,6 +1496,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       visibility: BlogVisibility;
       audience: BlogAudienceKind;
       dsIds?: string[];
+      media?: PostMedia[];
     }) => {
       const title = m.title.trim();
       const body = m.body.trim();
@@ -1509,6 +1513,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             visibility: m.visibility,
             audience: m.audience,
             created_at: nowIso(),
+            ...(m.media?.length ? { media: m.media } : {}),
           },
           ...prev.blog_posts,
         ],
@@ -1551,6 +1556,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       persistUpdate((prev) => {
         const mine = prev.blog_posts.find((p) => p.id === id && p.author_id === userId);
         if (!mine) return prev;
+        // ITS PHOTOS AND CLIP GO TOO, from this device (lib/post-media.ts):
+        // a deleted post leaves no file behind, here as in a real church.
+        for (const m of mine.media ?? []) void forgetPostFile(m.src).catch(() => {});
         // The views and the audience rows go with it. Leaving them behind would
         // keep counting readers for something nobody can read.
         return {

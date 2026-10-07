@@ -161,7 +161,7 @@ Vercel; e-mail is sent by Brevo; a weekly backup is encrypted before it leaves.
 | What | Kept | Then |
 |---|---|---|
 | An account and everything in it | While the person is a member | Deleted at once when the account is removed |
-| Stored files (photos, voice messages, resources, handouts, pictures) | As long as the record that points at them | Queued the moment their record is deleted, removed from storage by the nightly clean-up |
+| Stored files (photos, voice messages, resources, handouts, pictures, a post's photos and clip) | As long as the record that points at them | Queued the moment their record is deleted, removed from storage by the nightly clean-up |
 | Record of shared links | 30 days | Deleted automatically |
 | Safeguarding reports and the record of a removal | Permanently, deliberately | Kept to show the church acted on a safeguarding concern: the establishment or defence of a legal claim and the protection of vital interests (Act, section 13(b), (f)) |
 | Backups | [the church's backup period] | Overwritten by later backups |

@@ -70,6 +70,7 @@ Structure read from the live database. No values were read.
 | `prayer_requests` | what somebody asked prayer for, an Explorer or their Guide | The Explorer and their Guide; a Guide's request only to the one Explorer it was written to |
 | `guild_activity_posts` | a post on a guild board | Members of that guild, unsigned; leadership only when reported |
 | `posts` | blogs, at the audience the author chose | As chosen |
+| `post_media` + object storage (`post-media/<church>/<post>/`) (since 7 October 2026, database change `20261007160000`) | up to ten photos and one short clip on a post or a notice; photos shrunk and stripped of location before upload | Exactly who may read the post or the notice: the database asks the post's own rule. A draft's photos stay with its writer. Deleted with the post, and the files erased (`20261007150000`) |
 | `meetings`, `notes`, `follow_ups` | arrangements and a Guide's private notes | The pair, or the Guide alone |
 | `office_plans` (since 2 October 2026, migration `20261002150000`) | the account's own copy of its Sabbath programs and evangelistic meetings, so they follow it to every device it signs in on: the same as the device holds, platform notes and **Team only** blocks included. A deleted one stays as a row with its content emptied, so no other device brings it back. At most 1000 rows an account | **Its owner alone**: four owner-only rules, nothing for leadership, nothing for anybody signed out. Deleted with the account |
 

@@ -90,6 +90,10 @@ ok(/\.createSignedUrls\(unique,/.test(data), 'the one plural signing call sends 
 // 3. THE SHAPES THE APP WRITES -------------------------------------------------------
 const templates = [...data.matchAll(/const path = `([^`]+)`/g)].map((m) => m[1]).sort();
 const KNOWN = [
+  // A post's photo or clip (7 October 2026): <church>/<post>/<uuid>.<ext>,
+  // the extension from a fixed list of six; the database refuses any other
+  // shape (post_media_path_shape, 20261007160000).
+  "${church}/${postId}/${uuid()}.${ext}",
   "${pairingId}/${uuid()}",
   "avatars/${me}/${Date.now()}.${ext}",
   "lessons/${me_id}/${lessonId}-${Date.now()}${ext ? '.' + ext : ''}",
@@ -98,7 +102,7 @@ const KNOWN = [
 ].sort();
 ok(JSON.stringify(templates) === JSON.stringify(KNOWN),
    templates.length === KNOWN.length && templates.every((t, i) => t === KNOWN[i])
-     ? 'the app writes only the five known path shapes'
+     ? 'the app writes only the six known path shapes'
      : `a path shape changed; check it against lib/live/storage-path.ts, then update this list:\n      ${templates.join('\n      ')}`);
 // Every extension is cut down to letters and digits before it joins a path.
 const exts = [...data.matchAll(/const ext = ([^;]+);/g)].map((m) => m[1]);

@@ -387,6 +387,10 @@ The owner, 7 October 2026: "It should look the Home Screen where people can see 
 
 **The banner is shorter on a phone.** The church's name and its counts stay; the sentence about the board waits for a wider screen. That is what lets both rows start on the first screen of a phone.
 
+**Photos and a short video.** Under the post you are writing, **Add photos** takes up to ten pictures and **Add a short video** one clip of about a minute (50 MB at most). Each photo is made smaller and loses the place it was taken before it is kept; a video that is too long is refused with what to do instead: put a YouTube or Facebook link in the post, which plays inside it. Take one off with the cross on its corner. In the sample church they are kept on your own device. In a church's own app they need the church's database change for post photos; until it is applied, a link to a video still plays.
+
+**Share**, on an open post or notice, sends its title and a link, through the phone's own share sheet or by copying it. It never sends the words or the photos, and the link opens only for somebody signed in to that church who may read the post, so passing it on cannot carry a member's writing outside the church. A link opens the post straight away.
+
 **The sample church** has two posts for the whole church and one from the sample Guide with pictures drawn for the app, so the billboard has something on it the first time anybody opens it. They are drawings, not photographs of anybody.
 
 ![Write a post, on a phone, after the tap on Home: the cursor in Title, Publish, and Advanced settings under it.](screenshots/walkthrough/34-home-blog.png)

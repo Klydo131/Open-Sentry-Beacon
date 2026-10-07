@@ -135,6 +135,74 @@ const openHome = async (page) => {
     await desk.waitFor({ timeout: 10_000 });
     ok(/\b1 reader\b/.test(await desk.innerText()), 'opening it from Home counted: its writer sees 1 reader');
 
+    // ---- A Guide adds a photo to a post, and it is on Home as a picture. ----
+    // 7 October 2026: "writing blog post should be easy with added features
+    // like photos and videos", and "Samples should really feel like they are
+    // using the app, like they can see the photos and videos, can share".
+    await signIn(page, BASE, 'Maria Santos');
+    await page.goto(`${BASE}/church?room=blogs`, { waitUntil: 'networkidle' });
+    await page.locator('#blog-title').waitFor({ timeout: 10_000 });
+    // A real picture, drawn here: 400 x 300, a gradient, as PNG bytes.
+    const png = await page.evaluate(async () => {
+      const c = document.createElement('canvas'); c.width = 400; c.height = 300;
+      const g = c.getContext('2d'); const grad = g.createLinearGradient(0, 0, 400, 300);
+      grad.addColorStop(0, '#f6d27a'); grad.addColorStop(1, '#34508a'); g.fillStyle = grad; g.fillRect(0, 0, 400, 300);
+      const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
+      return Array.from(new Uint8Array(await blob.arrayBuffer()));
+    });
+    await page.locator('[data-post-photos]').setInputFiles({ name: 'garden.png', mimeType: 'image/png', buffer: Buffer.from(png) });
+    await page.locator('[data-post-media-picker] li img').first().waitFor({ timeout: 10_000 });
+    ok(await page.locator('[data-post-media-picker] li').count() === 1, 'a chosen photo shows under the writing box, with a way to take it off');
+    // Too long a video is refused, with what to do instead.
+    // 51 MB of nothing, written to a temporary file: the browser driver will
+    // not carry a buffer that large itself.
+    const fs = require('node:fs');
+    const os = require('node:os');
+    const path = require('node:path');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'beacon-clip-'));
+    const big = path.join(dir, 'long.mp4');
+    fs.writeFileSync(big, Buffer.alloc(51 * 1024 * 1024));
+    await page.locator('[data-post-clip]').setInputFiles(big);
+    fs.rmSync(dir, { recursive: true, force: true });
+    const refusal = page.locator('[data-post-media-picker] [role="alert"]');
+    await refusal.waitFor({ timeout: 10_000 });
+    ok(/50 MB/.test(await refusal.innerText()) && /YouTube or Facebook link/.test(await refusal.innerText()),
+       'a video over 50 MB is refused, and the post says to share a YouTube or Facebook link instead');
+    await page.locator('#blog-title').fill('The church garden after the rain');
+    await page.locator('#blog-body').fill('Planted on Sunday, and already green.');
+    await page.getByRole('button', { name: /^Publish$/ }).first().click();
+    await page.waitForTimeout(800);
+    await openHome(page);
+    const newest = page.locator('[data-home-board="posts"] [data-board-card]').first();
+    ok(/church garden/.test(await newest.innerText()), 'the new post leads the blog row on Home');
+    const cover = await newest.locator('img').first().evaluate((img) => new Promise((resolve) => {
+      const done = () => resolve({ w: img.naturalWidth, src: img.currentSrc || img.src });
+      if (img.complete) done(); else { img.onload = done; img.onerror = done; }
+    }));
+    ok(cover.w === 400 && /^blob:/.test(cover.src), `and its cover is the photo, read back from this device (${cover.w}px, ${cover.src.slice(0, 5)})`);
+
+    // ---- Share: a link that opens the post, and only for the church. ----
+    await newest.click();
+    await page.locator('[data-board-reader] [role="dialog"]').waitFor({ timeout: 5_000 });
+    await page.getByRole('button', { name: /^Share$/ }).click();
+    const said = page.locator('[data-board-reader] [role="status"]');
+    await said.waitFor({ timeout: 5_000 });
+    const sentence = await said.innerText();
+    ok(/Only people in your church can open it|#post-/.test(sentence), `Share hands over a link only the church can open ("${sentence.slice(0, 80)}")`);
+    const key = await page.evaluate(() => {
+      const card = [...document.querySelectorAll('[data-home-board="posts"] [data-board-card]')][0];
+      return card ? card.closest('li')?.getAttribute('data-key') : null;
+    });
+    await page.keyboard.press('Escape');
+    if (key) {
+      await page.goto(`${BASE}/church?room=notices#post-${encodeURIComponent(key)}`, { waitUntil: 'networkidle' });
+      await page.locator('[data-board-reader] [role="dialog"]').waitFor({ timeout: 10_000 }).catch(() => {});
+      ok(/church garden/.test(await page.locator('[data-board-reader]').innerText().catch(() => '')),
+         'and the shared link opens that post straight away');
+    } else {
+      ok(false, 'the card says which post it is, so a link can open it');
+    }
+
     await context.close();
 
     // ---- On a computer, the arrows move the row. ----

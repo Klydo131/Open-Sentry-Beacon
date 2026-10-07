@@ -15,6 +15,8 @@
 // Explorer is never shown their own journey stage: somebody exploring faith
 // should be able to read quietly without being watched doing it.
 
+import { PostGallery, PostMediaPicker } from '@/components/PostMedia';
+import type { PostMedia } from '@/lib/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as live from '@/lib/live/data';
 import { Button, Card } from '@/components/ui';
@@ -76,6 +78,10 @@ export function LiveBlogDesk() {
   const [confirming, setConfirming] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Photos and a clip, once this church's database takes them.
+  const [media, setMedia] = useState<PostMedia[]>([]);
+  const [photosReady, setPhotosReady] = useState(false);
+  useEffect(() => { void live.postPhotosReady().then(setPhotosReady); }, []);
 
   // From Home's "Write a post": the cursor goes straight into Title.
   const titleRef = useRef<HTMLInputElement>(null);
@@ -130,9 +136,13 @@ export function LiveBlogDesk() {
     setBusy(true);
     setError('');
     try {
-      await live.createBlogPost({ title, body, visibility, audience, dsIds: picked });
-      setTitle(''); setBody(''); setAudience('church'); setPicked([]);
+      const id = await live.createBlogPost({ title, body, visibility, audience, dsIds: picked });
+      const missed = await live.attachPostMedia(id, media);
+      setTitle(''); setBody(''); setAudience('church'); setPicked([]); setMedia([]);
       setPosted(postOutcome(visibility, audience));
+      if (missed > 0) {
+        setError(`The post is up, but ${missed === 1 ? 'one photo or video' : `${missed} photos or videos`} could not be added. Open it and try again from a stronger connection.`);
+      }
       await load();
     } catch (cause) {
       setError(message(cause));
@@ -167,9 +177,18 @@ export function LiveBlogDesk() {
         <label className="mt-3 block text-sm font-semibold text-navy" htmlFor="lblog-body">Post</label>
         <textarea
           id="lblog-body" value={body} onChange={(e) => typeBody(e.target.value)} rows={7}
-          placeholder="Leave a blank line between paragraphs."
+          placeholder="Leave a blank line between paragraphs. A YouTube or Facebook link plays in the post."
           className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
         />
+
+        {/* PHOTOS AND A SHORT VIDEO, once this church's database takes them
+            (20261007160000). Until then there is nothing to press here, and a
+            video link in the words still plays. */}
+        {photosReady && (
+          <div className="mt-3">
+            <PostMediaPicker media={media} onChange={(next) => { setMedia(next); setPosted(null); }} />
+          </div>
+        )}
 
         {advanced && (
           <>
@@ -346,6 +365,15 @@ export function LiveBlogFeed({ selfId }: { selfId?: string }) {
   const [error, setError] = useState('');
   const [open, setOpen] = useState(true);
   const [pinning, setPinning] = useState('');
+  // Each post's photos and clip, fetched after the words so the list is never
+  // held up by pictures.
+  const [pictures, setPictures] = useState<Map<string, PostMedia[]>>(new Map());
+  useEffect(() => {
+    if (!posts?.length) return;
+    let alive = true;
+    void live.mediaForPosts(posts.map((p) => p.id)).then((found) => { if (alive) setPictures(found); }).catch(() => {});
+    return () => { alive = false; };
+  }, [posts]);
 
   // Read once on mount rather than during render: the server has no
   // localStorage, and reading it inline is how a hydration mismatch starts.
@@ -475,6 +503,7 @@ export function LiveBlogFeed({ selfId }: { selfId?: string }) {
                 )}
               </p>
               <Body text={p.body} />
+              {pictures.get(p.id)?.length ? <div className="mt-3"><PostGallery media={pictures.get(p.id)} /></div> : null}
 
               {/* ONLY A DIRECTOR SEES THIS, and it is a convenience rather than
                   the control: set_post_pinned refuses anybody who is not

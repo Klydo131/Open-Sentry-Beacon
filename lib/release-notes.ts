@@ -31,6 +31,8 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-10-07',
     title: 'Home is a billboard',
     items: [
+      'A post can carry photos and one short video of about a minute. Photos are made smaller and lose where they were taken before they are kept. For anything longer, a YouTube or Facebook link plays inside the post.',
+      'Share on an open post or notice sends its title and a link. Only people in your church can open the link.',
       'Home opens on the church\'s announcements and its newest blog posts, as cards you swipe sideways. A post with a picture shows the picture.',
       'Tap a card to read the whole thing, with its photos and any YouTube or Facebook video in it.',
       'The church\'s banner is shorter on a phone, so the cards are on the first screen.',

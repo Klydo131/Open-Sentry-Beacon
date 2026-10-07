@@ -32,7 +32,8 @@ import {
   useFocusOnWrite,
   type PostOutcome,
 } from '@/components/WritePost';
-import type { BlogAudienceKind, BlogPost, DB } from '@/lib/types';
+import type { BlogAudienceKind, BlogPost, DB, PostMedia } from '@/lib/types';
+import { PostGallery, PostMediaPicker } from '@/components/PostMedia';
 
 function when(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -65,6 +66,7 @@ export function BlogDesk({ userId }: { userId: string }) {
   // The post being written.
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [media, setMedia] = useState<PostMedia[]>([]);
   const [audience, setAudience] = useState<BlogAudienceKind>('church');
   const [picked, setPicked] = useState<string[]>([]);
   const [advanced, setAdvanced] = useState(false);
@@ -111,9 +113,10 @@ export function BlogDesk({ userId }: { userId: string }) {
 
   const submit = () => {
     if (!canPost) return;
-    addBlogPost({ title, body, visibility: 'published', audience, dsIds: picked });
+    addBlogPost({ title, body, visibility: 'published', audience, dsIds: picked, media });
     setTitle('');
     setBody('');
+    setMedia([]);
     setAudience('church');
     setPicked([]);
     setPosted(postOutcome('published', audience));
@@ -121,9 +124,10 @@ export function BlogDesk({ userId }: { userId: string }) {
 
   const saveDraft = () => {
     if (!title.trim() || !body.trim()) return;
-    addBlogPost({ title, body, visibility: 'private', audience, dsIds: picked });
+    addBlogPost({ title, body, visibility: 'private', audience, dsIds: picked, media });
     setTitle('');
     setBody('');
+    setMedia([]);
     setPicked([]);
     setPosted(postOutcome('private', audience));
   };
@@ -152,9 +156,16 @@ export function BlogDesk({ userId }: { userId: string }) {
           value={body}
           onChange={(e) => typeBody(e.target.value)}
           rows={7}
-          placeholder="Leave a blank line between paragraphs."
+          placeholder="Leave a blank line between paragraphs. A YouTube or Facebook link plays in the post."
           className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
         />
+
+        {/* PHOTOS AND A SHORT VIDEO (7 October 2026: "writing blog post should
+            be easy with added features like photos and videos"). In the sample
+            church they are kept on this device; see lib/post-media.ts. */}
+        <div className="mt-3">
+          <PostMediaPicker media={media} onChange={(next) => { setMedia(next); setPosted(null); }} />
+        </div>
 
         {advanced && (
           <>
@@ -394,6 +405,7 @@ export function BlogFeed({ userId }: { userId: string }) {
                 {nameOf(p.author_id)} · {when(p.created_at)}
               </p>
               <Body text={p.body} />
+              {p.media?.length ? <div className="mt-3"><PostGallery media={p.media} /></div> : null}
             </article>
           ))}
         </div>

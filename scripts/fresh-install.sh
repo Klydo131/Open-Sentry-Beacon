@@ -123,6 +123,11 @@ psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/what-is-deleted-leaves-no-file-behind.sql"
 
+# A POST CARRIES ITS OWN PHOTOS: a writer's photos and clip reach exactly the
+# people who may read the post, and nobody adds to somebody else's.
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-post-carries-its-own-photos.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"
