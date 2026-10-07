@@ -157,14 +157,16 @@ export function subjectFor(role: InviteRole): string {
  * watching than it does, would be the legal trouble this is meant to prevent.
  */
 export function oversightLines(churchName: string, appUrl: string): { heading: string; lines: string[] } {
-  const church = churchName || 'Your church';
+  // As lib/oversight.ts: "your church" mid-sentence, "Your church" to start one.
+  const church = churchName || 'your church';
+  const Church = churchName || 'Your church';
   return {
     heading: 'How this app is looked after',
     lines: [
       `Hope Beacon is a private app for one-to-one discipleship and the ministry of ${church}. It is used for nothing else.`,
-      `It is overseen by the church. ${church}'s Directors and Executive Directors approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.`,
+      `It is overseen by the church. ${Church}'s Directors and Executive Directors approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.`,
       'What you write to the person you walk with stays between the two of you. Nobody else can read it, the church\'s leaders included, unless one of you reports a message; a reported message goes to leadership so they can keep everybody safe.',
-      `${church} keeps your information under the Data Privacy Act of 2012 (Republic Act 10173). You can ask for a copy of it, have it corrected, or have your account removed. The full privacy notice is at ${appUrl}/privacy`,
+      `${Church} keeps your information under the Data Privacy Act of 2012 (Republic Act 10173). You can ask for a copy of it, have it corrected, or have your account removed. The full privacy notice is at ${appUrl}/privacy`,
     ],
   };
 }

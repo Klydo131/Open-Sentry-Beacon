@@ -83,7 +83,7 @@ export function Faq({ inSettings = false }: { inSettings?: boolean }) {
           type="search"
           inputMode="search"
           autoComplete="off"
-          placeholder="Search, for example “password” or “photos”"
+          placeholder="Search the questions"
           className="tap w-full rounded-xl bg-gray-100 px-4 text-base outline-none focus:ring-2 focus:ring-teal-600"
           data-faq-search
         />

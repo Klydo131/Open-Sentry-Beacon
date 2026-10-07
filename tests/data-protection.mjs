@@ -177,6 +177,12 @@ for (const sentence of STATEMENTS) {
   ok(email.includes(sentence), '  and so does the invitation e-mail, word for word');
 }
 
+// With no church name yet, neither copy reads "the ministry of Your church".
+for (const [src, where] of [[app, 'the app'], [email, 'the e-mail']]) {
+  ok(/\|\| 'your church'/.test(src) && /\$\{Church\}'s Directors/.test(src) && /\$\{Church\} keeps your information/.test(src),
+     `${where} says "your church" mid-sentence and "Your church" only to start one`);
+}
+
 // The e-mail carries them in both its versions, not only in a helper nobody calls.
 ok(/const oversight = oversightLines\(churchName, appUrl\);/.test(email) && /oversight\.lines\.map/.test(email),
    'the e-mail\'s HTML version shows them');
