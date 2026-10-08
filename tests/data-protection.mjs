@@ -98,8 +98,10 @@ const strip = (src) => src
   const sql = readFileSync('supabase/migrations/20260901090000_the_library_belongs_to_everybody.sql', 'utf8');
   ok(/interval '30 days'/.test(sql), 'and the database deletes at 30 days');
 
-  ok(/kept\s*permanently/i.test(notice) || /kept permanently/i.test(notice),
-     'the notice says the safeguarding record is permanent');
+  ok(/Safeguarding reports and the record of a removal are kept separately/i.test(notice)
+     && /including after an account is deleted/i.test(notice)
+     && /lawful grounds, review retention regularly/i.test(notice),
+     'the notice explains retained safeguarding evidence and requires lawful retention review');
   // `reports` has no delete policy at all, deliberately. If one ever appears,
   // the notice above becomes untrue.
   const reports = readFileSync('supabase/migrations/0021_safeguarding_reports.sql', 'utf8');

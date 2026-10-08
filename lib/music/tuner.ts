@@ -94,37 +94,53 @@ export function useTuner(): Tuner {
     const W = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext };
     const C = W.AudioContext ?? W.webkitAudioContext;
     if (!C) { media.getTracks().forEach((t) => t.stop()); setStatus('unavailable'); return; }
-    const audio = new C();
-    void audio.resume().catch(() => {});
-    const analyser = audio.createAnalyser();
-    analyser.fftSize = LONG_WINDOW;
-    // Into the analyser only: nothing is connected to the speakers, so the
-    // tuner never plays the room back to itself.
-    audio.createMediaStreamSource(media).connect(analyser);
-    const tracker = new PitchTracker(audio.sampleRate);
-    const buffer = new Float32Array(LONG_WINDOW);
+    // Keep each resource before the next fallible step so Stop also works
+    // when audio setup fails, or while the context is resuming.
     stream.current = media;
-    ctx.current = audio;
-    setStatus('listening');
+    try {
+      const audio = new C();
+      ctx.current = audio;
+      await audio.resume();
+      if (mine !== turn.current) return;
+      const analyser = audio.createAnalyser();
+      analyser.fftSize = LONG_WINDOW;
+      // Into the analyser only: nothing is connected to the speakers, so the
+      // tuner never plays the room back to itself.
+      audio.createMediaStreamSource(media).connect(analyser);
+      const tracker = new PitchTracker(audio.sampleRate);
+      const buffer = new Float32Array(LONG_WINDOW);
+      setStatus('listening');
 
-    let showing = false;
-    const listen = () => {
+      let showing = false;
+      const listen = () => {
+        if (mine !== turn.current) return;
+        try {
+          frame.current = requestAnimationFrame(listen);
+          const now = performance.now();
+          analyser.getFloatTimeDomainData(buffer);
+          const heard = tracker.push(buffer, now);
+          if (!heard) {
+            // Cleared at once when the held note runs out, not on the next tick.
+            if (showing) { showing = false; setReading(null); setHeld(false); }
+            return;
+          }
+          if (now - shownAt.current < SHOW_EVERY_MS) return;
+          shownAt.current = now;
+          showing = true;
+          setReading(readFrequency(heard.hz, a4Now.current));
+          setHeld(heard.held);
+        } catch {
+          stop();
+          setStatus('unavailable');
+        }
+      };
       frame.current = requestAnimationFrame(listen);
-      const now = performance.now();
-      analyser.getFloatTimeDomainData(buffer);
-      const heard = tracker.push(buffer, now);
-      if (!heard) {
-        // Cleared at once when the held note runs out, not on the next tick.
-        if (showing) { showing = false; setReading(null); setHeld(false); }
-        return;
+    } catch {
+      if (mine === turn.current) {
+        stop();
+        setStatus('unavailable');
       }
-      if (now - shownAt.current < SHOW_EVERY_MS) return;
-      shownAt.current = now;
-      showing = true;
-      setReading(readFrequency(heard.hz, a4Now.current));
-      setHeld(heard.held);
-    };
-    frame.current = requestAnimationFrame(listen);
+    }
   }, [stop]);
 
   // Released when the room is left, and when the phone locks or another app

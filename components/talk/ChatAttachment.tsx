@@ -119,7 +119,6 @@ export function ChatAttachment({
           data-chat-image
         >
           {url ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={url}
               alt={file.title}
@@ -383,7 +382,6 @@ export function ImageViewer({ src, title, onClose }: { src: string; title: strin
         className="flex min-h-0 flex-1 items-center justify-center p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
         onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={title} className="max-h-full max-w-full rounded-lg object-contain" />
       </div>
     </div>,

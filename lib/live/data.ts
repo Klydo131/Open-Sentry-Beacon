@@ -2994,6 +2994,14 @@ export async function scheduleMeeting(
  * client-side filter would protect nobody and would go wrong the first time
  * somebody forgot it.
  */
+/**
+ * Still on: proposed, or agreed. A called-off or declined appointment stays on
+ * the lists as a record of who said no, but it is not ahead of anybody, so it
+ * is not counted as coming up and offers no way in: a "Join" link on a call
+ * that was called off sends somebody into an empty room (seen 7 October 2026).
+ */
+export const isStillOn = (m: Pick<Meeting, 'status'>): boolean => m.status === 'proposed' || m.status === 'confirmed';
+
 export async function myUpcomingMeetings(limit = 5): Promise<Meeting[]> {
   const { data, error } = await db()
     .from('meetings')

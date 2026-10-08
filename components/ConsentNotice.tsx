@@ -26,7 +26,7 @@ export function ConsentNotice() {
         </div>
 
         <div className="space-y-3 p-6">
-          <Point icon="🔒" text="What you say to your Guide stays between the two of you. Nobody else can read it." />
+          <Point icon="🔒" text="Your conversation is for you and your Guide. Directors and Executive Directors cannot read it through the app. The privacy notice explains technical administrator access and safeguarding reports." />
           <Point icon="📚" text="What you are reading, and how far you have come, is seen by your Guide and your church Director. Nobody else." />
           <Point icon="📊" text="Church leaders see counts only. Never your name, and never what you wrote." />
           <Point icon="🏠" text="Your information stays with the church, not outsiders." />

@@ -408,9 +408,11 @@ async function deskPhoto(page) {
       await page.getByRole('button', { name: '▶ Start' }).click();
       await page.waitForTimeout(900);
       const a = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
-      await page.waitForTimeout(170);
-      const b = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
-      ok(a !== b, `${size}: the baton moves (${a} then ${b})`);
+      const audiblyMoving = await page.waitForFunction((position) => {
+        const dot = document.querySelector('[data-baton-hand]');
+        return dot && `${dot.getAttribute('cx')},${dot.getAttribute('cy')}` !== position;
+      }, a, { timeout: 1500 }).then(() => true, () => false);
+      ok(audiblyMoving, `${size}: the baton moves`);
       ok(await page.locator('[data-baton] circle.fill-teal-700').count() === 1, `${size}: the beat it is on is lit`);
       // Tap the beat five times, and check the tempo against when the taps
       // actually landed, not against the half second the walk meant: on a
@@ -456,9 +458,12 @@ async function deskPhoto(page) {
       await page.locator('#conductor-sound').uncheck();
       await page.waitForTimeout(600);
       const c = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
-      await page.waitForTimeout(170);
-      const d = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
-      ok(c !== d, `${size}: silent, the baton still keeps time`);
+      // Observe movement across frames; two clock samples can hit the same point.
+      const moving = await page.waitForFunction((position) => {
+        const dot = document.querySelector('[data-baton-hand]');
+        return dot && `${dot.getAttribute('cx')},${dot.getAttribute('cy')}` !== position;
+      }, c, { timeout: 1500 }).then(() => true, () => false);
+      ok(moving, `${size}: silent, the baton still keeps time`);
       await page.getByRole('button', { name: '■ Stop' }).click();
       await page.waitForTimeout(200);
       ok((await clocksOpen(page)) === 0, `${size}: Stop closes the conductor's audio`);

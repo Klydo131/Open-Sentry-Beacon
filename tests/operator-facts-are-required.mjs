@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { missingOperatorFacts } from '../scripts/check-operator.mjs';
+assert.deepEqual(missingOperatorFacts({}), []);
+const backend = {NEXT_PUBLIC_SUPABASE_URL: 'https://fictional.example.test', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'fictional-preview-key'};
+const fields = ['NEXT_PUBLIC_BEACON_CONTROLLER', 'NEXT_PUBLIC_BEACON_PRIVACY_CONTACT', 'NEXT_PUBLIC_BEACON_HOSTING_DETAILS'];
+assert.deepEqual(missingOperatorFacts(backend), fields);
+const complete = {...backend, ...Object.fromEntries(fields.map(key => [key, 'Fictional test fact']))};
+assert.deepEqual(missingOperatorFacts(complete), []);
+for (const key of fields) assert.deepEqual(missingOperatorFacts({...complete, [key]: '  '}), [key]);
+console.log('PASS: fictional previews build; backend builds require all three public operator facts.');

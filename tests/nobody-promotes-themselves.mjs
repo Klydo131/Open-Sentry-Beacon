@@ -47,7 +47,10 @@ ok(!!latest, `the lock is defined (latest in ${latest?.f ?? 'NOTHING'})`);
 const body = latest ? latest.sql.slice(latest.sql.search(/create or replace function (public\.)?lock_privileged_profile_columns\(/)) : '';
 const fn = body.slice(0, body.indexOf('\nend;'));
 
-const selfBranch = fn.slice(fn.indexOf('if new.id = v_user_id then'), fn.indexOf('elsif not caller_privileged then'));
+const selfStart = fn.indexOf('if old.id = v_user_id then');
+ok(selfStart >= 0 && /new\.id is distinct from old\.id/.test(fn),
+  'the existing identity selects the self branch, and changing identity is refused');
+const selfBranch = fn.slice(selfStart, fn.indexOf('elsif not caller_privileged then'));
 for (const col of ['role', 'is_approved', 'church_id', 'is_head_executive', 'guardian_consent_at']) {
   ok(new RegExp(`new\\.${col} is distinct from old\\.${col}`).test(selfBranch),
     `changing your own ${col} is noticed`);

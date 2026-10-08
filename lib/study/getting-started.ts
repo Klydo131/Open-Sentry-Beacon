@@ -48,7 +48,7 @@ type Line =
  * feature after somebody changes that feature.
  */
 export const GUIDE_LINES: Line[] = [
-  { kind: 'text', words: 'Welcome. This room is yours. Nobody else can read what you write here: not your Guide, not a Director, not the person who set the app up. It is kept in your church’s own database.' },
+  { kind: 'text', words: 'Welcome. This room is yours. Your Guide, Directors and Executive Directors cannot read your notes through the app. They are kept in your church’s database. Authorized technical administrators can access stored data to operate the service; these notes are not end-to-end encrypted.' },
   { kind: 'text', words: 'Work through the list below and you will have used most of the room. Tick the boxes as you go, they are real.' },
 
   { kind: 'h2', words: 'Try these' },

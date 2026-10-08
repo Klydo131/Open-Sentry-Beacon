@@ -756,9 +756,13 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
             }}
             onTrash={(id) => setMeta(id, { trashedAt: Date.now() })}
             onRestore={(id) => setMeta(id, { trashedAt: undefined })}
-            onDeleteForever={(id) => {
-              workspace.current?.removeDoc(id);
-              refresh();
+            onDeleteForever={async (id) => {
+              try {
+                await workspace.current?.deleteDoc(id);
+                refresh();
+              } catch (cause) {
+                setTrouble(humanError(cause, 'That page could not be deleted. Please try again.'));
+              }
             }}
           />
         </>

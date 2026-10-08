@@ -154,6 +154,8 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   const past = (m: live.Meeting) => new Date(m.starts_at).getTime() <= Date.now() - STILL_ON;
 
   const upcoming = all.filter((m) => !past(m));
+  // Only what is still on is counted or offers a way in (live.isStillOn).
+  const stillOn = live.isStillOn;
 
   // A TIME THAT CAME AND WENT WITHOUT AN ANSWER.
   //
@@ -353,15 +355,15 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h3 className="text-lg font-extrabold text-navy">Upcoming appointments</h3>
-          {upcoming.length > 0 && <span className="rounded-full bg-sky-50 px-3 py-1 text-sm font-bold text-teal-700">{upcoming.length}</span>}
+          {upcoming.some(stillOn) && <span className="rounded-full bg-sky-50 px-3 py-1 text-sm font-bold text-teal-700">{upcoming.filter(stillOn).length}</span>}
         </div>
         <div className="space-y-3">
         {rows !== null && upcoming.length === 0 && (
           <p className="text-sm text-gray-500">Nothing arranged yet.</p>
         )}
         {upcoming.map((m) => {
-          const join = joinUrl(m.mode, m.location);
-          const map = placeUrl(m.mode, m.location);
+          const join = stillOn(m) ? joinUrl(m.mode, m.location) : null;
+          const map = stillOn(m) ? placeUrl(m.mode, m.location) : null;
           // PRINT WHAT THEY WROTE, OR LET THE BUTTON CARRY IT. One rule for
           // both kinds of meeting: when the field holds a link, show the words
           // around it (a passcode, a hall name) and leave the address to the
@@ -395,14 +397,16 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                     {/* AN ANSWER IS NOT AN ERROR, so neither of these is red.
                         Somebody who cannot make a Tuesday has not done anything
                         wrong, and a scarlet badge on their name says otherwise
-                        to the person reading it. */}
+                        to the person reading it. A white pill with a line, not
+                        a grey one: the dark looks repaint grey writing light
+                        and left the grey pill light, so it read pale on pale. */}
                     {m.status === 'declined' && (
-                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-700">
+                      <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700 ring-1 ring-navy/10">
                         Not this time
                       </span>
                     )}
                     {m.status === 'cancelled' && (
-                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-700">
+                      <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700 ring-1 ring-navy/10">
                         Called off
                       </span>
                     )}

@@ -37,6 +37,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
+import { isPushEndpoint } from './endpoint.ts';
 
 type Payload = {
   owner_id?: string;
@@ -123,11 +124,13 @@ Deno.serve(async (req) => {
   let sent = 0;
 
   await Promise.all(devices.map(async (device) => {
+    // Untrusted stored URLs do not become outbound requests with service authority.
+    if (!isPushEndpoint(device.endpoint)) return;
     try {
       await webpush.sendNotification(
         { endpoint: device.endpoint, keys: { p256dh: device.p256dh, auth: device.auth } },
         message,
-        { TTL: 60 * 60 * 24 },
+        { TTL: 60 * 60 * 24, timeout: 15_000 },
       );
       sent += 1;
     } catch (cause) {

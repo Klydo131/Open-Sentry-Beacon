@@ -344,6 +344,7 @@ export class StudyWorkspace implements Workspace {
   storeExtensions: ExtensionType[] = [];
 
   private readonly _docs = new Map<string, StudyDoc>();
+  private readonly _docSource: DocSource & { delete?: (id: string) => Promise<void> };
 
   slots = { docListUpdated: new Subject<void>() };
 
@@ -360,6 +361,7 @@ export class StudyWorkspace implements Workspace {
     idGenerator = nanoid,
   }: StudyWorkspaceOptions) {
     this.id = id;
+    this._docSource = docSource;
     this.doc = new Y.Doc({ guid: id });
     this.idGenerator = idGenerator;
 
@@ -420,6 +422,13 @@ export class StudyWorkspace implements Workspace {
     doc.dispose();
     this.meta.removeDocMeta(docId);
     this._docs.delete(docId);
+  }
+
+  /** A permanent deletion also releases the stored page's space. */
+  async deleteDoc(docId: string) {
+    if (!this.meta.getDocMeta(docId)) return;
+    await this._docSource.delete?.(docId);
+    this.removeDoc(docId);
   }
 
   /** Begin syncing with the database. */

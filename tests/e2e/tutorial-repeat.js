@@ -67,7 +67,8 @@ const settle=async(p,ms=6000)=>{
       const st=await settle(page);
       if(st.none){seq.push('GONE');break;}
       if(st.hasFinish){seq.push('FINISH');await page.getByRole('button',{name:/Finish/i}).first().click();await page.waitForTimeout(1200);break;}
-      const k=`${st.title}@${st.tq??(st.hasRoute?'ROUTE':'NOTHING')}`;
+      // Compare the route and target; the breadcrumb can arrive after the target.
+      const k=`${st.path}@${st.tq??(st.hasRoute?'ROUTE':'NOTHING')}`;
       if(k===last){rep++;}else{rep=0;last=k;}
       if(rep>=2){seq.push('STUCK:'+k);break;}
       seq.push(k);

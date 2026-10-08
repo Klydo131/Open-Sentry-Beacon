@@ -239,7 +239,7 @@ export function Quest() {
       // to see or press. When what comes next is outside an open chat, the
       // chat is put down first, as a person would.
       const sheet = document.querySelector('[data-talk-sheet]');
-      if (el && sheet && !sheet.contains(el)) closeTalk();
+      if (el && sheet && !step.target.startsWith('chat-') && !sheet.contains(el)) closeTalk();
 
       targetEl.current = el;
 

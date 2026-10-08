@@ -87,6 +87,10 @@ ok(!probe('LGPL-3.0-or-later', 'some-browser-library'), 'LGPL is allowed only fo
 // The notices.
 {
   const text = noticesText(packages, 'https://example.org/source');
+  const fft = packages.find((p) => p.name === 'fft.js');
+  ok(Boolean(fft?.texts.some((t) => t.text.includes('Copyright Fedor Indutny, 2017.')))
+     && text.includes('Copyright Fedor Indutny, 2017.'),
+     'the FFT package keeps the copyright from its own README licence');
   const missing = packages.filter((p) => !text.includes(`\n${p.id}\nLicence: `));
   ok(missing.length === 0, missing.length ? `left out of the notices: ${missing.map((p) => p.id).join(', ')}` : 'the notices name every package');
   ok(/AGPL-3\.0-only/.test(text) && text.includes('https://example.org/source'), 'and say what this app is under and where its source is');

@@ -66,6 +66,8 @@ interface Coming {
    * first to find the address is the errand this is meant to remove.
    */
   join?: string;
+  /** Said when it is no longer on: called off, or declined. Then there is no join link. */
+  off?: string;
 }
 
 function whenLabel(iso: string): string {
@@ -108,7 +110,8 @@ export function LiveDesk({ me, theme }: { me: Profile; theme: RoomTheme }) {
       when: whenLabel(m.starts_at),
       what: m.title?.trim() || 'A time together',
       href: guide ? `/dm/${m.pairing_id}` : '/ds',
-      join: joinUrl(m.mode, m.location) ?? undefined,
+      join: live.isStillOn(m) ? joinUrl(m.mode, m.location) ?? undefined : undefined,
+      off: m.status === 'cancelled' ? 'Called off' : m.status === 'declined' ? 'Not this time' : undefined,
     })));
 
     const unread = notes.filter((n) => !n.read_at).length;
@@ -226,6 +229,7 @@ export function LiveDesk({ me, theme }: { me: Profile; theme: RoomTheme }) {
                   <p className="truncate text-sm underline underline-offset-2" style={{ color: theme.ink }}>
                     {c.what}
                   </p>
+                  {c.off && <p className="text-xs font-semibold" style={{ color: theme.inkSoft }}>{c.off}</p>}
                 </Link>
                 {c.join && (
                   <a
