@@ -186,7 +186,7 @@ function absolute(href) {
 }
 
 function render(markdown) {
-  const lines = markdown.split('\n');
+  const lines = markdown.split(/\r?\n/);
   const html = [];
   let i = 0;
 

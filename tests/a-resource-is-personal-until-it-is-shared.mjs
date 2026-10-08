@@ -145,8 +145,11 @@ const mine = stripSql(read(MINE));
   // And the set means the same two people, while approved.
   const mine = allSql.slice(allSql.lastIndexOf('create or replace function private.my_pairing_ids'));
   const setDef = mine.slice(0, mine.indexOf('$$;', mine.indexOf('$$') + 2));
-  ok(/p\.dm_id = \(select auth\.uid\(\)\) or p\.ds_id = \(select auth\.uid\(\)\)/.test(setDef)
-       && /is_approved_user\(\)/.test(setDef),
+  ok(/join public\.profiles me on me\.id = \(select auth\.uid\(\)\)/.test(setDef)
+       && /me\.role = 'dm' and p\.dm_id = me\.id/.test(setDef)
+       && /me\.role = 'ds' and p\.ds_id = me\.id/.test(setDef)
+       && /me\.is_approved and me\.suspended_at is null/.test(setDef)
+       && /private\.my_session_is_live\(\)/.test(setDef),
      'and that set is the pairings the reader is in, while approved');
 
   // ANCHORED ON THE DEFINITION, NOT ON ANY MENTION. `lastIndexOf` on the bare
@@ -156,7 +159,7 @@ const mine = stripSql(read(MINE));
   // gutted. Caught by breaking it on purpose.
   const inPairing = allSql.slice(allSql.lastIndexOf('create or replace function public.in_pairing'));
   const def = inPairing.slice(0, inPairing.indexOf('$$;'));
-  ok(/dm_id = \(select auth\.uid\(\)\) or ds_id = \(select auth\.uid\(\)\)/.test(def),
+  ok(/p in \(select private\.my_pairing_ids\(\)\)/.test(def),
      'and that means the two people in it, nobody else');
   // Found while writing this: the current definition also requires the caller
   // to still be approved, so revoking somebody closes their side of every

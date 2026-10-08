@@ -13,6 +13,13 @@ build if a dependency arrives under a licence nobody here has read.
 
 ---
 
+The braces 3.0.3 parser receives a local depth-bound mitigation for
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
+Its original MIT attribution remains in the generated notices. The exact
+modification is distributed in `scripts/bound-braces.mjs` with this source.
+It does not change the upstream version or remove the npm advisory.
+
+
 ## Open Morbital — playlists and the queue player
 
 **Upstream:** <https://github.com/Klydo131/open_morbital_official>

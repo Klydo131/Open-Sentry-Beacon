@@ -18,6 +18,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-08-private-conversations-and-careful-saving',
+    date: '2026-10-08',
+    title: 'Private conversations and careful saving',
+    items: [
+      'Director and Executive Director roles cannot open private conversations. A safeguarding report includes only the evidence submitted to it.',
+      'Study pages and attachments share a space limit. Existing pages stay available; remove unused content or export a copy when your room is full.',
+      'The tuner releases your microphone if audio setup fails or you stop listening.',
+      'The privacy notice explains who runs your service and who can access its data, without install cards covering it.',
+      'Called-off appointments keep their history without offering a join link or counting as upcoming.',
+      'The tutorial keeps your conversation open while its typing box loads.',
+    ],
+  },
+  {
     id: '2026-10-06-easier-to-read',
     date: '2026-10-06',
     title: 'Easier to read, in every look',

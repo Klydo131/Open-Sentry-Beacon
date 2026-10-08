@@ -25,7 +25,7 @@ and it needs credentials nobody outside a running church has. Everything under
 changing it, read [AGENTS.md](./AGENTS.md) first: it is the working brief for
 the app's two halves, its product rules and how its authorisation is arranged.
 
-Requires **Node 22 or newer** and nothing else. Some tests import TypeScript
+Requires **Node 22 LTS** and nothing else. Some tests import TypeScript
 directly and rely on Node's native type stripping, so there is no build step
 between the code that ships and the code that is checked.
 

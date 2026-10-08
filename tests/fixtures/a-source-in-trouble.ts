@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import { SupabaseDocSource } from '@/lib/study/doc-source';
+import { Doc, encodeStateAsUpdate } from 'yjs';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /** The smallest thing shaped like the query this source builds. */
@@ -32,6 +33,10 @@ function clientThatWorks() {
 
 (async () => {
   const seen: Array<string | null> = [];
+  const doc = new Doc();
+  doc.getText('content').insert(0, 'A saved page');
+  const update = encodeStateAsUpdate(doc);
+  doc.destroy();
   const record = (cause: unknown | null) =>
     seen.push(cause === null ? null : String((cause as Error)?.message ?? cause));
 
@@ -41,13 +46,13 @@ function clientThatWorks() {
   const reportedOnPull = seen.length > 0 && seen[0] !== null;
 
   seen.length = 0;
-  await failing.push('page-1', new Uint8Array([0])).catch(() => {});
+  await failing.push('page-1', update).catch(() => {});
   const reportedOnPush = seen.length > 0 && seen[0] !== null;
 
   seen.length = 0;
   const working = new SupabaseDocSource(clientThatWorks(), 'owner', 'study-room');
   working.onTrouble = record;
-  await working.push('page-1', new Uint8Array([0])).catch(() => {});
+  await working.push('page-1', update).catch(() => {});
   const clearedOnSuccess = seen.length > 0 && seen[seen.length - 1] === null;
 
   console.log(JSON.stringify({ reportedOnPull, reportedOnPush, clearedOnSuccess }));

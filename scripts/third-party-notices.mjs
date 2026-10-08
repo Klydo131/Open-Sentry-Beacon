@@ -69,6 +69,18 @@ export function productionPackages(base = root) {
       .filter((f) => LICENCE_FILE.test(f) && fs.statSync(path.join(dir, f)).isFile())
       .sort();
     const texts = files.map((f) => ({ file: f, text: fs.readFileSync(path.join(dir, f), 'utf8').trim() }));
+    // Some packages put their complete licence in the README, including its
+    // copyright. Preserve that section instead of substituting another notice.
+    if (!texts.length) {
+      for (const file of fs.readdirSync(dir).filter((f) => /^readme(?:\.[a-z]+)?$/i.test(f))) {
+        const readme = fs.readFileSync(path.join(dir, file), 'utf8');
+        const section = /^#{1,6}\s+licen[cs]e\s*\r?\n([\s\S]*?)(?=^#{1,6}\s|$(?![\s\S]))/im.exec(readme)?.[1]?.trim();
+        if (section && Object.values(STANDARD).some((marker) => marker.test(section))) {
+          texts.push({ file, text: section });
+          break;
+        }
+      }
+    }
     seen.set(id, {
       id, name, version: pkg.version,
       // Three packages declare nothing in package.json and ship a licence file

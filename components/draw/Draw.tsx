@@ -97,7 +97,6 @@ export function DrawingPicture({ src, name, children }: {
         {src
           // A plain <img>: this is a user's picture at an address that expires,
           // which next/image's optimiser cannot fetch and should not cache.
-          // eslint-disable-next-line @next/next/no-img-element
           ? <img src={src} alt={title} className="max-h-72 w-auto max-w-full object-contain" />
           : <span className="text-sm text-gray-500">Loading the picture…</span>}
       </div>

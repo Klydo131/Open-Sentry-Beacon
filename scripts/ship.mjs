@@ -105,8 +105,8 @@ claim();
 process.on('exit', release);
 
 const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
-if (branch !== 'main') {
-  die(`on ${branch}. Beacon ships from main; Vercel builds Production from nothing else.`);
+if (branch === 'main' || branch === 'HEAD') {
+  die('Use a named review branch. Only the owner merges to main.');
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +164,7 @@ if (!source.length && !stamped) die('nothing to ship: the tree is clean');
 if (dryRun) {
   say(`would commit ${source.length} file(s) as: ${subject}`);
   if (stamped) say(`would commit ${STAMP} separately as: ${STAMP_MESSAGE}`);
-  say('would push to origin main');
+  say(`would push review branch ${branch}`);
   release();
   process.exit(0);
 }
@@ -220,15 +220,13 @@ for (const wait of [0, 2, 4, 8, 16]) {
     // than left because nothing complained.
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait * 1000);
   }
-  const p = spawnSync('git', ['push', '-u', 'origin', 'main'], { cwd: root, encoding: 'utf8' });
+  const p = spawnSync('git', ['push', '-u', 'origin', branch], { cwd: root, encoding: 'utf8' });
   if (p.status === 0) { pushed = true; break; }
   process.stderr.write(`${p.stderr ?? ''}`);
 }
 if (!pushed) die('could not push after five attempts');
 
-say(`pushed · HEAD=${git('rev-parse', '--short', 'HEAD')} `
-    + `origin=${git('rev-parse', '--short', 'origin/main')} `
-    + `unpushed=${git('rev-list', '--count', 'origin/main..HEAD')}`);
+say(`pushed review branch ${branch} · HEAD=${git('rev-parse', '--short', 'HEAD')}`);
 
 // Pushing is not deploying, and saying so is the house rule.
 say('pushed, build not observed — this sandbox cannot reach the deploy platform.');

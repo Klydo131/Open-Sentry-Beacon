@@ -15,7 +15,8 @@ This file adds only what is specific to a Claude session.
 - **Tell the owner before you push.** Say which commits would reach `main`,
   what they change, what passed and what was not verified, and wait for their
   go (AGENTS.md section 0.2).
-- Push to `main`; that is the only branch Vercel builds Production from.
+- Work on a branch and open a pull request. Only the owner merges to `main`;
+  agents never push to it (AGENTS.md section 0.2).
 - Report **"pushed, build not observed"**. This sandbox cannot reach the
   deployed site, so nothing here can honestly be called live.
 

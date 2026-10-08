@@ -11,10 +11,14 @@ The gaps at the end are real and several of them are not engineering problems.
 They need a decision by whoever runs the church.
 
 **Reviewed against:** Republic Act 10173, the Philippine Data Privacy Act of
-2012, and its Implementing Rules and Regulations; and the GDPR, because a
-congregation with one member in Europe is inside it.
+2012, and its Implementing Rules and Regulations; and GDPR Article 3 where the operator has an EU establishment, offers services
+to people in the EU, or monitors their behaviour there. One member in Europe
+does not by itself establish territorial scope. The operator must assess its
+actual activities.
 
-**Last checked:** 1 September 2026, against the live schema.
+**Repository review:** 7 October 2026. Historical live-schema observations below
+are not verification of a deployment. Operator details and legal decisions remain
+unconfirmed.
 
 ---
 
@@ -32,8 +36,8 @@ That is not a technicality. It changes four things:
 
 | Ordinary personal information | Sensitive personal information |
 |---|---|
-| Consent may be implied by conduct | Consent must be **express**, and evidenced |
-| No registration threshold in practice | **Register with the NPC** at 1,000 data subjects |
+| Establish and document an applicable lawful basis | Sensitive information needs a basis under RA 10173 §13; where consent is relied on, obtain and evidence it |
+| Registration depends on the processing | NPC Circular 2022-04 §5: 250 or more employees, **or** sensitive information of 1,000 or more people, **or** processing likely to risk their rights and freedoms |
 | A DPO is good practice | A **Data Protection Officer** is expected |
 | Penalties are lower | Unauthorised processing carries a **higher penalty** |
 
@@ -62,7 +66,7 @@ Structure read from the live database. No values were read.
 
 | Where | What | Who can read it |
 |---|---|---|
-| `messages` | the conversation between a Guide and an Explorer | Those two people, and a Director only inside a safeguarding report |
+| `messages` | the conversation between a Guide and an Explorer | The current approved Guide and Explorer. Leadership may see only evidence deliberately submitted in a safeguarding report, never the conversation feed. |
 | `pairing_media` + object storage | files sent in that conversation, including **voice messages** (since 1 October 2026: recorded in the browser, at most two minutes, stored like any other file) | The same two |
 | `message_reactions` | a reaction (one of six) to a message or file in that conversation | The same two; written only through `react_to()` |
 | `materials` + object storage (`library/<person>/`) | a resource: a link, or a file somebody added (since 25 September 2026) | Whoever added it, and the people they send it to. Leadership sees a record that it was added or shared, not the file |
@@ -126,10 +130,10 @@ the picture.
 
 Two of those are deliberately permanent, and that is a decision with a legal
 consequence: an erasure request cannot empty them without destroying the only
-record that a church acted on a safeguarding concern. The lawful basis for
-keeping them is the establishment or defence of a legal claim and the protection
-of vital interests, and **that has to be written into the privacy notice rather
-than assumed**.
+record that a church acted on a safeguarding concern. The operator must establish an applicable lawful basis for retained records,
+assess necessity, and set a retention schedule. Legal claims or vital interests
+are possible grounds in some circumstances, not a blanket justification for
+permanent retention.
 
 ### Where it physically is
 
@@ -220,14 +224,14 @@ Ordered by how much it matters, not by how hard it is.
 
 | # | Gap | What it needs | Who |
 |---|---|---|---|
-| 1 | **No privacy notice.** Nothing tells a member what is collected, why, who sees it, how long it is kept, or how to complain. RA 10173 §16(a) and GDPR Art. 13 both require it before collection. | `/privacy` now exists as a draft in the app. The blanks in it must be filled: who the controller is, the DPO's name and contact, the retention periods, the hosting region. | Owner, then a lawyer |
+| 1 | **Privacy notice needs operator approval.** A notice must explain collection, purpose, access, retention and complaint routes before collection. | Complete `/privacy` with real controller, privacy contact and hosting details, and review the operator's retention decisions. | Owner, then a lawyer |
 | ~~2~~ | ~~**No way for a member to get a copy of their own data.**~~ **Built, 1 September 2026.** *A copy of your information* on the Profile screen produces a JSON file with the profile, the conversation, prayer requests, meetings, posts, library shares, notifications and every change to their own details. | Nothing. See below for what it deliberately leaves out. | Done |
-| 3 | **No named Data Protection Officer.** Expected where sensitive personal information is processed. | A person, an email address, and the NPC filing if the church passes 1,000 members. | Owner |
-| 4 | **No breach procedure.** RA 10173 requires notification to the NPC and to affected people **within 72 hours** of knowing. There is no written procedure and no rehearsal. | One page: who decides it is a breach, who is told, in what order, and the wording. | Owner |
-| 5 | **Processor terms unchecked.** Supabase, Vercel, Brevo and GitHub all hold or see personal data, and komoot sees the words typed into the meet-up place box. The hosting region is now recorded: Seoul. | Confirm each one's data-processing terms. | Owner |
+| 3 | **No named Data Protection Officer.** Expected where sensitive personal information is processed. | A designated person and contact, plus an NPC registration assessment under all three §5 conditions. | Owner |
+| 4 | **Breach procedure needs named owners and rehearsal.** Assess the NPC notification criteria and notify **within 72 hours** where notification is required. | Complete and rehearse [PRIVACY-OPERATIONS.md](PRIVACY-OPERATIONS.md); assign the decision-maker, technical lead and notification contact. | Owner |
+| 5 | **Processor terms unchecked.** Hosting, email, backup and place-search services may process personal data. Historical provider/region observations are not deployment verification. | Verify actual providers, countries, contracts and transfer arrangements for this deployment. | Owner |
 | 6 | **Retention is undefined** for everything except the library record. A message from four years ago is still there because nothing deletes it, not because anybody decided it should stay. | A retention period per table, written down, then enforced. | Owner decides, engineering enforces |
 | 7 | **Erasure conflicts with the safeguarding record**, and the conflict is unstated. | Write the lawful basis for the exception into the notice, and make the app say so when an account is deleted. | Owner, then engineering |
-| 8 | **No record of who read what.** A Director can open a reported conversation and nothing records that they did. | An access log for the one place where a third party reads a private thread. | Engineering |
+| 8 | **No record of who read what.** Leadership can review submitted report evidence; access logging and retention require operator review. | Review access logging for submitted safeguarding evidence; no private conversation access is granted by a leadership role. | Engineering |
 
 ---
 
@@ -262,3 +266,21 @@ half a lawyer cannot produce for you and cannot work without.
 
 Anybody continuing this: keep it true. If you add a table that holds anything
 about a person, add it to section 2 the same day, and say who can read it.
+
+## 7. Deployment requirements checked on 7 October 2026
+
+The privacy page now reads the operator’s controller name, privacy contact and
+hosting details from the three `NEXT_PUBLIC_BEACON_*` privacy fields in `.env.example`.
+A configured backend build refuses missing values. This checks completeness,
+not truth: the owner must verify the facts, processor contracts, retention,
+breach response, minors’ consent and applicable legal requirements before use.
+Messages are not end-to-end encrypted; authorised technical administrators
+may access the backend. Director and Executive Director roles grant no access
+to private conversations, including message previews and revisions.
+
+Study pages and attachments share 20 MiB and 500 rows per person. Existing
+over-limit rooms remain readable and can shrink; the migration does not delete
+content. Payload and identifier bytes are counted.
+
+Primary references: [NPC Circular 2022-04 §5](https://privacy.gov.ph/wp-content/uploads/2023/05/Circular-2022-04.pdf),
+[GDPR Article 3](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng).

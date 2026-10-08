@@ -13,7 +13,6 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 const readPanel = (page) => page.evaluate(() => {
   const panel = document.querySelector('[aria-label="Beacon tutorial"]');
   if (!panel) return { none: true };
-  const ps = [...panel.querySelectorAll('p')].map(p => p.textContent.trim());
   const ring = [...document.querySelectorAll('div')]
     .find(d => (d.style.boxShadow || '').includes('9999px'));
   const routeBtn = [...panel.querySelectorAll('button')]
@@ -31,11 +30,10 @@ const readPanel = (page) => page.evaluate(() => {
     ringInfo.overlapsPanel = rr.left < pnl.right && rr.right > pnl.left && rr.top < pnl.bottom && rr.bottom > pnl.top;
   }
   return {
-    // First NON-EMPTY paragraph. The panel's leading <p> is empty on the very
-    // first step (no location breadcrumb to show yet), so ps[0] came back '' and
-    // the run loop's `if (!st.title) break` ended every run before it started —
-    // three empty sequences that still passed the "identical route" assertion.
-    title: ps.find((t) => t) || '',
+    // The instruction remains the same when the panel collapses. The first
+    // paragraph is a breadcrumb, and no paragraphs exist in the collapsed bar.
+    title: (panel.querySelector('p.font-bold.text-navy') ||
+      panel.firstElementChild?.querySelector('span.truncate'))?.textContent.trim() || '',
     progress: (panel.textContent.match(/(\d)\/(\d)/) || [])[0] || '',
     hasRing: !!ring, ring: ringInfo, targetQuest,
     hasRouteBtn: !!routeBtn, hasAmber: !!amber,
@@ -135,6 +133,21 @@ async function actOnStep(page, st) {
     // And clicking it must actually enter the room.
     await actOnStep(page, st);
     ok(/^\/dm\/.+/.test(page.url().replace(BASE, '')), `clicking it opens the room (${page.url().replace(BASE,'')})`);
+
+    // A slow conversation can draw its sheet before its typing box is ready.
+    // Keep that anchor unpainted for a second; the tutorial must not close the
+    // sheet merely because it still sees Message as the step's fallback.
+    const delayedComposer = await page.addStyleTag({
+      content: '[data-quest="chat-send"] { display: none !important; }',
+    });
+    await page.locator('[data-quest="message-button"]').first().click();
+    await page.waitForTimeout(1100);
+    ok(await page.locator('[data-talk-sheet]').isVisible(),
+      'the tutorial keeps Talk open while its typing box is arriving');
+    await delayedComposer.evaluate((el) => el.remove());
+    await page.locator('[data-quest="chat-send"]').waitFor({ state: 'visible', timeout: 6000 }).catch(() => {});
+    ok(await page.locator('[data-quest="chat-send"]').isVisible(),
+      'the same Message tap reaches the typing box once it arrives');
     await page.close();
   }
 
@@ -163,6 +176,7 @@ async function actOnStep(page, st) {
       if (repeats >= 2) { seq.push('STUCK:' + stepKey); break; }
       seq.push(stepKey);
       // Every step must be actionable — no dead states, ever.
+      ok(!!st.title, `run ${run} step has a readable instruction`);
       ok(st.hasRing || st.hasRouteBtn, `run ${run} step "${st.title}" is actionable`);
       if (st.hasRing) {
         ok(st.targetQuest !== null,

@@ -19,7 +19,7 @@ rather than making you guess.
 
 ## Before you start
 
-You need [Node 22 or newer](https://nodejs.org) and a free account with a
+You need [Node 22 LTS](https://nodejs.org) and a free account with a
 Postgres host that also provides authentication. The migrations in
 `supabase/migrations/` are written for Supabase; [BACKENDS.md](BACKENDS.md)
 covers what changes on other hosts.
@@ -65,13 +65,26 @@ optional.
 | `0005_platform_function_acl.sql` | Locks the platform functions to the roles that need them |
 | `20260816130240_approval_revocation_gate.sql` | Taking approval away actually removes access |
 
-**Read `0001` before you run it.** Everything protecting your congregation's
-privacy is in that file: a Guide sees their own people and nobody else's, an
+**Read the complete migration set and `docs/BACKEND-MAP.md`.** `0001` starts
+the schema; later corrective migrations define the current permissions: a Guide sees their own people and nobody else's, an
 Explorer sees only themselves, a Director sees their own church. It is enforced
 by the database, not by the screens, which is why it holds even if somebody
 calls the API directly.
 
 ---
+
+## Publish the operator’s privacy facts
+
+Before inviting real people, add these public values to `.env.local` and the
+hosting environment:
+
+- `NEXT_PUBLIC_BEACON_CONTROLLER`: the organisation legally responsible for the data.
+- `NEXT_PUBLIC_BEACON_PRIVACY_CONTACT`: its actual privacy contact.
+- `NEXT_PUBLIC_BEACON_HOSTING_DETAILS`: providers, locations and cross-border transfers.
+
+Verify `/privacy`, define retention and breach procedures, and assess the legal
+requirements in [DATA-PROTECTION.md](DATA-PROTECTION.md). A backend build refuses
+blank operator facts; it cannot verify their truth or certify compliance.
 
 ## Step 3 — Restart the app
 
@@ -148,3 +161,27 @@ failure.
 - [SECURITY.md](SECURITY.md) — what the rules guarantee, and what they do not
 - [BUILD-YOUR-OWN.md](BUILD-YOUR-OWN.md) — the long course, if you want to build the backend yourself
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — how to work on the project itself
+
+## Security repairs and staging checks
+
+Apply all migrations before enabling the repaired release. The conversation
+migration freezes participant identities and closes leadership previews and
+revision APIs; arranging a different relationship requires a new pairing.
+The study migration preserves existing content and imposes a shared budget.
+Permanently deleting a page frees its document space, and deleting text compacts
+the next saved snapshot. Attachments may be shared by several pages and are not
+automatically removed from the database when an image block is deleted. If a room
+remains full, review unreferenced attachments with the operator before removing
+them; do not delete files that another page still uses.
+Run the fresh-install SQL checks against a throwaway Supabase instance, then
+exercise approvals, invitation claims, pairings, message/file access and study
+saving with fictional roles in staging. Never use a production database for fixtures.
+
+Notification delivery accepts only supported browser push hosts. A new browser
+provider requires reviewing `supabase/functions/notify/endpoint.ts` before use.
+
+The current braces release has no upstream security fix. `postinstall`, `predev`
+and `prebuild` apply a hash-checked depth bound for GHSA-vfj7-8cjw-p6xm. The npm
+advisory still appears because this is a local mitigation, not a released patched
+version. Normal globs remain supported. Remove the mitigation after reviewing an
+upstream fix. Do not skip lifecycle scripts without running the bound explicitly.

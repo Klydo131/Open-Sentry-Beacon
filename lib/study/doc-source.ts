@@ -35,7 +35,7 @@
 // wrong about.
 // ---------------------------------------------------------------------------
 
-import { diffUpdate, encodeStateVectorFromUpdate, mergeUpdates } from 'yjs';
+import { Doc, applyUpdate, encodeStateAsUpdate, diffUpdate, encodeStateVectorFromUpdate, mergeUpdates } from 'yjs';
 import type { DocSource } from '@blocksuite/sync';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -61,6 +61,14 @@ function fromBase64(text: string): Uint8Array {
 
 type Row = { state: string; version: number };
 
+// mergeUpdates preserves deleted payload. A real Y.Doc garbage-collects it
+// while retaining the clocks and delete sets needed by another device.
+function compact(update: Uint8Array): Uint8Array {
+  const doc = new Doc();
+  try { applyUpdate(doc, update); return encodeStateAsUpdate(doc); }
+  finally { doc.destroy(); }
+}
+
 /**
  * A document source that can say when it is in trouble.
  *
@@ -84,6 +92,8 @@ export class SupabaseDocSource implements DocSource, Troubled {
 
   /** How many times a write may lose the race before it gives up and throws. */
   private static readonly RETRIES = 3;
+  private readonly forgotten = new Set<string>();
+  private readonly writes = new Map<string, Promise<void>>();
 
   constructor(
     private readonly db: SupabaseClient,
@@ -119,14 +129,35 @@ export class SupabaseDocSource implements DocSource, Troubled {
   }
 
   async push(docId: string, data: Uint8Array): Promise<void> {
+    const prior = this.writes.get(docId);
+    const writing = (prior?.catch(() => {}) ?? Promise.resolve()).then(() => {
+      if (!this.forgotten.has(docId)) return this.write(docId, data);
+    });
+    this.writes.set(docId, writing);
     try {
-      await this.write(docId, data);
+      await writing;
       // The last write got through, so whatever was wrong is over. Reported
       // every time rather than only after a failure, because the room has no
       // other way to learn that a problem has cleared.
       this.onTrouble?.(null);
     } catch (cause) {
       this.onTrouble?.(cause);
+      throw cause;
+    } finally {
+      if (this.writes.get(docId) === writing) this.writes.delete(docId);
+    }
+  }
+
+  async delete(docId: string): Promise<void> {
+    this.forgotten.add(docId);
+    // Drain a write already sent; queued and later writes must not recreate it.
+    await this.writes.get(docId)?.catch(() => {});
+    try {
+      const { error } = await this.db.from('study_docs').delete()
+        .eq('owner_id', this.ownerId).eq('workspace_id', this.workspaceId).eq('doc_id', docId);
+      if (error) throw new Error(error.message);
+    } catch (cause) {
+      this.forgotten.delete(docId);
       throw cause;
     }
   }
@@ -141,7 +172,7 @@ export class SupabaseDocSource implements DocSource, Troubled {
           owner_id: this.ownerId,
           workspace_id: this.workspaceId,
           doc_id: docId,
-          state: toBase64(data),
+          state: toBase64(compact(data)),
         });
         // Somebody else created the row between the read and the insert. That
         // is the race, not a failure: go round again and merge onto theirs.
@@ -151,7 +182,7 @@ export class SupabaseDocSource implements DocSource, Troubled {
       }
 
       const row = existing as Row;
-      const merged = mergeUpdates([fromBase64(row.state), data]);
+      const merged = compact(mergeUpdates([fromBase64(row.state), data]));
 
       // CONDITIONAL ON WHAT WAS READ. Without the version match this is a
       // plain overwrite and the other device's edit is gone.

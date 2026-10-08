@@ -381,6 +381,7 @@ function snoozed(): boolean {
 }
 
 export function InstallPrompt() {
+  const pathname = usePathname();
   // Out of the way while the tutorial runs. Both live in the bottom-right
   // corner, so the card lands on top of the step panel at exactly the moment
   // someone is being asked to follow instructions.
@@ -532,7 +533,7 @@ export function InstallPrompt() {
 
   // `installed` is checked here rather than only in the effect, so the card
   // disappears the moment the app is installed instead of at the next reload.
-  if (!show || tutorialActive || installed) return null;
+  if (!show || tutorialActive || installed || pathname === '/privacy') return null;
 
   // IN AN APP'S OWN BROWSER, THE ONLY HONEST FIRST STEP IS TO LEAVE IT.
   //

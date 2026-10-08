@@ -190,7 +190,6 @@ export function Avatar({
   onDark?: boolean;
 }) {
   if (photo) {
-    // eslint-disable-next-line @next/next/no-img-element
     return (
       <img
         src={photo}

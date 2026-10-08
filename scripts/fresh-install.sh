@@ -112,6 +112,11 @@ psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/an-office-plan-has-a-size.sql"
 
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/leadership-does-not-open-a-conversation.sql"
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-study-room-has-a-budget.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

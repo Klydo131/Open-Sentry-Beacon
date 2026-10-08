@@ -75,6 +75,8 @@ try {
     //    marks that survived the render are all the same failure.
     const leaked = (html.match(/\*\*/g) ?? []).length;
     ok(leaked === 0, `${doc}: no bold markers left in the page (${leaked})`);
+    const windowsHtml = render(readFileSync(file, 'utf8').replace(/\r?\n/g, '\r\n'));
+    ok(!windowsHtml.includes('**'), `${doc}: Windows line endings keep inline formatting intact`);
 
     // 2. Tables come out balanced. A row with the wrong number of cells is a
     //    table that renders crooked, which nobody notices in Markdown.

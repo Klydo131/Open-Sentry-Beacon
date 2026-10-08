@@ -18,7 +18,7 @@
 // person's age, marital status and religious affiliation are SENSITIVE personal
 // information, and this app records all three by existing. That raises the
 // standard from "tell people" to "get express consent, appoint a Data
-// Protection Officer, and register if you pass a thousand members".
+// Protection Officer, and assess NPC registration under Circular 2022-04".
 // docs/DATA-PROTECTION.md has the full map and the list of what is still
 // missing.
 //
@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { NAVY, APP_NAME, APP_SHORT_NAME } from '@/lib/brand';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { Card } from '@/components/ui';
+import { PRIVACY } from '@/lib/privacy';
 
 function Blank({ what }: { what: string }) {
   return (
@@ -52,22 +53,22 @@ export default function PrivacyPage() {
       </div>
 
       <div className="mx-auto max-w-2xl space-y-5 px-4 py-8">
-        <Card className="p-5 ring-2 ring-amber-300">
-          <h2 className="text-xl font-bold text-navy">Two lines are still missing</h2>
+        {(!PRIVACY.controller || !PRIVACY.contact || !PRIVACY.hosting) && <Card className="p-5 ring-2 ring-amber-300">
+          <h2 className="text-xl font-bold text-navy">Before this church publishes</h2>
           <p className="mt-2 text-gray-700">
-            The highlighted parts are the church&rsquo;s own legal identity and the name of
-            its Data Protection Officer. Nobody but the church can supply them, and a
-            notice carrying a plausible wrong name would be worse than one that says it
-            is unfinished. Everything else below is decided and applies as written.
+            The church must complete the highlighted details: its legal identity, privacy
+            contact, and hosting arrangements. It must also review this notice against its
+            own practices before publishing. A notice carrying plausible but wrong details
+            would be worse than one that says it is unfinished.
           </p>
-        </Card>
+        </Card>}
 
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Who holds your information</h2>
           <p className="mt-2 text-gray-700">
-            <Blank what="[church name and address]" /> decides what is collected here and
+            {PRIVACY.controller || <Blank what="[church name and address]" />} decides what is collected here and
             is responsible for it. Questions, and any request below, go to the Data
-            Protection Officer at <Blank what="[name and email]" />.
+            Protection Officer at {PRIVACY.contact || <Blank what="[name and email]" />}.
           </p>
           <p className="mt-2 text-gray-700">
             If you are not satisfied with the answer, you can complain to the National
@@ -101,9 +102,12 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-navy">Who can see it</h2>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li><strong>Your conversation is yours and your Guide&rsquo;s.</strong> Not
-              other Guides, not Directors, not the person who runs the server. The one
+              other Guides, not Directors or Executive Directors. The one
               exception is a safeguarding report, and the screen where you make one says
               so before you make it.</li>
+            <li><strong>Technical administration.</strong> Conversations are not end-to-end
+              encrypted. Authorized database or hosting administrators can technically access
+              stored data for service operation. A church leadership role grants no such access.</li>
             <li><strong>Your Guide</strong> sees your profile and what you write to them.</li>
             <li><strong>Your Directors</strong> see the church&rsquo;s members and its
               numbers, safeguarding reports, and a 30-day record of which links people
@@ -119,11 +123,7 @@ export default function PrivacyPage() {
           {/* A CHURCH RUNNING ITS OWN COPY: the providers and the region below are
               this deployment's. Replace them with yours (docs/DEPLOY-ANYWHERE.md). */}
           <p className="mt-2 text-gray-700">
-            The database and files are hosted by Supabase in <strong>Seoul, South
-            Korea</strong>, so information about you leaves the Philippines. That is
-            allowed, and you are being told because you should know.
-            The pages are served by Vercel. Email is sent through Brevo. A weekly backup
-            is encrypted before it leaves.
+            {PRIVACY.hosting || <Blank what="[hosting providers, countries and backup arrangements]" />}
           </p>
           <p className="mt-2 text-gray-700">
             <strong>When you arrange to meet somebody in person</strong>, the words you type
@@ -170,13 +170,13 @@ export default function PrivacyPage() {
             <li><strong>The record of shared links: 30 days</strong>, then deleted
               automatically.</li>
             <li><strong>Everything else: for as long as you have an account.</strong>{' '}
-              When it is removed, what is in it goes at once rather than after a waiting
-              period, and your photographs are deleted before the account itself.</li>
+              Account removal deletes account-linked data and photographs through the
+              removal process. Copies in backups and content deliberately shared with others
+              may remain under the church&rsquo;s retention policy.</li>
             <li><strong>Safeguarding reports and the record of a removal are kept
-              permanently</strong>, including after an account is deleted. A church has
-              to be able to show that it acted, and a record the person it describes can
-              erase would not show anything. This is the one thing that survives a
-              deletion request.</li>
+              separately</strong>, including after an account is deleted, to preserve evidence.
+              The church must identify its lawful grounds, review retention regularly and
+              explain any limits on a deletion request.</li>
           </ul>
         </Card>
 
@@ -252,11 +252,9 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-navy">This is a starting point</h2>
           <p className="mt-2 text-gray-700">
             {APP_NAME} is free software, and this notice ships with it as a draft.
-            Any church running it should read it, fill in the blanks, and have somebody
-            qualified check it against the law where they are. It is
-            <code className="mx-1 rounded bg-gray-100 px-1.5 py-0.5 text-sm">app/privacy/page.tsx</code>
-            in the source, and <code className="rounded bg-gray-100 px-1.5 py-0.5 text-sm">docs/DATA-PROTECTION.md</code>
-            {' '}lists what is still missing.
+            Your church must complete its identity, privacy contact and hosting information
+            and have the notice checked against the law where it operates before collecting
+            member information. Ask the privacy contact above about its retention policy.
           </p>
           <p className="mt-2 text-sm text-gray-600">
             It is not legal advice.

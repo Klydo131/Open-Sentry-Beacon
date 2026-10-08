@@ -669,6 +669,11 @@ const staticChecks = [
   // My Files. Hostile scores and zips, the microphone let go, nothing sent.
   // The browser half is tests/e2e/the-music-room.js.
   ['the music room', 'tests/the-music-room.mjs'],
+  ['the microphone always closes', 'tests/the-microphone-always-closes.mjs'],
+  ['push only goes to browser services', 'tests/push-only-goes-to-browser-services.mjs'],
+  ['glob nesting is bounded', 'tests/glob-nesting-is-bounded.mjs'],
+  ['operator facts are required', 'tests/operator-facts-are-required.mjs'],
+  ['deleting study pages releases space', 'tests/deleting-study-pages-releases-space.mjs'],
   // Plan and show, test, polish, and the owner is aware before anything
   // reaches main, for people and AI tools alike (30 September 2026).
   ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],

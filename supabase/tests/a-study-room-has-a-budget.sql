@@ -1,0 +1,40 @@
+-- Fictional users; rolled back. Exercise actual writes and exact byte accounting.
+begin;
+insert into auth.users(id,email) select ('20000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'budget-'||n||'@example.test' from generate_series(1,5)n;
+insert into public.churches(id,name) values ('20000000-0000-0000-0000-000000000010','Fictional budget chapel');
+update public.profiles set church_id='20000000-0000-0000-0000-000000000010',is_approved=true where id::text like '20000000%';
+create function pg_temp.assert(ok boolean,label text) returns void language plpgsql as $$ begin if not coalesce(ok,false) then raise exception 'FAIL %',label; end if; raise notice 'PASS %',label; end $$;
+create function pg_temp.refused(sql text,wanted text,label text) returns void language plpgsql as $$
+declare actual text:='ok';begin begin execute sql;exception when others then actual:=sqlstate;end;perform pg_temp.assert(actual=wanted,label||' got '||actual);end $$;
+insert into study_docs(owner_id,workspace_id,doc_id,state) values ('20000000-0000-0000-0000-000000000001','room','page','abc');
+insert into study_blobs(owner_id,workspace_id,key,mime,bytes) values ('20000000-0000-0000-0000-000000000001','room','file','text/plain','xyz');
+select pg_temp.assert((select used_bytes=32 and entry_count=2 from private.study_usage where owner_id='20000000-0000-0000-0000-000000000001'),'pages and blobs share payload and metadata accounting');
+insert into study_blobs(owner_id,workspace_id,key,mime,bytes) values ('20000000-0000-0000-0000-000000000001','room','file','text/plain','xyz') on conflict do nothing;
+select pg_temp.assert((select used_bytes=32 and entry_count=2 from private.study_usage where owner_id='20000000-0000-0000-0000-000000000001'),'duplicate blob consumes no extra space');
+insert into study_docs(owner_id,workspace_id,doc_id,state) values ('20000000-0000-0000-0000-000000000001','room','page','abcdef') on conflict(owner_id,workspace_id,doc_id) do update set state=excluded.state;
+select pg_temp.assert((select used_bytes=35 and entry_count=2 from private.study_usage where owner_id='20000000-0000-0000-0000-000000000001'),'upsert charges only changed bytes');
+select pg_temp.refused($q$update study_docs set owner_id='20000000-0000-0000-0000-000000000005' where owner_id='20000000-0000-0000-0000-000000000001'$q$,'42501','page owner cannot move');
+select pg_temp.refused($q$insert into study_docs values ('20000000-0000-0000-0000-000000000001',repeat('x',513),'too-long','a',now(),now())$q$,'22023','identifier metadata is bounded');
+delete from study_docs where owner_id='20000000-0000-0000-0000-000000000001';
+select pg_temp.assert((select used_bytes=21 and entry_count=1 from private.study_usage where owner_id='20000000-0000-0000-0000-000000000001'),'deleting a page releases its space');
+insert into study_docs(owner_id,workspace_id,doc_id,state) select '20000000-0000-0000-0000-000000000002','room',n::text,'a' from generate_series(1,500)n;
+select pg_temp.refused($q$insert into study_blobs(owner_id,workspace_id,key,bytes) values ('20000000-0000-0000-0000-000000000002','room','one-more','a')$q$,'54000','pages and blobs share 500-row ceiling');
+select pg_temp.assert((select entry_count=500 from private.study_usage where owner_id='20000000-0000-0000-0000-000000000002'),'rejected transaction leaves counter unchanged');
+delete from study_docs where owner_id='20000000-0000-0000-0000-000000000002' and doc_id='500';
+insert into study_blobs(owner_id,workspace_id,key,bytes) values ('20000000-0000-0000-0000-000000000002','room','one-more','a');
+select pg_temp.assert((select entry_count=500 from private.study_usage where owner_id='20000000-0000-0000-0000-000000000002'),'deletion makes room for a new attachment');
+insert into study_docs(owner_id,workspace_id,doc_id,state) select '20000000-0000-0000-0000-000000000003','room',n::text,repeat('a',2000000) from generate_series(1,10)n;
+select pg_temp.refused($q$insert into study_blobs(owner_id,workspace_id,key,bytes) values ('20000000-0000-0000-0000-000000000003','room','oversized',repeat('a',1000000))$q$,'54000','combined 20 MiB ceiling rejects growth');
+insert into study_docs(owner_id,workspace_id,doc_id,state) select '20000000-0000-0000-0000-000000000004','room',n::text,repeat('📚',2000000) from generate_series(1,2)n;
+select pg_temp.refused($q$insert into study_docs(owner_id,workspace_id,doc_id,state) values ('20000000-0000-0000-0000-000000000004','room','3',repeat('📚',2000000))$q$,'54000','UTF-8 accounting counts bytes rather than characters');
+-- Model data kept before the migration: it must survive and be allowed to shrink.
+alter table study_docs disable trigger charge_study_room;
+insert into study_docs(owner_id,workspace_id,doc_id,state) select '20000000-0000-0000-0000-000000000005','room',n::text,repeat('a',2000000) from generate_series(1,11)n;
+alter table study_docs enable trigger charge_study_room;
+insert into private.study_usage values ('20000000-0000-0000-0000-000000000005',22000000+11*4+13,11);
+select pg_temp.refused($q$insert into study_docs(owner_id,workspace_id,doc_id,state) values ('20000000-0000-0000-0000-000000000005','room','12','a')$q$,'54000','legacy over-limit room cannot grow');
+update study_docs set state='a' where owner_id='20000000-0000-0000-0000-000000000005' and doc_id='1';
+select pg_temp.assert((select count(*)=11 from study_docs where owner_id='20000000-0000-0000-0000-000000000005'),'legacy room shrinks without losing other pages');
+delete from auth.users where id='20000000-0000-0000-0000-000000000005';
+select pg_temp.assert(not exists(select 1 from private.study_usage where owner_id='20000000-0000-0000-0000-000000000005'),'account cascade releases counter without recreating it');
+rollback;
