@@ -13,6 +13,7 @@ const mac = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (
     const context = await browser.newContext({ viewport: { width, height }, userAgent: width < 1000 ? mobile : mac });
     const page = await context.newPage();
     await page.goto(`${BASE}/privacy`, { waitUntil: 'networkidle' });
+    await page.getByText('Technical administration.', { exact: true }).waitFor({ state: 'visible' });
     await page.waitForTimeout(800);
     ok(await page.locator('[data-install-prompt]').count() === 0, `${width}px: the install card does not cover the privacy notice`);
     ok(await page.getByText('Technical administration.', { exact: true }).count() === 1, `${width}px: operator access is disclosed`);
