@@ -50,6 +50,24 @@ const where = (page) => page.evaluate(() => {
   const context = await browser.newContext({ viewport: { width: 412, height: 780 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
 
+  // A cold route can deliver its controls later than network-idle.
+  await page.setContent('<body></body>');
+  await page.evaluate(() => {
+    setTimeout(() => {
+      const button = document.createElement('button');
+      button.dataset.messageButton = '';
+      button.textContent = 'Message';
+      button.onclick = () => {
+        const composer = document.createElement('div');
+        composer.dataset.quest = 'chat-send';
+        composer.innerHTML = '<textarea></textarea>';
+        document.body.append(composer);
+      };
+      document.body.append(button);
+    }, 350);
+  });
+  ok(await openChat(page), 'the opener waits for controls on a cold route');
+
   await signInAs(page, /Maria Santos/i);
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);

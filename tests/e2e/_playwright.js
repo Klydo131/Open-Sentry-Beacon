@@ -273,6 +273,9 @@ async function openByQuest(page, quest) {
 async function openChat(page) {
   const box = page.locator(COMPOSER).first();
   try {
+    // A route can still be rendering after network-idle; wait before choosing its control.
+    await page.locator('[data-message-button], [data-talk-bubble], ' + COMPOSER)
+      .filter({ visible: true }).first().waitFor({ state: 'visible' });
     const message = page.locator('[data-message-button]');
     // THE BUBBLE REMEMBERS BEING OPEN, so after moving to another page it can
     // already be up, on somebody else's conversation, and covering the very
