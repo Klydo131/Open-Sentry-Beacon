@@ -32,6 +32,14 @@ create table if not exists auth.sessions (
   refreshed_at timestamp, user_agent text, ip inet, tag text, oauth_client_id uuid,
   refresh_token_hmac_key text, refresh_token_counter bigint, scopes text);
 alter table auth.refresh_tokens add column if not exists session_id uuid;
+-- What a real project lets the postgres role do with the sign-in tables. That
+-- role owns this app's functions, and on a live project it may read and change
+-- all three (its grants, read on 13 October 2026). The sessions table above is
+-- made by supabase_admin and granted to nobody, so suspend_member -- which ends
+-- the suspended person's sessions -- was refused here and only here, and
+-- fresh-install failed 2 of 50 checks in a-leader-stays-within-their-rank.sql
+-- from 7 to 13 October 2026. The app was never broken; this stand-in was.
+grant all on auth.users, auth.sessions, auth.refresh_tokens to postgres;
 alter table storage.buckets add column if not exists public boolean default false;
 alter table storage.buckets add column if not exists avif_autodetection boolean default false;
 alter table storage.buckets add column if not exists file_size_limit bigint;
