@@ -136,12 +136,16 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-navy">Where it is kept, and for how long</h2>
           {/* A CHURCH RUNNING ITS OWN COPY: the providers and the region below are
               this deployment's. Replace them with yours (docs/DEPLOY-ANYWHERE.md). */}
+          {/* THE BACKUP, SAID AS IT IS (13 October 2026). This used to say "A weekly
+              backup is encrypted before it leaves" while .github/workflows/backup.yml
+              had failed every run since it was added. Say it again only after a run
+              has succeeded AND a copy has been restored somewhere to prove it opens. */}
           <p className="mt-2 text-gray-700">
             The database and files are hosted by Supabase in <strong>Seoul, South
             Korea</strong>, so information about you leaves the Philippines. That is
             allowed, and you are being told because you should know.
-            The pages are served by Vercel. Email is sent through Brevo. A weekly backup
-            is encrypted before it leaves.
+            The pages are served by Vercel. Email is sent through Brevo. A weekly
+            encrypted backup is being set up and is not running yet.
           </p>
           <p className="mt-2 text-gray-700">
             <strong>When you arrange to meet somebody in person</strong>, the words you type

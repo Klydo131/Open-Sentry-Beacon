@@ -154,7 +154,10 @@ proven on every fresh install).
 **Where.** The database and files are hosted by Supabase in [region; for the
 deployment this repository describes, Seoul, South Korea]. This is a transfer
 outside the Philippines, disclosed in the privacy notice. Pages are served by
-Vercel; e-mail is sent by Brevo; a weekly backup is encrypted before it leaves.
+Vercel; e-mail is sent by Brevo. A weekly backup, encrypted before it leaves, is
+set up but [for the deployment this repository describes: has not yet completed a
+run (13 October 2026), so no backup copy exists until one succeeds and has been
+restored once to prove it opens].
 
 **How long.**
 
@@ -258,7 +261,9 @@ As built and tested:
 
 - Encryption in transit (the app and its database are reached over HTTPS only,
   and the app tells browsers to remember that: `Strict-Transport-Security`) and at
-  rest (by the hosting provider); the weekly backup is encrypted before it leaves.
+  rest (by the hosting provider). The weekly backup is encrypted before it leaves
+  once it runs; for the deployment this repository describes it has not yet
+  completed a run (13 October 2026), so it is built but not yet working.
 - Authorisation in the database: row-level rules on every table; nothing at all
   for a signed-out visitor, and a check that fails the build if a table ever
   grants anything to one.
