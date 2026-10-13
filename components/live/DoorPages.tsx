@@ -16,6 +16,9 @@ import { Button, Card } from '@/components/ui';
 import { Notice, emailLooksValid, errorText } from '@/components/live/shared';
 import { ConsentWording } from '@/components/live/ConsentWording';
 import { TwoStepSignInCard } from '@/components/live/TwoStep';
+import { LanguagePick } from '@/components/LanguagePick';
+import { usePhrases } from '@/lib/i18n';
+import { DOOR_WORDS } from '@/lib/words/door';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 
 // SPLIT OUT OF components/LiveCorePages.tsx, which had grown to three thousand
@@ -29,12 +32,18 @@ import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '
 // screen.
 
 function PublicHeader({ title, subtitle }: { title: string; subtitle: string }) {
+  const say = usePhrases(DOOR_WORDS);
   return (
     <div className="px-4 py-8 text-center text-white" style={{ backgroundColor: NAVY }}>
       <div className="mx-auto flex max-w-md flex-col items-center">
-        <Link href="/" className="text-sm text-white/60 underline">
-          ← Home
-        </Link>
+        {/* The way home at the start of the row and the language at the end,
+            which in Arabic are the right and the left. */}
+        <div className="flex w-full items-center justify-between gap-3">
+          <Link href="/" className="text-sm text-white/60 underline">
+            <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {say('Home')}
+          </Link>
+          <LanguagePick />
+        </div>
         <SentryBeaconMark size={58} className="mt-3" />
         <h1 className="mt-3 text-3xl font-extrabold">{title}</h1>
         <p className="mt-1 text-white/70">{subtitle}</p>
@@ -46,6 +55,7 @@ function PublicHeader({ title, subtitle }: { title: string; subtitle: string }) 
 
 export function LiveHomePage() {
   const { session, profile, loading } = useLiveSession();
+  const say = usePhrases(DOOR_WORDS);
   const { enterTutorial } = useTutorialMode();
   const router = useRouter();
 
@@ -61,8 +71,13 @@ export function LiveHomePage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen text-white" style={{ backgroundColor: NAVY }}>
-      <main className="mx-auto flex min-h-[100svh] max-w-lg flex-col items-center justify-center px-4 py-10 text-center">
+    <div className="relative min-h-screen text-white" style={{ backgroundColor: NAVY }}>
+      {/* THE LANGUAGE, IN THE CORNER, before anything else is read
+          (components/LanguagePick.tsx). */}
+      <div className="absolute end-4 top-[max(1rem,env(safe-area-inset-top))] z-10">
+        <LanguagePick />
+      </div>
+      <main className="mx-auto flex min-h-[100svh] max-w-lg flex-col items-center justify-center px-4 pb-10 pt-20 text-center">
         {/* The app is named after a light somebody far away can see. On the
             one screen that is only ever a first impression, it behaves like
             one. Scenery: aria-hidden, and the glow cannot take a tap. */}
@@ -75,10 +90,10 @@ export function LiveHomePage() {
             how the app works rather than what it is for. Somebody arriving from
             an invitation reads the top line and nothing else. */}
         <p className="mt-3 text-xl font-semibold text-white/90">
-          Walking with Jesus, one step at a time.
+          {say('Walking with Jesus, one step at a time.')}
         </p>
         <p className="mt-1 text-base text-white/60">
-          And never on your own. One person, walking with one person.
+          {say('And never on your own. One person, walking with one person.')}
         </p>
 
         <Button
@@ -89,21 +104,22 @@ export function LiveHomePage() {
             router.push(session && profile ? homeFor(profile.role) : '/login')
           }
         >
-          {session && profile ? `Continue as ${profile.full_name.split(' ')[0] || 'member'}` : 'Sign in'}
+          {session && profile
+            ? say('Continue as {name}', { name: profile.full_name.split(' ')[0] || say('member') })
+            : say('Sign in')}
         </Button>
 
         <Link href="/signup" className="mt-5 font-semibold underline underline-offset-4">
-          I have an invitation
+          {say('I have an invitation')}
         </Link>
         <p className="mt-7 max-w-sm text-sm leading-relaxed text-white/55">
-          By invitation. Someone from your church brings you in, so there is
-          nothing to sign up for here.
+          {say('By invitation. Someone from your church brings you in, so there is nothing to sign up for here.')}
         </p>
         {/* QUESTIONS, BEFORE ANYBODY SIGNS IN. Somebody holding an invitation
             should be able to find out what they are joining, and who can see
             what, before they join (app/faq/page.tsx). */}
         <Link href="/faq" className="mt-3 text-sm font-semibold underline underline-offset-4" data-faq-link>
-          Questions? Read the answers
+          {say('Questions? Read the answers')}
         </Link>
 
         {/* THE WAY INTO THE TUTORIAL, AND IT HAS TO BE ON THIS SCREEN.
@@ -119,10 +135,9 @@ export function LiveHomePage() {
             the way in — this is a real app that comes with a demonstration, not
             a demonstration wearing an app's clothes. */}
         <div className="mt-10 w-full max-w-sm rounded-2xl bg-white/10 p-5 text-center ring-1 ring-white/15">
-          <p className="text-base font-bold">Not invited yet? Look around first.</p>
+          <p className="text-base font-bold">{say('Not invited yet? Look around first.')}</p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/70">
-            A complete working church with sample people in it. Every feature the
-            real app has, including the guided walk for your role.
+            {say('A complete working church with sample people in it. Every feature the real app has, including the guided walk for your role.')}
           </p>
           <button
             type="button"
@@ -132,11 +147,10 @@ export function LiveHomePage() {
             }}
             className="tap mt-4 w-full rounded-xl bg-white/90 px-4 font-bold text-navy hover:bg-white"
           >
-            🧪 Open the tutorial
+            🧪 {say('Open the tutorial')}
           </button>
           <p className="mt-2.5 text-xs text-white/55">
-            Runs entirely in this browser. No account, no database, nothing sent
-            anywhere, and nothing you do there can touch a church's real data.
+            {say("Runs entirely in this browser. No account, no database, nothing sent anywhere, and nothing you do there can touch a church's real data.")}
           </p>
         </div>
 
@@ -145,7 +159,10 @@ export function LiveHomePage() {
             group who most need it -- somebody who has just opened the link
             their church sent and has not signed in yet -- never saw it at all.
             It is also in Settings, for people already inside. */}
-        <div className="mt-10 w-full max-w-sm">
+        {/* dir="auto": still English in every language, so it takes its
+            direction from its own words rather than from an Arabic page, which
+            would put its full stops at the wrong end. */}
+        <div className="mt-10 w-full max-w-sm" dir="auto">
           <InstallHomeButton />
         </div>
 
@@ -155,7 +172,7 @@ export function LiveHomePage() {
           rel="noopener noreferrer"
           className="mt-9 text-sm text-white/65 underline underline-offset-4"
         >
-          Developers: view and contribute on GitHub ↗
+          {say('Developers: view and contribute on GitHub')} ↗
         </a>
       </main>
     </div>
@@ -165,6 +182,10 @@ export function LiveHomePage() {
 
 export function LiveLoginPage() {
   const router = useRouter();
+  // The messages below are kept in English in state and put into the reader's
+  // language where they are drawn, so a server's English refusal that is in
+  // the word list is translated the same way as the page's own.
+  const say = usePhrases(DOOR_WORDS);
   const { session, profile, loading: sessionLoading, secondStep, refreshProfile, signOut } = useLiveSession();
   const params = useSearchParams();
   // FILLED FROM THE INVITATION. The e-mail links here as
@@ -278,10 +299,7 @@ export function LiveLoginPage() {
         }
         if (!mine.is_approved) {
           setNotice('');
-          setError(
-            'Your password worked, but your account is waiting for a Director to approve it. '
-            + 'Ask your church to approve you, then sign in again.',
-          );
+          setError('Your password is correct, but your account is waiting for a Director to approve it. Ask your church to approve you, then sign in again.');
           return;
         }
         window.location.replace(homeFor(mine.role));
@@ -317,10 +335,7 @@ export function LiveLoginPage() {
         // is right, the page blinks, and you are back at the form. People
         // retype it, then conclude the app is broken — and they are not wrong
         // to, because a correct password that appears to do nothing IS broken.
-        setError(
-          'Your password is correct, but your account is waiting for a Director to approve it. '
-          + 'Ask your church to approve you, then sign in again.',
-        );
+        setError('Your password is correct, but your account is waiting for a Director to approve it. Ask your church to approve you, then sign in again.');
         return;
       }
       window.location.replace(homeFor(mine.role));
@@ -365,7 +380,7 @@ export function LiveLoginPage() {
   if (codeStep || secondStep) {
     return (
       <div className="min-h-screen">
-        <PublicHeader title="Enter your code" subtitle="One more step to sign in." />
+        <PublicHeader title={say('Enter your code')} subtitle={say('One more step to sign in.')} />
         <div className="mx-auto max-w-md space-y-5 px-4 py-8">
           <TwoStepSignInCard
             onCode={async (code) => {
@@ -393,11 +408,11 @@ export function LiveLoginPage() {
   if (session && profile && !profile.is_approved) {
     return (
       <div className="min-h-screen">
-        <PublicHeader title="Account awaiting approval" subtitle="Your invitation and password worked." />
+        <PublicHeader title={say('Account awaiting approval')} subtitle={say('Your invitation and password worked.')} />
         <div className="mx-auto max-w-md px-4 py-8">
           <Card className="p-6 text-center">
             <p className="text-gray-600">
-              A Director or Executive Director must approve your account before you enter the app.
+              {say('A Director or Executive Director must approve your account before you enter the app.')}
             </p>
             <Button
               className="mt-5"
@@ -405,7 +420,7 @@ export function LiveLoginPage() {
                 await signOut();
               }}
             >
-              Sign out
+              {say('Sign out')}
             </Button>
           </Card>
         </div>
@@ -415,14 +430,17 @@ export function LiveLoginPage() {
 
   return (
     <div className="min-h-screen">
-      <PublicHeader title={`Sign in to ${APP_SHORT_NAME}`} subtitle="Use your live church account." />
+      <PublicHeader title={say('Sign in to {app}', { app: APP_SHORT_NAME })} subtitle={say('Use your live church account.')} />
       <div className="mx-auto max-w-md space-y-5 px-4 py-8">
         <Card className="p-5">
           <form onSubmit={submit} className="space-y-4">
             <label className="block">
-              <span className="text-sm font-semibold text-gray-600">E-mail</span>
+              <span className="text-sm font-semibold text-gray-600">{say('E-mail')}</span>
               <input
                 type="email"
+                // An address reads left to right in every language; in an Arabic
+                // page it would otherwise be cut off from its start.
+                dir="ltr"
                 name="email"
                 autoComplete="email"
                 value={email}
@@ -435,7 +453,7 @@ export function LiveLoginPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-semibold text-gray-600">Password</span>
+              <span className="text-sm font-semibold text-gray-600">{say('Password')}</span>
               {/* An eye, because a password box you cannot read back is where
                   a wrong character hides — and on a phone keyboard that is most
                   of them. Standard everywhere else; it was missing here. */}
@@ -444,24 +462,25 @@ export function LiveLoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   autoComplete="current-password"
-                  className="tap w-full rounded-xl bg-gray-100 px-4 pr-12 text-lg outline-none focus:ring-2 focus:ring-gold"
+                  className="tap w-full rounded-xl bg-gray-100 px-4 pe-12 text-lg outline-none focus:ring-2 focus:ring-gold"
                   required
                 />
+                {/* At the END of the box, which in Arabic is the left. */}
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-lg hover:bg-black/5"
+                  aria-label={showPassword ? say('Hide password') : say('Show password')}
+                  title={showPassword ? say('Hide password') : say('Show password')}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-lg hover:bg-black/5"
                 >
                   {showPassword ? '🙈' : '👁️'}
                 </button>
               </div>
             </label>
-            {error && <Notice tone="error">{error}</Notice>}
-            {notice && <Notice tone="success">{notice}</Notice>}
+            {error && <Notice tone="error">{say(error)}</Notice>}
+            {notice && <Notice tone="success">{say(notice)}</Notice>}
             <Button type="submit" variant="gold" className="w-full" disabled={busy}>
-              {busy ? 'Signing in…' : 'Sign in'}
+              {busy ? say('Signing in…') : say('Sign in')}
             </Button>
           </form>
 
@@ -494,7 +513,7 @@ export function LiveLoginPage() {
             // the screen where somebody is already stuck (6 October 2026).
             <div className="mt-4 rounded-xl bg-blue-50 p-4 ring-1 ring-blue-200">
               <p className="text-sm font-semibold text-navy">
-                Never set a password yet?
+                {say('Never set a password yet?')}
               </p>
               {/* SAID HERE BECAUSE IT IS WHERE IT HAPPENS. Since 29 September
                   2026 an invitation's password stops working after a few days
@@ -502,10 +521,7 @@ export function LiveLoginPage() {
                   password_runs_out), and "wrong password" is all the sign-in
                   can say. The way back is the same link as ever. */}
               <p className="mt-1 text-sm text-gray-700">
-                If you were invited but never got as far as choosing one, there is
-                nothing to type here yet. The password in an invitation e-mail also
-                stops working three days after it was sent. Either way, we can send
-                you a link that lets you choose your own now.
+                {say('If you were invited but never got as far as choosing one, there is nothing to type here yet. The password in an invitation e-mail also stops working three days after it was sent. Either way, we can send you a link that lets you choose your own now.')}
               </p>
               <Button
                 variant="gold"
@@ -513,7 +529,7 @@ export function LiveLoginPage() {
                 disabled={busy}
                 onClick={resetPassword}
               >
-                {busy ? 'Sending…' : 'Send me a link to set my password'}
+                {busy ? say('Sending…') : say('Send me a link to set my password')}
               </Button>
             </div>
           )}
@@ -524,19 +540,19 @@ export function LiveLoginPage() {
             disabled={busy}
             className="mx-auto mt-4 block text-sm text-gray-500 underline"
           >
-            Forgot your password?
+            {say('Forgot your password?')}
           </button>
         </Card>
 
         <Card className="p-5 text-center">
-          <p className="font-bold text-navy">Invited for the first time?</p>
-          <p className="mt-1 text-sm text-gray-600">Open the invitation e-mail and set your password there.</p>
+          <p className="font-bold text-navy">{say('Invited for the first time?')}</p>
+          <p className="mt-1 text-sm text-gray-600">{say('Open the invitation e-mail and set your password there.')}</p>
           <Link href="/signup" className="mt-3 inline-block font-semibold text-navy underline">
-            Invitation help
+            {say('Invitation help')}
           </Link>
           <p className="mt-2">
             <Link href="/faq" className="text-sm font-semibold text-navy underline" data-faq-link>
-              Questions people ask
+              {say('Questions people ask')}
             </Link>
           </p>
         </Card>
@@ -1119,6 +1135,9 @@ export function LiveJoinPage() {
                   <span className="sr-only">Your e-mail address</span>
                   <input
                     type="email"
+                    // An address reads left to right in every language; in an Arabic
+                    // page it would otherwise be cut off from its start.
+                    dir="ltr"
                     inputMode="email"
                     autoComplete="email"
                     value={rescueEmail}

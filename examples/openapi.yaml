@@ -1,0 +1,321 @@
+openapi: 3.1.0
+info:
+  title: Hope Beacon, the calls the examples make
+  version: 1.0.0
+  summary: Sign in, read your own profile and conversations, send a message.
+  description: |
+    The small part of a Hope Beacon project's interface that the programs in
+    examples/ use. The full data interface is Supabase's (PostgREST): every
+    table and database function, filtered by the database's own row rules.
+    docs/IN-ANY-LANGUAGE.md explains each call.
+
+    Every request sends `apikey: <publishable key>`. After sign-in, it also
+    sends `Authorization: Bearer <access_token>`. The publishable key is safe
+    to ship in an app; the secret key never is.
+  license:
+    name: AGPL-3.0-only
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+servers:
+  - url: https://{project}.supabase.co
+    variables:
+      project:
+        default: your-project-ref
+security:
+  - publishableKey: []
+    personToken: []
+paths:
+  /auth/v1/token:
+    post:
+      summary: Sign in with e-mail and password
+      operationId: signIn
+      security:
+        - publishableKey: []
+      parameters:
+        - name: grant_type
+          in: query
+          required: true
+          schema: { type: string, enum: [password, refresh_token] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PasswordGrant'
+                - $ref: '#/components/schemas/RefreshGrant'
+      responses:
+        '200':
+          description: Signed in. The access token lasts an hour; each refresh token works once.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '400':
+          description: The e-mail and password did not match, or the refresh token was already used.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthError' }
+  /auth/v1/user:
+    get:
+      summary: Who the token belongs to, and their two-step sign-in apps
+      operationId: whoAmI
+      responses:
+        '200':
+          description: The signed-in person.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401':
+          description: The token is not genuine, or has run out.
+  /auth/v1/factors/{factorId}/challenge:
+    post:
+      summary: Start a two-step check with an authenticator app
+      operationId: challenge
+      parameters:
+        - $ref: '#/components/parameters/FactorId'
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: The challenge to answer with a code.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id: { type: string, format: uuid }
+                  expires_at: { type: integer }
+  /auth/v1/factors/{factorId}/verify:
+    post:
+      summary: Answer the challenge with the six-digit code
+      operationId: verify
+      parameters:
+        - $ref: '#/components/parameters/FactorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challenge_id, code]
+              properties:
+                challenge_id: { type: string, format: uuid }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        '200':
+          description: A new session whose token the data API accepts.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '422':
+          description: The code did not match.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthError' }
+  /auth/v1/logout:
+    post:
+      summary: Sign out this session; the database stops honouring its token at once
+      operationId: signOut
+      parameters:
+        - name: scope
+          in: query
+          schema: { type: string, enum: [local, others, global], default: local }
+      responses:
+        '204':
+          description: Signed out.
+  /rest/v1/profiles:
+    get:
+      summary: Profiles you are allowed to see (your own, the people you walk with, and your church if you lead it)
+      operationId: listProfiles
+      parameters:
+        - $ref: '#/components/parameters/Select'
+        - name: id
+          in: query
+          description: A filter such as `eq.<user id>`.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Only the rows the database's rules allow.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Profile' }
+        '403': { $ref: '#/components/responses/Refused' }
+  /rest/v1/pairings:
+    get:
+      summary: The conversations you are in
+      operationId: listPairings
+      parameters:
+        - $ref: '#/components/parameters/Select'
+        - $ref: '#/components/parameters/Order'
+      responses:
+        '200':
+          description: Only your own. No filter is needed; the rules filter.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Pairing' }
+        '403': { $ref: '#/components/responses/Refused' }
+  /rest/v1/messages:
+    get:
+      summary: Messages in a conversation you are in
+      operationId: listMessages
+      parameters:
+        - $ref: '#/components/parameters/Select'
+        - $ref: '#/components/parameters/Order'
+        - name: pairing_id
+          in: query
+          description: A filter such as `eq.<pairing id>`. Another pair's conversation returns an empty list.
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: The messages, or an empty list for a conversation that is not yours.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Message' }
+        '403': { $ref: '#/components/responses/Refused' }
+    post:
+      summary: Send a message as yourself, into your own conversation
+      operationId: sendMessage
+      parameters:
+        - name: Prefer
+          in: header
+          schema: { type: string, enum: [return=representation, return=minimal] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewMessage' }
+      responses:
+        '201':
+          description: Sent.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Message' }
+        '403': { $ref: '#/components/responses/Refused' }
+components:
+  securitySchemes:
+    publishableKey:
+      type: apiKey
+      in: header
+      name: apikey
+      description: The project's publishable (anon) key. Safe in an app.
+    personToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: The signed-in person's access token.
+  parameters:
+    FactorId:
+      name: factorId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Select:
+      name: select
+      in: query
+      description: The columns to return, separated by commas.
+      schema: { type: string }
+    Order:
+      name: order
+      in: query
+      description: For example `created_at.desc`.
+      schema: { type: string }
+  responses:
+    Refused:
+      description: |
+        Refused by the database. `code` says why: `42501` the rules refused,
+        `PT403` two-step sign-in is owed, `PT401` (sent as 401) the session has ended.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/DataError' }
+  schemas:
+    PasswordGrant:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    RefreshGrant:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token: { type: string }
+    Session:
+      type: object
+      required: [access_token, refresh_token, expires_in, user]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string }
+        expires_in: { type: integer }
+        refresh_token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+    User:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        factors:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              factor_type: { type: string, enum: [totp, phone, webauthn] }
+              status: { type: string, enum: [verified, unverified] }
+    Profile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        full_name: { type: string }
+        role:
+          type: string
+          enum: [ds, dm, admin, executive]
+          description: Explorer, Guide, Director, Executive Director.
+    Pairing:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        journey_stage: { type: string }
+    Message:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        pairing_id: { type: string, format: uuid }
+        sender_id: { type: string, format: uuid }
+        body: { type: string }
+        created_at: { type: string, format: date-time }
+    NewMessage:
+      type: object
+      required: [pairing_id, sender_id, body]
+      properties:
+        pairing_id: { type: string, format: uuid }
+        sender_id:
+          type: string
+          format: uuid
+          description: Must be your own id; the database refuses anybody else's.
+        body: { type: string }
+    AuthError:
+      type: object
+      properties:
+        code: { type: integer }
+        error_code: { type: string }
+        msg: { type: string }
+    DataError:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        hint: { type: [string, 'null'] }

@@ -202,7 +202,7 @@ const KEYS = ['hope-beacon.feedback.local', 'hope-beacon:library-favorites'];
   // AND THE SCREEN THE OWNER SCREENSHOTTED reads it from there rather than
   // carrying its own copy, which is how it came to disagree in the first place.
   const door = read('components/live/DoorPages.tsx');
-  ok(/Sign in to \$\{APP_SHORT_NAME\}/.test(door),
+  ok(/Sign in to \$\{APP_SHORT_NAME\}|'Sign in to \{app\}', \{ app: APP_SHORT_NAME \}/.test(door),
      'and the sign-in screen takes the name from the one place that defines it');
 }
 

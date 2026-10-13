@@ -211,7 +211,7 @@ const isComment = (line) => /^\s*(\/\/|\*|\/\*)/.test(line);
   const shipped = stripComments(shell);
   ok(!shipped.includes('\u23FB'),
     'and U+23FB is gone from what ships (the comment explaining it may keep it)');
-  ok(/aria-label="Sign out"/.test(shell),
+  ok(/aria-label=(?:"Sign out"|\{say\('Sign out'\)\})/.test(shell),
     'and it still says what it is to a screen reader, which a drawing cannot');
 }
 

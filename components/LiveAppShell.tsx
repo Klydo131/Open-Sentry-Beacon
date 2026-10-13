@@ -24,6 +24,8 @@ import { TabBar } from '@/components/TabBar';
 import { BackButton } from '@/components/BackButton';
 import { ConsentStep } from '@/components/live/ConsentStep';
 import { TwoStepGate } from '@/components/live/TwoStep';
+import { usePhrases } from '@/lib/i18n';
+import { FRAME_WORDS } from '@/lib/words/frame';
 
 // THE HEADER CARRIES NO LIST OF ROOMS ANY MORE (30 September 2026).
 //
@@ -52,6 +54,7 @@ export function LiveAppShell({
 }) {
   const { session, profile, loading, error, secondStep, signOut } = useLiveSession();
   const router = useRouter();
+  const say = usePhrases(FRAME_WORDS);
 
   // The office. These are the same rails the sample-data shell has used all
   // along — the right rail, the themes, the note, the ambient player.
@@ -116,7 +119,7 @@ export function LiveAppShell({
   // Two loading screens in one product are two answers to "is it working?",
   // and people learn one of them. The church app this grew out of uses the
   // splash at exactly this moment, which is what the owner asked for.
-  if (loading) return <BeaconSplash label="Signing you in…" />;
+  if (loading) return <BeaconSplash label={say('Signing you in…')} />;
   if (!session) return null;
 
   // THE CODE BEFORE ANYTHING ELSE. Somebody with two-step sign-in has given
@@ -235,7 +238,7 @@ export function LiveAppShell({
             <SentryBeaconMark size={40} />
             <div className="min-w-0">
               <p className="truncate text-lg font-extrabold sm:text-xl">{APP_SHORT_NAME}</p>
-              <p className="truncate text-xs text-white/60">Live church app</p>
+              <p className="truncate text-xs text-white/60">{say('Live church app')}</p>
             </div>
           </Link>
 
@@ -261,8 +264,8 @@ export function LiveAppShell({
           </Link>
           <button
             className="tap-sm shrink-0 rounded-xl bg-white/10 px-3 hover:bg-white/20"
-            aria-label="Sign out"
-            title="Sign out"
+            aria-label={say('Sign out')}
+            title={say('Sign out')}
             onClick={async () => {
               await signOut();
               router.replace('/login');
@@ -272,7 +275,7 @@ export function LiveAppShell({
                 the difference between a header that fits and one that does not.
                 Sign out lives nowhere else in the app, so it stays on every
                 size — as a symbol where there is no room for the sentence. */}
-            <span className="hidden text-sm font-semibold sm:inline">Sign out</span>
+            <span className="hidden text-sm font-semibold sm:inline">{say('Sign out')}</span>
             {/* DRAWN, NOT TYPED. This was `⏻`, U+23FB, which is not an emoji
                 and so has no guaranteed font behind it: an empty box on every
                 Android phone, and perfect on the iPhone it was written on. */}

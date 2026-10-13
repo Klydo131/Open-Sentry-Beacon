@@ -1014,6 +1014,7 @@ Step 7.
 |---|---|
 | [SETUP.md](SETUP.md) | The short version of Part 3 |
 | [BUILD-YOUR-OWN.md](BUILD-YOUR-OWN.md) | Why the backend is shaped this way |
+| [IN-ANY-LANGUAGE.md](IN-ANY-LANGUAGE.md) | Your own app or server in another programming language, with working examples; putting the screens into other languages |
 | [BACKENDS.md](BACKENDS.md) | Using something other than Supabase |
 | [DEPLOY-ANYWHERE.md](DEPLOY-ANYWHERE.md) | Hosting somewhere other than Vercel, or on your own computer |
 | [PLATFORMS.md](PLATFORMS.md) | Which phones, tablets and browsers it is tested on |

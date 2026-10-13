@@ -320,6 +320,7 @@ screens at all. Put the permission rules with the data, not in the interface.
 | Guide | For |
 |---|---|
 | **[docs/BUILD-YOUR-OWN.md](docs/BUILD-YOUR-OWN.md)** | **Start here.** Front end and backend, end to end: the tables with real SQL, accounts and invitations, the permission rules, wiring it up, deploying, and a checklist to work through before real people are in it. No backend experience assumed. |
+| [docs/IN-ANY-LANGUAGE.md](docs/IN-ANY-LANGUAGE.md) | Your own app or server in the language you already use. The same small program in curl, JavaScript, Python, PHP, Rust, C++, Go, Java and Dart, your own server in Python, PHP or Rust, all in [examples/](examples/); REST, live updates, GraphQL and webhooks; and how the screens are translated. |
 | [docs/BACKENDS.md](docs/BACKENDS.md) | The two seams in more detail, and the fifteen-minute feedback warm-up. |
 | [docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md) | Four worked ways to run it: your computer with no accounts, Vercel and Supabase, your computer with a real database, and other hosts. Each says what has been tested. |
 | [docs/EMAIL.md](docs/EMAIL.md) | Sending invitations by mail. Any provider, or none. |
@@ -342,6 +343,7 @@ instead of the database, and putting a key somewhere the browser can read it.
 | | |
 |---|---|
 | **[docs/BUILD-YOUR-OWN.md](docs/BUILD-YOUR-OWN.md)** | Build your own Beacon with a real backend, end to end: tables, accounts, permission rules, wiring, deploying, and the checklist before real people. No backend experience assumed. |
+| **[docs/IN-ANY-LANGUAGE.md](docs/IN-ANY-LANGUAGE.md)** | Hope Beacon in your own language and tools, with working [examples](examples/) in nine programming languages, and the app's screens in other spoken languages. |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | How it is built, and where everything lives. Start here if you are about to change something. |
 | **[docs/BACKENDS.md](docs/BACKENDS.md)** | The two seams in detail, and the fifteen-minute feedback warm-up. |
 | **[docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md)** | Run it on Vercel and Supabase, on your own computer, or on another host, with what has been tested for each. |

@@ -1189,5 +1189,25 @@ if (exists('supabase/functions/invite/index.ts')) {
     'two-step: the fresh install proves it as invented people');
 }
 
+// ===========================================================================
+// THE WORDS IN OTHER LANGUAGES, AND THE EXAMPLES FOR OTHER LANGUAGES
+// ===========================================================================
+//
+// Two checks of their own, run from here for the same reason as the two-step
+// one above: the gate's list is in Codex's lane.
+//
+//   tests/translations-say-only-what-english-says.mjs  a translation adds no
+//     link, address or number, keeps the blanks and the role words, and the
+//     consent wording stays English.
+//   tests/the-examples-keep-the-rules.mjs  the programs in examples/ carry no
+//     secret key, and every server example runs each request as the person.
+for (const [label, file] of [
+  ['translations say only what the English says', 'tests/translations-say-only-what-english-says.mjs'],
+  ['the examples keep the rules in the database', 'tests/the-examples-keep-the-rules.mjs'],
+]) {
+  const run = spawnSync(process.execPath, [path.join(root, file)], { cwd: root, encoding: 'utf8' });
+  ok(run.status === 0, `${label} (${file})` + (run.status === 0 ? '' : `\n${run.stdout}${run.stderr}`));
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

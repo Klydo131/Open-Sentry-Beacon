@@ -34,6 +34,8 @@ import { humanError } from '@/lib/live/errors';
 import { copyText } from '@/lib/share';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { Button, Card } from '@/components/ui';
+import { usePhrases } from '@/lib/i18n';
+import { TWO_STEP_WORDS } from '@/lib/words/two-step';
 
 const failed = (cause: unknown) => humanError(cause, 'Something went wrong. Please try again.');
 
@@ -51,8 +53,11 @@ export function CodeEntry({
 }) {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+  // Kept in English and put into the reader's language where it is drawn, so
+  // the sign-in service's refusals (lib/live/two-step.ts) are translated too.
   const [error, setError] = useState('');
   const box = useRef<HTMLInputElement>(null);
+  const say = usePhrases(TWO_STEP_WORDS);
 
   useEffect(() => { box.current?.focus(); }, []);
 
@@ -78,7 +83,7 @@ export function CodeEntry({
 
   return (
     <form onSubmit={send} className="text-left">
-      <label htmlFor={id} className="block text-sm font-semibold text-navy">{label}</label>
+      <label htmlFor={id} className="block text-sm font-semibold text-navy">{say(label)}</label>
       {/* one-time-code lets a phone offer the code from its own authenticator. */}
       <input
         id={id}
@@ -94,11 +99,11 @@ export function CodeEntry({
       />
       {error && (
         <p id={`${id}-error`} role="alert" className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 ring-1 ring-red-200">
-          {error}
+          {say(error)}
         </p>
       )}
       <Button type="submit" className="mt-4 w-full" disabled={!ready}>
-        {busy ? 'Checking…' : action}
+        {busy ? say('Checking…') : say(action)}
       </Button>
     </form>
   );
@@ -106,11 +111,10 @@ export function CodeEntry({
 
 /** What somebody who has lost their phone can do. Said in the same words everywhere. */
 function LostPhone() {
+  const say = usePhrases(TWO_STEP_WORDS);
   return (
     <p className="mt-4 text-sm leading-relaxed text-gray-500">
-      Lost the phone with your authenticator app? Ask your church&rsquo;s Director to
-      contact whoever looks after the app. They can remove two-step sign-in from your
-      account so you can sign in with your password and set it up again.
+      {say('Lost the phone with your authenticator app? Ask your church’s Director to contact whoever looks after the app. They can remove two-step sign-in from your account so you can sign in with your password and set it up again.')}
     </p>
   );
 }
@@ -123,11 +127,11 @@ export function TwoStepSignInCard({
   onCode: (code: string) => Promise<void>;
   onCancel: () => Promise<void>;
 }) {
+  const say = usePhrases(TWO_STEP_WORDS);
   return (
     <Card className="p-5">
       <p className="text-gray-600">
-        Your password is right. Your account also uses two-step sign-in: open your
-        authenticator app and type the six-digit code it shows for this app.
+        {say('Your password is right. Your account also uses two-step sign-in: open your authenticator app and type the six-digit code it shows for this app.')}
       </p>
       <div className="mt-4">
         <CodeEntry id="sign-in-code" onCode={onCode} />
@@ -138,7 +142,7 @@ export function TwoStepSignInCard({
         onClick={() => void onCancel()}
         className="tap-sm mt-4 rounded-full px-4 text-sm font-bold text-navy ring-1 ring-navy/20"
       >
-        Use a different account
+        {say('Use a different account')}
       </button>
     </Card>
   );
@@ -148,18 +152,18 @@ export function TwoStepSignInCard({
 export function TwoStepGate() {
   const { session, refreshProfile, signOut } = useLiveSession();
   const router = useRouter();
+  const say = usePhrases(TWO_STEP_WORDS);
 
   return (
     <div className="grid min-h-screen place-items-center px-4" style={{ backgroundColor: NAVY }}>
       <Card className="w-full max-w-md p-6 text-center">
         <SentryBeaconMark size={56} className="mx-auto" />
-        <h1 className="mt-4 text-2xl font-extrabold text-navy">Enter your code</h1>
+        <h1 className="mt-4 text-2xl font-extrabold text-navy">{say('Enter your code')}</h1>
         <p className="mt-2 text-gray-600">
-          Your account uses two-step sign-in. Open your authenticator app and type the
-          six-digit code it shows for this app.
+          {say('Your account uses two-step sign-in. Open your authenticator app and type the six-digit code it shows for this app.')}
         </p>
         {session?.user.email && (
-          <p className="mt-2 text-sm text-gray-500">Signing in as {session.user.email}</p>
+          <p className="mt-2 text-sm text-gray-500">{say('Signing in as {email}', { email: session.user.email })}</p>
         )}
         <div className="mt-5">
           <CodeEntry
@@ -179,7 +183,7 @@ export function TwoStepGate() {
           }}
           className="tap-sm mt-4 rounded-full px-4 text-sm font-bold text-navy ring-1 ring-navy/20"
         >
-          Sign out
+          {say('Sign out')}
         </button>
       </Card>
     </div>

@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-13-choose-your-language-first',
+    date: '2026-10-13',
+    title: 'Choose your language before you sign in',
+    items: [
+      'The front door and the sign-in page now have a language chooser in the corner. Sixteen languages are offered, and the phone or computer keeps your choice after you sign in.',
+      'The front door, the sign-in page and its messages, the code screen of two-step sign-in, and the bar along the bottom are translated. Arabic reads right to left. Everything else is still in English for now, including the permission you give when you join.',
+      'The translations are drafts. If you speak one of these languages and something reads wrong, tell your church so it can be corrected.',
+      'For developers: a guide and working examples for building your own app or server in Rust, C++, JavaScript, Python, PHP, Go, Java, Dart or plain REST, with the privacy rules kept in the database (docs/IN-ANY-LANGUAGE.md).',
+    ],
+  },
+  {
     id: '2026-10-13-two-step-sign-in',
     date: '2026-10-13',
     title: 'Two-step sign-in',

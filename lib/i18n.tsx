@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from 'react';
@@ -212,17 +213,30 @@ interface Ctx {
 const LocaleContext = createContext<Ctx | null>(null);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<string>(() =>
-    typeof window !== 'undefined' ? localStorage.getItem(LANG_KEY) || 'en' : 'en',
-  );
+  // ENGLISH FIRST, THEN THIS DEVICE'S CHOICE, BEFORE ANYTHING IS DRAWN. The
+  // server cannot see localStorage, so its HTML is always English. Reading the
+  // choice while rendering would make the browser's first render disagree with
+  // that HTML on any screen drawn at once, as the front door and the sign-in
+  // page are; React reports that as a mismatch and draws the page again from
+  // nothing. A layout effect runs after hydration and before the first paint,
+  // so the page is drawn once, in the chosen language.
+  const [lang, setLangState] = useState<string>('en');
+  useLayoutEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(LANG_KEY);
+    } catch {}
+    if (saved && LANGUAGES.some((l) => l.code === saved)) setLangState(saved);
+  }, []);
   const [scale, setScaleState] = useState<number>(() =>
     typeof window !== 'undefined'
       ? Number(localStorage.getItem(SCALE_KEY)) || 1
       : 1,
   );
 
-  // Apply language direction + document lang.
-  useEffect(() => {
+  // Apply language direction + document lang, before paint as well, so an
+  // Arabic reader never sees a frame laid out left to right.
+  useLayoutEffect(() => {
     const rtl = LANGUAGES.find((l) => l.code === lang)?.rtl ?? false;
     document.documentElement.dir = rtl ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
@@ -263,4 +277,49 @@ export function useLocale(): Ctx {
   const ctx = useContext(LocaleContext);
   if (!ctx) throw new Error('useLocale must be used inside <LocaleProvider>');
   return ctx;
+}
+
+// ---------------------------------------------------------------------------
+// A WORD LIST PER SCREEN (lib/words/).
+//
+// The keys above are the app's shared vocabulary, and they ride in every page.
+// A screen's own sentences live beside it instead, in a word list that only
+// that screen imports, so a language adds weight to the pages that use it and
+// to nothing else.
+//
+// THE ENGLISH SENTENCE IS THE KEY. A screen keeps its English in its own
+// source, where the comment explaining it sits, and wraps it:
+//
+//   const say = usePhrases(DOOR_WORDS);
+//   <p>{say('Forgot your password?')}</p>
+//   <p>{say('Sign in to {app}', { app: APP_SHORT_NAME })}</p>
+//
+// Change the English and every translation of the old sentence stops being
+// used: the screen shows the new English until somebody translates it again,
+// rather than a translation of something it no longer says.
+// tests/translations-say-only-what-english-says.mjs holds the lists to that,
+// and to adding no link, address or number the English does not have.
+// ---------------------------------------------------------------------------
+
+/** Language code, then English sentence, then that sentence in the language. */
+export type Phrasebook = Readonly<Record<string, Readonly<Record<string, string>>>>;
+
+/** `{name}` in a sentence, filled from `vars`. Anything not given is left as written. */
+export function phrase(
+  book: Phrasebook,
+  lang: string,
+  english: string,
+  vars?: Readonly<Record<string, string>>,
+): string {
+  const text = book[lang]?.[english] ?? english;
+  return vars ? text.replace(/\{(\w+)\}/g, (whole, name: string) => vars[name] ?? whole) : text;
+}
+
+/** This screen's sentences in the reader's language, falling back to the English. */
+export function usePhrases(book: Phrasebook) {
+  const { lang } = useLocale();
+  return useCallback(
+    (english: string, vars?: Readonly<Record<string, string>>) => phrase(book, lang, english, vars),
+    [book, lang],
+  );
 }

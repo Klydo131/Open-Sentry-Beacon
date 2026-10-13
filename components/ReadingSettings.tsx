@@ -37,6 +37,8 @@ import { useLocale, LANGUAGES } from '@/lib/i18n';
 import { UI_FAMILIES, UI_THEMES, looksIn, saveUiTheme, type UiFamily, type UiTheme } from '@/lib/ui-themes';
 import { ChevronGlyph } from '@/components/Glyph';
 import { useChosenLook } from '@/components/UiTheme';
+import { usePhrases } from '@/lib/i18n';
+import { FRAME_WORDS } from '@/lib/words/frame';
 
 // The same four steps the demo has always offered. 0.9 to 1.3 against an 18px
 // base is 16px to 23px -- a real change for somebody who needs it, and still
@@ -51,12 +53,12 @@ export const SIZES: { key: 'small' | 'normal' | 'large' | 'xlarge'; scale: numbe
 
 export function LanguageCard() {
   const { t, lang, setLang } = useLocale();
+  const say = usePhrases(FRAME_WORDS);
   return (
     <Card className="p-5">
       <h2 className="mb-1 text-xl font-bold text-navy">🌐 {t('language')}</h2>
       <p className="mb-4 text-sm text-gray-500">
-        Choose your language. More of the app is translated over time; anything
-        not translated yet stays in English.
+        {say('Choose your language. More of the app is translated over time; anything not translated yet stays in English.')}
       </p>
       <select
         value={lang}

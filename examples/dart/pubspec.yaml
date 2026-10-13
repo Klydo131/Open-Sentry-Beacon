@@ -1,0 +1,10 @@
+name: hope_beacon_walk
+description: The Hope Beacon walk-through in Dart. The same code runs inside a Flutter app.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  http: ^1.2.2

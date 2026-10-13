@@ -479,6 +479,10 @@ const GUARDRAILS = new Set([
   // to prove exactly that, so naming the role is the property being tested.
   // It holds no key. The credential-shape scan above still applies.
   'supabase/tests/a-second-step-is-required.sql',
+  // The examples guard reads every program in examples/ for the server key's
+  // name, which no program has a reason to mention, so it has to spell the
+  // name to look for it.
+  'tests/the-examples-keep-the-rules.mjs',
 ]);
 // AN EXEMPTION IS FOR NAMING, NOT FOR CARRYING. Until 1 October 2026 a file on
 // the list above skipped every term, the live-hostname patterns included, so a

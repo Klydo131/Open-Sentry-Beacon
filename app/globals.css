@@ -34,6 +34,28 @@
   --ease-leave: cubic-bezier(0.4, 0, 1, 1);
 }
 
+/* KOREAN WRAPS BETWEEN WORDS. Korean puts spaces between words, as English
+   does, but a browser's default lets it break inside one, so "사람과" (with a
+   person) came out as "사 / 람과" on a phone. keep-all breaks only at the
+   spaces; break-word still lets one word too long for the line wrap rather
+   than push the page sideways. Chinese and Japanese have no spaces to break
+   at and keep the default. */
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* ARABIC, WHILE MOST OF THE APP IS STILL ENGLISH. Choosing Arabic turns the
+   whole page right to left, and most sentences inside the app are not
+   translated yet. An English sentence laid out right to left puts its full
+   stop at the wrong end (".forward") and scrambles "1 of 6". So, only in a
+   right-to-left page, each block of text takes its direction from its own
+   first letter: Arabic reads right to left, English left to right, and the
+   page around them stays mirrored. */
+html[dir='rtl'] :where(p, h1, h2, h3, h4, h5, h6, li, dt, dd, label, legend, summary, figcaption, blockquote, td, th, button, a) {
+  unicode-bidi: plaintext;
+}
+
 html {
   font-size: 18px; /* senior-friendly base */
 

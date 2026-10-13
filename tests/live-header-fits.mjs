@@ -45,7 +45,7 @@ ok(!/href:\s*'\//.test(shell.replace(/\/\/[^\n]*/g, '')),
 
 // 4. "Sign out" is the widest single word in that row and it lives nowhere else
 //    in the app, so it must survive as a symbol rather than be dropped.
-ok(/aria-label="Sign out"/.test(shell),
+ok(/aria-label=(?:"Sign out"|\{say\('Sign out'\)\})/.test(shell),
    'sign out keeps an accessible name when its text is hidden');
 ok(/hidden text-sm font-semibold sm:inline/.test(shell),
    'the words "Sign out" are hidden on phones, not the control itself');

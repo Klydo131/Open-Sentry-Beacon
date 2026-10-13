@@ -43,6 +43,8 @@ import type { Role } from '@/lib/types';
 import { FILES_HREF, MENU_HREF, peopleHref, tabFor, type Tab } from '@/lib/tab-bar';
 import { FolderGlyph, MenuGlyph, PeopleGlyph } from '@/components/Glyph';
 import { DesktopNav } from '@/components/DesktopNav';
+import { usePhrases } from '@/lib/i18n';
+import { FRAME_WORDS } from '@/lib/words/frame';
 
 const TABS: { key: Tab; label: string; Icon: typeof MenuGlyph }[] = [
   { key: 'menu', label: 'Menu', Icon: MenuGlyph },
@@ -53,6 +55,7 @@ const TABS: { key: Tab; label: string; Icon: typeof MenuGlyph }[] = [
 export function TabBar({ role }: { role: Role }) {
   const path = usePathname() || '/';
   const lit = tabFor(path, role);
+  const say = usePhrases(FRAME_WORDS);
 
   // PUBLISHED, NOT GUESSED. The bar is fixed, so the page does not know it is
   // there, and its height is not a constant: the phone's home-indicator inset
@@ -102,7 +105,7 @@ export function TabBar({ role }: { role: Role }) {
                 <span className="tab-bar-pill" aria-hidden>
                   <Icon size={24} />
                 </span>
-                <span className="tab-bar-label">{label}</span>
+                <span className="tab-bar-label">{say(label)}</span>
               </Link>
             </li>
           );

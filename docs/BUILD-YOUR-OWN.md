@@ -14,6 +14,11 @@
 >
 > Come back here when you want to know *why* the backend is shaped the way it
 > is, or you are porting it to a different stack.
+>
+> **Writing your own app or server in another programming language?**
+> [IN-ANY-LANGUAGE.md](IN-ANY-LANGUAGE.md) has the same small program in nine
+> languages and the same small server in three, each run before it was
+> published, and how to keep every rule while you do it.
 
 Everything else in this repository says **"there is no backend"** — meaning the
 app ships with none *switched on*, and runs entirely in your browser until you
