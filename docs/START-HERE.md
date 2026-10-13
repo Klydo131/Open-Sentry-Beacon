@@ -535,6 +535,10 @@ automatically.** There is no second step and no "publish" button.
 > **Check:** open your address on your phone, on mobile data with wifi off. Sign
 > in. If it works there, it works.
 
+**Before the first real member is invited**, work through
+[GOING-LIVE.md](GOING-LIVE.md): a clean project, ten steps each with its proof,
+and `supabase/tests/ready-for-real-members.sql` to confirm them.
+
 ---
 
 ## Part 5 — Using AI to do the work

@@ -56,7 +56,8 @@ aware".
 - its pull request lists what it could **not** verify (a browser it did not
   have, a signed-in screen it could not open), in so many words;
 - it reads [`AGENTS.md`](./AGENTS.md) first, whatever tool you use; section 0.2
-  is this same rule.
+  is this same rule. [`docs/AI-LIMITS.md`](docs/AI-LIMITS.md) is the one-page
+  version: what it can do, what it cannot know, and what it must never do.
 
 ---
 

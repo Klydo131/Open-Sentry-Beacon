@@ -366,5 +366,25 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
     'and the fresh install proves it as invented people');
 }
 
+// ---------------------------------------------------------------------------
+// THE READINESS CHECK ONLY READS (13 October 2026).
+// supabase/tests/ready-for-real-members.sql is pasted into a production SQL
+// editor by a church's custodian. It must never change anything there, and its
+// output must never carry a member's details or a secret's value.
+// ---------------------------------------------------------------------------
+{
+  const sql = readFileSync('supabase/tests/ready-for-real-members.sql', 'utf8').replace(/--[^\n]*/g, '');
+  // Quoted text (the hints it prints) is words, not statements.
+  const code = sql.replace(/'(?:[^']|'')*'/g, "''");
+  const writes = code.match(/\b(insert\s+into|update\s+\w+\s+set|delete\s+from|drop\s|alter\s|truncate\s|grant\s|revoke\s|create\s+(?!or\s+replace\s+function\s+pg_temp\.)\w+)/gi) || [];
+  ok(writes.length === 0, `the readiness check writes nothing${writes.length ? ` (found: ${writes.join(', ')})` : ''}`);
+  ok(/create or replace function pg_temp\.readiness\(\)/.test(sql), 'its one creation is a function in pg_temp, gone with the session');
+  ok(!/decrypted_secret|vault\.decrypted_secrets/.test(sql) && /from vault\.secrets where name/.test(sql),
+    'it reads Vault entry names, never a secret\'s value');
+  ok(!/select[^;]*\b(email|full_name|phone)\b[^;]*from auth\.users/i.test(sql.replace(/where[^;]*/gi, '')),
+    'it counts addresses, never lists them');
+  ok(/ready-for-real-members\.sql/.test(readFileSync('docs/GOING-LIVE.md', 'utf8')), 'and the going-live guide tells a custodian to run it');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

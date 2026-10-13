@@ -107,7 +107,9 @@ again.
 
 ## Before real people go in
 
-Do not skip this. The rules are the product.
+Do not skip this. The rules are the product. [GOING-LIVE.md](GOING-LIVE.md)
+is the full list, each step with its proof, and a check that asks every
+question at once.
 
 **Try to break in as your least-privileged user.** Sign in as an Explorer and
 attempt to reach what they should not: another person's conversation, the church
