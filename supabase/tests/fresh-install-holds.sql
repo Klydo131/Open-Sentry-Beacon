@@ -78,6 +78,17 @@ begin
     raise exception 'the signed-out role cannot pass the check before each request, so every signed-out page fails';
   end if;
 
+  -- 7. The record of shared links is deleted after 30 days whether or not
+  --    anybody shares another link, as the privacy notice promises
+  --    (20261013120000_the_link_record_runs_out_on_time).
+  if not exists (
+    select 1 from cron.job
+     where jobname = 'link-record-runs-out'
+       and command like '%private.prune_library_activity()%'
+  ) then
+    raise exception 'nothing deletes the record of shared links after 30 days unless somebody shares another link';
+  end if;
+
   raise notice 'a fresh install holds every checked protection';
 end
 $holds$;
