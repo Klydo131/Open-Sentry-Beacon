@@ -118,6 +118,12 @@ psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-leader-stays-within-their-rank.sql"
 
+# A MESSAGE HISTORY OPENS ONLY FOR A REPORT: leadership reads what a withdrawn
+# or edited message said only for a reported conversation, and every reading is
+# on the record. Invented people, rolled back.
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-message-history-needs-a-report.sql"
+
 # WHAT IS DELETED LEAVES NO FILE BEHIND: removing somebody queues every file
 # their rows pointed at, and only the service role can read or clear the list.
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \

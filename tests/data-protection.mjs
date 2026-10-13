@@ -311,8 +311,8 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
 // ---------------------------------------------------------------------------
 // CONSENT IS ASKED OF EVERYBODY, NOT ONLY OF THOSE WHO SIGNED UP (13 October 2026).
 // Consent was asked on the sign-up page alone, and a member who signed in with
-// the password from their invitation never saw it: on the live church 42 of 43
-// accounts had none on record. The signed-in app now stops anybody without a
+// the password from their invitation never saw it: on the beta service 42 of
+// its 43 tester accounts had none on record. The signed-in app now stops anybody without a
 // record at a consent step, in the sign-up's own words.
 // ---------------------------------------------------------------------------
 {
@@ -343,6 +343,27 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
     'saying no is a real button, and it signs the person out');
   ok(/oversightPoints\(churchName\)/.test(step) && /href="\/privacy"/.test(step),
     'the step says who looks after the app, and links the full notice, before asking');
+}
+
+// ---------------------------------------------------------------------------
+// A MESSAGE HISTORY OPENS ONLY FOR A REPORT (13 October 2026).
+// What a withdrawn or edited message said is kept for safeguarding, so reading
+// it is bound to safeguarding: a report on that conversation, and an entry in
+// the church's security record each time. supabase/tests/a-message-history-
+// needs-a-report.sql proves it as invented people; this keeps the shape.
+// ---------------------------------------------------------------------------
+{
+  const mig = readFileSync('supabase/migrations/20261013130000_a_message_history_opens_only_for_a_report.sql', 'utf8')
+    .replace(/--[^\n]*/g, '');
+  ok(/from public\.reports r\s+where r\.pairing_id = p_pairing/.test(mig)
+     && /if v_report\.id is null then\s+raise exception 'A message history is opened only for a conversation somebody has reported\.'/.test(mig),
+    'a message history needs a safeguarding report on that conversation');
+  ok(/public\.leads_church\(v_church\)/.test(mig), 'and a reader who leads that church');
+  ok(/church_of\(p\.ds_id\)/.test(mig) && !/p\.church_id/.test(mig),
+    'the conversation\'s church comes from its Explorer, as its own rules find it');
+  ok(/'message_history_read', 'review'/.test(mig), 'every opening is written to the security record for review');
+  ok(/a-message-history-needs-a-report\.sql/.test(readFileSync('scripts/fresh-install.sh', 'utf8')),
+    'and the fresh install proves it as invented people');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
