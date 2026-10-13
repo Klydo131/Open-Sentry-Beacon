@@ -1,7 +1,6 @@
 'use client';
 
 import { oversightPoints } from '@/lib/oversight';
-import { APP_NAME } from '@/lib/brand';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -15,6 +14,7 @@ import { useTutorialMode } from '@/lib/tutorial';
 import { InstallHomeButton } from '@/components/InstallHomeButton';
 import { Button, Card } from '@/components/ui';
 import { Notice, emailLooksValid, errorText } from '@/components/live/shared';
+import { ConsentWording } from '@/components/live/ConsentWording';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 
 // SPLIT OUT OF components/LiveCorePages.tsx, which had grown to three thousand
@@ -1242,13 +1242,7 @@ export function LiveJoinPage() {
                         under the Act, for which consent must be specific and
                         informed (section 13; NPC Circular 2023-04). */}
                     <span className="text-sm leading-relaxed text-gray-700">
-                      I give permission for <strong>{churchName || 'my church'}</strong> to
-                      keep and use my information in {APP_NAME} for one-to-one discipleship
-                      and the church&rsquo;s ministry: my name and contact details, what I
-                      choose to share with my Guide, and my place on the journey. I
-                      understand this shows my connection with the church. I can update my
-                      details whenever I need to, I will keep them truthful, and my Guide and
-                      my church&rsquo;s leadership can see when I change them.{' '}
+                      <ConsentWording churchName={churchName} />{' '}
                       <span className="text-red-600">*</span>
                     </span>
                   </label>

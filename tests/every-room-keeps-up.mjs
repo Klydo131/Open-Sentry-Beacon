@@ -134,6 +134,10 @@ const READS_ONCE_ON_PURPOSE = new Set([
   // The door: sign in, claim an invitation, fetch the profile just created.
   // A one-shot flow, not a room somebody sits in while others change data.
   'components/live/DoorPages.tsx',
+  // The consent step (13 October 2026): one question, answered once, in front
+  // of the app. It reads the church's name so the permission names who is
+  // asking, and is gone the moment the person answers. A door, not a room.
+  'components/live/ConsentStep.tsx',
   // Resolves one signed URL for one attachment. A URL builder, not a feed.
   'components/live/shared.tsx',
   // Signs the photos of people another screen already listed (30 September

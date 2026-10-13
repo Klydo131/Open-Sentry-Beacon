@@ -196,9 +196,13 @@ const told = door.indexOf('{oversightPoints(churchName).map');
 const asked = door.indexOf('checked={consent}');
 ok(told > 0 && asked > told, 'the sign-up says who looks after the app before the permission box');
 ok(/href="\/privacy"/.test(door.slice(told, asked)), 'and links the full privacy notice there');
+// The words live in components/live/ConsentWording.tsx since 13 October 2026,
+// so the consent step for members who never signed up asks the same thing.
 const permission = door.slice(asked, door.indexOf('</label>', asked));
-ok(/one-to-one discipleship/.test(permission) && /what I\s+choose to share with my Guide/.test(permission)
-   && /my place on the journey/.test(permission) && /connection with the church/.test(permission),
+const permissionWords = read('components/live/ConsentWording.tsx');
+ok(/<ConsentWording churchName=\{churchName\} \/>/.test(permission)
+   && /one-to-one discipleship/.test(permissionWords) && /what I\s+choose to share with my Guide/.test(permissionWords)
+   && /my place on the journey/.test(permissionWords) && /connection with the church/.test(permissionWords),
    'the permission names what it covers: discipleship, what is shared with the Guide, the journey, and the connection with the church');
 ok(/useState\(false\)/.test(door.slice(door.indexOf('const [consent'), door.indexOf('const [consent') + 60)),
    'and the box starts unticked');
@@ -302,6 +306,43 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
   // Every question can be linked to, so its id is unique.
   const ids = [...code.matchAll(/^\s+id: '([a-z0-9-]+)'/gm)].map((m) => m[1]);
   ok(ids.length >= 55 && new Set(ids).size === ids.length, `every group and question has its own address (${ids.length})`);
+}
+
+// ---------------------------------------------------------------------------
+// CONSENT IS ASKED OF EVERYBODY, NOT ONLY OF THOSE WHO SIGNED UP (13 October 2026).
+// Consent was asked on the sign-up page alone, and a member who signed in with
+// the password from their invitation never saw it: on the live church 42 of 43
+// accounts had none on record. The signed-in app now stops anybody without a
+// record at a consent step, in the sign-up's own words.
+// ---------------------------------------------------------------------------
+{
+  const src = (p) => readFileSync(p, 'utf8');
+  const shell = strip(src('components/LiveAppShell.tsx'));
+  const step = strip(src('components/live/ConsentStep.tsx'));
+  const door = strip(src('components/live/DoorPages.tsx'));
+  const wording = src('components/live/ConsentWording.tsx');
+
+  const gate = shell.indexOf('if (!profile.consent_at) return <ConsentStep />;');
+  ok(gate > 0, 'the signed-in app stops anybody with no consent on record at the consent step');
+  ok(gate > 0 && gate < shell.indexOf('if (!profile.is_approved)'),
+    'before anything else, the waiting-for-approval screen included');
+
+  ok(/<ConsentWording churchName=\{churchName\} \/>/.test(step) && /<ConsentWording churchName=\{churchName\} \/>/.test(door),
+    'the step and the sign-up ask in the same words, from one place');
+  ok(!/I give permission for/.test(door), 'and the sign-up no longer carries a second copy of them');
+  ok(/my name and contact details, what I\s+choose to share with my Guide, and my place on the journey/.test(wording)
+    && /shows my connection with the church/.test(wording),
+    'the words say specifically what is kept, and that it shows a connection with the church');
+
+  ok(/const \[agreed, setAgreed\] = useState\(false\);/.test(step) && /checked=\{agreed\}/.test(step),
+    'the box starts unticked (Circular 2023-04: a ticked box is not consent)');
+  ok(/disabled=\{busy \|\| !agreed\}/.test(step), 'and the agree button waits for it');
+  ok(/updateMyProfile\(\{ consent_at: new Date\(\)\.toISOString\(\) \}\)/.test(step),
+    'agreeing records when, on the account, in the column the sign-up writes');
+  ok(/I do not agree, sign me out/.test(step) && /signOut\(\)/.test(step),
+    'saying no is a real button, and it signs the person out');
+  ok(/oversightPoints\(churchName\)/.test(step) && /href="\/privacy"/.test(step),
+    'the step says who looks after the app, and links the full notice, before asking');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

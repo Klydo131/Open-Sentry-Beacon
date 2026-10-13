@@ -22,6 +22,7 @@ import { useScrollToHash } from '@/lib/scroll-to-hash';
 import { useUrlKey } from '@/lib/url-signal';
 import { TabBar } from '@/components/TabBar';
 import { BackButton } from '@/components/BackButton';
+import { ConsentStep } from '@/components/live/ConsentStep';
 
 // THE HEADER CARRIES NO LIST OF ROOMS ANY MORE (30 September 2026).
 //
@@ -133,6 +134,13 @@ export function LiveAppShell({
       </CenteredCard>
     );
   }
+
+  // PERMISSION BEFORE ANYTHING ELSE (13 October 2026). Somebody who signed in
+  // with their invitation's password never passed the sign-up page, the only
+  // place consent was asked for; on the live church 42 of 43 accounts had none
+  // on record. Before the approval screen too, because waiting to be approved
+  // is already being kept in the app. See components/live/ConsentStep.tsx.
+  if (!profile.consent_at) return <ConsentStep />;
 
   if (!profile.is_approved) {
     return (
