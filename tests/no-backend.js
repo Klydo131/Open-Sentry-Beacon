@@ -472,6 +472,13 @@ const GUARDRAILS = new Set([
   // storage rules are revoked from every browser role by name and granted to
   // the roles that evaluate rules, the same shape as room_to_upload above.
   'supabase/migrations/20261007160000_a_post_can_carry_photos_and_a_clip.sql',
+  // Two-step sign-in (13 October 2026). The per-request check now also refuses
+  // a password-only session once two-step is set up, and it must still let the
+  // server's own role through: PostgREST runs it before every request, the
+  // invite and erase functions' included. The test runs the check as that role
+  // to prove exactly that, so naming the role is the property being tested.
+  // It holds no key. The credential-shape scan above still applies.
+  'supabase/tests/a-second-step-is-required.sql',
 ]);
 // AN EXEMPTION IS FOR NAMING, NOT FOR CARRYING. Until 1 October 2026 a file on
 // the list above skipped every term, the live-hostname patterns included, so a
