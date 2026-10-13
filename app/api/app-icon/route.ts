@@ -306,10 +306,17 @@ export async function GET(request: NextRequest) {
   // any website could point its own visitors' browsers at this route and use
   // the church's server as a free picture fetcher, spending the church's
   // hosting allowance. A browser says where a request came from in
-  // Sec-Fetch-Site and does not let a page change it; a browser too old to
-  // send it is let through, because nothing else here depends on it.
+  // Sec-Fetch-Site and does not let a page change it.
+  //
+  // AND ONLY WHEN THE REQUEST SAYS SO (13 October 2026). A request without the
+  // header used to be let through, for browsers too old to send it, and that
+  // opened the route to any script on the internet, none of which send it.
+  // Every current browser does (Chrome 76, Firefox 90, Safari 16.4); an older
+  // phone gets the letter mark, which is what a 404 here already means. A
+  // script can still claim to be this site, so this is a fence against
+  // casual use, not a lock: a rate limit at the host is the real one.
   const from = request.headers.get('sec-fetch-site');
-  if (from && from !== 'same-origin') return new NextResponse(null, { status: 403 });
+  if (from !== 'same-origin') return new NextResponse(null, { status: 403 });
 
   const asked = request.nextUrl.searchParams.get('url');
   if (!asked) return new NextResponse(null, { status: 400 });

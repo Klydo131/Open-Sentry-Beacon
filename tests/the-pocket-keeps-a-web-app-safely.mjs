@@ -312,9 +312,13 @@ const ui = strip(read('components/Pocket.tsx'));
 {
   const route = read('app/api/app-icon/route.ts');
   const head = route.slice(route.indexOf('export async function GET'));
-  const refuse = head.indexOf("if (from && from !== 'same-origin') return new NextResponse(null, { status: 403 });");
+  const refuse = head.indexOf("if (from !== 'same-origin') return new NextResponse(null, { status: 403 });");
   ok(/request\.headers\.get\('sec-fetch-site'\)/.test(head) && refuse > 0 && refuse < head.indexOf('publicUrl('),
      'a request from another site is refused before anything is fetched');
+  // 13 October 2026: a request that does not say where it came from is a
+  // script, not a browser, and is refused too.
+  ok(!/from &&/.test(head.slice(0, head.indexOf('publicUrl('))),
+     'and so is a request that does not say where it came from');
   ok(/'cross-origin-resource-policy': 'same-origin'/.test(route), 'and no other site may draw the picture it returns');
 }
 
