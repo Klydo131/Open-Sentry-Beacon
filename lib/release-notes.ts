@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-13-two-step-sign-in',
+    date: '2026-10-13',
+    title: 'Two-step sign-in',
+    items: [
+      'You can add a second step to signing in: a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator. Somebody who learns your password still cannot sign in as you.',
+      'Turn it on in Settings, on the Password page. It is recommended for Directors and Executive Directors.',
+      'Once it is on, each new sign-in asks for your password and then the code.',
+    ],
+  },
+  {
     id: '2026-10-07-questions-people-ask',
     date: '2026-10-07',
     title: 'Questions people ask',

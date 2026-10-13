@@ -124,6 +124,12 @@ psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-message-history-needs-a-report.sql"
 
+# A SECOND STEP ONCE SET UP IS REQUIRED: a password alone does not reach the
+# data, the live socket or the files for somebody with an authenticator app,
+# and changes nothing for anybody without one. Invented people, rolled back.
+psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-second-step-is-required.sql"
+
 # WHAT IS DELETED LEAVES NO FILE BEHIND: removing somebody queues every file
 # their rows pointed at, and only the service role can read or clear the list.
 psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \

@@ -118,6 +118,22 @@ const safeOrigin = (value: string | null) => {
   }
 };
 
+/** Whether this person has an authenticator app they have confirmed with a code. */
+function hasConfirmedSecondStep(user: { factors?: { status?: string }[] }): boolean {
+  return (user.factors ?? []).some((f) => f.status === 'verified');
+}
+
+/** The sign-in level a token carries: `aal2` after password and code. */
+function tokenLevel(token: string): string {
+  try {
+    const part = token.split('.')[1] ?? '';
+    const claims = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/'))) as { aal?: unknown };
+    return typeof claims.aal === 'string' ? claims.aal : '';
+  } catch {
+    return '';
+  }
+}
+
 // The handler answers; the wrapper below decides who is allowed to read the
 // answer. Applying the headers in ONE place is the point: there are nineteen
 // `return json(...)` paths in here, and a per-call-site rule is a rule that one
@@ -153,6 +169,15 @@ async function handle(req: Request): Promise<Response> {
   // suspended" -- so without this line a suspended Director could go on
   // bringing people into the church for up to an hour.
   if (me.suspended_at) return json({ error: 'This account is suspended.' }, 403);
+  // A PASSWORD ALONE INVITES NOBODY once the Director has set up two-step
+  // sign-in. Same reason as the line above: the database refuses a
+  // password-only token for such a person before every request
+  // (20261013140000_a_second_step_once_set_up_is_required), but this function
+  // reads with the service role key, so that refusal never reaches it. The
+  // token was checked by getUser above, so its level can be read from it.
+  if (hasConfirmedSecondStep(caller.user) && tokenLevel(token) !== 'aal2') {
+    return json({ error: 'Finish two-step sign-in first.' }, 403);
+  }
   if (me.role !== 'admin' && me.role !== 'executive') {
     return json({ error: 'Only a Director may send an invitation.' }, 403);
   }

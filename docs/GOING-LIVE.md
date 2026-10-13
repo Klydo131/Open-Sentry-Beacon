@@ -48,7 +48,7 @@ Write each proof down: the date, who did it, and what was seen.
 | 3 | Build the tables with `npx supabase db push`, then run `supabase/tests/fingerprint.sql` in the SQL editor. | START-HERE Part 3, Step 3 and Step 8 | "Remote database is up to date"; the fingerprint is saved |
 | 4 | Function secrets; deploy `invite`, `places` and `erase`; add the two Vault entries the nightly jobs read (`notify_service_key`, `notify_function_url`). | START-HERE Part 3, Steps 5 to 7b, and Step 6 item 5 | An invitation to a second address of your own arrives from your church's name and opens your app |
 | 5 | Vercel: the two `NEXT_PUBLIC_` values **before** the first build. The publishable key only. | START-HERE Part 4 | The address opens on a phone using mobile data |
-| 6 | Supabase Authentication: Site URL and Redirect URLs; sign-in e-mail through your provider; e-mail code expiry 3600 seconds or less; minimum password length 10. | START-HERE Part 4, step 7; [DEMO-SETUP.md](DEMO-SETUP.md) steps 1 to 3 | The Security Advisor shows no warnings |
+| 6 | Supabase Authentication: Site URL and Redirect URLs; sign-in e-mail through your provider; e-mail code expiry 3600 seconds or less; minimum password length 10; Multi-Factor, authenticator app (TOTP) enabled, which two-step sign-in in the app needs. | START-HERE Part 4, step 7; [DEMO-SETUP.md](DEMO-SETUP.md) steps 1 to 3 | The Security Advisor shows no warnings |
 | 7 | GitHub: protect `main` (pull requests only, checks must pass); turn on dependency alerts and private vulnerability reporting; create the `backup` environment with its two secrets. On a paid plan, turn the keep-awake workflow off. | `.github/workflows/backup.yml`, its opening notes | A backup run started by hand finishes green |
 | 8 | The first Executive Director: sign up in the app, then run `supabase/seed/01_make_me_the_first_director.sql`. | START-HERE Part 3, Step 4 | They land on the leader screens |
 | 9 | Restore the backup into a separate, empty project, and time it. | `.github/workflows/backup.yml`, "TO RESTORE" | It restored; the time is written down |
@@ -75,7 +75,7 @@ secret's value, so its output can go straight into your go-live record.
 | No expired invitation password still active | Invitation passwords last three days |
 | An approved Executive Director exists | Somebody has to hold the first seat |
 | Accounts without consent on record (a count) | Consent was asked at one of the two ways in |
-| Leaders using two-step sign-in (a count) | Not yet possible in the app; see below |
+| Leaders using two-step sign-in (a count) | No leader on the trial used a second step, and the app had nowhere to set one up |
 | The newest database change applied | Features were finished in the code but missing on the live database |
 
 ---
@@ -92,15 +92,17 @@ secret's value, so its output can go straight into your go-live record.
 | Files outlived their records | The database cannot delete stored files | The erase list, the `erase` function and its Vault entries, from day one |
 | A leader could act above their rank | Actions were checked for leadership, not for rank | Every leader action is tested at the edge of its authority |
 | Leaders' message-history tool never worked, and needed no report | It looked for a column that does not exist, and asked only for leadership | It now needs a safeguarding report, and each reading is recorded |
+| No leader used a second step at sign-in | The app had nowhere to set one up | Two-step sign-in in Settings, and a database that refuses a password alone once it is on |
 | Documents promised what the service did not do | They were written from plans, not from the live service | Every statement about the live service says when and how it was checked |
 
 ---
 
 ## Still being built
 
-- **Two-step sign-in inside the app.** Supabase supports authenticator-app
-  codes; the app has no screen to set them up yet. Until it does, turn two-step
-  sign-in on for every console account (step 1).
+- **Requiring two-step sign-in for leaders.** Since 13 October 2026 anybody can
+  turn it on in Settings, Password, and it is recommended to leaders on that
+  page. Making it required for Directors and Executive Directors is a decision
+  for your church; the readiness check counts who has it.
 - **Safari.** A few automated screen walks fail only in Safari. Test on a real
   iPhone before your first members join.
 

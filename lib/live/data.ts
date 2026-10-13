@@ -46,6 +46,7 @@ import { shrinkImage } from '@/lib/live/shrink-image';
 import { isSafeStoragePath, safeStoragePath } from '@/lib/live/storage-path';
 import { NotOnThisDatabaseYet, isMissingFromDatabase } from '@/lib/live/not-yet';
 import type { PlaceSuggestion } from '@/lib/live/place-pin';
+import { SecondStepNeeded, enterCode, isSecondStepRefusal } from '@/lib/live/two-step';
 import type { Session } from '@supabase/supabase-js';
 import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode, PostMedia } from '@/lib/types';
 import { forgetPostFile, readPostFile } from '@/lib/post-media';
@@ -100,9 +101,15 @@ export async function uid(): Promise<string> {
 export interface SignInResult {
   role: Role;
   is_approved: boolean;
+  second_step?: false;
 }
 
-export async function signIn(email: string, password: string): Promise<SignInResult> {
+/** The password was right and the account has two-step sign-in: the code comes next. */
+export interface SecondStepNext {
+  second_step: true;
+}
+
+export async function signIn(email: string, password: string): Promise<SignInResult | SecondStepNext> {
   let response: Response;
   try {
     response = await fetch('/api/auth/sign-in', {
@@ -117,6 +124,24 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   }
 
   const payload = await response.json().catch(() => null);
+
+  // TWO-STEP SIGN-IN: the password was right, and the code comes next. The
+  // session is kept so the code can be checked against it; it opens nothing
+  // until then, because the database refuses it (lib/live/two-step.ts).
+  if (
+    response.ok &&
+    payload?.second_step === true &&
+    typeof payload?.session?.access_token === 'string' &&
+    typeof payload?.session?.refresh_token === 'string'
+  ) {
+    try {
+      saveBrowserSession(payload.session as Session);
+    } catch {
+      throw new Error('Your account signed in, but the app could not save the session.');
+    }
+    return { second_step: true };
+  }
+
   if (
     !response.ok ||
     !payload?.profile ||
@@ -135,8 +160,24 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   } catch {
     throw new Error('Your account signed in, but the app could not save the session.');
   }
-  const mine = payload.profile as SignInResult;
+  return afterSignIn(payload.profile as SignInResult);
+}
 
+/**
+ * Finish a two-step sign-in with the code from the authenticator app, then do
+ * what an ordinary sign-in does next.
+ */
+export async function finishSignInWithCode(code: string): Promise<SignInResult> {
+  await enterCode(code);
+  const me = await getMyProfile();
+  // The same test the sign-in route makes before it hands over a profile.
+  if (!me || !['executive', 'admin', 'dm', 'ds'].includes(me.role)) {
+    throw new Error('Your account profile is not ready yet.');
+  }
+  return afterSignIn({ role: me.role, is_approved: me.is_approved });
+}
+
+async function afterSignIn(mine: SignInResult): Promise<SignInResult> {
   // CLAIM THE INVITATION HERE, NOT ONLY ON THE JOIN LINK.
   //
   // Sending an invitation creates the account; the church and the invited role
@@ -282,6 +323,9 @@ export async function getMyProfile(): Promise<Profile | null> {
     .select('*')
     .eq('id', await uid())
     .maybeSingle();
+  // Said by name, so the session provider shows the code screen rather than
+  // "Your account is not ready" (lib/live/session.tsx).
+  if (isSecondStepRefusal(error)) throw new SecondStepNeeded();
   if (error) throw new Error(error.message);
   return (data as Profile) ?? null;
 }

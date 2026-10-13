@@ -15,6 +15,7 @@ import { InstallHomeButton } from '@/components/InstallHomeButton';
 import { Button, Card } from '@/components/ui';
 import { Notice, emailLooksValid, errorText } from '@/components/live/shared';
 import { ConsentWording } from '@/components/live/ConsentWording';
+import { TwoStepSignInCard } from '@/components/live/TwoStep';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 
 // SPLIT OUT OF components/LiveCorePages.tsx, which had grown to three thousand
@@ -164,7 +165,7 @@ export function LiveHomePage() {
 
 export function LiveLoginPage() {
   const router = useRouter();
-  const { session, profile, loading: sessionLoading, signOut } = useLiveSession();
+  const { session, profile, loading: sessionLoading, secondStep, refreshProfile, signOut } = useLiveSession();
   const params = useSearchParams();
   // FILLED FROM THE INVITATION. The e-mail links here as
   // /login?email=..., so the address is already in the box and the person only
@@ -181,6 +182,7 @@ export function LiveLoginPage() {
       case 'profile': return 'Your account profile is not ready yet.';
       case 'unavailable': return 'Could not reach live sign-in. Please try again.';
       case 'busy': return 'Too many sign-in attempts just now. Wait a few minutes, then try again.';
+      case 'second-step': return 'Your account uses two-step sign-in. Sign in here to enter your code.';
       default: return '';
     }
   });
@@ -189,6 +191,10 @@ export function LiveLoginPage() {
       ? 'Your address is filled in. Copy the password from your invitation e-mail.'
       : ''
   ));
+  // The password was right and the account uses two-step sign-in, so the code
+  // comes next (components/live/TwoStep.tsx). The provider's `secondStep` says
+  // the same for somebody who arrives here with the code still owed.
+  const [codeStep, setCodeStep] = useState(false);
   // Set when a sign-in was refused for a reason that an unfinished account
   // would also produce. See the comment where it is set.
   const [couldBeUnfinished, setCouldBeUnfinished] = useState(false);
@@ -265,6 +271,11 @@ export function LiveLoginPage() {
       setNotice('Signing you in…');
       try {
         const mine = await live.signIn(email, handed);
+        if (mine.second_step) {
+          setNotice('');
+          setCodeStep(true);
+          return;
+        }
         if (!mine.is_approved) {
           setNotice('');
           setError(
@@ -294,6 +305,10 @@ export function LiveLoginPage() {
     setCouldBeUnfinished(false);
     try {
       const mine = await live.signIn(email, password);
+      if (mine.second_step) {
+        setCodeStep(true);
+        return;
+      }
       if (!mine.is_approved) {
         // SAY SOMETHING. This used to be `window.location.replace('/login')`,
         // which reloaded the very page the person was already looking at and
@@ -346,6 +361,34 @@ export function LiveLoginPage() {
     if (resetError) setError(resetError.message);
     else setNotice('If that address has an account, a password-reset e-mail is on its way.');
   };
+
+  if (codeStep || secondStep) {
+    return (
+      <div className="min-h-screen">
+        <PublicHeader title="Enter your code" subtitle="One more step to sign in." />
+        <div className="mx-auto max-w-md space-y-5 px-4 py-8">
+          <TwoStepSignInCard
+            onCode={async (code) => {
+              const mine = await live.finishSignInWithCode(code);
+              if (mine.is_approved) {
+                window.location.replace(homeFor(mine.role));
+                return;
+              }
+              // Waiting for approval: the provider re-reads the profile, and
+              // the waiting card below takes over.
+              setCodeStep(false);
+              await refreshProfile().catch(() => null);
+            }}
+            onCancel={async () => {
+              await signOut();
+              setCodeStep(false);
+              setError('');
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (session && profile && !profile.is_approved) {
     return (

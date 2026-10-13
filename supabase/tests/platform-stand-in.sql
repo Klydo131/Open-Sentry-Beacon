@@ -40,6 +40,27 @@ alter table auth.refresh_tokens add column if not exists session_id uuid;
 -- fresh-install failed 2 of 50 checks in a-leader-stays-within-their-rank.sql
 -- from 7 to 13 October 2026. The app was never broken; this stand-in was.
 grant all on auth.users, auth.sessions, auth.refresh_tokens to postgres;
+-- Two-step sign-in's factors: one row per authenticator app a person has added,
+-- `verified` once they have confirmed it with a code. Shape copied from a live
+-- project on 13 October 2026, where the postgres role may read it. The first
+-- migration to ask (20261013140000_a_second_step_once_set_up_is_required)
+-- stopped a fresh install without it.
+do $$ begin
+  if to_regtype('auth.factor_type') is null then
+    create type auth.factor_type as enum ('totp', 'webauthn', 'phone');
+  end if;
+  if to_regtype('auth.factor_status') is null then
+    create type auth.factor_status as enum ('unverified', 'verified');
+  end if;
+end $$;
+create table if not exists auth.mfa_factors (
+  id uuid primary key, user_id uuid not null references auth.users(id) on delete cascade,
+  friendly_name text, factor_type auth.factor_type not null, status auth.factor_status not null,
+  created_at timestamptz not null, updated_at timestamptz not null, secret text, phone text,
+  last_challenged_at timestamptz, web_authn_credential jsonb, web_authn_aaguid uuid,
+  last_webauthn_challenge_data jsonb);
+create index if not exists mfa_factors_user_id_idx on auth.mfa_factors (user_id);
+grant all on auth.mfa_factors to postgres;
 alter table storage.buckets add column if not exists public boolean default false;
 alter table storage.buckets add column if not exists avif_autodetection boolean default false;
 alter table storage.buckets add column if not exists file_size_limit bigint;

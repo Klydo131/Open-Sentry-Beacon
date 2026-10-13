@@ -35,6 +35,7 @@ import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
 import { ReadingSettings } from '@/components/ReadingSettings';
 import { LiveCourt } from '@/components/LiveTrialRoom';
 import { LiveAdminReports } from '@/components/LiveAdminReports';
+import { TwoStepCard } from '@/components/live/TwoStep';
 
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
@@ -368,6 +369,9 @@ export function LiveSettingsPage() {
               Change my password
             </Link>
           </Card>
+          <div className="mt-4">
+            <TwoStepCard />
+          </div>
         </div>
       )}
 

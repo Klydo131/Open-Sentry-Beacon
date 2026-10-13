@@ -23,6 +23,7 @@ import { useUrlKey } from '@/lib/url-signal';
 import { TabBar } from '@/components/TabBar';
 import { BackButton } from '@/components/BackButton';
 import { ConsentStep } from '@/components/live/ConsentStep';
+import { TwoStepGate } from '@/components/live/TwoStep';
 
 // THE HEADER CARRIES NO LIST OF ROOMS ANY MORE (30 September 2026).
 //
@@ -49,7 +50,7 @@ export function LiveAppShell({
   allow: Role[];
   children: React.ReactNode;
 }) {
-  const { session, profile, loading, error, signOut } = useLiveSession();
+  const { session, profile, loading, error, secondStep, signOut } = useLiveSession();
   const router = useRouter();
 
   // The office. These are the same rails the sample-data shell has used all
@@ -117,6 +118,12 @@ export function LiveAppShell({
   // splash at exactly this moment, which is what the owner asked for.
   if (loading) return <BeaconSplash label="Signing you in…" />;
   if (!session) return null;
+
+  // THE CODE BEFORE ANYTHING ELSE. Somebody with two-step sign-in has given
+  // their password and not yet the code; the database refuses them until they
+  // do, so every screen behind this would only fill with refusals.
+  // components/live/TwoStep.tsx.
+  if (secondStep) return <TwoStepGate />;
 
   if (!profile) {
     return (

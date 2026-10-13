@@ -42,11 +42,12 @@ const ok = (cond, msg) => {
 
 const data = strip(read('lib/live/data.ts'));
 
-// The body of signIn, by brace matching from its declaration. Measured inside
-// the function rather than anywhere in the file, because the point is that THIS
-// path claims -- a call somewhere else in the module would not help it.
-const signInBody = (() => {
-  const m = /export async function signIn\s*\([^)]*\)[^{]*\{/.exec(data);
+// A function's body, by brace matching from its declaration. Measured inside
+// the functions on the way in rather than anywhere in the file, because the
+// point is that THESE paths claim -- a call somewhere else in the module would
+// not help them.
+const bodyOf = (name) => {
+  const m = new RegExp(`(?:export )?async function ${name}\\s*\\([^)]*\\)[^{]*\\{`).exec(data);
   if (!m) return '';
   let i = m.index + m[0].length;
   let depth = 1;
@@ -57,17 +58,26 @@ const signInBody = (() => {
     i += 1;
   }
   return data.slice(m.index, i);
-})();
+};
+const signInBody = bodyOf('signIn');
+// Since 13 October 2026 there are two ways a sign-in finishes: the password
+// alone, and the password then a two-step code. Both hand the profile to one
+// function that claims, so the claim is measured there, and each way in must
+// reach it.
+const afterBody = bodyOf('afterSignIn');
+const codeBody = bodyOf('finishSignInWithCode');
 
 ok(signInBody.length > 0, 'signIn is where it is expected to be');
+ok(/afterSignIn\s*\(/.test(signInBody), 'signing in with a password goes through the claim');
+ok(/afterSignIn\s*\(/.test(codeBody), 'and so does finishing a sign-in with a two-step code');
 
-ok(/claimMyPendingInvitation\s*\(/.test(signInBody),
+ok(/claimMyPendingInvitation\s*\(/.test(afterBody),
    'signing in claims a pending invitation, so the person lands in a church');
 
 // The claim must be able to run for the people who need it: those not yet
 // approved. A gate that skips them puts the bug straight back while leaving the
 // call in place for a grep to find.
-ok(/!\s*\w+\.is_approved/.test(signInBody),
+ok(/!\s*\w+\.is_approved/.test(afterBody),
    'the claim is reachable for somebody who is not approved yet');
 
 // And the join flow must keep doing it too. This half was always right; it is

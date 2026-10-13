@@ -163,6 +163,48 @@ was run on the live database in a transaction that was thrown away, with two
 made-up accounts, before it was applied: the letter's password stopped working
 and its sessions ended; the account that had chosen its own was untouched.
 
+### Two-step sign-in
+
+Since 13 October 2026 anybody can add a second step to their sign-in: a
+six-digit code from an authenticator app on their phone (Settings, Password,
+**Two-step sign-in**). It is recommended on that page to Directors and
+Executive Directors, who can see the church's list of members. Supabase does
+the cryptography; the app only asks it (`lib/live/two-step.ts`).
+
+- **The lock is in the database, not the screen.** A password alone still
+  produces a valid token, marked `aal1`; password and code produce `aal2`. For
+  anybody with a confirmed authenticator app, the data API's check before every
+  request refuses an `aal1` token (HTTP 403), and the live socket and the file
+  store ask the same question. Somebody who learns the password and calls the
+  data API directly gets nothing
+  (`20261013140000_a_second_step_once_set_up_is_required`).
+- **It changes nothing for anybody who has not turned it on.** A person with no
+  authenticator app, or one they started adding and never confirmed with a code,
+  is let in on the password exactly as before. The signed-out visitor and the
+  server's own requests are untouched.
+- **The invite function asks too.** It reads with the service role key, so the
+  database's refusal never reaches it; it refuses a password-only token from a
+  Director who has two-step sign-in on.
+- **A lost phone.** The person cannot finish signing in until a custodian
+  removes their authenticator app. **Confirm who is asking first**, in person or
+  by a phone number you already have: removing it is exactly what somebody who
+  stole the password would ask for. Then, in the SQL editor:
+
+  ```sql
+  delete from auth.mfa_factors
+  where user_id = (select id from auth.users where email = 'their address');
+  ```
+
+  They sign in with their password and can set it up again. (Written from the
+  sign-in service's table shape; not yet run on a live project.)
+- **Supabase must allow it.** Authentication, Multi-Factor, authenticator app
+  (TOTP) is on by default. If it has been switched off, setting up says so and
+  where to switch it on.
+
+`supabase/tests/a-second-step-is-required.sql` proves the database half as
+invented people in every fresh install; `tests/two-step-sign-in.mjs` runs the
+app's half against a stand-in sign-in server.
+
 ### Files people upload
 
 The live app keeps every uploaded file in **one private storage bucket**, and a
@@ -235,6 +277,7 @@ anybody new is given access. Listed after the audit of 3 October 2026.
 |---|---|---|
 | Supabase → Authentication → "Allow new users to sign up" | **Off** | The app is invitation-only, and invitations are made through the service role, so nothing breaks. Left on, the public key alone can create accounts. |
 | Supabase → Authentication → email code expiry | **Under an hour** | A sign-in code that lasts longer is longer to steal. |
+| Supabase → Authentication → Multi-Factor → authenticator app (TOTP) | **Enabled** (the default) | Two-step sign-in in the app uses it. Switched off, nobody can set it up. |
 | GitHub → Settings → Environments → `backup` | Allow `main` only, you as **required reviewer**, `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` as its secrets | The database address can read everything. As a repository secret, any workflow on any branch can read it, so anybody who can push, or an AI tool working with that access, could copy it out. `.github/workflows/backup.yml` explains. |
 | GitHub → Settings → Code security | **Private vulnerability reporting, secret scanning and push protection on** | The "report a vulnerability" link above depends on the first; the others stop a key from being pushed by mistake. |
 | GitHub → Settings → Branches (or Rules) for `main` | **Require review from Code Owners** | Then a pull request that touches the files in `.github/CODEOWNERS` (database rules, workflows, server routes, the AI brief) waits for your review. |

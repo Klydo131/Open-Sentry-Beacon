@@ -155,6 +155,15 @@ export function faqSections(): FaqSection[] {
           links: [{ label: 'Sign in', href: '/login' }],
         },
         {
+          id: 'two-step',
+          q: 'What is two-step sign-in, and should I turn it on?',
+          a: [
+            'It adds a second step after your password: a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator. Somebody who learns your password still cannot sign in as you.',
+            'Turn it on in Settings, on the Password page, under “Two-step sign-in”. It is recommended for Directors and Executive Directors, who can see the church’s list of members.',
+            'If you lose the phone with your authenticator app, ask your church’s Director to contact whoever looks after the app. They can remove it from your account so you can sign in with your password and set it up again.',
+          ],
+        },
+        {
           id: 'under-18',
           q: 'I am under 18. Can I join?',
           a: [

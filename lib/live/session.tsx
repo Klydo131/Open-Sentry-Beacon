@@ -14,6 +14,7 @@ import * as live from '@/lib/live/data';
 import { setFeedbackSink } from '@/lib/backend/feedback';
 import { churchFeedbackSink, flushKeptFeedback } from '@/lib/live/feedback-sink';
 import { verdictOnFailure } from '@/lib/live/session-verdict';
+import { SecondStepNeeded, needsSecondStep, refreshMyFactors } from '@/lib/live/two-step';
 import type { Profile, Role } from '@/lib/types';
 
 const HOME: Record<Role, string> = {
@@ -30,6 +31,8 @@ interface LiveSessionValue {
   profile: Profile | null;
   loading: boolean;
   error: string;
+  /** Signed in with the password, and the code from the authenticator app is still owed. */
+  secondStep: boolean;
   refreshProfile: () => Promise<Profile | null>;
   signOut: () => Promise<void>;
 }
@@ -41,18 +44,34 @@ export function LiveSessionProvider({ children }: { children: React.ReactNode })
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [secondStep, setSecondStep] = useState(false);
 
   const refreshProfile = useCallback(async () => {
     const nextSession = readBrowserSession();
     if (!nextSession) {
       setSession(null);
       setProfile(null);
+      setSecondStep(false);
       return null;
     }
     setSession(nextSession);
-    const next = await live.getMyProfile();
-    setProfile(next);
-    return next;
+    if (needsSecondStep(nextSession)) {
+      setProfile(null);
+      setSecondStep(true);
+      return null;
+    }
+    try {
+      const next = await live.getMyProfile();
+      setProfile(next);
+      setSecondStep(false);
+      return next;
+    } catch (cause) {
+      if (!(cause instanceof SecondStepNeeded)) throw cause;
+      await refreshMyFactors().catch(() => null);
+      setProfile(null);
+      setSecondStep(true);
+      return null;
+    }
   }, []);
 
   useEffect(() => {
@@ -72,6 +91,17 @@ export function LiveSessionProvider({ children }: { children: React.ReactNode })
       if (!next) {
         setProfile(null);
         setError('');
+        setSecondStep(false);
+        setLoading(false);
+        return;
+      }
+      // THE CODE IS STILL OWED. The session knows the account has a confirmed
+      // authenticator app and its token is password-only, so the profile read
+      // below would be refused anyway (lib/live/two-step.ts). Ask for the code.
+      if (needsSecondStep(next)) {
+        setProfile(null);
+        setError('');
+        setSecondStep(true);
         setLoading(false);
         return;
       }
@@ -79,6 +109,7 @@ export function LiveSessionProvider({ children }: { children: React.ReactNode })
         const mine = await live.getMyProfile();
         if (!alive) return;
         setProfile(mine);
+        setSecondStep(false);
         setError(mine ? '' : 'Your account profile is not ready yet.');
 
         // FEEDBACK NOW HAS SOMEWHERE TO GO, and until this line it did not.
@@ -96,6 +127,19 @@ export function LiveSessionProvider({ children }: { children: React.ReactNode })
         void flushKeptFeedback().catch(() => {});
       } catch (cause) {
         if (!alive) return;
+
+        // SET UP ON ANOTHER DEVICE. This device signed in before the account
+        // had a second step, so its session did not know; the database did,
+        // and refused. Learn which app it is, then ask for the code.
+        if (cause instanceof SecondStepNeeded) {
+          await refreshMyFactors().catch(() => null);
+          if (!alive) return;
+          setSession(readBrowserSession());
+          setProfile(null);
+          setError('');
+          setSecondStep(true);
+          return;
+        }
 
         // WHETHER A SESSION IS OVER IS NOT A QUESTION ABOUT THIS ERROR.
         //
@@ -183,11 +227,12 @@ export function LiveSessionProvider({ children }: { children: React.ReactNode })
     await live.signOut();
     setSession(null);
     setProfile(null);
+    setSecondStep(false);
   }, []);
 
   const value = useMemo(
-    () => ({ session, profile, loading, error, refreshProfile, signOut }),
-    [session, profile, loading, error, refreshProfile, signOut],
+    () => ({ session, profile, loading, error, secondStep, refreshProfile, signOut }),
+    [session, profile, loading, error, secondStep, refreshProfile, signOut],
   );
 
   return <LiveSessionContext.Provider value={value}>{children}</LiveSessionContext.Provider>;

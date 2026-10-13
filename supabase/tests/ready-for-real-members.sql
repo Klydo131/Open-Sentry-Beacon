@@ -154,7 +154,7 @@ begin
     n := 13; item := 'Leaders using two-step sign-in';
     seen := v2 || ' of ' || v;
     status := case when v > 0 and v2 = v then 'READY' else 'NOT YET' end;
-    what_to_do := case when v > 0 and v2 = v then '' else 'The app has no screen for it yet (being built). Meanwhile, turn it on for every console administrator.' end;
+    what_to_do := case when v > 0 and v2 = v then '' else 'Each leader turns it on in Settings, Password, Two-step sign-in. Console administrators also turn it on in GitHub, Supabase, Vercel and the e-mail service.' end;
     return next;
   end if;
 

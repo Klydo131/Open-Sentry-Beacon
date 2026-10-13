@@ -118,6 +118,19 @@ export async function POST(request: NextRequest) {
         : formRedirect(request, '/login?error=credentials', pendingCookies, pendingHeaders);
     }
 
+    // THE PASSWORD WAS RIGHT, AND IT IS NOT ENOUGH for somebody who has set up
+    // two-step sign-in. Their profile cannot be read yet (the database refuses
+    // a password-only token for them: 20261013140000_a_second_step_once_set_up_
+    // is_required), so the session goes back as it is and the browser asks for
+    // the code (lib/live/two-step.ts). Nothing about the account is said
+    // beyond what a right password has already earned.
+    const confirmedSecondStep = (authData.user.factors ?? []).some((f) => f.status === 'verified');
+    if (confirmedSecondStep) {
+      return expectsJson
+        ? jsonResponse({ second_step: true, session: authData.session }, 200, pendingCookies, pendingHeaders)
+        : formRedirect(request, '/login?error=second-step', pendingCookies, pendingHeaders);
+    }
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role,is_approved')

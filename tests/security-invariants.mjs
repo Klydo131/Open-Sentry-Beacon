@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { stripTs } from './_strip.mjs';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
@@ -1113,6 +1114,79 @@ if (exists('supabase/functions/invite/index.ts')) {
   const successReturn = code.slice(code.lastIndexOf("delivery: 'email'"));
   ok(!/token_hash|hashed_token/.test(successReturn),
      'and no reply carries a one-time token');
+}
+
+// ---------------------------------------------------------------------------
+// TWO-STEP SIGN-IN IS KEPT WHERE THE DATA IS (13 October 2026).
+// ---------------------------------------------------------------------------
+// A password alone produces a valid token, and anybody holding one can call the
+// data API without this app. So the code screen is a convenience and the lock
+// is the database's check before every request. These are the lines a later,
+// well-meaning change could drop without any screen looking different.
+// supabase/tests/a-second-step-is-required.sql proves the behaviour as people.
+{
+  const migDir = 'supabase/migrations';
+  const migs = fs.readdirSync(path.join(root, migDir)).filter((f) => f.endsWith('.sql')).sort();
+  const lastDefining = (fn) => {
+    const hits = migs.filter((f) => read(`${migDir}/${f}`).includes(`create or replace function ${fn}(`));
+    return hits.length ? read(`${migDir}/${hits[hits.length - 1]}`) : '';
+  };
+  const mig = exists(`${migDir}/20261013140000_a_second_step_once_set_up_is_required.sql`)
+    ? read(`${migDir}/20261013140000_a_second_step_once_set_up_is_required.sql`) : '';
+  ok(/'aal2'/.test(mig) && /f\.status = 'verified'/.test(mig),
+    'two-step: a password-only token passes only for somebody with no CONFIRMED authenticator app');
+  ok(/revoke all on function private\.my_second_step_is_done\(\) from public, anon, authenticated/.test(mig),
+    'two-step: nobody signed in can ask the question directly');
+
+  const before = lastDefining('public.refuse_suspended_requests');
+  ok(/my_second_step_is_done\(\)/.test(before) && /errcode = 'PT403'/.test(before)
+    && /my_session_is_live\(\)/.test(before),
+    'two-step: the newest check before every request still asks it, beside the ended-session check');
+  ok(/grant execute on function public\.refuse_suspended_requests\(\) to anon/.test(before),
+    'two-step: and the signed-out visitor keeps the grant that check needs');
+  ok(/my_second_step_is_done\(\)/.test(lastDefining('private.i_am_not_suspended')),
+    'two-step: the live socket and the file store ask it too');
+
+  const route = stripTs(read('app/api/auth/sign-in/route.ts'));
+  const branch = route.indexOf('second_step: true');
+  ok(branch > 0 && branch < route.indexOf(".from('profiles')") && /status === 'verified'/.test(route),
+    'two-step: the sign-in route stops before the profile for a confirmed authenticator app');
+
+  const twoStep = stripTs(read('lib/live/two-step.ts'));
+  ok(/FACTOR_ID\.test\(id\)/.test(twoStep) && !/`\/factors\/\$\{(?!id\})/.test(twoStep),
+    'two-step: a factor id is checked before it goes into an address');
+  ok(/\^\\d\{6\}\$/.test(twoStep), 'two-step: a code is exactly six digits before it is sent');
+  ok(!/console\./.test(twoStep), 'two-step: nothing logs the key, the code or a token');
+  const screens = stripTs(read('components/live/TwoStep.tsx'));
+  ok(!/dangerouslySetInnerHTML/.test(screens) && /<img\s[^>]*src=\{setup\.qr\}/.test(screens),
+    'two-step: the picture code is shown by an <img>, never inserted as markup');
+
+  const shell = stripTs(read('components/LiveAppShell.tsx'));
+  const gate = shell.indexOf('if (secondStep) return <TwoStepGate');
+  ok(gate > 0 && gate < shell.indexOf('if (!profile)') && gate < shell.indexOf('<ConsentStep'),
+    'two-step: the app asks for the code before anything else is drawn');
+  const provider = stripTs(read('lib/live/session.tsx'));
+  ok(/instanceof SecondStepNeeded/.test(provider) && /needsSecondStep\(next\)/.test(provider),
+    'two-step: a refusal for the code shows the code screen, not "your account is not ready"');
+
+  const invite = stripTs(read('supabase/functions/invite/index.ts'));
+  const guard = invite.indexOf("tokenLevel(token) !== 'aal2'");
+  ok(guard > 0 && guard < invite.indexOf('await req.json()'),
+    'two-step: the invite function, which reads with the server key, refuses a password-only Director');
+
+  // THE BEHAVIOUR, RUN RATHER THAN READ: tests/two-step-sign-in.mjs bundles
+  // lib/live/two-step.ts and runs it against a stand-in sign-in server. Run
+  // from here because the gate's list, scripts/verify.mjs, is in Codex's lane;
+  // once it lists the file itself, this call can go.
+  const behaviour = spawnSync(process.execPath, [path.join(root, 'tests/two-step-sign-in.mjs')],
+    { cwd: root, encoding: 'utf8' });
+  ok(behaviour.status === 0,
+    'two-step: the module asks the sign-in server the right things, in order (tests/two-step-sign-in.mjs)'
+    + (behaviour.status === 0 ? '' : `\n${behaviour.stdout}${behaviour.stderr}`));
+
+  ok(/a-second-step-is-required\.sql/.test(read('scripts/fresh-install.sh'))
+    && /create table if not exists auth\.mfa_factors/.test(read('supabase/tests/platform-stand-in.sql')),
+    'two-step: the fresh install proves it as invented people');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
