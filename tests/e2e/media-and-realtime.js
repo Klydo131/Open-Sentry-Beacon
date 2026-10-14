@@ -28,7 +28,7 @@ async function signInAsMaria(page) {
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1100);
   const maria = page.getByText(/Maria Santos/i).first();
-  if (await maria.count()) await maria.click();
+  await maria.click();
   await page.waitForTimeout(1400);
   const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
   if (await consent.count()) {
@@ -41,13 +41,11 @@ async function openFirstSeekerRoom(page) {
   await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
   const card = page.locator('[data-quest="seeker-card"]').first();
-  if (await card.count()) {
-    await card.click();
-    await page.waitForTimeout(1200);
-    // The conversation is in the Talk bubble (30 September 2026); Message opens it.
-    await openChat(page);
-    await page.waitForTimeout(1600);
-  }
+  await card.click();
+  await page.waitForTimeout(1200);
+  // The conversation is in the Talk bubble (30 September 2026); Message opens it.
+  await openChat(page);
+  await page.waitForTimeout(1600);
   return page.locator('[data-quest="chat-send"]').count();
 }
 

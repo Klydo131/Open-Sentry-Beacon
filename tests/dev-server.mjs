@@ -24,7 +24,7 @@
 // Plain Node, no Playwright — it must run anywhere, including a machine that has
 // never installed a browser.
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import net from 'node:net';
 
 let bad = 0;
@@ -74,7 +74,7 @@ const stop = () => {
   // The negative PID is the process GROUP: npm is only the wrapper, and the
   // `next dev` it spawns is what actually holds the port.
   try {
-    if (NEEDS_SHELL) process.kill(dev.pid);
+    if (NEEDS_SHELL) spawnSync('taskkill', ['/PID', String(dev.pid), '/T', '/F'], { stdio: 'ignore' });
     else process.kill(-dev.pid, 'SIGTERM');
   } catch {
     /* already gone */
@@ -120,7 +120,7 @@ if (ready) {
     });
     html = await res.text();
   } catch (e) {
-    ok(false, `the dev server answers: ${e.message}`);
+    ok(false, `the dev server answers: ${e.message}${e.cause ? ` (${e.cause.code || e.cause.message})` : ''}`);
   }
 
   if (res) {
@@ -147,22 +147,22 @@ if (ready) {
     // deliberately not a dependency of this project (see tests/e2e/_playwright),
     // so this is a bonus rather than a requirement.
     let browser = null;
+    let launchOptions = {};
     try {
-      ({ chromium: browser } = await import('./e2e/_playwright.js').then((m) => m.default ?? m));
+      ({ chromium: browser, launchOptions } = await import('./e2e/_playwright.js').then((m) => m.default ?? m));
     } catch {
       browser = null;
     }
     if (browser) {
       let rendered = 0;
       try {
-        const b = await browser.launch(
-          process.env.PLAYWRIGHT_BROWSERS_PATH
-            ? { executablePath: '/opt/pw-browsers/chromium' }
-            : {},
-        );
+        const b = await browser.launch(launchOptions);
         const pg = await b.newPage();
         await pg.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-        await pg.waitForTimeout(2500);
+        // Network idle does not mean the client has finished mounting in WebKit.
+        // Wait for the content this check requires; a blank page still fails below.
+        await pg.waitForFunction(() => document.body.innerText.trim().length > 200)
+          .catch(() => {});
         rendered = (await pg.locator('body').innerText()).trim().length;
         await b.close();
       } catch {
@@ -179,6 +179,7 @@ if (ready) {
   }
 }
 
+if (bad) console.error(`DEV SERVER LOG (exit ${dev.exitCode}, signal ${dev.signalCode}):\n${log}`);
 stop();
 
 // Production must NOT get the relaxation. Checked from the config source rather

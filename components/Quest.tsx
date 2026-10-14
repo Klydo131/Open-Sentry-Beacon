@@ -239,7 +239,9 @@ export function Quest() {
       // to see or press. When what comes next is outside an open chat, the
       // chat is put down first, as a person would.
       const sheet = document.querySelector('[data-talk-sheet]');
-      if (el && sheet && !sheet.contains(el)) closeTalk();
+      // A chat step can still be waiting for its composer while the sheet opens.
+      // Its outside fallback opens that sheet; closing it would race the mount.
+      if (el && sheet && !sheet.contains(el) && !step.target.startsWith('chat-')) closeTalk();
 
       targetEl.current = el;
 

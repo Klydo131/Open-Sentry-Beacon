@@ -16,11 +16,12 @@ import { useEffect, useState } from 'react';
 
 const PROBE = '/icons/icon.svg';
 
-async function reachable(): Promise<boolean> {
+async function reachable(signal: AbortSignal): Promise<boolean> {
   try {
     const res = await fetch(`${PROBE}?ping=${Date.now()}`, {
       method: 'HEAD',
       cache: 'no-store',
+      signal,
     });
     return res.ok;
   } catch {
@@ -36,6 +37,7 @@ export function useOnline(): { online: boolean; checking: boolean } {
 
   useEffect(() => {
     let dead = false;
+    const controller = new AbortController();
 
     const goOffline = () => {
       if (!dead) setOnline(false);
@@ -46,7 +48,7 @@ export function useOnline(): { online: boolean; checking: boolean } {
     const goOnline = async () => {
       if (dead) return;
       setChecking(true);
-      const ok = await reachable();
+      const ok = await reachable(controller.signal);
       if (dead) return;
       setChecking(false);
       setOnline(ok);
@@ -71,6 +73,7 @@ export function useOnline(): { online: boolean; checking: boolean } {
 
     return () => {
       dead = true;
+      controller.abort();
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('online', goOnline);
       clearInterval(poll);

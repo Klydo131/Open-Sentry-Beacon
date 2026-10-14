@@ -74,7 +74,7 @@ async function run(browser, label, device) {
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1100);
   const maria = page.getByText(/Maria Santos/i).first();
-  if (await maria.count()) await maria.tap();
+  await maria.tap();
   await page.waitForTimeout(1500);
   const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
   if (await consent.count()) {
@@ -93,10 +93,8 @@ async function run(browser, label, device) {
   ok(overflow <= 1, `${label}: no horizontal scroll on the missionary list (${overflow}px)`);
 
   const card = page.locator('[data-quest="seeker-card"]').first();
-  if (await card.count()) {
-    await card.tap();
-    await page.waitForTimeout(1700);
-  }
+  await card.tap();
+  await page.waitForTimeout(1700);
 
   // EVERY DESTINATION IS REACHABLE BY TAPPING, at this width.
   //

@@ -22,7 +22,7 @@
 //   node tests/e2e/the-study-room-on-every-size.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions, isCancelledPrefetch } = require('./_playwright');
-const { signInAsExplorer, openStudyRoom, openPage } = require('./_study');
+const { signInAsExplorer, openStudyRoom, openPage, newPage, backToShelf } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -171,6 +171,25 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     await page.screenshot({ path: `${OUT}/study-${size.width}.png` });
   }
 
+  // Seeded pages have words, so they cannot expose a clipped empty-page hint.
+  // Check a genuinely new page too, at the same phone, pad and desktop sizes.
+  await backToShelf(page);
+  await newPage(page);
+  const hint = page.locator('.affine-paragraph-placeholder.visible').first();
+  await hint.waitFor({ timeout: 10_000 });
+  for (const size of SIZES) {
+    await page.setViewportSize({ width: size.width, height: size.height });
+    const fit = await hint.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return { clipped: el.scrollWidth - el.clientWidth,
+        inside: [...range.getClientRects()].every((r) => r.left >= box.left - 1 && r.right <= box.right + 1) };
+    });
+    ok(fit.clipped <= 1 && fit.inside,
+       `${size.name} (${size.width}px): a new page's entire writing hint fits (${fit.clipped}px clipped)`);
+    await page.screenshot({ path: `${OUT}/study-empty-${size.width}.png` });
+  }
   await ctx.close();
   console.log(`\nscreenshots in ${OUT}`);
   console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

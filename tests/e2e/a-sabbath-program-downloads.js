@@ -20,7 +20,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { chromium, launchOptions, engineName } = require('./_playwright');
+const { chromium, launchOptions, engineName, pageErrors } = require('./_playwright');
 
 const PORT = process.argv[2] || '4412';
 const BASE = `http://localhost:${PORT}`;
@@ -32,7 +32,7 @@ async function signInAs(page, who) {
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1100);
   const pick = page.getByText(who).first();
-  if (await pick.count()) await pick.click();
+  await pick.click();
   await page.waitForTimeout(1500);
   const consent = page.getByRole('button', { name: /I understand|Continue|Got it|Agree|OK/i });
   if (await consent.count()) {
@@ -73,8 +73,7 @@ function storedEntry(buf, name) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
   await quietStart(context);
   const page = await context.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
+  const pageFaults = pageErrors(page);
 
   // 1. A GUIDE FINDS IT IN THE OFFICE
   await signInAs(page, 'Maria Santos');
@@ -180,6 +179,7 @@ function storedEntry(buf, name) {
   ok((await page.locator('[data-panel="sabbath-programs"], [data-panel="sabbath-program"]').count()) === 0,
      'an Explorer who types the address is not shown it');
 
+  const errors = pageFaults.list();
   ok(errors.length === 0, `no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
 
   await browser.close();

@@ -40,7 +40,6 @@ async function signInAs(page, name) {
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
   const who = page.getByText(new RegExp(name, 'i')).first();
-  if ((await who.count()) === 0) return false;
   await who.click();
   await page.waitForTimeout(1800);
   const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
