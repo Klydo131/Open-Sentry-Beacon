@@ -26,7 +26,8 @@
 // composed or retouched. A screenshot is the one kind of documentation that
 // rots with nothing failing, so rerun this whenever a screen changes.
 
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -39,6 +40,18 @@ const ONLY = process.argv.slice(3);
 const BASE = `http://localhost:${PORT}`;
 
 const { chromium } = require('playwright');
+// The pretend microphone sings: a held C4, made by the same made-up voice the
+// tuner's tests sing with (tests/e2e/_made-up-voice.js), so Sing the note's
+// pictures (44, 45) are of the app really hearing a note, not a staged screen.
+const { sing, wav } = require('../tests/e2e/_made-up-voice.js');
+const VOICE = join(mkdtempSync(join(tmpdir(), 'beacon-shots-')), 'held-c4.wav');
+{
+  const parts = [[0.3, null]];
+  for (let i = 0; i < 20; i++) parts.push([3, 60], [0.3, null]);
+  writeFileSync(VOICE, wav(sing(parts, { vowel: 'ah', sex: 'm', seed: 11 }), 48000));
+}
+/** What Sing the note remembers on the phone: a run of five, or one note. */
+const singKept = (mode) => JSON.stringify({ mode, single: 60, notes: [60, 62, 64, 65, 67], part: 'any', tolerance: 'choir', hearFirst: false });
 // The browser walks' own helpers for the two things that changed shape on
 // 30 September 2026: a room's subrooms are a drop-down now, not a row of tabs,
 // and the conversation is the Talk bubble, not a page. Using the walks' copies
@@ -457,6 +470,41 @@ const SHOTS = [
       await p.locator('[data-tuner-a4]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await settle(p, 600);
     } },
+  // Sing the note, 14 October 2026: "place a note that you are looking for
+  // voice and see if you hit the note correctly or if you put at least 5-10
+  // notes ... rewarded for 'perfect pitch'". The practice in the Tuner's
+  // Advanced settings, set up for a run of five.
+  { file: '44-sing-the-note.png', what: 'Sing the note: one note or five to ten, your voice, and how close counts', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate((kept) => {
+        localStorage.setItem('beacon:music-advanced:tuner', '1');
+        localStorage.setItem('beacon:music-sing', kept);
+      }, singKept('run'));
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy(0, -80));
+      await settle(p, 600);
+    } },
+  // And the reward: C4 sung and held into the pretend microphone, judged a
+  // hit, and Perfect pitch.
+  { file: '45-perfect-pitch.png', what: 'Sing the note: C4 sung and held, a hit, and Perfect pitch', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate((kept) => {
+        localStorage.setItem('beacon:music-advanced:tuner', '1');
+        localStorage.setItem('beacon:music-sing', kept);
+      }, singKept('one'));
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-sing]').getByRole('button', { name: 'Sing C4' }).click();
+      await p.locator('[data-perfect-pitch]').waitFor({ timeout: 15000 });
+      await settle(p, 900);
+      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy(0, -80));
+      await settle(p, 300);
+    } },
   // My Files on a phone, 6 October 2026: "The Library (My files) are not UI
   // friendly for Mobile and Pad users". On this device: adding first, at one
   // width, then the files, then the note about Music.
@@ -543,10 +591,11 @@ const executablePath = (() => {
 })();
 
 // A pretend microphone, so the voice-message shot shows the recorder without
-// anybody's real one; the browser is told yes without asking.
+// anybody's real one, and Sing the note hears its made-up voice; the browser
+// is told yes without asking.
 const browser = await chromium.launch({
   ...(executablePath ? { executablePath } : {}),
-  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${VOICE}`],
 });
 let failed = 0;
 const chosen = ONLY.length ? SHOTS.filter((s) => ONLY.some((n) => s.file.startsWith(`${n.padStart(2, '0')}-`))) : SHOTS;

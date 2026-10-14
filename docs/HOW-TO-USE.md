@@ -126,9 +126,11 @@ folder for more, and untick it to put the folder back as it was.
   **Concert pitch** is where the choir's A sits: 440 is the standard. Tap 442
   or 432 and you hear the new A, with a line saying what it does to every note;
   **Compare with 440** plays the standard A, then yours. To match an organ or a
-  piano, ask for its A and tap **Listen for the A**. In **Advanced**: a line
-  drawing your voice over the last ten seconds, a **drone** to sing against,
-  and the notes as a clarinet, trumpet, saxophone or horn reads them.
+  piano, ask for its A and tap **Listen for the A**. In **Advanced**: **Sing
+  the note**, a practice that shows you a note (or five to ten) and tells you
+  whether you hit each one, with **Perfect pitch!** when you hit them all; a
+  line drawing your voice over the last ten seconds, a **drone** to sing
+  against, and the notes as a clarinet, trumpet, saxophone or horn reads them.
 - **Conductor** keeps a steady beat and draws the conductor's hand for 2, 3, 4
   or 6 beats. Tap **Tap the beat** a few times in time and the tempo follows
   you. Untick **Sound the clicks** to follow the hand in silence. In
@@ -151,6 +153,10 @@ folder for more, and untick it to put the folder back as it was.
 ![The Music room's Conductor. The pattern for four beats, numbered where the hand falls, with the tempo beside it.](screenshots/walkthrough/40-music-room.png)
 
 ![The Tuner's Concert pitch. One tap for each common A, the one chosen shown as chosen, and Compare with 440.](screenshots/walkthrough/42-tuner-pitch.png)
+
+![Sing the note, in the Tuner's Advanced settings: One note or 5–10 notes, the notes chosen, and a note to add.](screenshots/walkthrough/44-sing-the-note.png)
+
+![C4 sung and held: a hit, and Perfect pitch.](screenshots/walkthrough/45-perfect-pitch.png)
 
 ![Pieces with a choir PDF opened on the phone. Under the title it says it was read from the printed notes, and About this piece explains it.](screenshots/walkthrough/41-music-pdf.png)
 

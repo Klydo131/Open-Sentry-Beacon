@@ -162,6 +162,105 @@ downloads the reader (9 KB compressed), pdf.js (148 KB) and its worker
 PDF itself is kept on the phone as it is, and read again each time it opens,
 so a better reader later improves every kept piece.
 
+## How exact the tuner is (14 October 2026)
+
+Asked for with **Sing the note**: "MAKE SURE the tuner for voice is extremely
+accurate with 1 to 1 on voice to notes", then "the accuracy of notes from voice
+to notes needs to be 99% accurate and fast". So the tuner's ear was measured
+before anything was built on it, and the measuring stays in the gate.
+
+**On what.** Two things, because neither is enough alone.
+
+- **Made-up voices** (`tests/e2e/_made-up-voice.js`), built the way a voice is
+  built: a buzz rich in harmonics, shaped by the mouth into a vowel. Every note
+  five voice parts sing (bass E2 to soprano C6, 121 notes) on five vowels, 605
+  sung notes, each from a breath, each with a scoop into the note, a vibrato,
+  jitter, shimmer, breath and a phone's thin low end, and then made harder:
+  wider vibratos, a breathy voice in a noisy room, a room's echo, a phone that
+  hears nothing below 250 Hz, a rough voice. They are not people, and nothing
+  here says they are. Sopranos raise the mouth's first resonance onto high
+  notes (Joliveau, Smith and Wolfe, *Nature* 427, 2004); the made-up soprano
+  does too, and the case where she does not is measured on its own.
+- **Real singing marked by people**: vocadito track 1 (Bittner and others,
+  Spotify, 2021; CC BY 4.0), 33 seconds of one singer, with the pitch every
+  5.8 ms and every note marked by trained musicians. It is in
+  `tests/fixtures/voice/` with its credit. It came from the mirdata project's
+  copy on GitHub because Zenodo and Hugging Face, where the rest of the open
+  singing datasets live, could not be reached from where this was measured;
+  one real voice is what could be had, and it is one voice.
+
+**What was wrong, and is fixed** (`lib/music/pitch-tracker.ts`). Each was found
+by measuring, not by reading the code:
+
+1. **A loud overtone was read as the note.** On "ee" at the top of a tenor's,
+   alto's or soprano's range, one harmonic sits on a resonance of the mouth and
+   can be thirty times louder than the note. The tuner now takes a repeat that
+   falls between the overtone's own, and is clearly better, as the note.
+2. **A chance repeat far along the window was taken for the note.** pitchy looks
+   at every delay up to the whole window; past half of it there is too little
+   sound to compare, and a bass's note "repeated" six periods on. The tuner now
+   reads McLeod's curve itself, from pitchy's own autocorrelation, and stops at
+   half the window, as the paper does.
+3. **A wide vibrato flipped the letter.** A swing of 60 cents either side
+   crosses into the next note five or six times a second. A move of less than a
+   semitone and a half now has to move the average of the last 130 ms as well.
+4. **A wrong first reading stuck for the whole note.** The first reading of a
+   note can land an octave out; every right reading after it was then thrown
+   away as an "octave slip", for as long as the note lasted. Six readings in a
+   row that agree now move it. This was in the tuner before today.
+
+**The numbers.** Out of 36,300 readings for each condition (the middle second
+of each of the 605 sung notes): how many named a wrong note, letter or octave,
+and how many gave no reading at all, before 14 October and now:
+
+| Made-up voices | Wrong note, before | Wrong note, now | No reading, before → now |
+|---|---|---|---|
+| An ordinary voice | 0 | 0 | 648 → 44 |
+| A vibrato of 60 cents, 6.5 a second | 4,660 | 0 | 3,162 → 519 |
+| A vibrato of 80 cents, 4.8 a second | 22,304 | 0 | 3,279 → 762 |
+| A breathy voice in a noisy room | 0 | 0 | 665 → 82 |
+| A room's echo | 0 | 0 | 546 → 75 |
+| A phone that hears nothing below 250 Hz | 240, every one an octave out | 0 | 787 → 54 |
+| A rough voice (each cycle 1.5% longer or shorter) | 16 | 6, none an octave out | 2,880 → 940 |
+| A soprano's A♯5 on a closed "ee", the note itself weak, in a noisy room | 0 | 34, a fifth high, on that one note | 2,076 → 1,460 |
+
+The last row is the one thing worse than before, and it is kept in view rather
+than hidden: the old tuner went silent on that note, and this one reads some
+of it a fifth high. No soprano sings it that way (above C5 the mouth opens onto
+the note, and with it the made-up soprano reads 0 wrong), but a reading a fifth
+out is worse than none.
+
+| Real singing (vocadito 1), the held part of each note | Before | Now |
+|---|---|---|
+| Moments given a reading | 98.4% | 99.5% |
+| Within 50 cents of the pitch people marked | 98.2% | 99.2% |
+| Read an octave out | 0 | 0 |
+| Notes named within 50 cents of the annotators' marks | 96.6% and 96.8% | 98.3% and 100% |
+| How far behind the voice a reading is | 74 ms | 42 ms |
+
+"Rounds to the same note as the label" is not in this table on purpose. This
+singer sings about a quarter of a semitone off A 440, so many of the marked
+notes sit on the line between two notes (one is 45.49, read as 45.50); naming
+the nearest note there measures the ruler, not the ear.
+
+**Sing the note's judge** (`lib/music/sing-the-note.ts`) waits for a note to be
+held for 0.6 s and judges the middle of what was sung, leaving out the scoop.
+On every one of the 121 notes sung in tune: 121 hits, each judged within
+0.67 s of the voice starting. Sung a semitone off, 40 cents sharp or an octave
+low: every one judged a miss and named for what it was. In the browser, with a
+made-up voice as Chromium's microphone, it scored C4 D4 E4 F4 G4 sung in tune
+as 5 of 5, and C4 E4 G4 C5 G4 sung as C4 F4 G4 C4 G4 as 3 of 5 ("F4: a
+semitone above E4", "C4: an octave below C5").
+
+**Kept true by** `tests/the-tuner-hears-the-note-sung.mjs` (in the gate, about
+half a minute) and `tests/e2e/a-sung-note-is-heard-as-itself.js` (the browser,
+with every look measured for contrast).
+
+**Not measured**: a real phone's microphone, Safari's audio (WebKit has no
+pretend microphone to sing into), more than one real singer, children's
+voices, and singing in a full room. The first check on a real iPhone is still
+the owner's.
+
 ## What is not done, and why
 
 - **The score is shown as notes on a strip, not as printed music.** Printed

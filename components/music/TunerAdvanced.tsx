@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Card } from '@/components/ui';
 import { INSTRUMENT_KEYS, midiName, midiToHz, toSemitones, trailBand, type InstrumentKey, type Reading } from '@/lib/music/notes';
 import { TIMBRES, TIMBRE_NAME, closeAudio, openAudio, sustain, type Timbre } from '@/lib/music/audio';
+import { QUIET_EVENT } from '@/components/music/SingTheNote';
 
 /** How much of the voice the trail shows. */
 const TRAIL_SECONDS = 10;
@@ -171,12 +172,15 @@ export function Drone({ a4 }: { a4: number }) {
     if (on) start(note, sound);
   };
 
-  // Silent when the folder is left or the phone locks.
+  // Silent when the folder is left or the phone locks, and when Sing the note
+  // starts: the tuner would hear the drone, not the singer.
   useEffect(() => {
     const hidden = () => { if (document.hidden) stop(); };
     document.addEventListener('visibilitychange', hidden);
+    window.addEventListener(QUIET_EVENT, stop);
     return () => {
       document.removeEventListener('visibilitychange', hidden);
+      window.removeEventListener(QUIET_EVENT, stop);
       release.current?.();
       closeAudio(ctx.current);
       ctx.current = null;

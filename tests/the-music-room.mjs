@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -709,6 +710,19 @@ function wordsOnlyPdf(words) {
      'the PDF kept on the phone is the file itself, not the bytes pdf.js takes over');
   ok(/piece\.kind === 'score' && piece\.mime === PDF_MIME\) \{[\s\S]{0,200}?scoreFromPdfBytes\(new Uint8Array\(await blob\.arrayBuffer\(\)\)/.test(code('components/music/PiecesPanel.tsx')),
      'a PDF kept on the phone is read again, and checked again, every time it is opened');
+}
+
+// ---------------------------------------------------------------------------
+// SING THE NOTE, AND HOW EXACT THE EAR IS (14 October 2026)
+//
+// Its own file, run from here because the gate's list is in Codex's lane:
+// the ear on every note of five voice parts under six conditions, the judge
+// of each sung note, and the tuner on real singing marked by people.
+// ---------------------------------------------------------------------------
+{
+  const sung = spawnSync(process.execPath, [path.join(root, 'tests/the-tuner-hears-the-note-sung.mjs')], { cwd: root, encoding: 'utf8' });
+  ok(sung.status === 0, 'the tuner hears the note sung, and Sing the note judges it (tests/the-tuner-hears-the-note-sung.mjs)'
+    + (sung.status === 0 ? '' : `\n${sung.stdout}${sung.stderr}`));
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

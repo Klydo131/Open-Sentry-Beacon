@@ -1776,3 +1776,51 @@ body:has([data-conversation-screen]) .tab-bar {
   .wash-emerald-teal { background-image: linear-gradient(to right, light-dark(#ecfdf5, transparent), light-dark(#ffffff, transparent), light-dark(#f0fdfa, transparent)); }
   .wash-featured { background-image: linear-gradient(to bottom right, light-dark(#ffffff, transparent), light-dark(rgb(240 249 255 / 0.8), transparent)); }
 }
+
+/* SING THE NOTE (14 October 2026): the ring that fills while a note is held,
+   and the reward for hitting every note, perfect pitch. The ring's fill is a
+   change of length, so it eases; the reward's notes float up and its badge
+   glows once. All of it stops under Reduce Motion (below), and the reward
+   itself then shows standing still (components/music/SingTheNote.tsx). */
+.sing-ring-fill {
+  transition: stroke-dashoffset var(--motion-quick, 160ms) linear, stroke var(--motion-base, 220ms) ease;
+}
+.perfect-pitch {
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--music-accent) 22%, transparent), transparent 70%);
+  outline: 2px solid color-mix(in srgb, var(--music-accent) 55%, transparent);
+  outline-offset: -2px;
+}
+.perfect-pitch-badge {
+  background: color-mix(in srgb, var(--music-accent) 18%, transparent);
+  animation: perfectPitchBadge 900ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.perfect-pitch-spark {
+  position: absolute;
+  bottom: -1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--music-accent);
+  opacity: 0;
+  animation: perfectPitchSpark 1800ms ease-out calc(var(--i, 0) * 110ms) 2 both;
+}
+@keyframes perfectPitchBadge {
+  0% { transform: scale(0.4); box-shadow: 0 0 0 0 color-mix(in srgb, var(--music-accent) 60%, transparent); }
+  60% { transform: scale(1.12); box-shadow: 0 0 0 14px color-mix(in srgb, var(--music-accent) 0%, transparent); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes perfectPitchSpark {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-11rem) rotate(18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sing-ring-fill,
+  .perfect-pitch-badge,
+  .perfect-pitch-spark {
+    animation: none;
+    transition: none;
+  }
+  .perfect-pitch-spark {
+    display: none;
+  }
+}

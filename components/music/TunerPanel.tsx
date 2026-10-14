@@ -24,6 +24,7 @@ import {
 import { closeAudio, note, openAudio } from '@/lib/music/audio';
 import { AdvancedToggle, useAdvanced } from '@/components/music/Advanced';
 import { Drone, InstrumentChoice, PitchTrail } from '@/components/music/TunerAdvanced';
+import { SingTheNote } from '@/components/music/SingTheNote';
 
 /** The calibration a choir chose, remembered on this phone. A convenience only. */
 const A4_KEY = 'beacon:music-a4';
@@ -308,11 +309,12 @@ export function TunerPanel() {
           folder="tuner"
           on={advanced}
           onChange={setAdvanced}
-          what="A trail of your voice over ten seconds, a drone to sing against, and notes as a clarinet, trumpet, saxophone or horn reads them."
+          what="Sing the note: a note, or a run of five to ten, judged as you sing. And a trail of your voice over ten seconds, a drone to sing against, and notes as a clarinet, trumpet, saxophone or horn reads them."
         />
       </Card>
       {advanced && (
         <>
+          <SingTheNote tuner={tuner} a4={a4} />
           <PitchTrail reading={held ? null : reading} a4={a4} listening={listening} />
           <Drone a4={a4} />
           <InstrumentChoice value={instrument} onChange={setInstrument} />

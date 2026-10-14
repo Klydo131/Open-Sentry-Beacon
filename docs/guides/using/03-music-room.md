@@ -89,9 +89,33 @@ recorded.
 
 The phone remembers your concert pitch until you change it.
 
-### Advanced: your voice as a line, a drone, and your instrument's notes
+### Advanced: sing the note, your voice as a line, a drone, and your instrument's notes
 
-Tick **Advanced settings** under the starting note and three more cards open.
+Tick **Advanced settings** under the starting note and four more cards open.
+
+- **Sing the note.** Practise hitting notes. Choose **One note** (set it with
+  **−** and **+**, a semitone at a time, or tap **Surprise me**) or **5–10
+  notes** (add them one at a time under **Add a note**, or choose how many
+  under **Or let the app pick** and tap **Pick for me**). Choose **Your voice**
+  first, so the notes are ones you can sing, and tap a note to take it out.
+  Then tap **Sing**, sing the note shown and hold it. A ring fills while you hold it, and
+  after about two-thirds of a second the tuner says whether you hit it: the
+  right note, in the right octave, close enough. If not, it says what you sang
+  ("F4: a semitone above E4", "C4: an octave below C5", "C4, but 32 cents
+  sharp"). Then the next note. Hit every one and you are told so: **Perfect
+  pitch!**
+  - **How close counts.** **Choir** is within a quarter of a semitone (25
+    cents); **Exact** is within a tenth (10 cents).
+  - **Play each note before I sing it** plays each note first. Leave it off
+    for the real test, from memory. **Hear it** plays the note at any time,
+    and the tuner does not listen while it plays, so the phone cannot pass a
+    note by singing it to itself.
+  - **Skip** moves on; **Stop** ends the practice. Starting a practice stops
+    the drone, so the tuner hears you and not it.
+
+  ![Sing the note on a phone: One note or 5–10 notes, a run of five chosen, and a note to add.](../../screenshots/walkthrough/44-sing-the-note.png)
+
+  ![C4 sung and held: a hit, right in the middle, and Perfect pitch.](../../screenshots/walkthrough/45-perfect-pitch.png)
 
 - **Your voice, the last 10 seconds.** While the tuner listens, your voice is
   drawn as a line across the notes. A flat line is a steady note; a wave is a
@@ -280,7 +304,7 @@ Leaving Play, or locking the phone, stops every sound.
 | --- | --- | --- |
 | Your music, video and playlists | On this device | Only you, on this device |
 | Your clean pages and scores | On this device, in the Music room's own store | Only you, on this device |
-| Concert pitch, the conductor's settings, saved tempos and beats, and which folders have Advanced open | On this device | Only you |
+| Concert pitch, the conductor's settings, saved tempos and beats, the notes you chose to sing, and which folders have Advanced open | On this device | Only you |
 | Sound from the microphone | Nowhere: measured and thrown away | Nobody |
 
 Because it is all on the device, a new phone starts with an empty Music room.
