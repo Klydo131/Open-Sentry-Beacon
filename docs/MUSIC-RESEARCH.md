@@ -69,6 +69,8 @@ reason comes from what the project says about itself.
 |---|---|---|
 | `lib/music/notes.ts` | Frequency to note name and cents, concert pitch 400–480 Hz | Pure arithmetic; refuses anything that is not a real frequency |
 | `lib/music/tuner.ts` | Opens the microphone, measures, smooths, lets go | Asks only after Start; sound only, no video; never connected to the speaker or recorded; every track stopped on Stop, on leaving, and when the phone locks or switches app |
+| `lib/music/pitch-tracker.ts` | The tuner's ear: McLeod's curve from pitchy's autocorrelation, read to half the window; overtones, vibrato and octave slips handled (see How exact the tuner is) | Pure arithmetic on the samples it is handed; keeps no sound, only the last 130 ms of numbers |
+| `lib/music/sing-the-note.ts`, `components/music/SingTheNote.tsx` | Sing the note: judges each note held, names what was sung, Perfect pitch | Judges the tuner's readings only; never judges while the app plays a note; remembers the chosen notes on the phone, nothing else |
 | `lib/music/beat.ts` | Tempo, tap tempo, the baton patterns for 2, 3, 4 and 6 | Pure arithmetic; tempo clamped to 30–240 |
 | `lib/music/audio.ts`, `metronome.ts` | Clicks scheduled on the audio clock ("A tale of two clocks", web.dev) | Audio opened on a tap, closed on Stop; silent when the page is hidden |
 | `lib/music/musicxml.ts`, `score-file.ts` | Reads a MusicXML score into parts and notes | Refuses any file that declares its own entities (the "billion laughs" attack); limits on elements, notes, parts and length; the browser's own XML parser, which fetches nothing; names and lyrics shown as text, never as markup |

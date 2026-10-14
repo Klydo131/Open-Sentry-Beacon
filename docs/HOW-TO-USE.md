@@ -154,7 +154,7 @@ folder for more, and untick it to put the folder back as it was.
 
 ![The Tuner's Concert pitch. One tap for each common A, the one chosen shown as chosen, and Compare with 440.](screenshots/walkthrough/42-tuner-pitch.png)
 
-![Sing the note, in the Tuner's Advanced settings: One note or 5–10 notes, the notes chosen, and a note to add.](screenshots/walkthrough/44-sing-the-note.png)
+![Sing the note, in the Tuner's Advanced settings: One note or 5-10 notes, the notes chosen, and a note to add.](screenshots/walkthrough/44-sing-the-note.png)
 
 ![C4 sung and held: a hit, and Perfect pitch.](screenshots/walkthrough/45-perfect-pitch.png)
 

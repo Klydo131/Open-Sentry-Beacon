@@ -119,7 +119,7 @@ async function setNotes(page, names) {
 }
 
 const chips = (page) => page.locator('[data-sing-note-chip]').allInnerTexts().then((t) => t.map((s) => s.replace(/\s*×\s*$/, '').trim()));
-const results = (page) => page.locator('[data-sing-result]').evaluateAll((els) => els.map((e) => [e.getAttribute('data-sing-result'), e.innerText.replace(/^[✓✗–]\s*/, '').trim()]));
+const results = (page) => page.locator('[data-sing-result]').evaluateAll((els) => els.map((e) => [e.getAttribute('data-sing-result'), e.innerText.replace(/^[✓✗·]\s*/, '').trim()]));
 
 async function singIt(page, label) {
   await page.locator('[data-sing]').getByRole('button', { name: label }).click();

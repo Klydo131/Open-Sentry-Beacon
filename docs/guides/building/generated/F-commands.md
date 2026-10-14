@@ -61,8 +61,8 @@ Names only: values never go in the repository. `NEXT_PUBLIC_` ones are compiled 
 | `BEACON_MIN_BUILD_TIME` | `app/version.json/route.ts` |
 | `BEACON_PUBLIC_SITE` | `lib/site-visibility.ts`, `next.config.mjs` |
 | `NEXT_PUBLIC_PLAYER_CREDIT` | `lib/player.tsx` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `app/api/auth/sign-in/route.ts`, `lib/mode.ts`, `lib/supabase/client.ts`, `next.config.mjs` |
-| `NEXT_PUBLIC_SUPABASE_URL` | `app/api/auth/sign-in/route.ts`, `lib/mode.ts`, `lib/supabase/client.ts`, `next.config.mjs` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `app/api/auth/sign-in/route.ts`, `lib/live/two-step.ts`, `lib/mode.ts`, `lib/supabase/client.ts`, and 1 more |
+| `NEXT_PUBLIC_SUPABASE_URL` | `app/api/auth/sign-in/route.ts`, `lib/live/two-step.ts`, `lib/mode.ts`, `lib/supabase/client.ts`, and 1 more |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | `lib/push.ts` |
 | `NODE_ENV` | `components/ServiceWorker.tsx`, `next.config.mjs` |
 | `X` | `lib/supabase/client.ts` |

@@ -924,7 +924,7 @@ Asked for on 4 October 2026: "another room for music for music lovers and choir"
 
 ![The Tuner's Concert pitch on a phone: one tap for each common A, A = 440 shown as the standard, and Compare with 440.](screenshots/walkthrough/42-tuner-pitch.png)
 
-![Sing the note on a phone, in the Tuner's Advanced settings: One note or 5–10 notes, a run of five chosen, and a note to add.](screenshots/walkthrough/44-sing-the-note.png)
+![Sing the note on a phone, in the Tuner's Advanced settings: One note or 5-10 notes, a run of five chosen, and a note to add.](screenshots/walkthrough/44-sing-the-note.png)
 
 ![Sing the note after C4 was sung and held: a hit, right in the middle, and Perfect pitch.](screenshots/walkthrough/45-perfect-pitch.png)
 

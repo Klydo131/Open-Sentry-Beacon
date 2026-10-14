@@ -54,6 +54,14 @@ EVERY ROLE HAS IT, including an Explorer, and that is the point. An Explorer cal
 
 *No header comment.*
 
+#### `app/faq/page.tsx`
+
+Questions people ask, for anybody: no sign-in needed.
+
+Linked from the front door and both sign-in screens, so somebody holding an invitation can find out what they are joining before they join, and from the privacy notice. The same answers are in Settings, Help, for people already inside (components/Faq.tsx draws them; lib/faq.ts holds them).
+
+A server component, so the page has a title of its own in a tab or a shared link; only the search box and the answers are drawn in the browser.
+
 #### `app/global-error.tsx`
 
 The last resort, shown only when the app could not start at all.
@@ -332,6 +340,14 @@ Asked for on 2 October 2026: "super customizable, unlike Sabbath program it has 
 
 THE SAME HOUSE RULES AS THE SABBATH PROGRAM (components/SabbathProgram.tsx), because the same people use both and the phone is the same width: * one night open at a time, so a week of meetings is not one long scroll; * typing and arranging are two modes, so the boxes keep a phone's width and the move and remove buttons appear only when asked for; * nothing here reads the database. Meetings live on the device, and sharing goes through the one function the page hands in.
 
+#### `components/Faq.tsx`
+
+The questions people ask, drawn the same way wherever they are read: on the page anybody can open before signing in (/faq), and in Settings, Help, in the sample church and in a real one. The answers live in lib/faq.ts.
+
+SIMPLE ON PURPOSE. A search box, the questions under their headings, and an answer that opens under the question tapped. Each question is a native <details>, so it opens with a tap, a click or the keyboard, a screen reader announces it as something that expands, and it works before any script has loaded. Nothing animates.
+
+A LINK TO ONE ANSWER WORKS. /faq#faq-sign-out opens that answer and brings it into view, so a Director can send somebody straight to it.
+
 #### `components/Feedback.tsx`
 
 *No header comment.*
@@ -384,6 +400,16 @@ The character was `⏻`, U+23FB POWER SYMBOL. It lives in the Miscellaneous Tech
 
 So it rendered on the iPhone it was written on, on the Mac it was tested on, and on the reviewer's laptop, and it was a blank box for everybody on Android.
 
+#### `components/HomeBoard.tsx`
+
+The billboard on Home: the church's announcements and blog posts as pictures you can see straight away and swipe through.
+
+ASKED FOR (7 October 2026): "It should look the Home Screen where people can see blogs and announcements right away please like a Bill board you can just see the image and photos right away and you can scroll on it."
+
+WHAT IT REPLACED. Home opened on a masthead and a grid of small text cards for the notices, with the blog a folder away. Nothing on it was a picture, and a post somebody had taken the trouble to write was two taps from where anybody would see it.
+
+A ROW EACH, SWIPED SIDEWAYS. Announcements in one, the blog in the next, the way a streaming app stacks its rows: both kinds are on the first screen, and a church with twelve posts does not push this Sabbath's notice twelve swipes out of sight, which one mixed row would. Each card is most of the screen's width, so the edge of the next one says there is more. A card is its picture first (a photo, a short clip, or a video link's player), then the words. Tap one and it opens whole, in a sheet over Home.
+
 #### `components/InstallCard.tsx`
 
 Installing the app, as something you can go and find.
@@ -435,6 +461,12 @@ Sniffing the user agent gets the common browsers right and everything else wrong
 #### `components/JourneyPath.tsx`
 
 *No header comment.*
+
+#### `components/LanguagePick.tsx`
+
+THE LANGUAGE, BEFORE ANYBODY HAS SIGNED IN.
+
+Settings, General, Language has offered sixteen languages for a long time, and it is behind the sign-in. Somebody who reads Cebuano or Arabic first met the app as an English front door and an English sign-in form, which are the two screens they most need to understand. So the same choice sits on both, small, in the corner where a phone puts it. It writes the same setting as Settings does (lib/i18n.tsx), so the app keeps the language after sign-in.
 
 #### `components/LessonSeriesLibrary.tsx`
 
@@ -816,6 +848,12 @@ The browser is still doing the playing — one <audio>/<video> element with `con
 
 The pocket, on the desk. See lib/pocket.ts for why the marks are drawn rather than fetched, and why this lives in the browser rather than a table.
 
+#### `components/PostMedia.tsx`
+
+Photos and a short clip on a post: choosing them, and showing them.
+
+Shared by every writing box and every place a post is read, so a photo looks the same on Home's billboard, in the open post and in the Blog folder. A `src` may be an ordinary address or a file kept on this device (`device:<id>`, lib/post-media.ts); these components show either.
+
 #### `components/ProgressReport.tsx`
 
 The progress report, in the Office's Reports subroom: how the Explorers are moving along the journey, for a month or a quarter, in the shape an Adventist teacher or Bible worker would recognise. lib/progress-report.ts says what is counted, from what, and why each reader sees what they see.
@@ -1036,6 +1074,18 @@ AND THE FALLBACK IS TAKEN OFF. Even with the path set, Excalidraw adds esm.sh as
 
 *No header comment.*
 
+#### `components/live/ConsentStep.tsx`
+
+ASKED OF EVERYBODY, NOT ONLY OF THOSE WHO SIGNED UP (13 October 2026).
+
+Consent was asked for on the sign-up page and nowhere else, and a member who signed in with the password from their invitation never saw that page. On the live church that left 42 of 43 accounts with no consent on record, for information the Act counts as sensitive. This step stands in front of the whole signed-in app for anybody without a record (components/LiveAppShell.tsx) and asks in the same words as the sign-up (components/live/ConsentWording.tsx), after the same account of who looks after the app (lib/oversight.ts).
+
+THE BOX STARTS UNTICKED and the button waits for it: a box that arrives ticked is not consent (NPC Circular 2023-04). Saying no is a real choice with a real button, and it signs the person out without recording anything more.
+
+#### `components/live/ConsentWording.tsx`
+
+*No header comment.*
+
 #### `components/live/DoorPages.tsx`
 
 *No header comment.*
@@ -1118,6 +1168,16 @@ Before this, an Explorer's conversation was a card on a page with a journey bar 
 
 WHAT IT DELIBERATELY IS NOT. This is not a rebuild of anybody's messenger. The shapes a chat needs — a list that puts the waiting ones first, a thread, a count on the way in — are older than any of those products, and everything here is built out of this app's own pieces: the same `Conversation` the two pages already used, the same pairing rules, the same report control that must travel with a conversation wherever it goes. There is no presence, no typing indicator, no receipts beyond the one this app already had, and no channel that is not a pairing two people are already in.
 
+#### `components/live/TwoStep.tsx`
+
+Two-step sign-in, on screen: the code at sign-in, and setting it up in Settings.
+
+The work is in lib/live/two-step.ts and the lock is in the database (20261013140000_a_second_step_once_set_up_is_required). These are the three places a person meets it:
+
+* CodeEntry: six digits, the one box both other places use. * TwoStepGate: stands in front of the whole signed-in app while the code is owed (components/LiveAppShell.tsx), the way the consent step does. * TwoStepCard: Settings, Password. Set it up, see that it is on, turn it off.
+
+WORDS A PERSON ALREADY KNOWS. "Authenticator app" is what the app stores call these apps, and "code" is what the apps themselves show. Nothing here says TOTP, factor or assurance level.
+
 #### `components/live/shared.tsx`
 
 *No header comment.*
@@ -1192,6 +1252,14 @@ NOT PRINTED NOTATION, AND THAT IS A DECISION WITH A REASON. Drawing real staves,
 
 Everything a person wrote into the file (titles, part names) reaches the screen as text, never as markup.
 
+#### `components/music/SingTheNote.tsx`
+
+Sing the note: the Tuner's practice, in its Advanced settings. Choose a note, or a run of five to ten, sing each one and hold it, and the tuner says whether you hit it. Every note hit is perfect pitch, and it says so.
+
+Asked for on 14 October 2026 (the owner's words are at the top of lib/music/sing-the-note.ts, which judges each note). The microphone is the Tuner's own, opened and let go the same way; what it hears is measured on the phone and thrown away. Nothing about a practice leaves the phone: the notes chosen are remembered on it, as a convenience, and nothing else is.
+
+THE APP'S OWN SOUND IS NEVER JUDGED. Hear it plays the note through the phone's speaker, which the microphone hears. While it plays, and for a moment after, the judge is told to start again, so a note cannot be passed by the phone singing it to itself. The drone is stopped for the same reason.
+
 #### `components/music/TunerAdvanced.tsx`
 
 The Tuner's Advanced settings: a trail of your voice, a drone to sing against, and notes as a transposing instrument reads them.
@@ -1215,6 +1283,16 @@ REPORTED, WITH A PHOTOGRAPH OF AN ANDROID PHONE: the `/` typed into the page and
 WHY, AND IT IS NOT A BUG IN BLOCKSUITE. Their slash menu opens on a `keydown` for the `/` key. A phone's on-screen keyboard does not send those: GBoard and its cousins send composition and `beforeinput` events, and the character arrives without any keydown the menu could recognise. AFFiNE knows this -- their own slash menu declines to register on a mobile scope at all, and their answer is a bar above the keyboard instead.
 
 SO WHY NOT USE THEIRS. Because it only exists while a virtual keyboard is open, and there is no virtual keyboard in a headless browser: it cannot be tested here, at all, by anybody. This project has shipped four things that could not be tested here and the owner found every one of them. A bar this app draws itself is one that a browser walk can open, press and assert on.
+
+#### `components/study/StudyModeSwitch.tsx`
+
+Simple or Advanced, in the Explorer's study room.
+
+ASKED FOR (7 October 2026): "the study room is way complicated for a new user of the app, it must have simple UI and advance UI."
+
+SIMPLE IS WHERE EVERYBODY STARTS: a list of pages, New page, search, and on a page its name, the writing and a short row of the basics. ADVANCED is the room as it was: Starred and the Journal, folders, tags, saved views, the whiteboard, the whole insert bar and Markdown in and out. Switching back to Simple hides those controls; it never hides or changes anything written.
+
+The room's own segmented control, so it looks like the rest of the room, and remembered on this device as the study-writing switch is (WritingMode.tsx).
 
 #### `components/study/StudyRoom.tsx`
 
@@ -1474,6 +1552,16 @@ ASKED FOR on 2 October 2026: "Make sure Evangelistic Meetings are super customiz
 
 * BLOCKS. A night, and the series as a whole, is a list of blocks the planner chooses and orders: a list, a paragraph, a checklist. "A program", "a team" and "a schedule" are only lists with their columns already named. * THEIR OWN COLUMNS. A list names its own columns, up to six, where the Sabbath program has its fixed three (what, details, who). * MANY NIGHTS. Each night has its own date, time, topic and blocks, and one night can be copied to make the next. * THEIR OWN LOOK. A colour and a heading style for the Word file and the picture.
 
+#### `lib/faq.ts`
+
+Questions people ask, answered once.
+
+ASKED FOR (7 October 2026): "I want a complete FAQ in the app too please before users login and inside the app in settings."
+
+ONE SOURCE FOR TWO PLACES. The page anybody can open before signing in (app/faq/page.tsx, linked from the front door and the sign-in screens) and the Help folder in Settings, in the sample church and in a real one, all draw this list through components/Faq.tsx. A question answered in one place and not the other is the drift tests/the-live-app-offers-what-the-tutorial- offers.mjs exists to stop elsewhere.
+
+EVERY ANSWER IS ONE THE APP KEEPS TRUE, which is the only kind worth giving to somebody deciding whether to trust it. Where the answer is a rule, the rule is the database's and its test is named in the comment beside it; where it is a number, the number is read from the code that enforces it, so the two cannot drift apart. The privacy answers say what the privacy notice says (app/privacy/page.tsx) and the oversight answers ARE the oversight wording (lib/oversight.ts), word for word, because the invitation e-mail and the sign-up page say them too, and a person should never read two versions.
+
 #### `lib/folders.ts`
 
 Folders for the Office's own documents, as plain functions: a folder is a name on an item, and these group by it. components/Folders.tsx draws them.
@@ -1527,6 +1615,14 @@ THE SAME LIST LIVES IN THE DATABASE, and it is the one that decides: the `pairin
 So why have this at all? Because a file picker that will happily let somebody choose a file the server is about to refuse is a trap. The report was a Guide attaching a study sheet and getting "mime type application/vnd.openxml- formats-officedocument.wordprocessingml.document is not supported" back. Half of that was the missing type; the other half was being allowed to pick it.
 
 KEEP THE TWO IN STEP. If you widen the bucket, widen this; a type here that the bucket refuses is the trap again, and a type in the bucket that is missing here is a file people cannot choose.
+
+#### `lib/live/cleared-meetings.ts`
+
+Appointments a person has cleared from their own list, on this device.
+
+ASKED FOR (7 October 2026): "when I call off online meeting I dont have the option to exit it". A called-off or declined appointment stays on both people's lists until its time passes, so that both can see who said no (components/LiveMeetings.tsx). Once somebody has seen it, they can clear it from their own list.
+
+Kept on this device, not in the database. Deleting the row would take the record away from the other person too, who may not have seen it yet; a list per person in the database would be a database change, not made here.
 
 #### `lib/live/data.ts`
 
@@ -1700,6 +1796,14 @@ FOUND BY THE SECURITY REVIEW OF 1 OCTOBER 2026. To open a private file the app a
 
 The database now refuses that shape for conversation files (20261001120000_a_conversation_can_reply_react_and_speak). This is the same rule in the browser, for every bucket, and for rows written before it.
 
+#### `lib/live/two-step.ts`
+
+Two-step sign-in: a password, then a six-digit code from an authenticator app.
+
+WHY IT EXISTS. A password can be guessed, reused from another site, or read over a shoulder. The review for the Data Protection Officer (13 October 2026) found that no leader used a second step and that the app had nowhere to set one up, and the owner asked for it to be built. Leaders can read a church's list of members, which is the information a stolen password would be used for.
+
+HOW IT WORKS. The sign-in service does the cryptography; this file only asks it. A person adds an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password, Aegis and the like) by scanning a picture code, and confirms it by typing the six digits the app shows. From then on, a password alone gives a token marked `aal1`; the code turns it into `aal2`. The database refuses `aal1` for such a person before every request (supabase/migrations/20261013140000_a_second_step_once_set_up_is_required.sql), so this screen is the convenience and the database is the lock.
+
 #### `lib/localMedia.ts`
 
 On-device media storage. Files never leave the browser.
@@ -1838,6 +1942,14 @@ Opening a score file somebody chose: the one way into lib/music/musicxml.ts from
 
 Playing a score's voices so a singer can learn theirs: every line at once, or one alone, or one louder than the rest, at any tempo, from any point. The notes are sung by the phone (lib/music/audio.ts), scheduled ahead on the audio clock the same way the metronome's clicks are.
 
+#### `lib/music/sing-the-note.ts`
+
+Sing the note: the Tuner's practice. A note (or a run of five to ten) is shown, the singer sings it, and this says whether they hit it.
+
+Asked for on 14 October 2026: "place a note that you are looking for voice and see if you hit the note correctly or if you put at least 5-10 notes and see if you hit those correctly and the user will be rewarded for 'perfect pitch' ... MAKE SURE the tuner for voice is extremely accurate with 1 to 1 on voice to notes", then "the accuracy of notes from voice to notes needs to be 99% accurate and fast".
+
+WHAT IS JUDGED. Not the first thing heard. A singer scoops into a note, wobbles on it, and takes a moment to settle, so a sung note counts once it has been held for HOLD_MS. Its pitch is the middle (the median) of the tuner's own readings over that time, leaving out the first SETTLE_MS of the scoop: a vibrato's swings either side cancel, and one stray reading cannot move a median. A hit is that pitch within the tolerance of the note asked for, in the same octave: C3 is not C4, however well it is sung.
+
 #### `lib/music/tuner.ts`
 
 The tuner: listen through the microphone and say which note is sounding and how far off it is.
@@ -1879,6 +1991,14 @@ One way to say "open the notification panel", from anywhere on the screen.
 The bell is drawn once, in the app header. Everything else that wants to send somebody to their notifications — the desk's "Unread notifications" row today, anything else tomorrow — is somewhere else in the tree entirely, with no parent in common but the shell.
 
 The alternative was a `?bell=1` query parameter, and it does not work: the link points at the screen the person is already on, so Next.js changes the address without re-rendering anything, and `useSearchParams()` drags a Suspense boundary into every statically rendered page for the privilege. A window event costs nothing and cannot go stale in the URL afterwards.
+
+#### `lib/oversight.ts`
+
+What this app is, and who looks after it: said the same way everywhere a person is asked to trust it.
+
+The owner, 7 October 2026: "Make sure when a user is invited, the email invitation has transparency letting all users know that this app is well monitored by the church ... This is a 1 on 1 discipleship private app and only used for ministry." And the law asks it in its own words: a person is told what is done with their information, by whom and why, before it is collected, and consent to sensitive personal information is specific and informed (RA 10173 sections 13 and 16; NPC Circular 2023-04). Membership of a church's discipleship app is a religious affiliation, which the Act counts as sensitive.
+
+ONE SOURCE FOR THREE PLACES. The invitation e-mail (supabase/functions/invite/email.ts, which is deployed on its own and so carries its own copy), the sign-up page's permission box (components/live/DoorPages.tsx), and the sample church's welcome (components/ConsentNotice.tsx). tests/the-app-says-who-looks-after-it.mjs keeps the e-mail's copy saying the same thing.
 
 #### `lib/pdf.ts`
 
@@ -1923,6 +2043,14 @@ The pocket: a person's own shortcuts to the web apps they already use.
 ASKED FOR LIKE THIS: "First I will copy the URL of the web app like example, spotify, youtube, or facebook, then I will paste it on the URL of the pocket micro-app and I click the save button, then it automatically registers the logo and app URL, Now when I click the logo, it automatically goes in that web app destination... some people use office web app so that can be helpful to ALL users."
 
 WHY THE MARK IS DRAWN AND NOT FETCHED. "It automatically registers the logo" is the interesting half. The obvious way is to fetch each site's favicon, and it is the wrong way twice over. The app's CSP allows images from `'self'`, `data:` and `blob:` only, so every real favicon would need img-src widened to arbitrary origins -- and once it is, every tile on a person's desk quietly tells that company the person is here, each time the rail renders. A church member's screen should not report to Facebook that it exists.
+
+#### `lib/post-media.ts`
+
+Photos and a short clip on a post, kept on the device.
+
+ASKED FOR (7 October 2026): "writing blog post should be easy with added features like photos and videos", and then: "Samples should really feel like they are using the app, like they can see the photos and videos, can share". The sample church has no server, so a post's photos and clip live in this browser, in a store of their own (not the music player's, which lists every file it holds), and a post refers to each by `device:<id>`.
+
+THE SAME RULES AS A REAL CHURCH'S UPLOAD, so the sample teaches the real thing: a photo is shrunk to about 1600 pixels and loses its location before it is kept (lib/live/shrink-image.ts, the path every photo in the app takes); a clip is one per post, at most 50 MB and about a minute and a quarter.
 
 #### `lib/progress-report-docx.ts`
 
@@ -2281,6 +2409,30 @@ WHY THIS FILE EXISTS. `crypto.randomUUID()` is a SECURE-CONTEXT api. It is undef
 Turn a YouTube or Facebook video link into an embeddable player URL.
 
 No SDK, no API key, no dependency: both platforms expose a plain iframe endpoint and that is the entire integration. We never download, re-host or proxy the video — the person's browser talks to YouTube/Facebook directly, exactly as it would in a normal tab. That keeps this free and keeps us on the right side of both platforms' terms, which forbid re-hosting their video.
+
+#### `lib/words/door.ts`
+
+THE FRONT DOOR AND THE SIGN-IN PAGE, in every language the app offers.
+
+The English is not here. It is in components/live/DoorPages.tsx, next to the comment that explains each sentence, and each line below is keyed by that exact English (lib/i18n.tsx, "A word list per screen"). A sentence missing from a language is shown in English, which is always safe.
+
+THESE ARE DRAFTS. They were written by an AI tool, not by people who grew up speaking each language, and a church should have one of its own members read them in the app before relying on them. To review: open the front door, choose the language in the corner, and read the front door, the sign-in page, a wrong password, and "Forgot your password?". Correct the line here.
+
+Rules a translation must keep (tests/translations-say-only-what-english-says.mjs): - the same {placeholders} as the English; - no link, e-mail address or number the English does not have; - role words stay as the app names them (Director, Executive Director), because lib/brand.ts is the one place roles are named.
+
+#### `lib/words/frame.ts`
+
+THE WORDS AROUND EVERY SCREEN, in every language the app offers: the bar along the bottom (components/TabBar.tsx), the signed-in header (components/LiveAppShell.tsx) and the Language card in Settings (components/ReadingSettings.tsx).
+
+Kept short on purpose, because the bar and the header are on every page and so is this list. Keyed by the exact English in those files; anything missing is shown in English. DRAFTS written by an AI tool, for a native speaker to read in the app. The rules a translation keeps are at the top of lib/words/door.ts.
+
+#### `lib/words/two-step.ts`
+
+THE CODE SCREENS OF TWO-STEP SIGN-IN, in every language the app offers: the code after a right password, and the screen in front of the app while the code is owed (components/live/TwoStep.tsx), with the refusals the sign-in service can give (lib/live/two-step.ts).
+
+Keyed by the exact English in those two files; anything missing is shown in English. DRAFTS written by an AI tool, for a native speaker to read in the app before a church relies on them. The rules a translation keeps are at the top of lib/words/door.ts.
+
+Setting two-step sign-in up, in Settings, is not translated yet and shows in English.
 
 ## A.4 Scripts
 

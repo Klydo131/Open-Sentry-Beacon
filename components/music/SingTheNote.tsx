@@ -241,7 +241,7 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
           <div className="mt-4 space-y-5" data-sing-setup>
             {/* One note, or a run: the first choice, and the only one needed. */}
             <div role="radiogroup" aria-label="What to sing" className="grid grid-cols-2 gap-1 rounded-2xl bg-gray-50 p-1 ring-1 ring-navy/10" data-sing-mode>
-              {([['one', 'One note', 'One note'], ['run', '5–10 notes', '5 to 10 notes']] as const).map(([id, label, said]) => (
+              {([['one', 'One note', 'One note'], ['run', '5-10 notes', '5 to 10 notes']] as const).map(([id, label, said]) => (
                 <button
                   key={id}
                   type="button"
@@ -427,7 +427,7 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
               {results.map((r, i) => (
                 <li key={i} className="flex items-baseline gap-2 text-sm" data-sing-result={skipped(r) ? 'skipped' : r.hit ? 'hit' : 'miss'}>
                   <span aria-hidden="true" className={`w-5 font-bold ${!skipped(r) && r.hit ? 'text-[color:var(--music-accent)]' : 'text-gray-500'}`}>
-                    {skipped(r) ? '–' : r.hit ? '✓' : '✗'}
+                    {skipped(r) ? '·' : r.hit ? '✓' : '✗'}
                   </span>
                   <span className="text-navy">{skipped(r) ? `${midiName(r.target)}: skipped` : verdictWords(r)}</span>
                 </li>

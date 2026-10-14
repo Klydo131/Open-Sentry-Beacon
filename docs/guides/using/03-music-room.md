@@ -94,7 +94,7 @@ The phone remembers your concert pitch until you change it.
 Tick **Advanced settings** under the starting note and four more cards open.
 
 - **Sing the note.** Practise hitting notes. Choose **One note** (set it with
-  **−** and **+**, a semitone at a time, or tap **Surprise me**) or **5–10
+  **−** and **+**, a semitone at a time, or tap **Surprise me**) or **5-10
   notes** (add them one at a time under **Add a note**, or choose how many
   under **Or let the app pick** and tap **Pick for me**). Choose **Your voice**
   first, so the notes are ones you can sing, and tap a note to take it out.
@@ -113,7 +113,7 @@ Tick **Advanced settings** under the starting note and four more cards open.
   - **Skip** moves on; **Stop** ends the practice. Starting a practice stops
     the drone, so the tuner hears you and not it.
 
-  ![Sing the note on a phone: One note or 5–10 notes, a run of five chosen, and a note to add.](../../screenshots/walkthrough/44-sing-the-note.png)
+  ![Sing the note on a phone: One note or 5-10 notes, a run of five chosen, and a note to add.](../../screenshots/walkthrough/44-sing-the-note.png)
 
   ![C4 sung and held: a hit, right in the middle, and Perfect pitch.](../../screenshots/walkthrough/45-perfect-pitch.png)
 

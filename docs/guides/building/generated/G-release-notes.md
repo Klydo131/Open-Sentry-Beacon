@@ -1,6 +1,69 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 37 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 44 releases, as members read them in Settings, What's new.
+
+### Sing the note, and a tuner that hears each note exactly
+
+*2026-10-14*
+
+- In the Music room, Tuner, tick Advanced settings and you will find Sing the note. Choose one note, or a run of five to ten (or let the app pick them for your voice), sing each one and hold it, and the tuner tells you whether you hit it: the right note, in the right octave. If you did not, it tells you what you sang instead.
+- Hit every note and you are told so: Perfect pitch!
+- Choose how close counts: Choir (within a quarter of a semitone) or Exact (within a tenth). Leave Play each note before I sing it off for the real test, from memory.
+- The tuner itself hears more exactly: a singer with a wide vibrato is shown one note, not two; "ee" at the top of a voice is no longer missed; and a thin phone microphone no longer shows a low note an octave out. It was checked against real singing marked by trained musicians.
+- The microphone is used only while you sing, and nothing is recorded or sent.
+
+### Choose your language before you sign in
+
+*2026-10-13*
+
+- The front door and the sign-in page now have a language chooser in the corner. Sixteen languages are offered, and the phone or computer keeps your choice after you sign in.
+- The front door, the sign-in page and its messages, the code screen of two-step sign-in, and the bar along the bottom are translated. Arabic reads right to left. Everything else is still in English for now, including the permission you give when you join.
+- The translations are drafts. If you speak one of these languages and something reads wrong, tell your church so it can be corrected.
+- For developers: a guide and working examples for building your own app or server in Rust, C++, JavaScript, Python, PHP, Go, Java, Dart or plain REST, with the privacy rules kept in the database (docs/IN-ANY-LANGUAGE.md).
+
+### Two-step sign-in
+
+*2026-10-13*
+
+- You can add a second step to signing in: a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator. Somebody who learns your password still cannot sign in as you.
+- Turn it on in Settings, on the Password page. It is recommended for Directors and Executive Directors.
+- Once it is on, each new sign-in asks for your password and then the code.
+
+### Questions people ask
+
+*2026-10-07*
+
+- Answers to the questions people ask: what the app is, who can see what, signing in, your information and the law, and finding your way around. Search them, or tap a question to read its answer.
+- They are on the front door and the sign-in screen for anybody, before signing in, and in Settings, under Help, once you are in.
+- The privacy notice now says plainly that conversations are encrypted on their way and where they are kept, but not end to end.
+
+### Who can do what, kept by the church's own rules
+
+*2026-10-07*
+
+- Only an Executive Director can make somebody a Director or an Executive Director. A Director looks after Guides and Explorers.
+- Directors can give an Explorer a different Guide with Change Guide. The Explorer keeps their place on the journey, the new Guide starts a fresh conversation, and nobody else ever reads what the two wrote to each other.
+
+### Home is a billboard
+
+*2026-10-07*
+
+- A post can carry photos and one short video of about a minute. Photos are made smaller and lose where they were taken before they are kept. For anything longer, a YouTube or Facebook link plays inside the post.
+- Share on an open post or notice sends its title and a link. Only people in your church can open the link.
+- Home opens on the church's announcements and its newest blog posts, as cards you swipe sideways. A post with a picture shows the picture.
+- Tap a card to read the whole thing, with its photos and any YouTube or Facebook video in it.
+- The church's banner is shorter on a phone, so the cards are on the first screen.
+- Whoever pinned a notice, or anybody in leadership, can take it down from the notice itself. Put back up is in the Announcements folder.
+
+### Clearer conversations, a simpler Study Room
+
+*2026-10-07*
+
+- In a conversation your messages are blue and the other person's are white, so you can always tell who said what. The dark looks have a dark version of the same two.
+- The box you write a message in now lines up with the paperclip and the send button.
+- The Study Room starts Simple: your pages, New page and search, and on a page the writing and a few basics. Tap Advanced for folders, tags, Starred, the Journal and the whiteboard. Nothing you have written is hidden by switching.
+- In Focus and Dark Aero the writing on a Study Room page was almost black on black. It is light now.
+- An appointment that was called off no longer shows a Join button or counts as coming up, and Clear from my list takes it off your list once you have seen it.
 
 ### Easier to read, in every look
 
