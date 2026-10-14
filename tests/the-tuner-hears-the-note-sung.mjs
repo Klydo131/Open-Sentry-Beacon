@@ -7,10 +7,13 @@
 // So this holds the tuner to numbers, every run, and fails if one slips:
 //
 //   1. THE EAR, on every note the five voice parts sing (bass E2 to soprano C6,
-//      121 notes), a vowel each in turn, from a breath, under five conditions:
-//      an ordinary voice, a wide vibrato, a breathy voice in a noisy room, a
-//      room's echo, and a phone that hears nothing below 250 Hz. A reading is
-//      right when it names the note sung, in the right octave.
+//      121 notes), a vowel each in turn, from a breath, under four conditions:
+//      an ordinary voice, a wide vibrato, a breathy voice in a noisy room and a
+//      room's echo. Then on EVERY VOWEL of every note, 605 sung notes, under
+//      the two that went wrong only on one vowel: a phone that hears nothing
+//      below 250 Hz ("oo" on a low note), and a singer who does not open the
+//      mouth onto a high note ("ee" at the top). A reading is right when it
+//      names the note sung, in the right octave.
 //   2. A ROUGH VOICE, beyond what counts as a healthy one: held to a lower bar,
 //      and still never an octave out.
 //   3. THE JUDGE, on every one of those notes sung four ways: in tune (a hit),
@@ -30,7 +33,7 @@
 //
 //   node tests/the-tuner-hears-the-note-sung.mjs
 //
-// About half a minute: it listens to about five minutes of singing.
+// About a minute and a half: it listens to about twenty-five minutes of singing.
 
 import { build } from 'esbuild';
 import fs from 'node:fs';
@@ -69,9 +72,11 @@ const HOP = 800; // sixty windows a second, as a phone's screen asks for them
 const semis = (hz) => 69 + 12 * Math.log2(hz / 440);
 const pct = (a, b) => `${((100 * a) / b).toFixed(2)}%`;
 
-/** Every note each voice part sings, with a vowel each in turn. */
-const NOTES = Object.entries(V.VOICES).flatMap(([part, v]) =>
-  Array.from({ length: v.high - v.low + 1 }, (_, i) => ({ part, sex: v.sex, midi: v.low + i, vowel: Object.keys(V.VOWELS)[(v.low + i) % 5] })));
+/** Every note each voice part sings, on every vowel. */
+const EVERY_VOWEL = Object.entries(V.VOICES).flatMap(([part, v]) =>
+  Array.from({ length: v.high - v.low + 1 }, (_, i) => Object.keys(V.VOWELS).map((vowel) => ({ part, sex: v.sex, midi: v.low + i, vowel }))).flat());
+/** And with a vowel each in turn, one sung note each. */
+const NOTES = EVERY_VOWEL.filter((n) => Object.keys(V.VOWELS)[n.midi % 5] === n.vowel);
 
 /** The tuner's readings of a sound, sixty a second. */
 function listen(x) {
@@ -86,16 +91,19 @@ function listen(x) {
 
 /**
  * Every note sung for 1.4 s after a breath; the readings of its middle second,
- * scored. `every` 2 takes every other note, to keep this check to half a
+ * scored. `every` 2 takes every other note, to keep this check to about a
  * minute; the conditions that most often go wrong are run on all of them.
  */
-function ear(opts, every = 1) {
+function ear(opts, every = 1, notes = NOTES) {
   let frames = 0, right = 0, octave = 0, none = 0;
-  for (const n of NOTES.filter((_, i) => i % every === 0)) {
+  for (const n of notes.filter((_, i) => i % every === 0)) {
     const x = V.sing([[0.2, null], [1.4, n.midi]], { vowel: n.vowel, sex: n.sex, seed: n.midi * 7 + n.vowel.length, ...opts });
     for (const f of listen(x).filter((f) => f.t > 0.55 && f.t < 1.55)) {
       frames++;
-      if (!f.shown || !f.raw) { none++; continue; }
+      // What the screen shows is what is scored. (Scoring the readings behind
+      // it hid a wrong note left on screen while every right reading was
+      // being dropped as a slip.)
+      if (!f.shown) { none++; continue; }
       const heard = Math.round(semis(f.shown));
       if (heard === n.midi) right++;
       else if (Math.abs(heard - n.midi) % 12 === 0) octave++;
@@ -107,14 +115,20 @@ function ear(opts, every = 1) {
 // ---------------------------------------------------------------------------
 // 1. THE EAR
 // ---------------------------------------------------------------------------
-for (const [what, opts, every] of [
+for (const [what, opts, every, notes] of [
   ['an ordinary voice (vibrato 35 cents, breath, a phone\'s microphone)', {}, 1],
   ['a wide vibrato, 60 cents either side, six and a half a second', { vibrato: 60, vibratoRate: 6.5 }, 1],
-  ['a phone that hears nothing below 250 Hz', { mic: 250 }, 1],
   ['a breathy voice in a noisy room', { breath: 0.1, noise: 0.01 }, 2],
   ['a room\'s echo', { echo: 0.35 }, 2],
+  // Before 14 October an "oo" from a man's C3 to D♯3 here was read an octave
+  // up for the whole note: its first reading landed on the overtone and every
+  // right one after it was thrown away as a slip.
+  ['a phone that hears nothing below 250 Hz, every vowel', { mic: 250 }, 1, EVERY_VOWEL],
+  // The mouth's first resonance left where speech has it: on "ee" above A5 a
+  // harmonic sits on it, far louder than the note, and was read as the note.
+  ['a singer who does not open the mouth onto a high note, every vowel from C4 up', { tune: false }, 1, EVERY_VOWEL.filter((n) => n.midi >= 60)],
 ]) {
-  const r = ear(opts, every);
+  const r = ear(opts, every, notes);
   ok(r.right === r.heard && r.octave === 0 && r.none / r.frames < 0.02,
     `${what}: ${pct(r.right, r.heard)} of ${r.heard} readings name the note sung, ${r.octave} an octave out, ${pct(r.none, r.frames)} with no reading`);
 }
