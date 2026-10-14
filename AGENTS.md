@@ -495,6 +495,7 @@ branch can never produce anything but a preview.
 | `supabase/migrations/` | The database, in order. |
 | `supabase/functions/` | Edge functions, currently the invitation mailer. |
 | `tests/`, `tests/e2e/` | The guardrails. `scripts/verify.mjs` lists them all. |
+| `docs/WEB-APP-SECURITY.md` | The security practice for anyone writing code here, human or AI: five questions before a feature, thirteen practices, a pull-request checklist, and the gaps still open. Read it before touching authentication, input, uploads, headers, secrets or CI. `tests/the-security-guide-points-at-real-things.mjs` keeps it true. |
 | `.claude/agents/`, `docs/agents/` | Three read-only research agents any AI tool can run: a **security reviewer** (first, always), a design researcher and a licence auditor. `docs/agents/README.md` says how to run them with any tool. |
 | `.github/workflows/` | verify (three operating systems), keep-awake, backup, two WebKit probes. |
 

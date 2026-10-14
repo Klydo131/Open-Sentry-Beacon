@@ -36,6 +36,11 @@ Three tests hold that promise rather than a paragraph in a README:
 
 Run them with `npm test`.
 
+**Writing code for this app, or letting an AI tool write it?** Read
+[WEB-APP-SECURITY.md](WEB-APP-SECURITY.md). It is the developer's practice: the
+questions to ask before a feature, what to rely on in this repository, and the
+gaps that are still open, named plainly.
+
 ---
 
 ## The moment that changes: connecting a backend

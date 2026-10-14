@@ -72,6 +72,10 @@ npm run test:all  # the above, plus the real-browser walks (~4 min)
 somebody clicks — it drives a real browser through the guided walks and catches
 the class of bug where the code is right and the button is under a banner.
 
+If you touched sign-in, input, uploads, headers, secrets or a workflow, read
+[docs/WEB-APP-SECURITY.md](./docs/WEB-APP-SECURITY.md) first: it has the
+questions to ask and the checklist a reviewer will use.
+
 If a check fails and you believe the check is wrong, say so in the pull request.
 Several of these tests exist because a previous version of them was wrong; that
 is a fair argument to make, and a better one than quietly deleting the file.

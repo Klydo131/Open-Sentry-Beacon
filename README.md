@@ -325,6 +325,7 @@ screens at all. Put the permission rules with the data, not in the interface.
 | [docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md) | Four worked ways to run it: your computer with no accounts, Vercel and Supabase, your computer with a real database, and other hosts. Each says what has been tested. |
 | [docs/EMAIL.md](docs/EMAIL.md) | Sending invitations by mail. Any provider, or none. |
 | [docs/SECURITY.md](docs/SECURITY.md) | What you become responsible for the day you connect one. |
+| [docs/WEB-APP-SECURITY.md](docs/WEB-APP-SECURITY.md) | Good practice for web application security, for developers and AI tools: what to ask before a feature, what this repository already enforces, and the gaps still open. |
 
 ---
 
@@ -350,6 +351,7 @@ instead of the database, and putting a key somewhere the browser can read it.
 | **[docs/EMAIL.md](docs/EMAIL.md)** | Sending invitations by mail. Any provider, or none, since the app works without it. |
 | **[docs/ONBOARDING.md](docs/ONBOARDING.md)** | How a church actually uses it: who does what, in what order. |
 | **[docs/SECURITY.md](docs/SECURITY.md)** | Read before you put real people in it. |
+| **[docs/WEB-APP-SECURITY.md](docs/WEB-APP-SECURITY.md)** | Web application security practice for developers: the questions, the checklist, the open gaps. |
 | **[docs/UPDATES.md](docs/UPDATES.md)** | How an installed copy updates itself. |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Setup, house style, and what a good pull request looks like. |
 | **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** | Short, and the standard is ordinary decency. |

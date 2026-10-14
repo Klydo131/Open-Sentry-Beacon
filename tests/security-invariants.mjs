@@ -1190,7 +1190,7 @@ if (exists('supabase/functions/invite/index.ts')) {
 }
 
 // ===========================================================================
-// THE WORDS IN OTHER LANGUAGES, AND THE EXAMPLES FOR OTHER LANGUAGES
+// THE WORDS IN OTHER LANGUAGES, THE EXAMPLES, AND THE SECURITY GUIDE
 // ===========================================================================
 //
 // Two checks of their own, run from here for the same reason as the two-step
@@ -1201,9 +1201,13 @@ if (exists('supabase/functions/invite/index.ts')) {
 //     consent wording stays English.
 //   tests/the-examples-keep-the-rules.mjs  the programs in examples/ carry no
 //     secret key, and every server example runs each request as the person.
+//   tests/the-security-guide-points-at-real-things.mjs  docs/WEB-APP-SECURITY.md
+//     names only files that exist, claims only protections still in the code,
+//     and still admits every gap that is still open.
 for (const [label, file] of [
   ['translations say only what the English says', 'tests/translations-say-only-what-english-says.mjs'],
   ['the examples keep the rules in the database', 'tests/the-examples-keep-the-rules.mjs'],
+  ['the web app security guide still describes this app', 'tests/the-security-guide-points-at-real-things.mjs'],
 ]) {
   const run = spawnSync(process.execPath, [path.join(root, file)], { cwd: root, encoding: 'utf8' });
   ok(run.status === 0, `${label} (${file})` + (run.status === 0 ? '' : `\n${run.stdout}${run.stderr}`));
