@@ -25,7 +25,7 @@ async function signInAs(page, who) {
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1100);
   const pick = page.getByText(who).first();
-  if (await pick.count()) await pick.click();
+  await pick.click();
   await page.waitForTimeout(1500);
   const consent = page.getByRole('button', { name: /I understand|Continue|Got it|Agree|OK/i });
   if (await consent.count()) {

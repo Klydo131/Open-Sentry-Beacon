@@ -58,10 +58,11 @@ const settle=async(p,ms=6000)=>{
     // pressed a button that only scrolls to the chooser, started nothing, and then
     // failed against /login.
     const begin = page.locator('[data-quest-track="dm"]').first();
-    if(await begin.count()) await begin.click();
+    await begin.click();
     await page.waitForTimeout(2400);
     const c=page.getByRole('button',{name:/I understand|Continue|Got it/i});
     if(await c.count()){await c.first().click().catch(()=>{});await page.waitForTimeout(600);}
+    await page.locator('[aria-label="Beacon tutorial"]').waitFor({ state: 'visible' });
     const seq=[]; let last='',rep=0;
     for(let i=0;i<16;i++){ // 16, not 12: the walk gained a react step on 1 October 2026
       const st=await settle(page);

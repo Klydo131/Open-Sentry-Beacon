@@ -138,7 +138,13 @@ async function openConversation(page) {
     composer.style.height = '64px';
 
     card.append(head, thread, composer);
-    (document.querySelector('main') || document.body).append(card);
+    // At the document's end WebKit rounds the maximum scroll position down.
+    // One pixel of fixture space lets scrollIntoView lift a fractional bottom
+    // fully on screen, without changing the conversation's height or checks.
+    const host = document.createElement('div');
+    host.style.paddingBottom = '1px';
+    host.append(card);
+    (document.querySelector('main') || document.body).append(host);
     card.scrollIntoView({ block: 'start', behavior: 'instant' });
   });
 }
@@ -163,14 +169,20 @@ async function openConversation(page) {
     await build(page);
     // Waiting for the number rather than sleeping past it. A fixed 300ms landed
     // on the wrong side of whatever clears it about once per WebKit run.
-    await page.waitForFunction(
-      () => getComputedStyle(document.documentElement)
-        .getPropertyValue('--install-bar').trim() !== '',
+    const published = await page.waitForFunction(
+      () => {
+        const height = getComputedStyle(document.documentElement)
+          .getPropertyValue('--install-bar').trim();
+        return parseInt(height, 10) > 200 && height;
+      },
       null,
       { timeout: 4000 },
-    ).catch(() => {});
+    ).catch(() => null);
 
-    const before = await readVar(page);
+    // Read the value that satisfied the wait. Another publisher can clear the
+    // live property between that observation and a separate evaluate call.
+    const before = published ? await published.jsonValue() : '';
+    await published?.dispose();
     ok(parseInt(before, 10) > 200,
       `${label}: the invitation really is tall to begin with (${before})`);
 

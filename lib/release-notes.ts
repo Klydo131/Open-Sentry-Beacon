@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-14-safari-device-and-navigation',
+    date: '2026-10-14',
+    title: 'More reliable photos and navigation in Safari',
+    items: [
+      'Photos saved on your device remain available after reopening the app. Existing saved photos stay readable.',
+      'Links wait for their section to appear before scrolling, and the pairing tutorial keeps its highlight visible while you choose a Guide and an Explorer.',
+      'The Study Room wraps its empty-page hint on narrow screens.',
+      'The tutorial keeps conversations open while their message box loads.',
+    ],
+  },
+  {
     id: '2026-10-13-choose-your-language-first',
     date: '2026-10-13',
     title: 'Choose your language before you sign in',

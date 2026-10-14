@@ -408,7 +408,11 @@ async function deskPhoto(page) {
       await page.getByRole('button', { name: '▶ Start' }).click();
       await page.waitForTimeout(900);
       const a = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
-      await page.waitForTimeout(170);
+      // Observe a real frame change; fixed samples can coincide or precede audio startup.
+      await page.waitForFunction((before) => {
+        const h = document.querySelector('[data-baton-hand]');
+        return h && `${h.getAttribute('cx')},${h.getAttribute('cy')}` !== before;
+      }, a, { timeout: 5000, polling: 50 }).catch(() => {});
       const b = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
       ok(a !== b, `${size}: the baton moves (${a} then ${b})`);
       ok(await page.locator('[data-baton] circle.fill-teal-700').count() === 1, `${size}: the beat it is on is lit`);
@@ -456,7 +460,11 @@ async function deskPhoto(page) {
       await page.locator('#conductor-sound').uncheck();
       await page.waitForTimeout(600);
       const c = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
-      await page.waitForTimeout(170);
+      // Observe a real frame change; fixed samples can coincide or precede audio startup.
+      await page.waitForFunction((before) => {
+        const h = document.querySelector('[data-baton-hand]');
+        return h && `${h.getAttribute('cx')},${h.getAttribute('cy')}` !== before;
+      }, c, { timeout: 5000, polling: 50 }).catch(() => {});
       const d = await hand.evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
       ok(c !== d, `${size}: silent, the baton still keeps time`);
       await page.getByRole('button', { name: '■ Stop' }).click();
@@ -753,7 +761,8 @@ async function deskPhoto(page) {
       await firstKick.click();
       ok((await firstKick.getAttribute('aria-pressed')) !== was, `${size}: a square of the beat turns on and off`);
       await page.getByRole('button', { name: '▶ Play the beat' }).click();
-      await page.waitForTimeout(800);
+      await page.waitForFunction(() => document.querySelector('[data-play-beats] button.outline'),
+        null, { timeout: 5000, polling: 50 }).catch(() => {});
       ok((await page.locator('[data-play-beats] button.outline').count()) >= 1, `${size}: the beat plays, lighting each step`);
       await page.locator('[data-play-beats]').getByRole('button', { name: '+ 5' }).click();
       ok((await say(page, '[data-play-tempo]')).trim() === '95', `${size}: its tempo changes while it plays`);

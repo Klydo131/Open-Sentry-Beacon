@@ -537,10 +537,9 @@ function Pairing() {
               <option value="traditional">Traditional / in-person</option>
             </select>
           </label>
-          <div className="flex items-end">
+          <div className="flex items-end" data-quest="create-pairing">
             <Button
               disabled={!dm || !ds}
-              data-quest="create-pairing"
               onClick={() => {
                 createPairing(dm, ds, track);
                 setDm('');

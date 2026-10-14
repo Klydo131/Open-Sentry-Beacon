@@ -21,6 +21,16 @@
   --affine-editor-side-padding: 0px;
 }
 
+/* The editor's default ellipsis clips its empty-page hint on narrow phones.
+   Wrap the hint within its own writing column, including WebKit font metrics. */
+.sr editor-host .affine-paragraph-placeholder {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  right: 0;
+  top: 0;
+  bottom: auto;
+}
+
 @media (min-width: 768px) {
   .affine-page-viewport {
     --affine-editor-side-padding: 24px;

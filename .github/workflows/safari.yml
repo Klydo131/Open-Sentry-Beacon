@@ -62,15 +62,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Playwright is deliberately NOT a dependency of this project: it is a
-      # ~300 MB install with its own browser downloads and the app does not use
-      # it at runtime. tests/e2e/_playwright.js resolves it from a local
-      # install, a global one, or reports its absence honestly. --no-save keeps
-      # it out of package.json.
+      # npm ci already installed the lockfile's Playwright devDependency.
+      # Download its matching browser without upgrading the tested library.
       - name: Install Playwright and WebKit
         run: |
           set -euo pipefail
-          npm i --no-save playwright
           npx playwright install webkit
 
       # E2E_BROWSER is read by tests/e2e/_playwright.js. Without it the suites
