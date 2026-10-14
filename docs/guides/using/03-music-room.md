@@ -117,11 +117,17 @@ Tick **Advanced settings** under the starting note and four more cards open.
 
   ![C4 sung and held: a hit, right in the middle, and Perfect pitch.](../../screenshots/walkthrough/45-perfect-pitch.png)
 
-- **Your voice, the last 10 seconds.** While the tuner listens, your voice is
-  drawn as a line across the notes. A flat line is a steady note; a wave is a
-  wobble; a slope is a slide into the note. It is the quickest way to see what
-  your voice does on a long note. Only the last ten seconds are drawn, and they
-  are forgotten when you leave the Tuner.
+- **Your voice.** While the tuner listens, the last ten seconds of your voice
+  are drawn across one octave of notes, a row for each note with its name
+  beside it, as on a piano roll. The octave follows your voice; the note you
+  are singing now is lit, and its name is shown large at the top. Each note
+  you sing is a line of its own: **steady** (level), a **wobble** (a wave), or
+  a **slide** (a slope). A line that sits on a note's row is that note in
+  tune. It is the quickest way to see what your voice does on a long note.
+  Only the last ten seconds are drawn, and they are forgotten when you leave
+  the Tuner.
+
+  ![Your voice on a phone: one octave of notes, each named, the note being sung lit, and each note sung a line of its own.](../../screenshots/walkthrough/46-your-voice.png)
 - **Drone.** One note held for as long as you like, to sing against. Choose
   the note and the sound (soft voice, organ or flute) and tap **Start the
   drone**. When your voice drifts you hear it rub against the drone. With the

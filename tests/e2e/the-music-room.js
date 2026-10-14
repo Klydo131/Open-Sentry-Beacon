@@ -366,6 +366,11 @@ async function deskPhoto(page) {
       await page.locator('#music-advanced-tuner').check();
       ok(await page.locator('[data-tuner-trail]').isVisible() && await page.locator('[data-tuner-drone]').isVisible() && await page.locator('[data-tuner-instrument]').isVisible(),
          `${size}: Advanced opens the trail, the drone and the instrument`);
+      // "It's too small to see" (14 October 2026): the trail fitted up to three
+      // octaves into the chart, and a phone printed the notes' names over each
+      // other. One octave now, and every row tall enough for its name.
+      const rowPx = Number(await page.locator('[data-tuner-trail] canvas').getAttribute('data-row-px'));
+      ok(rowPx >= 18, `${size}: each note on the trail has a row tall enough to read its name (${rowPx}px)`);
       await page.getByRole('button', { name: /Start the drone/ }).click();
       await page.waitForTimeout(300);
       ok((await clocksOpen(page)) === 1 && await page.getByRole('button', { name: /Stop the drone/ }).isVisible(), `${size}: the drone sounds`);

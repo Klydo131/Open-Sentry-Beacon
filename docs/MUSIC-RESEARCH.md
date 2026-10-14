@@ -254,9 +254,38 @@ made-up voice as Chromium's microphone, it scored C4 D4 E4 F4 G4 sung in tune
 as 5 of 5, and C4 E4 G4 C5 G4 sung as C4 F4 G4 C4 G4 as 3 of 5 ("F4: a
 semitone above E4", "C4: an octave below C5").
 
+**The start and the end of a note.** The table above scores the middle second
+of each note. Scored over the whole of each note instead, from the first sound
+to the last echo (605 notes a condition), the readings shown more than a
+semitone and a half from the note sung: an ordinary voice 0, a breathy voice
+in a noisy room 0, a soprano who does not open her mouth onto a high note 0;
+a phone that hears nothing below 250 Hz 24 (the first tenth of a second of a
+man's "oo" on D♯3, read an octave up until six readings agree; before 14
+October it was 248, the whole of those notes); a room's echo 54, all after the
+note had stopped, in the echo, up to two and a half semitones out.
+
 **Kept true by** `tests/the-tuner-hears-the-note-sung.mjs` (in the gate, about
-half a minute) and `tests/e2e/a-sung-note-is-heard-as-itself.js` (the browser,
-with every look measured for contrast).
+a minute and a half; it sings every vowel on every note for the two conditions
+that went wrong on one vowel only, after its first version, which gave each
+note one vowel, missed both) and `tests/e2e/a-sung-note-is-heard-as-itself.js`
+(the browser, with every look measured for contrast).
+
+**Your voice, redrawn** (`components/music/TunerAdvanced.tsx`, 14 October
+2026). The owner's phone showed the old trail: every row from C2 to G4, 31 of
+them in 176 pixels, the names printed over each other, and three lines falling
+from E4 to near A2 and D2 ("not aesthetically pleasing... too small to see").
+That phone runs the tuner on `main`, from before the fixes above, and what made
+those far-low readings is not known: no made-up voice reproduces a reading an
+octave and a half low with either tuner, at any point of a note, nor do the
+held notes of vocadito. The drawing
+no longer depends on it: the trail shows one octave, centred on the middle of
+what was sung (a median, so a stray cannot drag it) and following the newest
+note; every row is 25 pixels tall on a phone with its name in 14-pixel type;
+each note sung is its own line, and a line shorter than an eighth of a second
+is not drawn (`trailBand`, `trailLines` in `lib/music/notes.ts`, checked in
+`tests/the-music-room.mjs`; the row height is checked in the browser walk).
+Whether the new tuner makes such readings on the owner's phone is not yet
+known: it has not been tried there.
 
 **Not measured**: a real phone's microphone, Safari's audio (WebKit has no
 pretend microphone to sing into), more than one real singer, children's

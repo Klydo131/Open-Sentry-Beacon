@@ -158,6 +158,8 @@ folder for more, and untick it to put the folder back as it was.
 
 ![C4 sung and held: a hit, and Perfect pitch.](screenshots/walkthrough/45-perfect-pitch.png)
 
+![Your voice, in the Tuner's Advanced settings: one octave of notes, each named, and a short tune sung across them, a line for each note.](screenshots/walkthrough/46-your-voice.png)
+
 ![Pieces with a choir PDF opened on the phone. Under the title it says it was read from the printed notes, and About this piece explains it.](screenshots/walkthrough/41-music-pdf.png)
 
 ---

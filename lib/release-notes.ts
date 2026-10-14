@@ -26,6 +26,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       'Hit every note and you are told so: Perfect pitch!',
       'Choose how close counts: Choir (within a quarter of a semitone) or Exact (within a tenth). Leave Play each note before I sing it off for the real test, from memory.',
       'The tuner itself hears more exactly: a singer with a wide vibrato is shown one note, not two; "ee" at the top of a voice is no longer missed; and a thin phone microphone no longer shows a low note an octave out. It was checked against real singing marked by trained musicians.',
+      'Your voice, the drawing of the last ten seconds, is redrawn: one octave at a time, a row for each note with its name large enough to read on a phone, the note you are singing lit, and each note its own line. A stray sound no longer draws a tall streak.',
       'The microphone is used only while you sing, and nothing is recorded or sent.',
     ],
   },

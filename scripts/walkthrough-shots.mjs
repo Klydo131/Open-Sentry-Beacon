@@ -50,6 +50,13 @@ const VOICE = join(mkdtempSync(join(tmpdir(), 'beacon-shots-')), 'held-c4.wav');
   for (let i = 0; i < 20; i++) parts.push([3, 60], [0.3, null]);
   writeFileSync(VOICE, wav(sing(parts, { vowel: 'ah', sex: 'm', seed: 11 }), 48000));
 }
+/** A short tune, for the picture of Your voice: C4, E4 into G4, D4, then C4 again. */
+const TUNE = join(dirname(VOICE), 'tune.wav');
+{
+  const parts = [[0.3, null]];
+  for (let i = 0; i < 6; i++) parts.push([1.2, 60], [0.15, null], [1.2, 64], [1.0, 67], [0.25, null], [1.4, 62], [0.4, null]);
+  writeFileSync(TUNE, wav(sing(parts, { vowel: 'ah', sex: 'm', seed: 11, vibrato: 45 }), 48000));
+}
 /** What Sing the note remembers on the phone: a run of five, or one note. */
 const singKept = (mode) => JSON.stringify({ mode, single: 60, notes: [60, 62, 64, 65, 67], part: 'any', tolerance: 'choir', hearFirst: false });
 // The browser walks' own helpers for the two things that changed shape on
@@ -505,6 +512,20 @@ const SHOTS = [
       await p.evaluate(() => window.scrollBy(0, -80));
       await settle(p, 300);
     } },
+  // Your voice, redrawn the same day after the owner's phone showed the old
+  // trail: "not aesthetically pleasing... it's too small to see". The made-up
+  // voice sings a short tune into the pretend microphone.
+  { file: '46-your-voice.png', what: 'Your voice: one octave of named rows, each note sung its own line', size: PHONE, voice: 'tune',
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate(() => localStorage.setItem('beacon:music-advanced:tuner', '1'));
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.getByRole('button', { name: /Start listening/ }).click();
+      await p.waitForTimeout(6500);
+      await p.locator('[data-tuner-trail]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 300);
+    } },
   // My Files on a phone, 6 October 2026: "The Library (My files) are not UI
   // friendly for Mobile and Pad users". On this device: adding first, at one
   // width, then the files, then the note about Music.
@@ -593,10 +614,13 @@ const executablePath = (() => {
 // A pretend microphone, so the voice-message shot shows the recorder without
 // anybody's real one, and Sing the note hears its made-up voice; the browser
 // is told yes without asking.
-const browser = await chromium.launch({
+const launch = (voice) => chromium.launch({
   ...(executablePath ? { executablePath } : {}),
-  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${VOICE}`],
+  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${voice}`],
 });
+const browser = await launch(VOICE);
+// The tune needs a browser of its own: the pretend microphone is chosen at launch.
+let tuneBrowser = null;
 let failed = 0;
 const chosen = ONLY.length ? SHOTS.filter((s) => ONLY.some((n) => s.file.startsWith(`${n.padStart(2, '0')}-`))) : SHOTS;
 if (!chosen.length) {
@@ -604,7 +628,8 @@ if (!chosen.length) {
   process.exit(1);
 }
 for (const shot of chosen) {
-  const context = await browser.newContext({
+  if (shot.voice === 'tune' && !tuneBrowser) tuneBrowser = await launch(TUNE);
+  const context = await (shot.voice === 'tune' ? tuneBrowser : browser).newContext({
     viewport: shot.size,
     deviceScaleFactor: 2,
     ...(shot.size === PHONE ? { isMobile: true, hasTouch: true } : {}),
@@ -626,6 +651,7 @@ for (const shot of chosen) {
   await context.close();
 }
 await browser.close();
+if (tuneBrowser) await tuneBrowser.close();
 
 // A missing picture is a hole in the guide, so say so loudly rather than
 // leaving somebody to find a broken image in a printed PDF.
