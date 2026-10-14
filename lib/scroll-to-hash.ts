@@ -30,6 +30,7 @@ export function useScrollToHash(deps: unknown[] = []) {
 
     let tries = 0;
     let timer = 0;
+    let stopSettling = () => {};
 
     const look = () => {
       const id = window.location.hash.slice(1);
@@ -44,6 +45,7 @@ export function useScrollToHash(deps: unknown[] = []) {
         // of a long page needs to be told which card answered it.
         el.classList.add('beacon-landed');
         window.setTimeout(() => el.classList.remove('beacon-landed'), 2200);
+        stopSettling = settle(el);
         return;
       }
       // ~3 seconds, then stop. A link to a card this person cannot see should
@@ -57,6 +59,7 @@ export function useScrollToHash(deps: unknown[] = []) {
     // dead the second time. `hashchange` is the only event that fires.
     const again = () => {
       window.clearTimeout(timer);
+      stopSettling();
       tries = 0;
       look();
     };
@@ -65,8 +68,63 @@ export function useScrollToHash(deps: unknown[] = []) {
     look();
     return () => {
       window.clearTimeout(timer);
+      stopSettling();
       window.removeEventListener('hashchange', again);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
+}
+
+/**
+ * LAND, THEN MAKE SURE.
+ *
+ * A smooth scroll is aimed once, at where the card is when it starts. Two
+ * things can leave the page short of it, and Safari showed both are real: the
+ * scroll can be cut off part-way, and the page can change height under it,
+ * as Settings does when a link switches it to a shorter section. The landing
+ * walk on WebKit ended 2842px from the Install card, with nothing to notice.
+ *
+ * So once the page has stopped moving, look again. If the card is not where a
+ * scroll could put it, go there at once (no second animation). At most twice,
+ * for about two and a half seconds, and never against the person: any wheel,
+ * touch or key from them ends it, because by then they are steering.
+ *
+ * Returns a function that stops it early.
+ */
+function settle(el: HTMLElement): () => void {
+  let timer = 0;
+  let lastY = Number.NaN;
+  let still = 0;
+  let checks = 0;
+  let corrected = 0;
+  const steering = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
+
+  const stop = () => {
+    window.clearTimeout(timer);
+    for (const type of steering) window.removeEventListener(type, stop);
+  };
+
+  const check = () => {
+    if (!el.isConnected || checks++ >= 25) return stop();
+    const y = window.scrollY;
+    still = y === lastY ? still + 1 : 0;
+    lastY = y;
+    if (still >= 2) {
+      // Where `block: 'start'` would put the page, allowing for the card's
+      // own scroll margin (the header it sits under), and for how far this
+      // page can actually go.
+      const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+      const most = document.documentElement.scrollHeight - window.innerHeight;
+      const want = Math.max(0, Math.min(most, y + el.getBoundingClientRect().top - margin));
+      if (Math.abs(want - y) <= 48 || corrected >= 2) return stop();
+      corrected++;
+      still = 0;
+      window.scrollTo({ top: want, behavior: 'auto' });
+    }
+    timer = window.setTimeout(check, 100);
+  };
+
+  for (const type of steering) window.addEventListener(type, stop, { passive: true });
+  timer = window.setTimeout(check, 100);
+  return stop;
 }

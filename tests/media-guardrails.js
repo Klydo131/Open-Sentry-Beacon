@@ -69,6 +69,31 @@ check(
   'the 4K/60 claim stays conditional wherever it is made',
 );
 
+// EVERY STORE ON THE DEVICE, NOT ONLY THIS ONE. The attachments store learned
+// in September that WebKit will not keep a Blob in IndexedDB, and that a write
+// is not kept until its transaction completes. The post photo store, written in
+// October, repeated both: Safari showed an empty grey square and no message.
+// So every file that opens IndexedDB is held to the same two rules.
+{
+  const walk = (dir) => fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((e) => {
+    const rel = `${dir}/${e.name}`;
+    if (e.isDirectory()) return e.name === 'node_modules' ? [] : walk(rel);
+    return /\.(ts|tsx)$/.test(e.name) ? [rel] : [];
+  });
+  const stores = ['lib', 'components', 'app'].flatMap(walk).filter((f) => /indexedDB\.open\(/.test(read(f)));
+  check(stores.length >= 3 && stores.includes('lib/post-media.ts'),
+    `found every on-device store (${stores.join(', ')})`);
+  for (const f of stores) {
+    const src = read(f).replace(/\/\/[^\n]*/g, '');
+    check(/\.oncomplete\s*=/.test(src), `${f}: a write counts only once its transaction completes`);
+    check(!/\.put\(\s*(file|blob|new Blob|new File)\b/i.test(src),
+      `${f}: puts bytes, never a Blob or File, which WebKit will not keep`);
+  }
+  const posts = read('lib/post-media.ts');
+  check(/bytes:\s*await\s+file\.arrayBuffer\(\)/.test(posts) && /stored instanceof Blob/.test(posts),
+    'a post photo is kept as bytes, and one kept earlier as a Blob still reads');
+}
+
 console.log(
   failures === 0
     ? '\nRESULT: media boundary intact'

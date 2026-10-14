@@ -40,31 +40,59 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
+/**
+ * One request in one transaction, answered only once the transaction has
+ * COMMITTED. Resolving on the request's own success, as this did, told the
+ * picker a photo was kept while the write could still fail; on WebKit it
+ * always did, so a post showed an empty grey square and said nothing.
+ */
 async function run<T>(mode: IDBTransactionMode, act: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await open();
-  try {
-    return await new Promise<T>((resolve, reject) => {
-      const tx = db.transaction(STORE, mode);
-      const req = act(tx.objectStore(STORE));
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  } finally {
-    db.close();
-  }
+  return new Promise<T>((resolve, reject) => {
+    const tx = db.transaction(STORE, mode);
+    let result!: T;
+    act(tx.objectStore(STORE)).onsuccess = (event) => { result = (event.target as IDBRequest<T>).result; };
+    // WebKit aborts with `tx.error` set to null, so always reject with words.
+    const why = (stage: string) => tx.error ?? new Error(`The photo store ${stage}.`);
+    tx.oncomplete = () => { db.close(); resolve(result); };
+    tx.onerror = () => { db.close(); reject(why('errored')); };
+    tx.onabort = () => { db.close(); reject(why('stopped')); };
+  });
 }
 
+/**
+ * What goes into the store: the bytes and their type, NOT a Blob.
+ *
+ * WebKit will not keep a Blob or a File in IndexedDB at all, and the platform
+ * probe (tests/e2e/webkit-idb-probe.js) shows bytes are kept by every engine.
+ * lib/localMedia.ts found this for attachments and explains it at length; this
+ * store was written later and repeated the mistake.
+ */
+interface StoredBytes {
+  bytes: ArrayBuffer;
+  mime: string;
+}
 
 /** Keep a file on this device; returns what the post stores. */
 export async function keepPostFile(file: Blob): Promise<string> {
   const id = uuid();
-  await run('readwrite', (store) => store.put(file, id));
+  // The bytes are read BEFORE the transaction opens: one that waits on
+  // anything else closes itself and fails for reasons unrelated to the data.
+  const stored: StoredBytes = { bytes: await file.arrayBuffer(), mime: file.type || 'application/octet-stream' };
+  await run('readwrite', (store) => store.put(stored, id));
   return `${DEVICE}${id}`;
 }
 
 export async function readPostFile(src: string): Promise<Blob | undefined> {
   if (!isDeviceSrc(src)) return undefined;
-  return run<Blob | undefined>('readonly', (store) => store.get(src.slice(DEVICE.length)) as IDBRequest<Blob | undefined>);
+  const stored = await run<StoredBytes | Blob | undefined>(
+    'readonly', (store) => store.get(src.slice(DEVICE.length)) as IDBRequest<StoredBytes | Blob | undefined>,
+  );
+  if (!stored) return undefined;
+  // Kept before 14 October 2026 by a browser that took Blobs. Those photos are
+  // on somebody's device already and must keep showing.
+  if (stored instanceof Blob) return stored;
+  return stored.bytes ? new Blob([stored.bytes], { type: stored.mime || '' }) : undefined;
 }
 
 export async function forgetPostFile(src: string): Promise<void> {
