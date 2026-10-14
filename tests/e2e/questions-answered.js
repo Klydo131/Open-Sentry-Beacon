@@ -18,7 +18,7 @@
 //
 //   node tests/e2e/questions-answered.js [port]
 
-const { browser: engine, launchOptions } = require('./_playwright');
+const { browser: engine, launchOptions, isCancelledPrefetch } = require('./_playwright');
 const { signIn } = require('./_looks');
 
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
@@ -34,7 +34,8 @@ const visibleAnswer = (page, id) => page.locator(`[data-faq-item="${id}"] [data-
     await context.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
     const page = await context.newPage();
     const errors = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
+    // WebKit's report of a prefetch the walk outran is not an error in the app.
+    page.on('pageerror', (e) => { if (!isCancelledPrefetch(e)) errors.push(String(e)); });
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
     // ---- 1. Signed out, from the front door and from sign-in. ----

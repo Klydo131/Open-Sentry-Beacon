@@ -113,5 +113,24 @@ const walk = fs.readFileSync(path.join(root, 'tests/e2e/fresh-looks.js'), 'utf8'
 ok(/const errors = pageErrors\(page\);/.test(walk) && /assert\.deepEqual\(errors\.list\(\), \[\]/.test(walk),
    'fresh-looks asserts on the rule, not on a list of its own');
 
+// EVERY WALK, NOT ONLY THAT ONE. Until 14 October 2026 twenty-one walks kept
+// a page-error list of their own, so the rule above never reached them, and
+// each Safari run failed one or two of them at random on a prefetch the walk
+// had outrun: a-sabbath-program-downloads on 4c3b075 with every download
+// check green. A walk that listens for page errors itself must at least apply
+// the cancelled-prefetch rule; the rest go through pageErrors().
+{
+  const dir = path.join(root, 'tests/e2e');
+  const loose = fs.readdirSync(dir)
+    .filter((f) => f.endsWith('.js') && f !== '_playwright.js')
+    .filter((f) => {
+      const src = fs.readFileSync(path.join(dir, f), 'utf8');
+      return /\.on\(\s*'pageerror'/.test(src) && !/isCancelledPrefetch/.test(src);
+    });
+  ok(loose.length === 0,
+    'every walk that listens for page errors applies the cancelled-prefetch rule'
+    + (loose.length ? `: not ${loose.join(', ')}` : ''));
+}
+
 console.log(bad ? `\nRESULT: ${bad} FAILURE(S)` : '\nRESULT: ALL OK');
 process.exit(bad ? 1 : 0);

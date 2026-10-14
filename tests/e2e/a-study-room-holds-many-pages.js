@@ -20,7 +20,7 @@
 //
 //   node tests/e2e/a-study-room-holds-many-pages.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 const {
   signInAsExplorer, openStudyRoom, shelfRows, openPage, newPage, backToShelf, writtenOnPage,
 } = require('./_study');
@@ -52,8 +52,9 @@ const nameAndWrite = async (page, title, words) => {
   });
   const page = ctx.pages()[0] || await ctx.newPage();
 
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE);
@@ -155,6 +156,7 @@ const nameAndWrite = async (page, title, words) => {
   await page.waitForTimeout(900);
   ok(await shelfRows(page).count() === 0, 'and then it is gone');
 
+  const errors = caught.list();
   ok(errors.length === 0, `no page errors (${errors.slice(0, 1).join('') || 'none'})`);
 
   await page.screenshot({ path: `${OUT}/pages.png` });

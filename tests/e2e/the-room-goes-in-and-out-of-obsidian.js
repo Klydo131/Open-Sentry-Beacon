@@ -14,7 +14,7 @@
 //
 //   node tests/e2e/the-room-goes-in-and-out-of-obsidian.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, newPage, backToShelf, shelfRows } = require('./_study');
 const { execFileSync } = require('node:child_process');
 const os = require('node:os'), fs = require('node:fs'), path = require('node:path');
@@ -41,8 +41,9 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     ...launchOptions, viewport: { width: 1280, height: 900 }, acceptDownloads: true,
   });
   const page = ctx.pages()[0] || await ctx.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE);
@@ -208,6 +209,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     ok(/una/.test(text) && /pangalawa/.test(text), 'and so is the list under them');
   }
 
+  const errors = caught.list();
   ok(errors.length === 0, `no page errors (${errors.slice(0, 2).join(' | ') || 'none'})`);
 
   await ctx.close();

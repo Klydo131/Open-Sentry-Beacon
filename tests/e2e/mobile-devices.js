@@ -13,7 +13,7 @@
 // in tests/realtime-and-media.mjs and by the CI matrix, and where neither can
 // reach, they are listed honestly as untested rather than assumed.
 
-const { chromium, devices, launchOptions, openChat } = require('./_playwright');
+const { chromium, devices, launchOptions, openChat, isCancelledPrefetch } = require('./_playwright');
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
 
@@ -69,7 +69,8 @@ async function run(browser, label, device) {
   page.on('console', (m) => {
     if (m.type() === 'error') problems.push(m.text().slice(0, 300));
   });
-  page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 300)}`));
+  // WebKit's report of a prefetch the walk outran is not an error in the app.
+  page.on('pageerror', (e) => { if (!isCancelledPrefetch(e)) problems.push(`pageerror: ${String(e).slice(0, 300)}`); });
 
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1100);

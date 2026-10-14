@@ -16,7 +16,7 @@
 //
 //   node tests/e2e/the-study-room-has-affines-features.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, openPage, backToShelf } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
@@ -56,8 +56,9 @@ const textIn = (host) => {
   });
   const page = ctx.pages()[0] || await ctx.newPage();
 
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e).slice(0, 200)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   // WHAT THE BROWSER ACTUALLY FETCHES, counted rather than reasoned about. The
   // claim being tested is that opening the ROOM no longer downloads the whole
@@ -181,6 +182,7 @@ const textIn = (host) => {
   const toolbar = await page.locator('edgeless-toolbar-widget, affine-toolbar-widget').count();
   ok(toolbar >= 1, `with the tools to draw on it (${toolbar})`);
 
+  const errors = caught.list();
   ok(errors.length === 0, `no page errors (${errors.slice(0, 2).join(' | ') || 'none'})`);
 
   await page.screenshot({ path: `${OUT}/affine-features.png`, fullPage: false });

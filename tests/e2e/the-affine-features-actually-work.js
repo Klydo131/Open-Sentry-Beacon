@@ -29,7 +29,7 @@
 //
 //   node tests/e2e/the-affine-features-actually-work.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, newPage, backToShelf } = require('./_study');
 const os = require('node:os'), fs = require('node:fs'), path = require('node:path');
 
@@ -61,8 +61,9 @@ const onTheSurface = (page) => page.evaluate(() => {
   const ctx = await chromium.launchPersistentContext(dir,
     { ...launchOptions, viewport: { width: 1400, height: 950 } });
   const page = ctx.pages()[0] || await ctx.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE);
@@ -179,6 +180,7 @@ const onTheSurface = (page) => page.evaluate(() => {
     }
   }
 
+  const errors = caught.list();
   ok(errors.length === 0, `no page errors (${errors.slice(0, 2).join(' | ') || 'none'})`);
 
   await ctx.close();

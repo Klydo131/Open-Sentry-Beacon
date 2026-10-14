@@ -20,7 +20,7 @@
 //
 //   node tests/e2e/the-study-room-opens.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, openPage, writtenOnPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
@@ -38,8 +38,9 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   });
   const page = ctx.pages()[0] || await ctx.newPage();
 
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   await signInAsExplorer(page, BASE);
 
@@ -105,6 +106,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   ok(/John 11:35/.test(written), 'and Enter started a second block rather than swallowing it');
 
   // 4. NOTHING BROKE QUIETLY.
+  const errors = caught.list();
   ok(errors.length === 0, `no page errors (${errors.slice(0, 2).join(' | ') || 'none'})`);
 
   // 5. AND IT STILL FITS THE PHONE.

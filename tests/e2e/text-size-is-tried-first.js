@@ -7,7 +7,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4416
 //   node tests/e2e/text-size-is-tried-first.js 4416
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 
 const PORT = process.argv[2] || '4416';
 const BASE = `http://localhost:${PORT}`;
@@ -42,8 +42,9 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
       try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 864e5)); } catch { /* fine */ }
     });
     const page = await context.newPage();
-    const errors = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
+    // Through the shared collector, which leaves out WebKit's report of a fetch
+    // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+    const caught = pageErrors(page);
     await signInAs(page, 'Maria Santos');
     await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1200);
@@ -94,6 +95,7 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
     await page.waitForTimeout(400);
     ok((await rootPx(page)) === 18 && (await stored(page)) === '1', `${label}: and back to Normal with Apply`);
 
+    const errors = caught.list();
     ok(errors.length === 0, `${label}: no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
     await context.close();
   }

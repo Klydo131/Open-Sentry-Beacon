@@ -27,7 +27,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { chromium, launchOptions, engineName } = require('./_playwright');
+const { chromium, launchOptions, engineName, pageErrors } = require('./_playwright');
 
 const PORT = process.argv[2] || '4413';
 const BASE = `http://localhost:${PORT}`;
@@ -86,8 +86,9 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
   await quietStart(context);
   const page = await context.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   // 1. A PLANNED SERIES, NAMED
   await signInAs(page, 'Maria Santos');
@@ -255,6 +256,7 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   ok((await page.locator('[data-night]').count()) === 1 && (await page.locator('[data-block]').count()) === 0,
      'a blank start is one night with nothing on it');
 
+  const errors = caught.list();
   ok(errors.length === 0, `no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
 
   await browser.close();
