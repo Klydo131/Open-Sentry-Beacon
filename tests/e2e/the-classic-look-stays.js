@@ -14,7 +14,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4414
 //   node tests/e2e/the-classic-look-stays.js 4414
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 
 const PORT = process.argv[2] || '4414';
 const BASE = `http://localhost:${PORT}`;
@@ -80,8 +80,9 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
     try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 24 * 60 * 60 * 1000)); } catch { /* fine */ }
   });
   const page = await context.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   // 1. CLASSIC, AS IT IS, before anybody chooses anything. On a computer
   // Classic has its own layout (rooms down the left, tests/e2e/the-desktop-
@@ -136,6 +137,7 @@ const sideways = (page) => page.evaluate(() => document.documentElement.scrollWi
   ok((await lookOf(page)) === 'classic' && JSON.stringify(after) === JSON.stringify(before),
      'after all of that, a phone draws exactly what it drew before: nothing has changed colour or size');
 
+  const errors = caught.list();
   ok(errors.length === 0, `no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
   await browser.close();
   console.log(bad ? `RESULT: ${bad} BAD` : 'RESULT: ALL OK');

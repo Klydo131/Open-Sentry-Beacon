@@ -21,7 +21,7 @@
 //   2. a collection present but the wrong type is treated as missing,
 //   3. and with lesson_series absent from the save, all three screens that read
 //      it still render — and the feature is actually there, not silently empty.
-const { chromium, launchOptions, openByQuest } = require('./_playwright');
+const { chromium, launchOptions, openByQuest, isCancelledPrefetch } = require('./_playwright');
 
 const PORT = process.argv[2] || '4001';
 const BASE = `http://localhost:${PORT}`;
@@ -55,7 +55,8 @@ async function signInAs(page, name) {
 // renders HTML — just the recovery screen instead of the app.
 async function open(page, route) {
   const errors = [];
-  const onError = (e) => errors.push(String(e).split('\n')[0]);
+  // WebKit's report of a prefetch the walk outran is not an error in the app.
+  const onError = (e) => { if (!isCancelledPrefetch(e)) errors.push(String(e).split('\n')[0]); };
   page.on('pageerror', onError);
   await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1400);

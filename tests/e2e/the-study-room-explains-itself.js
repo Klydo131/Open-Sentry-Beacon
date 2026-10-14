@@ -19,7 +19,7 @@
 //
 //   node tests/e2e/the-study-room-explains-itself.js [port]
 // ---------------------------------------------------------------------------
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, shelfRows, backToShelf } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
@@ -35,8 +35,9 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   });
   const page = ctx.pages()[0] || await ctx.newPage();
 
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
 
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE);
@@ -67,6 +68,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     await box.click();
     await page.waitForTimeout(600);
   }
+  const errors = caught.list();
   ok(errors.length === 0, `nothing broke (${errors.slice(0, 1).join('') || 'none'})`);
 
   // 4. IT CAN BE BINNED LIKE ANY OTHER PAGE, which is the whole of what a

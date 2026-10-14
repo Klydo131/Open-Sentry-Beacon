@@ -17,7 +17,7 @@
 //   npm run build && node scripts/run-next.mjs start -p 4417
 //   node tests/e2e/room-colours-in-every-look.js 4417
 
-const { chromium, launchOptions } = require('./_playwright');
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
 
 const PORT = process.argv[2] || '4417';
 const BASE = `http://localhost:${PORT}`;
@@ -152,8 +152,9 @@ async function noWorseThanTheLook(page, look, key, label) {
       requestAnimationFrame(tick);
     });
     const page = await context.newPage();
-    const errors = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
+    // Through the shared collector, which leaves out WebKit's report of a fetch
+    // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+    const caught = pageErrors(page);
     await signIn(page);
 
     // CLASSIC IS AS IT WAS: four Office swatches, The Desk on.
@@ -230,6 +231,7 @@ async function noWorseThanTheLook(page, look, key, label) {
     ok(s.pressed === 'desk' && /245, 247, 251/.test(surface),
        'Classic still shows The Desk, the choice made in Classic, with its own wash');
 
+    const errors = caught.list();
     ok(errors.length === 0, `computer: no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
     await context.close();
   }
@@ -241,8 +243,9 @@ async function noWorseThanTheLook(page, look, key, label) {
       try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 864e5)); } catch { /* fine */ }
     });
     const page = await context.newPage();
-    const errors = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
+    // Through the shared collector, which leaves out WebKit's report of a fetch
+    // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+    const caught = pageErrors(page);
     await signIn(page);
     await setLook(page, 'study');
     const studyOwn = await seen(page);
@@ -265,6 +268,7 @@ async function noWorseThanTheLook(page, look, key, label) {
     // October 2026, a light strip around Focus's dark cards.
     const ground = await page.evaluate(() => getComputedStyle(document.querySelector('[data-desk-drawer]')).backgroundColor);
     ok(ground === s.page, `and the drawer behind them is the page's colour, not Classic's grey (${ground})`);
+    const errors = caught.list();
     ok(errors.length === 0, `phone: no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
     await context.close();
   }
