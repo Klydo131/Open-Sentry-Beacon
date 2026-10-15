@@ -469,9 +469,22 @@ async function deskPhoto(page) {
         return x && y && y.x >= x.x + x.width - 2 && Math.abs(y.y - x.y) < 160;
       };
       if (size === 'computer') {
+        // "I dont like to scroll much in desktop version" (15 October 2026),
+        // on a window the owner's screenshots measure at about 1300 x 615. The
+        // sample's banner is 46px the live app does not have: 661 here.
+        await page.setViewportSize({ width: 1300, height: 661 });
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(400);
+        const deskTab = await page.locator('[data-desk-tab]').isVisible();
+        const keys = await page.locator('[data-sing-keys] button').count();
+        const now = await page.locator('[data-sing-now]').boundingBox();
+        const ends = now ? Math.round(now.y + now.height) : null;
+        ok(deskTab && keys === 24 && await beside('.tuner-main', '[data-sing]') && ends !== null && ends <= 661,
+           `${size}, 1300 x 615: the desk waits in its drawer, and the dial, both octaves and the grade are on the first screen (desk tab ${deskTab}, ${keys} keys, the grade ends at ${ends}px of 661)`);
         await page.setViewportSize({ width: 1680, height: 1050 });
         await page.waitForTimeout(400);
         ok(await beside('.tuner-main', '[data-sing]'), `${size}, wide: Sing the note sits beside the dial`);
+        ok(!(await page.locator('[data-desk-tab]').isVisible()), `${size}, 1680 wide: there is room for the desk beside the page again`);
       }
       await page.locator('#music-advanced-tuner').uncheck();
       if (size === 'computer') {

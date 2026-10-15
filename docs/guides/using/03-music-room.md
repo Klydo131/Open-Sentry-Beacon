@@ -51,7 +51,10 @@ with their picture, and keep playing when you walk to another room.
 The Tuner is a dial with the note in the middle, and one round button. On a
 phone everything is in one column; on a tablet or a computer the dial sits
 beside its settings (and, with Advanced, beside Sing the note), so nothing is
-scrolled to.
+scrolled to. On a computer the Music room uses the whole width of the window:
+your desk (My office) waits in its drawer, the small tab on the right edge,
+unless the window is very wide. With Advanced on, the dial, both octaves of
+keys and your grade fit on one screen of an ordinary laptop.
 
 1. Open **Tuner** and tap the round **microphone** button (*Tap to listen*).
 2. The first time, your phone asks whether the app may use the microphone. Say

@@ -131,7 +131,9 @@ folder for more, and untick it to put the folder back as it was.
   it, and it says **Perfect**, **Close** or **Try again** (and what you sang),
   with a burst of notes for Perfect. On a computer, type the note (**A S D F G
   H J K** are C to C, **Z** and **X** the octave); on a tablet or a computer
-  the dial and the keyboard sit side by side. **More tools** holds a line drawing your
+  the dial and the keyboard sit side by side, and on a computer the Music room
+  keeps the whole width (your desk waits in the tab on the right edge), so the
+  dial, both octaves and your grade fit one laptop screen. **More tools** holds a line drawing your
   voice over the last ten seconds, a **drone** to sing against, and the notes
   as a clarinet, trumpet, saxophone or horn reads them.
 - **Pieces** keeps your choir's music. **Scan a page**: take a photo of a printed

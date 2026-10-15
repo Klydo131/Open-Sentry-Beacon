@@ -151,7 +151,7 @@ export function TunerPanel() {
           <p className={`mt-3 min-h-7 text-lg font-bold tabular-nums ${inTune ? 'text-[color:var(--music-accent)]' : 'text-navy'}`} data-tuner-verdict>
             {!reading ? '' : inTune ? '✓ In tune' : cents < 0 ? `♭ ${Math.abs(cents)}` : `♯ ${cents}`}
           </p>
-          <p className="min-h-5 text-xs tabular-nums text-gray-500">
+          <p className="min-h-5 text-xs tabular-nums text-gray-500" data-tuner-hz>
             {reading ? `${reading.hz.toFixed(1)} Hz` : ''}
             {a4 !== A4_DEFAULT && <span className="font-semibold text-[color:var(--music-accent)]" data-tuner-against>{reading ? ' · ' : ''}A = {a4}</span>}
           </p>
@@ -165,7 +165,7 @@ export function TunerPanel() {
           >
             {listening ? <span aria-hidden="true" className="block h-5 w-5 rounded-md bg-current" /> : <MicIcon />}
           </button>
-          <p className="mt-2 text-xs font-semibold text-gray-500" aria-hidden="true">{listening ? 'Listening' : 'Tap to listen'}</p>
+          <p className="mt-2 text-xs font-semibold text-gray-500" aria-hidden="true" data-tuner-mic-label>{listening ? 'Listening' : 'Tap to listen'}</p>
         </div>
 
         {status === 'denied' && (
@@ -397,7 +397,7 @@ function Gauge({ cents, inTune, children }: { cents: number | null; inTune: bool
   const inner = onDial(cents ?? 0, DIAL.r - 22);
   return (
     <div
-      className="relative w-full max-w-[20rem] text-navy"
+      className="tuner-gauge relative w-full max-w-[20rem] text-navy"
       role="meter"
       aria-label="How far off the note"
       aria-valuemin={-50}

@@ -1188,6 +1188,59 @@ body:has([role='dialog']) [data-install-prompt='card'] {
   }
 }
 
+/* THE MUSIC ROOM KEEPS THE WIDTH. Asked for on 15 October 2026, with a
+   picture of the Tuner, Sing the note and their settings side by side: "Can
+   we make a full set like this in desktop please. I dont like to scroll much
+   in desktop version." On a window about 1300px wide (a 1080p laptop at
+   140%) the desk beside the page left the room 640px, the Tuner fell back to
+   a phone's single column, and with Advanced on it was 1,891px tall. So on the
+   Music page the desk stays in its drawer (the cabinet tab on the right edge,
+   as on a pad) until the window has room for both: 1680px, where the Tuner
+   still has two octaves beside the desk. */
+@media (min-width: 1280px) and (max-width: 1679.98px) {
+  body:has([data-music-room]) .desk-drawer {
+    display: block;
+    visibility: hidden;
+  }
+  body:has([data-music-room]) .desk-drawer[data-open='true'] {
+    visibility: visible;
+  }
+  body:has([data-music-room]) .desk-tab {
+    display: flex;
+  }
+  body:has([data-music-room]) .desk-backdrop {
+    display: block;
+  }
+  body:has([data-music-room]) .desk-drawer-head {
+    display: flex;
+  }
+}
+
+/* The Music room's title and its folder button share one row once there is
+   room, instead of three blocks stacked above every folder. */
+[data-music-room] {
+  container: music-room / inline-size;
+}
+.music-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+@container music-room (min-width: 760px) {
+  .music-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title folders" "about about";
+    align-items: center;
+    column-gap: 1.5rem;
+    row-gap: 0.25rem;
+  }
+  .music-title { display: contents; }
+  .music-title h1 { grid-area: title; }
+  .music-title p { grid-area: about; margin-top: 0; }
+  .music-folders { grid-area: folders; }
+}
+
 /* ---- Things that hang off a button ----
    A menu, the bell's list, the role and mode switchers. Each comes OUT OF THE
    THING THAT WAS PRESSED: a short drop and a fade from the button's corner, so
@@ -1947,14 +2000,81 @@ body:has([data-conversation-screen]) .tab-bar {
   }
   .tuner-grid[data-advanced="true"] {
     grid-template-areas: "main sing" "side sing";
+    /* Any height the keyboard's column has over the dial's goes below the
+       settings, not between the dial and them. */
+    grid-template-rows: auto 1fr;
+  }
+  /* Side by side, the dial card is no taller than it needs to be, so the
+     dial, the keyboard and the grade fit one screen ("I dont like to scroll
+     much in desktop version", 15 October 2026). */
+  .tuner-main .tuner-gauge {
+    max-width: 15rem;
+  }
+  .tuner-main [data-tuner-mic] {
+    width: 3.75rem;
+    height: 3.75rem;
+    margin-top: 0.5rem;
+  }
+  .tuner-main [data-tuner-verdict] {
+    margin-top: 0.25rem;
+  }
+  /* The keys a little shorter, the grade a little closer under them, and the
+     settings beside the dial in slimmer cards: measured on a 1366 x 657
+     laptop, the keys were 198px tall and the three settings 306px. */
+  .tuner-sing .sing-piano {
+    height: 7.5rem;
+    margin-top: 0.75rem;
+  }
+  .tuner-sing [data-sing-now] {
+    margin-top: 0.75rem;
+  }
+  .tuner-grid .tuner-side {
+    gap: 0.75rem;
+  }
+  .tuner-grid .tuner-side > * {
+    padding-block: 0.75rem;
+  }
+  /* With Advanced on, the dial card is an instrument's face: the dial, and the
+     one round button beside it rather than under it. 401px tall before, on a
+     1366 x 657 laptop. Without Advanced the big dial stays as it is. */
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-reading] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "gauge mic"
+      "gauge caption"
+      "gauge verdict"
+      "gauge hz"
+      "sounds sounds";
+    grid-template-rows: auto auto auto auto;
+    align-content: center;
+    align-items: center;
+    justify-items: center;
+    column-gap: 1rem;
+  }
+  .tuner-grid[data-advanced="true"] .tuner-main .tuner-gauge { grid-area: gauge; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-mic] { grid-area: mic; margin-top: 0; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-mic-label] { grid-area: caption; margin-top: 0.25rem; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-sounds] { grid-area: sounds; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-verdict] { grid-area: verdict; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-hz] { grid-area: hz; }
+  .tuner-grid[data-advanced="true"] .tuner-main > p:last-child { margin-top: 0.5rem; }
+  .tuner-grid [data-pitch-pipe] h2 { white-space: nowrap; }
+  .tuner-grid[data-advanced="true"] .tuner-side { gap: 0.5rem; }
+  .tuner-grid[data-advanced="true"] .tuner-side > * { padding-block: 0.5rem; }
+  .tuner-sing [data-sing-ring] {
+    width: 7rem;
+    height: 7rem;
   }
 }
 /* Wide enough for the keyboard's two octaves beside the dial: the keyboard's
    side gets the larger share. Below this (an upright tablet) the halves stay
-   equal, or the settings beside the dial are squeezed. */
-@container tuner (min-width: 1000px) {
+   equal, or the settings beside the dial are squeezed. 940px, not 1000: a
+   1300px window with the Music room's full width is 990px, and at 1000 it
+   was one octave short. */
+@container tuner (min-width: 940px) {
   .tuner-grid[data-advanced="true"] {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   }
 }
 

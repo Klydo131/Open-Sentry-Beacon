@@ -35,6 +35,10 @@ export function DeskDrawer({ label, children }: { label: string; children: React
   const [open, setOpen] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const tab = useRef<HTMLButtonElement>(null);
+  // Whether the desk is the column beside the page rather than a drawer, as
+  // the stylesheet decided it (from 1280px, or 1680px on the Music page): read
+  // from the page, not worked out again here from the window's width.
+  const asColumn = () => !!panel.current && getComputedStyle(panel.current).display === 'contents';
 
   // A swipe in from the right edge opens it; a swipe to the right on the open
   // drawer closes it. Horizontal only: a thumb scrolling the page down that
@@ -43,9 +47,8 @@ export function DeskDrawer({ label, children }: { label: string; children: React
     let startX = 0;
     let startY = 0;
     let tracking: 'open' | 'close' | null = null;
-    const wide = () => window.matchMedia('(min-width: 1280px)').matches;
     const start = (event: TouchEvent) => {
-      if (wide()) return;
+      if (asColumn()) return;
       const t = event.touches[0];
       startX = t.clientX;
       startY = t.clientY;
@@ -87,7 +90,7 @@ export function DeskDrawer({ label, children }: { label: string; children: React
   useEffect(() => {
     if (!open) return;
     const wasOverflow = document.body.style.overflow;
-    if (!window.matchMedia('(min-width: 1280px)').matches) document.body.style.overflow = 'hidden';
+    if (!asColumn()) document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = wasOverflow; };
   }, [open]);
 

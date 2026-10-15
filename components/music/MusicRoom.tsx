@@ -81,13 +81,17 @@ export function MusicRoom({ theme }: { theme?: RoomTheme }) {
 
   return (
     <div className="space-y-5" data-music-room>
-      <div>
-        <h1 className="text-3xl font-extrabold text-room">🎵 Music</h1>
-        <p className="mt-1 text-room-soft">
-          For the choir and for anybody who loves music. Everything here works on this phone, and nothing is sent anywhere.
-        </p>
+      <div className="music-head">
+        <div className="music-title min-w-0">
+          <h1 className="text-3xl font-extrabold text-room">🎵 Music</h1>
+          <p className="mt-1 text-room-soft">
+            For the choir and for anybody who loves music. Everything here works on this phone, and nothing is sent anywhere.
+          </p>
+        </div>
+        <div className="music-folders shrink-0">
+          <RoomTabs rooms={ROOMS} room={room} onChoose={choose} />
+        </div>
       </div>
-      <RoomTabs rooms={ROOMS} room={room} onChoose={choose} />
       {room === 'listen' && <Listen theme={theme} />}
       {room === 'tuner' && <TunerPanel />}
       {room === 'conductor' && <ConductorPanel preset={conduct} />}

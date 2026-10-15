@@ -49,8 +49,12 @@ const HEAR_SECONDS = 1;
 const ECHO_MS = 350;
 /** How long a grade stays before the next try is listened for. */
 const GRADE_MS = 1400;
-/** A card at least this wide shows two octaves, and the grade beside the ring. */
-const WIDE_PX = 540;
+/**
+ * A card at least this wide shows two octaves, and the grade beside the ring:
+ * keys about 36px wide, plenty for a mouse. 540 until 15 October 2026, when a
+ * 1280px window with the Music room's full width measured 533 and showed one.
+ */
+const WIDE_PX = 500;
 /** Told to the drone, so it stops when a practice starts. */
 export const QUIET_EVENT = 'beacon:music-quiet';
 
