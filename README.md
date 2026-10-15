@@ -161,7 +161,9 @@ visit this week. Folders keep many programs in order, and **Add to calendar**
 puts them on a phone's calendar.
 
 **A Music room, for the choir and everybody who loves music.** A tuner that
-names the note you are singing and whether it is flat or sharp; a conductor's
+names the note you are singing on a dial, flat to one side and sharp to the
+other, with **Sing the note**: tap a key, sing it, and hear Perfect, Close or
+Try again, with a burst of notes for perfect pitch; a conductor's
 metronome that draws the hand for 2, 3, 4 and 6 beats; a scanner that turns a
 photo of a page of music into a clean one; and MusicXML scores played part by
 part, with yours louder. It all happens on the phone: the microphone is used

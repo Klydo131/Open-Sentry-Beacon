@@ -48,61 +48,97 @@ with their picture, and keep playing when you walk to another room.
 
 ## Tuner: which note, and is it in tune
 
-1. Open **Tuner** and tap **Start listening**.
+The Tuner is a dial with the note in the middle, and one round button.
+
+1. Open **Tuner** and tap the round **microphone** button (*Tap to listen*).
 2. The first time, your phone asks whether the app may use the microphone. Say
    yes; it is asked only once.
-3. Sing or play a steady note. The tuner names it (such as *A* or *C♯*) and its
-   octave, and a needle leans **left when you are flat** and **right when you
-   are sharp**. The green band in the middle is *in tune* (within 5 cents),
-   and the bold line through it is the note exactly. Inside the band the
-   needle turns green and the reading gets a green ring. It says so in words
-   as well, so nobody has to read a dial. A new note shows in about a tenth of
-   a second, and when you stop, the last note stays for a moment so you can
-   read it.
-4. Tap **Stop listening** when you are done.
+3. Sing or play a steady note. The note shows in the middle of the dial (such
+   as *A4* or *C♯3*), and a marker moves along the dial: **left when you are
+   flat (♭)**, **right when you are sharp (♯)**. The green band at the top is
+   *in tune* (within 5 cents), and the bold line through it is the note
+   exactly. In the band the marker turns green and the dial says **✓ In
+   tune**; outside it, it says how far off you are, such as **♭ 12**. A new
+   note shows in about a tenth of a second, and when you stop, the last note
+   stays for a moment so you can read it.
+4. Tap the button again (a green square while it listens) to stop.
 
-**Starting note** plays a note for two seconds, like a pitch pipe, so a choir
-can find its first note. It shows the frequency it will play.
+![The Tuner on a phone: the dial, a C4 sung and in tune, and the round button, green while it listens.](../../screenshots/walkthrough/47-tuner.png)
+
+**Starting note** gives the choir its first note, like a pitch pipe: choose the
+note with **−** and **+** and tap **▶**. It plays for two seconds.
 
 ### Concert pitch: where the choir's A sits
 
-Concert pitch is the A that every other note is tuned from. 440 Hz is the
-standard most choirs, pianos and recordings use. An older organ, a baroque
-group or an orchestra may use another, and then everything else should follow
-it: the tuner should call a note in tune when it matches that instrument, and
-the starting note should sound like it.
+Concert pitch is the A that every other note is tuned from: **A = 440 Hz**
+unless you change it, the standard most choirs, pianos and recordings use. An
+older organ, a baroque group or an orchestra may use another, and then
+everything should follow it: the tuner should call a note in tune when it
+matches that instrument, and the starting note should sound like it.
 
-1. Tap one of the common pitches: **415 Hz** (Baroque), **432 Hz**, **440 Hz**
-   (Standard) or **442 Hz** (Orchestra). Or move it one hertz at a time with
-   **− 1** and **+ 1**. Every change plays the new A, so you hear it.
-2. Read the line under it. It says what the change does to every note, such as
-   *2 Hz above the standard 440: every note sounds about 8 cents higher*. A
-   hundred cents is one semitone, one key on a piano.
-3. Tap **Compare with 440** to hear the standard A and then yours, one after
-   the other.
+Tap **Concert pitch** to open it.
 
-**To match an instrument**, ask the organist or pianist to hold an A, tap
-**Listen for the A**, and hold the phone near it. Once the A has been steady for
-a moment, the app says what it heard, such as *The A you played is 441.6 Hz*,
-and offers **Use 442 Hz**. Nothing changes until you tap it, and nothing is
-recorded.
+1. Tap one of the common pitches: **415** (Baroque), **432**, **440**
+   (Standard) or **442** (Orchestra), or move it one hertz at a time with
+   **−** and **+**. Every change plays the new A, so you hear it, and a line
+   says what it does to every note, such as *2 Hz above the standard 440:
+   every note sounds about 8 cents higher*. A hundred cents is one semitone,
+   one key on a piano. **Hear A** plays it again.
+2. **To match an instrument**, ask the organist or pianist to hold an A, tap
+   **Listen for the A**, and hold the phone near it. Once the A has been steady
+   for a moment, the app says what it heard, such as *Heard 441.6 Hz*, and
+   offers **Use 442 Hz**. Nothing changes until you tap it, and nothing is
+   recorded.
 
+When it is not 440, the dial shows the pitch it follows, such as *A = 442*.
 The phone remembers your concert pitch until you change it.
 
-### Advanced: your voice as a line, a drone, and your instrument's notes
+![Concert pitch opened: one tap for each common A, a line saying what it does, Hear A, and Listen for the A.](../../screenshots/walkthrough/42-tuner-pitch.png)
 
-Tick **Advanced settings** under the starting note and three more cards open.
+### Advanced: sing the note
 
-- **Your voice, the last 10 seconds.** While the tuner listens, your voice is
-  drawn as a line across the notes. A flat line is a steady note; a wave is a
-  wobble; a slope is a slide into the note. It is the quickest way to see what
-  your voice does on a long note. Only the last ten seconds are drawn, and they
-  are forgotten when you leave the Tuner.
+Tick **Advanced settings** and **Sing the note** opens: a piano keyboard.
+
+1. **Tap a key.** The note shows in a ring, and the tuner starts listening.
+   Use **‹** and **›** to move the keyboard down or up an octave.
+2. **Sing it and hold it.** A marker shows how near you are (flat to the left,
+   sharp to the right, the middle is the note) and the ring fills while you
+   hold it.
+3. **After about two-thirds of a second, it tells you:**
+   - **Perfect**: within a tenth of a semitone (10 cents). The ring bursts
+     with notes: perfect pitch.
+   - **Close**: within a quarter of a semitone (25 cents), close enough for a
+     choir. It says *A little sharp ↓* or *A little flat ↑*.
+   - **Try again**: further off, or another note. It says what you sang, such
+     as *You sang C4 ↑* (the arrow is the way to go), or *Too flat*.
+4. **Sing again** whenever you like: take a breath and sing, and it grades
+   you again, with no need to tap. Tap another key for another note.
+
+The **speaker** button plays the note; the tuner does not listen while it
+plays, so the phone cannot pass a note by singing it to itself. The **square**
+stops listening.
+
+![Sing the note on a phone: a keyboard, waiting for a note to be tapped.](../../screenshots/walkthrough/44-sing-the-note.png)
+
+![C4 tapped and sung: Perfect, with a burst of notes.](../../screenshots/walkthrough/45-perfect-pitch.png)
+
+**More tools**, under Sing the note, opens three more:
+
+- **Your voice.** While the tuner listens, the last ten seconds of your voice
+  are drawn across one octave of notes, a row for each note with its name
+  beside it, as on a piano roll. The octave follows your voice; the note you
+  are singing now is lit, and its name is shown large at the top. Each note
+  you sing is a line of its own: **steady** (level), a **wobble** (a wave), or
+  a **slide** (a slope). A line that sits on a note's row is that note in
+  tune. Only the last ten seconds are drawn, and they are forgotten when you
+  leave the Tuner.
+
+  ![Your voice on a phone: one octave of notes, each named, the note being sung lit, and each note sung a line of its own.](../../screenshots/walkthrough/46-your-voice.png)
 - **Drone.** One note held for as long as you like, to sing against. Choose
   the note and the sound (soft voice, organ or flute) and tap **Start the
   drone**. When your voice drifts you hear it rub against the drone. With the
   tuner listening at the same time, wear headphones, or the tuner hears the
-  drone instead of you.
+  drone instead of you. Tapping a key in Sing the note stops it.
 - **Your instrument.** A clarinet or trumpet, an alto saxophone or a French
   horn reads its music higher than it sounds. Choose yours and the tuner shows
   the note you would read, with the note it sounds underneath: a concert A on
@@ -110,9 +146,10 @@ Tick **Advanced settings** under the starting note and three more cards open.
 
 > **IMPORTANT** · What the microphone does, and does not do
 >
-> The tuner listens only after you tap **Start listening**. It measures the
-> sound on the phone and throws it away: **nothing is recorded, kept or sent**.
-> It lets go of the microphone when you tap **Stop listening**, when you leave
+> The tuner listens only after you tap the **microphone** button (or a key in
+> Sing the note). It measures the sound on the phone and throws it away:
+> **nothing is recorded, kept or sent**. It lets go of the microphone when you
+> tap the button again (or **■** in Sing the note), when you leave
 > the Tuner, and when the phone locks or another app comes to the front, so the
 > phone's own recording light goes off.
 
@@ -280,7 +317,7 @@ Leaving Play, or locking the phone, stops every sound.
 | --- | --- | --- |
 | Your music, video and playlists | On this device | Only you, on this device |
 | Your clean pages and scores | On this device, in the Music room's own store | Only you, on this device |
-| Concert pitch, the conductor's settings, saved tempos and beats, and which folders have Advanced open | On this device | Only you |
+| Concert pitch, the conductor's settings, saved tempos and beats, the notes you chose to sing, and which folders have Advanced open | On this device | Only you |
 | Sound from the microphone | Nowhere: measured and thrown away | Nobody |
 
 Because it is all on the device, a new phone starts with an empty Music room.

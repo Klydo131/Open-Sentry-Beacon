@@ -26,7 +26,8 @@
 // composed or retouched. A screenshot is the one kind of documentation that
 // rots with nothing failing, so rerun this whenever a screen changes.
 
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -39,6 +40,23 @@ const ONLY = process.argv.slice(3);
 const BASE = `http://localhost:${PORT}`;
 
 const { chromium } = require('playwright');
+// The pretend microphone sings: a held C4, made by the same made-up voice the
+// tuner's tests sing with (tests/e2e/_made-up-voice.js), so Sing the note's
+// pictures (44, 45) are of the app really hearing a note, not a staged screen.
+const { sing, wav } = require('../tests/e2e/_made-up-voice.js');
+const VOICE = join(mkdtempSync(join(tmpdir(), 'beacon-shots-')), 'held-c4.wav');
+{
+  const parts = [[0.3, null]];
+  for (let i = 0; i < 20; i++) parts.push([3, 60], [0.3, null]);
+  writeFileSync(VOICE, wav(sing(parts, { vowel: 'ah', sex: 'm', seed: 11 }), 48000));
+}
+/** A short tune, for the picture of Your voice: C4, E4 into G4, D4, then C4 again. */
+const TUNE = join(dirname(VOICE), 'tune.wav');
+{
+  const parts = [[0.3, null]];
+  for (let i = 0; i < 6; i++) parts.push([1.2, 60], [0.15, null], [1.2, 64], [1.0, 67], [0.25, null], [1.4, 62], [0.4, null]);
+  writeFileSync(TUNE, wav(sing(parts, { vowel: 'ah', sex: 'm', seed: 11, vibrato: 45 }), 48000));
+}
 // The browser walks' own helpers for the two things that changed shape on
 // 30 September 2026: a room's subrooms are a drop-down now, not a row of tabs,
 // and the conversation is the Talk bubble, not a page. Using the walks' copies
@@ -449,13 +467,76 @@ const SHOTS = [
     } },
   // Concert pitch you can hear, 5 October 2026: "I just put the Hertz and
   // nothing much is happening". The Tuner's concert pitch card, A = 440.
-  { file: '42-tuner-pitch.png', what: 'The Tuner: concert pitch, one tap for each common A, and Compare with 440', size: PHONE,
+  { file: '42-tuner-pitch.png', what: 'The Tuner: concert pitch opened, one tap for each common A', size: PHONE,
     go: async (p) => {
       await signIn(p, /John Reyes/i);
       await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
       await settle(p, 1200);
-      await p.locator('[data-tuner-a4]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await p.locator('[data-pitch-toggle]').click();
+      await p.locator('[data-concert-pitch]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await settle(p, 600);
+    } },
+  // The Tuner, redrawn on 15 October 2026: "The basic settings are just
+  // complicated with so many words on it. Let the design speaks for itself
+  // please." A dial and one round button, hearing a C4 sung.
+  { file: '47-tuner.png', what: 'The Tuner: the dial, a C4 sung and in tune, and one round button', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.getByRole('button', { name: 'Start listening' }).click();
+      await p.locator('[data-tuner-verdict]').filter({ hasText: /In tune/ }).waitFor({ timeout: 8000 }).catch(() => {});
+      await p.locator('[data-tuner-reading]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 300);
+    } },
+  // Sing the note, made simple the same day: "just tap or click a note and I
+  // will just sing ... and it will detect if I hit a perfect note or close
+  // enough, that's all." The keyboard, waiting for a tap.
+  { file: '44-sing-the-note.png', what: 'Sing the note: a keyboard, waiting for a note to be tapped', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate(() => {
+        localStorage.setItem('beacon:music-advanced:tuner', '1');
+        localStorage.setItem('beacon:music-sing', JSON.stringify({ octave: 4 }));
+      });
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // And the reward: C4 tapped, sung and held into the pretend microphone, and
+  // Perfect, with the burst of notes.
+  { file: '45-perfect-pitch.png', what: 'Sing the note: C4 tapped and sung, and Perfect', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate(() => {
+        localStorage.setItem('beacon:music-advanced:tuner', '1');
+        localStorage.setItem('beacon:music-sing', JSON.stringify({ octave: 4 }));
+      });
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await p.locator('[data-sing-keys]').getByRole('button', { name: 'C4', exact: true }).click();
+      await p.locator('[data-sing-verdict="perfect"]').waitFor({ timeout: 15000 });
+      // The ring and its word in the middle of the screen, clear of the
+      // sample-data badge and the chat button at the bottom.
+      await p.locator('[data-sing-now]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 250);
+    } },
+  // Your voice, redrawn the same day after the owner's phone showed the old
+  // trail: "not aesthetically pleasing... it's too small to see". The made-up
+  // voice sings a short tune into the pretend microphone.
+  { file: '46-your-voice.png', what: 'Your voice: one octave of named rows, each note sung its own line', size: PHONE, voice: 'tune',
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate(() => localStorage.setItem('beacon:music-advanced:tuner', '1'));
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-tuner-more]').click();
+      await p.getByRole('button', { name: /Start listening/ }).click();
+      await p.waitForTimeout(6500);
+      await p.locator('[data-tuner-trail]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 300);
     } },
   // My Files on a phone, 6 October 2026: "The Library (My files) are not UI
   // friendly for Mobile and Pad users". On this device: adding first, at one
@@ -543,11 +624,15 @@ const executablePath = (() => {
 })();
 
 // A pretend microphone, so the voice-message shot shows the recorder without
-// anybody's real one; the browser is told yes without asking.
-const browser = await chromium.launch({
+// anybody's real one, and Sing the note hears its made-up voice; the browser
+// is told yes without asking.
+const launch = (voice) => chromium.launch({
   ...(executablePath ? { executablePath } : {}),
-  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${voice}`],
 });
+const browser = await launch(VOICE);
+// The tune needs a browser of its own: the pretend microphone is chosen at launch.
+let tuneBrowser = null;
 let failed = 0;
 const chosen = ONLY.length ? SHOTS.filter((s) => ONLY.some((n) => s.file.startsWith(`${n.padStart(2, '0')}-`))) : SHOTS;
 if (!chosen.length) {
@@ -555,7 +640,8 @@ if (!chosen.length) {
   process.exit(1);
 }
 for (const shot of chosen) {
-  const context = await browser.newContext({
+  if (shot.voice === 'tune' && !tuneBrowser) tuneBrowser = await launch(TUNE);
+  const context = await (shot.voice === 'tune' ? tuneBrowser : browser).newContext({
     viewport: shot.size,
     deviceScaleFactor: 2,
     ...(shot.size === PHONE ? { isMobile: true, hasTouch: true } : {}),
@@ -577,6 +663,7 @@ for (const shot of chosen) {
   await context.close();
 }
 await browser.close();
+if (tuneBrowser) await tuneBrowser.close();
 
 // A missing picture is a hole in the guide, so say so loudly rather than
 // leaving somebody to find a broken image in a printed PDF.

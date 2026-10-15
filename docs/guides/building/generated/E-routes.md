@@ -11,6 +11,7 @@ Each page under `app/`, the address it answers, and who may open it. `allow` is 
 | `/dm/:id` | `app/dm/[id]/page.tsx` | Guide |
 | `/dm` | `app/dm/page.tsx` | Guide |
 | `/ds` | `app/ds/page.tsx` | Explorer |
+| `/faq` | `app/faq/page.tsx` | Anyone (no shell gate on this page) |
 | `/guilds` | `app/guilds/page.tsx` | Guide, Explorer |
 | `/join` | `app/join/page.tsx` | Anyone (no shell gate on this page) |
 | `/library` | `app/library/page.tsx` | Anyone (no shell gate on this page) |

@@ -62,7 +62,7 @@ people in it.
 - A **folder** is one part of a room. The button at the top of a room says
   which folder you are in, such as *My Guide, 1 of 4*. Tap it to see the rest.
 - **Bold words** are what is written on the screen, so you can look for them:
-  **Write a post**, **Apply**, **Start listening**.
+  **Write a post**, **Apply**, **Listen for the A**.
 - *The four roles* have a chapter of their own, and every other word the app uses
   is in the **Glossary** near the end.
 

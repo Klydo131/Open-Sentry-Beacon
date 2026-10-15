@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -429,8 +430,8 @@ function zip(files) {
   const panel = code('components/music/TunerPanel.tsx');
   const calibrate = (panel.match(/const calibrate = [\s\S]*?\n  \};/) || [''])[0];
   ok(/tone\.play\(/.test(calibrate), 'every change of concert pitch plays the new A');
-  ok(/data-pitch-words[\s\S]{0,40}pitchWords\(a4\)/.test(panel) && /Compare with 440/.test(panel) && /data-tuner-against/.test(panel) && /data-pipe-hz/.test(panel),
-     'the card says what the change does, compares it with 440, and the tuner and the starting note show the pitch they follow');
+  ok(/data-tuner-against/.test(panel) && /title=\{`\$\{midiToHz\(midi, a4\)\.toFixed\(1\)\} Hz`\}/.test(panel) && /aria-expanded=\{pitchOpen\}/.test(panel),
+     'the dial and the starting note follow the concert pitch, which is one line until it is opened');
   ok(!/getUserMedia/.test(panel) && /void listen\(\)/.test(panel), "Listen for the A uses the tuner's own microphone, not a second one");
   ok(/if \(openedMic\.current\) \{ openedMic\.current = false; stopListening\(\); \}/.test(panel),
      'and lets it go as soon as the A is heard, when it was the one that opened it');
@@ -495,9 +496,25 @@ function zip(files) {
   ok(M.midiName(M.writtenFor(69, 'Bb')) === 'B4' && M.midiName(M.writtenFor(69, 'Eb')) === 'F♯5' && M.midiName(M.writtenFor(69, 'F')) === 'E5' && M.writtenFor(69, 'C') === 69,
      'a concert A reads as B on a clarinet, F sharp on an alto sax, E on a horn');
   ok(Math.abs(M.toSemitones(440) - 69) < 1e-9 && Math.abs(M.toSemitones(466.16) - 70) < 0.01 && M.toSemitones(0) === null, 'the trail draws a frequency as its note number');
+  // The trail (redrawn 14 October 2026 from the owner's phone, where one stray
+  // reading stretched it to 31 rows with their names printed over each other).
   const band = M.trailBand([69, 69.2]);
-  ok(band[1] - band[0] === 12 && band[0] <= 69 && band[1] >= 70, `a held note gets an octave of room around it (${band})`);
-  ok(M.trailBand([30, 100])[1] - M.trailBand([30, 100])[0] === 36 && M.trailBand([]).join() === '57,69', 'never more than three octaves, and a sensible band with nothing sung');
+  ok(band[1] - band[0] === 12 && band[0] <= 68 && band[1] >= 70, `a held note sits in the middle of an octave (${band})`);
+  const strayBand = M.trailBand([...Array(60).fill(64), 40, ...Array(60).fill(64)]);
+  ok(strayBand[1] - strayBand[0] === 12 && strayBand[0] > 57, `always one octave, and one stray reading two octaves down does not drag it (${strayBand})`);
+  const moved = M.trailBand([...Array(100).fill(60), 72]);
+  ok(moved[0] < 72 - 0.9 && moved[1] > 72 + 0.9 && M.trailBand([]).join() === '57,69', `the newest note is always on it, a row from the edge (${moved}); a sensible octave with nothing sung`);
+  const at = (s, i) => ({ t: i * 16, s });
+  const held = (s, from, n = 10) => Array.from({ length: n }, (_, i) => at(s + (i % 2) * 0.1, from + i));
+  // A note, a stray two octaves down, the note again, then a tenth of a second
+  // an octave up (as a thin phone microphone can start a low "oo"), then a new note.
+  const lines = M.trailLines([...held(64, 0), at(40, 10), ...held(64, 11), ...held(76, 21, 6), ...held(71, 27)]);
+  ok(lines.length === 3 && lines.every((l) => l.every((p) => p.s > 60 && p.s < 72)),
+     `a stray reading is left off, and a new note starts a new line instead of a wall joining the two (${lines.map((l) => l.length).join(', ')})`);
+  ok(M.trailLines([60, 60.3, 60.6, 60.9, 61.2, 61.5, 61.8, 62].map(at)).length === 1, 'a slide stays one line');
+  const hooked = M.trailLines([...held(60, 0), at(60.5, 10), ...held(64, 11)]);
+  ok(hooked.length === 2 && hooked[0].every((p) => p.s < 60.2), 'the frame the tuner leaned toward the next note is no hook at the end of the last');
+  ok(M.trailLines([...held(60, 0), ...held(60, 40)]).length === 2, 'and a breath lifts the pen');
 
   // Play: chords in a key, the beat maker.
   ok(M.chordsInKey('C').map((c) => c.name).join(' ') === 'C Dm Em F G Am', 'the chords of C are C, Dm, Em, F, G and Am');
@@ -709,6 +726,19 @@ function wordsOnlyPdf(words) {
      'the PDF kept on the phone is the file itself, not the bytes pdf.js takes over');
   ok(/piece\.kind === 'score' && piece\.mime === PDF_MIME\) \{[\s\S]{0,200}?scoreFromPdfBytes\(new Uint8Array\(await blob\.arrayBuffer\(\)\)/.test(code('components/music/PiecesPanel.tsx')),
      'a PDF kept on the phone is read again, and checked again, every time it is opened');
+}
+
+// ---------------------------------------------------------------------------
+// SING THE NOTE, AND HOW EXACT THE EAR IS (14 October 2026)
+//
+// Its own file, run from here because the gate's list is in Codex's lane:
+// the ear on every note of five voice parts under six conditions, the judge
+// of each sung note, and the tuner on real singing marked by people.
+// ---------------------------------------------------------------------------
+{
+  const sung = spawnSync(process.execPath, [path.join(root, 'tests/the-tuner-hears-the-note-sung.mjs')], { cwd: root, encoding: 'utf8' });
+  ok(sung.status === 0, 'the tuner hears the note sung, and Sing the note judges it (tests/the-tuner-hears-the-note-sung.mjs)'
+    + (sung.status === 0 ? '' : `\n${sung.stdout}${sung.stderr}`));
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

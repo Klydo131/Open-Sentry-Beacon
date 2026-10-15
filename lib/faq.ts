@@ -414,7 +414,7 @@ export function faqSections(): FaqSection[] {
           id: 'music',
           q: 'What is the Music room?',
           a: [
-            'A tuner, a conductor’s beat, your pieces and something to listen to, all working on your phone. The tuner listens only after you tap Start listening, and nothing it hears is recorded or sent.',
+            'A tuner, a conductor’s beat, your pieces and something to listen to, all working on your phone. The tuner listens only after you tap its microphone button, and nothing it hears is recorded or sent.',
           ],
         },
         {

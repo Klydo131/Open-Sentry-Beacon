@@ -29,6 +29,9 @@ const SHOW_EVERY_MS = 33;
 
 export type TunerStatus = 'off' | 'asking' | 'listening' | 'denied' | 'unavailable';
 
+/** Told of every reading, one a frame: the pitch in Hz, or null for none, and when. */
+export type ReadingListener = (raw: number | null, now: number) => void;
+
 export interface Tuner {
   status: TunerStatus;
   reading: Reading | null;
@@ -38,6 +41,11 @@ export interface Tuner {
   setA4: (hz: number) => void;
   start: () => Promise<void>;
   stop: () => void;
+  /**
+   * Hear every raw reading as it is measured, sixty a second, before the
+   * needle's smoothing: what Sing the note judges from. Returns the way to stop.
+   */
+  onReading: (listen: ReadingListener) => () => void;
 }
 
 export function useTuner(): Tuner {
@@ -55,6 +63,11 @@ export function useTuner(): Tuner {
   const turn = useRef(0);
   const a4Now = useRef(a4);
   a4Now.current = a4;
+  const listeners = useRef(new Set<ReadingListener>());
+  const onReading = useCallback((listen: ReadingListener) => {
+    listeners.current.add(listen);
+    return () => { listeners.current.delete(listen); };
+  }, []);
 
   const stop = useCallback(() => {
     turn.current += 1;
@@ -113,6 +126,7 @@ export function useTuner(): Tuner {
       const now = performance.now();
       analyser.getFloatTimeDomainData(buffer);
       const heard = tracker.push(buffer, now);
+      listeners.current.forEach((listen) => listen(heard ? heard.raw : null, now));
       if (!heard) {
         // Cleared at once when the held note runs out, not on the next tick.
         if (showing) { showing = false; setReading(null); setHeld(false); }
@@ -144,5 +158,5 @@ export function useTuner(): Tuner {
   // Stable, so a screen can call it from an effect without running it again.
   const setA4 = useCallback((hz: number) => setA4State(clampA4(hz)), []);
 
-  return { status, reading, held, a4, setA4, start, stop };
+  return { status, reading, held, a4, setA4, start, stop, onReading };
 }

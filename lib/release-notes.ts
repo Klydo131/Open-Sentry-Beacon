@@ -18,6 +18,30 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-15-a-simpler-tuner',
+    date: '2026-10-15',
+    title: 'A simpler Tuner: a dial, a button, and a keyboard to sing to',
+    items: [
+      'The Tuner is a dial with your note in the middle, and one round button to start and stop listening. The words are gone; the dial says In tune, or how far off you are.',
+      'Starting note and Concert pitch are one line each. Tap Concert pitch to open it.',
+      'Sing the note, in Advanced settings, is a piano keyboard. Tap a key, sing it and hold it, and it says Perfect, Close, or Try again with what you sang. Sing again after a breath and it tells you again.',
+      'The voice trail, the drone and your instrument are under More tools.',
+    ],
+  },
+  {
+    id: '2026-10-14-sing-the-note',
+    date: '2026-10-14',
+    title: 'Sing the note, and a tuner that hears each note exactly',
+    items: [
+      'In the Music room, Tuner, tick Advanced settings and you will find Sing the note. Choose one note, or a run of five to ten (or let the app pick them for your voice), sing each one and hold it, and the tuner tells you whether you hit it: the right note, in the right octave. If you did not, it tells you what you sang instead.',
+      'Hit every note and you are told so: Perfect pitch!',
+      'Choose how close counts: Choir (within a quarter of a semitone) or Exact (within a tenth). Leave Play each note before I sing it off for the real test, from memory.',
+      'The tuner itself hears more exactly: a singer with a wide vibrato is shown one note, not two; "ee" at the top of a voice is no longer missed; and a thin phone microphone no longer shows a low note an octave out. It was checked against real singing marked by trained musicians.',
+      'Your voice, the drawing of the last ten seconds, is redrawn: one octave at a time, a row for each note with its name large enough to read on a phone, the note you are singing lit, and each note its own line. A stray sound no longer draws a tall streak.',
+      'The microphone is used only while you sing, and nothing is recorded or sent.',
+    ],
+  },
+  {
     id: '2026-10-13-choose-your-language-first',
     date: '2026-10-13',
     title: 'Choose your language before you sign in',

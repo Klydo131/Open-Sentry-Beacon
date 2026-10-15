@@ -167,20 +167,67 @@ export function toSemitones(hz: number, a4 = A4_DEFAULT): number | null {
 }
 
 /**
- * The band of notes the pitch trail shows: the notes sung, with room above
- * and below, at least an octave tall so a held note is not drawn as a mountain
- * range, and at most three octaves so one stray reading cannot shrink the rest.
+ * How many semitones the pitch trail shows at once: one octave. Each row is
+ * then tall enough for its name to be read on a phone. (Until 14 October 2026
+ * the band stretched to fit everything sung, up to three octaves; one stray
+ * reading stretched it to that, and 31 rows in a phone's chart left names
+ * written over each other. The owner: "it's too small to see".)
+ */
+export const TRAIL_SPAN = 12;
+
+/**
+ * The octave the pitch trail shows: centred on the middle of what was sung
+ * (the median, so a stray reading cannot drag it), then moved just enough that
+ * the newest note sits inside it, a row from the edge.
  */
 export function trailBand(semitones: number[]): [number, number] {
   const sung = semitones.filter((s) => Number.isFinite(s));
   if (!sung.length) return [57, 69];
-  let low = Math.floor(Math.min(...sung)) - 2;
-  let high = Math.ceil(Math.max(...sung)) + 2;
-  if (high - low < 12) {
-    const middle = Math.round((low + high) / 2);
-    low = middle - 6;
-    high = middle + 6;
+  const sorted = [...sung].sort((a, b) => a - b);
+  let middle = sorted[sorted.length >> 1];
+  const newest = sung[sung.length - 1];
+  const room = TRAIL_SPAN / 2 - 1;
+  if (newest > middle + room) middle = newest - room;
+  if (newest < middle - room) middle = newest + room;
+  return [middle - TRAIL_SPAN / 2, middle + TRAIL_SPAN / 2];
+}
+
+/** A gap longer than this is a breath: the trail lifts its pen. */
+export const TRAIL_BREATH_MS = 250;
+/** A step bigger than this between two readings is a new note, not a slide. */
+export const TRAIL_LEAP = 1;
+/**
+ * A line shorter than this many readings (about an eighth of a second) is a
+ * stray, not a note anyone holds. Measured: the one wrong thing the tuner
+ * still shows is a fragment as short as that (the first tenth of a second of
+ * a man's low "oo" on a thin phone microphone, read an octave up before it
+ * corrects; docs/MUSIC-RESEARCH.md).
+ */
+export const TRAIL_LEAST = 8;
+
+/**
+ * The trail's readings cut into the lines it draws: one line for each note
+ * sung, so a change of note is a step up or down and never a wall joining the
+ * two; a slide stays one line. A stray reading on its own, which on a phone's
+ * microphone can be an octave or two out, is left off: it drew as a tall
+ * streak down the chart. So is the one frame in which the tuner, waiting for a
+ * second reading to agree, had begun to lean toward the next note: it drew a
+ * hook at the end of every note.
+ */
+export function trailLines<P extends { t: number; s: number }>(points: P[]): P[][] {
+  const lines: P[][] = [];
+  let line: P[] = [];
+  for (const p of points) {
+    const before = line[line.length - 1];
+    const breath = before && p.t - before.t > TRAIL_BREATH_MS;
+    if (before && (breath || Math.abs(p.s - before.s) > TRAIL_LEAP)) {
+      const lean = line.length >= 2 ? before.s - line[line.length - 2].s : 0;
+      if (!breath && Math.abs(lean) > 0.25 && Math.sign(lean) === Math.sign(p.s - before.s)) line.pop();
+      if (line.length >= TRAIL_LEAST) lines.push(line);
+      line = [];
+    }
+    line.push(p);
   }
-  if (high - low > 36) low = high - 36;
-  return [low, high];
+  if (line.length >= TRAIL_LEAST) lines.push(line);
+  return lines;
 }

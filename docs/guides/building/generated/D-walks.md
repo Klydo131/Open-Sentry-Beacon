@@ -1,6 +1,14 @@
 # Appendix D. Every browser walk
 
-76 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+83 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+
+#### `a-link-lands-even-when-the-page-moves.js`
+
+A link to a card lands on the card even when the smooth scroll is cut short or the page changes height underneath it.
+
+WHY THIS EXISTS. On WebKit, landing.js followed `/settings#install` to a card that appeared late and finished 2842px away from it (13 October 2026). The scroll was aimed once and nothing looked again. lib/scroll-to-hash.ts now waits for the page to stop moving, checks, and goes the rest of the way.
+
+This makes the two things that defeat a single aimed scroll happen on purpose, so Chromium shows them too:
 
 #### `a-phone-can-insert-things.js`
 
@@ -9,6 +17,14 @@ A phone can put a heading, a list and a quote on a page.
 REPORTED, WITH A PHOTOGRAPH OF AN ANDROID PHONE: "it's not working in mobile". The `/` had been typed into the page and was sitting there as a character. No menu. No bar. Nothing to press.
 
 WHY IT LOOKED FINE HERE. The slash-menu walk runs in a headless Chromium, where Playwright's keyboard sends real `keydown` events and the menu opens exactly as it does on a desktop. A phone's on-screen keyboard does not send those: GBoard and its cousins send composition and `beforeinput` events, so the character arrives with no keystroke for the menu to hear. Every assertion was true and none of them was about a phone.
+
+#### `a-post-photo-is-kept.js`
+
+A photo added to a post is really kept, in every browser, and a save that fails says so.
+
+WHY THIS EXISTS. On WebKit, adding a photo to a post in the sample church left an empty grey square and no message (home-is-a-billboard, 13 October 2026). Two mistakes, both already learned once by the attachments store (lib/localMedia.ts) and repeated by the post photo store:
+
+- it stored a Blob, which WebKit will not keep in IndexedDB at all (tests/e2e/webkit-idb-probe.js asks the engine directly); - it treated a write as done when the request succeeded, before the transaction committed, so a save that failed afterwards looked kept.
 
 #### `a-sabbath-program-downloads.js`
 
@@ -39,6 +55,12 @@ A study room holds many pages, keeps them apart, and can put one away.
 WHAT THIS IS ACTUALLY CHECKING. A second page is easy to make look right and easy to get wrong in a way no screenshot shows: two rows on the shelf and one document underneath, so everything typed on "Romans" is also on "Daniel" because both are rendering the same store. The assertion that matters is not that a page can be made, it is that what is written on one page is NOT on the other, and that it is still there when you come back.
 
 It also holds the shelf itself to being useful rather than decorative: a page's own words have to reach the list, or the list is a column of identical rows and nobody can find anything. That preview is written by the page as it is edited -- every page is a separate document that must be fetched before a word of it can be read, so a shelf that read them all would be twenty round trips before it could draw one line.
+
+#### `a-sung-note-is-heard-as-itself.js`
+
+Sing the note, sung to. The Tuner's practice (Advanced settings) in a real browser, with a made-up voice as the microphone.
+
+WHY THIS EXISTS. Asked for on 14 October 2026: choose a note, sing it, and be told whether it was hit, with "perfect pitch" as the reward; "MAKE SURE the tuner for voice is extremely accurate with 1 to 1 on voice to notes". Made simple on 15 October 2026: "just tap or click a note and I will just sing ... and it will detect if I hit a perfect note or close enough, that's all." tests/the-tuner-hears-the-note-sung.mjs holds the ear and the grades to their numbers in Node; this proves the whole path a phone takes: a key tapped, the microphone, the audio clock, the tuner's frames, the judge, and what the screen says.
 
 #### `app-back.js`
 
@@ -131,6 +153,14 @@ Anything in the header that opens a panel must actually open it.
 This exists because "Try an account" stopped working and the failure was invisible from every angle a normal test looks from. The button was present, visible, and enabled. Clicking it toggled React state, and `aria-expanded` went from false to true. The panel entered the DOM, and Playwright's `isVisible()` returned true for it. Every ordinary assertion passed.
 
 It was still, from a person's point of view, a button that did nothing.
+
+#### `home-is-a-billboard.js`
+
+Home opens on the church's announcements and blog posts, as cards you can see straight away and swipe through, and a card opens into the whole thing.
+
+Asked for on 7 October 2026: "It should look the Home Screen where people can see blogs and announcements right away please like a Bill board you can just see the image and photos right away and you can scroll on it."
+
+WHAT IT HAS TO PROVE, on the sample church, on a phone: 1. both rows are there, on the first screen, without scrolling 2. the blog row is pictures, and the pictures really load 3. a row swipes sideways and the page itself never does 4. a card opens the whole post, and closes again with Escape 5. opening a post counts as reading it (its writer sees 1 reader) 6. a draft is never on the board 7. in a dark look the words on a card can still be read 8. on a computer, the arrows move the row
 
 #### `in-app-browser.js`
 
@@ -296,6 +326,14 @@ Every walk, walked. One per participant, in a real browser, at phone width.
 
 The tutorial used to be one array of missionary steps, so there was one thing to test. There are now five walks, and the failure this suite exists to catch is the boring one: a step that points at a `data-quest` anchor nobody ever added, so the person is told "tap the highlighted button" with no highlight anywhere. That is not hypothetical — it is written down in Quest.tsx as something that already happened, and it happened again while this suite was being written: `<Button>` took a fixed prop list and dropped `data-quest` on the floor, so five anchors across three walks did not exist in the DOM.
 
+#### `questions-answered.js`
+
+The questions people ask can be read before anybody signs in, and again in Settings, and they work like a person expects.
+
+Asked for on 7 October 2026: "I want a complete FAQ in the app too please before users login and inside the app in settings."
+
+WHAT IT HAS TO PROVE, on a phone: 1. the front door and the sign-in screen both lead to it, signed out 2. it opens on every group and every question, with nothing to sign in for 3. a question opens its answer under it when tapped 4. searching narrows the list, says how many matched, and opens the answer when only a few are left; a search for nothing says so 5. a link to one answer (/faq#faq-encrypted) opens that answer, in view 6. the page never scrolls sideways on a phone 7. inside the app, Settings, Help holds the same answers, and its search works there too 8. nothing on the way logs an error
+
 #### `recommend-flow.js`
 
 The client's requirement 2 and 8, end to end: "DMs recommend DS with an email address and name … If the DS accepts the admin's invite, DS enters through the app with a new account paired to the recommending DM." "The app begins on … Connect for DS (initiated by DM)."
@@ -404,7 +442,7 @@ The Music room, walked the way a choir member would.
 
 Asked for on 4 October 2026: "another room for music for music lovers and choir ... take out the audio tools from the library ... I want a tuner, a piece scanner, and beat maker (where you can track the beat like a conductor)". tests/the-music-room.mjs holds the arithmetic and the code's promises; this proves the screens do what they say, in a browser:
 
-- everybody finds Music in their rooms, and My Files points to it - the Tuner hears a 440 Hz tone as A4 in tune, follows a change of concert pitch, and lets the microphone go on Stop, on leaving the folder and when the phone locks - concert pitch is heard: a choice plays its A and says what it does, the starting note follows it, Compare plays 440 then yours, and Listen for the A takes an instrument's A and offers it - Advanced settings (5 October 2026), off until ticked: the Tuner's trail, drone and transposing instruments; the Conductor's clicks between beats, silent beats, count-in, speed trainer and saved tempos, counted by the sounds actually made; the score's transpose, loop, sound and silent part; and the Play folder's keyboard, chords and beat maker - the Conductor's baton moves on the beat, follows tapped tempo and a change of time signature, runs silent, and closes its audio on Stop - a score file opens, plays, follows your part and a change of tempo while playing, is kept, and opens again after a reload; a hostile one is refused in words - a photo of a page becomes a clean page, is kept without the photo, and is deleted with two taps - a music PDF (6 October 2026) is read on the phone under the site's own security policy, explains itself, is kept as itself and read again
+- everybody finds Music in their rooms, and My Files points to it - the Tuner hears a 440 Hz tone as A4 in tune, follows a change of concert pitch, and lets the microphone go on Stop, on leaving the folder and when the phone locks; and it says little (15 October 2026: "so many words on it. Let the design speaks for itself") - concert pitch is heard: a choice plays its A, the starting note and the dial follow it, and Listen for the A takes an instrument's A and offers it - Advanced settings (5 October 2026), off until ticked: Sing the note (a key tapped, a note sung, and Perfect), and under More tools the Tuner's trail, drone and transposing instruments; the Conductor's clicks between beats, silent beats, count-in, speed trainer and saved tempos, counted by the sounds actually made; the score's transpose, loop, sound and silent part; and the Play folder's keyboard, chords and beat maker - the Conductor's baton moves on the beat, follows tapped tempo and a change of time signature, runs silent, and closes its audio on Stop - a score file opens, plays, follows your part and a change of tempo while playing, is kept, and opens again after a reload; a hostile one is refused in words - a photo of a page becomes a clean page, is kept without the photo, and is deleted with two taps - a music PDF (6 October 2026) is read on the phone under the site's own security policy, explains itself, is kept as itself and read again
 
 #### `the-office-reports-files-and-calendars.js`
 
@@ -494,6 +532,14 @@ WHY THIS WALK EXISTS AND THE OTHER CHECKS DO NOT COVER IT. The static checks ass
 
 It failed that way three times while being built -- once on a decorator, once on the `accessor` keyword, once on vanilla-extract -- and each time the page simply rendered nothing. So the only honest test is to open it and type.
 
+#### `the-study-room-starts-simple.js`
+
+The study room starts Simple, Advanced brings the rest back, and the writing on a page can be read in every dark look.
+
+Asked for on 7 October 2026: "the study room for Explorers have some UI bugs specially for dark themes, the text are dark too. Also the study room is way complicated for a new user of the app, it must have simple UI and advance UI."
+
+WHAT WAS WRONG, MEASURED. Under Focus and Aero dark the writing on an open page was near-black on a near-black page: 1.01:1, every line of it. The editor's colours are AFFiNE's own and no look reached them. And a new Explorer met, before writing a word, four places, three rows of filters, a star on every page, Markdown in and out, a whiteboard switch, a folder box, tags and ten insert buttons.
+
 #### `the-words-can-be-read-in-every-look.js`
 
 The words can be read, in every look.
@@ -563,3 +609,11 @@ What can this browser actually put in IndexedDB?
 WHY THIS EXISTS. Attachments fail on WebKit and pass on Chromium, and two attempts to fix it by reasoning failed: reading the File into an ArrayBuffer broke Chromium, and holding the bytes across the write did nothing. Both were guesses dressed as diagnoses, seventeen minutes of CI apart.
 
 So this stops guessing. It runs a battery of storage attempts against the real IndexedDB in the real browser and prints which ones survive, with the actual error for the ones that do not. The app is not involved: this is the platform being asked a direct question.
+
+#### `whose-words-are-whose.js`
+
+In a conversation, your bubbles and theirs can be told apart in every look, and the box you write in lines up with the buttons beside it.
+
+Asked for on 7 October 2026, with a photograph of the composer in a dark look: "The chat box is still not aesthetically organize or align, and I can't distinguished the bubble if I am the one talking or the other account. Can we have the white and blue as the standard bubbles? (also create an alternative for dark themes in all UI themes)".
+
+WHAT WAS WRONG, MEASURED ON A PHONE. Under Focus both bubbles were rgb(27, 48, 73), and under Aero dark both were rgb(22, 50, 87): one colour. In the light looks they were a pale teal and a pale peach. And the writing box sat 8px above the paperclip and the send button, because a textarea is inline and leaves a line's descender gap under itself.

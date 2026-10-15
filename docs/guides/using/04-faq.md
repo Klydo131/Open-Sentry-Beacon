@@ -124,7 +124,7 @@ device, under rules the database itself enforces that let only you read them.
 
 ### Does the tuner record me?
 
-No. It listens only after you tap **Start listening**, measures the sound on
+No. It listens only after you tap its **microphone** button, measures the sound on
 the phone, and throws it away. It lets go of the microphone when you stop, when
 you leave the Tuner, and when the phone locks.
 

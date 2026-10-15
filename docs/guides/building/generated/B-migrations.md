@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-141 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+147 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1213,3 +1213,61 @@ FOUND BY THE AUDIT OF 3 OCTOBER 2026. 20261002150000_office_plans_follow_you let
 An invitation password lasts three days, not seven.
 
 CHOSEN BY THE OWNER ON 3 OCTOBER 2026, after that day's security audit: "do both options for the password". The password an invitation e-mails is now three words and a number (supabase/functions/invite/password.ts), and it lasts three days. Anybody who can read that mailbox can sign in until the person chooses their own password; a shorter window is less time for that, and less time for anybody guessing.
+
+#### `20261007130000_a_leader_cannot_raise_a_rank_or_move_a_pairing.sql`
+
+*2026-10-07*
+
+A leader cannot raise somebody's rank past their own, and nobody can move a pairing onto other people.
+
+WHAT WAS FOUND, 7 October 2026, by the second agent's security review, and reproduced on a scratch copy of the database before this was written:
+
+1. A DIRECTOR COULD RAISE ANOTHER ACCOUNT'S RANK. profiles_update_church lets leadership update any row in its church, and lock_privileged_profile_columns let a leader change every column of somebody else's row. So a Director could make a Guide, or an account of their own, an Executive Director, the one rank above them, which invitations had never allowed (validate_invite_privilege: "Only an Executive Director may appoint an Executive Director"). The same door let a Director demote or disapprove an Executive Director, mark somebody Head Executive, rewrite who approved whom and when, record or erase guardian consent without the checks in record_guardian_consent, and clear a suspension without restore_member.
+
+#### `20261007150000_what_is_deleted_leaves_no_file_behind.sql`
+
+*2026-10-07*
+
+What is deleted leaves no file behind.
+
+WHAT WAS ASKED, 7 October 2026: "Make sure we have a system of in and out (exit) of data when it's deleted. WE DONT WANT TO VIOLATE ANY NATIONAL AND INTERNATIONAL DATA PRIVACY LAW here, specially in our home country Philippines."
+
+WHAT WAS WRONG. Personal data is kept no longer than it is needed (RA 10173 section 11(e); GDPR Art. 5(1)(e)), and a person may have it erased (section 16(e); Art. 17). The rows did go. The files did not always: a photograph or a voice message in a conversation, a resource somebody uploaded, a study handout, a profile picture. When the row that pointed at one was deleted -- a member removed, a conversation ended by a removal, a resource taken off the shelf by a cascade -- the file stayed in storage. Nobody could open it any more, because every file's read rule asks for its row; but it was still kept, which is the thing the law forbids, and nothing would ever remove it.
+
+#### `20261007160000_a_post_can_carry_photos_and_a_clip.sql`
+
+*2026-10-07*
+
+A blog post or an announcement can carry photos and one short clip.
+
+WHAT WAS ASKED, 7 October 2026: "For home, writing blog post should be easy with added features like photos and videos." Asked how videos should work, the owner chose: YouTube or Facebook links play inside the post (that needs nothing from the database), and short phone clips, about a minute, go to the church's own storage. This file is the second half.
+
+WHAT IT ADDS
+
+#### `20261013120000_the_link_record_runs_out_on_time.sql`
+
+*2026-10-13*
+
+The record of shared links runs out on time, not on the next share.
+
+THE PROMISE. The privacy notice tells every member: "The record of shared links: 30 days, then deleted automatically." private.prune_library_activity() (20260901090000_the_library_belongs_to_everybody) does the deleting, and it was called on write, so that nothing had to be scheduled.
+
+WHY THAT WAS NOT ENOUGH. Pruning on write holds only while people keep sharing. On the live church, read on 13 October 2026, 21 records were older than 30 days and the oldest was 41, because no new link had arrived to prune them. A promise to members cannot depend on somebody else's next action.
+
+#### `20261013130000_a_message_history_opens_only_for_a_report.sql`
+
+*2026-10-13*
+
+A conversation's history opens only for a report, and every opening is on the record.
+
+WHY. When a message is edited or taken back, what it said before is kept in `message_revisions` (20260909200000), so that a safeguarding report can be judged on what was really said. Those words exist for safeguarding, and reading them should be bound to safeguarding: a report about that conversation, raised in that church.
+
+The function that reads them never worked: it looked for the church on the pairing, and pairings carry no church column, so every call failed with "column p.church_id does not exist" and leadership could not see what a withdrawn message had said. It also asked only whether the reader leads the church, so mending the column alone would have opened every conversation's history to leadership with no report at all.
+
+#### `20261013140000_a_second_step_once_set_up_is_required.sql`
+
+*2026-10-13*
+
+A person who has set up two-step sign-in is let in only after both steps.
+
+WHAT WAS TRUE. The app had no two-step sign-in at all. The review for the Data Protection Officer (13 October 2026) found that no leader used it and that the app offered no screen to set it up, and the owner asked for it to be built. The sign-in service already supports it: a person adds an authenticator app, and each sign-in then ends with a six-digit code. A token from the password alone is marked `aal1`; a token from password and code is marked `aal2`.
