@@ -23,6 +23,7 @@ import {
   type Pattern, type SongKey, type StepState,
 } from '@/lib/music/play';
 import { cleanName } from '@/lib/music/beat';
+import { keyLetter, noteKey, octaveKey, playable } from '@/lib/music/computer-keys';
 
 /** Quiet for this long, with nothing running, and the audio clock is closed. */
 const IDLE_MS = 30_000;
@@ -169,6 +170,39 @@ function Keyboard({ clock, a4, timbre }: { clock: Clock; a4: number; timbre: Tim
     // Quiet only once the last finger is up: a key held down keeps the clock open.
     if (held.current.size === 0) clock.busy('keys', false);
   };
+  // From a computer's keyboard (15 October 2026, "make it more convenient to
+  // ALL devices"): the row A S D F G H J K plays the white keys from the C
+  // shown and the row above the black ones, held for as long as the key is
+  // down, as a finger would; Z and X move the octave. lib/music/computer-keys.ts.
+  const pressNow = useRef(press);
+  pressNow.current = press;
+  const liftNow = useRef(lift);
+  liftNow.current = lift;
+  const octaveNow = useRef(octave);
+  octaveNow.current = octave;
+  useEffect(() => {
+    // A finger number for each computer key, clear of real pointers' numbers.
+    const finger = (code: string) => -1000 - (noteKey(code) ?? 0);
+    const down = (e: KeyboardEvent) => {
+      if (!playable(e)) return;
+      const shift = octaveKey(e.code);
+      if (shift) { e.preventDefault(); setOctave((o) => clampOctave(o + shift)); return; }
+      const step = noteKey(e.code);
+      if (step === null) return;
+      e.preventDefault();
+      pressNow.current(octaveC(octaveNow.current) + step, finger(e.code));
+    };
+    const up = (e: KeyboardEvent) => {
+      if (noteKey(e.code) !== null) liftNow.current(finger(e.code));
+    };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+    };
+  }, []);
+
   // From a keyboard (Enter or Space on a focused key): a short note.
   const tapKey = (midi: number) => {
     const ctx = clock.get();
@@ -223,8 +257,9 @@ function Keyboard({ clock, a4, timbre }: { clock: Clock; a4: number; timbre: Tim
                 <button
                   key={k.step}
                   {...keyProps(midi)}
-                  className={`flex h-full flex-1 items-end justify-center rounded-b-xl pb-2 text-xs font-bold ring-1 ring-[#1e2a4a]/30 ${on ? 'bg-[#0d9488] text-white' : 'bg-[#fdfdfb] text-[#6b7280]'}`}
+                  className={`relative flex h-full flex-1 items-end justify-center rounded-b-xl pb-2 text-xs font-bold ring-1 ring-[#1e2a4a]/30 ${on ? 'bg-[#0d9488] text-white' : 'bg-[#fdfdfb] text-[#6b7280]'}`}
                 >
+                  <span className="key-hint" aria-hidden="true">{keyLetter(k.step)}</span>
                   {midiName(midi)}
                 </button>
               );
@@ -238,9 +273,11 @@ function Keyboard({ clock, a4, timbre }: { clock: Clock; a4: number; timbre: Tim
               <button
                 key={k.step}
                 {...keyProps(midi)}
-                className={`absolute top-0 h-[58%] w-[9%] -translate-x-1/2 rounded-b-lg ${on ? 'bg-[#14b8a6]' : 'bg-[#16181d]'}`}
+                className={`absolute top-0 h-[58%] w-[9%] -translate-x-1/2 rounded-b-lg text-white ${on ? 'bg-[#14b8a6]' : 'bg-[#16181d]'}`}
                 style={{ left: `${left}%` }}
-              />
+              >
+                <span className="key-hint" aria-hidden="true">{keyLetter(k.step)}</span>
+              </button>
             );
           })}
         </div>

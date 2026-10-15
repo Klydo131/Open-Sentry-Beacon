@@ -357,9 +357,15 @@ async function deskPhoto(page) {
         const heard = (await say(page, '[data-pitch-heard]')).trim();
         ok(/Heard 4(39\.\d|40\.\d) Hz/.test(heard), `${size}: Listen for the A hears the instrument's A (${heard || 'nothing'})`);
         ok((await micsLive(page)) === 0, `${size}: and lets the microphone go once it has heard it`);
-        await page.getByRole('button', { name: 'Use 440 Hz' }).click();
-        ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && /A = 440 Hz/.test(await say(page, '[data-pitch-heard]')),
-           `${size}: Use 440 Hz makes it the concert pitch`);
+        // The pretend microphone's 440 is measured within half a hertz either
+        // side, and 440.5 rounds to 441: whichever whole hertz is offered is
+        // the one used. (A run on 15 October 2026 heard 440.5 and offered 441.)
+        const use = page.getByRole('button', { name: /^Use 4(39|40|41) Hz$/ });
+        const offered = ((await use.textContent().catch(() => '')) || '').match(/4\d\d/)?.[0] ?? '440';
+        await use.click();
+        ok(new RegExp(`A = ${offered} Hz`).test(await say(page, '[data-tuner-a4]')) && new RegExp(`A = ${offered} Hz`).test(await say(page, '[data-pitch-heard]')),
+           `${size}: Use ${offered} Hz makes it the concert pitch`);
+        if (offered !== '440') { await page.waitForTimeout(900); await page.locator('[data-pitch-choice="440"]').click(); }
         await page.waitForTimeout(1200);
       } else {
         await page.getByRole('button', { name: /Listen for the A/ }).click();
@@ -376,18 +382,45 @@ async function deskPhoto(page) {
       if ((await page.locator('[data-pitch-toggle]').getAttribute('aria-expanded')) === 'true') await page.locator('[data-pitch-toggle]').click();
       await page.locator('#music-advanced-tuner').check();
       // "Just tap or click a note and I will just sing" (15 October 2026).
-      ok(await page.locator('[data-sing-keys] button').count() === 12 && /Tap a note/.test(await say(page, '[data-sing-live]')),
-         `${size}: Advanced opens Sing the note, a keyboard of twelve keys to tap`);
+      const keys = await page.locator('[data-sing-keys] button').count();
+      ok(keys === (size === 'phone' ? 12 : 24) && /Tap a note/.test(await say(page, '[data-sing-live]')),
+         `${size}: Advanced opens Sing the note, a keyboard of ${keys} keys to tap`);
       // With Advanced open (concert pitch closed): 542 words before 15 October
       // 2026, when every setting was open and explained, and 45 after.
-      const advancedWords = await wordsIn('[data-music-tuner]');
+      // The letters on the keys for typing are not words to read.
+      const typing = await page.locator('[data-music-tuner] .key-hint').evaluateAll((els) => els
+        .filter((e) => getComputedStyle(e).display !== 'none' && /[A-Za-z]/.test(e.textContent || '')).length);
+      const advancedWords = (await wordsIn('[data-music-tuner]')) - typing;
       ok(advancedWords <= 60, `${size}: and Advanced says little too (${advancedWords} words)`);
+      // EVERY DEVICE (15 October 2026: "Not just on phone but on desktop too
+      // ... make it more convenient to ALL devices"). A phone shows an octave
+      // to tap; a computer two, with the letter that plays each key, and a
+      // note can be typed: H is A.
+      const octaves = await page.locator('[data-sing]').getAttribute('data-sing-octaves');
+      const lettersShown = await page.locator('[data-sing-keys] .key-hint').first().evaluate((el) => getComputedStyle(el).display !== 'none');
+      if (size === 'phone') {
+        ok(octaves === '1' && !lettersShown, `${size}: one octave to tap, and no letters on the keys (a touch screen has nothing to type)`);
+      } else {
+        ok(octaves === '2' && lettersShown && (await page.locator('[data-sing-keys] button').count()) === 24,
+           `${size}: two octaves, each key showing the letter that plays it (octaves ${octaves})`);
+        await page.keyboard.press('KeyZ');
+        ok(/Octaves 3 and 4/.test(await say(page, '[data-sing-octave]')), `${size}: Z moves the keyboard down an octave (${(await say(page, '[data-sing-octave]')).trim()})`);
+        await page.keyboard.press('KeyX');
+      }
       if (fakeMic) {
-        await page.locator('[data-sing-keys]').getByRole('button', { name: 'A4', exact: true }).click();
+        if (size === 'phone') await page.locator('[data-sing-keys]').getByRole('button', { name: 'A4', exact: true }).click();
+        else {
+          // Typed straight after ticking Advanced: the tick box still has the focus.
+          await page.keyboard.press('KeyH');
+          const typedKey = await page.locator('[data-sing-keys] [aria-pressed="true"]').first().getAttribute('aria-label', { timeout: 3000 }).catch(() => 'nothing');
+          ok(typedKey === 'A4', `${size}: H typed chooses A4 (${typedKey})`);
+        }
         await page.locator('[data-sing-verdict="perfect"],[data-sing-verdict="close"],[data-sing-verdict="off"]').first().waitFor({ timeout: 10000 }).catch(() => {});
         ok((await page.locator('[data-sing-verdict]').getAttribute('data-sing-verdict')) === 'perfect',
            `${size}: A4 tapped and an A at 440 heard: ${(await say(page, '[data-sing-live]')).replace(/\s+/g, ' ').trim()}`);
-        await page.locator('[data-sing]').getByRole('button', { name: 'Stop', exact: true }).click();
+        // Only there while a note is chosen; a failure above leaves none to press.
+        const stopSinging = page.locator('[data-sing]').getByRole('button', { name: 'Stop', exact: true });
+        if (await stopSinging.count()) await stopSinging.click();
         await page.waitForTimeout(300);
         ok((await micsLive(page)) === 0, `${size}: Stop lets the microphone go`);
       }
@@ -423,7 +456,25 @@ async function deskPhoto(page) {
         await page.getByRole('button', { name: /Stop listening/ }).click();
         await page.locator('#tuner-instrument').selectOption('C');
       }
+      // On a wide screen everything is side by side, so nothing is scrolled to:
+      // with Advanced, Sing the note beside the dial; without, the settings.
+      const beside = async (a, b) => {
+        const x = await page.locator(a).first().boundingBox();
+        const y = await page.locator(b).first().boundingBox();
+        return x && y && y.x >= x.x + x.width - 2 && Math.abs(y.y - x.y) < 160;
+      };
+      if (size === 'computer') {
+        await page.setViewportSize({ width: 1680, height: 1050 });
+        await page.waitForTimeout(400);
+        ok(await beside('.tuner-main', '[data-sing]'), `${size}, wide: Sing the note sits beside the dial`);
+      }
       await page.locator('#music-advanced-tuner').uncheck();
+      if (size === 'computer') {
+        await page.waitForTimeout(300);
+        ok(await beside('.tuner-main', '[data-pitch-pipe]'), `${size}, wide: without Advanced, the settings sit beside the dial`);
+        await page.setViewportSize({ width, height });
+        await page.waitForTimeout(300);
+      }
       ok(!(await page.locator('[data-tuner-trail]').count()), `${size}: unticked, the Tuner is simple again`);
       await page.waitForTimeout(300);
       // The pitch pipe sounds and goes quiet by itself.
@@ -775,6 +826,16 @@ async function deskPhoto(page) {
       await c4.dispatchEvent('pointerup', { pointerId: 7, isPrimary: true, bubbles: true });
       await page.waitForTimeout(100);
       ok((await c4.getAttribute('aria-pressed')) === 'false', `${size}: letting go stops it`);
+      if (size === 'computer') {
+        // Played from the computer's keys, held as long as the key is down.
+        await page.keyboard.down('KeyD');
+        await page.waitForTimeout(150);
+        const e4 = page.locator('[data-key="E4"]');
+        ok((await e4.getAttribute('aria-pressed')) === 'true' && (await say(page, '[data-play-last]')).trim() === 'E4', `${size}: D typed plays E4, held while the key is down`);
+        await page.keyboard.up('KeyD');
+        await page.waitForTimeout(100);
+        ok((await e4.getAttribute('aria-pressed')) === 'false', `${size}: and stops when it is let go`);
+      }
       await page.getByRole('button', { name: 'Higher' }).click();
       ok(/From C5/.test(await say(page, '[data-play-octave]')), `${size}: the keyboard moves up an octave`);
       await page.locator('#music-advanced-play').check();

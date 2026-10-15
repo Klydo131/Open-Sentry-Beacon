@@ -1907,3 +1907,84 @@ body:has([data-conversation-screen]) .tab-bar {
     transform: scale(1.15);
   }
 }
+
+/* THE TUNER ON EVERY DEVICE (15 October 2026): "make it more convenient to
+   ALL devices". The folder measures its own width (a container query, not the
+   window's, since a computer's sidebar and desk take some of it). Narrow, as on
+   a phone: one column, the dial first, Sing the note under it with Advanced,
+   then the settings. From 720px wide, as on a tablet or a computer: two
+   columns, the dial beside its settings, or with Advanced the dial and its
+   settings on the left and Sing the note on the right, all in view at once.
+   A browser without container queries keeps the single column. */
+.tuner-shell {
+  container: tuner / inline-size;
+}
+.tuner-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "main" "sing" "side";
+}
+.tuner-grid[data-advanced="false"] {
+  grid-template-areas: "main" "side";
+}
+.tuner-main { grid-area: main; }
+.tuner-side,
+.tuner-sing {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+.tuner-side { grid-area: side; }
+.tuner-sing { grid-area: sing; }
+@container tuner (min-width: 720px) {
+  .tuner-grid,
+  .tuner-grid[data-advanced="false"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "main side";
+    align-items: start;
+  }
+  .tuner-grid[data-advanced="true"] {
+    grid-template-areas: "main sing" "side sing";
+  }
+}
+/* Wide enough for the keyboard's two octaves beside the dial: the keyboard's
+   side gets the larger share. Below this (an upright tablet) the halves stay
+   equal, or the settings beside the dial are squeezed. */
+@container tuner (min-width: 1000px) {
+  .tuner-grid[data-advanced="true"] {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}
+
+/* The letter that plays each key from a computer's keyboard, and the Z and X
+   beside the octave arrows. Shown only where there is a mouse to point with
+   (a touch screen has no letters to type). Keys lighten under the pointer. */
+.key-hint {
+  display: none;
+  position: absolute;
+  inset-inline: 0;
+  top: 0.4rem;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.6;
+}
+/* Beside the octave arrows the letter sits in the line, not on a key. */
+[data-sing-octave] .key-hint { position: static; opacity: 0.75; }
+.sing-key-black .key-hint { top: auto; bottom: 0.4rem; }
+.sing-key-white .key-hint { color: #1e2a4a; opacity: 0.5; }
+.sing-key-black .key-hint { color: #ffffff; opacity: 0.7; }
+.sing-key[aria-pressed="true"] .key-hint { color: inherit; opacity: 0.8; }
+@media (hover: hover) and (pointer: fine) {
+  .key-hint { display: block; }
+  .sing-key-white:hover:not([aria-pressed="true"]) {
+    background-image: linear-gradient(to bottom, color-mix(in srgb, var(--music-accent) 10%, var(--key-white)) 82%, color-mix(in srgb, var(--key-white) 88%, #1e2a4a));
+  }
+  .sing-key-black:hover:not([aria-pressed="true"]) {
+    background-image: linear-gradient(to bottom, color-mix(in srgb, var(--key-black) 55%, #ffffff), color-mix(in srgb, var(--key-black) 85%, #ffffff) 35%);
+  }
+}
+

@@ -20,6 +20,9 @@
 //   1. C4 tapped and sung: Perfect, with the burst of notes; sung again after
 //      a breath, graded again with no second tap; D4 tapped: Try again, "You
 //      sang C4" and go up; B3: go down. A drone playing is stopped by the tap.
+//   1b. On a computer (15 October 2026: "make it more convenient to ALL
+//      devices"): Sing the note sits beside the dial, two octaves, a letter on
+//      every key; A typed is C4, sung: Perfect.
 //   2. Close enough: at a concert pitch of A = 445 the same C4 is 20 cents
 //      flat of the app's C4, and is Close, "A little flat".
 //   3. Under Reduce Motion: Perfect, standing still.
@@ -196,6 +199,29 @@ async function launch(file, contextOptions = {}) {
     }
   }
 
+  // ---- 1b. On a computer: typed ---------------------------------------------
+  if (fake) {
+    const { browser, page, errors } = await launch(voice, { viewport: { width: 1680, height: 1050 }, hasTouch: false });
+    try {
+      await openPractice(page);
+      const dial = await page.locator('.tuner-main').boundingBox();
+      const card = await page.locator('[data-sing]').boundingBox();
+      ok(dial && card && card.x >= dial.x + dial.width - 2, 'on a wide computer screen, Sing the note sits beside the dial');
+      ok((await page.locator('[data-sing]').getAttribute('data-sing-octaves')) === '2'
+        && (await page.locator('[data-sing-keys] .key-hint').first().evaluate((el) => getComputedStyle(el).display !== 'none')),
+        'with two octaves, and the letter that plays each key');
+      await page.keyboard.press('KeyA');
+      await page.locator('[data-sing-verdict="perfect"],[data-sing-verdict="close"],[data-sing-verdict="off"]').first().waitFor({ timeout: 12000 }).catch(() => {});
+      ok((await page.locator('[data-sing-keys] [aria-pressed="true"]').first().getAttribute('aria-label', { timeout: 3000 }).catch(() => null)) === 'C4' && (await grade(page)) === 'perfect',
+        `A typed is C4, and C4 sung is ${await live(page)}`);
+      await page.screenshot({ path: path.join(tmp, 'computer.png') });
+      await page.locator('[data-sing]').getByRole('button', { name: 'Stop', exact: true }).click();
+      ok(errors.list().length === 0, `no page errors${errors.list().length ? `: ${errors.list().join(' | ')}` : ''}`);
+    } finally {
+      await browser.close();
+    }
+  }
+
   // ---- 2. Close enough ----------------------------------------------------
   if (fake) {
     const { browser, page, errors } = await launch(voice);
@@ -240,7 +266,7 @@ async function launch(file, contextOptions = {}) {
         await openPractice(page);
         const setup = {
           title: await contrast(page.locator('[data-sing] h2')),
-          octave: await contrast(page.locator('[data-sing-octave] span')),
+          octave: await contrast(page.locator('[data-sing-octave-label]')),
           key: await contrast(key(page, 'D4')),
           ask: await contrast(page.locator('[data-sing-verdict]')),
         };

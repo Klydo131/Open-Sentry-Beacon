@@ -45,7 +45,7 @@ const bundle = async (entries, name) => {
   });
   return import(pathToFileURL(file).href);
 };
-const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml', 'lib/music/zip', 'lib/music/page-scan', 'lib/music/play', 'lib/music/explain'], 'music');
+const M = await bundle(['lib/music/notes', 'lib/music/beat', 'lib/music/musicxml', 'lib/music/zip', 'lib/music/page-scan', 'lib/music/play', 'lib/music/explain', 'lib/music/computer-keys'], 'music');
 const SP = await bundle(['lib/music/score-player'], 'score-player');
 const PT = await bundle(['lib/music/pitch-tracker'], 'pitch-tracker');
 
@@ -515,6 +515,24 @@ function zip(files) {
   const hooked = M.trailLines([...held(60, 0), at(60.5, 10), ...held(64, 11)]);
   ok(hooked.length === 2 && hooked[0].every((p) => p.s < 60.2), 'the frame the tuner leaned toward the next note is no hook at the end of the last');
   ok(M.trailLines([...held(60, 0), ...held(60, 40)]).length === 2, 'and a breath lifts the pen');
+
+  // A computer's keyboard as a piano's (15 October 2026: "make it more
+  // convenient to ALL devices"): read by where a key sits, so any layout plays.
+  const typed = ['KeyA', 'KeyW', 'KeyS', 'KeyE', 'KeyD', 'KeyF', 'KeyT', 'KeyG', 'KeyY', 'KeyH', 'KeyU', 'KeyJ', 'KeyK', 'KeyO', 'KeyL', 'KeyP', 'Semicolon'].map((c) => M.noteKey(c));
+  ok(typed.join(',') === Array.from({ length: 17 }, (_, i) => i).join(',') && M.noteKey('KeyQ') === null && M.noteKey('Space') === null,
+     'A S D F G H J K L ; are the white keys from C and W E T Y U O P the black ones, seventeen notes; nothing else plays');
+  ok(M.octaveKey('KeyZ') === -1 && M.octaveKey('KeyX') === 1 && M.octaveKey('KeyA') === null, 'Z and X move the octave down and up');
+  ok(M.keyLetter(0) === 'A' && M.keyLetter(1) === 'W' && M.keyLetter(16) === ';' && M.keyLetter(17) === '', 'each piano key shows the letter that plays it, and only those seventeen do');
+  const box = { tagName: 'INPUT' };
+  ok(M.playable({ target: { tagName: 'BUTTON' }, ctrlKey: false, altKey: false, metaKey: false, repeat: false })
+     && !M.playable({ target: box, ctrlKey: false, altKey: false, metaKey: false, repeat: false })
+     && !M.playable({ target: { tagName: 'DIV', isContentEditable: true }, ctrlKey: false, altKey: false, metaKey: false, repeat: false })
+     && !M.playable({ target: { tagName: 'BUTTON' }, ctrlKey: true, altKey: false, metaKey: false, repeat: false })
+     && !M.playable({ target: { tagName: 'BUTTON' }, ctrlKey: false, altKey: false, metaKey: false, repeat: true }),
+     'typing into a box, a shortcut with Ctrl, Alt or Cmd, and a key held repeating never play a note');
+  ok(M.playable({ target: { tagName: 'INPUT', type: 'checkbox' }, ctrlKey: false, altKey: false, metaKey: false, repeat: false })
+     && !M.playable({ target: { tagName: 'INPUT', type: 'search' }, ctrlKey: false, altKey: false, metaKey: false, repeat: false }),
+     'but a tick box just ticked (Advanced settings) does not stop the keys playing');
 
   // Play: chords in a key, the beat maker.
   ok(M.chordsInKey('C').map((c) => c.name).join(' ') === 'C Dm Em F G Am', 'the chords of C are C, Dm, Em, F, G and Am');

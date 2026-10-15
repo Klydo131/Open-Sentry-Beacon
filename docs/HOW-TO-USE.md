@@ -129,7 +129,9 @@ folder for more, and untick it to put the folder back as it was.
   and to match an organ or a piano, ask for its A and tap **Listen for the A**.
   In **Advanced**: **Sing the note**, a keyboard: tap a key, sing it and hold
   it, and it says **Perfect**, **Close** or **Try again** (and what you sang),
-  with a burst of notes for Perfect. **More tools** holds a line drawing your
+  with a burst of notes for Perfect. On a computer, type the note (**A S D F G
+  H J K** are C to C, **Z** and **X** the octave); on a tablet or a computer
+  the dial and the keyboard sit side by side. **More tools** holds a line drawing your
   voice over the last ten seconds, a **drone** to sing against, and the notes
   as a clarinet, trumpet, saxophone or horn reads them.
 - **Pieces** keeps your choir's music. **Scan a page**: take a photo of a printed
@@ -154,6 +156,8 @@ folder for more, and untick it to put the folder back as it was.
 ![Sing the note, in the Tuner's Advanced settings: a keyboard, waiting for a key to be tapped.](screenshots/walkthrough/44-sing-the-note.png)
 
 ![C4 tapped and sung: Perfect, with a burst of notes.](screenshots/walkthrough/45-perfect-pitch.png)
+
+![Sing the note on a computer: beside the dial, two octaves with a letter on each key, A typed for C4, and Perfect.](screenshots/walkthrough/48-sing-the-note-computer.png)
 
 ![Your voice, in the Tuner's Advanced settings: one octave of notes, each named, and a short tune sung across them, a line for each note.](screenshots/walkthrough/46-your-voice.png)
 

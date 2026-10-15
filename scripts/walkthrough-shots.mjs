@@ -111,6 +111,8 @@ const theirLatest = (page) => page.locator('[data-chat-entry="message"]:not([dat
 
 const PHONE = { width: 390, height: 844 };
 const DESK = { width: 1280, height: 900 };
+/** A wide computer screen, for what is laid out side by side there. */
+const WIDE = { width: 1680, height: 1050 };
 
 const SHOTS = [
   { file: '01-front-door.png', what: 'The front door', size: PHONE,
@@ -537,6 +539,24 @@ const SHOTS = [
       await p.waitForTimeout(6500);
       await p.locator('[data-tuner-trail]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await settle(p, 300);
+    } },
+  // The same practice on a computer, the same day: "Not just on phone but on
+  // desktop too ... make it more convenient to ALL devices." The dial beside
+  // Sing the note, two octaves, a letter on each key; A typed is C4, sung.
+  { file: '48-sing-the-note-computer.png', what: 'Sing the note on a computer: beside the dial, two octaves, A typed for C4, and Perfect', size: WIDE,
+    go: async (p) => {
+      await signIn(p, /Maria Santos/i);
+      await p.evaluate(() => {
+        localStorage.setItem('beacon:music-advanced:tuner', '1');
+        localStorage.setItem('beacon:music-sing', JSON.stringify({ octave: 4 }));
+      });
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-music-tuner]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await p.evaluate(() => window.scrollBy(0, -70));
+      await p.keyboard.press('KeyA');
+      await p.locator('[data-sing-verdict="perfect"]').waitFor({ timeout: 15000 });
+      await settle(p, 350);
     } },
   // My Files on a phone, 6 October 2026: "The Library (My files) are not UI
   // friendly for Mobile and Pad users". On this device: adding first, at one

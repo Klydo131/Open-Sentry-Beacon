@@ -48,7 +48,10 @@ with their picture, and keep playing when you walk to another room.
 
 ## Tuner: which note, and is it in tune
 
-The Tuner is a dial with the note in the middle, and one round button.
+The Tuner is a dial with the note in the middle, and one round button. On a
+phone everything is in one column; on a tablet or a computer the dial sits
+beside its settings (and, with Advanced, beside Sing the note), so nothing is
+scrolled to.
 
 1. Open **Tuner** and tap the round **microphone** button (*Tap to listen*).
 2. The first time, your phone asks whether the app may use the microphone. Say
@@ -113,6 +116,14 @@ Tick **Advanced settings** and **Sing the note** opens: a piano keyboard.
      as *You sang C4 ↑* (the arrow is the way to go), or *Too flat*.
 4. **Sing again** whenever you like: take a breath and sing, and it grades
    you again, with no need to tap. Tap another key for another note.
+
+**On a computer**, type the note instead: the keys **A S D F G H J K** are
+C D E F G A B C, the row above (**W E**, **T Y U**) the black keys, and **Z**
+and **X** move down and up an octave. Each piano key shows its letter. A
+tablet or a computer shows two octaves at once, and the result beside the
+ring.
+
+![Sing the note on a computer: beside the dial, two octaves with a letter on each key, A typed for C4, and Perfect.](../../screenshots/walkthrough/48-sing-the-note-computer.png)
 
 The **speaker** button plays the note; the tuner does not listen while it
 plays, so the phone cannot pass a note by singing it to itself. The **square**
@@ -280,7 +291,9 @@ semitones*. Unticking Advanced plays the score as written again.
 **The keyboard.** An octave of piano keys. Press and hold a key and it sounds
 for as long as you hold it; several fingers play several notes. **Lower** and
 **Higher** move the keyboard an octave at a time. It plays at your concert
-pitch.
+pitch. On a computer, play it from your own keyboard, held for as long as the
+key is down: **A S D F G H J K** for the white keys, **W E T Y U** for the
+black, **Z** and **X** for the octave.
 
 Tick **Advanced settings** and three more cards open.
 

@@ -15,6 +15,14 @@
 // the same way; what it hears is measured on the phone and thrown away. The
 // octave shown is remembered on the phone, as a convenience, and nothing else.
 //
+// EVERY DEVICE (15 October 2026: "Not just on phone but on desktop too ... make
+// it more convenient to ALL devices"). The card measures its own width: a
+// phone shows one octave and the grade under the ring; a tablet or a computer
+// shows two octaves and the grade beside it, so nothing needs scrolling to.
+// On a computer a note can be typed (lib/music/computer-keys.ts: A S D F G H J
+// K for the white keys, Z and X for the octave), and the letters are shown on
+// the keys wherever there is a mouse to point with.
+//
 // THE APP'S OWN SOUND IS NEVER JUDGED. The speaker button plays the note, which
 // the microphone hears. While it plays, and for a moment after, the judge is
 // told to start again, so a note cannot be passed by the phone singing it to
@@ -29,6 +37,7 @@ import { prefersLessMotion } from '@/lib/motion';
 import {
   CLOSE_CENTS, NoteJudge, PERFECT_CENTS, gradeHint, gradeOf, type Grade, type Judging, type Verdict,
 } from '@/lib/music/sing-the-note';
+import { keyLetter, noteKey, octaveKey, playable } from '@/lib/music/computer-keys';
 
 /** The octave shown, remembered on this phone. */
 const KEY = 'beacon:music-sing';
@@ -40,6 +49,8 @@ const HEAR_SECONDS = 1;
 const ECHO_MS = 350;
 /** How long a grade stays before the next try is listened for. */
 const GRADE_MS = 1400;
+/** A card at least this wide shows two octaves, and the grade beside the ring. */
+const WIDE_PX = 540;
 /** Told to the drone, so it stops when a practice starts. */
 export const QUIET_EVENT = 'beacon:music-quiet';
 
@@ -60,7 +71,25 @@ function readOctave(): number | null {
 }
 
 export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
-  const [octave, setOctave] = useState(4);
+  const [octave, setOctaveState] = useState(4);
+  const card = useRef<HTMLDivElement>(null);
+  const [wide, setWide] = useState(false);
+  const octaves = wide ? 2 : 1;
+  /** The octave the keyboard starts from: a second octave shown must still be one a voice sings. */
+  const fit = useCallback((o: number) => Math.max(LOWEST_OCTAVE, Math.min(HIGHEST_OCTAVE - (octaves - 1), o)), [octaves]);
+  const setOctave = useCallback((next: number | ((o: number) => number)) => {
+    setOctaveState((o) => fit(typeof next === 'function' ? next(o) : next));
+  }, [fit]);
+  useEffect(() => { setOctaveState((o) => fit(o)); }, [fit]);
+  // The card's own width, not the window's: the same card sits in a phone's
+  // single column and beside the dial on a computer.
+  useEffect(() => {
+    const el = card.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const watch = new ResizeObserver(([entry]) => setWide(entry.contentRect.width >= WIDE_PX));
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, []);
   const [target, setTarget] = useState<number | null>(null);
   const [live, setLive] = useState<Judging>({ state: 'waiting' });
   const [shown, setShown] = useState<Verdict | null>(null);
@@ -76,8 +105,8 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
 
   // The settings as they are now, for the callbacks a microphone frame and a
   // timer run long after the render that made them.
-  const now = useRef({ a4, target });
-  now.current = { a4, target };
+  const now = useRef({ a4, target, octave, octaves });
+  now.current = { a4, target, octave, octaves };
   const { onReading, start: listen, stop: stopListening, status } = tuner;
   const judge = useRef<NoteJudge | null>(null);
   const quietUntil = useRef(0);
@@ -116,6 +145,24 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
     judge.current = new NoteJudge(midi, a4, CLOSE_CENTS);
     if (status !== 'listening') { openedMic.current = true; await listen(); }
   };
+
+  // On a computer, a note can be typed: the row A S D F G H J K is the white
+  // keys from the C shown, the row above the black ones, Z and X the octave.
+  const chooseNow = useRef(choose);
+  chooseNow.current = choose;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!playable(e)) return;
+      const shift = octaveKey(e.code);
+      if (shift) { e.preventDefault(); setOctave((o) => o + shift); return; }
+      const step = noteKey(e.code);
+      if (step === null || step >= 12 * now.current.octaves) return;
+      e.preventDefault();
+      void chooseNow.current(12 * (now.current.octave + 1) + step);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setOctave]);
 
   const stop = useCallback(() => {
     judge.current = null;
@@ -182,36 +229,45 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
 
   return (
     <Card className="p-5">
-      <div data-sing>
+      <div ref={card} data-sing data-sing-octaves={octaves}>
         <div className="flex items-center justify-between gap-3">
           <h2 className="whitespace-nowrap text-xl font-bold text-navy">Sing the note</h2>
           <div className="flex shrink-0 items-center" data-sing-octave>
+            <span className="key-hint mr-1" aria-hidden="true">Z</span>
             <button
               type="button"
-              onClick={() => setOctave((o) => Math.max(LOWEST_OCTAVE, o - 1))}
+              onClick={() => setOctave((o) => o - 1)}
               disabled={octave <= LOWEST_OCTAVE}
               aria-label="Lower octave"
-              className="tap grid h-10 w-10 place-items-center rounded-full text-2xl font-bold text-navy disabled:opacity-30"
+              aria-keyshortcuts="Z"
+              className="tap grid h-10 w-10 place-items-center rounded-full text-2xl font-bold text-navy hover:bg-navy/5 disabled:opacity-30"
             >
               ‹
             </button>
-            <span className="text-center text-sm font-semibold tabular-nums text-gray-600">Octave {octave}</span>
+            <span className="text-center text-sm font-semibold tabular-nums text-gray-600" data-sing-octave-label>
+              {octaves === 2 ? `Octaves ${octave} and ${octave + 1}` : `Octave ${octave}`}
+            </span>
             <button
               type="button"
-              onClick={() => setOctave((o) => Math.min(HIGHEST_OCTAVE, o + 1))}
-              disabled={octave >= HIGHEST_OCTAVE}
+              onClick={() => setOctave((o) => o + 1)}
+              disabled={octave >= HIGHEST_OCTAVE - (octaves - 1)}
               aria-label="Higher octave"
-              className="tap grid h-10 w-10 place-items-center rounded-full text-2xl font-bold text-navy disabled:opacity-30"
+              aria-keyshortcuts="X"
+              className="tap grid h-10 w-10 place-items-center rounded-full text-2xl font-bold text-navy hover:bg-navy/5 disabled:opacity-30"
             >
               ›
             </button>
+            <span className="key-hint ml-1" aria-hidden="true">X</span>
           </div>
         </div>
 
-        <Piano octave={octave} chosen={target} onPick={(m) => void choose(m)} />
+        <Piano octave={octave} octaves={octaves} chosen={target} onPick={(m) => void choose(m)} />
 
-        <div className="mt-6 flex flex-col items-center text-center" data-sing-now>
-          <div className="relative">
+        <div
+          className={`mt-6 flex items-center text-center ${wide ? 'flex-row justify-center gap-10' : 'flex-col'}`}
+          data-sing-now
+        >
+          <div className="relative shrink-0">
             <Ring progress={shown ? 1 : holding ? (live as { progress: number }).progress : 0} grade={grade}>
               <span className={`font-extrabold tabular-nums text-navy ${target ? 'text-4xl' : 'text-3xl opacity-40'}`} data-sing-target>
                 {target ? midiName(target) : '♪'}
@@ -219,6 +275,7 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
             </Ring>
             {grade === 'perfect' && <Burst key={shown?.sung} />}
           </div>
+          <div className={`flex flex-col items-center ${wide ? 'min-w-[15rem]' : ''}`}>
           {target !== null && <Nearness cents={shown ? shown.cents : off} />}
           <div role="status" aria-live="polite" className="mt-3 min-h-[4.25rem]" data-sing-live>
             <p
@@ -255,6 +312,7 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
             </div>
           )}
           {problem && <p role="alert" className="mt-3 text-sm text-navy">{problem}</p>}
+          </div>
         </div>
       </div>
     </Card>
@@ -262,17 +320,20 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
 }
 
 /**
- * One octave of a piano, C to B. White keys take the width; the black keys sit
- * between them, as on a piano. Drawn in a piano's own colours in every look
- * (sing-piano in app/globals.css), so it always reads as a keyboard.
+ * A piano, C to B, one octave or two. White keys take the width; the black
+ * keys sit between them, as on a piano. Drawn in a piano's own colours in
+ * every look (sing-piano in app/globals.css), so it always reads as a
+ * keyboard. Where there is a mouse, each key shows the letter that plays it.
  */
-function Piano({ octave, chosen, onPick }: { octave: number; chosen: number | null; onPick: (midi: number) => void }) {
+function Piano({ octave, octaves, chosen, onPick }: { octave: number; octaves: number; chosen: number | null; onPick: (midi: number) => void }) {
   const c = 12 * (octave + 1);
-  const width = 100 / WHITE.length;
+  const whites = Array.from({ length: octaves }, (_, o) => WHITE.map((step) => o * 12 + step)).flat();
+  const blacks = Array.from({ length: octaves }, (_, o) => BLACK.map(({ step, after }) => ({ step: o * 12 + step, after: o * 7 + after }))).flat();
+  const width = 100 / whites.length;
   return (
-    <div className="sing-piano relative mt-4 h-40 select-none" role="group" aria-label={`Notes, octave ${octave}`} data-sing-keys>
+    <div className="sing-piano relative mt-4 h-40 select-none sm:h-44" role="group" aria-label={`Notes, from ${midiName(c)}`} data-sing-keys>
       <div className="flex h-full gap-[3px]">
-        {WHITE.map((step) => {
+        {whites.map((step) => {
           const midi = c + step;
           return (
             <button
@@ -281,14 +342,15 @@ function Piano({ octave, chosen, onPick }: { octave: number; chosen: number | nu
               onClick={() => onPick(midi)}
               aria-label={midiName(midi)}
               aria-pressed={chosen === midi}
-              className="sing-key sing-key-white flex flex-1 items-end justify-center pb-2 text-sm font-bold"
+              className="sing-key sing-key-white relative flex flex-1 items-end justify-center pb-2 text-sm font-bold"
             >
-              <span aria-hidden="true">{step === 0 ? midiName(midi) : midiName(midi).replace(/\d+$/, '')}</span>
+              <span className="key-hint" aria-hidden="true">{keyLetter(step)}</span>
+              <span aria-hidden="true">{step % 12 === 0 ? midiName(midi) : midiName(midi).replace(/\d+$/, '')}</span>
             </button>
           );
         })}
       </div>
-      {BLACK.map(({ step, after }) => {
+      {blacks.map(({ step, after }) => {
         const midi = c + step;
         return (
           <button
@@ -299,7 +361,9 @@ function Piano({ octave, chosen, onPick }: { octave: number; chosen: number | nu
             aria-pressed={chosen === midi}
             className="sing-key sing-key-black absolute top-0 h-[60%]"
             style={{ left: `calc(${(after + 1) * width}% - ${width * 0.3}%)`, width: `${width * 0.6}%` }}
-          />
+          >
+            <span className="key-hint key-hint-on-black" aria-hidden="true">{keyLetter(step)}</span>
+          </button>
         );
       })}
     </div>
