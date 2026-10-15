@@ -1214,6 +1214,11 @@ body:has([role='dialog']) [data-install-prompt='card'] {
   body:has([data-music-room]) .desk-drawer-head {
     display: flex;
   }
+  /* The drawer's tab on the right edge clears the room instead of sitting
+     over its last column (it hid Concert pitch's arrow at 1280px). */
+  body:has([data-music-room]) [data-music-room] {
+    padding-inline-end: 1.5rem;
+  }
 }
 
 /* The Music room's title and its folder button share one row once there is
@@ -2053,13 +2058,16 @@ body:has([data-conversation-screen]) .tab-bar {
     column-gap: 1rem;
   }
   .tuner-grid[data-advanced="true"] .tuner-main .tuner-gauge { grid-area: gauge; }
+  /* The note in the smaller dial, smaller with it: at full size it ran into
+     the dial's marks. */
+  .tuner-grid[data-advanced="true"] .tuner-main .tuner-gauge p { font-size: 3.25rem; }
+  .tuner-grid[data-advanced="true"] .tuner-main .tuner-gauge p span { font-size: 1.5rem; }
   .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-mic] { grid-area: mic; margin-top: 0; }
   .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-mic-label] { grid-area: caption; margin-top: 0.25rem; }
   .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-sounds] { grid-area: sounds; }
   .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-verdict] { grid-area: verdict; }
   .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-hz] { grid-area: hz; }
   .tuner-grid[data-advanced="true"] .tuner-main > p:last-child { margin-top: 0.5rem; }
-  .tuner-grid [data-pitch-pipe] h2 { white-space: nowrap; }
   .tuner-grid[data-advanced="true"] .tuner-side { gap: 0.5rem; }
   .tuner-grid[data-advanced="true"] .tuner-side > * { padding-block: 0.5rem; }
   .tuner-sing [data-sing-ring] {
