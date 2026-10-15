@@ -258,6 +258,15 @@ Chromium's microphone: C4 tapped is Perfect, and graded again after each
 breath with no second tap; D4 tapped is "You sang C4 ↑"; at a concert pitch of
 A = 445 the same C4 (20 cents flat of the app's C4) is Close, "A little flat".
 
+**Every try is heard, even while a grade shows.** A grade stays on the screen
+for 1.4 s. Until 15 October 2026 the card fed the judge nothing in that time,
+so a breath taken then went unheard, and the same note sung again was taken
+for the last one still held: of three short C4s (a second each, 0.4 s breaths)
+only two were graded. The owner met it the same day ("the voice no longer
+accurate after using it one time"). Now the judge hears every reading; while a
+grade shows it only shows nothing and judges nothing, and a try begun then is
+timed from its first sound. The same three C4s: three graded, all Perfect.
+
 **The start and the end of a note.** The table above scores the middle second
 of each note. Scored over the whole of each note instead, from the first sound
 to the last echo (605 notes a condition), the readings shown more than a

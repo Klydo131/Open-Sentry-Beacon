@@ -390,7 +390,12 @@ async function deskPhoto(page) {
       // The letters on the keys for typing are not words to read.
       const typing = await page.locator('[data-music-tuner] .key-hint').evaluateAll((els) => els
         .filter((e) => getComputedStyle(e).display !== 'none' && /[A-Za-z]/.test(e.textContent || '')).length);
-      const advancedWords = (await wordsIn('[data-music-tuner]')) - typing;
+      // Nor is a note saying why the microphone could not open: a browser with
+      // no microphone (WebKit here) must say so, and the safari run of 15
+      // October 2026 counted it (62). The count is of the Tuner's own words.
+      const micRefused = await page.locator('[data-music-tuner] [role="alert"]').evaluateAll((els) => els
+        .reduce((n, e) => n + (e.textContent || '').split(/\s+/).filter((w) => /[A-Za-z]/.test(w)).length, 0));
+      const advancedWords = (await wordsIn('[data-music-tuner]')) - typing - micRefused;
       ok(advancedWords <= 60, `${size}: and Advanced says little too (${advancedWords} words)`);
       // EVERY DEVICE (15 October 2026: "Not just on phone but on desktop too
       // ... make it more convenient to ALL devices"). A phone shows an octave

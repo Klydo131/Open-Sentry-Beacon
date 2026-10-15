@@ -76,6 +76,14 @@ function middle(values: number[]): number {
  * `after`: the pitch (MIDI) of the note just judged. A singer still holding it
  * when the next note is shown is not judged on it: the voice must stop, or
  * move a note away, first.
+ *
+ * `rest`: when that grade was given (`from`) and until when it stays on the
+ * screen (`until`). Until then nothing is shown or judged, but every reading
+ * is heard: a breath taken while the grade shows is a breath, and a new try
+ * begun then is timed from its first moment. Before 15 October 2026 the card
+ * fed the judge nothing while a grade showed, so a breath taken then was
+ * missed, and the same note sung again was taken for the old one still held
+ * and never graded ("it bugs out after using it one time").
  */
 export class NoteJudge {
   private run: { at: number; semi: number }[] = [];
@@ -85,14 +93,19 @@ export class NoteJudge {
   private after: number | null;
   /** The last moments of the voice while it may still be on the note before. */
   private lingering: { at: number; semi: number }[] = [];
+  private notBefore = -Infinity;
 
   constructor(
     readonly target: number,
     private readonly a4: number,
     private readonly tolerance: number,
     after: number | null = null,
+    rest: { from: number; until: number } | null = null,
   ) {
     this.after = after;
+    // The voice was sounding when the last grade was given: a gap is counted
+    // from then, so one unclear frame straight after it is not a breath.
+    if (rest) { this.lastAt = rest.from; this.notBefore = rest.until; }
   }
 
   /** Forget the note being held, as if the singer had paused (while a note plays, say). */
@@ -103,13 +116,15 @@ export class NoteJudge {
 
   push(hz: number | null, now: number): Judging {
     if (this.done) return { state: 'judged', verdict: this.done };
+    // The last grade is still showing: everything is heard, nothing is shown.
+    const resting = now < this.notBefore;
     if (hz === null || !(hz > 0)) {
       // A breath: the note being held ends, and so does the last one's hold.
       if (now - this.lastAt > GAP_MS) {
         this.run = [];
         this.after = null;
       }
-      return this.run.length ? this.holding(now) : { state: 'waiting' };
+      return this.run.length && !resting ? this.holding(now) : { state: 'waiting' };
     }
     const semi = semis(hz, this.a4);
     if (this.after !== null) {
@@ -131,6 +146,7 @@ export class NoteJudge {
     }
     this.run.push({ at: now, semi });
     this.lastAt = now;
+    if (resting) return { state: 'waiting' };
     if (now - this.startedAt < HOLD_MS) return this.holding(now);
     const settled = this.run.filter((r) => r.at - this.startedAt >= SETTLE_MS).map((r) => r.semi);
     const sung = middle(settled.length ? settled : this.run.map((r) => r.semi));

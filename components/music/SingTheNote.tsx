@@ -28,7 +28,7 @@
 // told to start again, so a note cannot be passed by the phone singing it to
 // itself. The drone is stopped for the same reason.
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Card } from '@/components/ui';
 import type { Tuner } from '@/lib/music/tuner';
 import { midiName, midiToHz } from '@/lib/music/notes';
@@ -82,10 +82,13 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
   }, [fit]);
   useEffect(() => { setOctaveState((o) => fit(o)); }, [fit]);
   // The card's own width, not the window's: the same card sits in a phone's
-  // single column and beside the dial on a computer.
-  useEffect(() => {
+  // single column and beside the dial on a computer. Measured once before the
+  // first paint too, or a computer saw one octave, then two, a moment later.
+  useLayoutEffect(() => {
     const el = card.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
+    if (!el) return;
+    setWide(el.clientWidth >= WIDE_PX);
+    if (typeof ResizeObserver === 'undefined') return;
     const watch = new ResizeObserver(([entry]) => setWide(entry.contentRect.width >= WIDE_PX));
     watch.observe(el);
     return () => watch.disconnect();
@@ -110,7 +113,6 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
   const { onReading, start: listen, stop: stopListening, status } = tuner;
   const judge = useRef<NoteJudge | null>(null);
   const quietUntil = useRef(0);
-  const restUntil = useRef(0);
   const openedMic = useRef(false);
   const shownAt = useRef(0);
   const sound = useRef<AudioContext | null>(null);
@@ -141,7 +143,6 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
     setTarget(midi);
     setShown(null);
     setLive({ state: 'waiting' });
-    restUntil.current = 0;
     judge.current = new NoteJudge(midi, a4, CLOSE_CENTS);
     if (status !== 'listening') { openedMic.current = true; await listen(); }
   };
@@ -175,19 +176,20 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
 
   // Every reading, sixty a second, to the judge of the note chosen. After a
   // grade, the next try is listened for once it has been seen, and only once
-  // the voice has left the note just graded (a breath, or another note).
+  // the voice has left the note just graded (a breath, or another note). The
+  // judge hears the readings while the grade shows too, or a breath taken
+  // then would be missed (lib/music/sing-the-note.ts, `rest`).
   useEffect(() => {
     if (target === null) return;
     return onReading((raw, t) => {
       const j = judge.current;
-      if (!j || t < restUntil.current) return;
+      if (!j) return;
       if (t < quietUntil.current) { j.restart(); return; }
       const said = j.push(raw, t);
       if (said.state === 'judged') {
         setShown(said.verdict);
         setLive({ state: 'waiting' });
-        restUntil.current = t + GRADE_MS;
-        judge.current = new NoteJudge(j.target, now.current.a4, CLOSE_CENTS, said.verdict.sung);
+        judge.current = new NoteJudge(j.target, now.current.a4, CLOSE_CENTS, said.verdict.sung, { from: t, until: t + GRADE_MS });
         return;
       }
       // The screen is told at most twenty times a second.
