@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-15-a-simpler-tuner',
+    date: '2026-10-15',
+    title: 'A simpler Tuner: a dial, a button, and a keyboard to sing to',
+    items: [
+      'The Tuner is a dial with your note in the middle, and one round button to start and stop listening. The words are gone; the dial says In tune, or how far off you are.',
+      'Starting note and Concert pitch are one line each. Tap Concert pitch to open it.',
+      'Sing the note, in Advanced settings, is a piano keyboard. Tap a key, sing it and hold it, and it says Perfect, Close, or Try again with what you sang. Sing again after a breath and it tells you again.',
+      'The voice trail, the drone and your instrument are under More tools.',
+    ],
+  },
+  {
     id: '2026-10-14-sing-the-note',
     date: '2026-10-14',
     title: 'Sing the note, and a tuner that hears each note exactly',

@@ -1,12 +1,17 @@
-// Sing the note: the Tuner's practice. A note (or a run of five to ten) is
-// shown, the singer sings it, and this says whether they hit it.
+// Sing the note: the Tuner's practice. Tap a note, sing it, and this says
+// whether you hit it: Perfect, Close, or Try again.
 //
 // Asked for on 14 October 2026: "place a note that you are looking for voice
-// and see if you hit the note correctly or if you put at least 5-10 notes and
-// see if you hit those correctly and the user will be rewarded for 'perfect
-// pitch' ... MAKE SURE the tuner for voice is extremely accurate with 1 to 1
-// on voice to notes", then "the accuracy of notes from voice to notes needs to
-// be 99% accurate and fast".
+// and see if you hit the note correctly ... rewarded for 'perfect pitch' ...
+// MAKE SURE the tuner for voice is extremely accurate with 1 to 1 on voice to
+// notes", then "the accuracy of notes from voice to notes needs to be 99%
+// accurate and fast". Made simpler on 15 October 2026: "just tap or click a
+// note and I will just sing ... and it will detect if I hit a perfect note or
+// close enough, that's all." So a note sung is graded in three (gradeOf, at
+// the end): PERFECT within a tenth of a semitone, CLOSE within a quarter (as
+// near as a choir needs), and anything further, or another note, is a try
+// again that says what was sung. The run of five to ten notes, the voice
+// parts and the two strictness settings went with that change.
 //
 // WHAT IS JUDGED. Not the first thing heard. A singer scoops into a note,
 // wobbles on it, and takes a moment to settle, so a sung note counts once it
@@ -35,28 +40,10 @@ export const GAP_MS = 160;
 /** Further than this from the note being held is a different note: start again. */
 export const NEW_NOTE_CENTS = 120;
 
-/** How close counts as a hit, in cents (a hundred to a semitone). */
-export const TOLERANCES = [
-  { id: 'choir', cents: 25, name: 'Choir', about: 'Within a quarter of a semitone' },
-  { id: 'exact', cents: 10, name: 'Exact', about: 'Within a tenth of a semitone' },
-] as const;
-export type Tolerance = (typeof TOLERANCES)[number]['id'];
-export const centsFor = (t: Tolerance) => TOLERANCES.find((x) => x.id === t)?.cents ?? 25;
-
-/** The most notes in one practice, and the fewest that make a run. */
-export const MOST_NOTES = 10;
-export const RUN_NOTES = 5;
-
-/** The voice parts, each with the notes it can sing comfortably (MIDI). */
-export const VOICE_PARTS = [
-  { id: 'any', name: 'Any voice', low: 48, high: 72 }, //  C3 to C5
-  { id: 'soprano', name: 'Soprano', low: 60, high: 81 }, // C4 to A5
-  { id: 'alto', name: 'Alto', low: 53, high: 74 }, //       F3 to D5
-  { id: 'tenor', name: 'Tenor', low: 48, high: 69 }, //     C3 to A4
-  { id: 'bass', name: 'Bass', low: 40, high: 64 }, //       E2 to E4
-] as const;
-export type VoicePart = (typeof VOICE_PARTS)[number]['id'];
-export const partFor = (id: VoicePart) => VOICE_PARTS.find((p) => p.id === id) ?? VOICE_PARTS[0];
+/** Perfect: within this many cents (a tenth of a semitone) of the note. */
+export const PERFECT_CENTS = 10;
+/** Close: within this many (a quarter of a semitone), as near as a choir needs. Also the judge's hit. */
+export const CLOSE_CENTS = 25;
 
 export interface Verdict {
   /** The note asked for (MIDI). */
@@ -158,39 +145,21 @@ export class NoteJudge {
   }
 }
 
-/** A run of notes for a voice part, picked at random but singable: no leap wider than a fifth. */
-export function pickNotes(count: number, part: VoicePart, random: () => number = Math.random): number[] {
-  const { low, high } = partFor(part);
-  const n = Math.max(1, Math.min(MOST_NOTES, Math.round(count)));
-  const notes: number[] = [];
-  let at = Math.round(low + (high - low) * (0.3 + 0.4 * random()));
-  for (let i = 0; i < n; i++) {
-    if (i > 0) {
-      let step = 0;
-      while (step === 0) step = Math.round((random() * 2 - 1) * 7);
-      at = Math.max(low, Math.min(high, at + step));
-      if (at === notes[i - 1]) at = at + (at < high ? 1 : -1);
-    }
-    notes.push(at);
-  }
-  return notes;
+export type Grade = 'perfect' | 'close' | 'off';
+
+/** A note sung, graded: within PERFECT_CENTS, within CLOSE_CENTS, or not. */
+export function gradeOf(v: Verdict): Grade {
+  const off = Math.abs(v.cents);
+  return off <= PERFECT_CENTS ? 'perfect' : off <= CLOSE_CENTS ? 'close' : 'off';
 }
 
-/** What was sung, in words a singer can use. */
-export function verdictWords(v: Verdict): string {
-  const asked = midiName(v.target);
+/** The few words under a grade, and which way to go (up, down, or nowhere). */
+export function gradeHint(v: Verdict): { words: string; go: 'up' | 'down' | null } {
+  const grade = gradeOf(v);
+  if (grade === 'perfect') return { words: 'Right on the note', go: null };
+  const go = v.cents < 0 ? 'up' : 'down';
+  if (grade === 'close') return { words: v.cents < 0 ? 'A little flat' : 'A little sharp', go };
   const near = Math.round(v.sung);
-  const off = Math.abs(v.cents);
-  if (v.hit) {
-    return off <= 2 ? `${asked}, right in the middle` : `${asked}, ${off} cents ${v.cents < 0 ? 'flat' : 'sharp'}`;
-  }
-  if (near === v.target) return `${asked}, but ${off} cents ${v.cents < 0 ? 'flat' : 'sharp'}`;
-  const apart = near - v.target;
-  if (Math.abs(apart) % 12 === 0) {
-    const octaves = Math.abs(apart) / 12;
-    return `${midiName(near)}: ${octaves === 1 ? 'an octave' : `${octaves} octaves`} ${apart < 0 ? 'below' : 'above'} ${asked}`;
-  }
-  const semitones = Math.abs(apart);
-  const how = semitones === 1 ? 'a semitone' : semitones === 2 ? 'a whole tone' : `${semitones} semitones`;
-  return `${midiName(near)}: ${how} ${apart < 0 ? 'below' : 'above'} ${asked}`;
+  if (near === v.target) return { words: v.cents < 0 ? 'Too flat' : 'Too sharp', go };
+  return { words: `You sang ${midiName(near)}`, go };
 }

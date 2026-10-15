@@ -247,12 +247,16 @@ the nearest note there measures the ruler, not the ear.
 
 **Sing the note's judge** (`lib/music/sing-the-note.ts`) waits for a note to be
 held for 0.6 s and judges the middle of what was sung, leaving out the scoop.
-On every one of the 121 notes sung in tune: 121 hits, each judged within
-0.67 s of the voice starting. Sung a semitone off, 40 cents sharp or an octave
-low: every one judged a miss and named for what it was. In the browser, with a
-made-up voice as Chromium's microphone, it scored C4 D4 E4 F4 G4 sung in tune
-as 5 of 5, and C4 E4 G4 C5 G4 sung as C4 F4 G4 C4 G4 as 3 of 5 ("F4: a
-semitone above E4", "C4: an octave below C5").
+Since 15 October 2026 it grades in three, as the owner asked ("detect if I hit
+a perfect note or close enough"): **Perfect** within 10 cents, **Close** within
+25, **Try again** beyond, or on another note, saying what was sung. On every
+one of the 121 notes sung in tune: 121 Perfect, each within 0.67 s of the
+voice starting. Sung 18 cents sharp or flat: every one Close, with the way to
+go. Sung 40 cents sharp, a semitone off or an octave low: every one Try again,
+named for what it was. In the browser, with a made-up voice holding C4 as
+Chromium's microphone: C4 tapped is Perfect, and graded again after each
+breath with no second tap; D4 tapped is "You sang C4 ↑"; at a concert pitch of
+A = 445 the same C4 (20 cents flat of the app's C4) is Close, "A little flat".
 
 **The start and the end of a note.** The table above scores the middle second
 of each note. Scored over the whole of each note instead, from the first sound

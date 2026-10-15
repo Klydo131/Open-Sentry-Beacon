@@ -430,8 +430,8 @@ function zip(files) {
   const panel = code('components/music/TunerPanel.tsx');
   const calibrate = (panel.match(/const calibrate = [\s\S]*?\n  \};/) || [''])[0];
   ok(/tone\.play\(/.test(calibrate), 'every change of concert pitch plays the new A');
-  ok(/data-pitch-words[\s\S]{0,40}pitchWords\(a4\)/.test(panel) && /Compare with 440/.test(panel) && /data-tuner-against/.test(panel) && /data-pipe-hz/.test(panel),
-     'the card says what the change does, compares it with 440, and the tuner and the starting note show the pitch they follow');
+  ok(/data-tuner-against/.test(panel) && /title=\{`\$\{midiToHz\(midi, a4\)\.toFixed\(1\)\} Hz`\}/.test(panel) && /aria-expanded=\{pitchOpen\}/.test(panel),
+     'the dial and the starting note follow the concert pitch, which is one line until it is opened');
   ok(!/getUserMedia/.test(panel) && /void listen\(\)/.test(panel), "Listen for the A uses the tuner's own microphone, not a second one");
   ok(/if \(openedMic\.current\) \{ openedMic\.current = false; stopListening\(\); \}/.test(panel),
      'and lets it go as soon as the A is heard, when it was the one that opened it');

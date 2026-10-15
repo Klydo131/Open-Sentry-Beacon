@@ -1777,50 +1777,133 @@ body:has([data-conversation-screen]) .tab-bar {
   .wash-featured { background-image: linear-gradient(to bottom right, light-dark(#ffffff, transparent), light-dark(rgb(240 249 255 / 0.8), transparent)); }
 }
 
-/* SING THE NOTE (14 October 2026): the ring that fills while a note is held,
-   and the reward for hitting every note, perfect pitch. The ring's fill is a
-   change of length, so it eases; the reward's notes float up and its badge
-   glows once. All of it stops under Reduce Motion (below), and the reward
-   itself then shows standing still (components/music/SingTheNote.tsx). */
+/* SING THE NOTE (14 October 2026; made simpler on 15 October 2026): a piano
+   keyboard to tap a note on, the ring that fills while it is held, and the
+   reward for a perfect note. The keyboard keeps a piano's own colours in every
+   look (white keys light, black keys dark, the chosen key the Music room's
+   green), so it always reads as a keyboard; a dark look (color-scheme: dark)
+   only dims the white keys a little. The reward is a burst of notes around the
+   ring and a glow; under Reduce Motion the glow stands still and the burst is
+   not drawn (components/music/SingTheNote.tsx). */
+.sing-piano {
+  --key-white: #ffffff;
+  --key-black: #1f2937;
+  --key-on-ink: #ffffff;
+}
+@supports (color: light-dark(#000, #fff)) {
+  .sing-piano {
+    --key-white: light-dark(#ffffff, #e6ebf3);
+    --key-black: light-dark(#1f2937, #0b1220);
+    --key-on-ink: light-dark(#ffffff, #052421);
+  }
+}
+.sing-key {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color var(--motion-quick, 160ms) ease, transform 80ms ease;
+}
+/* A solid colour under each gradient, so a contrast check (and a browser
+   that cannot draw the gradient) reads the key's own colour. */
+.sing-key-white {
+  border-radius: 0 0 0.6rem 0.6rem;
+  background-color: var(--key-white);
+  background-image: linear-gradient(to bottom, var(--key-white) 82%, color-mix(in srgb, var(--key-white) 90%, #1e2a4a));
+  color: #1e2a4a;
+  box-shadow: inset 0 0 0 1px rgb(30 42 74 / 0.16), 0 2px 0 rgb(30 42 74 / 0.14);
+}
+.sing-key-black {
+  z-index: 1;
+  border-radius: 0 0 0.45rem 0.45rem;
+  background-color: var(--key-black);
+  background-image: linear-gradient(to bottom, color-mix(in srgb, var(--key-black) 75%, #ffffff), var(--key-black) 35%);
+  box-shadow: 0 3px 5px rgb(0 0 0 / 0.3);
+}
+.sing-key:active {
+  transform: translateY(1px);
+}
+.sing-key[aria-pressed="true"] {
+  background: var(--music-accent);
+  color: var(--key-on-ink);
+}
+.sing-key:focus-visible {
+  outline: 3px solid var(--music-accent);
+  outline-offset: 2px;
+}
 .sing-ring-fill {
   transition: stroke-dashoffset var(--motion-quick, 160ms) linear, stroke var(--motion-base, 220ms) ease;
 }
-.perfect-pitch {
-  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--music-accent) 22%, transparent), transparent 70%);
-  outline: 2px solid color-mix(in srgb, var(--music-accent) 55%, transparent);
-  outline-offset: -2px;
-}
-.perfect-pitch-badge {
-  background: color-mix(in srgb, var(--music-accent) 18%, transparent);
-  animation: perfectPitchBadge 900ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+.perfect-pitch-glow {
+  animation: perfectPitchGlow 1000ms ease-out both;
 }
 .perfect-pitch-spark {
   position: absolute;
-  bottom: -1.5rem;
-  font-size: 1.5rem;
+  left: 50%;
+  top: 50%;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--music-accent);
   opacity: 0;
-  animation: perfectPitchSpark 1800ms ease-out calc(var(--i, 0) * 110ms) 2 both;
+  animation: perfectPitchSpark 1100ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--i, 0) * 40ms) both;
 }
-@keyframes perfectPitchBadge {
-  0% { transform: scale(0.4); box-shadow: 0 0 0 0 color-mix(in srgb, var(--music-accent) 60%, transparent); }
-  60% { transform: scale(1.12); box-shadow: 0 0 0 14px color-mix(in srgb, var(--music-accent) 0%, transparent); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+@keyframes perfectPitchGlow {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--music-accent) 55%, transparent); }
+  100% { box-shadow: 0 0 0 28px color-mix(in srgb, var(--music-accent) 0%, transparent); }
 }
 @keyframes perfectPitchSpark {
-  0% { opacity: 0; transform: translateY(0) rotate(0deg); }
-  20% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-11rem) rotate(18deg); }
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(-2.5rem) rotate(calc(-1 * var(--a, 0deg))) scale(0.6); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(-6rem) rotate(calc(-1 * var(--a, 0deg))) scale(1.1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sing-ring-fill,
-  .perfect-pitch-badge,
-  .perfect-pitch-spark {
-    animation: none;
+  .sing-key,
+  .sing-ring-fill {
     transition: none;
   }
+  .perfect-pitch-glow {
+    animation: none;
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--music-accent) 35%, transparent);
+  }
   .perfect-pitch-spark {
+    animation: none;
     display: none;
+  }
+}
+
+/* THE TUNER'S ROUND BUTTON (15 October 2026), while it listens: the Music
+   room's green, with a soft ring that breathes outwards so it is plain that
+   the microphone is on. The stop square is drawn in white on the deep green
+   of a light look and in near-black on the bright green of a dark one. Still
+   under Reduce Motion. */
+.tuner-mic-on {
+  position: relative;
+  background: var(--music-accent);
+  color: #ffffff;
+}
+@supports (color: light-dark(#000, #fff)) {
+  .tuner-mic-on {
+    color: light-dark(#ffffff, #052421);
+  }
+}
+.tuner-mic-on::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 3px solid var(--music-accent);
+  opacity: 0;
+  /* Grown and faded, not a spreading shadow: a loop that runs as long as the
+     microphone is on must move only what the compositor moves
+     (tests/an-animation-that-loops-does-not-repaint.mjs). */
+  animation: tunerMicOn 1600ms ease-out infinite;
+}
+@keyframes tunerMicOn {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tuner-mic-on::after {
+    animation: none;
+    opacity: 0.35;
+    transform: scale(1.15);
   }
 }

@@ -16,11 +16,14 @@
 //      names the note sung, in the right octave.
 //   2. A ROUGH VOICE, beyond what counts as a healthy one: held to a lower bar,
 //      and still never an octave out.
-//   3. THE JUDGE, on every one of those notes sung four ways: in tune (a hit),
-//      a semitone off and an octave low (misses, named for what they were),
-//      and 40 cents sharp (a miss, but the right note).
-//   4. A RUN OF NOTES sung without a breath between them, and the same note
-//      twice, which needs one.
+//   3. THE JUDGE, on every one of those notes sung six ways, graded as the
+//      card grades them (15 October 2026: "detect if I hit a perfect note or
+//      close enough"): in tune is Perfect; 18 cents sharp or flat is Close,
+//      and says which way to go; 40 cents sharp, a semitone off and an octave
+//      low are Try again, each named for what it was.
+//   4. ONE TRY AFTER ANOTHER: held on, a note graded is not graded again
+//      until the voice has left it; and notes sung one into the next, with no
+//      breath, are each heard as themselves.
 //   5. THE APP'S OWN SOUND IS NEVER JUDGED.
 //   6. REAL SINGING: tests/fixtures/voice (vocadito, CC BY 4.0), with the pitch
 //      marked by people. The tuner's readings against theirs.
@@ -71,6 +74,8 @@ const SR = 48000;
 const HOP = 800; // sixty windows a second, as a phone's screen asks for them
 const semis = (hz) => 69 + 12 * Math.log2(hz / 440);
 const pct = (a, b) => `${((100 * a) / b).toFixed(2)}%`;
+/** A grade as the card shows it, with the cents behind it. */
+const said = (v) => `${M.gradeOf(v)}, ${M.gradeHint(v).words}, ${v.cents} cents`;
 
 /** Every note each voice part sings, on every vowel. */
 const EVERY_VOWEL = Object.entries(V.VOICES).flatMap(([part, v]) =>
@@ -160,31 +165,34 @@ function judge(target, sung, opts, tolerance = 25) {
 }
 {
   const ways = [
-    ['in tune', 0, (v, m) => v.hit && Math.round(v.sung) === m],
-    ['a semitone sharp', 1, (v, m) => !v.hit && Math.round(v.sung) === m + 1 && / a semitone above /.test(M.verdictWords(v))],
-    ['40 cents sharp', 0.4, (v, m) => !v.hit && Math.round(v.sung) === m && /but \d+ cents sharp/.test(M.verdictWords(v))],
-    ['an octave low', -12, (v, m) => !v.hit && Math.round(v.sung) === m - 12 && /an octave below/.test(M.verdictWords(v))],
+    ['in tune', 0, (v, m) => M.gradeOf(v) === 'perfect' && v.hit && Math.round(v.sung) === m],
+    ['18 cents sharp', 0.18, (v) => M.gradeOf(v) === 'close' && v.hit && M.gradeHint(v).words === 'A little sharp' && M.gradeHint(v).go === 'down'],
+    ['18 cents flat', -0.18, (v) => M.gradeOf(v) === 'close' && v.hit && M.gradeHint(v).words === 'A little flat' && M.gradeHint(v).go === 'up'],
+    ['40 cents sharp', 0.4, (v) => M.gradeOf(v) === 'off' && !v.hit && M.gradeHint(v).words === 'Too sharp'],
+    ['a semitone sharp', 1, (v, m) => M.gradeOf(v) === 'off' && M.gradeHint(v).words === `You sang ${M.midiName(m + 1)}` && M.gradeHint(v).go === 'down'],
+    ['an octave low', -12, (v, m) => M.gradeOf(v) === 'off' && M.gradeHint(v).words === `You sang ${M.midiName(m - 12)}` && M.gradeHint(v).go === 'up'],
   ];
   for (const [how, shift, right] of ways) {
     let n = 0, good = 0, slowest = 0;
     const wrong = [];
-    // In tune on every note; the three ways of missing on every other one.
+    // In tune on every note; the other five ways on every other one.
     for (const note of NOTES.filter((_, i) => shift === 0 || i % 2 === 1)) {
       if (note.midi + shift < 36) continue; // below any voice
       n++;
       const v = judge(note.midi, note.midi + shift, { vowel: note.vowel, sex: note.sex, seed: note.midi * 7 + note.vowel.length });
       if (v && right(v, note.midi)) good++;
-      else if (wrong.length < 3) wrong.push(`${note.part} ${M.midiName(note.midi)}: ${v ? M.verdictWords(v) : 'never judged'}`);
+      else if (wrong.length < 3) wrong.push(`${note.part} ${M.midiName(note.midi)}: ${v ? said(v) : 'never judged'}`);
       if (v) slowest = Math.max(slowest, v.after);
     }
-    ok(good === n, `sung ${how}: ${good} of ${n} judged right${how === 'in tune' ? `, each within ${Math.round(slowest)} ms of the voice starting` : ''}${wrong.length ? ` (${wrong.join('; ')})` : ''}`);
+    ok(good === n, `sung ${how}: ${good} of ${n} graded right${how === 'in tune' ? `, each Perfect within ${Math.round(slowest)} ms of the voice starting` : ''}${wrong.length ? ` (${wrong.join('; ')})` : ''}`);
     if (how === 'in tune') ok(slowest <= 800, `a note held is judged within 0.8 s (${Math.round(slowest)} ms)`);
   }
 }
 
 // ---------------------------------------------------------------------------
-// 4. A RUN OF NOTES, as the card runs them: each judged, its verdict shown for
-//    0.9 s, then the next judge waits. Sung without a breath between notes.
+// 4. ONE TRY AFTER ANOTHER, as the card listens: each note graded, the grade
+//    shown for 1.4 s, then the next judge waits for the voice to leave the
+//    note just graded. Sung without a breath between notes.
 // ---------------------------------------------------------------------------
 function run(targets, sung, gap = 0) {
   const parts = [[0.2, null]];
@@ -200,16 +208,16 @@ function run(targets, sung, gap = 0) {
     if (now < waitUntil) continue;
     if (!j) j = new M.NoteJudge(targets[verdicts.length], 440, 25, verdicts[verdicts.length - 1].sung);
     const said = j.push(r ? r.raw : null, now);
-    if (said.state === 'judged') { verdicts.push(said.verdict); j = null; waitUntil = now + 900; }
+    if (said.state === 'judged') { verdicts.push(said.verdict); j = null; waitUntil = now + 1400; }
   }
   return verdicts;
 }
 {
   const legato = run([60, 62, 64, 65, 67], [60, 62, 64, 65, 67]);
   ok(legato.length === 5 && legato.every((v) => v.hit),
-    `five notes sung one into the next, no breath: ${legato.filter((v) => v.hit).length} of 5 hit (${legato.map((v) => M.verdictWords(v)).join('; ')})`);
+    `five notes sung one into the next, no breath: ${legato.filter((v) => v.hit).length} of 5 hit (${legato.map((v) => said(v)).join('; ')})`);
   const steps = run([60, 61, 62, 61, 60], [60, 61, 62, 61, 60]);
-  ok(steps.length === 5 && steps.every((v) => v.hit), `and in semitones (${steps.map((v) => M.verdictWords(v)).join('; ')})`);
+  ok(steps.length === 5 && steps.every((v) => v.hit), `and in semitones (${steps.map((v) => said(v)).join('; ')})`);
   // The same note twice: still holding the first is not singing the second.
   const held = run([60, 60], [60]);
   ok(held.length === 1, `one C4 held on is not two C4s: the second waits for a breath (${held.length} judged)`);

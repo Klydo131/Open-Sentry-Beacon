@@ -9,12 +9,13 @@
 //   - everybody finds Music in their rooms, and My Files points to it
 //   - the Tuner hears a 440 Hz tone as A4 in tune, follows a change of
 //     concert pitch, and lets the microphone go on Stop, on leaving the
-//     folder and when the phone locks
-//   - concert pitch is heard: a choice plays its A and says what it does, the
-//     starting note follows it, Compare plays 440 then yours, and Listen for
-//     the A takes an instrument's A and offers it
-//   - Advanced settings (5 October 2026), off until ticked: the Tuner's trail,
-//     drone and transposing instruments; the Conductor's clicks between beats,
+//     folder and when the phone locks; and it says little (15 October 2026:
+//     "so many words on it. Let the design speaks for itself")
+//   - concert pitch is heard: a choice plays its A, the starting note and the
+//     dial follow it, and Listen for the A takes an instrument's A and offers it
+//   - Advanced settings (5 October 2026), off until ticked: Sing the note (a
+//     key tapped, a note sung, and Perfect), and under More tools the Tuner's
+//     trail, drone and transposing instruments; the Conductor's clicks between beats,
 //     silent beats, count-in, speed trainer and saved tempos, counted by the
 //     sounds actually made; the score's transpose, loop, sound and silent
 //     part; and the Play folder's keyboard, chords and beat maker
@@ -249,6 +250,12 @@ async function deskPhoto(page) {
       await openFolder(page, 'Tuner');
       ok(await page.locator('[data-music-tuner]').isVisible(), `${size}: the Tuner folder opens`);
       ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')), `${size}: concert pitch starts at A 440`);
+      // "The basic settings are just complicated with so many words on it. Let
+      // the design speaks for itself please" (15 October 2026). Every word the
+      // basic Tuner shows, counted: 245 before that day, 25 after.
+      const wordsIn = async (sel) => (await say(page, sel)).split(/\s+/).filter((w) => /[A-Za-z]/.test(w)).length;
+      const words = await wordsIn('[data-music-tuner]');
+      ok(words <= 30, `${size}: the Tuner says little, and lets the dial speak (${words} words)`);
       await page.getByRole('button', { name: /Start listening/ }).click();
       if (fakeMic) {
         await page.waitForFunction(() => /A\s*4/.test(document.querySelector('[data-tuner-reading] p')?.textContent || ''), null, { timeout: 8000 }).catch(() => {});
@@ -260,15 +267,19 @@ async function deskPhoto(page) {
         for (let i = 0; i < 20; i += 1) { heard.push((await say(page, '[data-tuner-verdict]')).trim()); await page.waitForTimeout(100); }
         const steady = heard.filter((v) => /In tune/.test(v)).length;
         ok(steady >= 15, `${size}: and as in tune (${steady} of 20 readings${steady < 20 ? `; otherwise ${[...new Set(heard.filter((v) => !/In tune/.test(v)))].join(', ')}` : ''})`);
-        ok(await page.locator('[data-tuner-needle]').isVisible(), `${size}: the needle is drawn`);
-        // A choir tuned to A 445 hears the same tone as flat.
-        for (let i = 0; i < 5; i += 1) await page.getByRole('button', { name: '+ 1' }).click();
+        // Counted, not 'visible': a marker standing upright on the dial has no width.
+        ok((await page.locator('[data-tuner-needle]').count()) === 1, `${size}: the marker is drawn on the dial`);
+        // A choir tuned to A 445 hears the same tone as flat. Concert pitch is
+        // one line until it is opened.
+        await page.locator('[data-pitch-toggle]').click();
+        for (let i = 0; i < 5; i += 1) await page.getByRole('button', { name: '1 Hz higher' }).click();
         await page.waitForTimeout(600);
-        ok(/A = 445 Hz/.test(await say(page, '[data-tuner-a4]')) && /flat/.test(await say(page, '[data-tuner-verdict]')),
+        ok(/A = 445 Hz/.test(await say(page, '[data-tuner-a4]')) && /♭ \d+/.test(await say(page, '[data-tuner-verdict]')),
            `${size}: at A 445 the same tone reads flat (${(await say(page, '[data-tuner-verdict]')).trim()})`);
         await page.reload({ waitUntil: 'networkidle' });
         await openFolder(page, 'Tuner');
         ok(/A = 445 Hz/.test(await say(page, '[data-tuner-a4]')), `${size}: the chosen concert pitch is remembered on the phone`);
+        await page.locator('[data-pitch-toggle]').click();
         await page.locator('[data-pitch-choice="440"]').click();
         // That choice plays its A; let it finish before counting audio clocks.
         await page.waitForTimeout(1300);
@@ -318,37 +329,36 @@ async function deskPhoto(page) {
       }
       // CONCERT PITCH YOU CAN HEAR (asked for on 4 October 2026: "I just put
       // the Hertz and nothing much is happening").
-      ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && /standard/.test(await say(page, '[data-pitch-words]')),
-         `${size}: concert pitch is back at 440, called the standard`);
+      if (!(await page.locator('[data-pitch-choice="440"]').isVisible())) await page.locator('[data-pitch-toggle]').click();
+      ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && (await page.locator('[data-pitch-choice="440"]').getAttribute('aria-pressed')) === 'true',
+         `${size}: concert pitch is back at 440, the standard`);
       await page.locator('[data-pitch-choice="442"]').click();
       // Waited for, not looked at once: on Safari on GitHub's Mac machines the
       // status took longer than a fixed 150 ms to appear (run of 5 October 2026).
-      await page.locator('[data-pitch-now]').filter({ hasText: /A at 442 Hz/ }).waitFor({ timeout: 4000 }).catch(() => {});
-      ok(/A at 442 Hz/.test(await say(page, '[data-pitch-now]')), `${size}: choosing 442 plays its A (${(await say(page, '[data-pitch-now]')).trim() || 'nothing'})`);
-      ok(/A = 442 Hz/.test(await say(page, '[data-tuner-a4]')) && /8 cents higher/.test(await say(page, '[data-pitch-words]')),
-         `${size}: and says what it does (${(await say(page, '[data-pitch-words]')).trim()})`);
-      ok((await page.locator('[data-pitch-choice="442"]').getAttribute('aria-pressed')) === 'true', `${size}: the 442 choice is shown as chosen`);
-      ok(/C4 sounds at 262\.8 Hz, from your concert pitch A = 442 Hz/.test(await say(page, '[data-pipe-hz]')),
-         `${size}: the starting note follows it (${(await say(page, '[data-pipe-hz]')).trim()})`);
-      ok(/A = 442/.test(await say(page, '[data-tuner-against]')), `${size}: and the tuner says what it measures against`);
+      const pitchNow = () => page.locator('[data-pitch-now]').first().textContent().then((t) => (t || '').trim()).catch(() => '');
+      await page.waitForFunction(() => /A at 442 Hz/.test(document.querySelector('[data-pitch-now]')?.textContent || ''), null, { timeout: 4000 }).catch(() => {});
+      ok(/A at 442 Hz/.test(await pitchNow()), `${size}: choosing 442 plays its A (${(await pitchNow()) || 'nothing'})`);
+      ok(/A = 442 Hz/.test(await say(page, '[data-tuner-a4]')) && (await page.locator('[data-pitch-choice="442"]').getAttribute('aria-pressed')) === 'true',
+         `${size}: and 442 is shown as chosen`);
+      ok(/8 cents higher/.test(await say(page, '[data-pitch-words]')), `${size}: and it says what it does, in a line (${(await say(page, '[data-pitch-words]')).trim()})`);
+      ok(/262\.8 Hz/.test(await page.locator('[data-pipe-note]').getAttribute('title')),
+         `${size}: the starting note follows it (${await page.locator('[data-pipe-note]').getAttribute('title')})`);
+      ok(/A = 442/.test(await say(page, '[data-tuner-against]')), `${size}: and the dial says what it measures against`);
       await page.waitForTimeout(1000);
-      await page.getByRole('button', { name: /Compare with 440/ }).click();
+      await page.getByRole('button', { name: /Hear A/ }).click();
       await page.waitForTimeout(400);
-      const first = (await say(page, '[data-pitch-now]')).trim();
-      await page.waitForTimeout(1500);
-      const second = (await say(page, '[data-pitch-now]')).trim();
-      ok(/standard A, 440/.test(first) && /your A, 442/.test(second), `${size}: Compare plays 440, then yours (${first} / ${second})`);
-      await page.waitForTimeout(1600);
-      ok(!(await say(page, '[data-pitch-now]')).trim() && (await clocksOpen(page)) === 0, `${size}: and goes quiet by itself, closing its audio`);
+      ok(/A at 442 Hz/.test(await pitchNow()), `${size}: Hear A plays your A (${await pitchNow()})`);
+      await page.waitForTimeout(1900);
+      ok(!(await pitchNow()) && (await clocksOpen(page)) === 0, `${size}: and goes quiet by itself, closing its audio`);
       // Matching an instrument: the fake microphone holds an A at 440.
       if (fakeMic) {
         await page.getByRole('button', { name: /Listen for the A/ }).click();
-        await page.waitForFunction(() => /The A you played is/.test(document.querySelector('[data-pitch-heard]')?.textContent || ''), null, { timeout: 9000 }).catch(() => {});
+        await page.waitForFunction(() => /Heard 4/.test(document.querySelector('[data-pitch-heard]')?.textContent || ''), null, { timeout: 9000 }).catch(() => {});
         const heard = (await say(page, '[data-pitch-heard]')).trim();
-        ok(/The A you played is 4(39\.\d|40\.\d) Hz/.test(heard), `${size}: Listen for the A hears the instrument's A (${heard || 'nothing'})`);
+        ok(/Heard 4(39\.\d|40\.\d) Hz/.test(heard), `${size}: Listen for the A hears the instrument's A (${heard || 'nothing'})`);
         ok((await micsLive(page)) === 0, `${size}: and lets the microphone go once it has heard it`);
         await page.getByRole('button', { name: 'Use 440 Hz' }).click();
-        ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && /Concert pitch is now A = 440 Hz/.test(await say(page, '[data-pitch-heard]')),
+        ok(/A = 440 Hz/.test(await say(page, '[data-tuner-a4]')) && /A = 440 Hz/.test(await say(page, '[data-pitch-heard]')),
            `${size}: Use 440 Hz makes it the concert pitch`);
         await page.waitForTimeout(1200);
       } else {
@@ -362,10 +372,29 @@ async function deskPhoto(page) {
         await page.waitForTimeout(1200);
       }
       // THE TUNER'S ADVANCED SETTINGS: off until ticked.
-      ok(!(await page.locator('[data-tuner-trail]').count()), `${size}: the Tuner is simple until Advanced is ticked`);
+      ok(!(await page.locator('[data-tuner-trail]').count()) && !(await page.locator('[data-sing]').count()), `${size}: the Tuner is simple until Advanced is ticked`);
+      if ((await page.locator('[data-pitch-toggle]').getAttribute('aria-expanded')) === 'true') await page.locator('[data-pitch-toggle]').click();
       await page.locator('#music-advanced-tuner').check();
+      // "Just tap or click a note and I will just sing" (15 October 2026).
+      ok(await page.locator('[data-sing-keys] button').count() === 12 && /Tap a note/.test(await say(page, '[data-sing-live]')),
+         `${size}: Advanced opens Sing the note, a keyboard of twelve keys to tap`);
+      // With Advanced open (concert pitch closed): 542 words before 15 October
+      // 2026, when every setting was open and explained, and 45 after.
+      const advancedWords = await wordsIn('[data-music-tuner]');
+      ok(advancedWords <= 60, `${size}: and Advanced says little too (${advancedWords} words)`);
+      if (fakeMic) {
+        await page.locator('[data-sing-keys]').getByRole('button', { name: 'A4', exact: true }).click();
+        await page.locator('[data-sing-verdict="perfect"],[data-sing-verdict="close"],[data-sing-verdict="off"]').first().waitFor({ timeout: 10000 }).catch(() => {});
+        ok((await page.locator('[data-sing-verdict]').getAttribute('data-sing-verdict')) === 'perfect',
+           `${size}: A4 tapped and an A at 440 heard: ${(await say(page, '[data-sing-live]')).replace(/\s+/g, ' ').trim()}`);
+        await page.locator('[data-sing]').getByRole('button', { name: 'Stop', exact: true }).click();
+        await page.waitForTimeout(300);
+        ok((await micsLive(page)) === 0, `${size}: Stop lets the microphone go`);
+      }
+      ok(!(await page.locator('[data-tuner-trail]').count()), `${size}: the trail, drone and instrument wait under More tools`);
+      await page.locator('[data-tuner-more]').click();
       ok(await page.locator('[data-tuner-trail]').isVisible() && await page.locator('[data-tuner-drone]').isVisible() && await page.locator('[data-tuner-instrument]').isVisible(),
-         `${size}: Advanced opens the trail, the drone and the instrument`);
+         `${size}: More tools opens the trail, the drone and the instrument`);
       // "It's too small to see" (14 October 2026): the trail fitted up to three
       // octaves into the chart, and a phone printed the notes' names over each
       // other. One octave now, and every row tall enough for its name.
@@ -399,7 +428,7 @@ async function deskPhoto(page) {
       await page.waitForTimeout(300);
       // The pitch pipe sounds and goes quiet by itself.
       await page.getByRole('button', { name: /Play C4/ }).click();
-      ok(await page.locator('[data-music-tuner]').getByRole('button', { name: '■ Stop', exact: true }).isVisible(), `${size}: the starting note sounds`);
+      ok(await page.locator('[data-pitch-pipe]').getByRole('button', { name: 'Stop', exact: true }).isVisible(), `${size}: the starting note sounds`);
       await page.waitForTimeout(2800);
       ok(await page.getByRole('button', { name: /Play C4/ }).isVisible() && (await clocksOpen(page)) === 0,
          `${size}: and stops by itself, closing its audio`);
@@ -802,11 +831,12 @@ async function deskPhoto(page) {
             await openFolder(page, 'Tuner');
             await page.getByRole('button', { name: /Start listening/ }).click();
             await page.waitForTimeout(1500);
+            await page.locator('[data-tuner-more]').click();
             const trail = await shows(page, '[data-tuner-trail] canvas', 'borderTopColor', true);
             ok(trail >= 3, `${look}: the trail of your voice shows (${trail.toFixed(1)}:1)`);
             // "I can't see where's the fine line for perfect pitch" (6 October 2026).
-            const centre = await shows(page, '[data-tuner-centre]', 'backgroundColor');
-            const needle = await shows(page, '[data-tuner-needle]', 'backgroundColor');
+            const centre = await shows(page, '[data-tuner-centre]', 'color');
+            const needle = await shows(page, '[data-tuner-needle]', 'color');
             const words = await shows(page, '[data-tuner-verdict]', 'color');
             ok(centre >= 3 && needle >= 3 && words >= 4.5 && /In tune/.test(await say(page, '[data-tuner-verdict]')),
                `${look}: the tuner's centre line, its needle and "In tune" all show (${centre.toFixed(1)}, ${needle.toFixed(1)}, ${words.toFixed(1)}:1)`);

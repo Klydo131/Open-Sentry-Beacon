@@ -119,24 +119,19 @@ folder for more, and untick it to put the folder back as it was.
 - **Listen** plays your own music and videos, in playlists if you like, and has
   calming sounds for the background. Your music is still in My Files as well,
   and each file there has its own Play button for a quick listen.
-- **Tuner** tells you which note you are singing or playing and whether it is
-  flat or sharp: the green band in the middle is in tune. Tap **Start listening**; your phone asks once whether the app
-  may use the microphone. Tap **Stop listening** when you are done. It records
-  nothing. **Starting note** plays a note for the choir, like a pitch pipe.
-  **Concert pitch** is where the choir's A sits: 440 is the standard. Tap 442
-  or 432 and you hear the new A, with a line saying what it does to every note;
-  **Compare with 440** plays the standard A, then yours. To match an organ or a
-  piano, ask for its A and tap **Listen for the A**. In **Advanced**: **Sing
-  the note**, a practice that shows you a note (or five to ten) and tells you
-  whether you hit each one, with **Perfect pitch!** when you hit them all; a
-  line drawing your voice over the last ten seconds, a **drone** to sing
-  against, and the notes as a clarinet, trumpet, saxophone or horn reads them.
-- **Conductor** keeps a steady beat and draws the conductor's hand for 2, 3, 4
-  or 6 beats. Tap **Tap the beat** a few times in time and the tempo follows
-  you. Untick **Sound the clicks** to follow the hand in silence. In
-  **Advanced**: clicks between the beats, loud or silent beats, a one-bar
-  count-in, a speed trainer that gets a little faster bar by bar, and tempos
-  saved by name, such as *Hymn 100*.
+- **Tuner** is a dial with the note in the middle. Tap the round **microphone**
+  button and sing or play: the marker leans left when you are flat (♭), right
+  when you are sharp (♯), and the dial says **✓ In tune** inside the green band.
+  Your phone asks once whether the app may use the microphone; it records
+  nothing. Tap the button again to stop. **Starting note** plays a note for the
+  choir, like a pitch pipe. **Concert pitch** (tap it to open) is where the
+  choir's A sits: 440 is the standard; tap 442 or 432 and you hear the new A,
+  and to match an organ or a piano, ask for its A and tap **Listen for the A**.
+  In **Advanced**: **Sing the note**, a keyboard: tap a key, sing it and hold
+  it, and it says **Perfect**, **Close** or **Try again** (and what you sang),
+  with a burst of notes for Perfect. **More tools** holds a line drawing your
+  voice over the last ten seconds, a **drone** to sing against, and the notes
+  as a clarinet, trumpet, saxophone or horn reads them.
 - **Pieces** keeps your choir's music. **Scan a page**: take a photo of a printed
   page, drag the four dots onto its corners, and tap **Make a clean page**.
   **Open a score or PDF**: a MusicXML file from MuseScore, Sibelius, Finale or
@@ -152,11 +147,13 @@ folder for more, and untick it to put the folder back as it was.
 
 ![The Music room's Conductor. The pattern for four beats, numbered where the hand falls, with the tempo beside it.](screenshots/walkthrough/40-music-room.png)
 
-![The Tuner's Concert pitch. One tap for each common A, the one chosen shown as chosen, and Compare with 440.](screenshots/walkthrough/42-tuner-pitch.png)
+![The Tuner: the dial, a C4 sung and in tune, and the round button.](screenshots/walkthrough/47-tuner.png)
 
-![Sing the note, in the Tuner's Advanced settings: One note or 5-10 notes, the notes chosen, and a note to add.](screenshots/walkthrough/44-sing-the-note.png)
+![The Tuner's Concert pitch, opened. One tap for each common A, a line saying what it does, Hear A, and Listen for the A.](screenshots/walkthrough/42-tuner-pitch.png)
 
-![C4 sung and held: a hit, and Perfect pitch.](screenshots/walkthrough/45-perfect-pitch.png)
+![Sing the note, in the Tuner's Advanced settings: a keyboard, waiting for a key to be tapped.](screenshots/walkthrough/44-sing-the-note.png)
+
+![C4 tapped and sung: Perfect, with a burst of notes.](screenshots/walkthrough/45-perfect-pitch.png)
 
 ![Your voice, in the Tuner's Advanced settings: one octave of notes, each named, and a short tune sung across them, a line for each note.](screenshots/walkthrough/46-your-voice.png)
 

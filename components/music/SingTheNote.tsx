@@ -1,121 +1,88 @@
 'use client';
 
-// Sing the note: the Tuner's practice, in its Advanced settings. Choose a note,
-// or a run of five to ten, sing each one and hold it, and the tuner says
-// whether you hit it. Every note hit is perfect pitch, and it says so.
+// Sing the note: the Tuner's practice, in its Advanced settings. Tap a key,
+// sing that note and hold it, and the card says Perfect, Close, or Try again.
+// A perfect note is rewarded: perfect pitch.
 //
-// Asked for on 14 October 2026 (the owner's words are at the top of
-// lib/music/sing-the-note.ts, which judges each note). The microphone is the
-// Tuner's own, opened and let go the same way; what it hears is measured on
-// the phone and thrown away. Nothing about a practice leaves the phone: the
-// notes chosen are remembered on it, as a convenience, and nothing else is.
+// Asked for on 14 October 2026, and made this simple on 15 October 2026: "just
+// tap or click a note and I will just sing ... and it will detect if I hit a
+// perfect note or close enough, that's all ... Let the design speak for
+// itself." So: a keyboard, a ring that fills while the note is held, a marker
+// that shows how near the voice is, and one word. No settings. The owner's
+// words and how a note is graded are at the top of lib/music/sing-the-note.ts.
 //
-// THE APP'S OWN SOUND IS NEVER JUDGED. Hear it plays the note through the
-// phone's speaker, which the microphone hears. While it plays, and for a
-// moment after, the judge is told to start again, so a note cannot be passed
-// by the phone singing it to itself. The drone is stopped for the same reason.
+// The microphone is the Tuner's own, opened by the first key tapped and let go
+// the same way; what it hears is measured on the phone and thrown away. The
+// octave shown is remembered on the phone, as a convenience, and nothing else.
+//
+// THE APP'S OWN SOUND IS NEVER JUDGED. The speaker button plays the note, which
+// the microphone hears. While it plays, and for a moment after, the judge is
+// told to start again, so a note cannot be passed by the phone singing it to
+// itself. The drone is stopped for the same reason.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, Card } from '@/components/ui';
+import { Card } from '@/components/ui';
 import type { Tuner } from '@/lib/music/tuner';
 import { midiName, midiToHz } from '@/lib/music/notes';
 import { closeAudio, note, openAudio } from '@/lib/music/audio';
 import { prefersLessMotion } from '@/lib/motion';
 import {
-  MOST_NOTES, NoteJudge, RUN_NOTES, TOLERANCES, VOICE_PARTS, centsFor, partFor, pickNotes, verdictWords,
-  type Judging, type Tolerance, type Verdict, type VoicePart,
+  CLOSE_CENTS, NoteJudge, PERFECT_CENTS, gradeHint, gradeOf, type Grade, type Judging, type Verdict,
 } from '@/lib/music/sing-the-note';
 
-/** The notes, voice part, strictness and Hear-first choice, remembered on this phone. */
+/** The octave shown, remembered on this phone. */
 const KEY = 'beacon:music-sing';
-/** The note played by Hear it, and how long after it the judge waits for the room to go quiet. */
+/** The octaves a voice sings in: a bass's low E to a soprano's top C sit in these. */
+const LOWEST_OCTAVE = 2;
+const HIGHEST_OCTAVE = 5;
+/** The note the speaker plays, and how long after it the judge waits for the room to go quiet. */
 const HEAR_SECONDS = 1;
 const ECHO_MS = 350;
-/** How long each verdict stays before the next note. */
-const VERDICT_MS = 900;
+/** How long a grade stays before the next try is listened for. */
+const GRADE_MS = 1400;
 /** Told to the drone, so it stops when a practice starts. */
 export const QUIET_EVENT = 'beacon:music-quiet';
 
-type Mode = 'one' | 'run';
-interface Kept { mode: Mode; single: number; notes: number[]; part: VoicePart; tolerance: Tolerance; hearFirst: boolean }
-const singable = (n: unknown): n is number => Number.isInteger(n) && (n as number) >= 28 && (n as number) <= 96;
+/** A piano's octave: the seven white keys, and the five black ones between them. */
+const WHITE = [0, 2, 4, 5, 7, 9, 11];
+const BLACK = [
+  { step: 1, after: 0 }, { step: 3, after: 1 }, { step: 6, after: 3 }, { step: 8, after: 4 }, { step: 10, after: 5 },
+];
 
-function readKept(): Kept | null {
+function readOctave(): number | null {
   try {
-    const kept = JSON.parse(localStorage.getItem(KEY) || 'null') as Partial<Kept> | null;
-    if (!kept || typeof kept !== 'object') return null;
-    const notes = Array.isArray(kept.notes) ? kept.notes.filter(singable).slice(0, MOST_NOTES) : [];
-    return {
-      mode: kept.mode === 'one' ? 'one' : 'run',
-      single: singable(kept.single) ? kept.single : 60,
-      notes,
-      part: VOICE_PARTS.some((p) => p.id === kept.part) ? (kept.part as VoicePart) : 'any',
-      tolerance: TOLERANCES.some((t) => t.id === kept.tolerance) ? (kept.tolerance as Tolerance) : 'choir',
-      hearFirst: kept.hearFirst === true,
-    };
+    const kept = JSON.parse(localStorage.getItem(KEY) || 'null') as { octave?: unknown } | null;
+    const o = kept && typeof kept === 'object' ? kept.octave : null;
+    return Number.isInteger(o) && (o as number) >= LOWEST_OCTAVE && (o as number) <= HIGHEST_OCTAVE ? (o as number) : null;
   } catch {
     return null;
   }
 }
 
-type Result = Verdict | { target: number; skipped: true };
-const skipped = (r: Result): r is { target: number; skipped: true } => 'skipped' in r;
-
 export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
-  // One note, or a run of five to ten: the two ways the owner asked for.
-  const [mode, setMode] = useState<Mode>('run');
-  const [single, setSingle] = useState(60);
-  const [run, setRun] = useState<number[]>([60, 62, 64, 65, 67]);
-  const notes = mode === 'one' ? [single] : run;
-  const [part, setPart] = useState<VoicePart>('any');
-  const [tolerance, setTolerance] = useState<Tolerance>('choir');
-  const [hearFirst, setHearFirst] = useState(false);
-  const [adding, setAdding] = useState(60);
-  const [count, setCount] = useState(RUN_NOTES);
-
-  const [phase, setPhase] = useState<'setup' | 'singing' | 'done'>('setup');
-  const [index, setIndex] = useState(0);
-  const [results, setResults] = useState<Result[]>([]);
+  const [octave, setOctave] = useState(4);
+  const [target, setTarget] = useState<number | null>(null);
   const [live, setLive] = useState<Judging>({ state: 'waiting' });
   const [shown, setShown] = useState<Verdict | null>(null);
-  const [heardFirst, setHeardFirst] = useState(0);
-  const [stopped, setStopped] = useState('');
+  const [problem, setProblem] = useState('');
 
-  // Remembered choices, read after mount (no storage on the server).
   useEffect(() => {
-    const kept = readKept();
-    if (!kept) return;
-    setMode(kept.mode);
-    setSingle(kept.single);
-    if (kept.notes.length) setRun(kept.notes);
-    setPart(kept.part);
-    setTolerance(kept.tolerance);
-    setHearFirst(kept.hearFirst);
+    const kept = readOctave();
+    if (kept !== null) setOctave(kept);
   }, []);
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify({ mode, single, notes: run, part, tolerance, hearFirst })); } catch { /* a convenience only */ }
-  }, [mode, single, run, part, tolerance, hearFirst]);
+    try { localStorage.setItem(KEY, JSON.stringify({ octave })); } catch { /* a convenience only */ }
+  }, [octave]);
 
-  const range = partFor(part);
-  const choices = Array.from({ length: range.high - range.low + 1 }, (_, i) => range.low + i);
-  // A voice part chosen keeps every note offered inside it.
-  useEffect(() => {
-    if (adding < range.low || adding > range.high) setAdding(Math.round((range.low + range.high) / 2));
-    if (single < range.low || single > range.high) setSingle(Math.round((range.low + range.high) / 2));
-  }, [range.low, range.high, adding, single]);
-  const ready = mode === 'one' || run.length >= RUN_NOTES;
-
-  // ---- The practice ---------------------------------------------------------
   // The settings as they are now, for the callbacks a microphone frame and a
   // timer run long after the render that made them.
-  const now = useRef({ notes, a4, tolerance, hearFirst });
-  now.current = { notes, a4, tolerance, hearFirst };
+  const now = useRef({ a4, target });
+  now.current = { a4, target };
   const { onReading, start: listen, stop: stopListening, status } = tuner;
   const judge = useRef<NoteJudge | null>(null);
-  const at = useRef(0);
   const quietUntil = useRef(0);
+  const restUntil = useRef(0);
   const openedMic = useRef(false);
-  const timer = useRef(0);
   const shownAt = useRef(0);
   const sound = useRef<AudioContext | null>(null);
   const soundTimer = useRef(0);
@@ -138,357 +105,220 @@ export function SingTheNote({ tuner, a4 }: { tuner: Tuner; a4: number }) {
     soundTimer.current = window.setTimeout(hush, (HEAR_SECONDS + 0.3) * 1000);
   }, [hush]);
 
-  const finish = useCallback((why = '') => {
-    window.clearTimeout(timer.current);
-    judge.current = null;
-    hush();
-    if (openedMic.current) { openedMic.current = false; stopListening(); }
-    setStopped(why);
-  }, [hush, stopListening]);
-
-  /** The note at `i` is the one being sung now. */
-  const begin = useCallback((i: number, after: number | null) => {
-    const { notes: list, a4: pitch, tolerance: how, hearFirst: hear } = now.current;
-    at.current = i;
-    judge.current = new NoteJudge(list[i], pitch, centsFor(how), after);
-    setIndex(i);
+  /** A key tapped: that note is the one to sing, from now. */
+  const choose = async (midi: number) => {
+    window.dispatchEvent(new Event(QUIET_EVENT));
+    setProblem('');
+    setTarget(midi);
     setShown(null);
     setLive({ state: 'waiting' });
-    if (hear) { play(list[i]); setHeardFirst((n) => n + 1); }
-  }, [play]);
-
-  const start = async () => {
-    if (!ready) return;
-    window.dispatchEvent(new Event(QUIET_EVENT));
-    setStopped('');
-    setResults([]);
-    setHeardFirst(0);
-    setPhase('singing');
+    restUntil.current = 0;
+    judge.current = new NoteJudge(midi, a4, CLOSE_CENTS);
     if (status !== 'listening') { openedMic.current = true; await listen(); }
-    begin(0, null);
   };
 
-  /** A note is judged (or skipped): show it for a moment, then the next one. */
-  const record = useCallback((r: Result) => {
+  const stop = useCallback(() => {
     judge.current = null;
-    setResults((all) => [...all, r]);
-    if (!skipped(r)) setShown(r);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
-      const next = at.current + 1;
-      if (next >= now.current.notes.length) {
-        setPhase('done');
-        finish();
-      } else {
-        begin(next, skipped(r) ? null : r.sung);
-      }
-    }, skipped(r) ? 0 : VERDICT_MS);
-  }, [begin, finish]);
+    hush();
+    setTarget(null);
+    setShown(null);
+    setLive({ state: 'waiting' });
+    if (openedMic.current) { openedMic.current = false; stopListening(); }
+  }, [hush, stopListening]);
 
-  // Every reading, sixty a second, to the judge of the note being sung.
+  // Every reading, sixty a second, to the judge of the note chosen. After a
+  // grade, the next try is listened for once it has been seen, and only once
+  // the voice has left the note just graded (a breath, or another note).
   useEffect(() => {
-    if (phase !== 'singing') return;
+    if (target === null) return;
     return onReading((raw, t) => {
       const j = judge.current;
-      if (!j) return;
+      if (!j || t < restUntil.current) return;
       if (t < quietUntil.current) { j.restart(); return; }
       const said = j.push(raw, t);
-      if (said.state === 'judged') { record(said.verdict); return; }
+      if (said.state === 'judged') {
+        setShown(said.verdict);
+        setLive({ state: 'waiting' });
+        restUntil.current = t + GRADE_MS;
+        judge.current = new NoteJudge(j.target, now.current.a4, CLOSE_CENTS, said.verdict.sung);
+        return;
+      }
       // The screen is told at most twenty times a second.
       if (t - shownAt.current < 50) return;
       shownAt.current = t;
+      if (said.state === 'holding') setShown(null);
       setLive(said);
     });
-  }, [phase, onReading, record]);
+  }, [target, onReading]);
 
-  // The microphone refused, or let go (Stop listening, the folder left, the
-  // phone locked): the practice stops, and says why.
+  // The microphone refused, or let go (the Tuner's own button, the folder
+  // left, the phone locked): the practice rests until a key is tapped again.
   const was = useRef(status);
   useEffect(() => {
     const before = was.current;
     was.current = status;
-    if (phase !== 'singing') return;
+    if (target === null) return;
     if (status === 'denied' || status === 'unavailable') {
-      setPhase('setup');
       openedMic.current = false;
-      finish('The microphone is not available here, so nothing can be heard. Allow it for this site, then try again.');
+      stop();
+      setProblem('The microphone is not allowed here. Allow it for this site, then tap a note again.');
     } else if (before === 'listening' && status === 'off') {
-      setPhase('setup');
       openedMic.current = false;
-      finish('Stopped: the microphone was let go.');
+      stop();
     }
-  }, [status, phase, finish]);
-  useEffect(() => () => { window.clearTimeout(timer.current); hush(); }, [hush]);
+  }, [status, target, stop]);
+  useEffect(() => () => hush(), [hush]);
 
-  const stop = () => { setPhase('setup'); finish(); };
-  const skip = () => { if (judge.current) record({ target: judge.current.target, skipped: true }); };
-
-  // ---- What is shown --------------------------------------------------------
-  const hits = results.filter((r) => !skipped(r) && r.hit).length;
-  const perfect = phase === 'done' && results.length === notes.length && hits === notes.length;
-  const target = notes[index];
+  const grade: Grade | null = shown ? gradeOf(shown) : null;
+  const hint = shown ? gradeHint(shown) : null;
+  const holding = live.state === 'holding' && target !== null;
+  const off = holding ? Math.round((live.sung - (target as number)) * 100) : null;
+  const word = !target ? 'Tap a note'
+    : grade === 'perfect' ? 'Perfect'
+    : grade === 'close' ? 'Close'
+    : grade === 'off' ? 'Try again'
+    : holding ? 'Hold it'
+    : 'Sing it';
 
   return (
     <Card className="p-5">
       <div data-sing>
-        <h2 className="text-xl font-bold text-navy">Sing the note</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Choose a note, sing it and hold it. The tuner tells you if you hit it, in the right octave. Hit every one:
-          perfect pitch.
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="whitespace-nowrap text-xl font-bold text-navy">Sing the note</h2>
+          <div className="flex shrink-0 items-center" data-sing-octave>
+            <button
+              type="button"
+              onClick={() => setOctave((o) => Math.max(LOWEST_OCTAVE, o - 1))}
+              disabled={octave <= LOWEST_OCTAVE}
+              aria-label="Lower octave"
+              className="tap grid h-10 w-10 place-items-center rounded-full text-2xl font-bold text-navy disabled:opacity-30"
+            >
+              ‹
+            </button>
+            <span className="text-center text-sm font-semibold tabular-nums text-gray-600">Octave {octave}</span>
+            <button
+              type="button"
+              onClick={() => setOctave((o) => Math.min(HIGHEST_OCTAVE, o + 1))}
+              disabled={octave >= HIGHEST_OCTAVE}
+              aria-label="Higher octave"
+              className="tap grid h-10 w-10 place-items-center rounded-full text-2xl font-bold text-navy disabled:opacity-30"
+            >
+              ›
+            </button>
+          </div>
+        </div>
 
-        {phase === 'setup' && (
-          <div className="mt-4 space-y-5" data-sing-setup>
-            {/* One note, or a run: the first choice, and the only one needed. */}
-            <div role="radiogroup" aria-label="What to sing" className="grid grid-cols-2 gap-1 rounded-2xl bg-gray-50 p-1 ring-1 ring-navy/10" data-sing-mode>
-              {([['one', 'One note', 'One note'], ['run', '5-10 notes', '5 to 10 notes']] as const).map(([id, label, said]) => (
-                <button
-                  key={id}
-                  type="button"
-                  role="radio"
-                  aria-checked={mode === id}
-                  aria-label={said}
-                  onClick={() => setMode(id)}
-                  className={`tap whitespace-nowrap rounded-xl px-3 text-base font-bold transition-colors ${mode === id ? 'bg-navy text-white shadow-sm' : 'text-navy'}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+        <Piano octave={octave} chosen={target} onPick={(m) => void choose(m)} />
 
-            {mode === 'one' ? (
-              <div className="text-center" data-sing-one>
-                <div className="flex items-center justify-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setSingle((n) => Math.max(range.low, n - 1))}
-                    disabled={single <= range.low}
-                    aria-label="A semitone lower"
-                    className="tap grid h-12 w-12 place-items-center rounded-full bg-white text-2xl font-bold text-navy ring-1 ring-navy/20 disabled:opacity-40"
-                  >
-                    −
-                  </button>
-                  <p className="grid h-28 w-28 place-items-center rounded-full bg-gray-50 ring-2 ring-[color:var(--music-accent)]" aria-live="polite">
-                    <span className="text-4xl font-extrabold tabular-nums text-navy" data-sing-single>{midiName(single)}</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setSingle((n) => Math.min(range.high, n + 1))}
-                    disabled={single >= range.high}
-                    aria-label="A semitone higher"
-                    className="tap grid h-12 w-12 place-items-center rounded-full bg-white text-2xl font-bold text-navy ring-1 ring-navy/20 disabled:opacity-40"
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  <Button variant="ghost" onClick={() => play(single)}>🔔 Hear {midiName(single)}</Button>
-                  <Button variant="ghost" onClick={() => setSingle(pickNotes(1, part)[0])}>🎲 Surprise me</Button>
-                </div>
-              </div>
-            ) : (
-              <div data-sing-run>
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-sm font-semibold text-navy" id="sing-notes-label">
-                    Your notes <span className="font-normal text-gray-500">({run.length} of {MOST_NOTES})</span>
-                  </p>
-                  {run.length > 0 && (
-                    <button type="button" onClick={() => setRun([])} className="tap rounded-xl px-3 text-sm font-semibold text-navy underline underline-offset-2">
-                      Clear
-                    </button>
-                  )}
-                </div>
-                <ul aria-labelledby="sing-notes-label" className="mt-2 flex min-h-11 flex-wrap gap-2" data-sing-notes>
-                  {run.map((n, i) => (
-                    <li key={`${i}-${n}`}>
-                      <button
-                        type="button"
-                        onClick={() => setRun((all) => all.filter((_, k) => k !== i))}
-                        aria-label={`Remove ${midiName(n)}`}
-                        className="tap rounded-full bg-gray-50 px-4 text-base font-bold tabular-nums text-navy ring-1 ring-navy/20"
-                        data-sing-note-chip
-                      >
-                        {midiName(n)} <span aria-hidden="true" className="ml-1 font-normal text-gray-500">×</span>
-                      </button>
-                    </li>
-                  ))}
-                  {!run.length && <li className="self-center text-sm text-gray-600">No notes yet.</li>}
-                </ul>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <label htmlFor="sing-add" className="w-full text-xs font-semibold text-gray-600">Add a note</label>
-                  <select
-                    id="sing-add"
-                    value={adding}
-                    onChange={(e) => setAdding(Number(e.target.value))}
-                    className="tap rounded-xl bg-white px-4 text-base font-semibold text-navy ring-1 ring-navy/20"
-                  >
-                    {choices.map((m) => <option key={m} value={m}>{midiName(m)}</option>)}
-                  </select>
-                  <Button variant="ghost" onClick={() => setRun((all) => [...all, adding].slice(0, MOST_NOTES))} disabled={run.length >= MOST_NOTES}>
-                    + Add
-                  </Button>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <label htmlFor="sing-count" className="w-full text-xs font-semibold text-gray-600">Or let the app pick</label>
-                  <select
-                    id="sing-count"
-                    value={count}
-                    onChange={(e) => setCount(Number(e.target.value))}
-                    className="tap rounded-xl bg-white px-4 text-base font-semibold text-navy ring-1 ring-navy/20"
-                  >
-                    {[5, 6, 7, 8, 9, 10].map((c) => <option key={c} value={c}>{c} notes</option>)}
-                  </select>
-                  <Button variant="ghost" onClick={() => setRun(pickNotes(count, part))}>🎲 Pick for me</Button>
-                </div>
-                {run.length < RUN_NOTES && (
-                  <p className="mt-2 text-sm text-gray-600" data-sing-need>
-                    A run is five to ten notes: add {RUN_NOTES - run.length} more, or tap Pick for me.
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div className="space-y-4 border-t border-navy/10 pt-4">
-              <Pills
-                label="Your voice"
-                value={part}
-                onChange={(v) => setPart(v as VoicePart)}
-                options={VOICE_PARTS.map((p) => ({ id: p.id, name: p.id === 'any' ? 'Any' : p.name, hint: `${midiName(p.low)} to ${midiName(p.high)}` }))}
-                data="part"
-              />
-              <Pills
-                label="How close counts"
-                value={tolerance}
-                onChange={(v) => setTolerance(v as Tolerance)}
-                options={TOLERANCES.map((t) => ({ id: t.id, name: t.name, hint: `within ${t.cents} cents` }))}
-                data="tolerance"
-              />
-              <label className="flex items-start gap-3 text-navy">
-                <input
-                  type="checkbox"
-                  checked={hearFirst}
-                  onChange={(e) => setHearFirst(e.target.checked)}
-                  className="mt-0.5 h-5 w-5 shrink-0 accent-teal-700"
-                />
-                <span>
-                  <span className="block font-semibold">Play each note before I sing it</span>
-                  <span className="block text-sm text-gray-500">Leave it off for the real test: from memory, as perfect pitch is.</span>
-                </span>
-              </label>
-            </div>
-
-            <Button onClick={() => void start()} disabled={!ready || status === 'asking'} className="w-full justify-center">
-              🎙️ {mode === 'one' ? `Sing ${midiName(single)}` : `Sing the ${run.length} notes`}
-            </Button>
-            {stopped && <p role="status" className="text-sm text-navy">{stopped}</p>}
-            <p className="text-xs text-gray-500">
-              The microphone listens only while you sing here, and nothing is recorded. Wear headphones if you play
-              notes or the drone, or the tuner hears them instead of you.
+        <div className="mt-6 flex flex-col items-center text-center" data-sing-now>
+          <div className="relative">
+            <Ring progress={shown ? 1 : holding ? (live as { progress: number }).progress : 0} grade={grade}>
+              <span className={`font-extrabold tabular-nums text-navy ${target ? 'text-4xl' : 'text-3xl opacity-40'}`} data-sing-target>
+                {target ? midiName(target) : '♪'}
+              </span>
+            </Ring>
+            {grade === 'perfect' && <Burst key={shown?.sung} />}
+          </div>
+          {target !== null && <Nearness cents={shown ? shown.cents : off} />}
+          <div role="status" aria-live="polite" className="mt-3 min-h-[4.25rem]" data-sing-live>
+            <p
+              className={`text-3xl font-extrabold ${grade === 'perfect' || grade === 'close' ? 'text-[color:var(--music-accent)]' : 'text-navy'}`}
+              data-sing-verdict={grade ?? (target ? 'listening' : 'idle')}
+            >
+              {word}
             </p>
-          </div>
-        )}
-
-        {phase === 'singing' && target !== undefined && (
-          <div className="mt-4" data-sing-now>
-            <p className="text-sm font-semibold text-gray-600" data-sing-count>Note {index + 1} of {notes.length}</p>
-            <div className="mt-2 flex items-center gap-5">
-              <Ring progress={shown ? 1 : live.state === 'holding' ? live.progress : 0} hit={shown ? shown.hit : null}>
-                <span className="text-4xl font-extrabold tabular-nums text-navy" data-sing-target>{midiName(target)}</span>
-              </Ring>
-              <div className="min-w-0 flex-1" role="status" aria-live="polite" data-sing-live>
-                {shown ? (
-                  <p className={`text-lg font-bold ${shown.hit ? 'text-[color:var(--music-accent)]' : 'text-navy'}`} data-sing-verdict={shown.hit ? 'hit' : 'miss'}>
-                    {shown.hit ? '✓ Hit: ' : '✗ '}{verdictWords(shown)}
-                  </p>
-                ) : live.state === 'holding' ? (
-                  <p className="text-lg font-semibold text-navy">
-                    Hold it… you are on {midiName(Math.round(live.sung))}
-                  </p>
-                ) : (
-                  <p className="text-lg font-semibold text-navy">Sing {midiName(target)} and hold it.</p>
-                )}
-              </div>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="ghost" onClick={() => play(target)} disabled={!!shown}>🔔 Hear it</Button>
-              <Button variant="ghost" onClick={skip} disabled={!!shown}>Skip</Button>
-              <Button variant="ghost" onClick={stop}>■ Stop</Button>
-            </div>
-          </div>
-        )}
-
-        {phase === 'done' && (
-          <div className="mt-4" data-sing-results>
-            {perfect && <PerfectPitch notes={notes.length} heard={heardFirst} />}
-            <p className="text-lg font-bold text-navy" data-sing-score>
-              {hits} of {notes.length} {notes.length === 1 ? 'note' : 'notes'} hit
-            </p>
-            <ol className="mt-2 space-y-1">
-              {results.map((r, i) => (
-                <li key={i} className="flex items-baseline gap-2 text-sm" data-sing-result={skipped(r) ? 'skipped' : r.hit ? 'hit' : 'miss'}>
-                  <span aria-hidden="true" className={`w-5 font-bold ${!skipped(r) && r.hit ? 'text-[color:var(--music-accent)]' : 'text-gray-500'}`}>
-                    {skipped(r) ? '·' : r.hit ? '✓' : '✗'}
-                  </span>
-                  <span className="text-navy">{skipped(r) ? `${midiName(r.target)}: skipped` : verdictWords(r)}</span>
-                </li>
-              ))}
-            </ol>
-            {heardFirst > 0 && (
-              <p className="mt-2 text-xs text-gray-500">You heard {heardFirst === notes.length ? 'every note' : `${heardFirst} of the notes`} played first.</p>
+            {hint && (
+              <p className="mt-1 text-base font-semibold text-gray-600" data-sing-hint>
+                {hint.words}{hint.go === 'up' ? ' ↑' : hint.go === 'down' ? ' ↓' : ''}
+              </p>
             )}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button onClick={() => void start()}>{notes.length === 1 ? 'Sing it again' : 'Sing them again'}</Button>
-              <Button variant="ghost" onClick={() => { setPhase('setup'); setResults([]); }}>{notes.length === 1 ? 'Change the note' : 'Change the notes'}</Button>
-            </div>
+            {grade === 'perfect' && <p className="sr-only">Perfect pitch!</p>}
           </div>
-        )}
+          {target !== null && (
+            <div className="mt-2 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => play(target)}
+                aria-label={`Hear ${midiName(target)}`}
+                className="tap grid h-12 w-12 place-items-center rounded-full bg-gray-50 text-navy ring-1 ring-navy/15"
+              >
+                <SpeakerIcon />
+              </button>
+              <button
+                type="button"
+                onClick={stop}
+                aria-label="Stop"
+                className="tap grid h-12 w-12 place-items-center rounded-full bg-gray-50 text-navy ring-1 ring-navy/15"
+              >
+                <span aria-hidden="true" className="block h-3.5 w-3.5 rounded-sm bg-current" />
+              </button>
+            </div>
+          )}
+          {problem && <p role="alert" className="mt-3 text-sm text-navy">{problem}</p>}
+        </div>
       </div>
     </Card>
   );
 }
 
-/** A row of choices, one pressed: the voice part, how close counts. */
-function Pills({ label, value, onChange, options, data }: {
-  label: string;
-  value: string;
-  onChange: (id: string) => void;
-  options: { id: string; name: string; hint: string }[];
-  data: string;
-}) {
+/**
+ * One octave of a piano, C to B. White keys take the width; the black keys sit
+ * between them, as on a piano. Drawn in a piano's own colours in every look
+ * (sing-piano in app/globals.css), so it always reads as a keyboard.
+ */
+function Piano({ octave, chosen, onPick }: { octave: number; chosen: number | null; onPick: (midi: number) => void }) {
+  const c = 12 * (octave + 1);
+  const width = 100 / WHITE.length;
   return (
-    <div role="group" aria-label={label}>
-      <p className="text-sm font-semibold text-navy">{label}</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {options.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            aria-pressed={value === o.id}
-            onClick={() => onChange(o.id)}
-            className={`tap rounded-full px-4 py-1 text-left ring-1 transition-colors ${value === o.id ? 'bg-navy text-white ring-navy' : 'bg-white text-navy ring-navy/20'}`}
-            data-sing-choice={`${data}:${o.id}`}
-          >
-            <span className="block text-sm font-bold leading-tight">{o.name}</span>
-            <span className={`block text-xs leading-tight ${value === o.id ? 'text-white/80' : 'text-gray-600'}`}>{o.hint}</span>
-          </button>
-        ))}
+    <div className="sing-piano relative mt-4 h-40 select-none" role="group" aria-label={`Notes, octave ${octave}`} data-sing-keys>
+      <div className="flex h-full gap-[3px]">
+        {WHITE.map((step) => {
+          const midi = c + step;
+          return (
+            <button
+              key={midi}
+              type="button"
+              onClick={() => onPick(midi)}
+              aria-label={midiName(midi)}
+              aria-pressed={chosen === midi}
+              className="sing-key sing-key-white flex flex-1 items-end justify-center pb-2 text-sm font-bold"
+            >
+              <span aria-hidden="true">{step === 0 ? midiName(midi) : midiName(midi).replace(/\d+$/, '')}</span>
+            </button>
+          );
+        })}
       </div>
+      {BLACK.map(({ step, after }) => {
+        const midi = c + step;
+        return (
+          <button
+            key={midi}
+            type="button"
+            onClick={() => onPick(midi)}
+            aria-label={midiName(midi)}
+            aria-pressed={chosen === midi}
+            className="sing-key sing-key-black absolute top-0 h-[60%]"
+            style={{ left: `calc(${(after + 1) * width}% - ${width * 0.3}%)`, width: `${width * 0.6}%` }}
+          />
+        );
+      })}
     </div>
   );
 }
 
-/** The note, inside a ring that fills while it is held: full and green is a hit. */
-function Ring({ progress, hit, children }: { progress: number; hit: boolean | null; children: ReactNode }) {
+/** The note, inside a ring that fills while it is held. */
+function Ring({ progress, grade, children }: { progress: number; grade: Grade | null; children: ReactNode }) {
   const r = 44;
   const around = 2 * Math.PI * r;
+  const miss = grade === 'off';
   return (
-    <div className="relative grid h-28 w-28 shrink-0 place-items-center text-navy" data-sing-ring>
+    <div className="relative grid h-32 w-32 place-items-center text-navy" data-sing-ring>
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="currentColor" strokeOpacity="0.15" strokeWidth="8" />
+        <circle cx="50" cy="50" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="7" />
         <circle
-          cx="50" cy="50" r={r} fill="none" strokeWidth="8" strokeLinecap="round"
-          stroke={hit === false ? 'currentColor' : 'var(--music-accent)'}
-          strokeOpacity={hit === false ? 0.45 : 1}
+          cx="50" cy="50" r={r} fill="none" strokeWidth="7" strokeLinecap="round"
+          stroke={miss ? 'currentColor' : 'var(--music-accent)'}
+          strokeOpacity={miss ? 0.4 : 1}
           strokeDasharray={around}
           strokeDashoffset={around * (1 - Math.max(0, Math.min(1, progress)))}
           className="sing-ring-fill"
@@ -500,28 +330,58 @@ function Ring({ progress, hit, children }: { progress: number; hit: boolean | nu
 }
 
 /**
- * Every note hit: perfect pitch. A burst of notes and a glow; under Reduce
- * Motion, the same words and badge, standing still.
+ * How near the voice is to the note: a marker on a short line, flat to the
+ * left and sharp to the right, with the perfect band in the middle and the
+ * close band either side. Shown while a note is held, and for its grade.
  */
-function PerfectPitch({ notes, heard }: { notes: number; heard: number }) {
+function Nearness({ cents }: { cents: number | null }) {
+  const at = (c: number) => 50 + Math.max(-50, Math.min(50, c));
+  const perfect = cents !== null && Math.abs(cents) <= PERFECT_CENTS;
+  return (
+    <div aria-hidden="true" className="relative mt-4 h-6 w-56 text-navy" data-sing-meter>
+      <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-current opacity-15" />
+      <div
+        className="absolute top-1/2 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-25"
+        style={{ left: '50%', width: `${CLOSE_CENTS * 2}%`, background: 'var(--music-accent)' }}
+      />
+      <div
+        className="absolute top-1/2 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60"
+        style={{ left: '50%', width: `${PERFECT_CENTS * 2}%`, background: 'var(--music-accent)' }}
+      />
+      <span className="absolute -left-5 top-1/2 -translate-y-1/2 text-sm font-bold opacity-50">♭</span>
+      <span className="absolute -right-5 top-1/2 -translate-y-1/2 text-sm font-bold opacity-50">♯</span>
+      {cents !== null && (
+        <div
+          className={`absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white/80 transition-[left] duration-100 motion-reduce:transition-none ${perfect ? 'bg-[color:var(--music-accent)]' : 'bg-current'}`}
+          style={{ left: `${at(cents)}%` }}
+          data-sing-marker
+        />
+      )}
+    </div>
+  );
+}
+
+/** Perfect pitch: a burst of notes around the ring, and a glow. None under Reduce Motion. */
+function Burst() {
   const [still] = useState(() => prefersLessMotion());
+  if (still) return <div aria-hidden="true" className="perfect-pitch-glow pointer-events-none absolute inset-0 rounded-full" data-perfect-pitch />;
   const sparks = ['♪', '♫', '♩', '♬', '♪', '♫', '♩', '♬'];
   return (
-    <div className="perfect-pitch relative mb-4 overflow-hidden rounded-2xl p-5 text-center" role="status" aria-live="polite" data-perfect-pitch>
-      {!still && (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {sparks.map((s, i) => (
-            // Up the two outer edges, clear of the words in the middle.
-            <span key={i} className="perfect-pitch-spark" style={{ ['--i' as string]: i, left: `${i % 2 ? 87 + (i % 4) * 2 : 1 + (i % 4) * 2}%` }}>{s}</span>
-          ))}
-        </div>
-      )}
-      <p className="perfect-pitch-badge relative z-10 mx-auto grid h-16 w-16 place-items-center rounded-full text-3xl" aria-hidden="true">🎯</p>
-      <p className="relative z-10 mt-2 text-2xl font-extrabold text-navy">Perfect pitch!</p>
-      <p className="relative z-10 mx-auto mt-1 max-w-[16rem] text-sm text-gray-600">
-        {notes === 1 ? 'You hit the note.' : `Every one of the ${notes} notes, hit.`}
-        {heard === 0 ? ' From memory, with none played first.' : ''}
-      </p>
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0" data-perfect-pitch>
+      <div className="perfect-pitch-glow absolute inset-0 rounded-full" />
+      {sparks.map((s, i) => (
+        <span key={i} className="perfect-pitch-spark" style={{ ['--i' as string]: i, ['--a' as string]: `${i * 45}deg` }}>{s}</span>
+      ))}
     </div>
+  );
+}
+
+function SpeakerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor" stroke="none" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+      <path d="M18.5 5.5a9 9 0 0 1 0 13" />
+    </svg>
   );
 }

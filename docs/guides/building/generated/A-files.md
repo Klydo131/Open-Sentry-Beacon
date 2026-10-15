@@ -1254,11 +1254,11 @@ Everything a person wrote into the file (titles, part names) reaches the screen 
 
 #### `components/music/SingTheNote.tsx`
 
-Sing the note: the Tuner's practice, in its Advanced settings. Choose a note, or a run of five to ten, sing each one and hold it, and the tuner says whether you hit it. Every note hit is perfect pitch, and it says so.
+Sing the note: the Tuner's practice, in its Advanced settings. Tap a key, sing that note and hold it, and the card says Perfect, Close, or Try again. A perfect note is rewarded: perfect pitch.
 
-Asked for on 14 October 2026 (the owner's words are at the top of lib/music/sing-the-note.ts, which judges each note). The microphone is the Tuner's own, opened and let go the same way; what it hears is measured on the phone and thrown away. Nothing about a practice leaves the phone: the notes chosen are remembered on it, as a convenience, and nothing else is.
+Asked for on 14 October 2026, and made this simple on 15 October 2026: "just tap or click a note and I will just sing ... and it will detect if I hit a perfect note or close enough, that's all ... Let the design speak for itself." So: a keyboard, a ring that fills while the note is held, a marker that shows how near the voice is, and one word. No settings. The owner's words and how a note is graded are at the top of lib/music/sing-the-note.ts.
 
-THE APP'S OWN SOUND IS NEVER JUDGED. Hear it plays the note through the phone's speaker, which the microphone hears. While it plays, and for a moment after, the judge is told to start again, so a note cannot be passed by the phone singing it to itself. The drone is stopped for the same reason.
+The microphone is the Tuner's own, opened by the first key tapped and let go the same way; what it hears is measured on the phone and thrown away. The octave shown is remembered on the phone, as a convenience, and nothing else.
 
 #### `components/music/TunerAdvanced.tsx`
 
@@ -1270,9 +1270,9 @@ The trail draws only what the tuner has already measured; it keeps the last ten 
 
 The Tuner folder: the note you are singing or playing, how far off it is, and a pitch pipe to give the choir its starting note.
 
-The microphone is opened by lib/music/tuner.ts only after Start is pressed, and released on Stop, on leaving this folder, and when the phone locks. What it hears is measured on the phone and thrown away.
+The microphone is opened by lib/music/tuner.ts only after the round button is tapped, and released on a second tap, on leaving this folder, and when the phone locks. What it hears is measured on the phone and thrown away.
 
-CONCERT PITCH YOU CAN HEAR. It used to be a number and two buttons, and changing it moved only the tuner's reference, which nobody notices until they sing (the owner, 4 October 2026: "I just put the Hertz and nothing much is happening"). Now every change plays the new A, the card says in words what it does to every note, it compares the choir's A with 440 side by side, and it can take its A from the organ or piano in the room.
+LET THE DESIGN SPEAK (15 October 2026). The owner: "The basic settings are just complicated with so many words on it. Let the design speaks for itself please." So the folder is a dial with the note in it and one round button, and every setting is a line of its own: the starting note, and the concert pitch, which opens when tapped. Nothing was taken away. Concert pitch still plays the new A at every change (the owner, 4 October 2026: "I just put the Hertz and nothing much is happening"), and can still take its A from the organ or piano in the room.
 
 #### `components/study/StudyInsertBar.tsx`
 
@@ -1944,9 +1944,9 @@ Playing a score's voices so a singer can learn theirs: every line at once, or on
 
 #### `lib/music/sing-the-note.ts`
 
-Sing the note: the Tuner's practice. A note (or a run of five to ten) is shown, the singer sings it, and this says whether they hit it.
+Sing the note: the Tuner's practice. Tap a note, sing it, and this says whether you hit it: Perfect, Close, or Try again.
 
-Asked for on 14 October 2026: "place a note that you are looking for voice and see if you hit the note correctly or if you put at least 5-10 notes and see if you hit those correctly and the user will be rewarded for 'perfect pitch' ... MAKE SURE the tuner for voice is extremely accurate with 1 to 1 on voice to notes", then "the accuracy of notes from voice to notes needs to be 99% accurate and fast".
+Asked for on 14 October 2026: "place a note that you are looking for voice and see if you hit the note correctly ... rewarded for 'perfect pitch' ... MAKE SURE the tuner for voice is extremely accurate with 1 to 1 on voice to notes", then "the accuracy of notes from voice to notes needs to be 99% accurate and fast". Made simpler on 15 October 2026: "just tap or click a note and I will just sing ... and it will detect if I hit a perfect note or close enough, that's all." So a note sung is graded in three (gradeOf, at the end): PERFECT within a tenth of a semitone, CLOSE within a quarter (as near as a choir needs), and anything further, or another note, is a try again that says what was sung. The run of five to ten notes, the voice parts and the two strictness settings went with that change.
 
 WHAT IS JUDGED. Not the first thing heard. A singer scoops into a note, wobbles on it, and takes a moment to settle, so a sung note counts once it has been held for HOLD_MS. Its pitch is the middle (the median) of the tuner's own readings over that time, leaving out the first SETTLE_MS of the scoop: a vibrato's swings either side cancel, and one stray reading cannot move a median. A hit is that pitch within the tolerance of the note asked for, in the same octave: C3 is not C4, however well it is sung.
 

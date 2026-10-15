@@ -57,8 +57,6 @@ const TUNE = join(dirname(VOICE), 'tune.wav');
   for (let i = 0; i < 6; i++) parts.push([1.2, 60], [0.15, null], [1.2, 64], [1.0, 67], [0.25, null], [1.4, 62], [0.4, null]);
   writeFileSync(TUNE, wav(sing(parts, { vowel: 'ah', sex: 'm', seed: 11, vibrato: 45 }), 48000));
 }
-/** What Sing the note remembers on the phone: a run of five, or one note. */
-const singKept = (mode) => JSON.stringify({ mode, single: 60, notes: [60, 62, 64, 65, 67], part: 'any', tolerance: 'choir', hearFirst: false });
 // The browser walks' own helpers for the two things that changed shape on
 // 30 September 2026: a room's subrooms are a drop-down now, not a row of tabs,
 // and the conversation is the Talk bubble, not a page. Using the walks' copies
@@ -469,48 +467,61 @@ const SHOTS = [
     } },
   // Concert pitch you can hear, 5 October 2026: "I just put the Hertz and
   // nothing much is happening". The Tuner's concert pitch card, A = 440.
-  { file: '42-tuner-pitch.png', what: 'The Tuner: concert pitch, one tap for each common A, and Compare with 440', size: PHONE,
+  { file: '42-tuner-pitch.png', what: 'The Tuner: concert pitch opened, one tap for each common A', size: PHONE,
     go: async (p) => {
       await signIn(p, /John Reyes/i);
       await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
       await settle(p, 1200);
-      await p.locator('[data-tuner-a4]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await p.locator('[data-pitch-toggle]').click();
+      await p.locator('[data-concert-pitch]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await settle(p, 600);
     } },
-  // Sing the note, 14 October 2026: "place a note that you are looking for
-  // voice and see if you hit the note correctly or if you put at least 5-10
-  // notes ... rewarded for 'perfect pitch'". The practice in the Tuner's
-  // Advanced settings, set up for a run of five.
-  { file: '44-sing-the-note.png', what: 'Sing the note: one note or five to ten, your voice, and how close counts', size: PHONE,
+  // The Tuner, redrawn on 15 October 2026: "The basic settings are just
+  // complicated with so many words on it. Let the design speaks for itself
+  // please." A dial and one round button, hearing a C4 sung.
+  { file: '47-tuner.png', what: 'The Tuner: the dial, a C4 sung and in tune, and one round button', size: PHONE,
     go: async (p) => {
       await signIn(p, /John Reyes/i);
-      await p.evaluate((kept) => {
-        localStorage.setItem('beacon:music-advanced:tuner', '1');
-        localStorage.setItem('beacon:music-sing', kept);
-      }, singKept('run'));
       await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
       await settle(p, 1200);
-      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
-      await p.evaluate(() => window.scrollBy(0, -80));
-      await settle(p, 600);
-    } },
-  // And the reward: C4 sung and held into the pretend microphone, judged a
-  // hit, and Perfect pitch.
-  { file: '45-perfect-pitch.png', what: 'Sing the note: C4 sung and held, a hit, and Perfect pitch', size: PHONE,
-    go: async (p) => {
-      await signIn(p, /John Reyes/i);
-      await p.evaluate((kept) => {
-        localStorage.setItem('beacon:music-advanced:tuner', '1');
-        localStorage.setItem('beacon:music-sing', kept);
-      }, singKept('one'));
-      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
-      await settle(p, 1200);
-      await p.locator('[data-sing]').getByRole('button', { name: 'Sing C4' }).click();
-      await p.locator('[data-perfect-pitch]').waitFor({ timeout: 15000 });
-      await settle(p, 900);
-      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
-      await p.evaluate(() => window.scrollBy(0, -80));
+      await p.getByRole('button', { name: 'Start listening' }).click();
+      await p.locator('[data-tuner-verdict]').filter({ hasText: /In tune/ }).waitFor({ timeout: 8000 }).catch(() => {});
+      await p.locator('[data-tuner-reading]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await settle(p, 300);
+    } },
+  // Sing the note, made simple the same day: "just tap or click a note and I
+  // will just sing ... and it will detect if I hit a perfect note or close
+  // enough, that's all." The keyboard, waiting for a tap.
+  { file: '44-sing-the-note.png', what: 'Sing the note: a keyboard, waiting for a note to be tapped', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate(() => {
+        localStorage.setItem('beacon:music-advanced:tuner', '1');
+        localStorage.setItem('beacon:music-sing', JSON.stringify({ octave: 4 }));
+      });
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 600);
+    } },
+  // And the reward: C4 tapped, sung and held into the pretend microphone, and
+  // Perfect, with the burst of notes.
+  { file: '45-perfect-pitch.png', what: 'Sing the note: C4 tapped and sung, and Perfect', size: PHONE,
+    go: async (p) => {
+      await signIn(p, /John Reyes/i);
+      await p.evaluate(() => {
+        localStorage.setItem('beacon:music-advanced:tuner', '1');
+        localStorage.setItem('beacon:music-sing', JSON.stringify({ octave: 4 }));
+      });
+      await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
+      await settle(p, 1200);
+      await p.locator('[data-sing]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await p.locator('[data-sing-keys]').getByRole('button', { name: 'C4', exact: true }).click();
+      await p.locator('[data-sing-verdict="perfect"]').waitFor({ timeout: 15000 });
+      // The ring and its word in the middle of the screen, clear of the
+      // sample-data badge and the chat button at the bottom.
+      await p.locator('[data-sing-now]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(p, 250);
     } },
   // Your voice, redrawn the same day after the owner's phone showed the old
   // trail: "not aesthetically pleasing... it's too small to see". The made-up
@@ -521,6 +532,7 @@ const SHOTS = [
       await p.evaluate(() => localStorage.setItem('beacon:music-advanced:tuner', '1'));
       await p.goto(`${BASE}/music?room=tuner`, { waitUntil: 'networkidle' });
       await settle(p, 1200);
+      await p.locator('[data-tuner-more]').click();
       await p.getByRole('button', { name: /Start listening/ }).click();
       await p.waitForTimeout(6500);
       await p.locator('[data-tuner-trail]').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));

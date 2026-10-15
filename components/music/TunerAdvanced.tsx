@@ -319,9 +319,7 @@ export function Drone({ a4 }: { a4: number }) {
     <Card className="p-5">
       <div data-tuner-drone>
         <h2 className="text-xl font-bold text-navy">Drone</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          One note, held, to sing against. If your voice drifts you hear it rub against the drone.
-        </p>
+        <p className="mt-1 text-sm text-gray-600">A note held, to sing against.</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <label htmlFor="drone-note" className="sr-only">Drone note</label>
           <select
@@ -345,9 +343,7 @@ export function Drone({ a4 }: { a4: number }) {
             ? <Button variant="ghost" onClick={stop}>■ Stop the drone</Button>
             : <Button onClick={() => start()}>▶ Start the drone</Button>}
         </div>
-        <p className="mt-2 text-xs text-gray-500">
-          With the tuner listening as well, wear headphones, or it hears the drone instead of you.
-        </p>
+        <p className="mt-2 text-xs text-gray-500">🎧 With the tuner on, use headphones.</p>
       </div>
     </Card>
   );
@@ -359,10 +355,7 @@ export function InstrumentChoice({ value, onChange }: { value: InstrumentKey; on
     <Card className="p-5">
       <div data-tuner-instrument>
         <h2 className="text-xl font-bold text-navy">Your instrument</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          A clarinet, trumpet, saxophone or horn reads its music higher than it sounds. Choose yours and the tuner
-          shows the note you would read.
-        </p>
+        <p className="mt-1 text-sm text-gray-600">The tuner shows notes as your instrument reads them.</p>
         <label htmlFor="tuner-instrument" className="sr-only">Instrument</label>
         <select
           id="tuner-instrument"

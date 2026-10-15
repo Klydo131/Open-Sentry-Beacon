@@ -1,6 +1,15 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 44 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 45 releases, as members read them in Settings, What's new.
+
+### A simpler Tuner: a dial, a button, and a keyboard to sing to
+
+*2026-10-15*
+
+- The Tuner is a dial with your note in the middle, and one round button to start and stop listening. The words are gone; the dial says In tune, or how far off you are.
+- Starting note and Concert pitch are one line each. Tap Concert pitch to open it.
+- Sing the note, in Advanced settings, is a piano keyboard. Tap a key, sing it and hold it, and it says Perfect, Close, or Try again with what you sang. Sing again after a breath and it tells you again.
+- The voice trail, the drone and your instrument are under More tools.
 
 ### Sing the note, and a tuner that hears each note exactly
 
