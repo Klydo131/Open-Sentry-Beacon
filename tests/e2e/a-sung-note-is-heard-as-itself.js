@@ -86,6 +86,43 @@ const WATCH = () => {
   }
   try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864000000)); } catch { /* not a page of the app */ }
 };
+/**
+ * What the contrast above was read from, for a failure to name its cause: the
+ * text's colour, how faded it is by every opacity it sits under, and each
+ * background behind it that is not fully see-through.
+ */
+const explain = (locator) => locator.first().evaluate((el) => {
+  let opacity = 1;
+  const behind = [];
+  for (let at = el; at; at = at.parentElement) {
+    const cs = getComputedStyle(at);
+    opacity *= Number(cs.opacity);
+    if (cs.backgroundColor && !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) behind.push(`${at.tagName.toLowerCase()}:${cs.backgroundColor}`);
+  }
+  return `colour ${getComputedStyle(el).color}, opacity ${opacity.toFixed(2)}, behind ${behind.slice(0, 4).join(' < ') || 'nothing'}`;
+}).catch((e) => `unreadable: ${e.message}`);
+
+/**
+ * Every contrast in `where`, read again after a second if any is under 4.5:1.
+ * WebKit on a busy runner once read the first one at exactly 1.0:1 (safari,
+ * 15 October 2026, aero-dorfic's title only; it had passed the run before):
+ * the arithmetic of text faded to nothing, as if caught mid-transition. A
+ * second reading tells a moment from a look that really cannot be read, which
+ * still fails, now with what was read.
+ */
+async function readable(page, where) {
+  const read = async () => Object.fromEntries(await Promise.all(
+    Object.entries(where).map(async ([name, loc]) => [name, await contrast(loc(page))])));
+  let got = await read();
+  if (Object.values(got).some((r) => r < 4.5)) {
+    await page.waitForTimeout(1000);
+    got = await read();
+  }
+  const worst = Object.entries(got).sort((a, b) => a[1] - b[1])[0];
+  const why = worst[1] < 4.5 ? `; ${await explain(where[worst[0]](page))}` : '';
+  return { worst, why };
+}
+
 const micsLive = (page) => page.evaluate(() => window.__mics.flatMap((s) => s.getTracks()).filter((t) => t.readyState !== 'ended').length);
 
 /** A C4 held for three seconds, with a breath after, over and over. */
@@ -264,23 +301,21 @@ async function launch(file, contextOptions = {}) {
       for (const look of LOOKS) {
         if (look !== 'classic') await choose(page, BASE, look);
         await openPractice(page);
-        const setup = {
-          title: await contrast(page.locator('[data-sing] h2')),
-          octave: await contrast(page.locator('[data-sing-octave-label]')),
-          key: await contrast(key(page, 'D4')),
-          ask: await contrast(page.locator('[data-sing-verdict]')),
-        };
-        let worst = Object.entries(setup).sort((a, b) => a[1] - b[1])[0];
-        ok(worst[1] >= 4.5, `${look}: the keyboard and its words read (worst ${worst[0]}, ${worst[1].toFixed(1)}:1)`);
+        let { worst, why } = await readable(page, {
+          title: (p) => p.locator('[data-sing] h2'),
+          octave: (p) => p.locator('[data-sing-octave-label]'),
+          key: (p) => key(p, 'D4'),
+          ask: (p) => p.locator('[data-sing-verdict]'),
+        });
+        ok(worst[1] >= 4.5, `${look}: the keyboard and its words read (worst ${worst[0]}, ${worst[1].toFixed(1)}:1${why})`);
         if (fake) {
           const g = await tapAndSing(page, 'C4');
-          const after = {
-            chosen: await contrast(key(page, 'C4')),
-            grade: await contrast(page.locator('[data-sing-verdict]')),
-            words: await contrast(page.locator('[data-sing-hint]')),
-          };
-          worst = Object.entries(after).sort((a, b) => a[1] - b[1])[0];
-          ok(g === 'perfect' && worst[1] >= 4.5, `${look}: Perfect, the chosen key and the words read (worst ${worst[0]}, ${worst[1].toFixed(1)}:1)`);
+          ({ worst, why } = await readable(page, {
+            chosen: (p) => key(p, 'C4'),
+            grade: (p) => p.locator('[data-sing-verdict]'),
+            words: (p) => p.locator('[data-sing-hint]'),
+          }));
+          ok(g === 'perfect' && worst[1] >= 4.5, `${look}: Perfect, the chosen key and the words read (worst ${worst[0]}, ${worst[1].toFixed(1)}:1${why})`);
           await page.screenshot({ path: path.join(tmp, `look-${look}.png`) });
           await page.locator('[data-sing]').getByRole('button', { name: 'Stop', exact: true }).click();
         }
