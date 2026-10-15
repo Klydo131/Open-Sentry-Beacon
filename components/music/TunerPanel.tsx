@@ -9,7 +9,9 @@
 // just complicated with so many words on it. Let the design speaks for itself
 // please." So the folder is a dial with the note in it and one round button,
 // and every setting is a line of its own: the starting note, and the concert
-// pitch, which opens when tapped. Nothing was taken away. Concert pitch still
+// pitch, which opens when tapped. Nothing was taken away. And the same day,
+// "make it more convenient to ALL devices": on a tablet or a computer the dial
+// sits beside its settings, or beside Sing the note, so nothing is scrolled to. Concert pitch still
 // plays the new A at every change (the owner, 4 October 2026: "I just put the
 // Hertz and nothing much is happening"), and can still take its A from the
 // organ or piano in the room.
@@ -130,8 +132,12 @@ export function TunerPanel() {
   const [more, setMore] = useState(false);
 
   return (
-    <div className="space-y-4" data-music-tuner>
-      <Card className="p-5">
+    // One column on a phone; side by side wherever the folder is wide enough
+    // (a tablet, a computer): the dial beside its settings, or, with Advanced,
+    // beside Sing the note. tuner-shell and tuner-grid in app/globals.css.
+    <div className="tuner-shell" data-music-tuner>
+     <div className="tuner-grid" data-advanced={advanced ? 'true' : 'false'}>
+      <Card className="tuner-main p-5">
         <h2 className="sr-only">Tuner</h2>
         <div className="flex flex-col items-center text-center" data-tuner-reading>
           <Gauge cents={reading ? cents : null} inTune={inTune}>
@@ -154,7 +160,7 @@ export function TunerPanel() {
             onClick={() => (listening ? tuner.stop() : void tuner.start())}
             disabled={status === 'asking'}
             aria-label={listening ? 'Stop listening' : 'Start listening'}
-            className={`tap mt-3 grid h-[4.5rem] w-[4.5rem] place-items-center rounded-full shadow-md disabled:opacity-50 ${listening ? 'tuner-mic-on' : 'bg-navy text-white'}`}
+            className={`tap mt-3 grid h-[4.5rem] w-[4.5rem] place-items-center rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 motion-reduce:transition-none motion-reduce:hover:scale-100 ${listening ? 'tuner-mic-on' : 'bg-navy text-white'}`}
             data-tuner-mic
           >
             {listening ? <span aria-hidden="true" className="block h-5 w-5 rounded-md bg-current" /> : <MicIcon />}
@@ -175,6 +181,7 @@ export function TunerPanel() {
         <p className="mt-4 text-center text-xs text-gray-500">🔒 Nothing is recorded.</p>
       </Card>
 
+      <div className="tuner-side">
       <PitchPipe a4={a4} />
 
       <Card className="p-4">
@@ -259,8 +266,9 @@ export function TunerPanel() {
       <Card className="p-4">
         <AdvancedToggle folder="tuner" on={advanced} onChange={setAdvanced} what="Sing a note and see if you hit it." />
       </Card>
+      </div>
       {advanced && (
-        <>
+        <div className="tuner-sing">
           <SingTheNote tuner={tuner} a4={a4} />
           <Card className="p-4">
             <button
@@ -284,8 +292,9 @@ export function TunerPanel() {
               <InstrumentChoice value={instrument} onChange={setInstrument} />
             </>
           )}
-        </>
+        </div>
       )}
+     </div>
     </div>
   );
 }
@@ -315,7 +324,7 @@ function RoundButton({ label, onClick, disabled, children }: { label: string; on
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="tap grid h-11 w-11 place-items-center rounded-full bg-white text-2xl font-bold text-navy ring-1 ring-navy/20 disabled:opacity-40"
+      className="tap grid h-11 w-11 place-items-center rounded-full bg-white text-2xl font-bold text-navy ring-1 ring-navy/20 hover:ring-navy/40 disabled:opacity-40"
     >
       {children}
     </button>

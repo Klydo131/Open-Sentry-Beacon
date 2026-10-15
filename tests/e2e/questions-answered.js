@@ -18,7 +18,7 @@
 //
 //   node tests/e2e/questions-answered.js [port]
 
-const { browser: engine, launchOptions, isCancelledPrefetch } = require('./_playwright');
+const { browser: engine, launchOptions, pageErrors } = require('./_playwright');
 const { signIn } = require('./_looks');
 
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
@@ -33,10 +33,14 @@ const visibleAnswer = (page, id) => page.locator(`[data-faq-item="${id}"] [data-
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     await context.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
     const page = await context.newPage();
-    const errors = [];
-    // WebKit's report of a prefetch the walk outran is not an error in the app.
-    page.on('pageerror', (e) => { if (!isCancelledPrefetch(e)) errors.push(String(e)); });
-    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    // The shared rule: WebKit's report of a prefetch the walk outran, or of the
+    // release check a page change cut short, is not an error in the app. This
+    // walk had its own copy that knew only the first, and the safari run of
+    // 15 October 2026 failed it on the second (version.json and sw.js, cut
+    // short 27 to 33 ms before the walk's next page).
+    const thrown = pageErrors(page);
+    const logged = [];
+    page.on('console', (m) => { if (m.type() === 'error') logged.push(m.text()); });
 
     // ---- 1. Signed out, from the front door and from sign-in. ----
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
@@ -142,7 +146,7 @@ const visibleAnswer = (page, id) => page.locator(`[data-faq-item="${id}"] [data-
     ok(await card.locator('a[href="/faq"]').isVisible(), 'with a link to the page of its own, to send somebody');
 
     // ---- 8. Quiet. ----
-    const real = errors.filter((e) => !/favicon|Failed to load resource.*404/.test(e));
+    const real = [...thrown.list(), ...logged].filter((e) => !/favicon|Failed to load resource.*404/.test(e));
     ok(real.length === 0, `nothing on the way logged an error${real.length ? `: ${real.slice(0, 3).join(' | ')}` : ''}`);
   } catch (e) {
     bad++;

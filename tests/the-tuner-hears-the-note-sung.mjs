@@ -194,21 +194,25 @@ function judge(target, sung, opts, tolerance = 25) {
 //    shown for 1.4 s, then the next judge waits for the voice to leave the
 //    note just graded. Sung without a breath between notes.
 // ---------------------------------------------------------------------------
-function run(targets, sung, gap = 0) {
+function run(targets, sung, gap = 0, hold = 1.8) {
   const parts = [[0.2, null]];
-  for (const s of sung) { parts.push([1.8, s]); if (gap) parts.push([gap, null]); }
+  for (const s of sung) { parts.push([hold, s]); if (gap) parts.push([gap, null]); }
   const x = V.sing(parts, { vowel: 'ah', sex: 'm', seed: 5 });
   const tracker = new M.PitchTracker(SR);
   const verdicts = [];
+  // As the card does it: every reading to the judge, and after a grade a new
+  // judge that hears the next 1.4 seconds but shows nothing until they pass.
   let j = new M.NoteJudge(targets[0], 440, 25);
-  let waitUntil = 0;
   for (let end = M.LONG_WINDOW; end <= x.length && verdicts.length < targets.length; end += HOP) {
     const now = (end / SR) * 1000;
     const r = tracker.push(x.subarray(end - M.LONG_WINDOW, end), now);
-    if (now < waitUntil) continue;
-    if (!j) j = new M.NoteJudge(targets[verdicts.length], 440, 25, verdicts[verdicts.length - 1].sung);
     const said = j.push(r ? r.raw : null, now);
-    if (said.state === 'judged') { verdicts.push(said.verdict); j = null; waitUntil = now + 1400; }
+    if (said.state === 'judged') {
+      verdicts.push(said.verdict);
+      if (verdicts.length < targets.length) {
+        j = new M.NoteJudge(targets[verdicts.length], 440, 25, said.verdict.sung, { from: now, until: now + 1400 });
+      }
+    }
   }
   return verdicts;
 }
@@ -223,6 +227,13 @@ function run(targets, sung, gap = 0) {
   ok(held.length === 1, `one C4 held on is not two C4s: the second waits for a breath (${held.length} judged)`);
   const twice = run([60, 60], [60, 60], 0.3);
   ok(twice.length === 2 && twice.every((v) => v.hit), 'sung again after a breath, it is');
+  // "It even bugs out after using, the voice no longer accurate after using it
+  // one time" (15 October 2026). Short notes, each breath taken while the last
+  // grade still shows: before that day the breath went unheard and the next
+  // C4 was taken for the last one held on, so only every other try was graded.
+  const quick = run([60, 60, 60], [60, 60, 60], 0.4, 1.0);
+  ok(quick.length === 3 && quick.every((v) => v.hit),
+    `three short C4s, each breath taken while the last grade shows: ${quick.length} of 3 graded (${quick.map((v) => said(v)).join('; ')})`);
 }
 
 // ---------------------------------------------------------------------------

@@ -1272,7 +1272,7 @@ The Tuner folder: the note you are singing or playing, how far off it is, and a 
 
 The microphone is opened by lib/music/tuner.ts only after the round button is tapped, and released on a second tap, on leaving this folder, and when the phone locks. What it hears is measured on the phone and thrown away.
 
-LET THE DESIGN SPEAK (15 October 2026). The owner: "The basic settings are just complicated with so many words on it. Let the design speaks for itself please." So the folder is a dial with the note in it and one round button, and every setting is a line of its own: the starting note, and the concert pitch, which opens when tapped. Nothing was taken away. Concert pitch still plays the new A at every change (the owner, 4 October 2026: "I just put the Hertz and nothing much is happening"), and can still take its A from the organ or piano in the room.
+LET THE DESIGN SPEAK (15 October 2026). The owner: "The basic settings are just complicated with so many words on it. Let the design speaks for itself please." So the folder is a dial with the note in it and one round button, and every setting is a line of its own: the starting note, and the concert pitch, which opens when tapped. Nothing was taken away. And the same day, "make it more convenient to ALL devices": on a tablet or a computer the dial sits beside its settings, or beside Sing the note, so nothing is scrolled to. Concert pitch still plays the new A at every change (the owner, 4 October 2026: "I just put the Hertz and nothing much is happening"), and can still take its A from the organ or piano in the room.
 
 #### `components/study/StudyInsertBar.tsx`
 
@@ -1855,6 +1855,14 @@ NOTHING IS DOWNLOADED. The click and the voice are made by oscillators on the ph
 The conductor's beat: when each click falls, which beat of the bar it is, and where the baton is between them. Pure functions, no browser, so tests/the-music-room.mjs runs them.
 
 WHY THE CLICKS ARE SCHEDULED, NOT TIMED. A browser timer (setTimeout) can fire tens of milliseconds late whenever the phone is busy, and a metronome that wanders by that much is worse than none: a choir hears it at once. The Web Audio clock does not wander. So a cheap timer wakes every 25 ms and hands the audio clock every click due in the next tenth of a second, each at its exact time ("A tale of two clocks", web.dev/articles/audio-scheduling). `due` below is that hand-over, written so it can be tested.
+
+#### `lib/music/computer-keys.ts`
+
+A computer's keyboard as a piano's: the row A S D F G H J K L ; plays the white keys from C, the row above (W E, T Y U, O P) the black ones, and Z and X move down and up an octave. The same layout most music programs use.
+
+Asked for on 15 October 2026: "Not just on phone but on desktop too, remember people will use all devices for this ministry tool so make it more convenient to ALL devices." On a phone a note is tapped; on a computer it can be typed, without reaching for the mouse. Used by Sing the note and by Play.
+
+The keys are read by where they sit (KeyboardEvent.code), not by the letter they print, so a French or German keyboard plays the same shape.
 
 #### `lib/music/explain.ts`
 

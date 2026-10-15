@@ -10,6 +10,8 @@ The app's own release notes (`lib/release-notes.ts`), newest first: 45 releases,
 - Starting note and Concert pitch are one line each. Tap Concert pitch to open it.
 - Sing the note, in Advanced settings, is a piano keyboard. Tap a key, sing it and hold it, and it says Perfect, Close, or Try again with what you sang. Sing again after a breath and it tells you again.
 - The voice trail, the drone and your instrument are under More tools.
+- On a tablet or a computer the dial sits beside its settings, or beside Sing the note, with two octaves of keys. On a computer you can type the note: A S D F G H J K are C to C, Z and X change the octave. The Play keyboard can be played the same way.
+- Sing the note now hears every try. A breath taken while the last grade was still showing used to be missed, so the same note sung again straight away was not graded.
 
 ### Sing the note, and a tuner that hears each note exactly
 
