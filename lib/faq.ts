@@ -357,7 +357,7 @@ export function faqSections(): FaqSection[] {
           id: 'no-signal',
           q: 'Does it work with no signal?',
           a: [
-            'Yes. Once the app has been opened with a signal, every screen and every tool is kept on your phone: the Music room, This Sabbath, the Office, the study room, the drawing board, and the books of the Bible you saved. Settings, General says when all of it is there.',
+            'Its screens do. Once the app has been opened with a signal, every screen and every tool is kept on your phone: the Music room, This Sabbath, the Office, the study room, the drawing board, and the books of the Bible you saved. Settings, General says when all of it is there.',
             'Signed in, you see what you last saw, and the top of the screen says Offline. Sending a message, posting or answering needs a signal, and the app tells you when it could not.',
           ],
         },

@@ -20,7 +20,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     id: '2026-10-16-works-with-no-signal',
     date: '2026-10-16',
-    title: 'All of Beacon works with no signal',
+    title: 'Every screen opens with no signal',
     items: [
       'Once Beacon has been opened with a signal, every screen and every tool is kept on your phone: the Music room and all five of its folders, This Sabbath, the Office, the study room, the drawing board and the PDF reader. Before this, only the screens you had already opened worked, and the Tuner, the Conductor, Pieces and Play did not open at all.',
       'Signed in, you see what you last saw. The app keeps a copy of what your screens showed, for your account only, and deletes it when you sign out. Sending, posting and answering still need a signal, and the app says so when you try.',

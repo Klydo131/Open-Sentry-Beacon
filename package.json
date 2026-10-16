@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": false,
   "license": "AGPL-3.0-only",
-  "description": "A disciple-making journey app for local churches. Runs entirely in the browser with sample data; bring your own backend when ready.",
+  "description": "A web application for one-on-one discipleship. Runs entirely in the browser with sample data; bring your own backend when ready.",
   "homepage": "https://github.com/Klydo131/Open-Sentry-Beacon#readme",
   "bugs": "https://github.com/Klydo131/Open-Sentry-Beacon/issues",
   "repository": {
@@ -14,8 +14,9 @@
     "church",
     "discipleship",
     "nextjs",
+    "one-on-one",
+    "web-app",
     "pwa",
-    "offline-first",
     "no-backend"
   ],
   "engines": {

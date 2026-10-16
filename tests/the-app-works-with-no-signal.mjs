@@ -158,7 +158,7 @@ function pretendCaches() {
 const token = (sub) => `x.${Buffer.from(JSON.stringify({ sub, role: 'authenticated' })).toString('base64url')}.y`;
 const ANNA = '11111111-1111-4111-8111-111111111111';
 const BEN = '22222222-2222-4222-8222-222222222222';
-const DB = 'https://church.example.supabase.co';
+const DB = 'https://church.database.example';
 const ask = (sub, extra = {}) => ({ headers: { Authorization: `Bearer ${token(sub)}`, apikey: 'anon', ...extra.headers }, ...extra });
 
 globalThis.caches = pretendCaches();

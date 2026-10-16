@@ -123,7 +123,7 @@ behaves nothing like Chrome.
 - **Degrade, never throw.** A missing browser feature returns a lesser answer;
   it does not take a screen down. `crypto.randomUUID` is absent over plain http
   and threw rather than degrading, so sending a photo failed outright.
-- **It keeps working offline**, and says which build it is running.
+- **Its screens still open with no signal** (sending needs one), and it says which build it is running.
 
 ---
 

@@ -38,11 +38,11 @@ Everything here is checked against the code. Nothing is aspirational.
 
 | | |
 |---|---|
-| **What it is** | A web app that helps a church walk with one person at a time, from first contact to the point where they start walking with somebody else. |
+| **What it is** | A web application for one-on-one discipleship: it helps a church walk with one person at a time, from first contact to the point where they start walking with somebody else. |
 | **Licence** | AGPL-3.0. Free. Fork it, rename it, sell services around it — improvements to a hosted version stay open. |
 | **Runs on** | Any modern phone or computer. Installs from the browser — no app store. Developed and CI-tested on Linux, Windows and macOS. |
 | **Needs to run** | Nothing. No sign-up, no database, no keys, no configuration. |
-| **Works offline** | Yes: every screen and tool once opened with a signal; signed in, what you last saw. Sending needs a signal. |
+| **With no signal** | Screens still open once it has been opened with a signal, and show what you last saw. Sending needs a signal. Call it a web application, not an offline-first one. |
 | **Attachments** | Images, audio, video and documents on a conversation. Bytes stay on the device, in IndexedDB, never in the saved database. |
 | **Live sync** | Every open window on ONE device stays in step with no refresh. Across devices needs a backend; the transport is a seam you swap. |
 | **Roles** | Explorer, Guide, Director, Executive Director. |
@@ -93,8 +93,9 @@ the database, because anybody can send a request without using your screens.
 
 **Plain words.** Normally an app keeps your information on a computer somewhere
 else, and asks for it every time you open a screen. This one keeps everything on
-your own device. Nothing is sent anywhere. That is why it works with no signal,
-and why there is nothing to break into.
+your own device. Nothing is sent anywhere, and there is nothing to break into.
+That is the sample church. A church's own app keeps its records in the
+church's database, and sending anything there needs a signal.
 
 **In detail.** Every screen reads and writes one React context —
 `lib/demo/store.tsx` — which persists to `localStorage` and normalises on load,
@@ -351,13 +352,15 @@ Then: **"Here, have a look."** Let them tap. Point out three things as they go:
 
 1. **Pick who you are** — and the app becomes a different app. Same information,
    four completely different views.
-2. **It works with no signal.** Turn on flight mode while they hold it. Nothing
-   breaks. That single moment does more than any explanation.
+2. **One person, one Guide.** Open a person's page. Their conversation belongs
+   to them and their Guide alone; the church's leaders see counts, never the
+   words.
 3. **It is free, and it is yours.** Anyone can take it and make their own.
 
-If they ask how it works: *"Everything is stored on the phone itself, not on a
-company's server. That is why it works with no signal, and why there is nothing
-to leak."* Stop there unless they push.
+If they ask how it works: *"The sample church lives on this phone, so nothing
+here is real and nothing is sent anywhere. A church's own app keeps its records
+in the church's own database, where only the people in a conversation can read
+it."* Stop there unless they push.
 
 ---
 
@@ -402,7 +405,7 @@ Step 5 is the moment that lands. Everything before it is setup.
 | 9 | Director → invite them | The chain: recommend → decide → invite |
 | 10 | Show the pairing appears at **Connect** | "Paired the moment they accept. Nobody has to remember." |
 | 11 | Director → **Analytics** | Counts and trends. No names. |
-| 12 | Flight mode on, keep clicking | Works offline. This surprises people. |
+| 12 | Flight mode on, keep clicking | Screens still open. Say plainly that sending needs a signal. |
 | 13 | Settings → **App version** | Updates itself; nobody uninstalls anything. |
 
 ### For an IT room, add
@@ -617,7 +620,7 @@ Suggested deck shapes:
 |---|---|---|
 | Church directors | 10–14 | the problem they recognise → the pairing → the six stages → their own screen → what they will never see → cost → what is next |
 | IT | 14–20 | no backend and why → architecture → the store as contract → run it live → connect a database → the permission rules → attachments and live sync → contributing → maintaining |
-| Enthusiasts | 5–8 | the three-sentence pitch → pick who you are → offline → it is yours |
+| Enthusiasts | 5–8 | the three-sentence pitch → pick who you are → one person, one Guide → it is yours |
 
 Source files worth quoting from, all in this repository: `README.md`,
 `ARCHITECTURE.md`, `docs/BUILD-YOUR-OWN.md`, `docs/ONBOARDING.md`,

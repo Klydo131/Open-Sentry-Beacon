@@ -1,7 +1,7 @@
 # Open Sentry Beacon
 
-**A disciple-making journey app for local churches. Free, open source, and yours
-to change.**
+**A web application for one-on-one discipleship. Free, open source, and yours to
+change.**
 
 A church meets someone who wants to know more. What happens next usually depends
 on a card in a folder and somebody's memory. Open Sentry Beacon gives the church
@@ -197,9 +197,9 @@ same code syncs between devices, because the transport is a seam you swap
   AGPL-3.0. Run it, study it, change it, run it for your church, free and for
   good. The one condition is that improvements stay open: see
   [Licence](#licence-agpl-30) below.
-- **It works without signal.** Installs on a phone from the browser, and every
-  screen and tool keeps working offline; signed in, you see what you last saw.
-  Church halls and rural areas were the assumption, not an afterthought.
+- **It is a web application.** It opens in any browser and installs on a phone
+  from there. Once it has been opened with a signal, its screens still open
+  without one and show what you last saw; sending anything needs a signal.
 - **It teaches itself.** Each role has a guided walk, written for somebody who
   has never used it and does not enjoy new software.
 - **It is small enough to read.** React, Next.js and almost nothing else. One

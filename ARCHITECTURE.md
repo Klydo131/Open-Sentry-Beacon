@@ -235,8 +235,10 @@ screen and asserts that no stage name appears anywhere on it.
 
 ## Offline and updates
 
-The app installs from the browser and works without a connection: every screen,
-and every tool's code, not only the screens somebody happened to open. This was
+The app installs from the browser and its screens open without a connection:
+every screen, and every tool's code, not only the screens somebody happened to
+open. It is a web application, not an offline-first one: a church's records
+live in its database, and sending needs a signal. This was
 claimed here before it was true. On 16 October 2026, with the server stopped, 10
 of 27 screens opened and four of the Music room's five folders did not, because
 the worker kept the pages and none of the code loaded later.
