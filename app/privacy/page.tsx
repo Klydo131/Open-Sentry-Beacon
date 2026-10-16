@@ -148,6 +148,15 @@ export default function PrivacyPage() {
             encrypted backup is being set up and is not running yet.
           </p>
           <p className="mt-2 text-gray-700">
+            <strong>What you last saw while signed in is also kept on your phone or
+            computer</strong>, so the app opens with no signal: the same posts, people,
+            messages and lists your screens showed you, and nothing more. It is kept in
+            the browser&rsquo;s storage for this app, for your account only, and nobody
+            else who uses the device can open it in the app. It is deleted when you sign
+            out, and when somebody else signs in on the same device. Anything you send
+            still goes only to the church&rsquo;s database, and only with a signal.
+          </p>
+          <p className="mt-2 text-gray-700">
             <strong>When you arrange to meet somebody in person</strong>, the words you type
             in the place box are sent to a place search so it can suggest where you mean.
             It is Photon, run by komoot in Germany over OpenStreetMap data. The words go

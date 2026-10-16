@@ -42,7 +42,7 @@ Everything here is checked against the code. Nothing is aspirational.
 | **Licence** | AGPL-3.0. Free. Fork it, rename it, sell services around it — improvements to a hosted version stay open. |
 | **Runs on** | Any modern phone or computer. Installs from the browser — no app store. Developed and CI-tested on Linux, Windows and macOS. |
 | **Needs to run** | Nothing. No sign-up, no database, no keys, no configuration. |
-| **Works offline** | Yes, fully, after the first load. |
+| **Works offline** | Yes: every screen and tool once opened with a signal; signed in, what you last saw. Sending needs a signal. |
 | **Attachments** | Images, audio, video and documents on a conversation. Bytes stay on the device, in IndexedDB, never in the saved database. |
 | **Live sync** | Every open window on ONE device stays in step with no refresh. Across devices needs a backend; the transport is a seam you swap. |
 | **Roles** | Explorer, Guide, Director, Executive Director. |
@@ -134,8 +134,10 @@ browser bar. On a computer you can install it the same way. It updates itself;
 nobody ever has to uninstall and reinstall.
 
 **In detail.** It is a Progressive Web App: a web manifest makes it installable,
-and a service worker caches the shell so every route works offline, not only the
-screens you happened to visit. Updates do not rely on the service worker's own
+and a service worker keeps every screen and every tool's code, from a list the
+bundler writes each build, so the whole app works offline, not only the screens
+you happened to visit (`tests/e2e/the-app-works-with-no-signal.js` proves it with
+the server cut off). Updates do not rely on the service worker's own
 mechanism, which is the part that fails in practice — the app fetches
 `/version.json` with `cache: 'no-store'` a few seconds after launch, on every
 return to the foreground, and every fifteen minutes, and compares the build id

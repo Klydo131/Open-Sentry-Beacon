@@ -873,6 +873,22 @@ This matters most for somebody holding an invitation. The old advice was to swit
 >
 > In Safari on a Mac, and in Chrome when it offers to install, a card in the bottom-right corner invites you to add the app. It sits above the **Talk** button, and it is not there at all while a conversation, the bell's list or any other panel you opened is showing, so it can never cover **Send**, **Report** or your notifications. Until 4 October 2026 it sat on top of Talk, and on a Mac the conversations could not be opened until the card was closed. Close it with its **×**, or **I already have Beacon installed**.
 
+### With no signal
+
+**All of it works with no signal**, once the app has been opened with one. Every screen and every tool is kept on the phone: the Music room and its five folders, This Sabbath, the Office, the study room, the drawing board and the PDF reader in Pieces, and a Guide's Explorers' own pages. Signed in, each screen shows what it showed the last time it was opened with a signal, and the top of the screen says **Offline**. Sending a message, posting or answering needs a signal; the app says *That could not reach the church* when it could not.
+
+**Settings, General says whether it is all there.** *Every screen and tool is on this device, ready for no signal*, or *Getting ready for no signal: 120 of 204 files kept*, which finishes on its own while there is a signal. The first time it is about 5 MB, fetched in the background; after an update, only the files that changed. With Data Saver on, the three biggest tools (the study room's editor, the drawing board and the PDF reader) are kept the first time they are opened instead.
+
+> **GOOD TO KNOW** · What is kept for a signed-in person, and when it goes
+>
+> Only what that person's own screens read from the church's database, kept in the browser for their account alone, and never shown to another account on the same device. It is deleted when they sign out, and when somebody else signs in on that device. Nothing that changes anything is ever answered from the copy: a message that could not be sent says so.
+
+> **GOOD TO KNOW** · Left out, by name
+>
+> Three extras of the libraries the app uses are not kept, because they cost about 13 MB together and nothing in the app needs them to open: the colours for code in 300 programming languages (code is shown in one colour), drawing a diagram from text, and the drawing board's other languages (it is always in English). Each is kept the first time it is used with a signal.
+
+Before 16 October 2026 this was not true, while this book said it was. With the server stopped, 10 of 27 screens opened and four of the Music room's five folders did not, because only the pages were kept and not the code each folder loads as it opens.
+
 ### Updates
 
 Nobody reinstalls. When a new version ships, every open copy notices within seconds and offers to refresh. The app will not reload while a message is half written.

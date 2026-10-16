@@ -198,8 +198,8 @@ same code syncs between devices, because the transport is a seam you swap
   good. The one condition is that improvements stay open: see
   [Licence](#licence-agpl-30) below.
 - **It works without signal.** Installs on a phone from the browser, and every
-  screen keeps working offline. Church halls and rural areas were the assumption,
-  not an afterthought.
+  screen and tool keeps working offline; signed in, you see what you last saw.
+  Church halls and rural areas were the assumption, not an afterthought.
 - **It teaches itself.** Each role has a guided walk, written for somebody who
   has never used it and does not enjoy new software.
 - **It is small enough to read.** React, Next.js and almost nothing else. One

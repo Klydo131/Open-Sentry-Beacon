@@ -25,14 +25,23 @@ async function install(controlled, claimBeforeInstalled) {
     register: async () => reg, addEventListener() {}, removeEventListener() {},
   };
   const module = { exports: {} };
+  // The component also asks for the address (to offer each screen's person
+  // links to the worker) and tells the worker to keep the app for no signal
+  // (lib/offline-ready.ts, 16 October 2026). Neither bears on the install
+  // order this checks, so they are quiet stand-ins.
+  const updates = { BUILD_ID: 'test', setUpdateState: (s) => states.push(s.state),
+    setChecker() {}, setRegistration() {}, isApplying: () => false, applyUpdate() {} };
+  const offline = { askWorker() {}, keepPeopleOnScreen() {}, setKept() {} };
   vm.runInNewContext(code, {
-    module, exports: module.exports, window: {}, navigator: { serviceWorker: sw },
+    module, exports: module.exports, window: { addEventListener() {}, removeEventListener() {} },
+    navigator: { serviceWorker: sw },
     process: { env: { NODE_ENV: 'production' } },
-    setInterval: () => 1, clearInterval() {},
+    setInterval: () => 1, clearInterval() {}, setTimeout: () => 1, clearTimeout() {},
     require: (id) => id === 'react'
       ? { useEffect: (fn) => { effect = fn; } }
-      : { BUILD_ID: 'test', setUpdateState: (s) => states.push(s.state),
-        setChecker() {}, setRegistration() {}, isApplying: () => false, applyUpdate() {} },
+      : id === 'next/navigation'
+        ? { usePathname: () => '/' }
+        : id === '@/lib/offline-ready' ? offline : updates,
   });
   module.exports.ServiceWorker();
   const teardown = effect();

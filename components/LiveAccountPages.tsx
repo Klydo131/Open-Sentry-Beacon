@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { Avatar, Button, Card } from '@/components/ui';
 import { InstallCard } from '@/components/InstallCard';
 import { SourceCard } from '@/components/SourceCard';
+import { NoSignalCard } from '@/components/KeptForNoSignal';
 import { NAVY, roleNoun, APP_SHORT_NAME } from '@/lib/brand';
 import * as live from '@/lib/live/data';
 import { useLiveSession, homeFor } from '@/lib/live/session';
@@ -327,6 +328,7 @@ export function LiveSettingsPage() {
           <div id="install">
             <InstallCard />
           </div>
+          <NoSignalCard />
           <SourceCard />
         </>
       )}

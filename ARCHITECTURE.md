@@ -235,9 +235,30 @@ screen and asserts that no stage name appears anywhere on it.
 
 ## Offline and updates
 
-The app installs from the browser and works without a connection. Every route is
-warmed when it installs, so losing signal does not restrict you to the screens
-you happened to have opened.
+The app installs from the browser and works without a connection: every screen,
+and every tool's code, not only the screens somebody happened to open. This was
+claimed here before it was true. On 16 October 2026, with the server stopped, 10
+of 27 screens opened and four of the Music room's five folders did not, because
+the worker kept the pages and none of the code loaded later.
+
+- **The bundler writes the list** of files to keep, once per build
+  (`scripts/offline-files.mjs`, served at `/_next/static/offline/<build>.json`):
+  every screen's code, every tool's, and what a library loads for itself as a
+  tool opens. Three named extras are left out (code colours for 300 programming
+  languages, diagrams from text, the drawing board's other languages).
+- **The worker keeps it** (`app/sw.js/route.ts`): the screens and the smaller
+  tools as it installs, the big tools when the app asks a few seconds after it
+  opens (not on Data Saver). A file the last build kept is copied forward, so an
+  update downloads only what changed. Settings, General shows the count.
+- **A signed-in person's last reads are kept for them** (`lib/live/kept.ts`):
+  each read the database client makes is kept under the account that made it and
+  answered from that copy when the network cannot answer. Only reads: table
+  reads, and the database functions the migrations declare STABLE. Signing out
+  deletes it all.
+- `tests/the-app-works-with-no-signal.mjs` holds the rules and
+  `tests/e2e/the-app-works-with-no-signal.js` cuts the signal for real (a relay
+  in front of the server, because Playwright's offline switch does not reach a
+  service worker) and opens every screen and tool.
 
 When you deploy a new version, an open app notices within about thirty seconds
 and applies it **without asking anybody anything**. There is no banner, no

@@ -669,6 +669,11 @@ const staticChecks = [
   // My Files. Hostile scores and zips, the microphone let go, nothing sent.
   // The browser half is tests/e2e/the-music-room.js.
   ['the music room', 'tests/the-music-room.mjs'],
+  // The app works with no signal (16 October 2026: "How is it still and
+  // "offline" first local web app if all of the features are not usable
+  // offline?"): every screen, every tool, and a signed-in person's last read,
+  // kept for them alone. The browser half is tests/e2e/the-app-works-with-no-signal.js.
+  ['the app works with no signal', 'tests/the-app-works-with-no-signal.mjs'],
   // Plan and show, test, polish, and the owner is aware before anything
   // reaches main, for people and AI tools alike (30 September 2026).
   ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],

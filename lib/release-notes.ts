@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-16-works-with-no-signal',
+    date: '2026-10-16',
+    title: 'All of Beacon works with no signal',
+    items: [
+      'Once Beacon has been opened with a signal, every screen and every tool is kept on your phone: the Music room and all five of its folders, This Sabbath, the Office, the study room, the drawing board and the PDF reader. Before this, only the screens you had already opened worked, and the Tuner, the Conductor, Pieces and Play did not open at all.',
+      'Signed in, you see what you last saw. The app keeps a copy of what your screens showed, for your account only, and deletes it when you sign out. Sending, posting and answering still need a signal, and the app says so when you try.',
+      'A Guide\'s Explorers open with no signal too: the pages of the people on your lists are kept.',
+      'Settings, General says whether everything is on your phone yet. The first time it takes about 5 MB, fetched in the background; after an update, only what changed. With Data Saver on, the biggest tools are kept the first time you open them.',
+    ],
+  },
+  {
     id: '2026-10-15-a-simpler-tuner',
     date: '2026-10-15',
     title: 'A simpler Tuner: a dial, a button, and a keyboard to sing to',

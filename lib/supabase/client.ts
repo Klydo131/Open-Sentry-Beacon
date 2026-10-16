@@ -13,6 +13,7 @@
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { IS_LIVE } from '@/lib/mode';
 import { shouldRecheckSession } from '@/lib/supabase/session-recheck';
+import { forgetEverythingKept, keptFetch } from '@/lib/live/kept';
 
 let cached: SupabaseClient<any> | null = null;
 let authCached: SupabaseClient<any> | null = null;
@@ -60,6 +61,9 @@ export function readBrowserSession(): Session | null {
 export function clearBrowserSession() {
   const key = authStorageKey();
   if (typeof window !== 'undefined' && key) window.localStorage.removeItem(key);
+  // What this account read, kept for no signal (lib/live/kept.ts), goes with
+  // the session: nobody signed out leaves their church's data on the device.
+  void forgetEverythingKept();
 }
 
 // ---------------------------------------------------------------------------
@@ -331,7 +335,9 @@ export async function endBrowserSession(): Promise<void> {
 let lastRecheckAt = 0;
 
 const dataFetch: typeof fetch = async (input, init) => {
-  const res = await fetch(input, init);
+  // Every read is kept as it arrives and answered from that copy when there is
+  // no signal; writes go straight through (lib/live/kept.ts).
+  const res = await keptFetch(input, init, fetch);
   const now = Date.now();
   if (shouldRecheckSession(res.status, lastRecheckAt, now)) {
     const session = readBrowserSession();

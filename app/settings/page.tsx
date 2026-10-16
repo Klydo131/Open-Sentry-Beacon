@@ -26,6 +26,7 @@ import { WhichApp } from '@/components/WhichApp';
 import { FeedbackButton } from '@/components/Feedback';
 import { DataManager } from '@/components/DataManager';
 import { FaqCard } from '@/components/Faq';
+import { KeptForNoSignal } from '@/components/KeptForNoSignal';
 import { pushSupported, permission as pushPermission, requestPermission, subscribeToPush, showLocalNotification, iosNeedsInstall } from '@/lib/push';
 import { rememberThisDevice, forgetThisDevice } from '@/lib/live/push-devices';
 import { APP_SHORT_NAME } from '@/lib/brand';
@@ -383,6 +384,7 @@ function VersionCard() {
             Beacon keeps working offline. Your saved files and this device&rsquo;s
             data are always available.
           </p>
+          <KeptForNoSignal />
         </div>
         <OnlineRow />
       </div>

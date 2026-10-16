@@ -3,6 +3,7 @@ import { createVanillaExtractPlugin } from '@vanilla-extract/next-plugin';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { blocksuiteAliases, NEEDS_LOADERS } from './scripts/blocksuite-aliases.mjs';
+import { OfflineFilesPlugin, stampedBuild } from './scripts/offline-files.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -224,7 +225,14 @@ const nextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
-  webpack(config) {
+  webpack(config, { isServer, dev }) {
+    // The list of files the service worker keeps for no signal: every page's
+    // code and every tool's, written by the bundler because only it knows
+    // which files those are. See scripts/offline-files.mjs.
+    if (!isServer && !dev) {
+      config.plugins.push(new OfflineFilesPlugin({ root: HERE, build: stampedBuild(HERE) }));
+    }
+
     // Resolve @blocksuite to compiled output rather than its TypeScript source.
     // Without this the build dies on raw Lit decorators and the `accessor`
     // keyword, neither of which is a bundler's job to guess at.

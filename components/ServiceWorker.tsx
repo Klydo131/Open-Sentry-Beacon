@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   setUpdateState,
   setChecker,
@@ -9,6 +10,7 @@ import {
   isApplying,
   BUILD_ID,
 } from '@/lib/app-update';
+import { askWorker, keepPeopleOnScreen, setKept } from '@/lib/offline-ready';
 
 // Registers the offline service worker and keeps the app updating itself —
 // nobody ever has to uninstall and reinstall to get a new version.
@@ -20,6 +22,16 @@ import {
 // reload mid-sentence loses whatever somebody was typing, so that guard is the
 // whole of what this trade rests on.
 export function ServiceWorker() {
+  // A Guide's Explorers are listed on screens reached by moving around, not
+  // only on the one the app opened on, so each screen's person links are
+  // offered to the worker a moment after it settles.
+  const pathname = usePathname();
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') return;
+    const t = setTimeout(keepPeopleOnScreen, 2500);
+    return () => clearTimeout(t);
+  }, [pathname]);
+
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
     if (process.env.NODE_ENV !== 'production') {
@@ -45,6 +57,17 @@ export function ServiceWorker() {
     teardown.push(() =>
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange),
     );
+
+    // The worker's answer to "how much of the app is kept for no signal".
+    const onMessage = (event: MessageEvent) => {
+      const d = event.data as { type?: string; kept?: number; total?: number } | null;
+      if (d?.type === 'KEPT' && typeof d.kept === 'number' && typeof d.total === 'number') {
+        setKept({ kept: d.kept, total: d.total });
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    navigator.serviceWorker.startMessages?.();
+    teardown.push(() => navigator.serviceWorker.removeEventListener('message', onMessage));
 
     // The ?v= is the whole trick. See scripts/stamp-build.mjs.
     const build = BUILD_ID;
@@ -116,6 +139,19 @@ export function ServiceWorker() {
         check();
         const id = setInterval(check, 60 * 60 * 1000);
         teardown.push(() => clearInterval(id));
+
+        // KEEP THE WHOLE APP, NOT ONLY WHAT WAS OPENED. The worker keeps every
+        // screen and its code when it installs, and the big tools (the study
+        // room's editor, the drawing board, the PDF reader) once it is asked
+        // to. It is asked here, a few seconds after the app opens so the
+        // screen in front of somebody is never slowed by it, and again each
+        // time the signal comes back, so an install cut short by a lost
+        // signal finishes the next time there is one. Not on Data Saver.
+        const keepEverything = () => askWorker(true);
+        const soon = setTimeout(keepEverything, 4000);
+        teardown.push(() => clearTimeout(soon));
+        window.addEventListener('online', keepEverything);
+        teardown.push(() => window.removeEventListener('online', keepEverything));
       })
       .catch(() => {
         // Offline support is a progressive enhancement — never block the app.

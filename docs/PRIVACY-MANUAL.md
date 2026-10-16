@@ -169,6 +169,7 @@ restored once to prove it opens].
 | Safeguarding reports and the record of a removal | Permanently, deliberately | Kept to show the church acted on a safeguarding concern: the establishment or defence of a legal claim and the protection of vital interests (Act, section 13(b), (f)) |
 | Backups | [the church's backup period] | Overwritten by later backups |
 | Copies on a person's own device | Until they delete them or clear the browser | Not in the church's control; the person is told so |
+| The copy the app keeps of what a signed-in person last saw, so it opens with no signal (16 October 2026) | Until they sign out, or another account signs in on that device | Deleted by the app itself (`lib/live/kept.ts`), and only ever shown to the account that read it; the privacy page says so |
 
 [The church should decide whether ended pairings' conversations are kept for the
 life of the accounts, as now, or deleted after a set period, and write the
