@@ -14,6 +14,7 @@ import { useLocale } from '@/lib/i18n';
 import { ReadingSettings } from '@/components/ReadingSettings';
 import { useDemo } from '@/lib/demo/store';
 import { useNotificationPrefs } from '@/lib/notification-prefs';
+import { BeaconSoundSetting } from '@/components/BeaconSoundSetting';
 import { useUpdateState, checkForUpdate, versionLabel, hardRefresh, BUILD_TIME, BUILD_ID } from '@/lib/app-update';
 import { onCanonicalHost } from '@/lib/canonical';
 import { isStandalone } from '@/components/InstallPrompt';
@@ -186,6 +187,8 @@ function NotificationCard() {
       reachable
         ? 'This device will be told even when the app is closed.'
         : 'Beacon will notify you here while the app is open.',
+      '/settings',
+      { tag: 'beacon-test', renotify: true },
     );
   };
 
@@ -273,6 +276,7 @@ function NotificationCard() {
             )}
           </>
         )}
+        <BeaconSoundSetting compact />
       </div>
     </Card>
   );

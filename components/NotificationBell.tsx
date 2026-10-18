@@ -92,6 +92,7 @@ export function NotificationBell() {
         'Alerts are on',
         'Beacon will notify you here and on this device.',
         HOME[me.role],
+        { tag: 'beacon-test', renotify: true },
       );
     }
   };

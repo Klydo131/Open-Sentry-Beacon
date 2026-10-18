@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-18-beacons-own-sound',
+    date: '2026-10-18',
+    title: 'Alerts have a sound of their own',
+    items: [
+      'While Beacon is on your screen, a new alert plays Beacon\'s own sound: three quick glassy notes, rising and then settling. You hear it once, not twice: the phone\'s usual sound is held back for it.',
+      'When Beacon is not on your screen, your phone\'s own notification sound plays as before, following your ringer and Do Not Disturb. Phones do not let any web app choose that one.',
+      'Every alert now makes a sound. Before, a second alert arriving while the first was still showing replaced it without a sound, so a second message, or a prayer request after a message, could go unheard.',
+      'Settings, General, Notifications: Hear it, and a switch to turn Beacon\'s sound off.',
+    ],
+  },
+  {
     id: '2026-10-16-works-with-no-signal',
     date: '2026-10-16',
     title: 'Every screen opens with no signal',

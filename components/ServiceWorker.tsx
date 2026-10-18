@@ -11,6 +11,7 @@ import {
   BUILD_ID,
 } from '@/lib/app-update';
 import { askWorker, keepPeopleOnScreen, setKept } from '@/lib/offline-ready';
+import { armBeaconSound, playBeaconSound, silentSupported } from '@/lib/alert-sound';
 
 // Registers the offline service worker and keeps the app updating itself —
 // nobody ever has to uninstall and reinstall to get a new version.
@@ -26,6 +27,11 @@ export function ServiceWorker() {
   // only on the one the app opened on, so each screen's person links are
   // offered to the worker a moment after it settles.
   const pathname = usePathname();
+
+  // Beacon's notification sound can only be heard after the first tap of the
+  // visit. See lib/alert-sound.ts.
+  useEffect(() => armBeaconSound(), []);
+
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') return;
     const t = setTimeout(keepPeopleOnScreen, 2500);
@@ -63,6 +69,16 @@ export function ServiceWorker() {
       const d = event.data as { type?: string; kept?: number; total?: number } | null;
       if (d?.type === 'KEPT' && typeof d.kept === 'number' && typeof d.total === 'number') {
         setKept({ kept: d.kept, total: d.total });
+      }
+      // A push arrived while Beacon is on this screen: play Beacon's sound and
+      // say whether it was heard, so the worker knows whether to show the
+      // notification silently (app/sw.js/route.ts).
+      if (d?.type === 'BEACON_SOUND') {
+        const port = event.ports?.[0];
+        void (async () => {
+          const heard = silentSupported() && (await playBeaconSound());
+          port?.postMessage(heard);
+        })();
       }
     };
     navigator.serviceWorker.addEventListener('message', onMessage);

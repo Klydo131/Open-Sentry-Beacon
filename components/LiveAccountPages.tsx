@@ -26,6 +26,7 @@ import type { Role } from '@/lib/types';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { showLocalNotification } from '@/lib/push';
+import { BeaconSoundSetting } from '@/components/BeaconSoundSetting';
 import { LiveMyData } from '@/components/LiveMyData';
 import { FaqCard } from '@/components/Faq';
 import { WhatsNewButton } from '@/components/WhatsNew';
@@ -727,7 +728,8 @@ function NotificationCard() {
       // constructor only as a last-resort fallback in a try/catch. The demo
       // settings screen has always called it; this one was the copy that
       // reached for the raw API.
-      await showLocalNotification(APP_SHORT_NAME, 'Alerts are on for this device.', '/settings');
+      await showLocalNotification(APP_SHORT_NAME, 'Alerts are on for this device.', '/settings',
+        { tag: 'beacon-test', renotify: true });
     } else {
       setNote('Your browser refused. You can change it in the site settings for this page.');
     }
@@ -795,6 +797,10 @@ function NotificationCard() {
           </>
         )}
         {note && <p className="mt-2 text-sm text-gray-600">{note}</p>}
+      </div>
+
+      <div className="mt-3">
+        <BeaconSoundSetting />
       </div>
     </Card>
   );

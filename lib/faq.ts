@@ -27,7 +27,7 @@
 // Plain words, no clause numbers, no "user". Written for somebody who has just
 // been invited by a person they trust and wants to know what they are joining.
 
-import { APP_NAME, SOURCE_URL } from '@/lib/brand';
+import { APP_NAME, APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
 import { oversightPoints } from '@/lib/oversight';
 import { CLIP_MOST_BYTES, POST_FILES_MOST } from '@/lib/post-media';
 
@@ -351,6 +351,15 @@ export function faqSections(): FaqSection[] {
           a: [
             'Tap the bell, then “Turn on device alerts”, and allow it when your phone asks. On an iPhone, put the app on your home screen first: Apple allows alerts only from apps installed there.',
             'Alerts never carry the words of a message or a prayer request, because an alert can appear on a locked phone.',
+          ],
+        },
+        {
+          id: 'alert-sound',
+          q: 'What does an alert sound like, and can I change it?',
+          a: [
+            `While ${APP_SHORT_NAME} is on your screen, an alert plays ${APP_SHORT_NAME}’s own sound: three quick glassy notes, rising and then settling. Settings, General, Notifications has a “Hear it” button and a switch to turn it off.`,
+            `When ${APP_SHORT_NAME} is not on your screen, your phone plays its own notification sound, which follows your ringer and Do Not Disturb. No website or web app can choose that sound; it belongs to the phone. On Android you may be able to pick a different one in your phone’s notification settings for ${APP_SHORT_NAME} or for your browser. On an iPhone it cannot be changed.`,
+            `On an iPhone, ${APP_SHORT_NAME}’s own sound is quiet when the silent switch is on. On Android it follows the media volume, which is one reason it plays only while you are looking at the app.`,
           ],
         },
         {

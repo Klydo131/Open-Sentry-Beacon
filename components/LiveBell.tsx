@@ -136,6 +136,7 @@ export function LiveBell({ me }: { me: Profile }) {
         APP_SHORT_NAME,
         'Alerts are on for this device. This is what one looks like.',
         '/church',
+        { tag: 'beacon-test', renotify: true },
       );
     }
   };
@@ -169,6 +170,7 @@ export function LiveBell({ me }: { me: Profile }) {
       });
       const summary = async (count: number) => showLocalNotification(
         APP_SHORT_NAME, `${count} things are waiting for you.`, '/church',
+        { tag: 'beacon-waiting', renotify: true },
       );
       const single = async (n: live.AppNotification) => showLocalNotification(
         n.title, n.body ?? undefined, routeFor(n.type, me.role),
