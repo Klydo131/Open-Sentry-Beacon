@@ -106,7 +106,3 @@ export function offerableSeries(all: LessonSeries[]): LessonSeries[] {
     .sort((a, b) => a.topic.localeCompare(b.topic) || a.title.localeCompare(b.title));
 }
 
-/** Every distinct area of interest across a set of series, sorted. */
-export function seriesTopics(all: LessonSeries[]): string[] {
-  return Array.from(new Set(all.map((s) => s.topic.trim()).filter(Boolean))).sort();
-}

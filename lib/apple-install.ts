@@ -81,13 +81,6 @@ export function addTitle(kind: AppleKind, app: string): string {
   return `Install ${app}`;
 }
 
-/** Where it ends up, for the middle of a sentence. */
-export function addPlace(kind: AppleKind): string {
-  if (kind === 'mac') return 'your Dock';
-  if (kind) return 'your Home Screen';
-  return 'your device';
-}
-
 /**
  * Where the Share button is, which differs by device and is the single most
  * reported cause of somebody giving up.

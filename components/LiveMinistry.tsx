@@ -14,7 +14,6 @@ import { useKeepUp, KEEP_UP_FOLLOW_UPS } from '@/lib/live/keep-up';
 import * as live from '@/lib/live/data';
 import { copyText } from '@/lib/share';
 import { Button, Card } from '@/components/ui';
-import { Linked } from '@/components/Linked';
 import { humanError } from '@/lib/live/errors';
 
 const message = (cause: unknown) =>
@@ -307,63 +306,3 @@ export function LiveNotes({ pairingId }: { pairingId: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Lesson series: the church writes them, a Guide assigns them, an Explorer
-// walks them.
-// ---------------------------------------------------------------------------
-export function LiveLessonSeries({ manage = false }: { manage?: boolean }) {
-  const [rows, setRows] = useState<live.LessonSeries[] | null>(null);
-  const [title, setTitle] = useState(''); const [topic, setTopic] = useState('');
-  const [error, setError] = useState('');
-
-  const load = useCallback(async () => {
-    try { setRows(await live.listLessonSeries()); setError(''); }
-    catch (cause) { setRows([]); setError(message(cause)); }
-  }, []);
-  useEffect(() => { void load(); }, [load]);
-  // The screen keeps up when somebody else changes something.
-  useKeepUp(KEEP_UP_FOLLOW_UPS, load);
-
-  const byTopic = (rows ?? []).reduce<Record<string, live.LessonSeries[]>>((acc, s) => {
-    (acc[s.topic] ??= []).push(s); return acc;
-  }, {});
-
-  return (
-    <Card className="p-5">
-      <h2 className="text-xl font-bold text-navy">📖 Lesson series</h2>
-      <p className="mt-1 text-sm text-gray-500">Grouped by area of interest, so somebody can start where they actually are.</p>
-      <Err msg={error} />
-
-      {manage && (
-        <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Series title"
-            className="rounded-xl border border-gray-300 px-3 py-2" />
-          <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Area of interest"
-            className="rounded-xl border border-gray-300 px-3 py-2" />
-          <Button disabled={!title.trim()} onClick={async () => {
-            setError('');
-            try { await live.addLessonSeries({ title, topic }); setTitle(''); setTopic(''); await load(); }
-            catch (cause) { setError(message(cause)); }
-          }}>Add</Button>
-        </div>
-      )}
-
-      <div className="mt-4 space-y-4">
-        {rows?.length === 0 && <p className="text-sm text-gray-500">No series yet.</p>}
-        {Object.entries(byTopic).map(([t, list]) => (
-          <div key={t}>
-            <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500">{t}</h3>
-            <div className="mt-1 space-y-1">
-              {list.map((s) => (
-                <div key={s.id} className="rounded-xl bg-gray-50 p-3">
-                  <p className="font-semibold text-navy">{s.title}</p>
-                  {s.description && <p className="text-sm text-gray-600"><Linked text={s.description} /></p>}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}

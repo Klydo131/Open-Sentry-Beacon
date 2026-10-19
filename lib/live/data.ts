@@ -628,14 +628,6 @@ export async function renameChurch(id: string, name: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function createChurch(name: string): Promise<string> {
-  const trimmed = name.trim();
-  if (!trimmed) throw new Error('A church needs a name.');
-  const { data, error } = await db().rpc('create_church', { p_name: trimmed });
-  if (error) throw new Error(error.message);
-  return data as string;
-}
-
 /**
  * Everyone this caller may see.
  *
@@ -1271,12 +1263,6 @@ export async function askToWalkWith(dsId: string, note = ''): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** A Guide takes back their own ask. */
-export async function withdrawPairingRequest(id: string): Promise<void> {
-  const { error } = await db().from('pairing_requests').delete().eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
 /**
  * A Director answers.
  *
@@ -1348,12 +1334,6 @@ export async function listMyThreads(): Promise<Thread[]> {
   return (data ?? []) as Thread[];
 }
 
-/** What the badge shows. Zero when nothing is waiting, never a stale number. */
-export async function unreadTotal(): Promise<number> {
-  const threads = await listMyThreads().catch(() => [] as Thread[]);
-  return threads.reduce((sum, t) => sum + (Number(t.unread) || 0), 0);
-}
-
 /** The Guides' room, oldest last so it reads like a conversation. */
 export async function listGuideRoom(limit = 200): Promise<GuideRoomMessage[]> {
   const { data, error } = await db()
@@ -1419,16 +1399,6 @@ export async function listJourneyEvents(limit = 2000): Promise<JourneyEvent[]> {
     .select('*')
     .order('created_at', { ascending: false })
     .limit(limit);
-  if (error) throw new Error(error.message);
-  return (data ?? []) as JourneyEvent[];
-}
-
-export async function listJourney(pairingId: string): Promise<JourneyEvent[]> {
-  const { data, error } = await db()
-    .from('journey_events')
-    .select('*')
-    .eq('pairing_id', pairingId)
-    .order('created_at', { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as JourneyEvent[];
 }
@@ -2729,12 +2699,6 @@ export async function shareMaterial(materialId: string, pairingId: string, note?
   throw new Error(error.message);
 }
 
-/** Unshare. Only whoever shared it may take it back. */
-export async function unshareMaterial(shareId: string): Promise<void> {
-  const { error } = await db().from('material_shares').delete().eq('id', shareId);
-  if (error) throw new Error(error.message);
-}
-
 // ---------------------------------------------------------------------------
 // The apps a church already uses.
 // ---------------------------------------------------------------------------
@@ -2748,67 +2712,6 @@ export async function unshareMaterial(shareId: string): Promise<void> {
 // custom scheme like `myapp://` does the opposite: it fails with an error page
 // for everybody who has not installed it. Nothing here needs to know what a
 // phone is.
-
-export interface ChurchApp {
-  id: string;
-  church_id: string;
-  name: string;
-  blurb: string | null;
-  url: string;
-  icon: string | null;
-  sort_order: number;
-  added_by: string;
-}
-
-/** Everything in the room, in the order leadership put it. */
-export async function listChurchApps(): Promise<ChurchApp[]> {
-  const { data, error } = await db()
-    .from('church_apps')
-    .select('id, church_id, name, blurb, url, icon, sort_order, added_by')
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: true });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as ChurchApp[];
-}
-
-/**
- * Add one. Leadership only -- the policy decides, this is just the call.
- *
- * THE ADDRESS IS CHECKED HERE AS WELL AS IN THE COLUMN, so somebody pasting a
- * `http://` or a bare domain is told what is wrong while the form is still open
- * rather than by a constraint violation after they press the button.
- */
-export async function addChurchApp(app: {
-  name: string; url: string; blurb?: string; icon?: string; sortOrder?: number;
-}): Promise<void> {
-  const me = await uid();
-  const { data: profile } = await db()
-    .from('profiles').select('church_id').eq('id', me).maybeSingle();
-  const church = (profile as { church_id?: string } | null)?.church_id;
-  if (!church) throw new Error('You are not in a church yet.');
-
-  const url = app.url.trim();
-  if (!/^https:\/\//i.test(url)) {
-    throw new Error('The address has to start with https:// so it opens safely on a phone.');
-  }
-
-  const { error } = await db().from('church_apps').insert({
-    church_id: church,
-    name: app.name.trim(),
-    blurb: app.blurb?.trim() || null,
-    url,
-    icon: app.icon?.trim() || null,
-    sort_order: app.sortOrder ?? 0,
-    added_by: me,
-  });
-  if (error) throw new Error(error.message);
-}
-
-/** Take one out of the room. */
-export async function removeChurchApp(id: string): Promise<void> {
-  const { error } = await db().from('church_apps').delete().eq('id', id);
-  if (error) throw new Error(error.message);
-}
 
 // ---------------------------------------------------------------------------
 // Church announcements.
@@ -3633,18 +3536,6 @@ export async function deleteLessonSeries(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Put back a study that was hidden, which is the whole undo for the above. */
-export async function restoreLessonSeries(originalId: string): Promise<void> {
-  const supabase = db();
-  const me_id = await uid();
-  const { data: had } = await supabase
-    .from('lesson_series').select('id').eq('copied_from', originalId)
-    .eq('author_id', me_id).eq('is_hidden', true).maybeSingle();
-  if (!had) return;
-  const { error } = await supabase.from('lesson_series').delete().eq('id', (had as { id: string }).id);
-  if (error) throw new Error(error.message);
-}
-
 // ---------------------------------------------------------------------------
 // Feedback, which for months went to the sender's own browser and nowhere else.
 // ---------------------------------------------------------------------------
@@ -3881,20 +3772,6 @@ export async function listAssignments(): Promise<LessonAssignment[]> {
   const { data, error } = await db().from('lesson_assignments').select('*');
   if (error) throw new Error(error.message);
   return (data ?? []) as LessonAssignment[];
-}
-
-export async function assignSeries(pairingId: string, seriesId: string): Promise<void> {
-  const supabase = db();
-  const me_id = await uid();
-  const { error } = await supabase.from('lesson_assignments')
-    .insert({ pairing_id: pairingId, series_id: seriesId, assigned_by: me_id });
-  if (error) throw new Error(error.code === '23505' ? 'Already assigned.' : error.message);
-}
-
-export async function completeAssignment(id: string, done: boolean): Promise<void> {
-  const { error } = await db().from('lesson_assignments')
-    .update({ completed_at: done ? new Date().toISOString() : null }).eq('id', id);
-  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -4801,45 +4678,6 @@ export async function churchPulse(): Promise<ChurchPulse[]> {
   const { data, error } = await db().rpc('church_pulse');
   if (error) throw new Error(error.message);
   return (data ?? []) as ChurchPulse[];
-}
-
-/**
- * Every member under 18, for the Director who is responsible for them.
- *
- * WHY THIS EXISTS SEPARATELY FROM THE BADGE. The badge (components/MinorBadge)
- * marks a minor wherever somebody already happens to be looking at them, which
- * is right when you are looking and useless for the question a Director has to
- * answer: who are all of them, and is anybody missing a consent letter? A
- * safeguard you can only see by visiting every profile in turn is a safeguard
- * nobody performs.
- *
- * The guardian comes back as a real account when the guardian is also a member,
- * which is most often a Guide. It is NEVER inferred from a shared surname: a
- * Director records the link once from the signed letter in front of them, and
- * a wrong guess here links a child to a stranger.
- *
- * Rows with no consent recorded sort first, because those are the ones that
- * need doing.
- */
-export interface MinorRow {
-  member_id: string;
-  full_name: string;
-  role: Role;
-  birthday: string | null;
-  consent_recorded: boolean;
-  guardian_name: string | null;
-  guardian_member_id: string | null;
-  guardian_full_name: string | null;
-  guardian_role: Role | null;
-  guardian_is_member: boolean;
-}
-
-export async function minorsInChurch(churchId?: string): Promise<MinorRow[]> {
-  const { data, error } = await db().rpc('minors_in_church', {
-    p_church: churchId ?? null,
-  });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as MinorRow[];
 }
 
 /** A Director records the signed letter, and who signed it. */

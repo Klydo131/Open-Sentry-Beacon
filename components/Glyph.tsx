@@ -580,16 +580,6 @@ export function ArrowUpGlyph(props: GlyphProps) {
   );
 }
 
-/** A face with a plus: add a reaction. */
-export function ReactGlyph(props: GlyphProps) {
-  return (
-    <Svg {...props}>
-      <path d="M20.5 12.5A8.5 8.5 0 1 1 11.5 3.5" />
-      <path d="M8.5 14.5a4 4 0 0 0 6 0M9 9.5h.01M14 9.5h.01M19 2.5v5M16.5 5h5" />
-    </Svg>
-  );
-}
-
 /** Two quavers beamed together: the Music room. */
 export function MusicGlyph(props: GlyphProps) {
   return (

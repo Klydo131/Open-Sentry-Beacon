@@ -223,10 +223,6 @@ export function installGuides(shareWhere = 'in Safari'): InstallGuide[] {
   ];
 }
 
-/** The list with neutral wording, for tests and for anything rendered off a
- *  device (the handbook, the printed guide). */
-export const INSTALL_GUIDES: InstallGuide[] = installGuides();
-
 /**
  * Which entry to open the list on. A GUESS, never a claim.
  *

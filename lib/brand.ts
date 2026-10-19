@@ -274,6 +274,3 @@ export function canKick(callerRole: string, targetRole: string): boolean {
   return false;
 }
 
-export function canDisapprove(callerRole: string): boolean {
-  return callerRole === 'executive' || callerRole === 'admin';
-}

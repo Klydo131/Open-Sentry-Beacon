@@ -182,10 +182,6 @@ export function themesFor(role: Role): RoomTheme[] {
   return role === 'ds' ? STUDY_THEMES : OFFICE_THEMES;
 }
 
-export function isSeekerRole(role: Role): boolean {
-  return role === 'ds';
-}
-
 const KEY = 'beacon-room-v1';
 
 export interface RoomPrefs {

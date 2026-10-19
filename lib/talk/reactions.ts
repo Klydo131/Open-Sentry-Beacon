@@ -27,8 +27,6 @@ export const REACTIONS = [
   { emoji: '😢', label: 'Sad' },
 ] as const;
 
-export type ReactionEmoji = (typeof REACTIONS)[number]['emoji'];
-
 /** What a screen reader says for a reaction. */
 export function reactionLabel(emoji: string): string {
   return REACTIONS.find((r) => r.emoji === emoji)?.label ?? emoji;

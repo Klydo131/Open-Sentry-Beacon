@@ -266,11 +266,6 @@ export const STARTER_KIT: Material[] = [
   },
 ];
 
-// Every topic in the kit, for filter chips. Sorted so the order is stable.
-export const KIT_TOPICS: string[] = Array.from(
-  new Set(STARTER_KIT.flatMap((m) => m.topics)),
-).sort();
-
 
 // ---------------------------------------------------------------------------
 // The short list an Explorer starts with.

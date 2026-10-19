@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { APP_NAME } from '@/lib/brand';
 
@@ -145,57 +144,3 @@ export function BeaconSpinner({
   );
 }
 
-/**
- * A grey block standing in for content that is about to arrive.
- *
- * Used where the SHAPE of what is coming is known — a list of cards, a row of
- * rows. It keeps the page from jumping when the real thing lands, which a
- * centred spinner does not.
- */
-export function Skeleton({ className = '', rows = 3 }: { className?: string; rows?: number }) {
-  return (
-    <div className={`space-y-2 ${className}`} role="status" aria-live="polite">
-      <span className="sr-only">Loading…</span>
-      {Array.from({ length: rows }, (_, i) => (
-        <span
-          key={i}
-          aria-hidden
-          className="beacon-skeleton block h-12 rounded-xl bg-gray-100"
-          // Staggered, so it reads as one thing loading rather than several
-          // unrelated boxes flashing at each other.
-          style={{ animationDelay: `${i * 120}ms` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// Wraps the app on first mount: shows the splash until the client is ready,
-// then fades it out. `minMs` keeps it on screen just long enough to read as
-// intentional rather than a flash of navy.
-export function BootSplash({
-  ready,
-  minMs = 550,
-}: {
-  ready: boolean;
-  minMs?: number;
-}) {
-  const [done, setDone] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-
-  useEffect(() => {
-    if (!ready) return;
-    const t = setTimeout(() => {
-      setLeaving(true);
-      setTimeout(() => setDone(true), 320);
-    }, minMs);
-    return () => clearTimeout(t);
-  }, [ready, minMs]);
-
-  if (done) return null;
-  return (
-    <div className={leaving ? 'beacon-splash-out' : undefined}>
-      <BeaconSplash />
-    </div>
-  );
-}

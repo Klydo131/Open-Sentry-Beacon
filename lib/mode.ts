@@ -26,10 +26,3 @@ export const IS_LIVE = Boolean(url && key);
 /** True when it is running on sample data in the browser. */
 export const IS_DEMO = !IS_LIVE;
 
-/**
- * What to call this deployment on screen.
- *
- * A demo that does not say it is a demo is how somebody types a real prayer
- * request into sample data that the next visitor can read.
- */
-export const MODE_LABEL = IS_LIVE ? 'live' : 'sample data';

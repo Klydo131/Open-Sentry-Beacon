@@ -71,12 +71,6 @@ export function clearDraft(key: string | null | undefined): void {
   }
 }
 
-/** True when this conversation has something unsent waiting in it. */
-export function hasDraft(key: string | null | undefined): boolean {
-  if (!key) return false;
-  return read(key).trim() !== '';
-}
-
 /**
  * A text value that remembers itself, per conversation.
  *

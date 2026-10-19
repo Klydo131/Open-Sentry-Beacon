@@ -38,6 +38,3 @@ export const ATTACHMENT_ACCEPT = [
   'text/plain', '.txt', 'text/csv', '.csv',
 ].join(',');
 
-/** One line for the screen, so the limits are visible before a file is picked. */
-export const ATTACHMENT_HINT =
-  'Photos, PDFs, Word, Excel, PowerPoint, audio and text. Up to 10 MB. Video cannot be attached; link to it instead.';
