@@ -1,6 +1,24 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 45 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 47 releases, as members read them in Settings, What's new.
+
+### Alerts have a sound of their own
+
+*2026-10-18*
+
+- While Beacon is on your screen, a new alert plays Beacon's own sound: three quick glassy notes, rising and then settling. You hear it once, not twice: the phone's usual sound is held back for it.
+- When Beacon is not on your screen, your phone's own notification sound plays as before, following your ringer and Do Not Disturb. Phones do not let any web app choose that one.
+- Every alert now makes a sound. Before, a second alert arriving while the first was still showing replaced it without a sound, so a second message, or a prayer request after a message, could go unheard.
+- Settings, General, Notifications: Hear it, and a switch to turn Beacon's sound off.
+
+### Every screen opens with no signal
+
+*2026-10-16*
+
+- Once Beacon has been opened with a signal, every screen and every tool is kept on your phone: the Music room and all five of its folders, This Sabbath, the Office, the study room, the drawing board and the PDF reader. Before this, only the screens you had already opened worked, and the Tuner, the Conductor, Pieces and Play did not open at all.
+- Signed in, you see what you last saw. The app keeps a copy of what your screens showed, for your account only, and deletes it when you sign out. Sending, posting and answering still need a signal, and the app says so when you try.
+- A Guide's Explorers open with no signal too: the pages of the people on your lists are kept.
+- Settings, General says whether everything is on your phone yet. The first time it takes about 5 MB, fetched in the background; after an update, only what changed. With Data Saver on, the biggest tools are kept the first time you open them.
 
 ### A simpler Tuner: a dial, a button, and a keyboard to sing to
 

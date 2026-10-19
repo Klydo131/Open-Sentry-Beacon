@@ -36,11 +36,6 @@ Three tests hold that promise rather than a paragraph in a README:
 
 Run them with `npm test`.
 
-**Writing code for this app, or letting an AI tool write it?** Read
-[WEB-APP-SECURITY.md](WEB-APP-SECURITY.md). It is the developer's practice: the
-questions to ask before a feature, what to rely on in this repository, and the
-gaps that are still open, named plainly.
-
 ---
 
 ## The moment that changes: connecting a backend
@@ -287,43 +282,6 @@ anybody new is given access. Listed after the audit of 3 October 2026.
 | GitHub → Settings → Code security | **Private vulnerability reporting, secret scanning and push protection on** | The "report a vulnerability" link above depends on the first; the others stop a key from being pushed by mistake. |
 | GitHub → Settings → Branches (or Rules) for `main` | **Require review from Code Owners** | Then a pull request that touches the files in `.github/CODEOWNERS` (database rules, workflows, server routes, the AI brief) waits for your review. |
 | Any AI tool's connection to your database or hosting | **Ask every time** for running SQL, applying migrations and deploying | The prompt is what stands between an AI session and your live data. `AGENTS.md` section 0.3 says why an AI tool must not act on instructions it merely read. |
-
----
-
-## What is not protected, plainly
-
-- **An unlocked device that is signed in.** Whoever holds it sees what its owner
-  sees. True of all software; worth saying because it is the most likely
-  real-world exposure. *Sign out everywhere else* on the Password page ends
-  every session but the one it is pressed on.
-- **A temporary password during its three days.** Anybody who reads the invitation
-  e-mail in the first three days can sign in with it. Choosing a password ends
-  that at once.
-- **Anyone with a legitimate account.** Rules restrict what a role can retrieve.
-  They cannot stop somebody reading their own records and repeating them.
-- **Content you choose to share.** If somebody uploads a sensitive document to
-  Resources and sends it, the app will faithfully share it, and the person who
-  receives it can save a copy that deleting the resource cannot take back.
-- **Your hosting provider.** Whoever runs your server and database can see what
-  is on it.
-
----
-
-## Known advisories in what the app installs
-
-`npm audit --omit=dev` lists what the app installs for production. What it
-reports, and what was done about each, so nobody has to rediscover it:
-
-| Reported | Reached through | What was done | Why |
-|---|---|---|---|
-| **dompurify** 3.4.13–3.4.15, low: an `afterSanitize` hook that removes nodes can leave event handlers armed | The page editor (BlockSuite) and the diagram tool (Mermaid, inside Excalidraw) | **Fixed 1 October 2026:** updated to 3.4.16 with `npm update dompurify`, inside the range both already allowed. | The app never calls DOMPurify or adds hooks to it, so it was not reachable here. It was a one-line, non-breaking fix anyway. |
-| **vitest** / **@vitest/mocker**, moderate: a path traversal in the test runner's mock server (`npm audit` counts it 11 times, once for each BlockSuite package it passes through) | `@blocksuite/data-view` lists the test runner as a runtime dependency | **Left, on purpose.** | Nothing in the app runs vitest. BlockSuite's own code never imports it, and a production build contains no file that mentions it (checked on 1 October 2026). The only fix on offer is moving the editor back to 0.21.0, an older release, which would trade a test tool nobody runs for an editor change nobody has tested. Revisit when BlockSuite drops the dependency. |
-
-**`npm audit fix` itself fails in this repository** with "Unable to resolve
-reference $postcss". That comes from the `"postcss": "$postcss"` override in
-`package.json`, which `npm install` and `npm ci` both handle and the fix
-command does not. Update a single package with `npm update <name>`, then run
-`npm audit --omit=dev` again to confirm.
 
 ---
 

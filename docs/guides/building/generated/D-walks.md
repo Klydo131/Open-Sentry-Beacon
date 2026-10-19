@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-83 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+85 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -77,6 +77,12 @@ Two things now answer it, and this suite checks both, because only one of them w
 THE BUG. Safari has never fired `beforeinstallprompt`, on iOS or on macOS. So on every Apple device the header's Install chip has no prompt to hand the browser and falls back to a link. That link pointed at `/settings`, and the install card lives near the bottom of a long page.
 
 From the user's side: they press a button that says Install, Settings opens, and nothing that mentions installing is on screen. There is no error and nothing looks broken, so the reasonable conclusion is that the button does not work. Android users never saw this, because Chrome gives them a real one-tap prompt and they never take this branch.
+
+#### `beacon-has-its-own-sound.js`
+
+Beacon's own sound in the real app: the Settings switch and Hear it at three sizes, and (Chromium only, via DevTools) a push to the real service worker. The Node half is tests/beacon-has-its-own-sound.mjs.
+
+node tests/e2e/beacon-has-its-own-sound.js <port>
 
 #### `blog.js`
 
@@ -385,6 +391,12 @@ The study room's features DO something, not just appear in a menu.
 WHY THIS EXISTS BESIDE the-study-room-has-affines-features.js, WHICH ALREADY PASSES. That walk asks the slash menu what it OFFERS -- "the menu offers table view", "the menu offers code block" -- and then inserts exactly one of them. Seven of its assertions are satisfied by a string appearing in a list.
 
 This repository has spent a week on checks that stayed green while something was broken, and a menu entry is the purest example of the shape: the thing exists, it is named correctly, and nothing has established that choosing it does anything at all. A room advertised as "everything AFFiNE has" needs at least one walk that uses the features rather than reading their labels.
+
+#### `the-app-works-with-no-signal.js`
+
+The app works with no signal: opened once with a signal, then cut off, and every screen and every tool still opens.
+
+The owner, 16 October 2026: "How is it still and "offline" first local web app if all of the features are not usable offline? Can we fix that today and make an update?" Measured that day with the server stopped, after opening Home and the Church online: 10 of 27 screens opened, three showed "Beacon needs a fresh copy", and the Tuner, the Conductor, Pieces and Play all failed.
 
 #### `the-bubble-has-one-scroll.js`
 

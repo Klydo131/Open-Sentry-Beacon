@@ -1150,7 +1150,7 @@ Supabase Auth has exactly one "Invite user" template with no way to branch on a 
 >
 > **Not every key works with the API.** Keys created for other Brevo integrations are a different type, and the sending endpoint answers "Key not found" for them, which reads as a wrong key rather than a wrong kind. Create the key from *SMTP & API → API keys* and nowhere else.
 >
-> **IP restriction is on by default in some accounts.** Turning it off is a real reduction in protection, and it is the owner's call. The compensating control is that the key lives in the database where only the server can read it, and rotating it takes under a minute.
+> **IP restriction is on by default in some accounts.** Invitations fail silently until it is off for this key (step 4 above).
 
 ### Setting up the password reset
 
@@ -1732,8 +1732,6 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | The one-tap Safari handoff on a real device | Tested against simulated iPhone browsers. Never run on a physical iPhone. |
 | Publishing a post, from a real sign-in | The rules were proved against the live database as a real Explorer, Guide, Director and Executive Director, including that a draft never reaches anybody else. It has not been done through the app by a person with a password. |
 | "Active" as a count of visits | Not built and deliberately so. Beacon does not record when somebody opens the app, and the screen says what the number does mean instead of implying otherwise. |
-| Reply, reactions and voice on this church's own site | Built and shipped. Switched off here, because this church's database has not had migration `20261001120000`, by the owner's choice; every copy built from the repository has them. |
-| The conversation without its update, on the live site | Held by tests. Never seen running from here, because this sandbox cannot sign in to the live site. |
 | The new conversation on a real iPhone, and with a screen reader | Not tried. Checked in Chromium at phone and computer sizes, with a pretend microphone. |
 | What else other open-source chats do well | A "New messages" line, "Not sent: try again", an offline line and more, each traced to the file it would change, in `docs/CHAT-RESEARCH.md`. |
 | Nine decisions for the owner | Keeping removed files for safeguarding, a daily size cap, HEIC photos, read-only ended pairings, lock-screen previews, a copyright line, the sample church's name, a trademark search on "Sentry", and AI-written code. Listed with reasons in `docs/CHAT-RESEARCH.md`. |

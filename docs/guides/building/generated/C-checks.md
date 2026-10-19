@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 178 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 180 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -159,6 +159,14 @@ A notification a phone will actually show.
 WHY THIS EXISTS. Alerts were turned on from a real Android phone, the screen said "✓ On", and nothing ever appeared. Chrome on Android refuses the `Notification` constructor outright — it throws `Illegal constructor` and permits only `ServiceWorkerRegistration.showNotification()`. The live settings screen called the constructor directly, so the confirmation threw and the person was left with a screen claiming success and a silent phone.
 
 It worked on a desktop, which is exactly how it survived review, and the demo settings screen next door had always done it correctly. One copy of two reached for the raw API.
+
+#### Beacon has its own sound
+
+`tests/beacon-has-its-own-sound.mjs`
+
+Beacon's own notification sound, and every alert making a sound. Runs the real code: the sound, page/worker tag parity, notification options, when it plays, and the service worker's push handler in a sandbox. Browser half: tests/e2e/beacon-has-its-own-sound.js.
+
+node tests/beacon-has-its-own-sound.mjs
 
 #### a study can be corrected
 
@@ -1050,11 +1058,9 @@ TWO WAYS THAT PROMISE HAS QUIETLY BROKEN HERE BEFORE, and this check holds again
 
 `tests/fixed-advisories-stay-fixed.mjs`
 
-A security advisory that was fixed stays fixed, and one that was left is left in writing.
+A security fix in a dependency stays fixed: no installed copy goes back below the version that has it. Reads the lockfile; `npm audit` is still the live check.
 
-WHY. A lockfile can quietly go back to an older version. A merge, a reinstall with an old lock, or a dependency that pins lower can each undo a fix nobody remembers making. And an advisory left open on purpose is only safe while the reason is written down where the next person will look.
-
-This reads the lockfile; it does not ask the network. `npm audit --omit=dev` is still the real check. docs/SECURITY.md, "Known advisories in what the app installs", says what was found and what was done.
+node tests/fixed-advisories-stay-fixed.mjs
 
 #### the deploy guide matches the app
 
@@ -1799,6 +1805,16 @@ The Music room: a tuner, a conductor's metronome, a page scanner and a score to 
 Asked for on 4 October 2026: "Can we create another room for music for music lovers and choir, Put the main Audio tools to it, take out the audio tools from the library (unless they want to check and test the audio in the library). I want a tuner, a piece scanner, and beat maker (where you can track the beat like a conductor) ... make sure the features are Stable ... safe and not exploitable".
 
 This runs the arithmetic every tool rests on, the score reader against a written-for-purpose piece, the zip reader against hostile archives, and the scanner's geometry, and reads the code for the promises that keep the room safe: the microphone is released, nothing is sent anywhere, nothing is evaluated. tests/e2e/the-music-room.js walks the room in a browser.
+
+#### the app works with no signal
+
+`tests/the-app-works-with-no-signal.mjs`
+
+The app works with no signal: every screen, every tool, and what a signed-in person last read.
+
+The owner, 16 October 2026: "How is it still and "offline" first local web app if all of the features are not usable offline? Can we fix that today and make an update?" Measured that day with the server stopped, after opening Home and the Church online: 10 of 27 screens opened, and 4 of the 5 Music folders failed. The signed-in app opened on "Could not load your account". Settings said "Beacon keeps working offline".
+
+What this holds (the browser half is tests/e2e/the-app-works-with-no-signal.js, which stops the server and walks every screen):
 
 #### the owner sees it first
 

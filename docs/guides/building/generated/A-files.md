@@ -258,6 +258,10 @@ The first version kept a depth counter in component state, incremented on every 
 
 *No header comment.*
 
+#### `components/BeaconSoundSetting.tsx`
+
+The switch for Beacon's notification sound (lib/alert-sound.ts), both halves.
+
 #### `components/Blog.tsx`
 
 The Guide's blog, and the Explorer's reading of it.
@@ -459,6 +463,10 @@ Sniffing the user agent gets the common browsers right and everything else wrong
 *No header comment.*
 
 #### `components/JourneyPath.tsx`
+
+*No header comment.*
+
+#### `components/KeptForNoSignal.tsx`
 
 *No header comment.*
 
@@ -1416,6 +1424,12 @@ The church activity billboard — "what's happening", composed from real demo da
 
 The hard rule here is the same one the /church board has always kept: the shared feed shows NO individual seeker's private journey. A milestone is celebrated in the aggregate — "someone reached the Care stage" — never "John reached Care". A seeker glancing at the billboard learns the church is moving, not who is where. Anything that needs a name to be useful (a new sign-up to vouch for, an approval to grant) is not in the shared feed at all; it lives in the privileged strip below, which only Admin and Executive ever see, and only because acting on it is their job.
 
+#### `lib/alert-sound.ts`
+
+Beacon's own notification sound.
+
+No web app can choose the sound of the phone's own notification: the standard offers only `silent`. So with Beacon on screen we play our sound and show the notification silently; otherwise the phone's sound plays. On screen only, because a page's sound follows the media volume on Android, not the ringer. Sent straight to the speakers, so an iPhone's silent switch mutes it.
+
 #### `lib/analytics-trend.ts`
 
 *No header comment.*
@@ -1671,6 +1685,16 @@ WHAT THIS FIXES. One table in the whole app was published for realtime — `mess
 Migration 20260902020000 publishes the tables. This is the other half.
 
 RLS DECIDES, NOT THIS FILE. Realtime evaluates the same policies as a SELECT, per subscriber, so an event only arrives for a row this person could already have read. Nothing here filters for privacy, and nothing here could: a filter in the browser is a courtesy to the network, never a boundary.
+
+#### `lib/live/kept.ts`
+
+THE LAST COPY OF WHAT YOU READ, FOR WHEN THERE IS NO SIGNAL.
+
+The owner, 16 October 2026: "How is it still and "offline" first local web app if all of the features are not usable offline?" For the signed-in app the honest answer was that none of it was. Every screen asked the church's database as it opened, so a phone with no signal opened on "Could not load your account", in the church hall where the app is most needed.
+
+So every READ the app makes is kept, on this device, as it arrives; with no signal, the same read is answered with the copy. What somebody saw is what they see again, and the pill at the top says Offline.
+
+WHAT IS KEPT, AND WHAT NEVER IS: - plain reads of the database's tables (GET and HEAD, /rest/v1/); - reads through the database's functions, but only the ones the database itself declares STABLE, meaning they change nothing. READ_FUNCTIONS below is that list, and tests/the-app-works-with-no-signal.mjs checks it against the migrations, so a function that writes can never be answered from a copy. Answering a write from a copy would tell somebody their message was sent when it was not; - nothing else: no sign-in, no files, no writes. A write with no signal fails and says "That could not reach the church" (lib/live/errors.ts); - and nothing the church has since taken away: a read the database now refuses deletes its kept copy.
 
 #### `lib/live/kind-from-url.ts`
 
@@ -1985,6 +2009,10 @@ WHAT WAS WRONG WITH IT, reported by the people using it: "some of it are not ple
 1. ALL THREE OPTIONS WERE NOISE, and one of them was raw white noise -- flat all the way up, which is the harshest thing a speaker can make and the sound most people mean when they say noise is unpleasant. It sat in the same undifferentiated list as the gentle ones, so somebody looking for something calming had a one-in-three chance of an ear full of hiss.
 
 #### `lib/notification-prefs.ts`
+
+*No header comment.*
+
+#### `lib/offline-ready.ts`
 
 *No header comment.*
 
@@ -2556,6 +2584,14 @@ npm run build && node scripts/run-next.mjs start -p 4320 node scripts/live-scree
 
 Needs NEXT_PUBLIC_SUPABASE_URL and _ANON_KEY set at BUILD time, because that is what puts the app in live mode. It does not need the database to answer: a screen that renders its own loading state has proved the point, and a screen showing the placeholder has proved the opposite.
 
+#### `scripts/offline-files.mjs`
+
+Writes the list of files the app needs to work with no signal, once per build, for the service worker to keep (app/sw.js/route.ts).
+
+WHY THIS FILE EXISTS. The worker used to keep the pages and nothing else. The code those pages run was kept only once something had asked for it, so a phone kept exactly what its owner happened to open while online. Measured on 16 October 2026 with the server stopped, after opening Home and the Church online: 10 of 27 screens opened. Three showed "Beacon needs a fresh copy" because a piece of their code had never been fetched, fourteen showed "You're offline" or nothing, and the Tuner, the Conductor, Pieces and Play all failed, because each is loaded only when its folder is opened. An app that says it works offline has to keep its code before it is asked for.
+
+Nobody can write that list by hand: the bundler names the files and splits them differently on every build. So the bundler writes it, from what it knows about every chunk:
+
 #### `scripts/refresh-docs.mjs`
 
 Every picture and every printed guide, in one command.
@@ -2567,6 +2603,14 @@ WHY ONE COMMAND. Until 6 October 2026 a new edition was eight commands run by ha
 #### `scripts/run-next.mjs`
 
 *No header comment.*
+
+#### `scripts/same-code.mjs`
+
+Prove a change touched only comments and blank lines.
+
+Compiles every changed .ts/.tsx/.js/.mjs file twice, as it is in <base> and as it is on disk, with comments removed, and compares the two. Identical output means the program did not change. Exits 1 and names the file when it did, or when a file was added or deleted.
+
+node scripts/same-code.mjs [base] (default: HEAD)
 
 #### `scripts/screenshots.mjs`
 
@@ -2619,6 +2663,12 @@ WHY. Almost every package here is under a licence (MIT, ISC, BSD, Apache-2.0, MP
 WHAT IS LISTED. Every production dependency in package-lock.json that is actually installed -- not only what reaches the browser, which would need the bundler's opinion and could miss something. Development tools are left out: they never reach anybody.
 
 WHERE THE TEXT COMES FROM. Each package's own licence files, word for word. A package that ships none gets its declared licence named, its author and source, and the standard text of that licence once at the end of this file, taken from another installed package's own copy -- never typed from memory.
+
+#### `scripts/unused-exports.mjs`
+
+List exports in app/, components/ and lib/ that nothing uses: the name appears once in its own file and nowhere else in the repository (code, tests, SQL, docs). Candidates to delete, not verdicts.
+
+node scripts/unused-exports.mjs
 
 #### `scripts/verify.mjs`
 
