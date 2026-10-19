@@ -116,6 +116,18 @@ if (manifestSrc) {
       );
 }
 
+// Android fills its icon shape with the maskable icon. Without one, or with
+// one that has see-through parts, it shrinks the logo into a white box.
+const maskable = /src:\s*'(\/icons\/[^']+\.png)',[^}]*purpose:\s*'maskable'/.exec(manifestSrc ?? '')?.[1];
+const png = maskable && fs.existsSync(path.join(root, 'public' + maskable))
+  ? fs.readFileSync(path.join(root, 'public' + maskable))
+  : null;
+// PNG header: width and height at bytes 16-23, colour type at 25 (2 = RGB, no alpha).
+png && png.readUInt32BE(16) >= 512 && png.readUInt32BE(16) === png.readUInt32BE(20) && png[25] === 2
+  ? ok(`the manifest's maskable PNG is square, at least 512px and solid (${maskable})`)
+  : fail('the manifest needs a maskable PNG icon, square, at least 512px, with no transparency, ' +
+      'or Android shows the logo small inside a white box');
+
 // iOS reads apple-touch-icon and nothing else for a home-screen shortcut.
 const appleIcon = path.join(root, 'app/apple-icon.png');
 if (fs.existsSync(appleIcon)) {
