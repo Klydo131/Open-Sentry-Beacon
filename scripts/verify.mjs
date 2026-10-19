@@ -482,8 +482,7 @@ const staticChecks = [
   // Every animation stops for somebody who asked their device for less
   // movement, after it starts; one motion scale in CSS and code (1 October 2026).
   ['every animation can be stilled', 'tests/every-animation-can-be-stilled.mjs'],
-  // A fixed security advisory stays fixed in the lockfile, and one left on
-  // purpose stays written down in docs/SECURITY.md (1 October 2026).
+  // A fixed security advisory stays fixed in the lockfile (1 October 2026).
   ['fixed advisories stay fixed', 'tests/fixed-advisories-stay-fixed.mjs'],
   // docs/DEPLOY-ANYWHERE.md names only files, settings and secrets that exist,
   // and every scenario says whether it has been run (1 October 2026).
