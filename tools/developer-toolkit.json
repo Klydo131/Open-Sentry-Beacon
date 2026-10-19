@@ -58,6 +58,22 @@
       ]
     },
     {
+      "id": "pstack",
+      "name": "pstack",
+      "repo": "cursor/plugins",
+      "commit": "ddf824aff1e55ba14bd666b30bce3fc69962abe6",
+      "licence": "MIT",
+      "category": "harness",
+      "status": "recommended",
+      "runs_on_its_own": "none (skills and agents only; no hooks)",
+      "sends": "nothing by itself",
+      "why": "Lauren Tan's method for less code of higher quality, and what this project audits with. The parts an audit uses are copied unchanged into tools/pstack, with what is left out and where AGENTS.md wins; /audit (.claude/skills/audit/SKILL.md) uses them. Install the whole plugin only for its other skills; some of them ask the agent to run scripts that talk to GitHub.",
+      "install": [
+        "claude plugin marketplace add cursor/plugins",
+        "claude plugin install pstack@cursor-plugins"
+      ]
+    },
+    {
       "id": "anthropic-skills",
       "name": "Anthropic skills",
       "repo": "anthropics/skills",

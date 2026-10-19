@@ -58,7 +58,7 @@ cheaper and the code smaller without changing what ships:
 | Tool | What it saves | Install in Claude Code (two prompts) | How it is used here |
 | --- | --- | --- | --- |
 | **Caveman** | Tokens: short agent prose | `claude plugin marketplace add Klydo131/caveman` then `claude plugin install caveman@caveman` | For chat, plans and notes between agents. **Never** in code comments, docs, commit messages, report files or anything a church member reads: those stay full sentences, as this file is. Security warnings and anything irreversible are always said in full. |
-| **Ponytail** | Code: the fewest lines that work | `claude plugin marketplace add Klydo131/ponytail` then `claude plugin install ponytail@ponytail` | The platform before a dependency (`<input type="date">` before a date library). A deliberately small choice is marked `// ponytail: why`, as the code already does. Never trade a safety check, a test or an accessibility rule for fewer lines. |
+| **Ponytail** | Code: the fewest lines that work | `claude plugin marketplace add Klydo131/ponytail` then `claude plugin install ponytail@ponytail` | The platform before a dependency (`<input type="date">` before a date library). A deliberately small choice is marked `// shortcut: why` (Ponytail 5's marker; older `// ponytail:` markers still count). Never trade a safety check, a test or an accessibility rule for fewer lines. |
 
 Both are MIT-licensed and come from the owner's own forks of
 `JuliusBrussee/caveman` and `DietrichGebert/ponytail`, so a change upstream
@@ -70,6 +70,12 @@ a contributor without them loses nothing but speed. Any other tool an agent
 wants to add goes through [`docs/DEVELOPER-TOOLKIT.md`](./docs/DEVELOPER-TOOLKIT.md),
 which lists what is vetted, what each one can touch, and what is deliberately
 left out.
+
+**Audits** use `/audit` (`.claude/skills/audit/SKILL.md`): pstack's method,
+copied unchanged into `tools/pstack/`, in Ponytail 5's order (correct, safe,
+holds under load, tested, fast, lean). Comments keep only a reason the code
+cannot show; the story goes in the commit message (CONTRIBUTING.md, House
+style).
 
 ## 0.2 The owner sees it before it ships
 

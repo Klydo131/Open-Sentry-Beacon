@@ -103,14 +103,21 @@ watch it go red. A test that has never failed is a comment with a run time.
 These are not preferences. Each one exists because its absence cost somebody a
 day.
 
-### Comments explain *why*, not *what*
+### Comments explain *why*, briefly
 
-The code already says what it does. A comment earns its place by recording the
-bug that made it necessary, or the obvious alternative and why it failed.
+The code says what it does. A comment earns its place only with a reason the
+code cannot show: a platform or vendor rule ("Safari wants the audio started
+inside the tap"), a security invariant, or a limit chosen on purpose
+(`// shortcut: one church, so a list is enough`). One to three lines.
 
-You will find a lot of these, some of them long. They are the most valuable
-thing in the repository — this project is meant to be inherited, and the bar is
-not "does it work" but "will the next person understand why it is like that".
+The story behind a change, meaning the report, the bug and the alternative that
+failed, goes in the commit message. `git log -L` and `git blame` find it there
+without every later reader paying for it. A test's assertion message documents
+its step; a comment above it does not need to.
+
+Older files still carry long comments from before this rule. They are trimmed
+in separate commits that `node scripts/same-code.mjs` proves change nothing
+else. `/audit` (`.claude/skills/audit/SKILL.md`) applies the rule.
 
 ### Guardrails are tests, not agreements
 

@@ -189,6 +189,8 @@ const staticChecks = [
   ['notifications go through the worker', 'tests/notifications-go-through-the-worker.mjs'],
   // Browser half: tests/e2e/beacon-has-its-own-sound.js.
   ['Beacon has its own sound', 'tests/beacon-has-its-own-sound.mjs'],
+  // 28 dead exports were found by hand on 19 October 2026; this keeps it at none.
+  ['no export nothing uses', 'scripts/unused-exports.mjs'],
   // A study could be created, published and deleted but never corrected, so
   // fixing a typo meant deleting the study and losing every handout on it.
   // The database had always allowed the update; only the app was missing.

@@ -93,6 +93,28 @@ from here, because this sandbox has no Codex.
   the network and no new dependencies, so the fork was fast-forwarded to it
   (version 4.10.0). The commit in `tools/developer-toolkit.json` is that one.
 
+**Where the two forks stand (19 October 2026).** Both are behind upstream,
+and both are now safe to sync. Read at upstream's newest commit on that day:
+
+- **Caveman, 1,721 commits behind** (upstream `bad48a0`, version 4.0.1). The
+  licence worry above is gone: from 3.0.0 the whole repository is Apache-2.0,
+  including the parts that were under the Business Source License. Its Claude
+  Code plugin runs only its own Node scripts, on SessionStart, SubagentStart,
+  UserPromptSubmit and SessionEnd (that one records usage counts on the
+  machine), and sends nothing. The rest of the repository (engine, proxy,
+  browser extension) is not part of the plugin.
+- **Ponytail, 139 commits behind** (upstream `09c434a`, version 5.3.2). Still
+  MIT. Ponytail 5 rebuilt its rules and added `/ponytail-audit`, which the
+  `/audit` skill follows. New: after every turn its "band" writes that task's
+  cost and token counts to a CSV under `~/.config/ponytail/band/`, and it can
+  post that row to a webhook address, which is empty unless somebody sets one.
+  Its code-comment marker is now `// shortcut:`; older `// ponytail:` markers
+  still count.
+
+To sync: on GitHub, open each fork and press **Sync fork**. Then record the new
+commit in `tools/developer-toolkit.json`, with Caveman's licence as Apache-2.0
+and the two lines above.
+
 ## Recommended, opt-in
 
 Each is small enough to read and has a licence. None sends a session
@@ -102,6 +124,7 @@ machine, as each tool describes it at the commit recorded.
 | Tool | Why here | Install | Runs on its own | Sends | Licence |
 | --- | --- | --- | --- | --- | --- |
 | **Superpowers** (`obra/superpowers`) | Planning, test-first and systematic debugging as skills the agent reaches for. One hook, at session start, that only adds text. Installed from Anthropic's official directory, as its own README says; the commit recorded is the one read on the day it was reviewed. | `claude plugin install superpowers@claude-plugins-official` | SessionStart (loads its skills list) | nothing | MIT |
+| **pstack** (`cursor/plugins`) | Lauren Tan's method for less code of higher quality, and what this project audits with. The parts an audit uses are copied unchanged into tools/pstack, with what is left out and where AGENTS.md wins; /audit (.claude/skills/audit/SKILL.md) uses them. Install the whole plugin only for its other skills; some of them ask the agent to run scripts that talk to GitHub. | `claude plugin marketplace add cursor/plugins`<br>`claude plugin install pstack@cursor-plugins` | none (skills and agents only; no hooks) | nothing by itself | MIT |
 | **Anthropic skills** (`anthropics/skills`) | Anthropic's own skills. document-skills makes the PDF and Word copies of the guides in docs/handbook without new code here. Read each skill's own licence before copying it into this AGPL repository: some may be used but not redistributed. | `claude plugin marketplace add anthropics/skills`<br>`claude plugin install document-skills@anthropic-agent-skills` | none | nothing | per skill (some source-available, not open source) |
 | **Codex plugin for Claude Code** (`openai/codex-plugin-cc`) | Claude and Codex already share this repository (AGENTS.md section 7). This lets one hand a review to the other without leaving the session. Needs the developer's own Codex sign-in. Leave its review gate off in any session that has read live member data: with the gate on, every finished answer goes to Codex. | `npm install -g @openai/codex@0.158.0`<br>`claude plugin marketplace add openai/codex-plugin-cc`<br>`claude plugin install codex@openai-codex` | SessionStart and SessionEnd (start and stop its helper); Stop, which does nothing unless its review gate is switched on, and then hands every finished answer to Codex | whatever it is handed, to OpenAI under the developer's own Codex account; with the review gate on, every finished answer | Apache-2.0 |
 | **Claude HUD** (`jarrodwatts/claude-hud`) | Shows how much of the context and the budget a session has used, which is the number Caveman is there to bring down. | `claude plugin marketplace add jarrodwatts/claude-hud`<br>`claude plugin install claude-hud@claude-hud` | a status-line command, each time the line is drawn | nothing | MIT |
