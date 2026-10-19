@@ -187,9 +187,7 @@ const staticChecks = [
   // Notification constructor outright, so the live settings screen said "On"
   // and showed nothing -- on a desktop it worked, which is how it survived.
   ['notifications go through the worker', 'tests/notifications-go-through-the-worker.mjs'],
-  // Beacon's own sound while it is on the screen, and every alert making a
-  // sound: they all shared one tag, so a second one replaced the first in
-  // silence. The browser half is tests/e2e/beacon-has-its-own-sound.js.
+  // Browser half: tests/e2e/beacon-has-its-own-sound.js.
   ['Beacon has its own sound', 'tests/beacon-has-its-own-sound.mjs'],
   // A study could be created, published and deleted but never corrected, so
   // fixing a typo meant deleting the study and losing every handout on it.

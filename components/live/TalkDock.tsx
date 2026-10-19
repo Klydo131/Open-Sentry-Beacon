@@ -100,9 +100,6 @@ export function TalkDock() {
           // fastest way to make somebody switch notifications off.
           if (is > was && !(path === '/talk' && typeof window !== 'undefined'
                             && window.location.search.includes(t.pairing_id))) {
-            // ONE PER CONVERSATION, AND EACH NEW MESSAGE SOUNDS. They all
-            // used to share one tag, so a second message replaced the first
-            // without a sound.
             void showLocalNotification(
               APP_SHORT_NAME,
               `${t.other_name}: ${t.last_preview ?? 'sent you a message'}`,

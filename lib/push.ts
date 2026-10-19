@@ -75,15 +75,9 @@ export async function requestPermission(): Promise<NotificationPermission> {
 
 // Raise a real OS notification via the service worker (so it also shows when the
 // app is in the background). Falls back to the page Notification if no SW.
-//
-// THE SOUND IS DECIDED HERE. With Beacon on the screen it plays Beacon's own
-// sound and the notification is shown silently; otherwise the device's sound
-// plays. Only where a notification CAN be silent: on an iPhone it cannot, and
-// two sounds at once is worse than the phone's one. See lib/alert-sound.ts.
-//
-// `tag` names what the notification is about; by default the item itself.
-// `renotify` is for a stream, like one conversation: each new one replaces the
-// last and still sounds.
+// Beacon's sound plays only where the notification can then be silent; an
+// iPhone cannot be, and two sounds are worse than one (lib/alert-sound.ts).
+// `renotify` is for a stream such as one conversation.
 export async function showLocalNotification(
   title: string,
   body?: string,
@@ -94,9 +88,7 @@ export async function showLocalNotification(
   try {
     const reg = await navigator.serviceWorker?.ready;
     if (reg) {
-      // ALREADY ON THE SCREEN, ALREADY HEARD. A push for this item reached the
-      // device first (it sounded then), so this replaces it quietly and makes
-      // no second sound.
+      // A push for this item already showed it, with a sound.
       const showing = !renotify && (await reg.getNotifications?.({ tag }).catch(() => []))?.length;
       const heard = !showing && silentSupported() && (await playBeaconSound());
       await reg.showNotification(

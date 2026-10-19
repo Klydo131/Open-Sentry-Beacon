@@ -1,21 +1,15 @@
 'use client';
 
-// The switch for Beacon's own notification sound, and a way to hear it.
-//
-// One component for both halves' Settings, so the sample church and a real
-// one describe the sound in the same words. What it does, and why it is only
-// heard with Beacon on the screen, is in lib/alert-sound.ts.
+// The switch for Beacon's notification sound (lib/alert-sound.ts), both halves.
 
 import { useEffect, useState } from 'react';
 import { APP_SHORT_NAME } from '@/lib/brand';
 import { previewBeaconSound, setSoundOn, soundOn } from '@/lib/alert-sound';
 
-/** `compact` matches the sample card's smaller rows; the live card's are roomier. */
 export function BeaconSoundSetting({ compact = false }: { compact?: boolean }) {
   const [on, setOn] = useState(true);
   const [note, setNote] = useState('');
-  // Read after mount: the server has no localStorage, and a value that flips
-  // on hydration is a flicker and a console warning.
+  // After mount: the server has no localStorage.
   useEffect(() => setOn(soundOn()), []);
 
   const flip = (next: boolean) => {
@@ -29,8 +23,7 @@ export function BeaconSoundSetting({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className={`rounded-xl bg-gray-50 ${compact ? 'p-3' : 'p-4'}`}>
-      {/* compact-ui: the phone's 56px tap floor would blow the switch up into
-          a blob (app/globals.css). Hear it keeps the floor; it is a button. */}
+      {/* compact-ui exempts the switch from the 56px tap floor (app/globals.css). */}
       <div className="compact-ui flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className={`font-semibold text-navy ${compact ? 'text-sm' : ''}`}>{APP_SHORT_NAME}&rsquo;s own sound</p>

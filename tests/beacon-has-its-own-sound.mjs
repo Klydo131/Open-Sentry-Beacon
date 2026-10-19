@@ -1,29 +1,7 @@
-// Beacon's own notification sound, and every alert making one.
-//
-// THE ASK (18 October 2026): "make sure the notification sound is unique and
-// has a distinct sound."
-//
-// Two things were wrong. Beacon had no sound of its own: every alert made the
-// phone's usual sound, the same as every other app. And every alert carried
-// the one tag `beacon`, so an alert arriving while another was still in the
-// tray REPLACED it, and by the web's notification rules a replacement makes no
-// sound: the second message, or a prayer request after it, was silent.
-//
-// This runs the real code, not a reading of it:
-//   1. The sound: a fixed figure under a second long, unlike the Music room's
-//      wind chimes, made of in-tune partials.
-//   2. Tags: the page's tagFor and the service worker's copy agree on every
-//      input, including a body longer than the `notify` function sends.
-//   3. The options a notification is shown with: silent ONLY when Beacon's
-//      sound was heard and the browser can be silent; a stream that cannot
-//      sound again on replacement gets a tag of its own instead.
-//   4. Playing: nothing before the first tap, nothing with Beacon off the
-//      screen or the switch off, one sound for a burst.
-//   5. The service worker's push handler, run in a sandbox: the item's tag,
-//      Beacon's sound asked of a visible page, silent only on its yes.
-//
-// The browser half, in the real app under its real CSP, is
-// tests/e2e/beacon-has-its-own-sound.js.
+// Beacon's own notification sound, and every alert making a sound.
+// Runs the real code: the sound, page/worker tag parity, notification options,
+// when it plays, and the service worker's push handler in a sandbox.
+// Browser half: tests/e2e/beacon-has-its-own-sound.js.
 //
 //   node tests/beacon-has-its-own-sound.mjs
 
@@ -41,7 +19,7 @@ const ok = (cond, msg) => {
   if (!cond) bad++;
 };
 
-// Node before 23 needs to be told to strip TypeScript; re-run itself if so.
+// Node before 23 needs --experimental-strip-types; re-run with it.
 let sound, noise;
 try {
   sound = await import(pathToFileURL(path.join(root, 'lib/alert-sound.ts')).href);
@@ -59,11 +37,6 @@ try {
 
 const { BEACON_NOTES, PARTIALS, LEVEL, BURST_MS, scheduleBeaconSound, tagFor, alertOptions } = sound;
 
-// ---------------------------------------------------------------------------
-// 1. THE SOUND
-// ---------------------------------------------------------------------------
-
-/** A stand-in audio graph that records what was scheduled on it. */
 function recorder() {
   const oscs = [];
   const gains = [];
@@ -89,7 +62,7 @@ const rec = recorder();
 const end = scheduleBeaconSound(rec, rec.destination, 0);
 const pitches = BEACON_NOTES.map((n) => n.hz);
 const chimeNotes = noise.VOICES.filter((v) => v.engine === 'chime').flatMap((v) => v.notes ?? []);
-const near = (a, b) => Math.abs(1200 * Math.log2(a / b)) < 20; // within 20 cents
+const near = (a, b) => Math.abs(1200 * Math.log2(a / b)) < 20; // cents
 
 ok(BEACON_NOTES.length >= 3, `a figure of ${BEACON_NOTES.length} notes, not a single beep`);
 ok(new Set(pitches).size >= 2, 'with more than one pitch in it');
@@ -110,10 +83,6 @@ ok(pitches.every((p) => p >= 500 && p <= 2500),
   'it sits where a phone speaker is loud and the ear is sharp (500 Hz to 2.5 kHz)');
 const loudest = Math.max(...BEACON_NOTES.map((n) => n.level)) * LEVEL * PARTIALS.reduce((s, [, share]) => s + share, 0);
 ok(loudest < 1, `cannot clip: the loudest moment of one note is ${loudest.toFixed(2)} of full scale`);
-
-// ---------------------------------------------------------------------------
-// 2. TAGS: the page and the worker must agree
-// ---------------------------------------------------------------------------
 
 const routeSrc = fs.readFileSync(path.join(root, 'app/sw.js/route.ts'), 'utf8');
 const worker = JSON.parse(routeSrc.match(/^const SOURCE = (".*");$/m)[1]);
@@ -136,15 +105,13 @@ for (const [title, body] of samples) {
   ok(tagFor(title, body) === workerTagFor(title, body),
     `page and worker give "${String(title).trim().slice(0, 20)}" the same tag`);
 }
-// The `notify` function trims the title and cuts the body at 300 before it
-// sends; the page has the whole row. They must still meet.
+// `notify` trims the title and cuts the body at 300; the page has the whole row.
 ok(tagFor(' Long ', long) === workerTagFor('Long', long.slice(0, 300)),
   'a push (trimmed title, body cut at 300) matches the page\'s whole row');
 const distinct = new Set(samples.slice(0, 4).map(([t, b]) => tagFor(t, b)).concat(tagFor('Long', long)));
 ok(distinct.size === 5, 'different things get different tags, so each one sounds');
 ok(/^beacon:[0-9a-z]+$/.test(tagFor('x', 'y')), 'tags are short and plain');
 
-// Nothing anywhere still raises an alert with the shared tag.
 function walk(dir) {
   const out = [];
   for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
@@ -164,10 +131,6 @@ const dock = fs.readFileSync(path.join(root, 'components/live/TalkDock.tsx'), 'u
 ok(/tag:\s*`beacon-talk:\$\{t\.pairing_id\}`,\s*renotify:\s*true/.test(dock),
   'a conversation has its own tag, and each new message in it sounds again');
 
-// ---------------------------------------------------------------------------
-// 3. THE OPTIONS A NOTIFICATION IS SHOWN WITH
-// ---------------------------------------------------------------------------
-
 const base = { body: 'b', url: '/x', tag: 'beacon:abc' };
 const ALL = { silent: true, renotify: true };
 const o1 = alertOptions({ ...base, heard: true }, ALL);
@@ -186,10 +149,6 @@ ok(!('renotify' in o6) && o6.tag === base.tag, 'one item keeps its tag, so a pus
 ok(![o1, o2, o3, o4, o5, o6].some((o) => 'vibrate' in o),
   'never `vibrate` (a TypeError beside `silent`, and ignored on Android 8 and later anyway)');
 ok(o2.data.url === '/x' && o2.icon && o2.badge, 'it still opens the right screen and shows the icon');
-
-// ---------------------------------------------------------------------------
-// 4. PLAYING IT: when, and when not
-// ---------------------------------------------------------------------------
 
 const store = new Map();
 globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)) };
@@ -240,10 +199,6 @@ ok((await sound.previewBeaconSound()) === true && FakeContext.last.oscs.length >
 sound.setSoundOn(true);
 undo();
 
-// ---------------------------------------------------------------------------
-// 5. THE SERVICE WORKER'S PUSH HANDLER, RUN
-// ---------------------------------------------------------------------------
-
 async function push({ clients = [], showing = [] }, payload) {
   const handlers = {};
   const shown = [];
@@ -266,7 +221,6 @@ async function push({ clients = [], showing = [] }, payload) {
   return shown;
 }
 
-/** A Beacon window that answers the worker's question with `answer`. */
 const page = (visibilityState, answer, focused = true) => {
   const asked = [];
   return {
@@ -312,7 +266,6 @@ ok(again.asked.length === 0 && !('silent' in r[0].options),
 r = await push({}, { title: 'Pinagdarasal ka', body: 'Isang bagong panalangin' });
 ok(r[0].options.tag !== expected, 'a different push gets a different tag, so it sounds too');
 
-// The page answers the worker. Static, because the page needs a browser.
 const swPage = fs.readFileSync(path.join(root, 'components/ServiceWorker.tsx'), 'utf8');
 ok(/d\?\.type === 'BEACON_SOUND'/.test(swPage) && /silentSupported\(\)\s*&&\s*\(await playBeaconSound\(\)\)/.test(swPage)
   && /ports\?\.\[0\]/.test(swPage), 'the page plays the sound for a push and answers on the port it was given');

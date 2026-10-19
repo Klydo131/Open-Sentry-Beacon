@@ -1,21 +1,6 @@
-// Beacon's own sound, in the real app under its real CSP.
-//
-// WHY THIS EXISTS. Asked for on 18 October 2026: "make sure the notification
-// sound is unique and has a distinct sound." tests/beacon-has-its-own-sound.mjs
-// runs the sound, the tags and the service worker's push handler in Node; this
-// proves the path a phone takes:
-//
-//   1. Phone, pad and computer: Settings, General has the sound's switch, on by
-//      default; Hear it plays Beacon's three notes (D6, A6, F♯6); switched off
-//      it stays off after a reload; nothing sideways.
-//   2. Chromium only, because it needs the browser's own DevTools to deliver a
-//      push: a push to the real service worker while Beacon is on the screen
-//      plays Beacon's sound and is shown silently, with a tag of its own; with
-//      the switch off the next one keeps the device's sound; and the two are
-//      two notifications, not one replacing the other in silence.
-//
-// What no browser here can show: a real phone's speaker, the iPhone silent
-// switch, or what Android does with the media volume.
+// Beacon's own sound in the real app: the Settings switch and Hear it at three
+// sizes, and (Chromium only, via DevTools) a push to the real service worker.
+// The Node half is tests/beacon-has-its-own-sound.mjs.
 //
 //   node tests/e2e/beacon-has-its-own-sound.js <port>
 const { browser: engine, engineName, launchOptions, pageErrors } = require('./_playwright');
@@ -26,7 +11,6 @@ const BASE = `http://localhost:${process.argv[2] || '4415'}`;
 let bad = 0;
 const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
 
-/** Every oscillator the page starts, by frequency. */
 function record() {
   window.__oscs = [];
   const start = OscillatorNode.prototype.start;
@@ -36,7 +20,7 @@ function record() {
   };
 }
 
-/** Beacon's notes (lib/alert-sound.ts, BEACON_NOTES). */
+// lib/alert-sound.ts BEACON_NOTES
 const NOTES = [1174.66, 1760, 1479.98];
 const theSound = (freqs) => NOTES.every((hz) => freqs.some((f) => Math.abs(f - hz) < 1));
 const oscs = (page) => page.evaluate(() => window.__oscs.slice());
@@ -50,7 +34,6 @@ const SIZES = [
 (async () => {
   const browser = await engine.launch(launchOptions);
 
-  // ---- 1. The setting, on every size ----
   for (const size of SIZES) {
     const context = await browser.newContext({
       viewport: size.viewport,
@@ -67,7 +50,6 @@ const SIZES = [
     await toggle.scrollIntoViewIfNeeded().catch(() => {});
     ok(await toggle.isVisible(), `${size.name}: Settings, General has the sound's switch`);
     ok((await toggle.getAttribute('aria-checked')) === 'true', `${size.name}: it is on by default`);
-    // The phone's 56px tap floor turned the first version into a tall blob.
     const box = await toggle.boundingBox();
     ok(box && box.height <= 32 && box.width >= box.height * 1.6,
       `${size.name}: the switch looks like a switch (${box && `${Math.round(box.width)}x${Math.round(box.height)}`})`);
@@ -91,7 +73,6 @@ const SIZES = [
     await context.close();
   }
 
-  // ---- 2. A push, delivered to the real service worker ----
   if (engineName !== 'chromium') {
     console.log(`OK  (push not delivered on ${engineName}: it needs Chromium's DevTools)`);
   } else {
@@ -102,7 +83,7 @@ const SIZES = [
     await signIn(page, BASE, 'Maria Santos');
     await page.goto(`${BASE}/settings?room=general`, { waitUntil: 'networkidle' });
     await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
-    // The first tap of the visit, which is what lets a page make a sound.
+    // Browsers allow sound only after a tap.
     await page.getByRole('heading', { name: /Notifications/ }).first().click();
 
     const cdp = await context.newCDPSession(page);
