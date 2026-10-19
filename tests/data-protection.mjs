@@ -236,7 +236,7 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
      'only the service role reads the list');
   ok(/cron\.schedule\('erase-deleted-files'/.test(mig), 'and the database asks for it to be emptied every night');
   const fn = readFileSync('supabase/functions/erase/index.ts', 'utf8');
-  ok(/bearer !== SERVICE_KEY/.test(fn), 'the erase function answers only the database');
+  ok(/!\(await sameKey\(bearer, SERVICE_KEY\)\)/.test(fn), 'the erase function answers only the database');
   ok(/files_waiting_to_be_erased/.test(fn) && !/await req\.json\(\)/.test(fn),
      'and removes only what the list names, taking no path from the request');
   ok(/what-is-deleted-leaves-no-file-behind\.sql/.test(readFileSync('scripts/fresh-install.sh', 'utf8')),

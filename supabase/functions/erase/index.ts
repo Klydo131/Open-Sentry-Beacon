@@ -1,25 +1,6 @@
-// Remove the stored files whose rows are gone.
-//
-// ---------------------------------------------------------------------------
-// WHY THIS EXISTS. The owner, 7 October 2026: "Make sure we have a system of
-// in and out (exit) of data when it's deleted." When a row that points at a
-// stored file is deleted -- a member removed, a conversation that went with
-// them, a resource, a replaced profile picture -- the database writes the
-// file's path to a list (migration 20261007150000). Postgres cannot remove a
-// stored file itself; only the Storage API removes both the record and the
-// bytes. This is the piece that does, once a day.
-//
-// WHO MAY CALL IT. Exactly as `notify`: the bearer token must equal the
-// service role key this function already holds, a value that lives only in
-// this function's environment and the church's own Vault. A signed-in member's
-// token is not enough, and no browser can read either place.
-//
-// WHAT IT CAN REMOVE. Only paths the database has listed, and only in the
-// buckets the list names. It takes no path from the request: a call can say
-// "go", never "what". A path that fails to go stays on the list for tomorrow.
+// Removes stored files whose database rows are gone. Called by the database.
 //
 // Deploy: npx supabase functions deploy erase --project-ref <your-project-ref>
-// ---------------------------------------------------------------------------
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -35,10 +16,19 @@ const reply = (status: number, body: Record<string, unknown>) =>
 
 type Waiting = { bucket: string; path: string };
 
+// Constant time: a wrong key takes as long to refuse as a nearly right one.
+async function sameKey(a: string, b: string): Promise<boolean> {
+  const hash = (s: string) => crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  const [x, y] = (await Promise.all([hash(a), hash(b)])).map((d) => new Uint8Array(d));
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return reply(405, { error: 'Use POST.' });
   const bearer = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!SERVICE_KEY || bearer !== SERVICE_KEY) {
+  if (!SERVICE_KEY || !(await sameKey(bearer, SERVICE_KEY))) {
     return reply(401, { error: 'This function is called by the database.' });
   }
 

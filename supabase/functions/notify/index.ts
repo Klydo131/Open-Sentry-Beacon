@@ -1,39 +1,8 @@
-// Send a notification to a person's devices, even when the app is shut.
+// Sends a notification to a member's devices. Called by the database when a
+// notification is created.
 //
-// ---------------------------------------------------------------------------
-// REPORTED: "notifications still doesn't work to all devices, can we make it
-// work to all devices please. Find a way to make it happen."
-//
-// WHAT WAS ACTUALLY MISSING. The app has raised real system notifications for a
-// long time, and the service worker has had a `push` handler ready for one just
-// as long. But nothing ever pushed. The notification you saw was raised by the
-// page itself, from data the browser already had, which means it could only
-// ever reach you while the app was open in front of you. Lock the phone and the
-// app is not running; nothing is watching; nothing arrives.
-//
-// This is the sender. It is the piece that was never written.
-//
-// HOW IT IS CALLED, and why not from the browser. Every notification in this
-// app is a row in `notifications`. A trigger on that table calls this function
-// through pg_net, so a notification reaches a device because it was created,
-// not because some particular screen remembered to ask. A Guide writing to an
-// Explorer at midnight does not need the Explorer's phone to be awake, and the
-// Guide's browser does not need to know how push works.
-//
-// WHO MAY CALL IT. It holds the service_role key, so the answer is: the
-// database and nothing else. The bearer token must equal the service role key
-// this function already holds, which is a value that exists in exactly two
-// places -- this function's environment and the church's own Vault -- and in
-// neither of them can a browser read it. A JWT check would not do: Supabase
-// accepts any signed-in user's token as valid, and "valid" here would mean any
-// member could push any words to any other member's lock screen.
-//
-// WHAT IT DOES NOT DO, said plainly because it is a platform rule rather than
-// something left undone: on an iPhone, web push exists only for an app added to
-// the Home Screen, on iOS 16.4 or later. Safari in a tab cannot receive one, no
-// matter what this function sends. The app asks people to install it and says
-// why. There is no other lever.
-// ---------------------------------------------------------------------------
+// On an iPhone, web push reaches only an app added to the Home Screen
+// (iOS 16.4 or later); Safari in a tab cannot receive one.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
@@ -61,13 +30,20 @@ const headers = { 'Content-Type': 'application/json' };
 const reply = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), { status, headers });
 
+// Constant time: a wrong key takes as long to refuse as a nearly right one.
+async function sameKey(a: string, b: string): Promise<boolean> {
+  const hash = (s: string) => crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  const [x, y] = (await Promise.all([hash(a), hash(b)])).map((d) => new Uint8Array(d));
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return reply(405, { error: 'Use POST.' });
 
-  // CONSTANT TIME IS NOT THE POINT HERE; being unguessable is. The service role
-  // key is 200-odd characters of signed JWT and is never sent to a browser.
   const bearer = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!SERVICE_KEY || bearer !== SERVICE_KEY) {
+  if (!SERVICE_KEY || !(await sameKey(bearer, SERVICE_KEY))) {
     return reply(401, { error: 'This function is called by the database.' });
   }
 
