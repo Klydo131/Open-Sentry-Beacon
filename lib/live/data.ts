@@ -1,38 +1,10 @@
-// Talking to a real database.
+// Data access for a church's real database.
 //
-// This is the live twin of lib/demo/store.tsx. The demo keeps everything in the
-// browser and can afford to be relaxed, because the only data it can damage is
-// sample data in your own tab. This file talks to a database with real people
-// in it, so the rules are different and worth stating before the code.
-//
-// ---------------------------------------------------------------------------
-// THE FOUR RULES THIS FILE IS BUILT ON
-// ---------------------------------------------------------------------------
-//
-// 1. THE DATABASE DECIDES, NOT THIS FILE. Every function below asks for what it
-//    wants and lets row level security return what the caller is entitled to.
-//    None of them filters "for security" in JavaScript. A check in this file
-//    protects nobody: the browser can call PostgREST directly with the same
-//    key, and anything only this file enforces is enforced nowhere. Where you
-//    see a filter here it is for correctness or for fewer rows, never for
-//    access — and it is commented as such.
-//
-// 2. NOTHING HERE SETS role, church_id, is_approved OR is_head_executive ON
-//    YOURSELF. There is deliberately no setMyRole() in this file, though the
-//    demo store has one. In the demo it is a toy for exploring the app; here it
-//    would be a privilege escalation, and the only reason it would fail is a
-//    database trigger. Do not add one. If you need to change somebody's role,
-//    that is setMemberRole() and it is somebody else's row.
-//
-// 3. THE SERVICE ROLE KEY IS NEVER IMPORTED HERE. This file runs in the
-//    browser. Anything needing to bypass RLS belongs in an Edge Function, on
-//    the server, holding a secret this file cannot see.
-//
-// 4. AN EXPLORER IS NEVER HANDED THEIR OWN STAGE. Not "not shown it" — not
-//    handed it. getMyPairing() selects the columns an Explorer may have and
-//    journey_stage is not among them, so it is absent from the response rather
-//    than present and undrawn. The difference matters: a field that arrives and
-//    is not rendered is one careless change away from being rendered.
+// Row-level security in the database decides what each caller may read or
+// write; nothing here filters for access. This file runs in the browser, so it
+// never imports a server key, never sets role, church_id, is_approved or
+// is_head_executive on the caller's own profile, and never selects an
+// Explorer's own journey_stage.
 
 import {
   endBrowserSession,
@@ -54,7 +26,6 @@ import type { Reaction, ReactionTarget } from '@/lib/talk/reactions';
 import { plainTitle } from '@/lib/talk/thread';
 import { STAGE_ORDER } from '@/lib/brand';
 
-/** Thrown when a live call is made with no database configured. */
 class NotLive extends Error {
   constructor() {
     super('This build has no database configured.');
@@ -62,10 +33,8 @@ class NotLive extends Error {
   }
 }
 
-// Exported for lib/live/my-data.ts, which assembles a person's own copy of
-// their data and must read it through the ordinary rules as that person, not
-// through a privileged path of its own. Sharing these two is what keeps that
-// true: there is only one way into the database in this app.
+// Also used by lib/live/my-data.ts, so a member's data export reads through
+// the same rules as everything else.
 export function db() {
   const client = supabase();
   if (!client) throw new NotLive();
@@ -73,20 +42,9 @@ export function db() {
 }
 
 /**
- * Who is signed in, from the session this app already verified.
- *
- * USE THIS, NEVER the Auth client's own getUser. Eleven calls in this file
- * drifted onto it while features were being added, and each one is a second
- * network round trip to the Auth server before the query the caller actually
- * wanted. That is not just slow — a browser with tracking protection on
- * (Safari, Brave, Firefox in strict mode) can fail that request while the
- * session itself is perfectly good, so the feature reports "not signed in" to
- * somebody who is signed in, on their phone, in the middle of a conversation.
- *
- * The session in local storage was verified server-side by /api/auth/sign-in
- * before it was ever written. Reading the id out of it asks nobody anything.
- * lib/supabase/client.ts takes the access token from the same place, for the
- * same reason.
+ * The signed-in user's id, read from the stored session. Use this rather than
+ * the auth client's getUser(), which makes a network call that privacy
+ * settings in Safari, Brave and Firefox can block.
  */
 export async function uid(): Promise<string> {
   const id = readBrowserSession()?.user.id;
@@ -94,9 +52,7 @@ export async function uid(): Promise<string> {
   return id;
 }
 
-// ---------------------------------------------------------------------------
-// Session
-// ---------------------------------------------------------------------------
+// --- Session ---
 
 export interface SignInResult {
   role: Role;
@@ -125,9 +81,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 
   const payload = await response.json().catch(() => null);
 
-  // TWO-STEP SIGN-IN: the password was right, and the code comes next. The
-  // session is kept so the code can be checked against it; it opens nothing
-  // until then, because the database refuses it (lib/live/two-step.ts).
+  // The password was accepted and two-step sign-in is on: the code comes next.
   if (
     response.ok &&
     payload?.second_step === true &&
@@ -170,7 +124,6 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 export async function finishSignInWithCode(code: string): Promise<SignInResult> {
   await enterCode(code);
   const me = await getMyProfile();
-  // The same test the sign-in route makes before it hands over a profile.
   if (!me || !['executive', 'admin', 'dm', 'ds'].includes(me.role)) {
     throw new Error('Your account profile is not ready yet.');
   }
@@ -178,22 +131,8 @@ export async function finishSignInWithCode(code: string): Promise<SignInResult> 
 }
 
 async function afterSignIn(mine: SignInResult): Promise<SignInResult> {
-  // CLAIM THE INVITATION HERE, NOT ONLY ON THE JOIN LINK.
-  //
-  // Sending an invitation creates the account; the church and the invited role
-  // are attached separately, by claim_my_pending_invitation(). The join flow
-  // calls it. Signing in did not -- so anybody who reached the app through
-  // /login instead of finishing their join link kept a profile with NO CHURCH,
-  // and a church-less profile is invisible to every Director, because every
-  // approval list is scoped by church. They sat on "waiting for a Director to
-  // approve" while the Director's screen read "Nobody is waiting". Neither side
-  // could see the other and neither had anything to act on. Reported from both
-  // ends at once, which is the only reason it was findable.
-  //
-  // Gated on approval so it costs an approved member nothing, and safe when it
-  // does run: the claim only touches a profile that has no church AND is not
-  // approved, and it only ever writes what a still-valid invitation already
-  // says. For anybody else it is a no-op.
+  // Claim a pending invitation on every sign-in, not only on the join link, or
+  // a member who signs in through /login is left without a church.
   if (!mine.is_approved) {
     try {
       if (await claimMyPendingInvitation()) {
@@ -201,9 +140,7 @@ async function afterSignIn(mine: SignInResult): Promise<SignInResult> {
         if (claimed) return { role: claimed.role, is_approved: claimed.is_approved };
       }
     } catch {
-      // A failed claim must never turn a correct password into a sign-in
-      // error. The person still reaches the waiting room; they are just still
-      // waiting, which is where they already were.
+      // A failed claim must not turn a correct password into a sign-in error.
     }
   }
   return mine;
@@ -216,9 +153,7 @@ export async function signUp(email: string, password: string, fullName: string):
   const { error } = await client.auth.signUp({
     email: email.trim().toLowerCase(),
     password,
-    // full_name only. A client cannot ask to be created as an admin: the
-    // profile trigger reads this metadata and writes nothing but the name, and
-    // is_approved defaults to false regardless of what is sent.
+    // Only the name is sent; role and approval are set by the server.
     options: { data: { full_name: fullName.trim() } },
   });
   if (error) throw new Error(error.message);
@@ -230,25 +165,8 @@ export async function signOut(): Promise<void> {
 }
 
 /**
- * Change your own password.
- *
- * WHY THIS SCREEN EXISTS NOW AND DID NOT BEFORE. The invitation used to carry a
- * one-time link, and the only place anybody ever set a password was the sign-up
- * form at the end of that link. Once you were in, there was NOWHERE in the app
- * to change it -- the only route was signing out and using "Forgot your
- * password", which is a strange thing to ask of somebody who has not forgotten
- * anything.
- *
- * That was survivable while everybody chose their own password. It is not
- * survivable now: the invitation e-mails a temporary one, the message tells
- * people to change it, and telling somebody to do a thing the app cannot do is
- * worse than not mentioning it.
- *
- * THE FLAG IS CLEARED HERE AND ITS FAILURE IS SWALLOWED, deliberately. The
- * password change is the part that matters; the reminder flag is a convenience.
- * If clearing it fails the person has still changed their password
- * successfully, and reporting an error would tell them the opposite of what
- * happened. The reminder simply appears once more.
+ * Change your own password, then sign out every other device. Clearing the
+ * temporary-password reminder is best effort, so its failure is not reported.
  */
 export async function changeMyPassword(next: string): Promise<void> {
   if (next.length < 10) throw new Error('Use at least 10 characters.');
@@ -258,39 +176,24 @@ export async function changeMyPassword(next: string): Promise<void> {
   const { data, error } = await client.auth.updateUser({ password: next });
   if (error) throw new Error(error.message);
 
-  // updateUser rotates the tokens, so the saved session has to be replaced or
-  // the next request goes out with the old one. Same reason the join screen
-  // re-publishes after setting a password.
+  // updateUser rotates the tokens, so the saved session must be replaced.
   try {
     const { data: fresh } = await client.auth.getSession();
     if (fresh?.session) saveBrowserSession(fresh.session as Session);
-  } catch { /* the change stands; the session refreshes on its own */ }
+  } catch { }
 
-  // EVERY OTHER DEVICE IS SIGNED OUT (29 September 2026). A new password stops
-  // the old one signing anybody in, but a phone or laptop already signed in
-  // with it -- the invitation letter's, or one somebody saw -- used to stay
-  // signed in regardless. Choosing a password is the person taking the
-  // account back, so it now ends every session but this one. A failure is
-  // swallowed like the flag's: the password changed, which is the point, and
-  // "Sign out everywhere else" on the Password page can be pressed again.
+  // A new password ends every other session. A failure is ignored: the password
+  // still changed, and "Sign out everywhere else" can be pressed again.
   await signOutOtherDevices().catch(() => undefined);
 
   const me = data?.user?.id;
   if (me) {
     try {
       await db().from('profiles').update({ password_is_temporary: false }).eq('id', me);
-    } catch { /* see above: the password changed, which is the point */ }
+    } catch { }
   }
 }
 
-/**
- * Sign this account out on every device except this one.
- *
- * The person's own control over who is signed in as them, on the Password page
- * and after every password change. It ends the other sessions' refresh tokens,
- * so each of those devices is signed out within the hour its current access
- * token has left, and cannot sign back in without the password.
- */
 export async function clearTemporaryPasswordReminder(): Promise<void> {
   const me = await uid();
   await db().from('profiles').update({ password_is_temporary: false }).eq('id', me);
@@ -313,9 +216,7 @@ export async function myTemporaryPasswordEnds(): Promise<string | null> {
   return typeof data === 'string' && data ? data : null;
 }
 
-// ---------------------------------------------------------------------------
-// Me
-// ---------------------------------------------------------------------------
+// --- Me ---
 
 export async function getMyProfile(): Promise<Profile | null> {
   const { data, error } = await db()
@@ -323,21 +224,14 @@ export async function getMyProfile(): Promise<Profile | null> {
     .select('*')
     .eq('id', await uid())
     .maybeSingle();
-  // Said by name, so the session provider shows the code screen rather than
-  // "Your account is not ready" (lib/live/session.tsx).
   if (isSecondStepRefusal(error)) throw new SecondStepNeeded();
   if (error) throw new Error(error.message);
   return (data as Profile) ?? null;
 }
 
 /**
- * Update your own profile.
- *
- * The patch is REBUILT rather than spread, so a caller that passes
- * `{ role: 'admin' }` — by mistake or on purpose — sends nothing of the sort.
- * The database would refuse it anyway (lock_privileged_profile_columns raises),
- * but a request that never carries the field cannot be the request that gets
- * through when somebody edits that trigger.
+ * Update your own profile. The patch is rebuilt field by field, never spread,
+ * so privileged columns such as `role` are never sent.
  */
 export async function updateMyProfile(patch: Partial<Profile>): Promise<void> {
   const safe = {
@@ -345,17 +239,13 @@ export async function updateMyProfile(patch: Partial<Profile>): Promise<void> {
     preferred_contact: patch.preferred_contact,
     preferred_language: patch.preferred_language,
     topics_of_interest: patch.topics_of_interest,
-    // The sign-up fields added in 0013. Listed one by one for the same reason
-    // the four above are: this object is an allow-list, and the moment it
-    // becomes a spread it stops being one.
+    // An allow-list: add new fields one by one, never with a spread.
     birthday: patch.birthday,
     gender: patch.gender,
     life_status: patch.life_status,
     city_of_residence: patch.city_of_residence,
     work_industry: patch.work_industry,
     consent_at: patch.consent_at,
-    // A face. Not privileged: unlike role or guardian consent these are yours
-    // to change, and a member editing their own picture is the whole point.
     avatar: patch.avatar,
     photo_path: patch.photo_path,
   };
@@ -368,16 +258,6 @@ export async function updateMyProfile(patch: Partial<Profile>): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * What this person has changed about their own details, newest first.
- *
- * Readable by that member, by the Guide currently paired with them, and by
- * their church's leadership -- migration 0035 sets those three policies and
- * nothing else, so this call needs no role check of its own. Asking for
- * somebody you are not walking with returns an empty list rather than an
- * error, which is what a row level security refusal looks like from here and
- * is the right shape: absence of permission should not confirm existence.
- */
 export interface ProfileChange {
   id: string;
   field: string;
@@ -409,9 +289,7 @@ export async function listProfileChanges(personId: string, limit = 20): Promise<
   return (data ?? []) as ProfileChange[];
 }
 
-// Security audit events are deliberately served by an RPC rather than by a
-// table query. The database returns only the role-scoped, content-free summary
-// a Director or Executive Director is allowed to review.
+// Served by an RPC that returns only a role-scoped, content-free summary.
 export interface SecurityAuditEvent {
   id: string;
   subject_name: string;
@@ -436,18 +314,7 @@ export async function securityAuditFeed(limit = 100): Promise<SecurityAuditEvent
   return (data ?? []) as SecurityAuditEvent[];
 }
 
-// withdrawMyConsent() was here, and is gone on purpose. It called
-// withdraw_my_consent(), which migration 0035 drops.
-//
-// A member now keeps their details accurate rather than being able to erase
-// them, and every edit is recorded for their Guide and Director to see. Leaving
-// the function behind an unused screen would have left a SECURITY DEFINER route
-// to clearing somebody's details reachable by anything holding a session --
-// which is not a dead function, it is an undocumented one.
-
-// ---------------------------------------------------------------------------
-// Who has been invited, and who has not arrived yet
-// ---------------------------------------------------------------------------
+// --- Invitations sent, and who has not arrived yet ---
 
 export interface OpenInvite {
   id: string;
@@ -456,97 +323,40 @@ export interface OpenInvite {
   full_name: string | null;
   created_at: string;
   expires_at: string;
-  /**
-   * An auth account exists for this address. NOT the same as having joined —
-   * sending an invitation creates the account, so this is true for nearly
-   * every row here. Its ABSENCE is the useful half: no account means the send
-   * never got far enough to make one, so no message can have arrived.
-   */
+  /** An auth account exists. False means the send never got far enough to make one. */
   has_account: boolean;
-  /**
-   * When the invitation link was last opened — by somebody. Not proof it was
-   * the invited person: a Director who copies the link and opens it to check
-   * it works stamps this too.
-   */
+  /** When the invitation link was last opened, by anyone (a Director testing it counts). */
   opened_at: string | null;
   /**
-   * When they finished the sign-up form and chose their own password.
-   *
-   * THIS IS WHAT "ACCEPTED" MEANS, and two earlier answers were wrong.
-   * invites.redeemed_at is stamped when the auth row is created, which is the
-   * moment the invitation is SENT — so it read "joined today" for people who
-   * had never opened their email. last_sign_in_at is stamped by opening the
-   * link, which a Director testing one does on their own device — so it read
-   * "joined" for people who had never touched anything. Submitting the form is
-   * the only step that cannot happen by accident.
+   * When the person finished sign-up and chose a password: the only reliable
+   * meaning of "accepted".
    */
   joined_at: string | null;
   /**
-   * When the invitation was spent -- stamped as the auth row is created, which
-   * is the moment Send is pressed.
-   *
-   * ON ITS OWN THIS MEANS ALMOST NOTHING, and twice it was read as "they have
-   * joined", which it is not: it is stamped before the person has seen
-   * anything. That is why joined_at above exists and why this must never be
-   * substituted for it.
-   *
-   * PAIRED WITH has_account IT IS EXACT, because the two absences it separates
-   * are otherwise identical on screen:
-   *   null + no account     the send never got as far as making one. Nothing
-   *                         happened; Re-send is the right offer.
-   *   present + no account  an account WAS made and is gone. Somebody removed
-   *                         this person, and Re-send would rebuild them.
+   * Stamped when the invitation is sent, so on its own it does not mean joined.
+   * With has_account false: null means the send never made an account; a date
+   * means the account was made and later removed.
    */
   redeemed_at: string | null;
 }
 
-/**
- * Invitations this church has sent.
- *
- * The point of this list is the ones that have NOT been accepted. An invitation
- * that silently failed to send looks exactly like one the person has not got
- * round to opening, and until this existed there was nowhere at all to see the
- * difference — a Director pressed Invite, got a confirmation, and that was the
- * last anybody heard of it.
- */
+/** Invitations this church has sent, so unaccepted ones can be seen and re-sent. */
 export async function listInvites(): Promise<OpenInvite[]> {
-  // Through a definer function rather than a plain select, because whether a
-  // link was ever opened lives in auth.users and no browser-side policy can
-  // read it. church_invitations() checks the caller leads this church before
-  // it returns a single row.
+  // A definer function, because whether a link was opened lives in auth.users.
   const { data, error } = await db().rpc('church_invitations');
   if (error) throw new Error(error.message);
   return (data ?? []) as OpenInvite[];
 }
 
-/**
- * Mark this person's sign-up finished.
- *
- * Called once, by the join form, after the password has actually been set.
- * Nothing else may stand in for it: the account row is created when the
- * invitation is sent, and the sign-in stamp is set by opening the link, so
- * both of those are true for somebody who has done nothing at all. Choosing a
- * password is the first step that requires the invited person to be present.
- *
- * A definer that writes one column of the caller's own row, rather than an
- * ordinary update: the way profiles' no-self-promotion rule dies is somebody
- * widening the set of columns a browser may write and taking `role` along.
- */
+/** Mark sign-up finished. Called once by the join form, after the password is set. */
 export async function finishMySignup(): Promise<void> {
   const { error } = await db().rpc('finish_my_signup');
   if (error) throw new Error(error.message);
 }
 
 /**
- * Attach an invitation that was sent after this account already existed.
- *
- * `inviteUserByEmail` creates a new auth row, which normally lets
- * `handle_new_user` copy the invitation's church and role into the profile.
- * An already-created, unassigned account follows the recovery-email path
- * instead, so that trigger does not run again. The database function is
- * deliberately narrower than a general profile update: it can only fill the
- * current caller's unassigned, still-unapproved profile from an active invite
- * to that caller's verified account email.
+ * Attach an invitation sent after this account already existed (the
+ * handle_new_user trigger does not run a second time).
  */
 export async function claimMyPendingInvitation(): Promise<boolean> {
   const { data, error } = await db().rpc('claim_my_pending_invitation');
@@ -554,26 +364,7 @@ export async function claimMyPendingInvitation(): Promise<boolean> {
   return data === true;
 }
 
-/**
- * Withdraw an invitation that has not been accepted.
- *
- * There was no way to take one back. An invitation sent to the wrong address,
- * or with the wrong role chosen, simply stayed in the list for ever — and
- * because the one-open-invite-per-address index then blocked a corrected one,
- * a single slip made that person un-invitable until somebody went into the
- * database.
- *
- * THE FIRST VERSION OF THIS NEVER DELETED ANYTHING. It was a plain delete
- * filtered on `redeemed_at is null`, matching the invites_revoke policy — and
- * that column is stamped when the account row is created, which is the moment
- * the invitation is SENT. The condition was false for every row that has ever
- * existed. A delete that matches nothing is not an error, so the button said
- * "withdrawn" and the invitation stayed exactly where it was.
- *
- * Now a definer that checks the caller leads that church, refuses to touch
- * anybody who has finished signing up, and returns whether it deleted a row —
- * so a refusal can be shown rather than swallowed.
- */
+/** Withdraw an invitation that has not been accepted. */
 export async function cancelInvite(id: string): Promise<void> {
   const { data, error } = await db().rpc('cancel_invitation', { p_id: id });
   if (error) throw new Error(error.message);
@@ -593,28 +384,16 @@ export async function memberContact(): Promise<Record<string, { email: string; j
   return out;
 }
 
-// ---------------------------------------------------------------------------
-// The church and its people
-// ---------------------------------------------------------------------------
+// --- The church and its people ---
 
 export interface Church {
   id: string;
   name: string;
-  /**
-   * How many Explorers one Guide of this church may carry.
-   *
-   * A CHURCH'S OWN NUMBER, NOT THE APP'S. It was five for a long time and the
-   * whole discipleship shape was built on it; the owner has raised it to a
-   * hundred. What has not changed is that the database enforces it, so a Guide
-   * cannot give themselves more people than their church agreed to.
-   */
+  /** How many Explorers one Guide of this church may carry; enforced by the database. */
   guide_cap: number;
 }
 
 export async function myChurch(): Promise<Church | null> {
-  // THE CAP COMES WITH THE CHURCH, because the screen that shows a Guide's load
-  // has to show it against the number this congregation actually agreed to. It
-  // used to print "/5" from a literal, which was a lie the day the cap moved.
   const { data, error } = await db()
     .from('churches').select('id, name, guide_cap').limit(1).maybeSingle();
   if (error) throw new Error(error.message);
@@ -628,24 +407,7 @@ export async function renameChurch(id: string, name: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * Everyone this caller may see.
- *
- * No church filter, deliberately. `profiles_read_church` already scopes this to
- * churches the caller manages, and adding `.eq('church_id', mine)` here would
- * be a second, weaker copy of that rule which an Executive Director overseeing
- * two churches would then have to fight.
- */
-/**
- * One person's profile, if the caller is allowed it.
- *
- * NO ROLE CHECK HERE, and that is deliberate rather than an omission. Three
- * policies decide it: profiles_read_self, profiles_read_paired — the profile of
- * somebody you are actually walking with — and profiles_read_church for
- * leadership. A Guide asking for somebody they are not paired with gets no row
- * rather than an error, which is the right answer and not one this function
- * could improve on.
- */
+/** One person's profile, or null if the caller may not see it. */
 export async function memberProfile(id: string): Promise<Profile | null> {
   const { data, error } = await db().from('profiles').select('*').eq('id', id).maybeSingle();
   if (error) throw new Error(error.message);
@@ -662,16 +424,8 @@ export async function listMembers(): Promise<Profile[]> {
 }
 
 /**
- * Who the app would put with whom, for everybody still waiting.
- *
- * A PROPOSAL. IT WRITES NOTHING. The screen shows the list and the Director
- * confirms, and only then are the pairings created -- one at a time, through
- * `createPairing`, so every trigger and policy applies to each and a failure on
- * one cannot take the others with it.
- *
- * Minors are deliberately absent: see the migration. An Explorer under eighteen
- * being assigned to an adult by an algorithm is the one pairing in this app
- * that should never happen without a person deciding.
+ * Proposed pairings for everybody still waiting. Writes nothing: a Director
+ * confirms each one. Minors are never proposed.
  */
 export interface SuggestedPairing {
   dm_id: string;
@@ -709,50 +463,22 @@ export async function disapproveMember(userId: string): Promise<void> {
 }
 
 export async function setMemberRole(userId: string, role: Role): Promise<void> {
-  // Not a security control — the trigger raises on a self-edit regardless. It
-  // is here so the person gets "somebody else has to do that" instead of a
-  // database error they cannot act on.
+  // A friendly message only; the database refuses a self-edit regardless.
   if (userId === (await uid())) throw new Error('You cannot change your own role.');
   const { error } = await db().from('profiles').update({ role }).eq('id', userId);
   if (error) throw new Error(error.message);
 }
 
-// removeMember USED TO LIVE HERE, AND DELETING IT IS THE FIX.
-//
-// It deleted the profiles row and nothing else. profiles.id references
-// auth.users on delete cascade, and a cascade only runs in that direction, so
-// the auth account survived every use of it -- invisible to every screen, since
-// only the service role can read auth.users.
-//
-// Two things followed, both reported as bugs before the cause was found. The
-// removed person still held a working login that resolved to no profile. And
-// their address could never be invited again: member_by_email joins auth.users
-// to profiles, the row was still there, and a fresh invitation was refused as
-// already registered.
-//
-// removeMemberByLeader below is the whole act: it checks authority, writes the
-// discipline log, clears messages and pairings, and deletes the auth user,
-// which cascades everything else away and frees the address.
-
-// ---------------------------------------------------------------------------
-// Pairings
-// ---------------------------------------------------------------------------
+// --- Pairings ---
 
 export interface PairingView extends Pairing {
   dm_name: string;
   ds_name: string;
   /** When the Explorer finished signing up, for the "New" badge. */
   ds_signup_completed_at?: string | null;
-  // Carried so the MINOR badge can be drawn wherever a Guide or Director sees
-  // this Explorer. Both are already readable here: RLS is row-level, and a
-  // Guide may read the whole row of the person they are paired with, as may
-  // leadership for their own church. Nothing new is exposed by asking for them.
+  // For the minor badge wherever a Guide or Director sees this Explorer.
   ds_birthday: string | null;
   ds_guardian_consent_at: string | null;
-  // THEIR FACE, for the cards and the page a Guide or a Director opens. The
-  // same row, the same rule: only what that row already lets the reader see.
-  // The picture itself is loaded through avatarUrls, whose storage policy lets
-  // anybody signed in read a face and nobody write one but its owner.
   ds_photo_path?: string | null;
   ds_avatar?: string | null;
   dm_photo_path?: string | null;
@@ -772,7 +498,6 @@ export async function listPairings(): Promise<PairingView[]> {
   const client = db();
   const [{ data: pairs, error }, { data: people }] = await Promise.all([
     client.from('pairings').select('*').order('created_at', { ascending: false }),
-    // signup_completed_at rides along for the "New" badge on a Guide's cards.
     client.from('profiles').select('id, full_name, birthday, guardian_consent_at, signup_completed_at, photo_path, avatar'),
   ]);
   if (error) throw new Error(error.message);
@@ -793,35 +518,14 @@ export async function listPairings(): Promise<PairingView[]> {
 }
 
 /**
- * The Explorer's own pairing, WITHOUT the stage.
- *
- * The column list is the access control. `select('*')` here would put
- * journey_stage in the browser of the person the stage is about, and the only
- * thing standing between that and a screen would be somebody remembering not
- * to render it. The type has no stage either, so a future edit reaching for one
- * fails to compile.
+ * The Explorer's own pairing, without the journey stage. The column list is
+ * deliberate: do not change it to select('*').
  */
 export async function getMyPairing(): Promise<MyPairing | null> {
   const me = await uid();
   const client = db();
-  // NEWEST FIRST AND TAKE ONE, RATHER THAN maybeSingle().
-  //
-  // This was `.maybeSingle()`, which RAISES when it finds more than one row —
-  // and nothing in the database ever said an Explorer has one Guide. The only
-  // trigger on pairings caps a GUIDE at the church's own figure, the other side of the
-  // relationship, so pairing an Explorer who already had a Guide was simply
-  // allowed. Four of them ended up with two.
-  //
-  // The result was not a quietly wrong Guide. It was an exception on the one
-  // screen an Explorer has: My Guide failed to load at all, which is the whole
-  // app as far as they are concerned, and it failed for a reason no Director
-  // could have guessed from their side.
-  //
-  // The trigger added in migration 20260902100000 stops it happening again.
-  // This makes the reading survive the rows already there, because an Explorer
-  // should not be staring at an error while a Director decides which pairing
-  // was the mistake. Newest wins, which is the one a Director most recently
-  // meant.
+  // Newest row, not maybeSingle(): an Explorer may still have two pairings from
+  // before the database prevented it, and that must not break their screen.
   const { data: rows, error } = await client
     .from('pairings')
     .select('id, dm_id, track, status')
@@ -854,51 +558,14 @@ export interface JourneyProgress {
 }
 
 /**
- * The Explorer's own place on the journey, as a NUMBER, never as a name.
- *
- * ---------------------------------------------------------------------------
- * THE ASK: "There must be a progressive bar that the Explorers can see too that
- * is aligned with the Journey that the Guide sees, so when the Guide progresses
- * the Explorer, the Explorer can appreciate and affirm that he/she progresses
- * in the Journey with the Guide (no labels yet for the Explorer to see)."
- *
- * WHY THIS IS ITS OWN FUNCTION AND NOT A COLUMN ADDED TO getMyPairing(). Rule 4
- * at the top of this file says an Explorer is never HANDED their own stage, and
- * getMyPairing() enforces it by listing the columns rather than selecting all
- * of them, so a future edit reaching for the stage fails to compile. That rule
- * is worth keeping exactly as it is. This is a separate, named, deliberate
- * channel with a different job, so the old guarantee is not quietly widened by
- * a feature request landing on top of it.
- *
- * WHAT IT DOES AND DOES NOT PROTECT, stated plainly rather than implied.
- *
- * The stage NAME never leaves the database through here. What does leave is the
- * POSITION, because a bar cannot be drawn without one, and a position in a
- * six-step journey is convertible to a name by anybody who reads the public
- * source. So this is not a secret; it is an interface decision. The screen shows
- * movement rather than a category, which is the thing that was actually asked
- * for and the thing that matters to the person looking at it.
- *
- * IT ALSO TAKES NOTHING AWAY THAT WAS BEING WITHHELD. Checked against the live
- * policies rather than assumed: `pairings_read` already lets an Explorer select
- * their own pairing row, journey_stage included. The column restriction in
- * getMyPairing() is a choice this app makes about what to LOOK at, not a wall
- * the database holds up. So drawing this bar widens no permission at all.
- *
- * THE STAGE NAME STILL MAY NOT BE RENDERED. tests/e2e/seeker-no-stage.js walks
- * every screen an Explorer can reach and fails if any of the six words appears.
- * That rule is untouched and this bar carries no label, by request and because
- * it is right: a person is not a category, and "a relationship, not a score" is
- * written on the same screen.
- * ---------------------------------------------------------------------------
+ * The Explorer's place on the journey as a position only, for the progress
+ * bar. The stage name is never returned and must never be shown to them.
  */
 export async function myJourneyProgress(): Promise<JourneyProgress | null> {
   const me = await uid();
   const client = db();
 
-  // NEWEST ACTIVE ONE, not maybeSingle(). Same reasoning as getMyPairing above:
-  // an Explorer with two pairings is a state the database has allowed before,
-  // and an exception here would take out the whole screen rather than one bar.
+  // Newest active pairing, for the same reason as getMyPairing.
   const { data: rows, error } = await client
     .from('pairings')
     .select('journey_stage')
@@ -912,8 +579,7 @@ export async function myJourneyProgress(): Promise<JourneyProgress | null> {
   if (!row) return null;
 
   const at = STAGE_ORDER.indexOf(row.journey_stage);
-  // An unknown stage means the journey grew and this did not. Showing the
-  // start is wrong and showing nothing is honest.
+  // An unknown stage means the journey list changed; show nothing rather than guess.
   if (at < 0) return null;
 
   return { step: at + 1, total: STAGE_ORDER.length };
@@ -923,8 +589,6 @@ export async function createPairing(dmId: string, dsId: string, track: Track): P
   if (dmId === dsId) throw new Error('Somebody cannot be paired with themselves.');
   const { error } = await db()
     .from('pairings')
-    // An Explorer is never at Create. By the time an account is paired, the
-    // church has already made contact; the shared relationship starts here.
     .insert({
       dm_id: dmId,
       ds_id: dsId,
@@ -935,54 +599,23 @@ export async function createPairing(dmId: string, dsId: string, track: Track): P
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Invitations
-// ---------------------------------------------------------------------------
+// --- Invitations ---
 
 /**
- * What the invite function actually reports back.
- *
- * `delivery` is the honest bit: 'email' means it left, 'link' means it did not
- * and the URL below is the only way that person is getting in. A church with no
- * mail provider configured yet is a normal state, not an error — but it has to
- * be a VISIBLE state, or invitations quietly go nowhere.
+ * What the invite function reports. `delivery` is 'email' when it was sent, or
+ * 'link' when it was not and the link below must be passed on by hand.
  */
 export interface InviteResult {
   ok?: boolean;
   delivery?: 'email' | 'link';
-  /**
-   * Where to sign in. Present on every reply now, and that used to be forbidden.
-   *
-   * While the invitation carried a one-time token, producing this link MINTED
-   * one -- and auth.users stores exactly one token per purpose, so generating
-   * it after a successful send overwrote the token already in the recipient's
-   * inbox and their link came back "expired or already used". Every invitation
-   * this app ever sent, broken by the reply to the request that sent it.
-   *
-   * No token is minted anywhere any more. This is the ordinary sign-in page
-   * with the person's own address in the query string, so returning it is
-   * returning a fact rather than spending a credential.
-   */
+  /** The ordinary sign-in page for this address. */
   link?: string;
-  /**
-   * The address and the password the invitation e-mailed, handed back so a
-   * Director can read them out to somebody who says nothing arrived.
-   *
-   * THIS IS NOT A LEAK. The Director created the invitation a second ago; under
-   * the old flow they were handed a link that would sign them in AS that person,
-   * which is strictly more than this. What it buys is the phone call that used
-   * to end in "I'll send another one" -- which, under the old flow, killed the
-   * message already sitting in the inbox.
-   */
+  /** The address and temporary password the invitation emailed, for a Director to read out. */
   signInEmail?: string;
   tempPassword?: string;
   /** Why it could not be emailed, in words a person can act on. */
   mailNote?: string;
-  /**
-   * Set when the ONLY thing wrong is a per-address cooldown. A number here
-   * means "this will work, shortly" — a very different thing from a fault, and
-   * the screen must not draw them the same way.
-   */
+  /** Set when the only problem is a per-address cooldown: retry shortly. */
   waitSeconds?: number;
   /** Which route carried it: the church's provider, or Supabase's own mailer. */
   via?: 'provider' | 'supabase';
@@ -1001,14 +634,7 @@ export async function inviteMember({
   role: Role;
   fullName: string;
   recommendedBy?: string;
-  /**
-   * `'link'` sends no email at all and returns a join link to pass on by hand.
-   *
-   * For a church whose email is unreliable, or a congregation that lives on a
-   * messaging app rather than in an inbox. It is also the only route that
-   * cannot be broken by a mail scanner opening the link first, because nothing
-   * is emailed for a scanner to find.
-   */
+  /** `'link'` sends no email and returns a join link to pass on by hand. */
   deliver?: 'email' | 'link';
 }): Promise<InviteResult> {
   const client = db();
@@ -1023,8 +649,7 @@ export async function inviteMember({
   });
 
   if (error) {
-    // functions-js exposes the response on context for non-2xx results. Read
-    // the function's useful reason instead of showing "non-2xx status code".
+    // Non-2xx replies carry the function's own reason on `context`.
     const response = (error as { context?: unknown }).context;
     if (response instanceof Response) {
       let reason = '';
@@ -1032,7 +657,6 @@ export async function inviteMember({
         const body = (await response.clone().json()) as { error?: string };
         reason = body.error ?? '';
       } catch {
-        // If the response was not JSON, fall back to the SDK message below.
       }
       if (reason) throw new Error(reason);
     }
@@ -1041,40 +665,15 @@ export async function inviteMember({
   if (data && typeof data === 'object' && 'error' in data) {
     throw new Error(String((data as { error: unknown }).error));
   }
-  // RETURN IT. This used to be Promise<void>, so the Director's screen said
-  // "Invitation e-mail sent" whatever came back — including when the function
-  // had plainly reported that it could not send anything and had handed back a
-  // link to pass on by hand. The owner sent invitations for a day and was told
-  // each time that they had gone.
   return (data ?? {}) as InviteResult;
 }
 
 const ORDER: Stage[] = ['create', 'connect', 'care', 'call', 'cultivate', 'commission'];
 
+/** Move a pairing one stage on. Reads the current stage first, so two stale screens cannot skip a step. */
 /**
- * Move a pairing one step along, and record who moved it.
- *
- * Reads the stage first rather than trusting a stage passed in: two Guides on
- * two devices would otherwise both write "connect → care" from the same stale
- * view, and the journey would show one step where two happened.
- */
-/**
- * Move an Explorer BACK one stage, because Advance is one tap and a mistake.
- *
- * WHY THIS EXISTS. Advance was the only control. A Guide who tapped it on the
- * wrong person, or twice, had no way to put it right: the stage is on the
- * Explorer's own journey, and the only remaining fix was to ask a Director to
- * edit the database. So the app quietly recorded a decision nobody had made
- * about somebody's faith.
- *
- * IT IS A CORRECTION, NOT A DEMOTION, and the difference matters to the person
- * it is about. Nothing is deleted: the step back is written to journey_events
- * exactly like a step forward, with who did it and when, so the record shows
- * what actually happened rather than pretending the mistake never occurred.
- * That also means an Explorer's history stays honest if anybody ever reads it.
- *
- * The Explorer is never shown their stage at all, here or anywhere, so a
- * correction is invisible to them. That is deliberate: see myPairing.
+ * Move an Explorer back one stage, to correct a mistaken Advance. Recorded in
+ * journey_events like any other step.
  */
 export async function stepBackStage(pairingId: string): Promise<Stage | null> {
   const client = db();
@@ -1088,8 +687,7 @@ export async function stepBackStage(pairingId: string): Promise<Stage | null> {
 
   const from = (data as { journey_stage: Stage }).journey_stage;
   const back = ORDER[ORDER.indexOf(from) - 1];
-  // Already at the first stage. Returning null rather than throwing: the
-  // button is disabled there, and a race is not worth an error message.
+  // Already at the first stage; the button is disabled there.
   if (!back) return null;
 
   const { error: upErr } = await client
@@ -1131,15 +729,9 @@ export async function advanceStage(pairingId: string): Promise<Stage | null> {
 }
 
 /**
- * Give an Explorer a different Guide, in one step.
- *
- * The owner, 7 October 2026: "EDs and Directors can change pairs but they
- * can't see the Guide and Explorer's chat or communication." So this is not an
- * edit of the pairing -- the database refuses that now -- but the old pairing
- * ending and a new one beginning, done together by change_guide(). The
- * Explorer keeps their place on the journey; the new Guide starts with an
- * empty conversation; what the Explorer and the first Guide wrote stays
- * between those two.
+ * Give an Explorer a different Guide in one step: the old pairing ends and a
+ * new one begins (change_guide()). The first conversation stays between the
+ * Explorer and the first Guide.
  */
 export async function changeGuide(pairingId: string, newGuideId: string): Promise<string> {
   const { data, error } = await db().rpc('change_guide', { p_pairing: pairingId, p_new_guide: newGuideId });
@@ -1152,28 +744,10 @@ export async function endPairing(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Every stage change this caller may see, for the analytics screen. */
 /**
- * Every stage change this caller may see, for the analytics screen.
- *
- * NO PAIRING FILTER, on purpose: the policy on journey_events already decides
- * who sees what, so a Director gets their church and a Guide gets their own
- * people. Reading the real events rather than approximating from a pairing's
- * updated_at matters here, because updated_at moves for reasons that are not a
- * journey step and the chart would quietly count them.
- */
-/**
- * Per role: how many are on the roll, how many did something in the window, how
- * many did not, and how many are suspended.
- *
- * "ACTIVE" MEANS A RECORDED ACTION, NOT A SIGN-IN, and the screen has to say so.
- * Beacon does not log sign-ins — there is no last_seen_at and nothing writes
- * one — so a number claiming to be visits would be invented. What is real is
- * whether the app recorded this person doing something: a message, a journey
- * step on their pairing, a meeting, a post, a lesson. See migration 0043.
- *
- * Counts only. The function is SECURITY DEFINER so it can see messages a
- * Director may not read, and it returns four integers per role and never a
- * name, which is the same posture as the blog's reader count.
+ * Per role: on the roll, active in the window, inactive, and suspended.
+ * "Active" means a recorded action, not a sign-in; sign-ins are not logged.
  */
 export interface RoleActivity {
   role: Role;
@@ -1189,10 +763,7 @@ export async function churchActivity(days: number): Promise<RoleActivity[]> {
   return (data ?? []) as RoleActivity[];
 }
 
-// ---------------------------------------------------------------------------
-// A Guide asks to walk with somebody, and the Guides talk to each other.
-// See migration 0046.
-// ---------------------------------------------------------------------------
+// --- Pairing requests and the Guides' room ---
 
 /** An Explorer nobody is walking with yet, for the Guide who has room. */
 export interface UnpairedExplorer {
@@ -1202,20 +773,7 @@ export interface UnpairedExplorer {
   created_at: string;
 }
 
-/**
- * Who is waiting.
- *
- * AN RPC, AND THE FIRST VERSION OF THIS WAS WRONG. It computed the answer here
- * from listMembers() and listPairings(), on the assumption that a Guide could
- * already read both. A Guide can read exactly TWO profiles: their own and the
- * Explorer they walk with. So this returned an empty list to the only people it
- * was built for, and the panel would have shipped looking like a feature that
- * does nothing.
- *
- * Migration 0047 answers it in the database instead, returning a name and an id
- * and nothing else. That does widen what a Guide can see, deliberately: you
- * cannot ask to walk with somebody you cannot name.
- */
+/** Explorers waiting for a Guide: a name and an id only. */
 export async function unpairedExplorers(): Promise<UnpairedExplorer[]> {
   const { data, error } = await db().rpc('unpaired_explorers');
   if (error) throw new Error(error.message);
@@ -1231,13 +789,7 @@ export interface PairingRequest {
   created_at: string;
 }
 
-/**
- * The Guide's own asks, or every ask in the church for a Director.
- *
- * One query for both, because the policy already decides which rows come back
- * and a second query filtered in the app would be a second answer that can
- * disagree with the first.
- */
+/** The caller's own requests, or every request in the church for a Director. */
 export async function listPairingRequests(): Promise<PairingRequest[]> {
   const { data, error } = await db()
     .from('pairing_requests')
@@ -1263,14 +815,7 @@ export async function askToWalkWith(dsId: string, note = ''): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * A Director answers.
- *
- * Answering "yes" does NOT create the pairing. The Director still makes it on
- * the pairings screen, where the cap of five is enforced, and where they are
- * looking at everything else about that Guide. A button that silently created
- * a relationship from a list of requests is how somebody ends up with six.
- */
+/** A Director answers. "Yes" does not create the pairing; that is done on the pairings screen. */
 export async function decidePairingRequest(
   id: string,
   status: 'accepted' | 'declined',
@@ -1299,25 +844,14 @@ export interface GuideRoomMessage {
   /** Set when the author corrected the wording. The previous wording is kept. */
   edited_at?: string | null;
   /**
-   * Set when the message was taken back -- by its author, or by leadership of
-   * that church. `body` is emptied when this is set, so a deleted message must
-   * never be rendered as an empty bubble.
+   * Set when the message was taken back. `body` is emptied then, so never draw a
+   * deleted message as an empty bubble.
    */
   deleted_at?: string | null;
   deleted_by?: string | null;
 }
 
-/**
- * Every conversation this person is in, with what is waiting in each.
- *
- * ONE CALL, AND NOT A COUNT DONE IN THE BROWSER. The obvious version of this is
- * "read every message in my pairings and count the unread ones in JavaScript",
- * which downloads every word of every conversation to display a number. It
- * works at this church's size and stops working quietly.
- *
- * Ordered with the waiting ones first, then by when somebody last spoke, which
- * is the order a person opening the chat is actually looking for.
- */
+/** Every conversation this person is in, unread first, with counts from one call. */
 export interface Thread {
   pairing_id: string;
   other_id: string;
@@ -1359,13 +893,7 @@ export async function postToGuideRoom(body: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * Correct your own message in the Guides' room. Only the author, ever.
- *
- * LEADERSHIP CAN REMOVE A MESSAGE HERE AND DELIBERATELY CANNOT REWRITE ONE.
- * Removing something somebody said and putting different words in their mouth
- * are not the same power, and only the first belongs to a moderator.
- */
+/** Correct your own message in the Guides' room. Leaders can remove a message, never rewrite one. */
 export async function editGuideRoomMessage(id: string, body: string): Promise<void> {
   const text = body.trim();
   if (!text) throw new Error('A message has to say something.');
@@ -1377,17 +905,7 @@ export async function editGuideRoomMessage(id: string, body: string): Promise<vo
   if (error) throw new Error(error.message);
 }
 
-/**
- * Take a message back: the author, or leadership of that church.
- *
- * THIS USED TO BE A REAL DELETE, and that was the wrong shape for this room.
- * Guides say the hard parts of carrying people out loud in here and leadership
- * is in the room. If a safeguarding question is ever asked about something said
- * here, "it was deleted" has to mean removed from the screen, not removed from
- * existence. The words move to `guide_room_revisions`, which no browser can
- * read, and the row keeps who took it back so the thread can say so instead of
- * quietly changing shape between visits.
- */
+/** Take a message back (author or leadership). The words are kept in revisions, out of reach. */
 export async function deleteGuideRoomMessage(id: string): Promise<void> {
   const { error } = await db().rpc('delete_guide_room_message', { p_message: id });
   if (error) throw new Error(error.message);
@@ -1403,24 +921,9 @@ export async function listJourneyEvents(limit = 2000): Promise<JourneyEvent[]> {
   return (data ?? []) as JourneyEvent[];
 }
 
-// ---------------------------------------------------------------------------
-// The conversation
-//
-// Read by exactly two people, enforced by one policy with no leadership branch.
-// If you are here to add "so a Director can review a conversation", that is a
-// change to what this app is, not a feature.
-// ---------------------------------------------------------------------------
+// --- The conversation: readable only by its two people ---
 
-/**
- * The NEWEST thousand messages, oldest first.
- *
- * Asked for newest first and turned round here. The API returns at most a
- * thousand rows, and this used to ask for the OLDEST first, so the
- * conversation that reached a thousand and one stopped showing anything new --
- * the very message just sent was the one left out. Found by the design review
- * of 1 October 2026. "Show earlier messages" is a later piece of work; the
- * thousand most recent is a long way back for two people.
- */
+/** The newest thousand messages, oldest first. */
 export const THREAD_LIMIT = 1000;
 
 export async function listMessages(pairingId: string): Promise<Message[]> {
@@ -1434,13 +937,7 @@ export async function listMessages(pairingId: string): Promise<Message[]> {
   return ((data ?? []) as Message[]).reverse();
 }
 
-/**
- * Send a message, optionally as a reply to an earlier one.
- *
- * These four columns are the only ones the browser may write on the way in
- * (migration 20261001120000). `reply_to` is held to the same conversation by
- * the database, so a reply cannot quote a message from somebody else's.
- */
+/** Send a message, optionally as a reply to an earlier one in the same conversation. */
 export async function sendMessage(pairingId: string, body: string, replyTo?: string | null): Promise<void> {
   const text = body.trim();
   if (!text) return;
@@ -1456,15 +953,12 @@ export async function sendMessage(pairingId: string, body: string, replyTo?: str
   if (error) throw new Error(error.message);
 }
 
-/** Every reaction in one conversation. Read under the pairing's own rule. */
-// Replies, reactions and voice may not be on this database yet: see
-// lib/live/not-yet.ts. Re-exported so the screens can tell the two apart.
+/** Every reaction in one conversation. */
+// Replies, reactions and voice need a database update; see lib/live/not-yet.ts.
 export { NotOnThisDatabaseYet } from '@/lib/live/not-yet';
 
 export async function listReactions(pairingId: string): Promise<Reaction[]> {
-  // A reaction taken back stays as a row with no emoji: an UPDATE reaches only
-  // the two people on the realtime feed, a DELETE reaches everybody (migration
-  // 20261001120000, section 4). Those rows are nothing to show.
+  // A reaction taken back stays as a row with no emoji; skip those.
   const { data, error } = await db()
     .from('message_reactions')
     .select('id, pairing_id, message_id, media_id, person_id, emoji, created_at')
@@ -1474,14 +968,7 @@ export async function listReactions(pairingId: string): Promise<Reaction[]> {
   return (data ?? []) as Reaction[];
 }
 
-/**
- * React to a message or attachment, change the reaction, or take it away
- * (`emoji` null).
- *
- * THROUGH A FUNCTION, NOT A WRITE. The browser may read reactions and nothing
- * else; react_to() checks the person, the conversation, that the message was
- * not taken back, and that the emoji is one of the six (lib/talk/reactions.ts).
- */
+/** React to a message or attachment, change the reaction, or remove it (`emoji` null). */
 export async function reactTo(target: ReactionTarget, emoji: string | null): Promise<void> {
   const { error } = await db().rpc('react_to', {
     p_message: 'message' in target ? target.message : null,
@@ -1491,19 +978,7 @@ export async function reactTo(target: ReactionTarget, emoji: string | null): Pro
   if (error) throw new Error(error.message);
 }
 
-/**
- * Change the wording of your own message.
- *
- * THROUGH A FUNCTION, NOT AN UPDATE, and the reason is a fault this replaced.
- * `messages_mark` is an UPDATE policy that exists so the RECIPIENT can stamp
- * `read_at`. RLS is row level and says nothing about columns, so until today it
- * also let EITHER PERSON REWRITE THE OTHER'S WORDS, silently. The browser can
- * now only change `read_at` -- a column grant, not a policy -- and editing goes
- * through a definer function that checks you are the author.
- *
- * The previous wording is kept in `message_revisions` first. Editing is for
- * fixing a typo, not for changing what you said after being challenged on it.
- */
+/** Change the wording of your own message. The previous wording is kept in revisions. */
 export async function editMessage(messageId: string, body: string): Promise<void> {
   const text = body.trim();
   if (!text) throw new Error('A message has to say something.');
@@ -1515,16 +990,7 @@ export async function editMessage(messageId: string, body: string): Promise<void
   if (error) throw new Error(error.message);
 }
 
-/**
- * Take your own message back.
- *
- * NOT A DELETE. The words are moved into `message_revisions` and the row's
- * `body` is emptied, so they leave the reach of every browser while the record
- * survives for safeguarding -- the same reason `report_guild_post` copies a
- * post's words into the report before anybody can remove it. `deleted_at` and
- * `deleted_by` stay on the row so the conversation can say plainly that a
- * message was taken back, and by whom.
- */
+/** Take your own message back. The words leave the conversation but are kept for safeguarding. */
 export async function deleteMessage(messageId: string): Promise<void> {
   const { error } = await db().rpc('delete_message', { p_message: messageId });
   if (error) throw new Error(error.message);
@@ -1542,21 +1008,12 @@ export async function markRead(pairingId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * Live updates for one conversation.
- *
- * Realtime respects RLS, but only if the publication is configured for it —
- * see docs/BUILD-YOUR-OWN.md. The filter here is for traffic, not for privacy:
- * a subscription without it would still deliver only rows the caller may read,
- * it would just deliver more of them.
- */
+/** Live updates for one conversation. */
 export function subscribeToMessages(pairingId: string, onChange: () => void) {
   const client = supabase();
   if (!client) return () => {};
   const channel = client
-    // A RANDOM SUFFIX, like every other channel here. A fixed name means two
-    // components watching the same conversation ask one client for the same
-    // channel, and the second one does not get its own.
+    // A random suffix, so two components watching one conversation get their own channels.
     .channel(`messages:${pairingId}:${Math.random().toString(36).slice(2)}`)
     .on(
       'postgres_changes',
@@ -1569,41 +1026,14 @@ export function subscribeToMessages(pairingId: string, onChange: () => void) {
   };
 }
 
-// `subscribeToMyMessages` USED TO LIVE HERE and was deliberately removed.
-//
-// It was an unfiltered channel that called its callback on every row event with
-// no settling, and its only caller was the chat dock. That made one insert by
-// anybody into N recounts, where N is however many people have the app open. A
-// helper shaped like that is a trap for whoever needs the next one: it reads as
-// the obvious tool and it is the expensive one. Watch a table through
-// `useKeepUp`, which debounces, or filter to a single row set as the function
-// below does.
-
-// ---------------------------------------------------------------------------
-// Blog.
-//
-// A Guide writes once, to the people they walk with. See migration 0006.
-//
-// As everywhere else in this file, nothing here filters by who may see what —
-// row level security does that, and the queries are deliberately identical for
-// every caller. A Guide asking for their posts gets their own; an Explorer
-// asking for the feed gets what was published to them. The one exception is the
-// reader count, which cannot be a policy because it is an aggregate: it comes
-// from a SECURITY DEFINER function that returns a number and never the names
-// behind it.
-// ---------------------------------------------------------------------------
+// --- Blog ---
 
 export type BlogVisibility = 'private' | 'published';
 /**
- * Who a post is for.
- *
- *   church   — everybody in the writer's church. Community Blogs.
- *   all      — the people the writer walks with. For a Guide that is their
- *              Explorers; for an Explorer it is their Guide. Leaders' `all`
- *              posts also reach their whole church, which is how the board
- *              worked before `church` existed and is left alone so nothing
- *              already published changes audience.
- *   selected — named people, and nobody else.
+ * Who a post is for:
+ *   church   everybody in the writer's church
+ *   all      the people the writer walks with (a leader's `all` posts also reach their church)
+ *   selected named people only
  */
 export type BlogAudienceKind = 'all' | 'church' | 'selected';
 
@@ -1620,13 +1050,7 @@ export interface MyBlogPost {
   audience_ids: string[];
 }
 
-/**
- * A post as a reader sees it, with a name on it.
- *
- * The reader count stays out: that is the writer's, and a reader knowing how
- * many others have read a post changes what the post is. Who wrote it does
- * belong here — a blog anyone may post to is unreadable without it.
- */
+/** A post as a reader sees it, with the writer's name and without the reader count. */
 export interface FeedPost {
   id: string;
   author_id: string;
@@ -1647,28 +1071,14 @@ export async function listMyBlogPosts(): Promise<MyBlogPost[]> {
   return (data ?? []) as MyBlogPost[];
 }
 
-/**
- * What this caller may read, newest first, with the writer's name on each.
- *
- * `can_read_post` decides — the same function the table's own SELECT policy
- * uses — so this asks for everything and gets back exactly what it is allowed.
- *
- * The caller's own posts come back here too. That used to be filtered out on
- * the grounds that a Guide should see what was written FOR them; on a church
- * shared blog it is the opposite, because a post you wrote is part of the list
- * everybody else is reading and leaving it out makes the board look wrong to
- * its own author.
- */
+/** What this caller may read, newest first, including their own posts. */
 export async function listBlogFeed(limit = 100): Promise<FeedPost[]> {
   const { data, error } = await db().rpc('blog_feed', { p_limit: limit });
   if (error) throw new Error(error.message);
   return (data ?? []) as FeedPost[];
 }
 
-/**
- * Write one. `church_id` is pinned to the caller's own church by the policy, so
- * sending a different one is rejected by the database rather than by this code.
- */
+/** Write a post. The database pins `church_id` to the caller's church. */
 export async function createBlogPost(m: {
   title: string;
   body: string;
@@ -1697,9 +1107,7 @@ export async function createBlogPost(m: {
     .single();
   if (error) throw new Error(error.message);
 
-  // Named recipients only when the post is addressed to some rather than all.
-  // Writing them for an 'all' post would leave rows that quietly become wrong
-  // the moment the Guide is paired with somebody new.
+  // Named recipients only for 'selected', so an 'all' post follows future pairings.
   if (m.audience === 'selected' && m.dsIds?.length) {
     const { error: audErr } = await supabase
       .from('blog_audience')
@@ -1709,20 +1117,10 @@ export async function createBlogPost(m: {
   return data.id as string;
 }
 
-// ---------------------------------------------------------------------------
-// Photos and a short clip on a post (database change 20261007160000).
-//
-// The owner, 7 October 2026: "writing blog post should be easy with added
-// features like photos and videos". The writer picks them first; they wait on
-// the device (lib/post-media.ts) until the post exists, then go to the church's
-// own private bucket under <church>/<post>/<uuid>.<ext>, the only shape the
-// database accepts, and the device copy is forgotten. Reading one asks the
-// database for its row first, so a photo reaches exactly the people who may
-// read the post, and a draft's photos stay with its writer.
-//
-// UNTIL THE CHANGE IS APPLIED the table is missing, postPhotosReady() says no,
-// and the writing box shows no photo buttons. Nothing else changes.
-// ---------------------------------------------------------------------------
+// --- Photos and a short clip on a post ---
+// Stored privately under <church>/<post>/<uuid>.<ext> after the post exists.
+// Until the database update is applied, postPhotosReady() is false and the
+// writing box offers no photo buttons.
 
 const POST_BUCKET = 'post-media';
 const POST_EXT: Record<string, string> = {
@@ -1755,9 +1153,7 @@ export async function attachPostMedia(postId: string, media: PostMedia[]): Promi
   for (const [position, m] of media.entries()) {
     try {
       const kept = await readPostFile(m.src);
-      // The picker already shrank it; asked again here, as every upload is,
-      // so a photo that reached the device another way still loses its
-      // location. A photo that is already small and clean comes back as it is.
+      // Shrink and strip location again here, whatever path the photo came by.
       const photo = kept && m.kind === 'image' ? new File([kept], 'photo', { type: kept.type }) : null;
       const blob = photo ? await shrinkImage(photo) : kept;
       const mime = blob?.type || '';
@@ -1783,10 +1179,7 @@ export async function attachPostMedia(postId: string, media: PostMedia[]): Promi
   return missed;
 }
 
-/**
- * The photos and clips on some posts, as addresses this person may open for an
- * hour. Posts with none are simply absent from the map.
- */
+/** Signed addresses (valid for an hour) for the photos and clips on these posts. */
 export async function mediaForPosts(postIds: string[]): Promise<Map<string, PostMedia[]>> {
   const found = new Map<string, PostMedia[]>();
   if (postIds.length === 0 || !(await postPhotosReady())) return found;
@@ -1816,19 +1209,8 @@ export async function setBlogVisibility(id: string, visibility: BlogVisibility):
   if (error) throw new Error(error.message);
 }
 
-/** Delete. The audience rows and the views go with it, by foreign key cascade. */
-/**
- * Hold a post at the top of the church's feed, or let it fall back into order.
- *
- * WHY A FUNCTION RATHER THAN AN UPDATE. `blog_edit` lets an author change their
- * own post and nobody else's, and that is exactly what makes pinning impossible
- * through it: the point is that a Director decides what the church leads with,
- * including on a post somebody else wrote. Widening that policy would also hand
- * leadership the power to rewrite anybody's words, which is a far larger thing
- * than choosing an order. The function touches one column and can do nothing
- * else, and it takes the church from the POST rather than from an argument, so
- * a Director of one church cannot arrange another's feed.
- */
+/** Delete. Audience rows and views go with it by cascade. */
+/** Pin a post to the top of the church's feed, or unpin it. Leadership only. */
 export async function setPostPinned(id: string, pinned: boolean): Promise<void> {
   const { error } = await db().rpc('set_post_pinned', { p_post: id, p_pinned: pinned });
   if (error) throw new Error(error.message);
@@ -1839,38 +1221,18 @@ export async function deleteBlogPost(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * Record that the caller read a post.
- *
- * Deliberately never throws. A view that fails to record is not worth showing
- * anybody an error about, and certainly not worth interrupting their reading
- * for. The function is idempotent per person, so calling it on every page load
- * is correct rather than merely harmless.
- */
+/** Record that the caller read a post. Never throws; safe to call on every load. */
 export async function recordBlogView(id: string): Promise<void> {
   try {
     await db().rpc('record_blog_view', { p: id });
   } catch {
-    // Counting is a convenience for the writer, never a gate for the reader.
   }
 }
 
-// ---------------------------------------------------------------------------
-// Prayer.
-//
-// Two audiences given deliberately different things (migration 0007). A Guide
-// sees their own Explorers' requests WITH the name, because praying for someone
-// you walk with is the point. The congregation sees shared ones with NO name,
-// served by prayer_wall() rather than by a policy — a policy grants whole rows,
-// and the row carries ds_id, so "leaders see the request but not who wrote it"
-// would be a promise the network tab disproves in one click.
-//
-// IT RUNS BOTH WAYS (20260924100000). A request lives with one relationship and
-// `ds_id` is always the Explorer in it; `author_id` is who wrote it. An
-// Explorer's own request has the two equal. A Guide asking an Explorer to pray
-// for them writes a row with ds_id = that Explorer and author_id = themselves,
-// one row per Explorer asked, so each "I am praying" answers exactly one ask.
-// ---------------------------------------------------------------------------
+// --- Prayer ---
+// A Guide sees their own Explorers' requests with the name; the congregation
+// sees shared requests without one, through prayer_wall(). `ds_id` is always the
+// Explorer in the relationship; `author_id` is whoever wrote the request.
 
 export type PrayerStatus = 'open' | 'praying' | 'answered';
 
@@ -1923,17 +1285,8 @@ export async function addPrayerRequest(body: string, shareWithChurch: boolean): 
 }
 
 /**
- * A Guide asks the Explorers they walk with to pray for them.
- *
- * ONE ROW PER EXPLORER, written one at a time, because each ask is answered by
- * one person: "I am praying for this" moves that row, and tells its author.
- * The database decides everything that matters here -- the author is the
- * session, never a value this sends; the Explorer must be one this Guide walks
- * with now; and a Guide's words never go on the church wall -- so a browser
- * that skipped this function would get exactly the same answer.
- *
- * Returns how many asks went. It stops at the first refusal and throws it, so
- * a Guide is never told "asked" about somebody who was not.
+ * A Guide asks the Explorers they walk with to pray for them: one row per
+ * Explorer. Returns how many were asked; stops at the first refusal.
  */
 export async function askForPrayer(explorerIds: string[], body: string): Promise<number> {
   const supabase = db();
@@ -1960,12 +1313,7 @@ export async function askForPrayer(explorerIds: string[], body: string): Promise
   return sent;
 }
 
-/**
- * The requests this caller may see WITH a name. An Explorer: their own, and
- * what their Guide has asked them to pray for. A Guide: their Explorers' own,
- * and what they themselves have asked. A Director gets nothing here and that
- * is correct — they are shown the wall instead.
- */
+/** Requests this caller may see with a name (an Explorer's own and their Guide's). */
 export async function listPrayerRequests(): Promise<PrayerRequestRow[]> {
   const { data, error } = await db()
     .from('prayer_requests')
@@ -1982,29 +1330,13 @@ export async function listPrayerWall(): Promise<WallEntry[]> {
   return (data ?? []) as WallEntry[];
 }
 
-/**
- * The author may move the status anywhere; the other side may only move it from
- * open to praying (20260924100000). Only the author owns the words.
- */
+/** The author may set any status; the other side may only move it from open to praying. */
 export async function setPrayerStatus(id: string, status: PrayerStatus): Promise<void> {
   const { error } = await db().from('prayer_requests').update({ status }).eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-/**
- * The other side says they are praying for this, and whoever asked is told --
- * a Guide answering an Explorer, or an Explorer answering their Guide.
- *
- * ONE CALL, AND IT DOES NOT SEND THE MESSAGE. The message is sent by a trigger
- * on the row (migration 0049), because a client that updates and then notifies
- * is a client that can forget the second half — or a second client, added
- * later, that never knew there was one. Telling the person is not a step
- * somebody remembers here; it is what changing the status means.
- *
- * Pressing it more than once is harmless: the trigger only fires on the move
- * INTO praying, so a Guide who taps twice does not send two messages. Proved
- * against the live database rather than assumed.
- */
+/** Say you are praying for this. A database trigger tells whoever asked. */
 export async function markPrayingFor(id: string): Promise<void> {
   const { error } = await db()
     .from('prayer_requests')
@@ -2020,15 +1352,7 @@ export async function deletePrayerRequest(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * Report a prayer request somebody wrote to you.
- *
- * NO SUBJECT ARGUMENT. The function resolves the author from the request, so
- * the only thing the browser names is the request it is looking at, and it may
- * name only one written to it. It copies the words into the report: a request
- * can be withdrawn a moment after it is reported, and a Director must not open
- * a report about nothing. Every Director is told; the author is not.
- */
+/** Report a prayer request written to you. The words are copied into the report. */
 export async function reportPrayerRequest(
   requestId: string,
   reason: ReportReason,
@@ -2042,34 +1366,20 @@ export async function reportPrayerRequest(
   });
   if (error) throw new Error(error.message);
   const reportId = String(data ?? '');
-  // Filed first, files after, exactly as reportPerson does: a report must not
-  // be lost to a photo that failed to upload.
+  // File the report first, then the evidence, so a failed upload cannot lose it.
   if (reportId && evidence?.length) {
     for (const file of evidence) {
-      try { await attachReportEvidence(reportId, file); } catch { /* the report stands */ }
+      try { await attachReportEvidence(reportId, file); } catch { }
     }
   }
   return reportId;
 }
 
-// ---------------------------------------------------------------------------
-// Library.
-//
-// A resource is a title and a LINK (migration 0008). The app also has an
-// on-device library that keeps files in the browser that added them — a real
-// privacy property, and one that cannot move a file between two people. A link
-// travels on its own; a blob in IndexedDB does not. Uploading files to object
-// storage is a later, deliberate decision with a quota attached.
-// ---------------------------------------------------------------------------
+// --- Library ---
 
 export type MaterialKind = 'link' | 'video' | 'audio' | 'pdf' | 'image' | 'file';
 
-/**
- * A resource is a LINK or a FILE, never both (20260925100000). A file lives in
- * the church's own storage under `library/<whoever added it>/`, and whoever can
- * read the resource can open the file: sharing the resource is what hands it
- * over.
- */
+/** A resource is a link or a file, never both. Sharing the resource shares the file. */
 export interface Material {
   id: string;
   church_id: string;
@@ -2102,14 +1412,7 @@ export function kindFromFile(file: { type?: string | null; name?: string | null 
   return 'file';
 }
 
-/**
- * Why storage refused a file, in words the person can act on.
- *
- * Storage answers every rule it enforces with the same line -- "new row
- * violates row-level security policy" -- whether the file went over the limit
- * of what one person may keep (20260925120000), or their sharing has been
- * paused by a Director. Both are said, because this side cannot tell which.
- */
+/** Why storage refused a file, in words the person can act on (storage gives one message for every rule). */
 function uploadRefused(raw: string, name: string): string {
   if (/mime|type/i.test(raw)) {
     return `\u201c${name}\u201d is not a kind of file the church keeps. Pictures, PDFs, documents and audio are.`;
@@ -2123,17 +1426,11 @@ function uploadRefused(raw: string, name: string): string {
 }
 
 /**
- * Put a file on the shelf: upload it, then describe it.
- *
- * THE FILE FIRST, THEN THE ROW, and the file comes back out if the row cannot
- * be written, so a failure never leaves a file nobody can reach. The path holds
- * no part of the name somebody typed -- a name is text a person chose, a path is
- * used to build addresses -- only the uploader's id, which the database checks
- * against who added the resource, and a random id.
+ * Upload a file, then write its row; the file is removed if the row fails.
+ * The path uses ids only, never the typed name.
  */
 export async function addMaterialFile(chosen: File, m: { title?: string; description?: string } = {}): Promise<string> {
-  // A photo is made smaller and LOSES ITS LOCATION before it goes anywhere,
-  // as the privacy notice promises for every photo. See shrink-image.ts.
+  // Photos are resized and lose their location before upload (lib/shrink-image.ts).
   const file = await shrinkImage(chosen);
   if (file.size > MAX_RESOURCE_FILE) throw new Error(`\u201c${file.name}\u201d is over 10 MB. Share a link to it instead.`);
   const supabase = db();
@@ -2147,8 +1444,6 @@ export async function addMaterialFile(chosen: File, m: { title?: string; descrip
     .upload(path, file, { upsert: false, contentType: file.type || undefined });
   if (up.error) throw new Error(uploadRefused(up.error.message, file.name));
 
-  // A name somebody would recognise: what they typed, or the file's own name
-  // without the extension.
   const title = (m.title?.trim() || file.name.replace(/\.[a-z0-9]{1,8}$/i, '')).slice(0, 200) || 'A file';
   const { data, error } = await supabase
     .from('materials')
@@ -2172,11 +1467,7 @@ export async function addMaterialFile(chosen: File, m: { title?: string; descrip
   return data.id as string;
 }
 
-/**
- * A short-lived address to open a resource's file. Signed when opened, never
- * stored. With `saveAs`, the address downloads the file under that name rather
- * than opening it -- for a computer with no share sheet to hand it to.
- */
+/** A short-lived address to open a file; with `saveAs`, it downloads under that name. */
 export async function materialFileUrl(path: string, saveAs?: string): Promise<string> {
   const { data, error } = await db().storage.from('pairing-media')
     .createSignedUrl(safeStoragePath(path), 60 * 60, saveAs ? { download: saveAs } : undefined);
@@ -2201,19 +1492,7 @@ export interface MaterialShare {
   created_at: string;
 }
 
-/**
- * Everything this caller may see. For a Guide that is their church's library;
- * for an Explorer it is only what was shared with them. Same query either way —
- * the policy decides, not this function.
- */
-/**
- * The shelf as THIS person has it, which is not the same shelf for everybody.
- *
- * Anything they have taken off their own shelf is left out. Filtered here and
- * not in a policy on purpose: the row is genuinely readable by them -- the
- * church published it -- so this is a question of what to SHOW, and a policy
- * that hid a church resource from one member would be a much larger claim.
- */
+/** This person's shelf: everything they may read, minus what they have hidden. */
 export async function listMaterials(): Promise<Material[]> {
   const supabase = db();
   const { data, error } = await supabase
@@ -2223,31 +1502,15 @@ export async function listMaterials(): Promise<Material[]> {
   if (error) throw new Error(error.message);
   const rows = (data ?? []) as Material[];
 
-  // Only this person's own rows come back: mh_read allows no others.
   const { data: hidden } = await supabase.from('material_hides').select('material_id');
   const off = new Set(((hidden ?? []) as { material_id: string }[]).map((h) => h.material_id));
   return off.size ? rows.filter((m) => !off.has(m.id)) : rows;
 }
 
-/** Add one to the church library. Guides and leaders only, by policy. */
+/** Add one to the church library. Guides and leaders only. */
 /**
- * The record of who shared what, for church leadership.
- *
- * THERE IS NO ADDRESS IN HERE, AND THAT IS THE POINT OF THE WHOLE RECORD.
- * "Head ED, ED, and Directors can detect the activities (Except for chat) of
- * Guide and Explorer, but ... can't see the references." So a row says what was
- * done and what KIND of thing it was done with, and the address itself is not
- * hidden from this type -- it is not in the database. See migration
- * 20260917140000: the column was dropped rather than narrowed, because a column
- * that exists and is not selected today is one somebody selects next year.
- *
- * WHO SEES WHOM. A Director reads this for the Guides and Explorers of a church
- * they lead. An Executive Director, head or otherwise, reads those too, and
- * Directors as well. Nobody reads their own row. The database decides that, not
- * this file.
- *
- * Rows older than 30 days are gone. A record kept forever is a different
- * product from a record kept to answer "what happened last month".
+ * Who shared what, for church leadership. Never carries the address; rows
+ * older than 30 days are deleted.
  */
 export interface LibraryActivity {
   id: string;
@@ -2263,14 +1526,7 @@ export interface LibraryActivity {
   concern: 'ordinary' | 'questionable' | 'harmful';
   /** That judgement in words, written to name a kind and never a site. */
   label: string;
-  /**
-   * A one-way mark for the site, per church.
-   *
-   * WHAT IT IS FOR AND WHAT IT CANNOT DO. Two rows with the same mark are the
-   * same site, so "this is the fourth time" can be said out loud. It cannot be
-   * turned back into an address by anybody, including us, and the salt is per
-   * church so it cannot be compared against another congregation's.
-   */
+  /** A one-way, per-church mark for the site, so repeat visits can be counted. */
   host_mark: string | null;
   /** How many times this person has been to that same site. */
   seen_before: number;
@@ -2284,33 +1540,8 @@ export async function listLibraryActivity(limit = 100): Promise<LibraryActivity[
   return (data ?? []) as LibraryActivity[];
 }
 
-/**
- * Turn one line of the record into a case somebody has to answer.
- *
- * ASKED FOR: "Once those inappropriate things happen, Head ED, ED, and
- * Directors can file an open case."
- *
- * IT GOES THROUGH THE REPORT PATH THAT ALREADY EXISTS rather than writing a
- * report row of its own, so who may read it, who may claim it and the record
- * that outlives the account all come free, and the church has one kind of case
- * rather than two. The detail it writes carries the label and not the address,
- * because leadership cannot see the address to put there.
- */
-/**
- * What each Guide and Explorer has actually been doing.
- *
- * ASKED FOR: "Head ED, ED, and Directors must have analysis to track Guide and
- * Explorer activities please."
- *
- * THE RECORD ANSWERS "what happened". THIS ANSWERS "who is being walked with
- * and who is not", which is the question a Director actually has and cannot get
- * by scrolling a feed: forty events do not tell anybody that one Explorer has
- * heard from nobody in three weeks.
- *
- * SAME TWO RULES AS THE RECORD, because they are the church's and not one
- * screen's: nothing here reads a conversation, and nothing here carries an
- * address. Every field is a count or a date.
- */
+/** File one line of the record as a case, through the ordinary report path. */
+/** What each Guide and Explorer has been doing: counts and dates only. */
 export interface ActivityAnalysis {
   person_id: string;
   person_name: string;
@@ -2328,13 +1559,7 @@ export interface ActivityAnalysis {
   /** Things they added or shared that the database labelled as needing a look. */
   flagged: number;
   last_seen: string;
-  /**
-   * How long since they did anything the app can see.
-   *
-   * THE ONE FIGURE THAT FINDS THE PERSON NOBODY HAS NOTICED, which is what the
-   * whole discipleship shape exists to prevent and what a roster of green ticks
-   * hides.
-   */
+  /** Days since the app last saw them do anything. */
   quiet_days: number;
 }
 
@@ -2353,13 +1578,7 @@ export async function openCaseFromActivity(activityId: string, note?: string): P
   return data as string;
 }
 
-/**
- * Stop somebody sharing, or let them start again.
- *
- * A Director reaches Guides and Explorers; an Executive Director reaches
- * Directors. Nobody reaches sideways, upward, or themselves, and all of that
- * is enforced in the function rather than by hiding a button.
- */
+/** Stop somebody sharing, or let them start again. Enforced by the database function. */
 export async function setLibraryBlock(personId: string, blocked: boolean, reason?: string): Promise<void> {
   const { error } = await db().rpc('set_library_block', {
     p_person: personId,
@@ -2379,8 +1598,7 @@ export async function addMaterial(m: {
   const me_id = await uid();
 
   const url = m.url.trim();
-  // Checked here so the person gets a sentence rather than a constraint
-  // violation. The database checks it too, which is the one that counts.
+  // A friendly message only; the database checks it too.
   if (!/^https?:\/\//i.test(url)) throw new Error('The address needs to start with http:// or https://');
 
   const { data: me } = await supabase
@@ -2414,56 +1632,10 @@ export interface SharedWithMe {
 }
 
 /**
- * What OTHER PEOPLE have put in front of you.
- *
- * ---------------------------------------------------------------------------
- * WHY THIS EXISTS, reported as "the shared sources for Explorer also appears
- * in its shared sources location which is weird to look and not helpful".
- *
- * The card headed "Shared with you -- from your Guide" called listMaterials(),
- * which is everything the caller may READ. For an Explorer the policy makes
- * that their own additions plus whatever was shared into their pairings, so
- * that card showed an Explorer their OWN resources under a heading saying their
- * Guide had sent them. It also showed exactly the same rows as the shelf card
- * sitting directly above it, because on that screen both were the same query.
- *
- * The share rows were there the whole time -- twenty of them across twelve
- * pairings -- and no screen had ever read one. Sharing wrote a row that nothing
- * displayed, so it looked like sharing did nothing.
- *
- * `shares_read` is `in_pairing(pairing_id)`, so the database returns only
- * pairings this person is actually in. The one thing left to do here is drop
- * what they shared themselves: a Guide and an Explorer share into the SAME
- * pairing row, so without this every share comes back to the person who sent
- * it, which is the duplicate all over again from the other end.
- *
- * `pairingId` NARROWS THE ANSWER TO ONE RELATIONSHIP, and it is not a security
- * filter -- see rule 1 at the top of this file. The database has already
- * decided which pairings this person may read. A Guide walks with up to five
- * people and their screen is one Explorer at a time, so a card headed "what
- * Ruth has shared with you" must not quietly list what somebody else did.
- * ---------------------------------------------------------------------------
+ * Resources other people have shared with you (optionally in one pairing),
+ * not counting what you shared yourself.
  */
-/**
- * Put a resource in front of the whole church, or take it back off.
- *
- * ---------------------------------------------------------------------------
- * THE SHELF IS A DECISION NOW. `materials.is_published` defaulted to true and
- * no screen ever set it, so every resource anybody added was readable by every
- * Guide and every Director in the church -- including an Explorer's own
- * addition and another Guide's private bookmark. Nobody chose that; the column
- * was designed for a decision the app never asked anybody to make.
- *
- * Migration 20260908120000 makes the default false and refuses a promotion from
- * anybody who does not manage the church. This function is the door for the
- * people who may; for everybody else the database says no, which is the only
- * place saying it would mean anything.
- *
- * ASKS FOR THE ROW BACK, for the same reason updateLessonSeries does: an UPDATE
- * matching no rows is not an error, so without this a refusal would look
- * exactly like success and the screen would say "Saved" over nothing.
- * ---------------------------------------------------------------------------
- */
+/** Publish a resource to the whole church, or unpublish it. Leadership only. */
 export async function setMaterialPublished(id: string, next: boolean): Promise<void> {
   const { data, error } = await db()
     .from('materials').update({ is_published: next }).eq('id', id).select('id');
@@ -2487,9 +1659,7 @@ export async function listSharedWithMe(pairingId?: string): Promise<SharedWithMe
   const theirs = rows.filter((r) => r.shared_by !== me && r.materials
     && (!pairingId || r.pairing_id === pairingId));
 
-  // NAMES ARE A SEPARATE QUERY AND A SOFT ONE. A missing name is a worse
-  // sentence, not a broken card, so a failure here leaves "Someone" rather
-  // than taking the whole shelf down.
+  // Names are a separate, best-effort query: a missing name shows "Someone".
   const names = new Map<string, string>();
   const ids = [...new Set(theirs.map((r) => r.shared_by))];
   if (ids.length) {
@@ -2521,48 +1691,9 @@ export async function listShares(pairingId: string): Promise<MaterialShare[]> {
   return (data ?? []) as MaterialShare[];
 }
 
-/** Share one into a pairing. Either person in it may, by policy. */
-/**
- * Take a resource off the church shelf.
- *
- * WHY THIS WAS MISSING AND WHY THAT MATTERED. The library could be added to and
- * shared from, and never tidied. A link pasted with a typo, a resource that
- * turned out to be the wrong one, a video a church decided against — all of it
- * stayed on the shelf for good, because the only screen that listed them
- * offered one control and it was Share. The shelf could only ever grow.
- *
- * `materials_drop` has permitted this the whole time: the person who added it,
- * or anybody who manages the church. Only the app was missing, which is the
- * kind of gap nothing reports — no error, no refusal, just an absent button.
- *
- * SHARES GO WITH IT, and that is the database's doing rather than a loop here:
- * `material_shares.material_id` is ON DELETE CASCADE, so removing a resource
- * removes the record of it having been shared in the same statement. Nobody is
- * left with a share pointing at a row that no longer exists.
- *
- * The library ACTIVITY record is deliberately untouched. It says what somebody
- * did at the time they did it, and a record that quietly rewrites itself when
- * the thing it describes is deleted is not a record.
- */
-/**
- * Correct a resource that is already on the shelf.
- *
- * THE GAP: `materials_edit` has been in the database since migration 0008 and
- * NOTHING has ever called it. The library could be added to and taken from and
- * not corrected, so a link with a typo in it, or a title nobody recognises, had
- * exactly one remedy: delete it and type the whole thing again. On the church's
- * starter links -- which are the ones most likely to need a correction, because
- * nobody chose them for this congregation -- that meant losing the entry to fix
- * a character.
- *
- * The address is validated here for the same reason `addMaterial` does it: so a
- * person gets a sentence instead of a constraint violation. The database checks
- * it too, and that is the check that counts.
- *
- * Who may do this is not decided here. The policy allows the person who added
- * it and anybody who manages the church, and refuses everyone else whatever
- * this function is asked to do.
- */
+/** Share one into a pairing. */
+/** Delete a resource. Its shares go with it by cascade; the activity record stays. */
+/** Correct a resource already on the shelf. */
 export async function updateMaterial(id: string, m: {
   title: string;
   /** Left out for a file: a file has no link to change. */
@@ -2587,15 +1718,8 @@ export async function updateMaterial(id: string, m: {
 }
 
 /**
- * Take a resource off the shelf.
- *
- * YOURS IS DELETED. One somebody else added is taken off YOUR shelf and left on
- * everybody else's, because the library is one shared shelf and a Guide
- * pressing Remove on the church's link would otherwise take it from sixteen
- * other people without knowing they had.
- *
- * Leadership deletes outright, which is the moderation the policy already
- * grants them and the only way a genuinely bad link ever leaves the church.
+ * Remove a resource. Your own (or, for leaders, any) is deleted; anyone else's
+ * is only hidden from your shelf.
  */
 export async function deleteMaterial(id: string): Promise<'deleted' | 'hidden'> {
   const supabase = db();
@@ -2610,10 +1734,7 @@ export async function deleteMaterial(id: string): Promise<'deleted' | 'hidden'> 
   const leads = ['admin', 'executive'].includes(String((me as { role?: string } | null)?.role ?? ''));
 
   if (mine || leads) {
-    // THE FILE GOES FIRST. Leadership may remove a file only while they can
-    // still see the resource that points at it, so it cannot wait for the row
-    // to be gone. If it fails the resource is still removed: a file nothing
-    // points at can be opened by nobody but whoever uploaded it.
+    // Delete the file first: leaders can remove it only while the row still points at it.
     if (found?.file_path) {
       await supabase.storage.from('pairing-media').remove([found.file_path]);
     }
@@ -2622,26 +1743,15 @@ export async function deleteMaterial(id: string): Promise<'deleted' | 'hidden'> 
     return 'deleted';
   }
 
-  // Pressing it twice is not an error, it is the same wish expressed again.
   const { error } = await supabase
     .from('material_hides').upsert({ material_id: id, user_id: me_id });
   if (error) throw new Error(error.message);
   return 'hidden';
 }
 
-/**
- * What you have taken off your own shelf.
- *
- * WHY THIS EXISTS AT ALL. Remove is offered to everybody now, and for anybody
- * who is not the owner or leadership it hides rather than deletes. A hide with
- * no way back is a trap: one mis-tap on the church's starter link and that
- * person never sees it again, on any device, with nothing on screen to suggest
- * anything is missing. This is what makes the undo reachable tomorrow and not
- * only in the seconds after the tap.
- */
+/** What you have hidden from your own shelf, so it can be restored. */
 export async function listHiddenMaterials(): Promise<Material[]> {
   const supabase = db();
-  // mh_read returns this person's rows and nobody else's, so no filter here.
   const { data: hidden, error: hidErr } = await supabase
     .from('material_hides').select('material_id');
   if (hidErr) throw new Error(hidErr.message);
@@ -2675,20 +1785,11 @@ export async function shareMaterial(materialId: string, pairingId: string, note?
   });
   if (!error) return;
 
-  // The unique index is the one somebody will hit, so it gets words rather
-  // than a constraint name.
+  // The unique index is the likely refusal; say it in words.
   if (error.code === '23505') throw new Error('That is already shared with them.');
 
-  // WHY, NOT JUST NO. Found by probing the live database: a Guide sharing with
-  // their own Explorer was refused because an open case pauses sharing for that
-  // pairing. All they saw was a row-level-security violation, which humanError
-  // turns into "you do not have permission, ask your Director" -- wrong three
-  // times over. They DO have permission; it is paused rather than withheld; and
-  // it sends them to a Director, a tier this church has none of.
-  //
-  // So when the rules refuse, ask the rules why. The answer comes from the same
-  // function the policy itself is defined in terms of, so it cannot claim
-  // nothing is wrong while the insert is being refused.
+  // When the rules refuse, ask the rules why (for example, sharing is paused
+  // while a case is open), rather than showing a generic permission error.
   if (/row-level security/i.test(error.message)) {
     const { data: why } = await supabase.rpc('why_library_sharing_is_paused', {
       p_pairing: pairingId,
@@ -2699,28 +1800,11 @@ export async function shareMaterial(materialId: string, pairingId: string, note?
   throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// The apps a church already uses.
-// ---------------------------------------------------------------------------
-//
-// A room of links to things that live outside this app: a Bible, a hymnal, the
-// study guide. Leadership curates it; everybody in the church opens it.
-//
-// PLAIN HTTPS, AND THAT IS THE WHOLE TRICK. An https link to an app's own
-// domain is opened by the installed app on both iOS and Android -- Universal
-// Links and App Links -- and by the browser when the app is not installed. A
-// custom scheme like `myapp://` does the opposite: it fails with an error page
-// for everybody who has not installed it. Nothing here needs to know what a
-// phone is.
+// --- The apps a church already uses ---
+// Plain https links: an installed app opens its own domain's links (Universal
+// Links / App Links), and the browser opens them otherwise.
 
-// ---------------------------------------------------------------------------
-// Church announcements.
-// ---------------------------------------------------------------------------
-//
-// Notices the whole church reads and only leadership writes. Kept apart from
-// Community Blogs because they are different things: a blog post belongs to
-// whoever wrote it and carries their name; an announcement belongs to the
-// church and speaks for it.
+// --- Church announcements: read by the whole church, written by leadership ---
 
 export interface Announcement {
   id: string;
@@ -2729,10 +1813,7 @@ export interface Announcement {
   body: string;
   when_text: string;
   is_pinned: boolean;
-  /**
-   * Kept so a card can offer "take it down" to whoever wrote it, not to decide
-   * who reads it. Every notice goes to the whole church; see migration 0045.
-   */
+  /** Kept so its writer can be offered "take it down"; it does not limit readers. */
   author_id: string | null;
   created_at: string;
 }
@@ -2775,60 +1856,35 @@ export async function deleteAnnouncement(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// A face to put to the name.
-// ---------------------------------------------------------------------------
-//
-// The bucket is the one conversation attachments already use, under an
-// avatars/ prefix with its own policies: anybody signed in may READ a face
-// (a Director reading a roster needs to), and you may only ever WRITE inside
-// your own folder.
-//
-// THE PATH IS STORED, NEVER A URL. A signed URL expires, so a stored one is a
-// picture that stops working after an hour with nothing to say why.
+// --- Profile pictures ---
+// Stored under avatars/<person>/ in the conversation bucket. Store the path,
+// never a signed URL, which expires.
 
 const AVATAR_BUCKET = 'pairing-media';
 
 /** Upload a picture and return the path to store on the profile. */
 export async function uploadAvatar(chosen: File): Promise<string> {
-  // The same treatment as a conversation photo, and for the same two reasons:
-  // an avatar is shown at most 72 pixels across, and a picture somebody takes
-  // of themselves is the one most likely to be carrying their home
-  // coordinates.
+  // Resized, and the location removed, like every photo.
   const file = await shrinkImage(chosen);
   if (!file.type.startsWith('image/')) throw new Error('That is not a picture.');
   if (file.size > 5 * 1024 * 1024) throw new Error('That picture is over 5 MB. Try a smaller one.');
   const me = await uid();
-  // The extension is taken from the MIME type, never from the filename, which
-  // is attacker-controlled text that happens to be shown to people.
+  // The extension comes from the MIME type, never from the file name.
   const ext = file.type.split('/')[1]?.replace(/[^a-z0-9]/gi, '').slice(0, 5) || 'jpg';
   const path = `avatars/${me}/${Date.now()}.${ext}`;
   const { error } = await db().storage.from(AVATAR_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type });
   if (error) throw new Error(error.message);
 
-  // A new picture used to JOIN the old one rather than replace it. The name
-  // carries a timestamp, so `upsert` never had an existing key to overwrite,
-  // and every profile picture anybody had ever set was still stored and still
-  // readable by their church. One member was keeping three.
-  //
-  // Cleared here, after the upload has succeeded, so a failed upload can never
-  // cost somebody the picture they already had. Failing to tidy is not worth
-  // failing the upload over, so this never throws: the caller's picture is
-  // changed either way, and the worst case is the leftover we already had.
+  // Remove earlier pictures only after the new one uploaded; best effort.
   await removeOtherAvatars(me, path);
 
   return path;
 }
 
 /**
- * Delete a person's earlier avatars, keeping the one just uploaded.
- *
- * Deleting through the Storage API rather than the `storage.objects` table is
- * not a preference. Supabase refuses direct deletes from that table, because
- * the row is only metadata — removing it strands the image itself in object
- * storage, unreachable and undeletable, since every route to a file goes
- * through the metadata that was just thrown away.
+ * Delete a person's earlier avatars, keeping the one just uploaded. Uses the
+ * Storage API: deleting rows from storage.objects would strand the files.
  */
 async function removeOtherAvatars(person: string, keep: string): Promise<void> {
   try {
@@ -2839,31 +1895,12 @@ async function removeOtherAvatars(person: string, keep: string): Promise<void> {
       .filter((p) => p !== keep);
     if (stale.length) await db().storage.from(AVATAR_BUCKET).remove(stale);
   } catch {
-    // Tidying is best-effort by design. See above.
   }
 }
 
 /**
- * The person you walk with, so they can be seen rather than only named.
- *
- * THE ASK: "Explorer must see the Guide's profile and image so that the
- * Explorer is aware the Guide is not a robot but a real person."
- *
- * The Explorer's screen showed the Guide's NAME and nothing else. Everything
- * else about that screen says the journey is a relationship; the one place the
- * other person appeared was a line of text, which is what a system sounds like
- * rather than somebody who agreed to walk with you.
- *
- * THE COLUMN LIST IS THE ACCESS CONTROL, and it is deliberately short. The
- * policy (profiles_read_paired, migration 0001) would return the whole row: an
- * Explorer may read their Guide's profile and the Guide may read theirs. That
- * is the right rule and it is not a reason to put every field on a screen.
- * Named here are only things a person chose to say about themselves. Not their
- * birthday, not their contact details, nothing the church recorded ABOUT them
- * rather than something they wrote.
- *
- * Returns null rather than throwing when there is nobody: an Explorer waiting
- * to be paired is an ordinary state, not an error.
+ * The profile of the person you walk with: only what they chose to say about
+ * themselves (the column list is deliberate). Null when there is nobody.
  */
 export async function pairedProfile(id: string | null | undefined): Promise<Profile | null> {
   if (!id) return null;
@@ -2876,23 +1913,15 @@ export async function pairedProfile(id: string | null | undefined): Promise<Prof
   return (data as Profile) ?? null;
 }
 
-/**
- * A URL that will load for the next hour, or '' when there is no picture.
- * Called at render time rather than stored, for the reason above.
- */
+/** A URL valid for an hour, or '' when there is no picture. Never store it. */
 export async function avatarUrl(path: string | null | undefined): Promise<string> {
-  // An unsafe path is no picture: the initials stay (lib/live/storage-path.ts).
+  // An unsafe path means no picture; the initials stay (lib/live/storage-path.ts).
   if (!path || !isSafeStoragePath(path)) return '';
   const { data } = await db().storage.from(AVATAR_BUCKET).createSignedUrl(path, 60 * 60);
   return data?.signedUrl ?? '';
 }
 
-/**
- * Every face on a screen in ONE request, keyed by path. A Guide's list or a
- * Director's roster signing each picture separately is one round trip per
- * person, on a phone, before anybody's face appears. A path the caller may not
- * read, or one that no longer exists, is simply absent: the initials stay.
- */
+/** Every face on a screen in one request, keyed by path. Unreadable paths are absent. */
 export async function avatarUrls(paths: (string | null | undefined)[]): Promise<Record<string, string>> {
   const unique = [...new Set(paths.filter((p): p is string => Boolean(p)))];
   if (unique.length === 0) return {};
@@ -2904,20 +1933,7 @@ export async function avatarUrls(paths: (string | null | undefined)[]): Promise<
   return out;
 }
 
-// ---------------------------------------------------------------------------
-// Meetings, for the two people in a pairing.
-// ---------------------------------------------------------------------------
-//
-// THE TABLE HAS BEEN IN THE LIVE DATABASE SINCE MIGRATION 0009 AND NOTHING EVER
-// CALLED IT. The tutorial has had a booking card the whole time; the live app
-// shipped with a private checklist instead, which is a different thing
-// answering a different need. A Guide could remind themselves to call somebody
-// and could not agree a time with them.
-//
-// Nothing new is needed in the database. The policies were already written for
-// exactly this: both people in the pairing may read, create, edit and cancel,
-// and nobody else can see any of it. `in_pairing` is what enforces that, so
-// the Explorer is a full participant here rather than a spectator.
+// --- Meetings: visible to the two people in a pairing ---
 
 export type { MeetingMode };
 export type MeetingStatus = 'proposed' | 'confirmed' | 'declined' | 'cancelled' | 'done';
@@ -2933,15 +1949,9 @@ export interface Meeting {
   status: MeetingStatus;
   created_by: string;
   /**
-   * Who answered it, and what they said when they did.
-   *
-   * DECLINED AND CANCELLED ARE DIFFERENT THINGS and both are kept. Declined is
-   * "I cannot make the time you proposed"; cancelled is "the time we agreed is
-   * off". Collapsing them loses the one fact the other person actually wants,
-   * which is whether there was ever an agreement to break.
-   *
-   * `answer_name` is the name as it was at the moment of answering, so the
-   * record still reads properly after an account is deleted.
+   * Who answered, and what they said. Declined (the proposed time does not work)
+   * and cancelled (an agreed time is off) are kept apart. `answer_name` is the
+   * name at the time, so the record survives a deleted account.
    */
   answered_by: string | null;
   answered_at: string | null;
@@ -2949,12 +1959,7 @@ export interface Meeting {
   answer_note: string | null;
 }
 
-/**
- * When and how every meeting the reader may see went, for the progress report:
- * one query rather than one per Explorer. The rules decide which pairings'
- * meetings come back (`meetings_read`: the two people in the pairing), so a
- * Guide gets their own and leadership gets only pairings they are in.
- */
+/** When and how each visible meeting went, in one query, for the progress report. */
 export async function listMeetingTimes(): Promise<Pick<Meeting, 'pairing_id' | 'starts_at' | 'status'>[]> {
   const { data, error } = await db().from('meetings').select('pairing_id, starts_at, status');
   if (error) throw new Error(error.message);
@@ -2974,17 +1979,9 @@ export async function listMeetings(pairingId: string): Promise<Meeting[]> {
 
 
 /**
- * Places to meet, suggested as somebody types: "jollibee imus" becomes the
- * five branches, each with its street and barangay, to tap one.
- *
- * Asked through the church's own `places` function rather than from the
- * browser, so the only thing that leaves for the map service is the words and
- * a point rounded to the nearest town -- never a name, an account or the
- * member's own internet address. See supabase/functions/places/index.ts.
- *
- * Throws with a sentence a person can read when the search cannot answer; the
- * place box then carries on as an ordinary box, because typing an address by
- * hand always still works.
+ * Places to meet, suggested as somebody types, through the church's own
+ * `places` function: only the words and a town-level point reach the map
+ * service. Throws a readable sentence; typing an address by hand still works.
  */
 export async function searchPlaces(
   q: string,
@@ -3007,14 +2004,7 @@ export async function searchPlaces(
   return Array.isArray(places) ? (places as PlaceSuggestion[]) : [];
 }
 
-/**
- * Propose a time. Either person may, which is the point: an Explorer who can
- * only ever be summoned is not walking alongside anybody.
- *
- * church_id is read from the caller's own profile rather than passed in, because
- * the insert policy checks it against my_church_id() and a value from the
- * browser would only ever be a way to get it wrong.
- */
+/** Propose a time. Either person may. church_id comes from the caller's profile. */
 export async function scheduleMeeting(
   pairingId: string,
   meeting: { title: string; startsAt: string; mode: MeetingMode; location?: string; notes?: string },
@@ -3031,16 +2021,7 @@ export async function scheduleMeeting(
     title: meeting.title.trim() || 'Study time',
     starts_at: meeting.startsAt,
     mode: meeting.mode,
-    // KEPT FOR BOTH KINDS OF MEETING, which is what the column was always for:
-    // 0009 documents it as "a place for in person, or a joining address for
-    // online". This line said otherwise and threw the value away whenever the
-    // meeting was online, so an online meeting could never carry the one thing
-    // it needs — the link to join it. Somebody arranged a Zoom call and then
-    // had to send the link separately, in a message, which is exactly the
-    // errand arranging it on a shared card was meant to remove.
-    //
-    // An empty string is still not a place. Stored as null so the join button,
-    // the map link and the "where" line can all simply test for absence.
+    // A place for in person, or the joining link for online; empty becomes null.
     location: (meeting.location || '').trim() || null,
     notes: (meeting.notes || '').trim() || null,
     created_by: me,
@@ -3048,20 +2029,10 @@ export async function scheduleMeeting(
   if (error) throw new Error(error.message);
 }
 
+/** Every meeting ahead of this caller, across all their pairings. */
 /**
- * Every meeting ahead of this caller, across all their pairings.
- *
- * ONE QUERY, NO PAIRING FILTER, and that is not laziness. The policy on
- * `meetings` is in_pairing(pairing_id), so an unfiltered read already returns
- * exactly the meetings this person is part of and nothing else. Adding a
- * client-side filter would protect nobody and would go wrong the first time
- * somebody forgot it.
- */
-/**
- * Still on: proposed, or agreed. A called-off or declined appointment stays on
- * the lists as a record of who said no, but it is not ahead of anybody, so it
- * is not counted as coming up and offers no way in: a "Join" link on a call
- * that was called off sends somebody into an empty room (seen 7 October 2026).
+ * Proposed or agreed. A cancelled or declined meeting stays on the list as a
+ * record but is not "coming up" and offers no Join link.
  */
 export const isStillOn = (m: Pick<Meeting, 'status'>): boolean => m.status === 'proposed' || m.status === 'confirmed';
 
@@ -3069,11 +2040,7 @@ export async function myUpcomingMeetings(limit = 5): Promise<Meeting[]> {
   const { data, error } = await db()
     .from('meetings')
     .select('id, pairing_id, title, starts_at, mode, location, notes, status, created_by, answered_by, answered_at, answer_name, answer_note')
-    // ANSWERED ONES STAY ON THE LIST. Filtering cancelled out is what made a
-    // refusal look like the card silently disappearing: the person who arranged
-    // their afternoon around it saw nothing at all. They are drawn differently
-    // and they are still there.
-    // An hour's grace, so something starting right now is still "ahead".
+    // Answered meetings stay listed. An hour's grace keeps one starting now "ahead".
     .gte('starts_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
     .order('starts_at', { ascending: true })
     .limit(limit);
@@ -3082,23 +2049,8 @@ export async function myUpcomingMeetings(limit = 5): Promise<Meeting[]> {
 }
 
 /**
- * Answer a proposed time, or call off one that was agreed.
- *
- * ASKED FOR: "If there is a record for acceptance in appointment, there must be
- * a record for cancel too so that Guides and Explorers are informed who accepted
- * and who declined."
- *
- * WHAT WAS WRONG, AND IT WAS WORSE THAN A MISSING BUTTON. Confirming wrote
- * `status = 'confirmed'` and cancelling wrote `status = 'cancelled'`, and the
- * list then filtered cancelled ones out. So a Guide who proposed a time and had
- * it called off did not see a refusal: they saw the card VANISH, which reads as
- * a bug rather than an answer. Nobody was told anything either way.
- *
- * ONE FUNCTION IN THE DATABASE INSTEAD OF THREE TABLE WRITES, because the
- * record and the telling have to happen together or neither is reliable. It
- * writes who answered, their name as it was at the time, when, and why; it
- * notifies the other person; and it refuses the two answers that mean nothing:
- * accepting your own proposal, and answering something already answered.
+ * Answer a proposed time, or call off an agreed one. One database function
+ * records who answered and why and notifies the other person.
  */
 export async function answerMeeting(
   id: string,
@@ -3123,22 +2075,14 @@ export async function declineMeeting(id: string, note?: string): Promise<void> {
   await answerMeeting(id, 'declined', note);
 }
 
-/**
- * Cancel rather than delete. Somebody who arranged their afternoon around this
- * should see that it was called off, not find that it silently never existed.
- */
+/** Cancel rather than delete, so the other person sees it was called off. */
 export async function cancelMeeting(id: string, note?: string): Promise<void> {
   await answerMeeting(id, 'cancelled', note);
 }
 
 /**
- * Meetings across the church, as a leader may know them: when, online or in
- * person, and what state they are in. No title, no location, no notes.
- *
- * A separate function rather than a filtered read of `meetings`, because a
- * policy grants whole ROWS and a row carries the notes. "Leaders see that a
- * meeting is happening, not what was said in it" has to be true of the result
- * that crosses the wire, not of the screen that renders it.
+ * Meetings across the church as a leader may know them: when, online or in
+ * person, and status. No title, location or notes.
  */
 export interface ChurchMeeting {
   starts_at: string;
@@ -3152,9 +2096,7 @@ export async function listChurchMeetings(): Promise<ChurchMeeting[]> {
   return (data ?? []) as ChurchMeeting[];
 }
 
-// ---------------------------------------------------------------------------
-// Recommendations, a Guide's private tools, and lesson series.
-// ---------------------------------------------------------------------------
+// --- Recommendations, a Guide's private notes, and lesson series ---
 
 export interface Recommendation {
   id: string; church_id: string; dm_id: string;
@@ -3193,25 +2135,9 @@ export async function decideRecommendation(
   const supabase = db();
   const me_id = await uid();
 
-  // "INVITE THEM" HAS TO ACTUALLY INVITE THEM.
-  //
-  // It used to set this column and stop. The row then read INVITED, the Guide
-  // who put the name forward saw INVITED, and NOTHING HAD BEEN SENT: no
-  // invitation row, no account, no email. Reported as "does it automatically
-  // send a letter? How come there was no confirm in my mailbox" -- and the
-  // answer was that there was nothing to confirm. Checked against the live
-  // database: the only invitation on file for that address had been created
-  // sixteen days earlier and had expired two days before the button was
-  // pressed.
-  //
-  // The invitation is sent FIRST and the status written only if it succeeded,
-  // so a refusal -- the hourly email allowance is the common one -- leaves the
-  // row pending and the Director able to try again. Writing the status first
-  // would strand the person permanently behind a label saying they had been
-  // dealt with.
-  //
-  // recommended_by carries the Guide who put the name forward, which is what
-  // pairs the two of them automatically once the person is approved.
+  // "Invite them" sends the invitation first and records the status only if it
+  // succeeded, so a refusal leaves the row pending. recommended_by pairs the two
+  // automatically once the person is approved.
   if (status === 'invited') {
     if (!row) throw new Error('Nothing to invite.');
     await inviteMember({
@@ -3232,7 +2158,7 @@ export interface SeekerNote {
   id: string; pairing_id: string; author_id: string; body: string; created_at: string;
 }
 
-/** Private to the author. A leader cannot read these — see migration 0011. */
+/** Private to the author; leaders cannot read these. */
 export async function listNotes(pairingId: string): Promise<SeekerNote[]> {
   const { data, error } = await db().from('seeker_notes').select('*')
     .eq('pairing_id', pairingId).order('created_at', { ascending: false });
@@ -3312,18 +2238,8 @@ export interface LessonAssignment {
 }
 
 /**
- * The studies this person should see, which is not the same list for everybody.
- *
- * A shared study is a TEMPLATE. Once somebody has taken their own copy of one,
- * they should see theirs and not the original, or the shelf shows them the same
- * study twice and only one of them answers to their edits. And a template they
- * have put away should not come back.
- *
- * Filtered here rather than in a policy on purpose. The rows are all genuinely
- * readable by this person -- the original is published to the church and the
- * copy is their own -- so this is a question of what to SHOW, and a policy that
- * hid a published study from one member would be a much larger claim than the
- * one being made.
+ * The studies this person should see: their own copy in place of a shared
+ * template they copied, and not templates they have put away.
  */
 export async function listLessonSeries(): Promise<LessonSeries[]> {
   const { data, error } = await db().from('lesson_series').select('*')
@@ -3339,15 +2255,8 @@ export async function listLessonSeries(): Promise<LessonSeries[]> {
 }
 
 /**
- * The id of THIS PERSON'S version of a study, making one if they have none.
- *
- * The whole of "edit it privately" is this function. A study somebody wrote is
- * theirs and is returned unchanged. A shared study is copied -- the series and
- * every lesson in it, positions kept -- and from then on their edits land on
- * their copy while the original stays exactly as the church published it.
- *
- * The copy is not published. It is visible to its author through ls_read and to
- * nobody else, which is what "privately" has to mean to be worth saying.
+ * This person's own version of a study, copying a shared one (series and
+ * lessons) the first time. The copy is private to its author.
  */
 export async function myVersionOf(seriesId: string): Promise<string> {
   const supabase = db();
@@ -3360,8 +2269,7 @@ export async function myVersionOf(seriesId: string): Promise<string> {
   const original = series as LessonSeries;
   if (original.author_id === me_id) return original.id;
 
-  // Already taken one? The unique index makes this at most one row, so a second
-  // press cannot leave somebody with two versions and no way to tell them apart.
+  // The unique index allows at most one copy per person.
   const { data: had } = await supabase
     .from('lesson_series').select('id')
     .eq('copied_from', seriesId).eq('author_id', me_id).maybeSingle();
@@ -3379,8 +2287,7 @@ export async function myVersionOf(seriesId: string): Promise<string> {
   if (makeErr) throw new Error(makeErr.message);
   const mineId = (made as { id: string }).id;
 
-  // The lessons come with it, or the copy is an empty shelf with a familiar
-  // name on it. Positions are kept so "the third study" is still the third.
+  // Copy the lessons too, keeping their positions.
   const { data: lessons } = await supabase
     .from('lessons').select('title, body, position')
     .eq('series_id', seriesId).order('position', { ascending: true });
@@ -3396,7 +2303,7 @@ export async function myVersionOf(seriesId: string): Promise<string> {
         position: l.position,
       })),
     );
-    // A copy with no lessons is worse than none: it looks finished and is not.
+    // A copy without its lessons would look finished and is not; undo it.
     if (copyErr) {
       await supabase.from('lesson_series').delete().eq('id', mineId);
       throw new Error(copyErr.message);
@@ -3415,8 +2322,7 @@ export async function addLessonSeries(
   const { data, error } = await supabase.from('lesson_series').insert({
     church_id: me.church_id, title: m.title.trim(),
     topic: m.topic.trim() || 'General', description: m.description?.trim() || null,
-    // Stamped so a Guide owns what they wrote. The write policy checks it
-    // against the caller, so this cannot be used to write as somebody else.
+    // The write policy checks author_id against the caller.
     author_id: me_id,
     is_published: m.publish ?? false,
   }).select('id').single();
@@ -3430,27 +2336,10 @@ export async function setSeriesPublished(id: string, published: boolean): Promis
   if (error) throw new Error(error.message);
 }
 
+/** Rename a series or move it to another topic. */
 /**
- * Rename a series, or move it to another topic.
- *
- * WHY THIS WAS MISSING AND WHY THAT MATTERED. A Guide could write a series,
- * publish it and delete it, but never correct it. A typo in a title, or a
- * series filed under the wrong topic, could only be fixed by deleting the whole
- * thing and writing every study inside it again — so in practice it was not
- * fixed, and the shelf carried the mistake.
- *
- * The database has allowed this the whole time: `ls_edit` permits an UPDATE
- * from the author or anybody who manages the church, and pins `church_id` to
- * the caller's own. Only the app was missing. Nothing here loosens that — the
- * policy still decides, and a Guide editing somebody else's series gets no rows
- * back rather than a change.
- */
-/**
- * Rename a study. Yours if it is yours, your copy of it if it is not.
- *
- * Returns the id that was actually written, which the screen needs: after the
- * first edit of a shared study the person is looking at a different row, and a
- * screen still pointing at the original would show their change vanish.
+ * Rename a study: yours directly, or your copy of a shared one. Returns the id
+ * actually written, which differs after the first edit of a shared study.
  */
 export async function updateLessonSeries(
   id: string, m: { title: string; topic: string; description?: string | null },
@@ -3458,23 +2347,8 @@ export async function updateLessonSeries(
   const title = m.title.trim();
   if (!title) throw new Error('A series needs a title.');
   const mineId = await myVersionOf(id);
-  // ASK FOR THE ROW BACK, AND SAY SO IF NOTHING CHANGED.
-  //
-  // Without `.select()`, an UPDATE that matches NO ROWS is not an error --
-  // PostgREST returns success and the screen says "Saved". So any policy that
-  // filters the row out produces the worst possible outcome: a person presses
-  // Save, sees no error, and nothing has changed. From their side that is not
-  // a permission problem, it is "this app does not work", and there is nothing
-  // on screen for them to report.
-  //
-  // Reported as exactly that: "Explorers can't edit any Lesson studies." The
-  // database turned out to allow it for all forty-four of them, which is
-  // precisely why a silent no-op is so expensive to diagnose -- it looks
-  // identical whether the cause is permissions, a stale build, or a bug here.
-  // ONLY WRITE THE LINE WHEN A LINE WAS OFFERED. This wrote
-  // `description: null` whenever the caller left it out, and the Rename form
-  // left it out -- so renaming one of the seeded series silently erased the
-  // sentence underneath it, and nothing on screen said a word about it.
+  // Ask for the row back: an UPDATE matching no rows is not an error, and the
+  // screen must not say "Saved" over nothing. Send description only if given.
   const patch: Record<string, string | null> = {
     title,
     topic: m.topic.trim() || 'General',
@@ -3490,14 +2364,7 @@ export async function updateLessonSeries(
   return mineId;
 }
 
-/**
- * Put a study away.
- *
- * YOURS IS DELETED. A shared one is not, because it is not yours to take off
- * seventeen other people's shelves -- it is hidden for you, by way of a copy
- * that holds nothing but that fact. The church's version stays exactly where it
- * was for everybody who has not made the same choice.
- */
+/** Put a study away: yours is deleted; a shared one is hidden for you only. */
 export async function deleteLessonSeries(id: string): Promise<void> {
   const supabase = db();
   const me_id = await uid();
@@ -3513,8 +2380,7 @@ export async function deleteLessonSeries(id: string): Promise<void> {
     return;
   }
 
-  // Already have a copy of it? Then hiding it is a flag on the copy rather than
-  // a second row, or the unique index would refuse the insert.
+  // If a copy exists, hiding is a flag on it (the unique index allows one copy).
   const { data: had } = await supabase
     .from('lesson_series').select('id').eq('copied_from', id).eq('author_id', me_id).maybeSingle();
   if (had) {
@@ -3536,9 +2402,7 @@ export async function deleteLessonSeries(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Feedback, which for months went to the sender's own browser and nowhere else.
-// ---------------------------------------------------------------------------
+// --- Feedback ---
 
 export interface Feedback {
   id: string;
@@ -3553,12 +2417,7 @@ export interface Feedback {
   author_name?: string | null;
 }
 
-/**
- * What people have sent, newest first.
- *
- * Leadership sees everything; anybody else sees only what they sent
- * themselves, which is what the policy says and is not re-decided here.
- */
+/** What people have sent, newest first: everything for leaders, your own for anyone else. */
 export async function listFeedback(): Promise<Feedback[]> {
   const { data, error } = await db()
     .from('feedback')
@@ -3580,12 +2439,7 @@ export async function listFeedback(): Promise<Feedback[]> {
   }));
 }
 
-/**
- * Mark one as dealt with, so the list is a queue rather than a wall.
- *
- * There is deliberately no way to delete feedback. A message a leader can
- * quietly remove is a message nobody can rely on having been heard.
- */
+/** Mark one as dealt with. There is deliberately no delete. */
 export async function markFeedbackHandled(id: string, handled: boolean): Promise<void> {
   const me_id = await uid();
   const { error } = await db().from('feedback').update({
@@ -3595,9 +2449,7 @@ export async function markFeedbackHandled(id: string, handled: boolean): Promise
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Lessons inside a series, and the handouts attached to them.
-// ---------------------------------------------------------------------------
+// --- Lessons and their handouts ---
 
 export async function listLessons(seriesId: string): Promise<Lesson[]> {
   const { data, error } = await db().from('lessons')
@@ -3608,13 +2460,7 @@ export async function listLessons(seriesId: string): Promise<Lesson[]> {
   return (data ?? []) as Lesson[];
 }
 
-/**
- * Add a study to a series. To YOUR version of it, if the series is shared.
- *
- * Without this the series could be edited privately and added to universally,
- * which is the worst of both: somebody tidying their own copy would post a new
- * study into seventeen other people's shelves without being told they had.
- */
+/** Add a study to a series: to your own copy, if the series is shared. */
 export async function addLesson(
   seriesId: string, m: { title: string; body: string; position?: number },
 ): Promise<string> {
@@ -3631,28 +2477,10 @@ export async function addLesson(
   return (data as { id: string }).id;
 }
 
+/** Correct a study. */
 /**
- * Correct a study that is already written.
- *
- * Same gap as `updateLessonSeries` above, one level down, and the one people
- * hit first: the study itself is the thing being taught from, so it is the
- * thing most likely to need a word changed the night before it is used. Delete
- * and rewrite loses every handout attached to it, because the files hang off
- * the lesson row.
- *
- * `lessons_edit` has always permitted this for the author and for anybody
- * managing the church. The empty-title guard is here rather than in the
- * component so it holds for every caller.
- */
-/**
- * The lesson in THIS PERSON'S version of whatever series a lesson belongs to.
- *
- * Matched by `position`, which is the only thing that survives a copy and means
- * the same on both sides: the third study is still the third study. Ids cannot
- * be used because the copy's rows are new rows, and titles cannot because the
- * point of the exercise is that somebody is about to change one.
- *
- * Returns the id to write, having made the copy if this is the first edit.
+ * The matching lesson in this person's copy of its series, matched by
+ * position (copies get new ids). Makes the copy on the first edit.
  */
 async function myVersionOfLesson(lessonId: string): Promise<string> {
   const supabase = db();
@@ -3665,8 +2493,7 @@ async function myVersionOfLesson(lessonId: string): Promise<string> {
   const row = lesson as { id: string; series_id: string | null; position: number; author_id: string };
   if (row.author_id === me_id) return row.id;
 
-  // A lesson with no series cannot be copied anywhere sensible, and one that is
-  // not yours is then not yours to change.
+  // A lesson outside a series cannot be copied, so it is not yours to change.
   if (!row.series_id) throw new Error('That study belongs to somebody else.');
 
   const mineSeries = await myVersionOf(row.series_id);
@@ -3683,8 +2510,7 @@ export async function updateLesson(
   const title = m.title.trim();
   if (!title) throw new Error('A study needs a title.');
   const mineId = await myVersionOfLesson(id);
-  // Same reason as updateLessonSeries: a zero-row update is a silent success,
-  // and a silent success is indistinguishable from a broken app.
+  // Ask for the row back: a zero-row update would otherwise look like success.
   const { data, error } = await db().from('lessons').update({
     title, body: m.body.trim(),
   }).eq('id', mineId).select('id');
@@ -3694,12 +2520,7 @@ export async function updateLesson(
   }
 }
 
-/**
- * Remove a study from a series.
- *
- * On a shared series this copies it first and deletes from the copy, so the
- * church's version keeps all of its studies and this person's version does not.
- */
+/** Remove a study from a series; on a shared series, from your copy only. */
 export async function deleteLesson(id: string): Promise<void> {
   const mineId = await myVersionOfLesson(id);
   const { error } = await db().from('lessons').delete().eq('id', mineId);
@@ -3720,15 +2541,14 @@ export async function listLessonFiles(lessonIds: string[]): Promise<Record<strin
 }
 
 export async function attachLessonFile(lessonId: string, chosen: File): Promise<void> {
-  // A handout photographed on a phone loses its location like any other photo.
+  // Photographed handouts lose their location like any photo.
   const file = await shrinkImage(chosen);
   if (file.size > 10 * 1024 * 1024) throw new Error('That file is over 10 MB.');
   const supabase = db();
   const me_id = await uid();
   const { data: me } = await supabase.from('profiles').select('church_id').eq('id', me_id).maybeSingle();
   if (!me?.church_id) throw new Error('Your account is not in a church yet.');
-  // The stored name is what a reader sees; the PATH never contains it, because
-  // a filename is text somebody chose and a path is used to build URLs.
+  // The path never contains the file name.
   const ext = (file.name.split('.').pop() || '').replace(/[^a-z0-9]/gi, '').slice(0, 6);
   const path = `lessons/${me_id}/${lessonId}-${Date.now()}${ext ? '.' + ext : ''}`;
   const up = await supabase.storage.from('pairing-media')
@@ -3739,7 +2559,7 @@ export async function attachLessonFile(lessonId: string, chosen: File): Promise<
     name: file.name.slice(0, 200), path, mime: file.type || null, size_bytes: file.size,
   });
   if (error) {
-    // The file comes back out, so a failure never leaves one nobody can reach.
+    // Remove the upload again if the row fails.
     await supabase.storage.from('pairing-media').remove([path]);
     throw new Error(error.message);
   }
@@ -3751,14 +2571,7 @@ export async function lessonFileUrl(path: string): Promise<string> {
   return data?.signedUrl ?? '';
 }
 
-/**
- * Take a handout off a study, and delete the file itself.
- *
- * It used to delete only the row, which left the file in storage for good:
- * nobody could open it any more (the read rule asks for the row), but the
- * church kept paying to hold it. The file goes first, while the row still
- * says it is yours; if that fails the handout is still taken off the study.
- */
+/** Take a handout off a study and delete the file (file first, while the row proves ownership). */
 export async function removeLessonFile(id: string): Promise<void> {
   const supabase = db();
   const { data: row } = await supabase.from('lesson_files').select('path').eq('id', id).maybeSingle();
@@ -3774,15 +2587,7 @@ export async function listAssignments(): Promise<LessonAssignment[]> {
   return (data ?? []) as LessonAssignment[];
 }
 
-// ---------------------------------------------------------------------------
-// Reading, and how far through somebody is.
-// ---------------------------------------------------------------------------
-//
-// A read is recorded by the person doing the reading and by nobody else. The
-// database enforces that (`lr_write` checks `user_id = auth.uid()`), so a
-// Director cannot tick lessons off on an Explorer's behalf even by calling the
-// API directly -- which is the only reason the number on the bar means
-// anything.
+// --- Reading progress: each person records only their own reads ---
 
 /** How far through a set of lessons somebody has got. */
 export interface Reading {
@@ -3790,13 +2595,7 @@ export interface Reading {
   total: number;
 }
 
-/**
- * Every lesson, as an id and the series it sits in.
- *
- * ONE QUERY, NOT ONE PER SERIES. A Director opening a member's card wants the
- * denominator for the whole shelf; asking `listLessons` per series turned that
- * into a dozen round trips on a phone connection.
- */
+/** Every lesson as an id and its series, in one query. */
 export async function listLessonIndex(): Promise<{ id: string; series_id: string }[]> {
   const { data, error } = await db().from('lessons')
     .select('id, series_id')
@@ -3805,15 +2604,7 @@ export async function listLessonIndex(): Promise<{ id: string; series_id: string
   return (data ?? []) as { id: string; series_id: string }[];
 }
 
-/**
- * The lessons a member has marked as read.
- *
- * Returns an empty list rather than throwing when the reader is not entitled to
- * see them: `lr_read` simply matches no rows, which is a legitimate answer and
- * not an error. The caller draws "nothing read yet", which is also what a
- * genuinely empty history looks like -- and the two being indistinguishable is
- * the point, because the alternative leaks who has a Guide.
- */
+/** Lessons a member has marked as read; empty when the caller may not see them. */
 export async function listReadsFor(userId: string): Promise<string[]> {
   const { data, error } = await db().from('lesson_reads')
     .select('lesson_id')
@@ -3832,9 +2623,7 @@ export async function markLessonRead(lessonId: string): Promise<void> {
   const me_id = await uid();
   const { error } = await supabase.from('lesson_reads')
     .insert({ lesson_id: lessonId, user_id: me_id });
-  // MARKING SOMETHING TWICE IS NOT A MISTAKE WORTH REPORTING. Two taps, or a
-  // tap on a phone that had already saved it, both land here; the row exists
-  // either way, which is what the person asked for.
+  // Marking twice is fine: the row exists either way.
   if (error && error.code !== '23505') throw new Error(error.message);
 }
 
@@ -3846,21 +2635,14 @@ export async function unmarkLessonRead(lessonId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Lessons and notifications.
-// ---------------------------------------------------------------------------
-
-// Lesson and addLesson used to be declared here as well, unused and
-// church-wide. They are gone: the series-scoped pair above replaced them, and
-// two functions with the same name doing nearly the same thing is how the
-// wrong one gets called later.
+// --- Notifications ---
 
 export interface AppNotification {
   id: string; user_id: string; type: string;
   title: string; body: string; read_at: string | null; created_at: string;
 }
 
-/** Only ever this caller's own — enforced by policy, not by this query. */
+/** Only the caller's own. */
 export async function listNotifications(): Promise<AppNotification[]> {
   const { data, error } = await db().from('notifications').select('*')
     .order('created_at', { ascending: false }).limit(50);
@@ -3880,11 +2662,9 @@ export async function markAllNotificationsRead(): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Safeguarding
-// ---------------------------------------------------------------------------
+// --- Safeguarding ---
 
-/** The five reasons offered. Kept in step with the database's CHECK constraint. */
+/** The five reasons offered; keep in step with the database CHECK constraint. */
 export type ReportReason = 'inappropriate' | 'harassment' | 'unsafe' | 'spam' | 'other';
 
 export interface LiveReport {
@@ -3906,16 +2686,8 @@ export interface LiveReport {
 }
 
 /**
- * Raise a report about another member.
- *
- * Through a definer function rather than an insert, and the reason is worth
- * stating: the church is taken from the caller's own profile, not from an
- * argument. A browser that could name its own church_id could file a report
- * into a church it does not belong to. The function also refuses a subject
- * outside your church — which, done as an error rather than a silent success,
- * would otherwise be a way to discover that a stranger exists.
- *
- * The person reported is NOT notified. Every Director of the church is.
+ * Report another member. The church comes from the caller's profile. The
+ * person reported is not notified; every Director of the church is.
  */
 export async function reportPerson(args: {
   subjectId: string;
@@ -3934,30 +2706,16 @@ export async function reportPerson(args: {
   if (error) throw new Error(error.message);
   const reportId = String(data ?? '');
 
-  // THE REPORT IS FILED FIRST AND THE FILES FOLLOW, and if a file fails the
-  // report still stands. The alternative — upload everything, then file —
-  // means a dropped connection halfway through loses the report itself, and a
-  // safeguarding report that vanished because a photo did not upload is the
-  // worst possible trade. Whatever arrives is attached; the Director sees the
-  // written account either way.
+  // File the report first and attach evidence after, so a failed upload cannot lose it.
   if (reportId && args.evidence?.length) {
     for (const file of args.evidence) {
-      try { await attachReportEvidence(reportId, file); } catch { /* the report stands */ }
+      try { await attachReportEvidence(reportId, file); } catch { }
     }
   }
   return reportId;
 }
 
-/**
- * Attach one file to a report you raised.
- *
- * THE PATH IS `reports/<you>/…` AND THAT IS LOAD-BEARING. The storage policy
- * only lets somebody write into their own folder, and the definer function
- * refuses a row whose path is not in the caller's folder — so a reporter cannot
- * attach a row pointing at somebody else's object and read it back through a
- * Director's screen. Two checks for one rule, on purpose: the storage one stops
- * the upload, the database one stops the reference.
- */
+/** Attach one file to a report you raised. Files live under reports/<you>/. */
 export async function attachReportEvidence(reportId: string, file: File): Promise<void> {
   if (file.size > 10 * 1024 * 1024) throw new Error('That file is over 10 MB.');
   const supabase = db();
@@ -4007,13 +2765,7 @@ export async function reportFileUrl(path: string): Promise<string> {
   return data?.signedUrl ?? '';
 }
 
-/**
- * The church's reports. Directors and Executive Directors only.
- *
- * There is no "my reports" view for the person who raised one, deliberately.
- * They are told it went through at the time; every extra read path is another
- * way for the wrong person to end up holding this.
- */
+/** The church's reports. Directors and Executive Directors only. */
 export async function listReports(): Promise<LiveReport[]> {
   const { data, error } = await db()
     .from('reports')
@@ -4023,17 +2775,7 @@ export async function listReports(): Promise<LiveReport[]> {
   return (data ?? []) as LiveReport[];
 }
 
-/**
- * Close a report.
- *
- * `dismissed` — a Director looked and judged there was nothing to answer — is
- * a real outcome and deliberately as easy to record as the other. Making the
- * innocent finding harder to file pushes Directors towards punishing somebody
- * to clear a queue.
- *
- * There is no delete. The table has no delete policy at all, so this is not a
- * convention that a future change could quietly drop.
- */
+/** Close a report. "Dismissed" is as easy to record as any outcome. Reports cannot be deleted. */
 export async function resolveReport(
   id: string,
   status: 'actioned' | 'dismissed',
@@ -4048,20 +2790,9 @@ export async function resolveReport(
   if (data !== true) throw new Error('That report could not be updated.');
 }
 
-// ---------------------------------------------------------------------------
-// Files in a conversation
-// ---------------------------------------------------------------------------
-//
-// The note further up this file said object storage was "a later, deliberate
-// decision with a quota attached". This is that decision. The demo keeps
-// attachments in the sender's own IndexedDB — a real privacy property, and
-// also the reason the bytes never travel: the row syncs and the file does not.
-// A Guide sending an Explorer a study sheet needs the file to arrive.
-//
-// Private bucket, 10 MB a file, a fixed list of types. Both the row and the
-// object are guarded by membership of the pairing (migration 0022) — a row
-// anyone could read leaks filenames, and an object anyone could fetch leaks
-// the file, a storage path being guessable in a way a row id is not.
+// --- Files in a conversation ---
+// Private bucket, 10 MB a file, a fixed list of types; readable only by the
+// two people in the pairing.
 
 export interface PairingFile {
   id: string;
@@ -4075,7 +2806,7 @@ export interface PairingFile {
 }
 
 const MEDIA_BUCKET = 'pairing-media';
-/** Kept in step with the bucket's own file_size_limit in migration 0022. */
+/** Keep in step with the bucket's file_size_limit. */
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 export async function listPairingFiles(pairingId: string): Promise<PairingFile[]> {
@@ -4089,33 +2820,14 @@ export async function listPairingFiles(pairingId: string): Promise<PairingFile[]
 }
 
 /**
- * Send a file.
- *
- * THE UPLOAD HAPPENS FIRST AND THE ROW SECOND, and if the row fails the object
- * is removed again. The other order leaves a row pointing at nothing, which
- * renders as a broken attachment for ever — worse than a failure the sender
- * can see and retry.
- *
- * The path is `<pairing_id>/<uuid>` and never the person's filename. Filenames
- * carry spaces, accents and occasionally somebody's full name; the title is
- * kept in the row, where it belongs.
+ * Send a file: upload first, then the row (removing the upload if the row
+ * fails). The path is <pairing_id>/<uuid>, never the file name.
  */
 export async function sendPairingFile(pairingId: string, original: File): Promise<PairingFile> {
   const client = db();
 
-  // SHRUNK BEFORE IT IS MEASURED, so a 4 MB photo from a phone camera is not
-  // refused for being over a limit it does not need to be over. Fifteen of the
-  // sixteen files a real church had sent each other were photographs averaging
-  // 2.3 MB, and a conversation shows them a few hundred pixels wide.
-  //
-  // It also drops the EXIF, which is where a phone writes the coordinates the
-  // picture was taken at. Sending a photo of a Bible page to your Guide should
-  // not tell them where you live.
+  // Resize first, so phone photos fit the limit, and drop the location data.
   const file = await shrinkImage(original);
-  // uid() reads the session this app verified server-side and stored itself.
-  // Asking Supabase Auth again would be a second round trip for something
-  // already known, and tests/security-invariants.mjs forbids it by name — it
-  // caught this exact line on the first attempt.
   const me = await uid();
 
   if (file.size > MAX_ATTACHMENT_BYTES) {
@@ -4125,12 +2837,7 @@ export async function sendPairingFile(pairingId: string, original: File): Promis
     );
   }
 
-  // uuid(), not crypto.randomUUID(). The latter is a SECURE-CONTEXT api: it is
-  // undefined over plain http on a LAN address, and absent in Safari before
-  // 15.4. Unguarded it throws rather than degrading, so sending a photo failed
-  // outright with nothing the person could act on. lib/uuid.ts exists for this
-  // and lib/localMedia.ts already used it; this one call site did not, which is
-  // exactly the shape of bug a helper is supposed to prevent.
+  // uuid(), not crypto.randomUUID(): that needs a secure context and Safari 15.4+.
   const path = `${pairingId}/${uuid()}`;
   const { error: upErr } = await client.storage
     .from(MEDIA_BUCKET)
@@ -4142,8 +2849,7 @@ export async function sendPairingFile(pairingId: string, original: File): Promis
     .insert({
       pairing_id: pairingId,
       owner_id: me,
-      // Short and plain: the database refuses more than 200 characters and the
-      // invisible characters that reverse a name (lib/talk/thread.ts).
+      // The database refuses titles over 200 characters or with direction-override characters.
       title: plainTitle(file.name) || 'Attachment',
       mime: file.type || '',
       size: file.size,
@@ -4153,66 +2859,33 @@ export async function sendPairingFile(pairingId: string, original: File): Promis
     .single();
 
   if (error) {
-    // Do not leave bytes nobody can reach.
     await client.storage.from(MEDIA_BUCKET).remove([path]).catch(() => {});
     throw new Error(error.message);
   }
   return data as PairingFile;
 }
 
-/**
- * A URL the browser can actually open.
- *
- * Signed and short-lived, because the bucket is private. One hour: long enough
- * to read a PDF on a slow connection, short enough that a URL pasted into a
- * group chat stops working.
- */
+/** A signed URL valid for one hour (the bucket is private). */
 export async function pairingFileUrl(path: string): Promise<string> {
-  // The path was written by the other person in the conversation, and this
-  // runs with YOUR sign-in the moment a picture is drawn. lib/live/storage-path.ts.
+  // The path was written by the other person; check it before signing (lib/live/storage-path.ts).
   const { data, error } = await db().storage.from(MEDIA_BUCKET).createSignedUrl(safeStoragePath(path), 3600);
   if (error) throw new Error(error.message);
   return data.signedUrl;
 }
 
-/** Take back something you sent. Only the sender; see migration 0022. */
+/** Take back something you sent. Only the sender may. */
 export async function removePairingFile(file: PairingFile): Promise<void> {
   const client = db();
   const { error } = await client.from('pairing_media').delete().eq('id', file.id);
   if (error) throw new Error(error.message);
-  // The row is what the screen reads, so its removal is what matters and is
-  // done first. An orphaned object is invisible and costs a few kilobytes; an
-  // orphaned row is a broken attachment on somebody's screen.
+  // Remove the row first: an orphaned file is invisible; an orphaned row is a broken attachment.
   await client.storage.from(MEDIA_BUCKET).remove([file.path]).catch(() => {});
 }
 
-// ---------------------------------------------------------------------------
-// The trial room: suspending a member, and removing one
-// ---------------------------------------------------------------------------
-//
-// A church running this has no other lever. If somebody sends an Explorer
-// something they should not have, the leadership must be able to act tonight,
-// from a phone, without a developer. Reports gave them the evidence; this is
-// the response.
-//
-// JAIL and KICK are different acts and are kept different:
-//
-//   suspendMember   the account is switched OFF. They stay in the church and
-//                   keep their history, and cannot sign in at all -- migration
-//                   0026 bans the auth account and deletes their live sessions,
-//                   so somebody already signed in is out at once rather than at
-//                   token expiry. Reversible: restoreMember switches it back on.
-//                   This is both "we are looking into it" and "you are out
-//                   until we talk".
-//   removeMember    they are gone.
-//
-// WHO MAY DO WHAT IS DECIDED IN THE DATABASE (migration 0023), never here. An
-// Executive Director may act on anyone in a church they oversee; a Director on
-// Guides and Explorers only; nobody on themselves; and nobody at all on the
-// Head Executive Director, who is the root of authority and the one account
-// that can appoint executives again afterwards (migration 0025). Each call
-// returns 'ok' or the reason it was refused, because a leader trying to stop
-// something deserves a sentence, not a button that does nothing.
+// --- Suspending and removing members ---
+// suspendMember switches the account off at once (it keeps its history and can
+// be restored); removeMemberByLeader deletes it. The database decides who may
+// act on whom; each call returns 'ok' or the reason it was refused.
 
 /** Suspend ("jail"). Returns 'ok', or the reason it was refused. */
 export async function suspendMember(userId: string, reason?: string): Promise<string> {
@@ -4224,7 +2897,7 @@ export async function suspendMember(userId: string, reason?: string): Promise<st
   return String(data ?? 'Something went wrong.');
 }
 
-/** Lift a suspension ("unjail"). Pairings are NOT restored — see 0023. */
+/** Lift a suspension. Pairings are not restored. */
 export async function restoreMember(userId: string): Promise<string> {
   const { data, error } = await db().rpc('restore_member', { p_target: userId });
   if (error) throw new Error(error.message);
@@ -4233,15 +2906,9 @@ export async function restoreMember(userId: string): Promise<string> {
 
 /** Remove from the church entirely ("kick"), under the same authority rules. */
 export async function removeMemberByLeader(userId: string): Promise<string> {
-  // Their files go FIRST, and the order is not a preference. This call deletes
-  // the account, `profiles` goes with it by cascade, and from that moment no
-  // rule can say which church the leftover files belonged to — so nobody can
-  // ever delete them again. Three such photographs are already stranded that
-  // way, left by removals that happened before this existed.
-  //
-  // It cannot be done in a database trigger: Supabase refuses direct deletes
-  // from `storage.objects`, and a row deleted there strands the image rather
-  // than removing it. Only the Storage API deletes both halves.
+  // Delete their stored files first: once the account (and so the profile) is
+  // gone, nothing can tell which church the files belonged to. Only the Storage
+  // API removes both the file and its row.
   await removeStoredFilesFor(userId);
 
   const { data, error } = await db().rpc('remove_member_by_leader', { p_target: userId });
@@ -4249,13 +2916,7 @@ export async function removeMemberByLeader(userId: string): Promise<string> {
   return String(data ?? 'Something went wrong.');
 }
 
-/**
- * Clear everything a member has stored, before the account that owns it goes.
- *
- * Best-effort on purpose. A leftover picture is a privacy problem worth
- * chasing; it is not a reason to refuse to remove somebody who needs removing
- * today, which is what throwing here would mean.
- */
+/** Clear everything a member has stored before their account goes. Best effort. */
 async function removeStoredFilesFor(person: string): Promise<void> {
   for (const prefix of ['avatars', 'lessons']) {
     try {
@@ -4264,36 +2925,20 @@ async function removeStoredFilesFor(person: string): Promise<void> {
       await db().storage.from(AVATAR_BUCKET)
         .remove(data.map((f) => `${prefix}/${person}/${f.name}`));
     } catch {
-      // See above.
     }
   }
 }
 
-/**
- * Who this caller may act on, and how it would be refused if not.
- *
- * Asked per person so the screen can hide what would fail rather than offering
- * a Director a button that refuses. The database still decides; this only
- * spares somebody the experience of being told no.
- */
+/** Whether the caller may act on this person, so the screen can hide what would fail. */
 export async function disciplineCheck(userId: string): Promise<string> {
   const { data, error } = await db().rpc('discipline_check', { p_target: userId });
   if (error) return 'unavailable';
   return String(data ?? 'unavailable');
 }
 
-// ---------------------------------------------------------------------------
-// The trial room, as a court
-// ---------------------------------------------------------------------------
-//
-// Reports say what one person believes happened. A trial is where both sides
-// say it in their own words, in one place, before anybody is suspended or
-// removed -- and where what was said survives the decision.
-//
-// THE JUDGE RULE, because it is the one that surprises people: the Director who
-// opens a case is head judge from the first moment. Calling for an Executive
-// Director does not vacate the seat; it only offers it. If no Executive ever
-// answers, the Director decides the case. There is no countdown anywhere.
+// --- Trials ---
+// Both sides answer in their own words before a decision. The Director who
+// opens a case is head judge until an Executive Director takes the seat.
 
 export interface Trial {
   id: string;
@@ -4329,13 +2974,7 @@ export async function listTrials(): Promise<Trial[]> {
   return (data ?? []) as Trial[];
 }
 
-/**
- * Open a case against someone, and summon the other side with them.
- *
- * `otherId` names the other party directly; `reportId` takes them from the
- * report that prompted it. Either way both sides end up able to read the case
- * and answer it, which is the entire point of holding one.
- */
+/** Open a case and summon the other side (named directly or taken from a report). */
 export async function openTrial(args: {
   subjectId: string;
   summary: string;
@@ -4366,11 +3005,7 @@ export async function takeHeadJudge(trialId: string): Promise<string> {
   return String(data ?? 'Something went wrong.');
 }
 
-/**
- * Decide the case. Only the head judge, and the verdict is carried out by the
- * same functions the member list uses, so a court cannot reach past the
- * authority its judge already has.
- */
+/** Decide the case. Only the head judge; the verdict uses the member-list functions. */
 export async function closeTrial(
   trialId: string,
   verdict: 'dismissed' | 'suspended' | 'removed',
@@ -4396,15 +3031,7 @@ export async function listStatements(trialId: string): Promise<TrialStatement[]>
   return (data ?? []) as TrialStatement[];
 }
 
-/**
- * Say something in a case.
- *
- * A SUSPENDED PERSON MAY STILL DO THIS. Suspension stops them messaging, and
- * if it also silenced them here then suspending somebody pending a hearing
- * would take away their defence -- so every trial after a precautionary
- * suspension would be one-sided by construction. The policy in 0024
- * deliberately does not consult suspended_at.
- */
+/** Say something in a case. A suspended person still may, so they can answer. */
 export async function speakInTrial(trialId: string, body: string): Promise<void> {
   const me = await uid();
   const { error } = await db()
@@ -4413,18 +3040,8 @@ export async function speakInTrial(trialId: string, body: string): Promise<void>
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// Guilds
-// ---------------------------------------------------------------------------
-//
-// A pairing is one Guide and one Explorer. A guild is the group a Director
-// wants to name -- a campus, a cohort, a Sabbath team -- and naming it is the
-// part that matters to the people in it.
-//
-// An Explorer is never handed the roll. They can see the guild they are in and
-// how many are in it; the names come back as an empty list for them, because a
-// group feature that quietly published a roster of everybody being discipled
-// at this church would undo the privacy the one-to-one conversations exist for.
+// --- Guilds ---
+// An Explorer sees their guild and its size, never the list of names.
 
 export interface GuildMember {
   id: string;
@@ -4496,16 +3113,9 @@ export interface GuildActivityPost {
   amen_count: number;
   i_amen: boolean;
   created_at: string;
-  /** Set when the author corrected it. The previous wording is kept. */
+  /** Set when the author corrected it. */
   edited_at?: string | null;
-  /**
-   * Set when the post was taken down. `body` is empty when this is set.
-   *
-   * THERE IS NO `deleted_by` HERE ON PURPOSE. The wall is pseudonymous -- the
-   * feed returns a label and never an author id -- so a note built from an id
-   * would undo that. `removed_by_leader` says whether it was the author or
-   * leadership, which is all the screen needs and all it may know.
-   */
+  /** Set when the post was taken down; `body` is then empty. */
   deleted_at?: string | null;
   removed_by_leader?: boolean;
 }
@@ -4520,13 +3130,7 @@ export async function listGuildActivity(guildId: string, limit = 100): Promise<G
   return (data ?? []) as GuildActivityPost[];
 }
 
-/**
- * Correct your own post on the Guild wall. The author, and only ever the author.
- *
- * Leadership can take a post DOWN and deliberately cannot rewrite one: removing
- * something somebody said and putting different words in their mouth are not
- * the same power. The previous wording is kept where no browser can read it.
- */
+/** Correct your own guild post. Leaders can take a post down, never rewrite it. */
 export async function editGuildPost(postId: string, body: string): Promise<void> {
   const text = body.trim();
   if (!text) throw new Error('Write something first.');
@@ -4562,18 +3166,8 @@ export async function deleteMyGuildPost(postId: string): Promise<boolean> {
 }
 
 /**
- * Report a post on the guild board.
- *
- * NO SUBJECT ARGUMENT, and that is the point. The board shows "A Guide" and
- * "A fellow Explorer" rather than names, so the person reporting genuinely
- * does not know whose post it is and must not be asked to name them. The post
- * id is all the browser sends; the function resolves the author, files it into
- * the same `reports` table the pairing conversation uses, and never returns
- * the name.
- *
- * It also copies the post's text into the report. A post can be deleted by its
- * author a moment after it is reported, and without the copy a Director would
- * open a report about nothing.
+ * Report a guild post. Only the post id is sent: the board is pseudonymous,
+ * so the reporter cannot name the author. The text is copied into the report.
  */
 export async function reportGuildPost(
   postId: string,
@@ -4589,27 +3183,14 @@ export async function reportGuildPost(
   return String(data);
 }
 
-/**
- * Take a guild post down. Church leadership only.
- *
- * The board itself stays closed to leadership — a group talking honestly is
- * what the room is for. This reaches one post, the one somebody reported, and
- * writes a `guild_post_removed` row into the security audit ledger before the
- * delete rather than after it.
- */
+/** Take a guild post down. Church leadership only; logged before the delete. */
 export async function removeGuildPost(postId: string): Promise<boolean> {
   const { data, error } = await db().rpc('remove_guild_post', { p_post: postId });
   if (error) throw new Error(error.message);
   return Boolean(data);
 }
 
-// ---------------------------------------------------------------------------
-// Metrics
-// ---------------------------------------------------------------------------
-//
-// Every word in `health` is defined in guild_metrics() (migration 0029), not
-// here and not in the component, so the badge and the rule that produced it
-// cannot drift apart.
+// --- Guild metrics: every word in `health` comes from guild_metrics() ---
 
 export interface GuildMetric {
   id: string;
@@ -4646,16 +3227,7 @@ export interface ChurchPulse {
   messages_30d: number;
 }
 
-/**
- * One entry in the church's record of who was let in, switched off or removed.
- *
- * `approved` and `disapproved` joined the older three in migration 0041. Before
- * that a disapproval left no trace at all, so "how many did we turn away this
- * quarter" had no answer — the profile simply carried a false flag and nothing
- * said when, or who by. Approvals are recorded alongside the refusals on
- * purpose: a log that keeps only the punishments reads like a charge sheet
- * rather than a record of decisions.
- */
+/** One entry in the church's record of who was let in, switched off or removed. */
 export interface DisciplineEntry {
   id: string;
   person_name: string;
@@ -4694,36 +3266,20 @@ export async function recordGuardianConsent(
   if (error) throw new Error(error.message);
 }
 
-/** A parent can change their mind, so this has to exist. */
+/** Withdraw a guardian's consent. */
 export async function withdrawGuardianConsent(memberId: string): Promise<void> {
   const { error } = await db().rpc('withdraw_guardian_consent', { p_member: memberId });
   if (error) throw new Error(error.message);
 }
 
-/**
- * The discipline record, which outlives the people in it.
- *
- * Names and roles are copied onto the log at the time of the act (migration
- * 0028), because removing somebody deletes their profile — and the first
- * version of this lost the record of the removal along with the person.
- */
+/** The discipline record. Names and roles are copied in, so it outlives the people. */
 export async function disciplineHistory(): Promise<DisciplineEntry[]> {
   const { data, error } = await db().rpc('discipline_history');
   if (error) throw new Error(error.message);
   return (data ?? []) as DisciplineEntry[];
 }
 
-// ---------------------------------------------------------------------------
-// Admin Reports
-// ---------------------------------------------------------------------------
-//
-// Every rule that matters here lives in migration
-// 20260915120000_a_report_is_answered_by_one_person.sql, not in this file and
-// not in the component. Who may see a report, who may pick one up, and who may
-// speak in it are decided by the database, so a mistake in the screen cannot
-// widen any of them. In particular: nobody may handle a report they are the
-// subject of, and a report about a Director or an Executive Director is for
-// Executive Directors only.
+// --- Admin reports: who may see, claim and answer one is decided by the database ---
 
 export type AdminReport = {
   id: string;
@@ -4778,13 +3334,7 @@ export async function sayInReport(reportId: string, body: string): Promise<void>
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// The pocket
-// ---------------------------------------------------------------------------
-//
-// Personal shortcuts, private to the person who saved them. The policy on
-// pocket_apps is `owner_id = auth.uid()` on every verb -- not their Guide, not
-// a Director, not the Head ED -- so nothing here needs to filter by hand.
+// --- The pocket: personal shortcuts, private to their owner ---
 
 export type PocketApp = { id: string; url: string; label: string; created_at: string };
 
@@ -4798,12 +3348,7 @@ export async function myPocket(): Promise<PocketApp[]> {
 }
 
 export async function addPocketApp(url: string, label: string): Promise<void> {
-  // NO owner_id, AND NO getUser(). The column defaults to auth.uid() and the
-  // insert policy checks it, so the row cannot be written in anybody else's
-  // name whatever the browser sends. Asking Auth who this is would be a second
-  // round trip and a second source of truth; the app already holds a verified
-  // first-party session, and tests/security-invariants.mjs fails the build for
-  // reaching past it.
+  // owner_id defaults to auth.uid() in the database; do not send it.
   const { error } = await db().from('pocket_apps').insert({ url, label });
   if (error) throw new Error(error.message);
 }
@@ -4813,14 +3358,7 @@ export async function removePocketApp(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// The Hall of Justice
-// ---------------------------------------------------------------------------
-//
-// Who may take a seat is decided by private.may_sit_on_trial in migration
-// 20260916120000, never here: leadership of that church, but never on a case
-// about themselves, and never on a case about a Director unless they are an
-// Executive Director. The screen draws what the database already allowed.
+// --- The Hall of Justice: who may take a seat is decided by the database ---
 
 export type SeatableTrial = {
   id: string;
@@ -4843,36 +3381,14 @@ export async function trialsIMaySitOn(): Promise<SeatableTrial[]> {
   return (data ?? []) as SeatableTrial[];
 }
 
-/**
- * Watch a hearing, on the record.
- *
- * WATCHING IS SILENT. `trial_statements_speak` admits the person who accepted
- * the case and anybody actually called to it -- the accused, the reporter, a
- * witness -- and nobody else. An observer reads and cannot write, so a member
- * answering something said about them never finds a Director in the transcript
- * who was never called to the case.
- */
+/** Watch a hearing. Observers can read but never write. */
 export async function joinTrial(trialId: string): Promise<void> {
   const { error } = await db().rpc('join_trial', { p_trial: trialId });
   if (error) throw new Error(error.message);
 }
 
-// SUMMONING IS ALREADY HERE. `openTrial` above does exactly this and has
-// since the trial room was written -- LiveTrialRoom's "Open a case" button
-// calls it, and open_trial notifies the person it summons. A second wrapper
-// was written here before checking, which is the mistake the clipboard and
-// lib/url.ts guards both exist to prevent: two ways to do one thing, and one
-// of them eventually wrong. Deleted rather than kept for symmetry.
-
-// ---------------------------------------------------------------------------
-// The next thing to read
-// ---------------------------------------------------------------------------
-//
-// Deliberately NOT the journey stage. The stage is a note the church keeps about
-// a person and a seeker never sees it -- lib/types.ts says so, and it is a
-// safeguarding decision rather than an oversight. This is the other truth: what
-// the Explorer has actually done. Before it, somebody could read every study in
-// the church and watch nothing move until their Guide changed their mind.
+// --- The next thing to read ---
+// What the Explorer has actually done, which is not their journey stage.
 
 export type StudyProgress = {
   read_count: number;
