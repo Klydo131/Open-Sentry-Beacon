@@ -9,23 +9,10 @@ import { copyText } from '@/lib/share';
 import { appleKind, addTitle, addLabel, type AppleKind } from '@/lib/apple-install';
 import { APP_SHORT_NAME } from '@/lib/brand';
 
-// -------------------------------------------------------------------------
-// "Install Hope Beacon".
-//
-// The old version was a thin bar at the bottom of the screen with a small
-// button, and on a desktop monitor that is the easiest thing in the world to
-// miss — it reads as a cookie notice, which everybody has trained themselves
-// to ignore. On a Mac it never appeared at all: Safari does not fire
-// `beforeinstallprompt`, and the code only handled iPhones and iPads.
-//
-// Now:
-//  • Desktop gets a real card in the corner — icon, what installing gets you,
-//    and a full-size button. It is hard to mistake for chrome.
-//  • macOS Safari gets the "Add to Dock" steps; iOS gets "Add to Home Screen".
-//  • Dismiss is a SNOOZE, not a tombstone. Seven days later it asks once more.
-//    The old version wrote a permanent flag, so one stray tap meant the person
-//    was never offered the install again on that device.
-// -------------------------------------------------------------------------
+// "Install Hope Beacon": a card in the corner on a computer, a bar at the
+// bottom on a phone or tablet. Safari (iOS and macOS) never fires
+// beforeinstallprompt, so Apple devices get the steps for their own menu.
+// Dismissing snoozes the prompt; it is not permanent.
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -33,27 +20,12 @@ interface BIPEvent extends Event {
 }
 
 const SNOOZE_KEY = 'beacon-install-snoozed-until';
-// AN HOUR. It was seven days, then two, and both were too long.
-//
-// An uninstalled app is a person who loses their place every time they close
-// the tab, misses every notification, and has nothing on their home screen to
-// come back to. The prompt is the only thing standing between them and that,
-// so "not right now" should mean this hour, not this fortnight.
-//
-// An hour is short enough that somebody who wanted the app gets asked again the
-// same day, and long enough that it is not arguing with them. Anyone who truly
-// does not want it presses "I already have it installed", which is one tap,
-// permanent, and deliberately sits right under the button.
+// "Not now" snoozes for an hour. "I already have it installed" is permanent.
 const SNOOZE_MINUTES = 60;
 
 /**
- * Already installed?
- *
- * Exported because the automatic prompt is not enough on its own. Chrome fires
- * beforeinstallprompt only when its own engagement heuristics are satisfied,
- * Firefox never fires it at all, and once somebody snoozes, nothing offers it
- * again for days. So installing also has to be something a person can go and
- * find — see InstallCard.
+ * Already installed? Exported because installing must also be findable in
+ * Settings: Chrome fires its prompt only sometimes, and Firefox never does.
  */
 export function isStandalone(): boolean {
   if (typeof window === 'undefined') return false;
@@ -65,27 +37,9 @@ export function isStandalone(): boolean {
 }
 
 /**
- * Is the app installed, checked continuously rather than once.
- *
- * WHY A HOOK AND NOT JUST isStandalone(). The old code asked once, on mount,
- * and never again. Two things go wrong with that:
- *
- *   * Somebody installs while the tab is open. On Android that happens inside
- *     the page, and the prompt they just obeyed carried on sitting there
- *     telling them to install.
- *   * Somebody leaves for the installed copy and comes back to the tab. The
- *     answer may have changed while the page was hidden, and nothing rechecked.
- *
- * So this listens to the three signals that can change it: the display-mode
- * media query flipping, the browser's own `appinstalled` event, and the page
- * becoming visible again.
- *
- * NOT COVERED, and it cannot be: on iOS there is no way for a Safari TAB to
- * know that a copy exists on the home screen. The two contexts are sealed off
- * from each other, `getInstalledRelatedApps` is Chromium-only, and Apple
- * exposes nothing equivalent. That is exactly why "I already have it
- * installed" exists and is one tap: on the one platform where the app cannot
- * work this out, the person can say so.
+ * Whether the app is installed, kept current: listens for the display-mode
+ * query, `appinstalled`, and the page becoming visible again. A Safari tab on
+ * iOS cannot know about a home-screen copy, hence "I already have it installed".
  */
 export function useIsInstalled(): boolean {
   const [installed, setInstalled] = useState(false);
@@ -95,8 +49,7 @@ export function useIsInstalled(): boolean {
     check();
 
     const mq = window.matchMedia('(display-mode: standalone)');
-    // Safari only grew addEventListener on MediaQueryList in 14; addListener is
-    // deprecated everywhere else but is what older iOS has.
+    // addListener for Safari before 14, which lacks addEventListener on MediaQueryList.
     const onMq = () => check();
     if (mq.addEventListener) mq.addEventListener('change', onMq);
     else mq.addListener?.(onMq);
@@ -115,25 +68,9 @@ export function useIsInstalled(): boolean {
   return installed;
 }
 
-// Only the app's home address may be installed.
-//
-// Hosts give every deployment its own permanent URL, production builds
-// included, and a different hostname is a different app to the browser: its own
-// icon, its own service worker, its own storage. Installing from one of those
-// pins the person to that single build forever, because no later deploy can ever
-// reach that origin. Somebody with Beacon already installed opened a deployment
-// address, was offered the install again, accepted, and ended up with two
-// identical icons, one of them frozen.
-//
-// The first version of this checked the environment LABEL for 'preview', which
-// missed the case entirely: a per-deployment URL of a production build reports
-// 'production', because that is what it is. Only the hostname settles it.
-//
-// This is the whole protection now, and it is deliberately silent. A banner
-// across the front door announcing that the address is wrong reads to a visitor
-// like a security warning about the site itself, which is worse than the problem
-// it describes. Simply not offering the install prevents the frozen copy from
-// ever existing; Settings explains the situation to anyone who goes looking.
+// Only the app's home address may be installed. Each deployment URL is its
+// own app to the browser, and an install from one would be frozen at that
+// build forever. Silent on purpose: no warning banner, simply no offer.
 export function isInstallable(): boolean {
   return onCanonicalHost();
 }
@@ -148,23 +85,9 @@ export function isIos(): boolean {
 }
 
 /**
- * Which browser this is, when it is an iPhone or iPad and NOT Safari.
- *
- * THE REPORT THIS EXISTS FOR: "even in Chrome the install button is not
- * working, and even if they switch to Safari it is not working."
- *
- * On iOS, only Safari can add a real app to the home screen. Chrome, Firefox,
- * Edge and Opera on iPhone are all WebKit underneath, but Apple gives none of
- * them the Add to Home Screen that produces a standalone app -- at best they
- * make a bookmark that reopens in that browser. So the steps printed to a
- * Chrome user said "Tap Share at the bottom of Safari", naming a browser they
- * were not in, about a control that would not have worked there anyway.
- *
- * Empty string means Safari, or not iOS at all, and the ordinary steps apply.
- *
- * Checked in this order because each of these browsers keeps "Safari" and
- * "Version/" in its user agent for compatibility -- testing for Safari first
- * would match all of them.
+ * The browser name when this is an iPhone or iPad and not Safari, else ''.
+ * Only Safari can install a web app on iOS. Checked in this order because
+ * each of these keeps "Safari" in its user agent.
  */
 export function iosBrowser(): string {
   if (typeof navigator === 'undefined') return '';
@@ -189,29 +112,13 @@ export function isMacSafari(): boolean {
 }
 
 /**
- * Is this an app's own built-in browser rather than a real one?
- *
- * THE BUG THIS EXISTS FOR, reported with screenshots. A church shared the link
- * in Messenger. Tapping it opens Messenger's OWN web view — which reports
- * itself as an iPhone or iPad, is not standalone, and is on the right host, so
- * every check here said "offer the install" and the card printed "Tap Share at
- * the bottom of Safari, choose Add to Home Screen".
- *
- * There is no Safari. Messenger's share sheet has no Add to Home Screen, and on
- * iOS no in-app browser can install anything at all — only Safari can. So Apple
- * users were handed a set of steps that cannot be carried out, with no hint
- * that the problem was the browser they were in. They concluded the app was
- * broken, which from where they were sitting it was.
- *
- * Returns the app's name so the instructions can say which one to leave, since
- * "open this in your real browser" means nothing to somebody who does not know
- * they are not in one.
+ * The app's name when this is an in-app browser (Messenger, Instagram...),
+ * else ''. These cannot install anything, so the person must be told to leave.
  */
 export function inAppBrowser(): string {
   if (typeof navigator === 'undefined') return '';
   const ua = navigator.userAgent;
-  // FBAN/FBAV are Facebook's own markers; Messenger adds FB_IAB and
-  // Messenger/. Checked before Facebook so the name is the accurate one.
+  // Messenger before Facebook, so the name is the accurate one.
   if (/FB_IAB\/MESSENGER|Messenger[/ ]/i.test(ua)) return 'Messenger';
   if (/FBAN|FBAV|FB_IAB/i.test(ua)) return 'Facebook';
   if (/Instagram/i.test(ua)) return 'Instagram';
@@ -224,13 +131,7 @@ export function inAppBrowser(): string {
   return '';
 }
 
-/**
- * Where iOS keeps the Share button, which is not the same place on both.
- *
- * The old copy said "at the bottom of Safari" everywhere. On an iPad it is at
- * the TOP, in the toolbar — and a non-technical person told to look at the
- * bottom looks at the bottom, does not find it, and stops.
- */
+/** Where iOS keeps the Share button: the bottom on iPhone, the top on iPad. */
 export function iosShareLocation(): string {
   if (typeof navigator === 'undefined') return 'in Safari';
   const bigScreen =
@@ -241,33 +142,9 @@ export function iosShareLocation(): string {
 }
 
 /**
- * A link that opens THIS page in Safari, from a browser that cannot install.
- *
- * WHY THIS IS THE BEST AVAILABLE ANSWER ON APPLE.
- *
- * Only Safari may add an app to the iPhone home screen. That is Apple's rule,
- * it applies to every website equally, and no amount of code changes it. What
- * IS in our hands is the distance between "you are in the wrong browser" and
- * "you are in Safari", and until now that distance was three instructions
- * about a ••• menu whose position differs in every app that has one.
- *
- * iOS understands a URL beginning `x-safari-https://` as "open the rest of
- * this in Safari". Chrome, Firefox, Edge and most in-app browsers hand it to
- * the system, which opens Safari on the same page. One tap instead of three
- * steps, and no menu to find.
- *
- * IT IS OFFERED, NEVER RELIED ON. The scheme is not documented by Apple, some
- * in-app browsers refuse to hand off at all, and nothing reports a refusal:
- * the tap simply does nothing. So the written steps stay on screen underneath
- * it, always, and the copy button is there for the person whose browser
- * refuses both. A tap that does nothing costs a second; a tap that replaces
- * the instructions and then does nothing costs the install.
- *
- * RETURNS '' ANYWHERE THAT IS NOT iOS, and that is not a detail. Messenger and
- * Instagram have in-app browsers on Android too, and they cannot install either
- * -- but the answer there is Chrome, which CAN, and telling an Android user to
- * open Safari names a browser that does not exist on their phone. The iOS test
- * is what keeps this advice attached to the platform it is true on.
+ * A link that opens this page in Safari (`x-safari-https://`), from an iOS
+ * browser that cannot install. Undocumented and not always honoured, so the
+ * written steps always stay on screen. Returns '' anywhere that is not iOS.
  */
 export function safariHandoffUrl(): string {
   if (typeof window === 'undefined') return '';
@@ -275,38 +152,19 @@ export function safariHandoffUrl(): string {
   return `x-safari-${window.location.href}`;
 }
 
-/**
- * One tap to Safari, with a copy fallback and no promise it worked.
- *
- * `from` names the browser they are in, because "open in Safari" means nothing
- * to somebody who does not know they are not in Safari.
- */
+/** One tap to Safari, with a copy fallback. `from` names the browser they are in. */
 export function OpenInSafari({ from }: { from: string }) {
   const [href, setHref] = useState('');
   const [copied, setCopied] = useState<'' | 'yes' | 'failed'>('');
   const [tapped, setTapped] = useState(false);
 
-  // Read the address after mount. On the server there is no location, and a
-  // link rendered empty and filled in later is better than one that differs
-  // between the server's HTML and the browser's.
-  //
-  // AND READ IT AGAIN ON EVERY NAVIGATION. This was `[]`, so the address was
-  // captured once and never revisited — and this is a single-page app, so the
-  // page under it changes without a reload. Somebody who arrived on one screen
-  // and walked to another was handed off to the screen they arrived on.
-  //
-  // The WebKit walk caught it on the shortest possible journey: `/settings`
-  // sends a signed-out visitor to `/login`, and the link still said
-  // `/settings`. The same staleness lands on the case that matters most —
-  // somebody opening an invitation in Chrome on an iPhone, where being sent to
-  // the wrong page means being sent away from their invitation.
+  // Read the address after mount and on every navigation (this is a
+  // single-page app), so the handoff opens the current page.
   const pathname = usePathname();
   useEffect(() => { setHref(safariHandoffUrl()); }, [pathname]);
 
-  // copyText, not navigator.clipboard. Safari refuses the write when the
-  // document is not focused and the API does not exist at all over plain http;
-  // lib/share.ts owns those two failures in one place, and a security check
-  // fails the build if this reaches for the raw API instead.
+  // copyText from lib/share.ts, not navigator.clipboard directly (Safari and
+  // plain http fail differently).
   const copy = async () => {
     setCopied((await copyText(window.location.href)) ? 'yes' : 'failed');
   };
@@ -346,27 +204,9 @@ export function OpenInSafari({ from }: { from: string }) {
 
 function isDesktop(): boolean {
   if (typeof window === 'undefined') return false;
-  // WIDTH ALONE IS NOT A DESKTOP, and believing it was put a floating card on
-  // top of things people had to tap.
-  //
-  // The two layouts are not decoration. The bar along the bottom MEASURES
-  // ITSELF and publishes its height as `--install-bar`, which globals.css
-  // spends as padding, so the page can always be scrolled clear of it. The
-  // desktop card floats at bottom-right and reserves nothing, which is
-  // tolerable over a wide window with margins either side and is not tolerable
-  // over a tablet held upright.
-  //
-  // An iPad Mini in portrait is exactly 768 CSS pixels, and a phone on its side
-  // is wider still, so both were handed the floating card. On a real iPad in
-  // Safari it came to rest on a Guide's Explorer row and swallowed the tap;
-  // CI reported it as two failing walks, with Playwright naming the install
-  // steps list as the element that received the touch.
-  //
-  // A pointer that can be placed precisely is what actually distinguishes the
-  // two: a mouse or a trackpad reports `fine`, a finger reports `coarse`. A Mac
-  // keeps its card, an iPad and a sideways phone get the bar that makes room
-  // for itself. Where the query is not understood at all the answer is false,
-  // which is the safe side of this.
+  // A fine pointer (mouse or trackpad) at 768px or wider gets the floating card.
+  // Touch devices get the bar, which reserves its own space so it never covers
+  // something that needs a tap.
   return window.matchMedia('(min-width: 768px)').matches
     && window.matchMedia('(pointer: fine)').matches;
 }
@@ -385,26 +225,20 @@ export function InstallPrompt() {
   // corner, so the card lands on top of the step panel at exactly the moment
   // someone is being asked to follow instructions.
   const { tutorialActive } = useDemo();
-  // Live, not once. Installing on Android happens inside this page, and the
-  // prompt used to carry on sitting there after the person had obeyed it.
+  // Live, so the prompt disappears the moment the app is installed.
   const installed = useIsInstalled();
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [show, setShow] = useState(false);
   const [manual, setManual] = useState<'ios' | 'mac' | null>(null);
   const [desktop, setDesktop] = useState(false);
-  // Which app's built-in browser we are trapped in, if any. Empty means a real
-  // browser and the ordinary instructions apply.
+  // The in-app browser's name, or '' for a real browser.
   const [inApp, setInApp] = useState('');
   const [shareWhere, setShareWhere] = useState('in Safari');
-  // An iPhone browser that is not Safari, and therefore cannot install at all.
+  // An iPhone browser that is not Safari, and so cannot install.
   const [wrongBrowser, setWrongBrowser] = useState('');
-  // Apple has no programmatic install, so "Install now" cannot install. What it
-  // CAN do is show exactly which control to press, which is the thing people
-  // were failing to find. The button is real and doing this is its job.
+  // On Apple, "Install now" cannot install; it shows which controls to press.
   const [opened, setOpened] = useState(false);
-  // WHICH APPLE DEVICE, because they are three and not one. `manual` says
-  // whether Safari is doing this by hand; this says whose menu wording to use,
-  // and none of the three contains the word Install.
+  // Which Apple device: iPhone, iPad and Mac each word their menu differently.
   const [kind, setKind] = useState<AppleKind>(null);
 
   useEffect(() => {
@@ -431,13 +265,8 @@ export function InstallPrompt() {
     };
     window.addEventListener('appinstalled', onInstalled);
 
-    // Safari — desktop or mobile — never fires beforeinstallprompt, so the
-    // only honest thing to do is show the steps. A short delay keeps it from
-    // landing on top of the page before it has finished painting.
-    // Short, and it used to be 1200ms. The only job of the delay is to let the
-    // page finish painting so the card does not land on top of a half-drawn
-    // screen; anything longer is the app hiding the one thing an Apple user
-    // needs from it. There is no native prompt coming to replace it.
+    // Safari never fires beforeinstallprompt, so show the steps after a short
+    // delay that lets the page finish painting.
     let t: ReturnType<typeof setTimeout>;
     const APPEAR_MS = 350;
     if (isIos()) {
@@ -453,12 +282,7 @@ export function InstallPrompt() {
     };
   }, []);
 
-  // Separate from the snooze on purpose. Snooze means "not right now"; this
-  // means "you are wrong, I already have it", and asking again in a week would
-  // be the app arguing with someone about their own machine. It is also the
-  // honest answer to the confusing case: the browser only knows about installs
-  // on THIS address, so a copy installed from a preview link is invisible to it
-  // and it offers the install again in good faith.
+  // Permanent, unlike the snooze: the person says they already have it.
   const alreadyHave = () => {
     setShow(false);
     try {
@@ -482,30 +306,13 @@ export function InstallPrompt() {
     const { outcome } = await deferred.userChoice;
     setDeferred(null);
     setShow(false);
-    // "Not now" in the browser's own dialog is still a no — respect it for a
-    // week rather than asking again on the next page load.
+    // "Not now" in the browser's own dialog snoozes too.
     if (outcome === 'dismissed') snooze();
   };
 
-  // RESERVE THE GROUND THIS BAR STANDS ON.
-  //
-  // The bar is `position: fixed`, so it draws over the bottom of the page and
-  // the document has no idea it is there. On an iPhone it is not a thin strip:
-  // measured on a 664px screen it is 323px tall — HALF THE PHONE — because it
-  // carries the two install steps as well as the button. Everything in the
-  // bottom half of every screen was underneath it.
-  //
-  // Three separate WebKit walks failed on this and none of them could fail
-  // here, which is the part worth remembering. The bar is shown by UA sniffing
-  // (isIos), and headless Chromium is not an iPhone, so the whole class of bug
-  // is invisible to the local suite by construction. It took an iPhone user
-  // agent to reproduce it in this sandbox at all.
-  //
-  // Publishing the height as a custom property, and spending it as padding on
-  // the body plus scroll-padding on the root, fixes both halves: the page can
-  // always scroll far enough to lift anything clear, and anything scrolled to
-  // lands above the bar rather than beneath it. Cleared on unmount, so a
-  // dismissed bar does not leave a strip of dead space behind it.
+  // The bar is position: fixed and can be half a phone's height, so it
+  // publishes its height as --install-bar; globals.css pads the page by that
+  // much. Cleared on unmount.
   const barRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = barRef.current;
@@ -520,8 +327,7 @@ export function InstallPrompt() {
         `${Math.ceil(el.getBoundingClientRect().height)}px`,
       );
     publish();
-    // The bar grows when the steps open, so a one-off measurement would be
-    // right until the moment somebody presses the button.
+    // The bar grows when the steps open, so keep measuring.
     const ro = new ResizeObserver(publish);
     ro.observe(el);
     return () => {
@@ -534,17 +340,8 @@ export function InstallPrompt() {
   // disappears the moment the app is installed instead of at the next reload.
   if (!show || tutorialActive || installed) return null;
 
-  // IN AN APP'S OWN BROWSER, THE ONLY HONEST FIRST STEP IS TO LEAVE IT.
-  //
-  // On iOS nothing but Safari can add an app to the home screen. Printing the
-  // Safari steps to somebody sitting in Messenger sends them looking for a
-  // button that is not there — which is exactly what was reported.
-  //
-  // A REAL BROWSER THAT IS STILL THE WRONG ONE gets the same shape of answer.
-  // Chrome, Firefox, Edge and Opera on iOS cannot install an app either -- Apple
-  // allows only Safari to -- so naming Safari's Share button to somebody sitting
-  // in Chrome is the same failure as naming it to somebody sitting in Messenger.
-  // The first step has to be leaving.
+  // In an in-app browser, or an iOS browser other than Safari, the first step
+  // is to leave it: only Safari can install on iOS.
   const steps = inApp
     ? [
         `Tap the ••• menu at the top of ${inApp}`,
@@ -610,11 +407,7 @@ export function InstallPrompt() {
             {manual || inApp || wrongBrowser ? (
               <>
                 {(inApp || wrongBrowser) && <OpenInSafari from={inApp || wrongBrowser} />}
-                {/* A REAL BUTTON ON APPLE. Safari has never fired
-                    beforeinstallprompt, so nothing here can install for the
-                    person. Pressing this shows the two controls to press, in
-                    order, which is what they were failing to find. It is
-                    labelled for what it starts, not for what it cannot do. */}
+                {/* On Apple, this button shows the controls to press; it cannot install. */}
                 <button
                   onClick={() => setOpened(true)}
                   className="tap w-full rounded-xl text-base font-bold text-white"
@@ -622,8 +415,7 @@ export function InstallPrompt() {
                 >
                   {addLabel(kind)}
                 </button>
-                {/* Never hidden behind the button. See the phone layout below
-                    for why: in-app-browser.js enforces it. */}
+                {/* The steps are never hidden behind the button (tests/e2e/in-app-browser.js). */}
                 <ol className="space-y-1.5 rounded-xl bg-gray-50 p-3 text-sm text-navy">
                   {steps.map((step, i) => (
                     <li key={step} className="flex gap-2">
@@ -662,11 +454,6 @@ export function InstallPrompt() {
             >
               I already have Beacon installed
             </button>
-            {/* This used to open "Seeing this when you already have the icon
-                usually means…", which tells a first-time visitor they have
-                already installed something they have not. Said the other way
-                round it is a note for the person it applies to and invisible
-                noise to everybody else. */}
             <p className="text-xs leading-snug text-gray-500">
               Already have the icon and still seeing this? It probably came from
               a preview address, which the browser treats as a separate app.
@@ -678,38 +465,9 @@ export function InstallPrompt() {
     );
   }
 
-  // Phone / tablet: the compact bar, which is right for a small screen.
-  //
-  // THE BUG THIS LAYOUT HAD, reported plainly as "the banner is there but there
-  // is no install button". The button was written as
-  // `{!manual && !inApp && <button>Install</button>}`, so it rendered for
-  // Chrome and Android and for nobody else. Every iPhone, iPad and Mac Safari
-  // user got a banner made entirely of text, telling them to go and find a
-  // control somewhere else on their screen. The one device family that cannot
-  // install by itself was the one family given nothing to press.
-  //
-  // Now there is always a button. On Apple it cannot install -- nothing can, the
-  // API does not exist there -- so what it does is show the two controls to
-  // press, in order, right where the person is already looking.
-  //
-  // z-66, AND THE EXACT NUMBER MATTERS. The layers here are: the demo and
-  // preview ribbon at 65, blocking notices and the consent dialog at 70,
-  // sheets at 80. This has to clear the ribbon, which is pointer-events-none
-  // and never stole a tap but drew straight over "I already have it
-  // installed", while staying under everything that is asking a question.
-  //
-  // It sat at 70 for one commit and broke the blog walk: level with the
-  // consent dialog, it covered the "I understand" button, so consent was never
-  // dismissed and every later click was swallowed by the overlay. An install
-  // prompt must never be able to block a dialog the person has to answer.
-  //
-  // ON TOP OF THE BOTTOM BAR, like every other floating thing (30 September
-  // 2026), so Menu, People and My Files can still be pressed while it is up.
-  // It was tried standing IN FRONT of the bar instead, covering it, and the
-  // full gate showed what that costs: the Menu could not be reached until the
-  // prompt was dismissed, which the old header row never did to anybody. The
-  // room it needs comes from its ceiling instead (`.install-bar-ceiling`,
-  // below): half of what is left ABOVE the bottom bar, not half the screen.
+  // Phone and tablet: the bar. It always has a button. z-66 sits above the
+  // demo ribbon (65) and below dialogs (70) and sheets (80), so it can never
+  // block a question. It sits above the bottom bar, which stays usable.
   return (
     <div
       ref={barRef}
@@ -717,31 +475,14 @@ export function InstallPrompt() {
       data-steps-aside-for-chat
       className="no-print safe-bottom fixed inset-x-0 bottom-0 z-[66] flex justify-center p-3"
     >
-      {/* A CEILING, BECAUSE THE BAR RESERVES WHATEVER IT IS TALL.
-          This bar carries the steps as well as the button, and it publishes its
-          height so the page can pad itself clear. On a phone held upright that
-          is a fair trade. On the same phone turned sideways the viewport is
-          412px and the bar is 344 of them: the page keeps 68px, the row you
-          were reaching for is pushed under the bar, and the tap lands on the
-          bar instead. Sending a tablet here to escape the floating card is what
-          exposed it.
-
-          Half the visible height, and the steps scroll inside what is left.
-          Since the bottom bar: half of the height ABOVE the bar, because the
-          bar is part of what the page has already given up.
-          NOT collapsed behind the button: somebody who opened this from a
-          Messenger link has to be told to leave Messenger without pressing
-          anything, and tests/e2e/in-app-browser.js fails the build if that is
-          ever gated again. Scrolling is not gating; the steps are still there
-          and still on screen. */}
+      {/* Capped at half the height above the bottom bar, with the steps scrolling
+         inside, so a phone on its side keeps room for the page. The steps are
+         never hidden behind the button (tests/e2e/in-app-browser.js). */}
       <div className="install-bar-ceiling animate-drop flex w-full max-w-md flex-col overflow-y-auto overscroll-contain rounded-2xl bg-white p-3 lift-3 ring-1 ring-black/10">
         <div className="flex items-center gap-3">
           <SentryBeaconMark size={40} />
           <div className="min-w-0 flex-1">
             <p className="font-bold text-navy">{addTitle(kind, APP_SHORT_NAME)}</p>
-            {/* THE OTHER REPORTED BUG WAS THIS LINE. Opened from a Messenger
-                link it said "Tap Share, then Add to Home Screen" — inside a
-                browser that has neither. */}
             {inApp ? (
               <p className="text-sm text-gray-500">
                 {inApp} cannot install apps. Open it in Safari first.
@@ -765,8 +506,7 @@ export function InstallPrompt() {
           </button>
         </div>
 
-        {/* Full width and under the text, because a button squeezed beside two
-            lines of copy on a 320px screen is a button people miss. */}
+        {/* Full width and under the text, so it is easy to tap on a small screen. */}
         {manual || inApp ? (
           <>
             <button
@@ -776,13 +516,8 @@ export function InstallPrompt() {
             >
               {addLabel(kind)}
             </button>
-            {/* THE STEPS ARE NEVER HIDDEN BEHIND THE BUTTON, and that is a
-                safety property rather than a preference. Somebody who opened
-                this from a Messenger link has to be told to leave Messenger
-                whether or not they press anything; a version that hid that
-                behind a tap sent them looking for a Share button that does not
-                exist in the browser they are in. tests/e2e/in-app-browser.js
-                fails the build if this is ever gated again. */}
+            {/* Never hidden behind the button: someone in Messenger must be told to leave
+               it without pressing anything (tests/e2e/in-app-browser.js). */}
             {(inApp || wrongBrowser) && <OpenInSafari from={inApp || wrongBrowser} />}
             <ol className="mt-2 space-y-1.5 rounded-xl bg-gray-50 p-3 text-sm text-navy">
               {steps.map((step, i) => (
@@ -798,10 +533,7 @@ export function InstallPrompt() {
               ))}
             </ol>
             {opened && (
-              // What "Install now" actually does, since nothing on Apple can
-              // install programmatically: it points at the control, which is
-              // in the browser's own chrome and not on the page at all. That
-              // is the thing people were failing to find.
+              // The control is in the browser's own toolbar, not on the page.
               <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">
                 {inApp
                   ? `Open the ••• menu in ${inApp} now, and choose Open in Safari.`
