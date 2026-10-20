@@ -153,7 +153,11 @@ const isComment = (line) => /^\s*(\/\/|\*|\/\*)/.test(line);
       chars.forEach((ch, j) => {
         if (ch.codePointAt(0) < 128) return;
         if (KNOWN_SAFE.has(ch)) return;
-        const pictographic = /\p{Extended_Pictographic}/u.test(ch);
+        // Only a character with an emoji form can be asked for it. Unicode 16
+        // (Node 22.22) counts the music signs ♪ ♭ ♯ as pictographic without
+        // giving them an emoji form at all, so U+FE0F would change nothing;
+        // they are text symbols, and the rule below (blocks) covers them.
+        const pictographic = /\p{Extended_Pictographic}/u.test(ch) && /\p{Emoji}/u.test(ch);
         const alwaysEmoji = /\p{Emoji_Presentation}/u.test(ch);
         if (pictographic && !alwaysEmoji && chars[j + 1] !== '\uFE0F') {
           offenders.push(

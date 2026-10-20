@@ -11,6 +11,7 @@ sends somebody's Saturday afternoon down a path nobody walked.
 | A real church on the internet | [2. Vercel and Supabase](#2-vercel-and-supabase) | GitHub, Vercel, Supabase | **Yes**, it is how this project runs |
 | To develop against a real database without the cloud | [3. On your computer, with a real database](#3-on-your-computer-with-a-real-database) | None | **In part**, see the section |
 | Your own server, or another host | [4. Other hosts](#4-other-hosts) | Depends on the host | **No**, written from how the app is built |
+| No Supabase at all: any Postgres, on a server you rent | [POSTGRES.md](POSTGRES.md), the Postgres edition | A server and a domain | **Yes** for the database and server, on every check; the HTTPS setup not yet |
 
 The detailed click-by-click for scenario 2 is
 [START-HERE.md](START-HERE.md) Parts 3 and 4. This page does not repeat it; it
@@ -267,6 +268,11 @@ today. Of the four, this is the furthest from walked.
 ---
 
 ## Moving off Supabase
+
+**The ready answer is the Postgres edition ([POSTGRES.md](POSTGRES.md)):** the
+same app, migrations and rules on any Postgres 17, with a small server of ours
+in front that answers the app exactly as Supabase does. Read on if you want a
+different backend altogether.
 
 The app meets its backend at three seams: where feedback goes, the store, and
 real-time delivery. The sample church already runs the whole app with no

@@ -17,6 +17,10 @@
 --     rls_auto_enable() (made by the Supabase dashboard on some projects).
 --   * the authenticator role's platform settings. The one setting this app owns
 --     there -- the check PostgREST runs before every request -- is its own line.
+--   * what the Postgres edition adds to run without Supabase: the
+--     beacon_platform_announce trigger on each live table and the event trigger
+--     that keeps them in step (selfhost/sql/platform.sql). A Supabase database
+--     has neither, so its fingerprint is the same with or without this rule.
 --
 -- Read-only: it only looks at the catalogue, never at anybody's rows.
 with cat(kind, key, detail) as (
@@ -85,7 +89,9 @@ with cat(kind, key, detail) as (
    where not (kind = 'trigger' and key like 'storage.%')
      and not (kind in ('function','function_acl') and key = 'public.rls_auto_enable()')
      and not (kind = 'extension' and key = 'pg_net')
-     and not (kind = 'role_config' and key = 'authenticator'))
+     and not (kind = 'role_config' and key = 'authenticator')
+     and not (kind = 'trigger' and key like '%.beacon_platform_announce')
+     and not (kind = 'event_trigger' and key like 'beacon_platform%'))
 select kind, count(*), left(md5(string_agg(key||'|'||md5(d), E'\n' order by key)),10) from norm group by kind
 union all
 select 'authenticator app setting', 1, left(md5(coalesce((select c from pg_roles r, unnest(r.rolconfig) c where r.rolname='authenticator' and c like 'pgrst.%'),'')),10)

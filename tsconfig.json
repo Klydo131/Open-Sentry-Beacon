@@ -1325,6 +1325,7 @@
   ],
   "exclude": [
     "node_modules",
+    "selfhost",
     "supabase/functions",
     "tests",
     "private",

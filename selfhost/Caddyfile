@@ -1,0 +1,12 @@
+# HTTPS for both addresses, with certificates from Let's Encrypt fetched and
+# renewed by Caddy itself. Used by the `https` profile in docker-compose.yml.
+# Point both names at this machine (an A record each) before starting it.
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
+{$API_DOMAIN} {
+	reverse_proxy server:8000
+}

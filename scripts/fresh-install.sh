@@ -32,6 +32,17 @@
 # installs only what is new. The CLI reads files differently (it skips any name
 # that is not <digits>_name.sql), so CI runs both and requires the two
 # fingerprints to be identical.
+#
+# AND A THIRD WAY, WITHOUT SUPABASE. With
+#
+#   docker run -d --name hb-plain -p 5434:5432 -e POSTGRES_PASSWORD=fresh postgres:17
+#   PGPORT=5434 PGPASSWORD=fresh scripts/fresh-install.sh --plain
+#
+# the same files go into an ordinary Postgres through the Postgres edition's
+# installer (selfhost/server/src/migrate.mjs, docs/POSTGRES.md), and the same
+# checks run. CI requires its fingerprint to match the Supabase one on every
+# line but `extension`: Supabase ships two extensions (pg_cron,
+# pg_stat_statements) that the edition replaces or does not need.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -39,8 +50,13 @@ via="psql"
 case "${1:-}" in
   '') ;;
   --via-cli) via="cli" ;;
-  *) echo "Usage: $0 [--via-cli]" >&2; exit 2 ;;
+  --plain) via="plain" ;;
+  *) echo "Usage: $0 [--via-cli | --plain]" >&2; exit 2 ;;
 esac
+# Who may plant invented sign-ins for the checks below: Supabase's superuser,
+# or on plain Postgres the ordinary one.
+su="supabase_admin"
+[ "$via" = "plain" ] && su="postgres"
 # Pinned, like everything else CI runs: a new CLI release must not change what
 # "the same database" means without somebody choosing to move this.
 cli_version="${SUPABASE_CLI_VERSION:-2.117.0}"
@@ -64,10 +80,20 @@ for _ in $(seq 1 60); do
   sleep 2
 done
 
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
-  -f "$here/supabase/tests/platform-stand-in.sql" >/dev/null
+if [ "$via" != "plain" ]; then
+  psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+    -f "$here/supabase/tests/platform-stand-in.sql" >/dev/null
+fi
 
-if [ "$via" = "cli" ]; then
+if [ "$via" = "plain" ]; then
+  if ! DATABASE_URL="postgresql://postgres:${PGPASSWORD}@${PGHOST}:${PGPORT}/postgres" \
+       node "$here/selfhost/server/src/migrate.mjs" >"$log" 2>&1; then
+    echo "The Postgres edition's install stopped:" >&2
+    cat "$log" >&2
+    exit 1
+  fi
+  tail -1 "$log"
+elif [ "$via" = "cli" ]; then
   # The throwaway database has no TLS, and a password of letters needs no
   # escaping in a URL. Neither is true of a real project, which is why the guide
   # tells a church to paste the connection string Supabase gives them instead.
@@ -104,40 +130,40 @@ psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q \
 # alone, a suspended account and a signed-out visitor get nothing. As the
 # superuser, because it plants invented sign-ins in auth.users; inside one
 # transaction that is rolled back, so the fingerprint below is unaffected.
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-conversation-can-reply-react-and-speak.sql"
 
 # AN OFFICE PLAN HAS A SIZE, the same way: an approved member keeps plans, one
 # account cannot fill the database, as invented people, rolled back.
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/an-office-plan-has-a-size.sql"
 
 # A LEADER STAYS WITHIN THEIR RANK: nobody appoints above themselves, and
 # nobody moves a pairing to read a conversation that is not theirs. Invented
 # people, rolled back.
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-leader-stays-within-their-rank.sql"
 
 # A MESSAGE HISTORY OPENS ONLY FOR A REPORT: leadership reads what a withdrawn
 # or edited message said only for a reported conversation, and every reading is
 # on the record. Invented people, rolled back.
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-message-history-needs-a-report.sql"
 
 # A SECOND STEP ONCE SET UP IS REQUIRED: a password alone does not reach the
 # data, the live socket or the files for somebody with an authenticator app,
 # and changes nothing for anybody without one. Invented people, rolled back.
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-second-step-is-required.sql"
 
 # WHAT IS DELETED LEAVES NO FILE BEHIND: removing somebody queues every file
 # their rows pointed at, and only the service role can read or clear the list.
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/what-is-deleted-leaves-no-file-behind.sql"
 
 # A POST CARRIES ITS OWN PHOTOS: a writer's photos and clip reach exactly the
 # people who may read the post, and nobody adds to somebody else's.
-psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-post-carries-its-own-photos.sql"
 
 echo

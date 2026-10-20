@@ -1,0 +1,25 @@
+{
+  "name": "beacon-server",
+  "version": "1.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "description": "Hope Beacon on plain Postgres: sign-in, two-step codes, files, live data, scheduled jobs and the app's functions, in front of PostgREST.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node src/main.mjs",
+    "migrate": "node src/migrate.mjs",
+    "keys": "node src/keys.mjs",
+    "test": "node test/the-edition-holds.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.112.3",
+    "nodemailer": "10.0.13",
+    "pg": "8.23.1",
+    "qrcode": "1.5.4",
+    "web-push": "3.6.7",
+    "ws": "8.22.0"
+  }
+}

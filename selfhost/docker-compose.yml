@@ -1,0 +1,97 @@
+# Hope Beacon on one machine, with no Supabase account. docs/POSTGRES.md is the
+# guide; in short:
+#
+#   cd selfhost/server && npm ci && npm run keys -- --write   # makes selfhost/.env
+#   (edit selfhost/.env: SITE_URL, PUBLIC_URL, the SMTP lines)
+#   cd .. && docker compose up -d                              # database + API
+#   docker compose --profile app --profile https up -d         # and the app, on HTTPS
+#
+# Every image is pinned by digest, so `up` on another day starts the same
+# software. The database and the uploaded files are kept in the two named
+# volumes at the bottom; back those two up and you have backed up everything.
+
+name: hope-beacon
+
+services:
+  db:
+    image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run "npm run keys -- --write" in selfhost/server first}
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    # Not published: only the server and PostgREST reach the database.
+
+  server:
+    build:
+      context: ..
+      dockerfile: selfhost/server/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      POSTGREST_URL: http://rest:3000
+      DATA_DIR: /data
+      PORT: "8000"
+    volumes:
+      - files:/data
+    ports:
+      # This machine only. The https service (or your own proxy) is the way in.
+      - "${SERVER_BIND:-127.0.0.1}:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  rest:
+    image: postgrest/postgrest:v16.5@sha256:1347d7552b88f17832912c06afbf7c43209af6eeeb60834b04aae12c9bd9d5cc
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD:?Run "npm run keys -- --write" in selfhost/server first}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:?Run "npm run keys -- --write" in selfhost/server first}
+      PGRST_DB_EXTRA_SEARCH_PATH: public, extensions
+      PGRST_DB_MAX_ROWS: "1000"
+      PGRST_OPENAPI_MODE: disabled
+      PGRST_SERVER_PORT: "3000"
+    depends_on:
+      # The server installs the database (and sets this role's password) first.
+      server:
+        condition: service_healthy
+
+  app:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: selfhost/app.Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${PUBLIC_URL:?Set PUBLIC_URL in selfhost/.env}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+    restart: unless-stopped
+    ports:
+      - "${APP_BIND:-127.0.0.1}:3000:3000"
+
+  https:
+    profiles: [https]
+    image: caddy:2.11.7@sha256:685ae3d7c34d9b5f8caeddc5d14051db7bbd88ff1f5a2fa0c16bd8ca328fb7af
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in selfhost/.env}
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN in selfhost/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy:/data
+
+volumes:
+  db:
+  files:
+  caddy:

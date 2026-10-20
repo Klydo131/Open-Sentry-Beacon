@@ -324,6 +324,7 @@ screens at all. Put the permission rules with the data, not in the interface.
 | [docs/IN-ANY-LANGUAGE.md](docs/IN-ANY-LANGUAGE.md) | Your own app or server in the language you already use. The same small program in curl, JavaScript, Python, PHP, Rust, C++, Go, Java and Dart, your own server in Python, PHP or Rust, all in [examples/](examples/); REST, live updates, GraphQL and webhooks; and how the screens are translated. |
 | [docs/BACKENDS.md](docs/BACKENDS.md) | The two seams in more detail, and the fifteen-minute feedback warm-up. |
 | [docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md) | Four worked ways to run it: your computer with no accounts, Vercel and Supabase, your computer with a real database, and other hosts. Each says what has been tested. |
+| [docs/POSTGRES.md](docs/POSTGRES.md) | No Supabase account: the same app on any Postgres, on a server your church rents or owns, with one `docker compose up`. |
 | [docs/EMAIL.md](docs/EMAIL.md) | Sending invitations by mail. Any provider, or none. |
 | [docs/SECURITY.md](docs/SECURITY.md) | Securing your own copy, with samples you can adapt, and who is responsible for what. |
 

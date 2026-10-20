@@ -77,9 +77,20 @@ checks by name, see section 5.
 
 Before this change, the browser walks ran on one machine and took about 19
 minutes, so every pull request waited about 20 minutes for its slowest job.
-Splitting them four ways is expected to bring that close to the 6 minutes the
-`verify` job takes. That estimate has not yet been measured on GitHub; the
-first runs after this change will give the real figure.
+Measured on GitHub on 20 October 2026, the first full run after the split:
+
+| Job | Took |
+| --- | --- |
+| `verify` on Ubuntu | 4 minutes |
+| `verify` on Windows | 3½ minutes |
+| `verify` on macOS | 5½ minutes, after waiting 10½ minutes for a free Mac |
+| `walks (1)` | 10 minutes (the longest of the four) |
+| `walks (2)`, `(3)`, `(4)` | 5½, 5½ and 7 minutes |
+
+So a pull request now waits about 10 minutes for its slowest walk, down from
+about 20. GitHub has fewer Mac machines than Linux ones, so on a busy day the
+macOS job can wait in the queue longer than it runs; the emergency lane skips
+it for that reason.
 
 The build also keeps Next.js's compile cache between runs, and a newer push to
 the same pull request cancels the run it replaces.

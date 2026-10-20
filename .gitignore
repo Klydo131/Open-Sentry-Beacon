@@ -88,3 +88,8 @@ supabase/.temp/
 /opencode.json
 /opencode.jsonc
 /.kiro/settings/mcp.json
+
+# The Postgres edition's own install, and what a running copy keeps: the
+# database files and uploaded files of whoever runs it (selfhost/README.md).
+/selfhost/server/node_modules/
+/selfhost/data/

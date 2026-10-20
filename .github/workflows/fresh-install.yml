@@ -52,6 +52,19 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 30
+      # A plain Postgres, no Supabase at all, for the Postgres edition
+      # (docs/POSTGRES.md). Pinned by digest, like the actions.
+      postgres_plain:
+        image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+        env:
+          POSTGRES_PASSWORD: fresh
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
       # A second empty database for the second way in.
       postgres_cli:
         image: supabase/postgres:17.6.1.011
@@ -89,3 +102,54 @@ jobs:
         run: |
           diff <(sed -n '/^Fingerprint/,$p' "$RUNNER_TEMP/psql.out") \
                <(sed -n '/^Fingerprint/,$p' "$RUNNER_TEMP/cli.out")
+
+      # ------------------------------------------------ the Postgres edition ----
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: selfhost/server/package-lock.json
+
+      - name: The edition's server installs
+        working-directory: selfhost/server
+        run: npm ci --no-audit --no-fund
+
+      - name: Every migration, on plain Postgres with no Supabase
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: '5434'
+          PGPASSWORD: fresh
+        shell: bash
+        run: scripts/fresh-install.sh --plain | tee "$RUNNER_TEMP/plain.out"
+
+      - name: Plain Postgres builds the same app as Supabase
+        shell: bash
+        # Every line but `extension`: Supabase ships pg_cron and
+        # pg_stat_statements, which the edition replaces or does not need.
+        run: |
+          diff <(sed -n '/^Fingerprint/,$p' "$RUNNER_TEMP/psql.out" | grep -v '^extension ') \
+               <(sed -n '/^Fingerprint/,$p' "$RUNNER_TEMP/plain.out" | grep -v '^extension ')
+
+      - name: Sign-in, files, live data and functions, driven by supabase-js
+        working-directory: selfhost/server
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Keys made for this run only, and thrown away with it.
+          while IFS='=' read -r key value; do
+            echo "::add-mask::$value"
+            export "$key=$value"
+          done < <(node src/keys.mjs)
+          export DATABASE_URL="postgresql://postgres:fresh@127.0.0.1:5434/postgres"
+          node src/migrate.mjs >/dev/null
+          docker run -d --name rest --network host \
+            -e PGRST_DB_URI="postgres://authenticator:${AUTHENTICATOR_PASSWORD}@127.0.0.1:5434/postgres" \
+            -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon -e PGRST_JWT_SECRET="$JWT_SECRET" \
+            -e PGRST_DB_EXTRA_SEARCH_PATH="public, extensions" -e PGRST_DB_MAX_ROWS=1000 \
+            -e PGRST_OPENAPI_MODE=disabled -e PGRST_SERVER_PORT=3000 -e PGRST_SERVER_HOST=127.0.0.1 \
+            postgrest/postgrest:v16.5@sha256:1347d7552b88f17832912c06afbf7c43209af6eeeb60834b04aae12c9bd9d5cc
+          for _ in $(seq 1 30); do
+            curl -s -o /dev/null http://127.0.0.1:3000/ && break
+            sleep 1
+          done
+          POSTGREST_URL=http://127.0.0.1:3000 node test/the-edition-holds.mjs | grep -v '"at":"http"'
