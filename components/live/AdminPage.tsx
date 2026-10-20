@@ -9,10 +9,7 @@ import { roleNoun, stageInfo, APP_SHORT_NAME } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
 import * as live from '@/lib/live/data';
 
-/**
- * A day, for the pairing record. Short, and it carries the year only when it is
- * not this one -- a roster stamped 2026 on every line reads as noise.
- */
+/** A short date for the pairing record; the year only when it is not this year. */
 function onDay(iso: string | null | undefined): string {
   if (!iso) return '';
   const d = new Date(iso);
@@ -46,15 +43,7 @@ import { LiveAnnouncements } from '@/components/LiveAnnouncements';
 import { MemberProfile } from '@/components/live/MemberProfile';
 import { useFaces, faceOf } from '@/components/live/Face';
 
-// SPLIT OUT OF components/LiveCorePages.tsx, which had grown to three thousand
-// lines holding nineteen components: the signed-out door, the Director's whole
-// admin screen, both Guide screens, the Explorer's screen and every small piece
-// they share. Nobody can hold that in their head, and a maintainer looking for
-// the login form had to know it was in a file called "core pages".
-//
-// The old module still exists as a re-export, so nothing that imported from it
-// had to change. New code should import from the file that actually holds the
-// screen.
+// The Director's and Executive Director's admin screen.
 
 export function LiveAdminPage() {
   const { profile } = useLiveSession();
@@ -80,27 +69,18 @@ export function LiveAdminPage() {
   const [handLink, setHandLink] = useState<
     { to: string; url: string; why: string; wait?: number; pass?: string } | null
   >(null);
-  // '' not tried, 'yes' copied, 'failed' the clipboard refused. Safari rejects
-  // the write when the document is not focused, and navigator.clipboard does
-  // not exist at all over plain http. The link is in a selectable box right
-  // above, so a failure has somewhere useful to point.
+  // '' not tried, 'yes' copied, 'failed' (Safari refuses when unfocused; no
+  // clipboard over plain http). The link is also in a selectable box.
   const [linkCopied, setLinkCopied] = useState<'' | 'yes' | 'failed'>('');
 
-  // Finding one person in a list of thirty-seven. Kept in the component rather
-  // than the URL: it is a way of looking, not a place you would want to return
-  // to or send to somebody else.
   const [findApproved, setFindApproved] = useState('');
-  // Deleting is permanent, so it takes two taps in the row itself rather than a
-  // browser confirm. A confirm() dialog on a phone lands under the thumb that
-  // just tapped Delete, and the button that dismisses it is the one that agrees.
+  // Delete takes two taps in the row, not a confirm() dialog.
   const [confirmDelete, setConfirmDelete] = useState('');
-  // Bulk selection, held as ids rather than as a flag on each row, so the set
-  // survives the list being re-sorted or re-filtered under it.
+  // Bulk selection as ids, so it survives re-sorting and filtering.
   const [picked, setPicked] = useState<string[]>([]);
-  // '' none pending, 'disapprove' or 'delete' waiting on the second press.
+  // '' none pending, or the bulk action waiting on its second press.
   const [bulkAsk, setBulkAsk] = useState<'' | 'disapprove' | 'delete'>('');
-  // What happened to each person in the last batch. A batch that reports one
-  // number hides the one refusal that mattered.
+  // What happened to each person in the last batch.
   const [bulkResult, setBulkResult] = useState<string[]>([]);
 
   const load = useCallback(async () => {
@@ -122,48 +102,24 @@ export function LiveAdminPage() {
     }
   }, []);
 
-  // WHO IS OPEN. One at a time: a Director comparing two people opens one, reads
-  // it, closes it and opens the other, which is also the only shape that fits a
-  // phone. The panel is rendered next to the list rather than over it so the
-  // row they came from stays visible.
+  // The one profile open beside the list.
   const [openId, setOpenId] = useState('');
   const [contact, setContact] = useState<Record<string, { email: string; joined_at: string }>>({});
 
   useEffect(() => {
     void load();
   }, [load]);
-  // Approvals, invitations and pairings, as they happen. A Director watching
-  // this during a launch was the person most often told to refresh.
   useKeepUp(KEEP_UP_ROSTER, load);
 
-  // The address somebody was invited at and the day they arrived are the two
-  // facts that answer "is this the person I meant to let in?", and neither is
-  // on the profile row. Leadership only, by the same function the roster uses.
+  // The invited address and arrival date, from the same leadership-only function as the roster.
   useEffect(() => {
     live.memberContact().then(setContact).catch(() => setContact({}));
   }, []);
 
   /**
-   * Show somebody's sign-in details again, for handing over by any means.
-   *
-   * ASKED FOR: "I need to see this to all the e-mails I invited so have a
-   * chance to just copy and paste to other platforms not just in e-mail, like
-   * an alternative and chance please."
-   *
-   * WHY IT RE-ISSUES RATHER THAN LOOKS UP. There is nowhere to look it up. The
-   * password is generated when the invitation is made and handed over once; it
-   * is never stored anywhere in a form anybody can read, which is the only
-   * acceptable way to hold somebody's password and is not going to change. So
-   * the honest way to show it again is to make a new one.
-   *
-   * AND THAT IS SAFE FOR EXACTLY ONE KIND OF ACCOUNT. The invite function
-   * refuses an address that has finished signing up, so this can only ever
-   * replace a password on an account created by an invitation and never used.
-   * Somebody who has chosen their own password cannot have it taken away by a
-   * Director pressing this, and the refusal is shown rather than swallowed.
-   *
-   * `deliver: 'link'` sends no email at all. The point of the button is the
-   * congregation that lives on Messenger.
+   * Show somebody's sign-in details again, to pass on by hand. Passwords are
+   * never stored, so this issues a new one; the invite function refuses any
+   * account that has finished signing up. Sends no email (`deliver: 'link'`).
    */
   const showSignIn = async (member: Profile) => {
     const email = contact[member.id]?.email;
@@ -185,9 +141,7 @@ export function LiveAdminPage() {
         ? {
             to: email,
             url: result.link,
-            // NOT 'sent', because nothing was sent. The panel draws the 'sent'
-            // case in green with "in case the e-mail does not arrive", which
-            // would be describing a message that does not exist.
+            // Not 'sent': nothing was sent.
             why: result.mailNote
               || 'Made for you to pass on. Nothing was e-mailed.',
             wait: result.waitSeconds,
@@ -207,8 +161,7 @@ export function LiveAdminPage() {
   };
 
   const openPerson = members.find((m) => m.id === openId) ?? null;
-  // The other half of their pairing, so the compatibility panel has something
-  // to compare against.
+  // The other half of their pairing, for the compatibility panel.
   const openPartner = (() => {
     if (!openPerson) return null;
     const pairing = pairings.find(
@@ -219,22 +172,17 @@ export function LiveAdminPage() {
     return members.find((m) => m.id === otherId) ?? null;
   })();
 
-  // An Executive Director may appoint their own bench, which is why
-  // 'executive' is here and why the edge function refuses it from anybody
-  // else. A Director invites Guides and Explorers only.
+  // Only an Executive Director may invite an Executive Director.
   const roleOptions: Role[] = profile?.role === 'executive'
     ? ['executive', 'admin', 'dm', 'ds']
     : ['dm', 'ds'];
   const guides = members.filter((member) => member.role === 'dm' && member.is_approved);
   const explorers = members.filter((member) => member.role === 'ds' && member.is_approved);
-  // WHO CAN ACTUALLY BE PAIRED: an Explorer with no Guide. One at a time is the
-  // rule, and it is the reason this list is usually short and sometimes empty.
+  // Explorers with no Guide: the only ones who can be paired.
   const freeExplorers = explorers.filter(
     (explorer) => !pairings.some((p) => p.ds_id === explorer.id && p.status === 'active'),
   );
-  // Whether EITHER picker in the pairing form will draw a search box. The same
-  // threshold SelectPerson uses; passing it to both is what keeps the two
-  // dropdowns on one line.
+  // Either picker showing a search box; passed to both keeps them on one line.
   const pairPickersSearch = guides.length > 6 || freeExplorers.length > 6;
   const manageable = members.filter(
     (member) => member.id !== profile?.id && roleOptions.includes(member.role),
@@ -242,49 +190,28 @@ export function LiveAdminPage() {
   const pending = manageable.filter((member) => !member.is_approved);
   const approved = manageable.filter((member) => member.is_approved);
 
-  // The proposal, and what could not be made. `null` means nobody has asked
-  // yet; an empty array means asked and nobody is waiting, which is a different
-  // screen and a different sentence.
+  // null: not asked yet. []: asked, and nobody is waiting.
   const [proposal, setProposal] = useState<live.SuggestedPairing[] | null>(null);
   const [pairResults, setPairResults] = useState<string[]>([]);
 
-  /**
-   * The name of whoever approved somebody, from the list already loaded.
-   *
-   * FIRST NAME ONLY, because the line it sits on is already carrying a role and
-   * a date and this is the least important of the three.
-   *
-   * AND IT RETURNS EMPTY RATHER THAN GUESSING. `approved_by` is null when the
-   * approval happened outside a request -- a migration or a script has no
-   * auth.uid() -- and it can also point at somebody who has since been deleted,
-   * because the column is ON DELETE SET NULL. Either way the date is still
-   * true and is worth showing on its own; inventing "by Someone" would put a
-   * person in a record who may never have been there.
-   */
+  /** The approver's first name, or '' when unknown (no auth user, or since deleted). */
   const approverName = (id: string | null | undefined): string => {
     if (!id) return '';
     const who = members.find((m) => m.id === id);
     return who?.full_name ? who.full_name.split(' ')[0] : '';
   };
-  // Matching is on the name a Director reads on the row. Case and surrounding
-  // spaces are ignored, because a name copied out of an email carries both.
+  // Match the name, ignoring case and surrounding spaces.
   const approvedNeedle = findApproved.trim().toLowerCase();
   const approvedShown = approvedNeedle
     ? approved.filter((member) => (member.full_name || '').toLowerCase().includes(approvedNeedle))
     : approved;
-  // Only the rows on screen. Select-all and its half-ticked state both mean
-  // "of what you can see", never "of everything the filter is hiding".
+  // Select-all applies to the rows on screen only.
   const pickedShown = approvedShown.filter((member) => picked.includes(member.id));
-  // Directors are their own room, and only an Executive has one. A Director
-  // does not manage other Directors, so showing them the tab would be a room
-  // with nothing they can do in it.
+  // Only an Executive Director has a Directors room.
   const directors = members.filter((member) => member.role === 'admin' && member.is_approved);
   const isExec = profile?.role === 'executive';
 
-  // ROOMS, IN THE ORDER A DIRECTOR ACTUALLY WORKS. See docs/DESIGN.md rule 1:
-  // the room needed most often is the first one. Pairing and approving happen
-  // weekly; the board report is read once a month. Pairing used to be the ninth
-  // section down one long page.
+  // Rooms in the order a Director uses them most (docs/DESIGN.md rule 1).
   const rooms: Room[] = [
     { id: 'pairings', label: 'Pairings', badge: pairings.filter((x) => x.status === 'active').length },
     { id: 'approvals', label: 'Approvals', badge: pending.length, urgent: pending.length > 0 },
@@ -297,7 +224,7 @@ export function LiveAdminPage() {
     { id: 'feedback', label: 'Feedback' },
     { id: 'church', label: 'Church' },
   ];
-  // Stored per role, so a Director and an Executive keep their own places.
+  // Remembered per role.
   const [room, chooseRoom] = useRoom(rooms, `beacon-admin-room:${profile?.role ?? 'admin'}`);
 
   useEffect(() => {
@@ -319,12 +246,7 @@ export function LiveAdminPage() {
       });
       const to = email.trim().toLowerCase();
 
-      // TELL THE TRUTH ABOUT WHAT HAPPENED. This said "Invitation e-mail sent"
-      // unconditionally, including when the function had reported that it could
-      // not send anything. Invitations went nowhere for a day while the screen
-      // said they had gone — and the one thing that would have made it obvious,
-      // the link the function hands back for exactly this case, was thrown away
-      // one layer down.
+      // Not delivered by email: show the link to pass on by hand.
       if (result.delivery === 'link' && result.link) {
         setHandLink({
           to, url: result.link, why: result.mailNote ?? '',
@@ -332,20 +254,12 @@ export function LiveAdminPage() {
         });
         setNotice('');
       } else {
-        // KEEP THE LINK ON SCREEN EVEN ON SUCCESS. Supabase builds the link in
-        // its own email from the project's Site URL, and if the app's address
-        // is not in the Redirect URLs allow-list that is silently ignored — a
-        // project on its defaults mails everybody a link to localhost:3000. The
-        // send reports success, the link is useless, and nothing in the result
-        // says so. This link is built by our own invite function from the
-        // church's own configured address, so it is correct whatever the
-        // provider dashboard holds.
+        // Show the link on success too: it is built from the church's own address,
+        // unlike Supabase's email, which can point at a misconfigured Site URL.
         setHandLink(result.link
           ? { to, url: result.link, why: 'sent', pass: result.tempPassword }
           : null);
-        // Say WHERE it went and BY WHICH ROUTE. "Sent" on its own is the
-        // message this screen showed all day while nothing was being sent, so
-        // it has to carry something only a real send could produce.
+        // Say where it went and by which route.
         const how = result.via === 'supabase'
           ? ' It went through Supabase\u2019s own mail service, so it will look plain.'
           : '';
@@ -396,24 +310,8 @@ export function LiveAdminPage() {
     }
   };
 
-  // DELETE, WHICH IS NOT DISAPPROVE.
-  //
-  // Disapprove switches an account off and keeps it. Delete removes the auth
-  // user, and because every table hangs off that row, the person leaves the
-  // system entirely -- including their address, which is the point. Until this
-  // existed, an address that had ever been invited could never be invited
-  // again: the account stayed in auth.users where no screen could see it, and
-  // a fresh invitation to the same person was refused as already registered.
-  //
-  // WHO MAY DELETE WHOM IS DECIDED IN THE DATABASE, not here. remove_member_by_
-  // leader runs discipline_check first (migration 0023): an Executive may act
-  // on anyone in a church they oversee, a Director on Guides and Explorers
-  // only, nobody on themselves, and nobody at all on the Head Executive
-  // Director. It returns a sentence when it refuses, which is shown as-is.
-  //
-  // The act is recorded. remove_member_by_leader writes to discipline_log
-  // before it deletes, and that entry outlives the person it describes
-  // (migration 0028) -- so a church can always answer who removed whom.
+  // Delete removes the account entirely, freeing the address; Disapprove only
+  // switches it off. The database decides who may delete whom and logs it.
   const deleteAccount = async (member: Profile) => {
     setBusy(member.id);
     setError('');
@@ -434,18 +332,8 @@ export function LiveAdminPage() {
     }
   };
 
-  // ACTING ON SEVERAL PEOPLE AT ONCE, ONE PERSON AT A TIME UNDERNEATH.
-  //
-  // There is no bulk endpoint and there should not be. Every rule that governs
-  // a single removal -- who may act on whom, the discipline log, freeing the
-  // address -- lives in the database function, and a batch call would have to
-  // reimplement all three. So the batch is a loop over the same call.
-  //
-  // ONE REFUSAL MUST NOT UNDO THE REST. A Director selecting twelve people and
-  // catching one refusal on a Director they may not touch should still have
-  // acted on the other eleven, and should be told exactly which one failed.
-  // Reporting "12 accounts" and meaning eleven is how trust in a bulk action
-  // goes, permanently.
+  // Bulk actions run the single-person call in a loop, so every rule and the log
+  // still apply, and one refusal does not stop the rest. Each result is reported.
   const runBulk = async (what: 'disapprove' | 'delete') => {
     const people = approved.filter((member) => picked.includes(member.id));
     if (people.length === 0) return;
@@ -507,20 +395,11 @@ export function LiveAdminPage() {
   return (
     <LiveAppShell allow={['admin', 'executive']}>
       <div className="space-y-4">
-        {/* SMALLER THAN IT WAS, and the sentence under it is gone. It read
-            "Invite, approve, disapprove and pair people", which is exactly what
-            the room names below now say, and it said it again on every visit.
-            On a 664px phone that block plus the header spent 300px before a
-            Director could reach anything they came to do. */}
         <h1 className="text-2xl font-extrabold text-room sm:text-3xl">
           {church?.name || 'Church administration'}
         </h1>
 
-        {/* ABOVE THE ROOMS, and only while somebody is open. A panel below a
-            long roster is one a Director scrolls past without seeing, and they
-            have just pressed a name expecting something to happen. It is not
-            allowed to displace the room tabs permanently — it is here only when
-            it was asked for, and Close puts everything back. */}
+        {/* Shown above the rooms only while a profile is open. */}
         {openPerson && (
           <MemberProfile
             person={openPerson}
@@ -534,32 +413,16 @@ export function LiveAdminPage() {
           />
         )}
 
-        {/* THE ROOMS COME FIRST, above even a safeguarding alert, and that
-            ordering is deliberate. docs/DESIGN.md rule 1: the second visit
-            should be faster than the first, which only works if the way around
-            the building is in the same place every time. Put an alert above
-            them and the tabs move down on the days something is wrong -- which
-            are the days a Director can least afford to go looking. */}
+        {/* The room tabs come first, always in the same place (docs/DESIGN.md rule 1). */}
         <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
 
         {error && <Notice tone="error">{error}</Notice>}
         {notice && <Notice tone="success">{notice}</Notice>}
 
-        {/* FIRST CONTENT, AND STILL BELOW THE TABS. The tabs do not move, for
-            the reason written above them: put anything above them and the way
-            around the building shifts on exactly the days a Director can least
-            afford to go looking.
-
-            Above the safeguarding alert on an ordinary day, because it draws
-            nothing when there is nothing pinned — and below it on the rare day
-            something is open, which is the right way round. A pinned notice
-            must never sit on top of a report somebody has made. */}
+        {/* Pinned notices, below the tabs; shows nothing when there are none. */}
         <LiveAnnouncements hideWhenEmpty />
 
-        {/* ABOVE THE ADMIN WORK, NOT BELOW IT. A safeguarding report that sits
-            under invitations and pairings gets read at the pace of invitations
-            and pairings. It renders nothing at all when there is nothing open,
-            so it costs a Director no attention on an ordinary day. */}
+        {/* Open safeguarding reports, above the admin work; nothing when there are none. */}
         <LiveReportsForDirector
           onRemove={async (id, who) => {
             if (!confirm(
@@ -568,12 +431,8 @@ export function LiveAdminPage() {
               + 'is freed so they could be invited again.',
             )) return;
             try {
-              // The RPC, not the plain profile delete this used to call. A
-              // deleted profile left the auth account behind where no screen
-              // could reach it, so somebody removed after a safeguarding report
-              // still held a login and their address could never be invited
-              // again. It also refuses rather than throwing when a Director
-              // lacks the authority, so a refusal is a sentence to show.
+              // The database function, which removes the auth account too and returns a
+              // sentence when it refuses.
               const verdict = await live.removeMemberByLeader(id);
               if (verdict !== 'ok') { setError(verdict); return; }
               setNotice(`${who} was removed from the church.`);
@@ -584,12 +443,7 @@ export function LiveAdminPage() {
           }}
         />
 
-        {/* GUIDES AND EXPLORERS ARE SEPARATE ROOMS, not one roll to scroll.
-            They are different jobs: a Guide has a load and a cap, an Explorer
-            has a Guide and a stage. Reading one long list and sorting people
-            in your head is work the app should have done. Directors get their
-            own room too, and only an Executive sees it, because a Director does
-            not manage other Directors. */}
+        {/* Guides, Explorers and (for Executives) Directors are separate rooms. */}
         {(room === 'guides' || room === 'explorers' || room === 'directors') && (
           <PeopleRoom
             people={room === 'guides' ? guides : room === 'explorers' ? explorers : directors}
@@ -600,76 +454,37 @@ export function LiveAdminPage() {
           />
         )}
 
-        {/* SAFEGUARDING, IN THE ORDER A DIRECTOR MEETS IT: what has been
-            reported, then the cases arising from it, then the room where a
-            case is opened or somebody is stopped on the spot. Putting the
-            trial room first would offer the punishment before the hearing. */}
-        {/* A Director sees the cases they are judging here, beside the reports
-            they come from. This is not a duplicate of the /cases room: that one
-            is where a person answers a case they were called to, and this is
-            where a head judge works through the ones they opened. Both call the
-            same component because the component already tells those two jobs
-            apart by whether the reader leads the church. */}
+        {/* Safeguarding in order: reports, then cases, then the trial room. */}
+        {/* The cases this Director is judging, beside the reports they come from. */}
         {room === 'safeguarding' && profile && <LiveHallOfJustice me={profile} />}
         {room === 'safeguarding' && profile && <LiveCourt me={profile} />}
         {room === 'safeguarding' && profile && (
           <LiveTrialRoom
             me={profile}
             onCaseOpened={() => {
-              // A case opened below appears in Cases above, which loads its own
-              // list. Reloading the page data here keeps the member list and the
-              // pairing list honest after a suspension archived somebody.
+              // Reload after a case, so the lists reflect any suspension.
               void load();
             }}
           />
         )}
 
-        {/* THE SECURITY ROOM HOLDS BOTH RECORDS, because they answer the same
-            question a week apart: the audit says what happened to accounts, and
-            the library record says what people sent each other. A Director
-            looking into somebody reads both, and two doors for one errand is
-            one door too many.
-
-            Who appears in each is decided in the database. A Director reads the
-            activity record for the Guides and Explorers of a church they lead;
-            an Executive Director, head or otherwise, reads those and the
-            Directors as well. Nobody appears in their own oversight, and
-            nobody at any rank is shown the address of anything: the record
-            carries what KIND of thing it was, never which. */}
+        {/* Security: the account audit and the library record. Who appears in each is
+           decided by the database; no record shows an address. */}
         {room === 'feedback' && <LiveFeedbackInbox />}
 
         {room === 'security' && (
           <>
-            {/* THE ANALYSIS FIRST, THE FEED AFTER IT. A Director opening this
-                room has a question about people, not about events: the feed
-                answers "what happened" and can only ever show what is there,
-                which is why an Explorer nobody has spoken to appears in it zero
-                times. The screen that counts silence goes above the one that
-                lists noise. */}
+            {/* The analysis first, then the feed. */}
             <LiveActivityAnalysis />
             <LiveSecurityAudit />
             <LiveLibraryRecord audience={profile?.role === 'executive' ? 'executive' : 'admin'} />
           </>
         )}
 
-        {/* Guilds and the church-wide numbers. Both are a Director's job as
-            much as an Executive's -- a Director who cannot see their own
-            church's totals cannot run it. */}
         {room === 'church' && profile && <LiveGuilds me={profile} />}
         {room === 'church' && <LiveChurchPulse />}
-        {/* THE NUMBERS, THE DOWNLOADS AND THE WRITING MOVED TO THE OFFICE.
-            They were three clicks inside an admin tab, which is not where
-            anybody looks for the thing they open on a Tuesday morning. This
-            room keeps what it is for: the state of the church and its guilds.
-            See app/office/page.tsx. */}
 
-        {/* THE LIBRARY BELONGS TO DIRECTORS TOO.
-            The tutorial's Director walk ends on "Stock the library", and live
-            it existed only on the Guide's page — so somebody who learned the
-            job in the demo signed in and found the last thing they were taught
-            was missing. Passing no pairings gives add-and-publish without the
-            per-Explorer share buttons, which is right: stocking the shelf is a
-            Director's job, handing a book to one person is a Guide's. */}
+        {/* Directors can stock the library too; no pairings means no per-person sharing. */}
         {room === 'lessons' && <LiveLibraryForGuide pairings={[]} />}
 
         {room === 'approvals' && (
@@ -677,10 +492,7 @@ export function LiveAdminPage() {
           <h2 className="text-xl font-bold text-navy">Send an invitation e-mail</h2>
           <p className="mt-1 text-sm text-gray-500">The chosen role comes from the server-side invitation record.</p>
           {handLink && (
-            // A church that has not set up a mail provider yet is a normal
-            // state, and it must not be a dead end. The account and the link
-            // are real and work exactly once; the only thing missing is the
-            // postman, so the Director becomes the postman.
+            // No mail provider yet is normal: the Director passes the details on by hand.
             <div className={`mt-4 rounded-2xl p-4 ring-1 ${
               handLink.wait
                 ? 'bg-blue-50 ring-blue-300'
@@ -688,10 +500,7 @@ export function LiveAdminPage() {
                   ? 'bg-green-50 ring-green-300'
                   : 'bg-amber-50 ring-amber-300'
             }`}>
-              {/* A COOLDOWN AND A FAULT ARE DIFFERENT THINGS and must not look
-                  the same. One means "wait a moment"; the other means "go and
-                  change a setting". Drawn identically, a sixty-second timer
-                  reads as the email system failing again. */}
+              {/* A cooldown ("wait a moment") looks different from a fault ("change a setting"). */}
               <p className={`font-bold ${
                 handLink.wait ? 'text-blue-900' : handLink.why === 'sent' ? 'text-green-900' : 'text-amber-900'
               }`}>
@@ -715,12 +524,7 @@ export function LiveAdminPage() {
                 password works for three days, or until they choose their own.
               </p>
 
-              {/* THE PASSWORD, WHERE A DIRECTOR CAN READ IT DOWN A PHONE LINE.
-                  This is the call that used to end in "I'll send you another
-                  one" -- which, while invitations carried a one-time token,
-                  killed the message already sitting in their inbox. Now there
-                  is nothing to kill and nothing to re-send: the two facts on
-                  screen are the two facts in the e-mail. */}
+              {/* The password, to read out if the email does not arrive. */}
               {handLink.pass && (
                 <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-black/10">
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-500">E-mail</p>
@@ -790,18 +594,8 @@ export function LiveAdminPage() {
             </label>
             {role === 'ds' && (
               <div className="block">
-                {/* NOT "after approval" any more, because for an Explorer there is
-                    no approval step: an invitation IS the approval, so choosing
-                    a Guide here pairs them the moment they finish signing up.
-                    The old label described a wait that does not happen. */}
-                {/* THE SHARED PICKER, not a second hand-rolled select.
-                    This was its own <select> listing every Guide, so when the
-                    pairing screen's pickers learned to be typed into, this one
-                    -- which is the SAME decision, made a week earlier -- did
-                    not. A Director inviting an Explorer still scrolled thirty
-                    nine names. One component, one behaviour, and "Pair later"
-                    survives as the empty choice because here it is a real
-                    answer rather than a thing left undone. */}
+                {/* For an Explorer, the invitation is the approval, so a Guide chosen here
+                   pairs them as soon as they sign up. "Pair later" is a real choice. */}
                 <SelectPerson
                   label="Guide to walk with (optional)"
                   value={guideId}
@@ -830,8 +624,7 @@ export function LiveAdminPage() {
 
         )}
 
-        {/* BULK, UNDER THE SINGLE FORM. One at a time is right for the usual
-            case and hopeless for twenty-five, which is a real Sunday. */}
+        {/* Bulk invitations, under the single form. */}
         {room === 'approvals' && <LiveBulkInvite roles={roleOptions} />}
 
         {room === 'approvals' && (
@@ -847,10 +640,7 @@ export function LiveAdminPage() {
             <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-800">{approved.length}</span>
           </div>
 
-          {/* SEARCH, once the list is longer than a screen. Below five rows a
-              box is one more thing to read on the way to the row you can
-              already see; at thirty-seven it is the only way to reach one
-              person without scrolling past thirty-six others. */}
+          {/* Search appears above five rows. */}
           {approved.length > 5 && (
             <div className="mt-4">
               <input
@@ -871,10 +661,7 @@ export function LiveAdminPage() {
             </div>
           )}
 
-          {/* SELECT ALL MEANS ALL OF WHAT YOU CAN SEE, not all of everything.
-              With a search of "ma" showing four rows, a box labelled Select all
-              that quietly took thirty-seven is the difference between
-              disapproving four people and disapproving a church. */}
+          {/* Select all means all of what is on screen. */}
           {approvedShown.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-gray-50 px-3 py-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-navy">
@@ -883,8 +670,7 @@ export function LiveAdminPage() {
                   className="h-4 w-4"
                   checked={pickedShown.length === approvedShown.length && approvedShown.length > 0}
                   ref={(node) => {
-                    // Some are picked, but not all. The browser has a third
-                    // state for exactly this and it has to be set in code.
+                    // The checkbox's half-ticked state can only be set in code.
                     if (node) node.indeterminate =
                       pickedShown.length > 0 && pickedShown.length < approvedShown.length;
                   }}
@@ -921,10 +707,7 @@ export function LiveAdminPage() {
             </div>
           )}
 
-          {/* THE SECOND PRESS NAMES EVERY PERSON. "Delete 12 accounts?" is not
-              a confirmation, it is a number: nobody can tell from it whether
-              the twelve are the twelve they meant. Deleting cannot be undone,
-              so the list is spelled out before it happens. */}
+          {/* The second press names every person. */}
           {bulkAsk && picked.length > 0 && (
             <div className={`mt-3 rounded-xl p-3 ring-1 ${
               bulkAsk === 'delete' ? 'bg-red-50 ring-red-200' : 'bg-amber-50 ring-amber-200'
@@ -961,8 +744,7 @@ export function LiveAdminPage() {
             </div>
           )}
 
-          {/* PER PERSON, NOT PER BATCH. A refusal names who and why, so a
-              Director can act on it rather than re-running the whole batch. */}
+          {/* Results per person, so a refusal says who and why. */}
           {bulkResult.length > 0 && (
             <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
               <p className="font-bold">Not everybody could be done:</p>
@@ -979,20 +761,8 @@ export function LiveAdminPage() {
             </div>
           )}
 
-          {/* A LIST OF ITS OWN, WITH ITS OWN SCROLL BAR.
-              Forty accounts is roughly four thousand pixels of page. Every
-              control above this — the search box, Select all, Disapprove
-              selected, Delete selected — scrolled away the moment somebody
-              started looking through the names, so choosing the eighth person
-              meant scrolling back up to find the button. Capping the height
-              keeps the roll and the things you do to it on the screen at the
-              same time.
-
-              `max-h` with `overflow-y-auto`, not a fixed height: a church with
-              four accounts gets a four-row box rather than an empty well.
-              `overscroll-contain` stops the page underneath from scrolling on
-              when this list reaches its end, which on a phone is what makes an
-              inner scroll area feel broken. */}
+          {/* Its own scroll area, so the controls above stay on screen. max-h, not a fixed
+             height; overscroll-contain keeps the page from scrolling on. */}
           <div
             className={`mt-4 space-y-2 ${
               approvedShown.length > 6
@@ -1022,25 +792,8 @@ export function LiveAdminPage() {
                       <p className="truncate font-semibold text-navy">{member.full_name || 'Member'}</p>
                       <NewBadge person={member} />
                     </div>
-                    {/* WHEN, AND BY WHOM. This line read "access approved" and
-                        nothing else -- a permanent present tense for the single
-                        decision a Director is most likely to be asked to account
-                        for afterwards. Every other consequential thing on a
-                        profile already carried a date, and two of them carried
-                        an actor: suspended_at with suspended_by, guardian
-                        consent with the person who gave it. Taking access AWAY
-                        was fully recorded; granting it was not recorded at all.
-
-                        NULL MEANS TWO DIFFERENT THINGS AND THE LINE SAYS WHICH.
-                        Everybody in this list is approved, so a missing date is
-                        never "not yet decided" -- it is a decision made before
-                        the column existed, never captured, and not in
-                        profile_changes either, because that trigger watches
-                        eight fields and is_approved is not one of them. Saying
-                        so is the truth; showing created_at or updated_at in its
-                        place would be a confident guess about somebody's access.
-                        That stops being said for everyone approved from now
-                        on. */}
+                    {/* When and by whom access was approved. A missing date means approved before
+                       dates were recorded, and the line says so. */}
                     <p className="text-sm text-gray-500">
                       {roleNoun(member.role)}
                       {member.approved_at
@@ -1050,10 +803,7 @@ export function LiveAdminPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {/* NOT A DESTRUCTIVE BUTTON, SO NOT A RED ONE, and it sits
-                        before the two that are. A Director reaching for this is
-                        helping somebody get in, which is the opposite errand
-                        from the two beside it. */}
+                    {/* Not destructive, so not red, and before the two that are. */}
                     <Button
                       variant="ghost"
                       onClick={() => void showSignIn(member)}
@@ -1078,11 +828,7 @@ export function LiveAdminPage() {
                   </div>
                 </div>
 
-                {/* THE SECOND TAP, AND WHAT IT COSTS, IN THE SAME PLACE.
-                    Saying "this cannot be undone" is not the same as saying
-                    what goes: their messages, who they walked with, and their
-                    way back in. The last line is the one a Director is
-                    actually here for, so it is stated rather than implied. */}
+                {/* The second tap says what is lost: messages, pairings, and their way back in. */}
                 {confirmDelete === member.id && (
                   <div className="mt-3 rounded-xl bg-red-50 p-3 ring-1 ring-red-200">
                     <p className="text-sm font-bold text-red-900">
@@ -1149,10 +895,7 @@ export function LiveAdminPage() {
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Pair a Guide and Explorer</h2>
           <form onSubmit={pair} className="mt-4 grid gap-3 sm:grid-cols-2">
-            {/* BOTH PICKERS RESERVE THE SEARCH ROW TOGETHER, so the two
-                dropdowns stay on one line whichever of the two lists happens to
-                be long enough to need a search box. The parent is the only
-                thing that can see both. */}
+            {/* Both pickers reserve the search row together, so they stay on one line. */}
             <SelectPerson
               label="Guide"
               value={dmId}
@@ -1164,13 +907,8 @@ export function LiveAdminPage() {
                 ? 'Nobody in this church has the Guide role yet. Invite one, or change somebody\u2019s role from their profile.'
                 : undefined}
             />
-            {/* AN EMPTY LIST HERE IS USUALLY GOOD NEWS, AND USED TO READ AS A
-                FAULT. The picker offers only Explorers who have no Guide, so a
-                church where everybody is paired correctly has nothing to
-                choose. It said "No Explorers to choose yet" -- and "yet" means
-                none exist, which to a Director looking at a roster of fourteen
-                Explorers means the screen is broken. Reported as a bug, and
-                the message was the bug. */}
+            {/* Only unpaired Explorers are offered, so an empty list usually means everyone
+               has a Guide; it says so. */}
             <SelectPerson
               label="Explorer"
               value={dsId}
@@ -1192,28 +930,9 @@ export function LiveAdminPage() {
             </div>
           </form>
 
-          {/* ---------------------------------------------------------------
-              PAIR EVERYBODY WHO IS WAITING
-              ---------------------------------------------------------------
-              Asked for: "if there are too many candidates and the ED or
-              Director have to input alot of Guides and Explorers inside the
-              system of the app, there must be a button for auto pair." Right,
-              and the form above is the reason -- one pairing at a time is two
-              fields and a button, forty times.
-
-              IT PROPOSES. IT DOES NOT PAIR. That is the whole design and it is
-              not timidity: a pairing is two named people being told they will
-              walk together for months, and forty of them created by one tap
-              with no list shown first is not something a Director can
-              supervise. The list appears, the Director reads it, and only then
-              does anything happen.
-
-              AND THEN THEY ARE MADE ONE AT A TIME, through the same
-              `createPairing` the form above uses, so every trigger and policy
-              applies to each -- the cap, the one-Guide-per-Explorer rule, the
-              church scope. A refusal names who and why instead of taking the
-              whole batch down with it, the same shape as the bulk approval
-              controls further down this screen. */}
+          {/* Pair everybody who is waiting. It proposes; the Director reads the list and
+             confirms, and each pairing is then made through createPairing, one at a
+             time, so every rule applies and a refusal names who and why. */}
           <div className="mt-4 rounded-2xl bg-slate-50 p-3 ring-1 ring-navy/5 sm:p-4">
             {proposal === null ? (
               <>
@@ -1239,9 +958,7 @@ export function LiveAdminPage() {
             ) : proposal.length === 0 ? (
               <>
                 <p className="text-sm font-bold text-navy">Nobody is waiting</p>
-                {/* THE TWO REASONS A PROPOSAL CAN BE EMPTY, said apart. A
-                    Director who reads "nobody is waiting" when in fact every
-                    Guide is full would go looking for a bug. */}
+                {/* The two reasons a proposal can be empty, said apart. */}
                 <p className="mt-0.5 text-sm text-gray-600">
                   Every Explorer already has a Guide, or every Guide is at the limit for
                   this church, in which case the people still waiting need another Guide
@@ -1290,9 +1007,7 @@ export function LiveAdminPage() {
                       let made = 0;
                       for (const row of proposal) {
                         try {
-                          // THE ORDINARY PATH, one at a time. 'traditional' is
-                          // the default track the form uses; a Director changes
-                          // it per pairing afterwards if somebody is digital.
+                          // One at a time. 'traditional' is the default track; it can be changed after.
                           await live.createPairing(row.dm_id, row.ds_id, 'traditional');
                           made += 1;
                         } catch (cause) {
@@ -1315,8 +1030,7 @@ export function LiveAdminPage() {
               </>
             )}
 
-            {/* PER PAIRING, NOT PER BATCH. A refusal names who and why so a
-                Director can act on it, rather than re-running the whole thing. */}
+            {/* Results per pairing. */}
             {pairResults.length > 0 && (
               <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
                 <p className="font-bold">Not every pairing could be made:</p>
@@ -1337,9 +1051,7 @@ export function LiveAdminPage() {
           <div className="mt-5 space-y-2">
             {pairings.filter((pairing) => pairing.status === 'active').map((pairing) => (
               <div key={pairing.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 text-sm">
-                {/* BOTH NAMES OPEN. The question a Director asks of this row
-                    is whether the two belong together, and that cannot be
-                    answered from two names and a stage. */}
+                {/* Both names open their profiles. */}
                 <button
                   type="button"
                   onClick={() => setOpenId(pairing.dm_id)}
@@ -1356,23 +1068,9 @@ export function LiveAdminPage() {
                   {pairing.ds_name}
                 </button>
                 <MinorBadge person={{ birthday: pairing.ds_birthday, guardian_consent_at: pairing.ds_guardian_consent_at }} />
-                {/* WHEN THEY WERE CONNECTED. `created_at` has been on every one
-                    of these rows since the table existed and was never drawn,
-                    so the roster answered "who" and never "since when" -- and a
-                    Director deciding whether a pairing is working needs the
-                    second at least as much as the first. Three weeks and three
-                    months are different questions about the same two names. */}
+                {/* When they were connected. */}
                 <span className="text-xs text-gray-500">since {onDay(pairing.created_at)}</span>
-                {/* THIS IS A STATUS, NOT A BUTTON, and it was read as one.
-                    It shows where the Explorer is on the journey, and the
-                    second stage is called "Connect" — so a grey pill reading
-                    "Connect" sat immediately beside a large button reading
-                    "Disconnect" and the pair looked like a choice. It was
-                    reported as exactly that: "Connect should be bigger and
-                    green".
-
-                    Now it says what it is, and wears the stage's own colour
-                    rather than the neutral grey every chip in the app shares. */}
+                {/* A status, not a button, in the stage's own colour. */}
                 <span
                   className="ml-auto rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide"
                   style={{
@@ -1382,14 +1080,9 @@ export function LiveAdminPage() {
                 >
                   Stage · {stageInfo(pairing.journey_stage).label}
                 </span>
-                {/* UNPAIR. A pairing could be made and never unmade, so a wrong
-                    one could only be corrected in SQL. Archiving rather than
-                    deleting keeps the conversation history intact -- the two
-                    people simply stop being connected. */}
-                {/* CHANGE GUIDE. The owner, 7 October 2026: "EDs and
-                    Directors can change pairs but they can't see the Guide
-                    and Explorer's chat". The first pairing ends and a new one
-                    starts; the conversation stays with the first two. */}
+                {/* Unpair archives the pairing; the conversation history stays. */}
+                {/* Change Guide: the first pairing ends and a new one starts; the conversation
+                   stays with the first two. */}
                 <Button
                   variant="ghost"
                   onClick={() => { setChanging(changing === pairing.id ? '' : pairing.id); setNextGuide(''); }}
@@ -1465,28 +1158,7 @@ export function LiveAdminPage() {
             ))}
           </div>
 
-          {/* -----------------------------------------------------------------
-              THE PAIRINGS THAT HAVE ENDED
-              -----------------------------------------------------------------
-              WHAT A DIRECTOR COULD NOT SEE AT ALL. The list above filters to
-              `status === 'active'`, so a pairing that ended simply stopped
-              existing on this screen. Fifty-three of this church's pairings are
-              archived and not one of them was visible to anybody -- which means
-              a Director could not answer "has this Explorer had a Guide
-              before?", or "how long did that last?", or "who was walking with
-              them in August?".
-
-              That is the question this whole change came from: "EDs and
-              Directors should know when did the Guide and Explorer connected so
-              we there would be a track record." A record that only holds the
-              present is not a record.
-
-              FOLDED SHUT, because the roster is about who is walking together
-              now. It opens when somebody asks the question it answers -- the
-              same shape as the appointments history.
-
-              NEWEST FIRST, because the question is almost always about the most
-              recent arrangement rather than the oldest. */}
+          {/* Pairings that have ended, newest first, folded shut. */}
           {(() => {
             const ended = pairings
               .filter((p) => p.status !== 'active')
@@ -1517,15 +1189,7 @@ export function LiveAdminPage() {
                       >
                         {p.ds_name}
                       </button>
-                      {/* TWO DIFFERENT KINDS OF NULL, AND THE SCREEN SAYS WHICH.
-                          A pairing archived before migration 20260913100000 has
-                          an end date that was NEVER CAPTURED, and there is no
-                          honest way to recover it -- `updated_at` moves on stage
-                          changes, so reading it as an ending would put a
-                          confident wrong day in front of a pastoral judgement.
-                          Saying the date is not recorded is the truth, and it
-                          stops being said for every pairing that ends from now
-                          on. */}
+                      {/* A pairing archived before end dates were recorded says so rather than guessing. */}
                       <span className="ml-auto text-xs text-gray-500">
                         {onDay(p.created_at)}
                         {' \u2013 '}
@@ -1540,17 +1204,10 @@ export function LiveAdminPage() {
         </Card>
         )}
 
-        {/* The numbers first: a leader opens this to find out how the ministry
-            is going, not to administer one more person. */}
+        {/* The numbers first. */}
         {room === 'church' && <LiveChurchOverview />}
 
-        {/* The WALL, not the named requests. A Director is shown totals and
-            never an identity; one who needs to know how a particular person is
-            doing asks their Guide. prayer_wall() returns no identifier at all,
-            so there is nothing to read even in the raw response.
-
-            Worth stating because it was once reported as a bug — "the admin
-            cannot see the prayer" — when it was the design working. */}
+        {/* Directors see the anonymous prayer wall, never named requests. */}
         {room === 'approvals' && <LiveRecommendationsForDirector />}
         {room === 'lessons' && <LiveStudies />}
         {room === 'church' && <LiveBoardReport churchName={church?.name} />}
@@ -1558,14 +1215,6 @@ export function LiveAdminPage() {
     </LiveAppShell>
   );
 }
-
-/**
- * Morning, afternoon or evening, by the reader's own clock.
- *
- * Local time deliberately: a Guide in Manila opening this at eight in the
- * evening should not be told good morning because a server in another
- * hemisphere thinks it is.
- */
 
 function PeopleRoom({
   people,
@@ -1611,7 +1260,7 @@ function PeopleRoom({
             const walking = kind === 'explorers' ? guideOf(person.id) : null;
             return (
               <div key={person.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-gray-50 px-4 py-3 text-sm">
-                {/* THE FACE OPENS THEM TOO: it is the biggest thing on the row. */}
+                {/* The face opens the profile too. */}
                 <button type="button" onClick={() => onOpen(person.id)} className="shrink-0 rounded-full" aria-label={`Open ${person.full_name || 'this person'}'s profile`}>
                   <Avatar name={person.full_name || 'Member'} photo={faceOf(faces, person.photo_path)} avatar={person.avatar ?? undefined} />
                 </button>
@@ -1624,15 +1273,12 @@ function PeopleRoom({
                     >
                       {person.full_name}
                     </button>
-                    {/* The Guides and Explorers rooms: a Director scanning a
-                        roster needs to know who arrived this week. */}
+                    {/* Who arrived this week. */}
                     <NewBadge person={person} />
                     <MinorBadge person={person} />
                   </div>
                   {kind === 'explorers' && (
-                    // The one thing a Director looks for on this screen. An
-                    // Explorer with no Guide has no app, so it is said plainly
-                    // and coloured as something to fix rather than a blank.
+                    // An Explorer without a Guide is flagged as something to fix.
                     walking
                       ? <p className="text-xs text-gray-500">walking with {walking}</p>
                       : <p className="text-xs font-semibold text-red-700">not yet paired</p>
@@ -1642,12 +1288,7 @@ function PeopleRoom({
                   )}
                 </div>
                 {kind === 'guides' && (
-                  // THE CAP IS THE CHURCH'S, READ FROM THE CHURCH. This printed
-                  // "/5" from a literal in three places, which was true for as
-                  // long as five was the only number anybody had and a lie the
-                  // moment a church chose a different one. The database has
-                  // always enforced the church's own figure; only the screen
-                  // was guessing.
+                  // The cap is the church's own figure.
                   <span
                     className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
                       load >= cap ? 'bg-red-100 text-red-800' : 'bg-white text-navy ring-1 ring-black/5'
@@ -1659,10 +1300,7 @@ function PeopleRoom({
                     {load}/{cap}
                   </span>
                 )}
-                {/* SAID IN A WORD. The underlined name always opened the
-                    profile; nothing on the row said so. Asked for on 30
-                    September 2026: "I still can't see anyway to see the
-                    Explorers profile or their image display". */}
+                {/* Say that the row opens the profile. */}
                 <button
                   type="button"
                   onClick={() => onOpen(person.id)}
@@ -1679,16 +1317,3 @@ function PeopleRoom({
     </Card>
   );
 }
-
-/**
- * A Guide's own numbers: how many Explorers, at which level, and how many have
- * been all the way through.
- *
- * GRADUATED IS THE POINT OF THE WHOLE DESIGN and no screen showed it. An
- * Explorer who reaches Commission has walked the journey and is now sent to
- * walk with somebody else, which is the only kind of growth this app believes
- * in. A Guide who cannot see that number cannot see whether any of it worked.
- *
- * "Still walking" is stated rather than left to be worked out. Five figures a
- * Director has to add up in their head is not a number they have.
- */
