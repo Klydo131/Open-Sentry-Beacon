@@ -2,6 +2,9 @@
 //
 //   npm run verify        static guards only (no server, no browser)
 //   npm run verify:all    the above plus every end-to-end walk
+//   --walks-only          build and walk, skipping the static guards (CI runs those once, elsewhere)
+//   --shard=2/4           walk only every fourth suite, starting at the second, so CI can split them
+//   --quick               the emergency lane: typecheck, build and the safety checks below
 //
 // The e2e half owns the server: it picks a free port, waits for the build id it
 // just built (a stale server would answer with old code), and always tears down.
@@ -13,7 +16,28 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const withE2e = process.argv.includes('--all');
+const quick = process.argv.includes('--quick');
+const walksOnly = process.argv.includes('--walks-only');
+const withE2e = process.argv.includes('--all') || walksOnly;
+const shardArg = (process.argv.find((a) => a.startsWith('--shard=')) || '').slice('--shard='.length);
+const [shardIndex, shardCount] = shardArg ? shardArg.split('/').map(Number) : [1, 1];
+if (!(shardCount >= 1 && shardIndex >= 1 && shardIndex <= shardCount)) {
+  console.error(`--shard must look like 2/4, not "${shardArg}"`);
+  process.exit(2);
+}
+
+// What an emergency fix must still pass. Everything here is about not leaking
+// data or access; layout and wording wait for the full run on main.
+const QUICK = new Set([
+  'tests/no-secrets.js',
+  'tests/no-backend.js',
+  'tests/backend-csp.mjs',
+  'tests/security-invariants.mjs',
+  'tests/nobody-promotes-themselves.mjs',
+  'tests/an-ended-session-ends-at-once.mjs',
+  'tests/signing-out-ends-the-session.mjs',
+  'tests/data-protection.mjs',
+]);
 const results = [];
 
 // On Windows, npm and npx are .cmd shims that Node will only run through a
@@ -107,7 +131,7 @@ async function waitForBuild(port, expected, timeoutMs = 60_000) {
 
 // ---------------------------------------------------------------- static ----
 
-run('typecheck', 'npx', ['tsc', '--noEmit']);
+if (!walksOnly) run('typecheck', 'npx', ['tsc', '--noEmit']);
 run('build', 'npm', ['run', 'build']);
 
 const staticChecks = [
@@ -293,8 +317,17 @@ const staticChecks = [
   ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],
   ['dev server', 'tests/dev-server.mjs'],
 ];
+// The emergency lane names its checks by file; one that is not registered here fails it.
+for (const file of quick ? QUICK : []) {
+  if (!staticChecks.some(([, f]) => f === file)) {
+    console.log(`MISSING ${file} is in the quick lane and is not a registered check.`);
+    results.push({ label: `quick lane: ${file}`, passed: false });
+  }
+}
+
 // A registered check whose file is missing fails the gate instead of being skipped.
-for (const [label, file] of staticChecks) {
+for (const [label, file] of walksOnly ? [] : staticChecks) {
+  if (quick && !QUICK.has(file)) continue;
   if (fs.existsSync(path.join(root, file))) {
     run(label, 'node', [file]);
   } else {
@@ -308,9 +341,11 @@ for (const [label, file] of staticChecks) {
 
 if (withE2e) {
   const e2eDir = path.join(root, 'tests/e2e');
-  const suites = fs.existsSync(e2eDir)
+  // Dealt round-robin rather than cut into runs, so the long suites spread out.
+  const suites = (fs.existsSync(e2eDir)
     ? fs.readdirSync(e2eDir).filter((f) => f.endsWith('.js') && !f.startsWith('_')).sort()
-    : [];
+    : []
+  ).filter((_, i) => i % shardCount === shardIndex - 1);
 
   if (suites.length === 0) {
     console.log('\n(no e2e suites found)');

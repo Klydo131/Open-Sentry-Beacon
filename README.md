@@ -354,6 +354,7 @@ shows how to do both properly, with samples.
 | **[docs/ONBOARDING.md](docs/ONBOARDING.md)** | How a church actually uses it: who does what, in what order. |
 | **[docs/SECURITY.md](docs/SECURITY.md)** | Read before you put real people in it: securing your own copy, with samples. |
 | **[docs/UPDATES.md](docs/UPDATES.md)** | How an installed copy updates itself. |
+| **[docs/EMERGENCY-DEPLOY.md](docs/EMERGENCY-DEPLOY.md)** | When the live app is broken: roll back, then a short checked fix. |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Setup, house style, and what a good pull request looks like. |
 | **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** | Short, and the standard is ordinary decency. |
 

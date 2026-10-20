@@ -206,6 +206,7 @@ export const BUILDING = {
         { src: { file: H, section: /^7\. Moving to a new project/ } },
         { src: { file: H, section: /^8\. Every setting/ } },
         { src: { file: 'docs/UPDATES.md' } },
+        { src: { file: 'docs/EMERGENCY-DEPLOY.md' } },
         { src: { file: START, section: /^Part 6/ }, title: 'When setting up goes wrong' },
         { src: { file: 'docs/WHAT-IT-COSTS.md' } },
         { src: { file: 'docs/COST-AND-FUTURE.md' } },

@@ -30,6 +30,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same pull request cancels the run it replaces.
+concurrency:
+  group: fresh-install-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   fresh-install:
     runs-on: ubuntu-latest

@@ -19,12 +19,47 @@ on:
   push:
     branches: [main]
   pull_request:
+    # `labeled` so that adding the emergency label starts the short run at once.
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: read
 
+# A newer push to the same pull request cancels the run it replaces. Pushes to
+# main are grouped by commit, so every commit on main is checked in full.
+concurrency:
+  group: verify-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  # ---------------------------------------------------------------------------
+  # THE EMERGENCY LANE (docs/EMERGENCY-DEPLOY.md). A pull request carrying the
+  # `emergency` label runs this instead of everything below: typecheck, build
+  # and the checks that guard data and access, on one machine, in a few
+  # minutes. Only people with write access can add a label, so a fork cannot
+  # use it to skip checks. The merge to main then runs everything in full.
+  quick:
+    if: contains(github.event.pull_request.labels.*.name, 'emergency')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - name: Install
+        run: npm ci
+      - name: Safety checks
+        run: node scripts/verify.mjs --quick
+
   verify:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'emergency') }}
     # Three operating systems, because "it should work on Windows" is a guess
     # until something runs it there. The specific thing this catches: npm and
     # npx are .cmd shims on Windows and Node will not execute them without a
@@ -54,6 +89,14 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Next.js keeps what it compiled in .next/cache. Restoring it from the
+      # last run on this system turns most of the build into a cache hit.
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
       - name: Install
         run: npm ci
 
@@ -78,9 +121,11 @@ jobs:
   # list was long) is the exact class these catch, and each one shipped through
   # a gate that never looked at a rendered page.
   #
-  # They took a little over half an hour one after another. Run four at a time
-  # they take about ten minutes, which is a length a push can wait for, and
-  # that -- not any new check -- is what puts them here.
+  # They took a little over half an hour one after another, and about nineteen
+  # minutes four at a time on one machine, which made every pull request wait
+  # twenty minutes for its slowest job. They are now dealt across four
+  # machines, each walking four at a time. The static checks are not repeated
+  # here: the job above runs them.
   #
   # UBUNTU ONLY, AND THAT IS A CHOICE RATHER THAN AN OVERSIGHT. The job above
   # runs on three operating systems because it is cheap and catches real
@@ -90,14 +135,24 @@ jobs:
   # they are the same Chromium. Safari is the engine that actually behaves
   # differently, and it has its own workflow.
   walks:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'emergency') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
       - name: Install
         run: npm ci
       # The browser is a separate download from the npm package, and without it
@@ -105,4 +160,4 @@ jobs:
       - name: Get a browser
         run: npx playwright install --with-deps chromium
       - name: Walk through the app
-        run: npm run verify:all
+        run: node scripts/verify.mjs --walks-only --shard=${{ matrix.shard }}/4

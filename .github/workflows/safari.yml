@@ -48,6 +48,8 @@ concurrency:
 
 jobs:
   webkit:
+    # An emergency pull request skips Safari; the merge to main runs it.
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'emergency') }}
     runs-on: macos-latest
     timeout-minutes: 30
 
