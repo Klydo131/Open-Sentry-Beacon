@@ -21,23 +21,14 @@ import { usePhrases } from '@/lib/i18n';
 import { DOOR_WORDS } from '@/lib/words/door';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 
-// SPLIT OUT OF components/LiveCorePages.tsx, which had grown to three thousand
-// lines holding nineteen components: the signed-out door, the Director's whole
-// admin screen, both Guide screens, the Explorer's screen and every small piece
-// they share. Nobody can hold that in their head, and a maintainer looking for
-// the login form had to know it was in a file called "core pages".
-//
-// The old module still exists as a re-export, so nothing that imported from it
-// had to change. New code should import from the file that actually holds the
-// screen.
+// The signed-out screens: the front door, sign-in and the invited person's join page.
 
 function PublicHeader({ title, subtitle }: { title: string; subtitle: string }) {
   const say = usePhrases(DOOR_WORDS);
   return (
     <div className="px-4 py-8 text-center text-white" style={{ backgroundColor: NAVY }}>
       <div className="mx-auto flex max-w-md flex-col items-center">
-        {/* The way home at the start of the row and the language at the end,
-            which in Arabic are the right and the left. */}
+        {/* Home at the start of the row, language at the end (mirrored in Arabic). */}
         <div className="flex w-full items-center justify-between gap-3">
           <Link href="/" className="text-sm text-white/60 underline">
             <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {say('Home')}
@@ -72,23 +63,16 @@ export function LiveHomePage() {
 
   return (
     <div className="relative min-h-screen text-white" style={{ backgroundColor: NAVY }}>
-      {/* THE LANGUAGE, IN THE CORNER, before anything else is read
-          (components/LanguagePick.tsx). */}
+      {/* Language picker, in the corner (components/LanguagePick.tsx). */}
       <div className="absolute end-4 top-[max(1rem,env(safe-area-inset-top))] z-10">
         <LanguagePick />
       </div>
       <main className="mx-auto flex min-h-[100svh] max-w-lg flex-col items-center justify-center px-4 pb-10 pt-20 text-center">
-        {/* The app is named after a light somebody far away can see. On the
-            one screen that is only ever a first impression, it behaves like
-            one. Scenery: aria-hidden, and the glow cannot take a tap. */}
+        {/* Decoration: aria-hidden, and it cannot take a tap. */}
         <span className="beacon-glow" aria-hidden>
           <SentryBeaconMark size={92} />
         </span>
         <h1 className="mt-6 text-5xl font-extrabold tracking-tight">{APP_SHORT_NAME}</h1>
-        {/* THE THEME FIRST, THE MECHANISM SECOND. This door used to lead with
-            "One person, walking with one person" — true, and a description of
-            how the app works rather than what it is for. Somebody arriving from
-            an invitation reads the top line and nothing else. */}
         <p className="mt-3 text-xl font-semibold text-white/90">
           {say('Walking with Jesus, one step at a time.')}
         </p>
@@ -115,25 +99,13 @@ export function LiveHomePage() {
         <p className="mt-7 max-w-sm text-sm leading-relaxed text-white/55">
           {say('By invitation. Someone from your church brings you in, so there is nothing to sign up for here.')}
         </p>
-        {/* QUESTIONS, BEFORE ANYBODY SIGNS IN. Somebody holding an invitation
-            should be able to find out what they are joining, and who can see
-            what, before they join (app/faq/page.tsx). */}
+        {/* Questions, before anybody signs in (app/faq/page.tsx). */}
         <Link href="/faq" className="mt-3 text-sm font-semibold underline underline-offset-4" data-faq-link>
           {say('Questions? Read the answers')}
         </Link>
 
-        {/* THE WAY INTO THE TUTORIAL, AND IT HAS TO BE ON THIS SCREEN.
-            "Invitation only, there is no public sign-up" is true and it is also
-            a closed door to everybody who has not been invited yet — which is
-            every church still deciding, and every IT person asked to evaluate
-            this. They arrived here, read that sentence, and had nowhere to go.
-            The tutorial existed and was compiled into this very page, and there
-            was no link to it anywhere.
-
-            Kept BELOW the real door on purpose. A member arriving with an
-            invitation should never have to read past a tutorial pitch to find
-            the way in — this is a real app that comes with a demonstration, not
-            a demonstration wearing an app's clothes. */}
+        {/* The way into the tutorial, below the real way in, so invited members never
+           have to read past it. */}
         <div className="mt-10 w-full max-w-sm rounded-2xl bg-white/10 p-5 text-center ring-1 ring-white/15">
           <p className="text-base font-bold">{say('Not invited yet? Look around first.')}</p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/70">
@@ -154,14 +126,9 @@ export function LiveHomePage() {
           </p>
         </div>
 
-        {/* INSTALL, AT THE BOTTOM OF THE FRONT DOOR.
-            It used to be a chip in the signed-in header, which meant the one
-            group who most need it -- somebody who has just opened the link
-            their church sent and has not signed in yet -- never saw it at all.
-            It is also in Settings, for people already inside. */}
-        {/* dir="auto": still English in every language, so it takes its
-            direction from its own words rather than from an Arabic page, which
-            would put its full stops at the wrong end. */}
+        {/* Install, at the bottom of the front door, for people not yet signed in. */}
+        {/* dir="auto": this stays English in every language, so it takes its direction
+           from its own words. */}
         <div className="mt-10 w-full max-w-sm" dir="auto">
           <InstallHomeButton />
         </div>
@@ -182,17 +149,11 @@ export function LiveHomePage() {
 
 export function LiveLoginPage() {
   const router = useRouter();
-  // The messages below are kept in English in state and put into the reader's
-  // language where they are drawn, so a server's English refusal that is in
-  // the word list is translated the same way as the page's own.
+  // Messages are kept in English in state and translated where drawn.
   const say = usePhrases(DOOR_WORDS);
   const { session, profile, loading: sessionLoading, secondStep, refreshProfile, signOut } = useLiveSession();
   const params = useSearchParams();
-  // FILLED FROM THE INVITATION. The e-mail links here as
-  // /login?email=..., so the address is already in the box and the person only
-  // has to copy the password across. Typing an address on a phone is where an
-  // older member gives up, and it is the half of the pair they are least likely
-  // to get exactly right.
+  // Filled from the invitation link (/login?email=...), so only the password is needed.
   const [email, setEmail] = useState(() => (params.get('email') ?? '').trim().toLowerCase());
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -212,16 +173,11 @@ export function LiveLoginPage() {
       ? 'Your address is filled in. Copy the password from your invitation e-mail.'
       : ''
   ));
-  // The password was right and the account uses two-step sign-in, so the code
-  // comes next (components/live/TwoStep.tsx). The provider's `secondStep` says
-  // the same for somebody who arrives here with the code still owed.
+  // Password accepted and two-step sign-in is on: the code comes next (components/live/TwoStep.tsx).
   const [codeStep, setCodeStep] = useState(false);
-  // Set when a sign-in was refused for a reason that an unfinished account
-  // would also produce. See the comment where it is set.
+  // Set when a refusal could also mean an unfinished account (see where it is set).
   const [couldBeUnfinished, setCouldBeUnfinished] = useState(false);
-  // Runs the arrival-from-the-invitation sign-in exactly once. A second attempt
-  // after the address bar has been cleaned would have nothing to sign in with,
-  // and re-running on every render of a state change would be a login storm.
+  // The sign-in from the invitation link runs once only.
   const arrived = useRef(false);
 
   useEffect(() => {
@@ -230,35 +186,10 @@ export function LiveLoginPage() {
     }
   }, [sessionLoading, session, profile, router]);
 
-  // ---------------------------------------------------------------------
-  // ARRIVING FROM THE INVITATION: tapping the button signs you in.
-  // ---------------------------------------------------------------------
-  //
-  // THE ASK: "Make sure when the new explorer clicks, they are logged in (so
-  // they can have the logic to change the password, if not then they will have
-  // the temporary password)" -- and then, immediately after: "Not just
-  // explorers I mean, but new users (EDs, D, Gs, and Es)." So this runs for
-  // every invited role, which is why it lives here on the door rather than in
-  // anything role-shaped.
-  //
-  // WHY THE PASSWORD TRAVELS IN THE FRAGMENT AND NEVER THE QUERY STRING.
-  // Everything after `#` is stripped by the browser before the request is
-  // built: it is not in the address the server receives, not in an access log,
-  // not in a proxy's records, and not in a Referer header sent onward to
-  // anything the page later loads. A `?p=` would be in all five. It is then
-  // taken out of the address bar below, before the sign-in is even attempted,
-  // so it does not sit in history or survive a screenshot of the browser.
-  //
-  // WHAT THIS DOES NOT PRETEND TO BE. Anybody who can read that inbox can
-  // already sign in -- the password is printed in the message, by design and at
-  // the owner's instruction. This does not widen that; it saves the person
-  // retyping something they were just shown. The answer to the underlying risk
-  // is the change-password reminder, not a worse invitation.
-  //
-  // IT IS ALLOWED TO FAIL QUIETLY. If the password has since been changed, the
-  // fragment is stale and the person is simply left at the ordinary form with
-  // their address filled in -- which is exactly where they would have been if
-  // this feature did not exist.
+  // Arriving from the invitation: the link signs the person in. The password
+  // travels in the URL fragment (#p=), which browsers never send to a server or
+  // in a Referer, and it is removed from the address bar before anything else.
+  // If it no longer works, the person is left at the form with their address filled in.
   useEffect(() => {
     if (arrived.current) return;
     if (typeof window === 'undefined') return;
@@ -270,16 +201,10 @@ export function LiveLoginPage() {
       try { return decodeURIComponent(hash.slice(3)); } catch { return ''; }
     })();
 
-    // FIRST, before any await. An address bar holding a password while a
-    // network call is in flight is a password on screen for as long as the
-    // connection is slow, which on a phone in a church hall is the normal case.
+    // Remove the password from the address bar first, before any await.
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
 
-    // WITHOUT AN ADDRESS THERE IS NOTHING TO SIGN IN AS. Every invitation this
-    // app sends carries `?email=`, so this is the malformed-link case rather
-    // than the normal one -- but the notice above says "your address is filled
-    // in", and leaving that standing over an empty box is how somebody decides
-    // the app is broken rather than the link.
+    // No valid address in the link: say so rather than leave an empty box.
     if (!handed || !emailLooksValid(email)) {
       setNotice('');
       setError('Enter the e-mail and password from your invitation to sign in.');
@@ -328,32 +253,15 @@ export function LiveLoginPage() {
         return;
       }
       if (!mine.is_approved) {
-        // SAY SOMETHING. This used to be `window.location.replace('/login')`,
-        // which reloaded the very page the person was already looking at and
-        // told them nothing. From the other side of the screen that is
-        // indistinguishable from a wrong password: you type a password you know
-        // is right, the page blinks, and you are back at the form. People
-        // retype it, then conclude the app is broken — and they are not wrong
-        // to, because a correct password that appears to do nothing IS broken.
+        // Say why: a correct password that seems to do nothing reads as broken.
         setError('Your password is correct, but your account is waiting for a Director to approve it. Ask your church to approve you, then sign in again.');
         return;
       }
       window.location.replace(homeFor(mine.role));
     } catch (cause) {
       setError(errorText(cause));
-      // WHY THE FAILURE IS REMEMBERED AND NOT JUST SHOWN.
-      //
-      // An invitation creates the account the moment it is SENT, so somebody
-      // whose one-time link was spent before they reached the password step has
-      // a real account with no password at all. Signing in is refused as
-      // "invalid credentials", which is true and useless: they are not typing
-      // the wrong password, there is no password to type.
-      //
-      // "Forgot your password?" was already on this screen and they do not
-      // press it, because they did not forget one — they never had one, and the
-      // sentence does not describe them. Twenty-three people were stuck in
-      // exactly this state at once. So the offer is made HERE, in the words of
-      // what actually happened, at the moment it happens.
+      // An account with no password yet is refused as "invalid credentials". Remember
+      // that, so the screen can offer a fresh link in words that fit.
       setCouldBeUnfinished(/credential|password|invalid/i.test(String((cause as Error)?.message ?? '')));
     } finally {
       setBusy(false);
@@ -389,8 +297,7 @@ export function LiveLoginPage() {
                 window.location.replace(homeFor(mine.role));
                 return;
               }
-              // Waiting for approval: the provider re-reads the profile, and
-              // the waiting card below takes over.
+              // Waiting for approval: the provider re-reads the profile and shows the waiting card.
               setCodeStep(false);
               await refreshProfile().catch(() => null);
             }}
@@ -438,8 +345,7 @@ export function LiveLoginPage() {
               <span className="text-sm font-semibold text-gray-600">{say('E-mail')}</span>
               <input
                 type="email"
-                // An address reads left to right in every language; in an Arabic
-                // page it would otherwise be cut off from its start.
+                // Addresses read left to right in every language.
                 dir="ltr"
                 name="email"
                 autoComplete="email"
@@ -454,9 +360,7 @@ export function LiveLoginPage() {
             </label>
             <label className="block">
               <span className="text-sm font-semibold text-gray-600">{say('Password')}</span>
-              {/* An eye, because a password box you cannot read back is where
-                  a wrong character hides — and on a phone keyboard that is most
-                  of them. Standard everywhere else; it was missing here. */}
+              {/* Show-password toggle. */}
               <div className="relative mt-1">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -484,42 +388,16 @@ export function LiveLoginPage() {
             </Button>
           </form>
 
-          {/* WHERE "TRY AN ACCOUNT" WENT.
-              Three buttons used to sit here that signed you in as Maria, John
-              or Pastor Ramos against THIS database, using seeded rows and a
-              shared password. It was removed, and the reason is worth keeping.
-
-              The tutorial is not part of the live app. Those buttons made it
-              part of it: trying the app meant putting invented members into a
-              real church's database and signing in as them. A church that had
-              not run the seed got "those sample accounts are not in this
-              database" — which reads as the app being broken — and a church
-              that HAD run it now has fictional people in its member list and a
-              shared password on three real accounts.
-
-              Somebody who wants to look around before joining goes to the
-              tutorial, which is offline, invents its people in the browser, and
-              cannot reach any database at all. That is a cleaner answer to the
-              same question, and it is the one on the front door. */}
           <form onSubmit={() => {}} className="hidden">
           </form>
-          {/* THE SAME BUTTON, IN THE WORDS OF SOMEBODY WHO NEVER HAD A
-              PASSWORD. It calls exactly what "Forgot your password?" calls;
-              what changes is that it appears at the moment they are stuck and
-              describes their situation instead of a different one. */}
+          {/* "Never had a password?": the same reset as "Forgot your password?", in words that fit. */}
           {couldBeUnfinished && (
-            // Blue, not sky: a dark look repaints blue-50 under its own pale
-            // ink, and left sky-50 pale under it, so this heading vanished on
-            // the screen where somebody is already stuck (6 October 2026).
+            // Blue, not sky: dark looks repaint blue-50 readably, but not sky-50.
             <div className="mt-4 rounded-xl bg-blue-50 p-4 ring-1 ring-blue-200">
               <p className="text-sm font-semibold text-navy">
                 {say('Never set a password yet?')}
               </p>
-              {/* SAID HERE BECAUSE IT IS WHERE IT HAPPENS. Since 29 September
-                  2026 an invitation's password stops working after a few days
-                  (three since 3 October 2026) unless it was changed (see the migration an_invitation_
-                  password_runs_out), and "wrong password" is all the sign-in
-                  can say. The way back is the same link as ever. */}
+              {/* An invitation's password stops working after three days unless changed. */}
               <p className="mt-1 text-sm text-gray-700">
                 {say('If you were invited but never got as far as choosing one, there is nothing to type here yet. The password in an invitation e-mail also stops working three days after it was sent. Either way, we can send you a link that lets you choose your own now.')}
               </p>
@@ -594,29 +472,9 @@ export function LiveSignupPage() {
   );
 }
 
-// The invited person's front door.
-//
-// This is the ONE screen where somebody who has never used Hope Beacon, was
-// sent a link by their church, and has no account yet, becomes a member. Three
-// separate things had to be right for that to happen and none of them were:
-//
-//   1. THE LINK HAD TO REDEEM. It arrived as `?code=…` and was pushed through
-//      exchangeCodeForSession, which is the PKCE route and needs a verifier
-//      this browser never had. Every invitation failed identically, which is
-//      why it read as "it just errors" rather than as anything intermittent.
-//      Invitations now arrive as `?token_hash=…&type=invite` and redeem
-//      through verifyOtp, which needs nothing from the device.
-//
-//   2. IT HAD TO ASK WHAT THE CHURCH ACTUALLY NEEDS. This asked for a name and
-//      a password. The form the client specified — the one the demo has always
-//      shown — asks a little about the person and, before any of it, asks
-//      permission to keep it. Showing one form in the demo and a different one
-//      live is the gap that makes a demo feel like an advertisement.
-//
-//   3. ACCEPTING HAD TO PUT THEM IN THE APP. It ended on "one approval
-//      remains" for everybody, including people whose Director had personally
-//      addressed the invitation. Migration 0013 makes a matched invitation the
-//      approval, so an invited person now lands on their own home screen.
+// The invited person's front door: it redeems the invitation link
+// (?token_hash=...&type=invite, through verifyOtp), asks a few optional
+// questions and for consent, and lands the person in the app.
 
 export function LiveJoinPage() {
   const params = useSearchParams();
@@ -633,19 +491,8 @@ export function LiveJoinPage() {
   const [busy, setBusy] = useState(false);
   const [donePending, setDonePending] = useState(false);
   const [error, setError] = useState('');
-  // Getting back in when the link is dead.
-  //
-  // An invitation creates the account immediately but sets no password, and the
-  // link in the email works once. Somebody who opens it twice, or opens it a day
-  // late, is then holding an account they cannot reach: no password to sign in
-  // with, and a link that will not open again. The only screen they were given
-  // said "go to sign in", which is exactly what they cannot do.
-  //
-  // The recovery email works for them, because it does not care whether a
-  // password exists yet. It was already in the app, labelled "Forgot your
-  // password?" on the sign-in screen -- wording that no one in this position
-  // reads as applying to them, because they have not forgotten a password, they
-  // have never had one. So it is offered here, in their own words.
+  // Getting back in when the link is dead: send a fresh reset link, offered in
+  // words that fit somebody who never had a password.
   const [rescueEmail, setRescueEmail] = useState('');
   const [rescueNotice, setRescueNotice] = useState('');
   const [rescueBusy, setRescueBusy] = useState(false);
@@ -653,39 +500,19 @@ export function LiveJoinPage() {
   const [role, setRole] = useState<Role>('ds');
   const recovery = params.get('recovery') === '1' || params.get('type') === 'recovery';
 
-  // SHOWING THE SIGN-UP TO A ROOM, WITHOUT AN INVITATION AND WITHOUT AN ACCOUNT.
-  //
-  // The join screen is the one screen nobody can demonstrate: it needs a live
-  // one-time link, opening one spends it, and the account it creates is real.
-  // So a church deciding whether to adopt this could be shown every screen
-  // except the first one anybody actually meets.
-  //
-  // `?preview=ds|dm|admin|executive` renders the real form — the same password
-  // rules, the same permission wording, the same optional questions, in that
-  // role's words — and can create nothing. It never establishes a session, and
-  // submit returns before it reaches Supabase. Both halves are checked by
-  // tests/the-sign-up-can-be-shown.mjs, because "a preview that writes" is the
-  // only way this could ever be worse than not having it.
+  // `?preview=ds|dm|admin|executive` shows the real form to a room without an
+  // invitation. It never creates a session and submit returns before the
+  // network (tests/the-sign-up-can-be-shown.mjs).
   const PREVIEW_ROLES: Role[] = ['ds', 'dm', 'admin', 'executive'];
   const previewParam = params.get('preview') ?? '';
   const preview = PREVIEW_ROLES.includes(previewParam as Role) ? (previewParam as Role) : null;
 
-  // WHOSE DEVICE IS THIS?
-  //
-  // Redeeming an invitation link signs this browser in as the invited person.
-  // If somebody is already signed in here — a Director who copied the link to
-  // check it works, a family sharing a tablet — that person was signed out and
-  // replaced without a word. It read as the app logging people out at random,
-  // and it also marked the invited person as arrived when they had not touched
-  // anything.
-  //
-  // So nothing is redeemed until whoever is sitting here says the link is
-  // theirs. `handover` is that answer.
+  // If somebody else is already signed in on this device, ask before redeeming
+  // the link, which would replace their session.
   const [signedInAs, setSignedInAs] = useState('');
   const [handover, setHandover] = useState(false);
 
-  // The optional half of the form. Everything here is the person's to give or
-  // withhold, so it starts collapsed and nothing in it blocks the button.
+  // The optional half of the form: it starts collapsed and never blocks the button.
   const [consent, setConsent] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [extra, setExtra] = useState({
@@ -701,10 +528,8 @@ export function LiveJoinPage() {
     (key: keyof typeof extra) => (event: React.ChangeEvent<HTMLInputElement>) =>
       setExtra((prev) => ({ ...prev, [key]: event.target.value }));
 
-  // Safari and password managers may fill a field directly, without a React
-  // change event. Reading the inputs as well as state means the password the
-  // person can see on screen is the one we validate and save. It also makes
-  // the Show password control safe immediately after a browser suggestion.
+  // Read the inputs directly too: Safari and password managers can fill them
+  // without a React change event.
   const readPasswordFields = () => {
     const chosen = passwordInput.current?.value ?? password;
     const confirmation = confirmInput.current?.value ?? confirm;
@@ -716,9 +541,7 @@ export function LiveJoinPage() {
   useEffect(() => {
     let alive = true;
     const establishSession = async () => {
-      // BEFORE THE CLIENT IS EVEN ASKED FOR. A preview must not be able to
-      // redeem a token, read a session, or sign anybody out, so it returns
-      // above all of that rather than being filtered somewhere inside it.
+      // A preview returns before any client call, so it cannot redeem or sign out.
       if (preview) {
         setRole(preview);
         setChurchName('Your church');
@@ -732,45 +555,18 @@ export function LiveJoinPage() {
         const tokenHash = params.get('token_hash');
         const code = params.get('code');
         const codeEmail = params.get('email');
-        // `type` IS READ TWICE ON PURPOSE. The invitation link is built in the
-        // email template as `?token_hash=...&type=...`, and a mail client that
-        // re-encodes the ampersand as `&amp;` turns the second parameter into
-        // one named `amp;type`. The link still opens, the token is still there,
-        // and the only thing lost is the word that says which kind it is --
-        // which silently turns a password reset into a failed invitation.
+        // Read `type` twice: a mail client that re-encodes & as &amp; leaves `amp;type`.
         const kind = (params.get('type') ?? params.get('amp;type')) === 'recovery'
           ? 'recovery'
           : 'invite';
 
-        // SUPABASE REPORTS A DEAD LINK IN THE HASH, NOT THE QUERY. An expired
-        // or already-used link arrives as
-        // `#error=access_denied&error_code=otp_expired`, with no token at all.
-        // Nothing looked for it, so the page found nothing to redeem, carried
-        // on, and fell through to whatever session happened to be in the
-        // browser already — presenting one person's account as another
-        // person's invitation. Read it first and say so.
+        // Supabase reports an expired or used link in the hash (#error=...&error_code=otp_expired).
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
         const linkError = hashParams.get('error_description') || hashParams.get('error');
         if (linkError) {
           throw new Error(
             /expired/i.test(linkError)
-              // NAME THE LIKELIEST CAUSE FIRST, BECAUSE IT IS ALSO THE ONE
-              // THE READER CAN FIX WITHOUT ASKING ANYBODY.
-              //
-              // A church has exactly one live invitation per person: sending a
-              // second replaces the first, which is correct, because a link
-              // that outlived its replacement would be a way in that nobody
-              // could revoke. But every invitation email is identical -- same
-              // subject, same wording, same sender -- so a Director who pressed
-              // Send twice leaves the invited person holding several messages
-              // with no way to tell which one is alive, and the older ones fail
-              // exactly like a genuinely expired link.
-              //
-              // The old wording, "expired or already used", sent that person
-              // back to the church for a THIRD invitation, which killed the
-              // second and repeated the whole loop. Saying "open the newest
-              // email" first ends it, and costs nothing when the cause really
-              // was age.
+              // Name the likeliest cause first: an older copy of a re-sent invitation.
               ? 'This link is not the current one. If your church sent more than one '
                 + 'invitation, only the newest email works -- open the most recent one '
                 + 'and use its button. Otherwise this link has expired, and your church '
@@ -781,19 +577,8 @@ export function LiveJoinPage() {
 
         const redeeming = Boolean(tokenHash || code);
 
-        // ASK BEFORE SIGNING ANYBODY OUT.
-        //
-        // A browser that already holds a session must not keep it while a link
-        // is redeemed — that is how an Explorer's invitation came to display a
-        // Guide's account, and whoever was sitting there could have finished
-        // somebody else's sign-up or changed their password.
-        //
-        // But clearing it silently is the other half of the same bug. The first
-        // version did exactly that, and the person it caught was the Director:
-        // they copy the join link the invitation screen hands them, open it to
-        // check it works, and are signed out of their own account and into the
-        // account of the person they just invited. Ask, name who is signed in,
-        // and let them back out.
+        // Ask before signing the current person out (a Director testing the link, a
+        // shared tablet). Name who is signed in and let them back out.
         if (redeeming && !handover) {
           const { data: current } = await client.auth.getSession();
           const who = current.session?.user?.email ?? '';
@@ -809,15 +594,11 @@ export function LiveJoinPage() {
         }
 
         if (tokenHash) {
-          // The normal path. Works on any device, because the token carries
-          // everything needed to redeem it.
+          // The normal path: the token holds everything needed to redeem it.
           const { error: otpError } = await client.auth.verifyOtp({ token_hash: tokenHash, type: kind });
           if (otpError) throw otpError;
         } else if (code && codeEmail) {
           // The six-digit fallback, for a mail client that mangled the link.
-          // Redeemed against the address it was issued for — NOT through
-          // exchangeCodeForSession, which is the mistake this whole screen was
-          // built on.
           const { error: otpError } = await client.auth.verifyOtp({
             email: codeEmail,
             token: code,
@@ -841,9 +622,7 @@ export function LiveJoinPage() {
 
         const { data } = await client.auth.getSession();
         if (!data.session) {
-          // NO TOKEN AND NO SESSION is a different thing from a bad token, and
-          // the two used to produce the same sentence. Somebody who opened
-          // /join out of curiosity was told their invitation was invalid.
+          // No token and no session is different from a bad token; say so.
           throw new Error(
             redeeming
               ? 'This invitation link is invalid or has expired. Ask your church to send a new one.'
@@ -851,34 +630,19 @@ export function LiveJoinPage() {
           );
         }
 
-        // HAND THE SESSION OVER EXPLICITLY. There are two clients in this app:
-        // the auth client, which owns sign-in, and the data client, which reads
-        // its token out of local storage through readBrowserSession(). They
-        // agree on the storage key and today they agree on the format, so this
-        // line is redundant — right up until a library upgrade changes the
-        // shape the auth client writes.
-        //
-        // The cost of being wrong is not an error message. readBrowserSession()
-        // returns null when it cannot parse what it finds, the profile read
-        // then fails, and this screen concludes the person is unapproved and
-        // shows them a waiting room. Silently telling an approved member they
-        // are not approved is the single worst outcome this file can produce,
-        // and it is one library bump away. So the session is written in the
-        // exact shape the data client expects, by us, here.
+        // Write the session in the exact shape the data client reads, so a library
+        // upgrade cannot leave an approved member looking unapproved.
         saveBrowserSession(data.session);
 
-        // An account that already existed before the invitation receives a
-        // recovery link, not a second auth-user insert. Claim its matching
-        // invitation before reading the profile so it reaches the same
-        // church-scoped approval queue as every other invitee.
+        // An account that existed before the invitation gets a reset link instead, so
+        // claim its invitation before reading the profile.
         await live.claimMyPendingInvitation();
         const mine = await live.getMyProfile();
         if (!alive) return;
         setEmail(data.session.user.email ?? '');
         setName(mine?.full_name || String(data.session.user.user_metadata.full_name ?? ''));
         if (mine?.role) setRole(mine.role);
-        // The church's own name, so the permission being asked for names who is
-        // asking. "I give permission for the church" is not consent to anything.
+        // The church's name, so the consent names who is asking.
         try {
           const church = await live.myChurch();
           if (alive && church?.name) setChurchName(church.name);
@@ -913,17 +677,15 @@ export function LiveJoinPage() {
       .resetPasswordForEmail(address, { redirectTo: `${window.location.origin}/join?recovery=1` })
       .catch(() => {});
     setRescueBusy(false);
-    // The same words whether or not the address has an account. Saying "no
-    // account here" would turn this box into a way of finding out who is a
-    // member of the church.
+    // The same words whether or not the address has an account, so this cannot
+    // reveal who is a member.
     setRescueNotice('If that address has an account, a fresh link is on its way. It lasts one hour.');
   };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (preview) {
-      // The checks below still run for a demonstration, so a room can watch a
-      // short password be refused. Nothing after them does.
+      // A preview still runs these checks, so a room can watch a short password refused.
       const { chosen, confirmation } = readPasswordFields();
       if (chosen.length < 10) { setError('Use at least 10 characters.'); return; }
       if (chosen !== confirmation) { setError('The passwords do not match.'); return; }
@@ -944,8 +706,7 @@ export function LiveJoinPage() {
       setError('Tick the permission box to continue.');
       return;
     }
-    // The database cannot check this — a CHECK constraint may not read the
-    // clock — so it is checked here, where the person can see what they typed.
+    // A CHECK constraint cannot read the clock, so the future-birthday check is here.
     if (extra.birthday && extra.birthday > new Date().toISOString().slice(0, 10)) {
       setError('That birthday is in the future.');
       return;
@@ -961,14 +722,12 @@ export function LiveJoinPage() {
       });
       if (passwordError) throw passwordError;
 
-      // updateUser can rotate the tokens, so re-publish whatever is current.
+      // updateUser can rotate the tokens, so re-publish the current session.
       const { data: fresh } = await client.auth.getSession();
       if (fresh.session) saveBrowserSession(fresh.session);
 
-      // A PASSWORD CHOSEN HERE IS THE PERSON'S OWN, whichever way they came:
-      // a reset e-mail or a first sign-up. So every other device signed in as
-      // them is signed out, as on the Password page, and the reminder about
-      // the invitation's password is cleared, which this door never did.
+      // A password chosen here is the person's own: sign out other devices and clear
+      // the temporary-password reminder.
       await live.signOutOtherDevices().catch(() => undefined);
       await live.clearTemporaryPasswordReminder().catch(() => undefined);
 
@@ -990,25 +749,15 @@ export function LiveJoinPage() {
         await live.updateMyProfile({ full_name: name.trim() });
       }
 
-      // SIGN-UP IS FINISHED HERE, AND NOWHERE EARLIER. The account row exists
-      // from the moment the invitation was sent, and the sign-in stamp is set
-      // by opening the link, so both are true for somebody who has done
-      // nothing. This is the first step that needed the invited person to be
-      // present, so this is what the church's Invitations screen counts as
-      // arriving.
+      // Sign-up counts as finished only here, once a password has been chosen.
       try {
         await live.finishMySignup();
       } catch {
-        /* A missed stamp shows them as still waiting, which is recoverable.
-           Failing the sign-up over it is not. */
+        /* A missed stamp leaves them shown as waiting, which is recoverable. */
       }
 
       const mine = await refreshProfile();
-      // THREE OUTCOMES, NOT TWO. The version of this line that read
-      // `if (mine?.is_approved) … else waitingRoom` collapsed "we could not
-      // read your profile" into "you are not approved", which is how somebody
-      // whose Director invited them personally ends up staring at a waiting
-      // room. A read that failed is an error and says so.
+      // Three outcomes: approved, waiting, or a profile that could not be read (an error).
       if (!mine) throw new Error('Your account was created, but we could not load it. Please sign in.');
       if (mine.is_approved) router.replace(homeFor(mine.role));
       else setDonePending(true);
@@ -1034,8 +783,7 @@ export function LiveJoinPage() {
     </div>
   ) : null;
 
-  // Somebody is already signed in on this device. Nothing has been redeemed
-  // and nobody has been signed out — that only happens if they choose it here.
+  // Somebody else is signed in here; nothing happens unless they choose it.
   if (signedInAs) {
     return (
       <div className="min-h-screen">
@@ -1105,8 +853,7 @@ export function LiveJoinPage() {
         }
       />
       {previewBanner}
-      {/* pb-32, not py-8: the install banner is fixed to the bottom of the
-          viewport, and the join button is the last thing on this page. */}
+      {/* pb-32 keeps the join button clear of the fixed install banner. */}
       <div className="mx-auto max-w-md px-4 pb-32 pt-8">
         <Card className="p-5">
           {error && !email ? (
@@ -1118,13 +865,7 @@ export function LiveJoinPage() {
                 invitation switches off the one you already have.
               </p>
 
-              {/* The way out, and it has to be here.
-                  Somebody reading this has an account already, because the
-                  invitation made one. What they do not have is a password, so
-                  "go to sign in" is the one thing they cannot do, and asking
-                  their church for another invitation costs them a day and
-                  switches off any link they still hold. This sends a fresh
-                  link straight to the address it was addressed to. */}
+              {/* A way back for an account that has no password yet: send a fresh link. */}
               <div className="mt-5 rounded-xl bg-navy/5 p-4">
                 <p className="text-sm font-bold text-navy">Send me a new link</p>
                 <p className="mt-1 text-sm text-gray-600">
@@ -1135,8 +876,7 @@ export function LiveJoinPage() {
                   <span className="sr-only">Your e-mail address</span>
                   <input
                     type="email"
-                    // An address reads left to right in every language; in an Arabic
-                    // page it would otherwise be cut off from its start.
+                    // Addresses read left to right in every language.
                     dir="ltr"
                     inputMode="email"
                     autoComplete="email"
@@ -1163,9 +903,7 @@ export function LiveJoinPage() {
             </>
           ) : (
             <form onSubmit={submit} className="space-y-4">
-              {/* Read-only, because it is the address the invitation was sent
-                  to. An editable box here would let somebody redirect an
-                  invitation that was not addressed to them. */}
+              {/* Read-only: the address the invitation was sent to. */}
               <label className="block">
                 <span className="text-sm font-semibold text-gray-600">Email</span>
                 <input
@@ -1263,20 +1001,8 @@ export function LiveJoinPage() {
 
               {!recovery && (
                 <>
-                  {/* PERMISSION. Named church, plain words, and the OBLIGATION
-                      stated in the same breath as the request, because that is
-                      what is actually being agreed to here.
-                      This used to promise "I can withdraw this at any time from
-                      Settings, and my details are removed when I do", and
-                      Settings had the button behind it. Both went together in
-                      the same commit: keeping the sentence after removing the
-                      button would have made the app lie at the exact moment it
-                      asks somebody to trust it. Unticked by default -- a box
-                      that arrives already ticked is not consent, it is a
-                      default nobody noticed. */}
-                  {/* WHO LOOKS AFTER THIS APP, said before the box is ticked
-                      (7 October 2026). The same words as the invitation e-mail
-                      and the sample church's welcome; see lib/oversight.ts. */}
+                  {/* Consent: names the church and what is agreed to. Unticked by default. */}
+                  {/* Who looks after this app, before the box is ticked (lib/oversight.ts). */}
                   <div className="space-y-2 rounded-xl bg-gray-50 p-4" data-oversight>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-600">How this app is looked after</p>
                     {oversightPoints(churchName).map((point) => (
@@ -1296,13 +1022,8 @@ export function LiveJoinPage() {
                       onChange={(event) => setConsent(event.target.checked)}
                       className="mt-1 h-5 w-5 shrink-0"
                     />
-                    {/* WHAT IS BEING AGREED TO, SPECIFICALLY. It used to name
-                        contact details only, while the app also keeps what a
-                        person tells their Guide and their place on the journey,
-                        and being in a church's discipleship app at all is a
-                        religious affiliation -- sensitive personal information
-                        under the Act, for which consent must be specific and
-                        informed (section 13; NPC Circular 2023-04). */}
+                    {/* Names everything that is kept, as specific consent for sensitive
+                       information requires (RA 10173 section 13). */}
                     <span className="text-sm leading-relaxed text-gray-700">
                       <ConsentWording churchName={churchName} />{' '}
                       <span className="text-red-600">*</span>

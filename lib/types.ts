@@ -1,24 +1,12 @@
-// Domain types — the shape of everything the app stores. The demo store keeps
-// to these exactly, so the screens don't care where the data comes from.
+// The shape of everything the app stores. The sample church keeps to these
+// exactly, so the screens do not care where the data comes from.
 
 import type { Reaction } from '@/lib/talk/reactions';
 
-// The Church Board is deliberately NOT a role here.
-//
-// The client was explicit: "CB has no account in the system. Their approval
-// of DMs is off the app." A board member who needs numbers gets them from an
-// admin; they do not sign in. Removing the union member is what makes the
-// compiler find every screen that still assumed otherwise.
+// The Church Board has no account, so it is not a role.
 export type Role = 'executive' | 'admin' | 'dm' | 'ds';
 
-/**
- * Online or face to face.
- *
- * Moved here from lib/live/data.ts, which is where it happened to be needed
- * first. It is a domain type, and leaving it in the data-access module meant
- * anything that merely wanted to REASON about a meeting had to import the whole
- * Supabase client to do it.
- */
+/** Online or face to face. */
 export type MeetingMode = 'online' | 'in_person';
 export type Stage =
   | 'create'
@@ -39,18 +27,11 @@ export interface Profile {
   birthday?: string;
   gender?: string;
   status?: string;
-  // The live database's name for the same thing as `status` above. `status` is
-  // already a column on pairings and on invites meaning something entirely
-  // different, and a third meaning of one word on the table everything joins to
-  // is how a wrong join gets written one day and nobody notices. The demo store
-  // keeps `status`; the live schema uses `life_status`; both are declared here
-  // because one Profile type serves both.
+  // The live schema's name for `status` above (`status` already means other things there).
   life_status?: string;
   /**
-   * The guardian set, for a member under eighteen. Written only by leadership
-   * through record_guardian_consent; lock_privileged_profile_columns refuses
-   * these columns to everybody else, including the member themselves, so
-   * nobody can consent on their own behalf.
+   * The guardian set, for a member under eighteen. Only leadership can write
+   * these (record_guardian_consent); a member cannot consent for themselves.
    */
   guardian_name?: string | null;
   guardian_member_id?: string | null;
@@ -61,11 +42,8 @@ export interface Profile {
   work_industry?: string;
   preferred_language: string;
   /**
-   * Set while this member is suspended — "jailed" in the trial room. They stay
-   * in the church and keep their history; they cannot sign in, message or be
-   * paired. NULL means active. Only leadership may set or lift it, and which
-   * leadership may act on whom is decided in the database (migration 0023),
-   * never on a screen.
+   * Set while the member is suspended: they keep their place and history but
+   * cannot sign in, message or be paired. NULL means active.
    */
   suspended_at?: string | null;
   suspended_by?: string | null;
@@ -73,53 +51,29 @@ export interface Profile {
   avatar?: string; // chosen preset (emoji)
   photo?: string; // uploaded picture as a data URL (on-device in the demo)
   /**
-   * LIVE ONLY: the object path of an uploaded picture, inside the shared
-   * bucket under avatars/<user id>/. The demo keeps its picture in `photo` as
-   * a data URL because it has no server; live stores a path and signs it at
-   * render time, since a stored signed URL expires and becomes a broken face.
+   * Live only: the uploaded picture's storage path (avatars/<user id>/). Signed
+   * when drawn, because a stored signed URL expires.
    */
   photo_path?: string | null;
   is_approved: boolean;
   /**
-   * When this person was approved, and by whom. Stamped by a database trigger
-   * on the transition into approved, and cleared if approval is taken away.
-   *
-   * NULL FOR TWO REASONS A SCREEN MUST TELL APART: somebody not yet approved
-   * has no date because there was no decision, and somebody approved before
-   * migration 20260913140000 has one that was never captured. `is_approved`
-   * says which.
-   *
-   * NOT RECOVERABLE FOR THE SECOND GROUP. `record_profile_change` watches eight
-   * fields and `is_approved` is not one of them, so there is no audit row to
-   * read a historical date out of either.
+   * When this person was approved. NULL when not yet approved, and also for
+   * approvals made before the date was recorded; `is_approved` says which.
    */
   approved_at?: string | null;
   approved_by?: string | null;
-  // A missionary who vouched for this sign-up to the admin. It is a note on the
-  // approval card, not a gate: the admin decides alone. (This used to be
-  // endorsed_by, a Church Board member, and it was step 1 of a two-step gate.
-  // The board has no account any more and approves missionaries off the app, so
-  // the gate collapsed to the admin's single decision.)
+  // A Guide who vouched for this sign-up; a note for the admin, not a gate.
   recommended_by?: string;
   recommended_at?: string;
   consent_at?: string; // when the seeker accepted the privacy notice
-  /**
-   * When they chose a password and actually arrived, which is what "new" means
-   * to the people meeting them. `created_at` is when a Director typed their
-   * address, and can be weeks earlier.
-   */
+  /** When they chose a password and actually arrived (created_at is when they were invited). */
   signup_completed_at?: string | null;
-  /**
-   * True while this person is still using the password their invitation
-   * e-mailed them. A reminder flag, not a permission: nothing in the app is
-   * withheld while it is true, and anybody can clear their own.
-   */
+  /** Still using the invitation's password. A reminder, not a permission. */
   password_is_temporary?: boolean;
   created_at: string;
 }
 
-// A scheduled meeting between a missionary and their seeker — a call or an
-// in-person study time. Both see it; either can schedule or cancel.
+// A meeting between a Guide and an Explorer; either can schedule or cancel.
 export interface Meeting {
   id: string;
   pairing_id: string;
@@ -132,8 +86,7 @@ export interface Meeting {
   created_at: string;
 }
 
-// A lesson the missionary assigned to a seeker's pairing, and whether it's done.
-// The lesson content itself lives in lib/lessons.ts (a built-in curriculum).
+// A lesson a Guide assigned to a pairing; the content lives in lib/lessons.ts.
 export interface LessonAssignment {
   id: string;
   pairing_id: string;
@@ -143,21 +96,12 @@ export interface LessonAssignment {
   completed_at?: string;
   /** Set when this lesson came from a series rather than being picked alone. */
   series_id?: string;
-  /** Position within that series, from 0. What makes "3 of 6" answerable. */
+  /** Position within that series, from 0. */
   series_order?: number;
 }
 
-// A course, on one area of interest, walked through in order.
-//
-// The client asked for it in their own words: "Can the library upload lesson
-// series on specific areas of interest that can be pushed to seekers and walked
-// through with them until they finish?" Every noun in that sentence is here.
-//
-// A series is grouped by TOPIC, not by journey stage. That distinction matters:
-// a stage is a note the church keeps about a person and a seeker never sees it,
-// whereas "Prayer" or "Understanding the Bible" is a thing somebody can say out
-// loud that they are interested in. Series are the part of the curriculum a
-// seeker is allowed to see the shape of.
+// A course on one topic, walked through in order. Grouped by topic, not by
+// journey stage: an Explorer may see a series, never their stage.
 export interface LessonSeries {
   id: string;
   title: string;
@@ -169,26 +113,19 @@ export interface LessonSeries {
   is_published: boolean;
   created_at: string;
   /**
-   * A picture drawn for the series on the drawing board, by its id in this
-   * tab's drawings (lib/demo/drawings.ts). Sample app only, and never the
-   * picture itself: this row is written to localStorage on every change. The
-   * live app keeps a drawing as a file on the study it belongs to.
+   * A drawing for the series, by its id in lib/demo/drawings.ts. Sample app
+   * only; the live app keeps a drawing as a file on its study.
    */
   drawing_id?: string;
 }
 
-// A prayer request from a seeker. Always visible to their missionary; if
-// share_with_board is true it also appears — WITHOUT the seeker's name — on the
-// church-wide prayer wall so the whole church can pray.
+// A prayer request. Always visible to the Guide; if shared, it also appears
+// on the church's prayer wall without a name.
 export interface PrayerRequest {
   id: string;
   /** The Explorer this request lives with, whoever wrote it. */
   ds_id: string;
-  /**
-   * Who wrote it: the Explorer, or their Guide asking them to pray. Missing on
-   * requests saved before prayer ran both ways, which were all the Explorer's
-   * own -- read it through prayerAuthor() rather than directly.
-   */
+  /** Who wrote it. Missing on older requests (all the Explorer's own); use prayerAuthor(). */
   author_id?: string;
   body: string;
   share_with_board: boolean;
@@ -196,14 +133,12 @@ export interface PrayerRequest {
   created_at: string;
 }
 
-/** Who wrote a prayer request. Older saved requests were all the Explorer's. */
+/** Who wrote a prayer request. */
 export function prayerAuthor(r: Pick<PrayerRequest, 'ds_id' | 'author_id'>): string {
   return r.author_id ?? r.ds_id;
 }
 
-// A study item a Digital Seeker keeps for themselves — their own notes and
-// uploaded media. Visible to the seeker, their missionary, and (for monitoring)
-// admins.
+// An Explorer's own study notes and files.
 export interface SeekerMedia {
   id: string;
   ds_id: string;
@@ -214,18 +149,9 @@ export interface SeekerMedia {
   created_at: string;
 }
 
-// A file shared inside one pairing: a photo, a voice note, a video, a document.
-//
-// THE BYTES ARE NOT IN THIS ROW, and that is the whole design. This is metadata
-// plus an id; the file itself lives in IndexedDB (lib/localMedia.ts) under that
-// same id. It mirrors what a real deployment must do — bytes in object storage,
-// a row in the database pointing at them — and it is not optional here either:
-// this database is serialised into localStorage on every write, and localStorage
-// holds about 5 MB. One phone photo inlined here would break saving for
-// everything else in the app.
-//
-// Who may see it follows the PAIRING, never the file. See mediaFor() in
-// lib/demo/store.tsx and the matching policy in docs/examples/schema.sql (2b).
+// A file shared inside one pairing. The bytes live in IndexedDB
+// (lib/localMedia.ts), never in this row, which is saved to localStorage.
+// Visibility follows the pairing (mediaFor() in lib/demo/store.tsx).
 export interface PairingMedia {
   id: string;
   pairing_id: string;
@@ -237,9 +163,7 @@ export interface PairingMedia {
   created_at: string;
 }
 
-// A missionary's private note about a seeker. The seeker never sees these, and
-// neither does an admin — the whole point is a place to record
-// what was actually said without it becoming a church record.
+// A Guide's private note about an Explorer: never shown to the Explorer or to leaders.
 export interface SeekerNote {
   id: string;
   pairing_id: string;
@@ -248,8 +172,7 @@ export interface SeekerNote {
   created_at: string;
 }
 
-// A missionary's own reminder to follow something up — "check in with John
-// before Sabbath". Private to the missionary, like the notes.
+// A Guide's private reminder.
 export interface FollowUp {
   id: string;
   pairing_id: string;
@@ -270,16 +193,8 @@ export interface Pairing {
   /** When these two were connected. The start of the track record. */
   created_at: string;
   /**
-   * When the pairing was archived, set by a database trigger.
-   *
-   * NULL FOR TWO DIFFERENT REASONS, and a screen has to tell them apart: an
-   * ACTIVE pairing has not ended, and a pairing archived before migration
-   * 20260913100000 has an end date that was never captured and cannot be
-   * recovered. Status says which.
-   *
-   * NEVER SUBSTITUTE `updated_at` FOR THIS. That column is written by stage
-   * changes only, so it would put a confident wrong day in front of somebody
-   * making a pastoral judgement.
+   * When the pairing was archived. NULL for active pairings and for ones
+   * archived before the date was recorded. Never use `updated_at` instead.
    */
   ended_at?: string | null;
 }
@@ -294,16 +209,12 @@ export interface Message {
   /** Set when the author changed the wording. The previous wording is kept. */
   edited_at?: string | null;
   /**
-   * Set when the author took the message back. `body` is emptied when this is
-   * set -- the words are moved into `message_revisions`, which no browser can
-   * read -- so a deleted message must never be rendered as an empty bubble.
+   * Set when the author took the message back. `body` is then empty, so never
+   * draw a deleted message as an empty bubble.
    */
   deleted_at?: string | null;
   deleted_by?: string | null;
-  /**
-   * The earlier message, in the same conversation, that this one answers. The
-   * database holds it to the same pairing (messages_reply_in_same_pairing).
-   */
+  /** The earlier message, in the same conversation, that this one answers. */
   reply_to?: string | null;
 }
 
@@ -327,28 +238,15 @@ export interface MaterialShare {
   created_at: string;
 }
 
-// ---------------------------------------------------------------------------
-// Blog posts — a Guide writing to the people they walk with.
-//
-// A Guide already has conversations, which are private and one-to-one. This is
-// the other thing they need: something said once to everybody, that an Explorer
-// can read in their own time without being asked a question or owing a reply.
-// Sermon notes, a thought for the week, what the church is doing on Sunday.
-//
-// TWO SWITCHES, NOT ONE. `visibility` is whether the post exists for anybody
-// but its author — a draft stays private until it is ready. `audience` is who
-// it reaches once published. Collapsing them into a single "public" flag would
-// mean the only way to stop showing a post is to delete it, and a Guide who
-// wants yesterday's note off the front page should not have to destroy it.
-// ---------------------------------------------------------------------------
+// --- Blog posts ---
+// `visibility` (draft or published) and `audience` (who it reaches) are
+// separate, so a post can be taken off the front page without deleting it.
 export type BlogVisibility = 'private' | 'published';
 /**
- * Who a post is for. Mirrors the live enum (migration 0042) exactly, so the
- * tutorial teaches the choice people actually get.
- *
- *   church   — everybody in the church. Community Blogs.
- *   all      — the people the writer walks with.
- *   selected — named people, and nobody else.
+ * Who a post is for (mirrors the live enum):
+ *   church   everybody in the church
+ *   all      the people the writer walks with
+ *   selected named people only
  */
 export type BlogAudienceKind = 'all' | 'church' | 'selected';
 
@@ -360,7 +258,7 @@ export interface BlogPost {
   body: string;
   /** 'private' means a draft: nobody but the author sees it, ever. */
   visibility: BlogVisibility;
-  /** 'all' reaches every Explorer this Guide is paired with, today and later. */
+  /** 'all' reaches every Explorer this Guide is paired with, now and later. */
   audience: BlogAudienceKind;
   created_at: string;
   updated_at?: string;
@@ -369,11 +267,8 @@ export interface BlogPost {
 }
 
 /**
- * A photo or a short clip on a post or a notice.
- *
- * `src` is whatever the browser can show: a picture shipped with the app for a
- * sample post, a blob: for one kept on this device, or a short-lived signed
- * link to the church's own storage.
+ * A photo or short clip on a post or notice. `src` is anything the browser
+ * can show: a bundled picture, a blob: URL, or a signed link.
  */
 export interface PostMedia {
   kind: 'image' | 'video';
@@ -389,20 +284,7 @@ export interface BlogAudienceEntry {
   ds_id: string;
 }
 
-/**
- * One row the first time a person opens a post.
- *
- * The viewer is recorded so the count means "people", not "page loads" — a
- * counter that climbs every time somebody scrolls past tells the writer
- * nothing. The identity goes no further than that: the Guide is shown a
- * NUMBER, never a list of names.
- *
- * That restraint is deliberate and matches the rest of the product. An Explorer
- * is not shown their own journey stage and the prayer wall carries no names,
- * for the same reason: somebody exploring faith should be able to read quietly
- * without being watched doing it. A blog that reports "Marci opened this twice"
- * changes what the app is.
- */
+/** One row per person the first time they open a post; the writer sees a count, never names. */
 export interface BlogView {
   id: string;
   post_id: string;
@@ -430,10 +312,7 @@ export interface AppNotification {
   created_at: string;
 }
 
-// A behaviour event, logged locally. This is the "local data" the client keeps
-// on-device: detailed, per-user, for an admin to analyze. Only an aggregated,
-// name-free rollup of these ever becomes "global" data (see the Admin analytics
-// view) — personal detail never leaves the device.
+// A behaviour event, kept on the device; only name-free totals are shown.
 export interface AnalyticsEvent {
   id: string;
   user_id: string;
@@ -460,20 +339,15 @@ export interface AnalyticsEvent {
     | 'followup_added'
     | 'followup_done'
     | 'blog_written'
-    // Safeguarding. The subject of the event is the REASON, never the person
-    // reported — analytics is read by anyone who can see the church's trends,
-    // and "who has been reported" is not a trend, it is an accusation.
+    // Analytics records the reason for a report, never the person reported.
     | 'report_raised'
     | 'report_resolved';
   meta?: string;
   at: string;
 }
 
-// An invitation for a new Digital Seeker. The app is invite-only: an admin
-// creates an invite (name + email), which yields a secure token. The invited
-// person opens /join?token=<token>, completes their sign-up, and only then does
-// an account exist. In production the email is sent by the backend (see
-// docs/BACKEND-EMAIL-INVITES.md); in the demo the admin copies the invite link.
+// An invitation (sample app): the invited person opens /join?token=... and
+// only then does an account exist.
 export interface Invite {
   id: string;
   token: string;
@@ -481,11 +355,7 @@ export interface Invite {
   full_name: string;
   role: Role; // which role the invited person will have
   invited_by: string; // admin/executive profile id
-  /** The missionary this invite came from, carried through the whole flow so
-   *  that accepting it creates the pairing. This is the client's requirement in
-   *  one field: "If the DS accepts the admin's invite, DS enters through the
-   *  app with a new account paired to the recommending DM." Set only when the
-   *  invite grew out of a recommendation. */
+  /** The Guide whose recommendation this came from; accepting creates the pairing. */
   pair_with_dm?: string;
   recommendation_id?: string;
   status: 'pending' | 'accepted' | 'revoked';
@@ -493,16 +363,12 @@ export interface Invite {
   accepted_at?: string;
 }
 
-// A message the app *would* have emailed. There is no mail server in this
-// build, so instead of silently doing nothing, every send is captured here and
-// shown in the admin's Outbox. It is how you demonstrate the invitation flow —
-// and check the wording of what a real member receives — without one.
+// The email the app would have sent, shown in the admin's Outbox.
 export interface DemoEmail {
   id: string;
   to: string;
   to_name: string;
-  /** Set when the message is addressed to a person in this church, so their
-   *  inbox can find it. Absent for mail to an outsider (an invitation). */
+  /** Set when addressed to someone in this church; absent for invitations. */
   to_user_id?: string;
   from: string;
   from_name: string;
@@ -511,14 +377,10 @@ export interface DemoEmail {
   body: string; // plain text, rendered with a heading + button in the viewer
   kind: 'invite' | 'approved' | 'paired' | 'reset' | 'meeting' | 'recommendation';
   link?: string; // the call-to-action the real email would carry
-  /** A recommendation carries the sign-up it is about, which is what lets the
-   *  admin approve or disapprove from inside the message rather than going to
-   *  find them. This is the flow the real app will implement with signed links
-   *  in a genuine email. */
+  /** The sign-up a recommendation is about, so the admin can decide from the message. */
   about_profile_id?: string;
   suggested_role?: Role;
-  /** A recommendation is now about a person with no account, so there is no
-   *  profile id to point at — the recommendation record is the subject. */
+  /** The recommendation record, for a person with no account yet. */
   recommendation_id?: string;
   action_taken?: 'approved' | 'disapproved';
   acted_at?: string;
@@ -526,14 +388,7 @@ export interface DemoEmail {
   opened_at?: string;
 }
 
-// A missionary putting a name forward to the admin. The person has NO account
-// yet — that is the whole point, and it is what the old flow got wrong: it
-// offered a dropdown of people who had already signed up, so the seeker the
-// client described (someone the DM knows, who has never heard of the app)
-// could not be recommended at all.
-//
-// The DM does not invite. They recommend; the admin decides and invites. That
-// keeps the existing security boundary exactly where it was.
+// A Guide puts forward a person who has no account yet; only an admin invites.
 export interface Recommendation {
   id: string;
   dm_id: string;
@@ -547,19 +402,7 @@ export interface Recommendation {
   invite_id?: string;
 }
 
-/**
- * Somebody said something that should not have been said.
- *
- * WHY THIS EXISTS. This app pairs a Guide with an Explorer in a private
- * conversation nobody else can read — which is the right design for a
- * spiritual conversation and exactly the design that needs a way out. An
- * Explorer sent something inappropriate to their Guide, or the other way
- * about, and until now the only options were to say nothing or to leave.
- *
- * A report is deliberately NOT a message to the other person, and it does not
- * warn them. It goes to the church's Directors, who are the people with the
- * standing to act.
- */
+/** A safeguarding report. It goes to the church's Directors and never warns the other person. */
 export interface Report {
   id: string;
   /** Who raised it. A Guide or an Explorer; both may report. */
@@ -568,12 +411,7 @@ export interface Report {
   subject_id: string;
   /** The conversation it came from, when it came from one. */
   pairing_id?: string;
-  /**
-   * The specific message, when one was named. Kept as an id rather than a copy
-   * of the text: the Director reads it in place, in its own thread, with what
-   * came before and after it. A quoted line with no context is how a
-   * misunderstanding becomes a removal.
-   */
+  /** The specific message, as an id, so it is read in its own thread. */
   message_id?: string;
   reason: ReportReason;
   /** The reporter's own words. Optional — some things are hard to write down. */
@@ -586,12 +424,7 @@ export interface Report {
   outcome?: string;
 }
 
-/**
- * The reasons offered, in the order they are shown.
- *
- * A short list on purpose. A long one makes a person hunt for the exact label
- * and give up; "something else" catches everything and is not a lesser choice.
- */
+/** The reasons offered, in order. */
 export type ReportReason =
   | 'inappropriate'
   | 'harassment'
