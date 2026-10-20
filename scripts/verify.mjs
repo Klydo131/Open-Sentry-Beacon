@@ -1,19 +1,10 @@
-// One command that runs every guard, so nobody has to remember the list.
+// One command that runs every guard.
 //
-//   npm run verify        static guards only — no server, no browser, ~30s
-//   npm run verify:all    the above plus every end-to-end walk (~4 min)
+//   npm run verify        static guards only (no server, no browser)
+//   npm run verify:all    the above plus every end-to-end walk
 //
-// Why this exists: the checks were all here already and all run by hand, which
-// meant in practice they ran when someone remembered, which meant a stale
-// assertion could sit green-looking for weeks. Three of them had drifted so far
-// they were asserting the *opposite* of what had been asked for, and the only
-// reason anyone noticed was an unrelated investigation.
-//
-// The e2e half also owns the server lifecycle, because doing that by hand is
-// its own source of wrong answers: `next start` exits 1 when a previous
-// next-server still holds the port, and a stale server happily answers on the
-// old build so the suite passes against code that no longer exists. This picks
-// a free port, waits for the build id it just built, and always tears down.
+// The e2e half owns the server: it picks a free port, waits for the build id it
+// just built (a stale server would answer with old code), and always tears down.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
@@ -25,16 +16,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const withE2e = process.argv.includes('--all');
 const results = [];
 
-// On Windows, `npm` and `npx` are `npm.cmd` / `npx.cmd`, and Node refuses to
-// execute a .cmd without a shell — it has done since the CVE-2024-27980
-// hardening, so even setups that once worked now fail. Without this, the very
-// first thing a Windows contributor runs, `npm run verify`, dies at step one
-// with a bare ENOENT that says nothing about the cause.
-//
-// Gated on win32 rather than always-on: `shell: true` changes argument parsing,
-// and there is no reason to take that risk on the platforms where it is not
-// needed. Every argument passed here is a bare flag or word with no spaces, so
-// there is nothing for the Windows shell to mis-split.
+// On Windows, npm and npx are .cmd shims that Node will only run through a
+// shell. Every argument passed here is a bare word, so the shell cannot mis-split it.
 const NEEDS_SHELL = process.platform === 'win32';
 
 function run(label, cmd, args, opts = {}) {
@@ -52,14 +35,8 @@ function run(label, cmd, args, opts = {}) {
 }
 
 /**
- * The same as `run`, but for something that can happen alongside others.
- *
- * WHY THE OUTPUT IS CAPTURED RATHER THAN INHERITED. Four browser walks writing
- * to one terminal at once produces a transcript in which no line can be
- * attributed to the suite that wrote it, which is worse than no output: a
- * failure is still printed and is no longer findable. Each suite's output is
- * held and printed as one block when it finishes, so the log reads exactly as
- * it did when they ran one after another -- only sooner.
+ * Like `run`, for jobs that run alongside others. Output is captured and
+ * printed as one block per job, so parallel output stays readable.
  */
 function runAside(label, cmd, args) {
   return new Promise((resolve) => {
@@ -80,14 +57,8 @@ function runAside(label, cmd, args) {
 }
 
 /**
- * Run a list of jobs a few at a time, keeping every worker busy.
- *
- * HOW MANY AT ONCE, AND WHY IT IS NOT THE CORE COUNT. Each job is a whole
- * browser; they are bounded by memory rather than by CPU, and a runner that
- * swaps is slower than one that waits. Four is what a two-core CI runner and a
- * laptop both survive. E2E_WORKERS overrides it for anybody whose machine has
- * the room -- or for anybody bisecting a suite that only fails alongside
- * others, where 1 is the setting that answers the question.
+ * Run jobs a few at a time. Each is a whole browser, bounded by memory, not
+ * CPU; E2E_WORKERS overrides the default (1 helps when bisecting).
  */
 async function inParallel(jobs, workers) {
   const out = new Array(jobs.length);
@@ -123,9 +94,7 @@ async function waitForBuild(port, expected, timeoutMs = 60_000) {
       });
       if (res.ok) {
         const body = await res.json();
-        // The build id is the whole point of the wait. A server that answers
-        // with a different one is a stale process, and running the suite
-        // against it is how you "verify" code that is not deployed.
+        // A server answering with a different build id is stale; do not test against it.
         if (!expected || body.build === expected) return true;
       }
     } catch {
@@ -146,128 +115,41 @@ const staticChecks = [
   ['no backend, no pipelines', 'tests/no-backend.js'],
   ['test portability', 'tests/test-portability.mjs'],
   ['brand consistency', 'tests/brand-consistency.mjs'],
-  // brand-consistency only ever compared the LOGO DRAWING between its copies --
-  // it never looked at the name, while lib/brand.ts claimed it did. This is the
-  // check that claim described: the old name is gone everywhere, the two
-  // localStorage ADDRESSES that carry it survived untouched, and the
-  // hard-coded surface is pinned so it cannot grow behind a promise again.
   ['the brand is one name', 'tests/the-brand-is-one-name.mjs'],
   ['media guardrails', 'tests/media-guardrails.js'],
-  // Reads the CSP header itself. Every live data call is made from the browser,
-  // so a policy that omits the backend origin kills the whole app in the
-  // console — where nothing else in this suite is looking.
   ['backend CSP', 'tests/backend-csp.mjs'],
   ['real-time and pairing media', 'tests/realtime-and-media.mjs'],
   ['update floor', 'tests/min-build.mjs'],
-  // The auto-update policy, asserted both ways. The browser suite can only
-  // prove the half where an update is BLOCKED, and a guard that blocks forever
-  // passes that half too — so the decision itself is a pure function and both
-  // answers are checked here.
   ['auto-update policy', 'tests/auto-update-policy.mjs'],
   ['a first install stays on the page', 'tests/a-first-install-stays-on-the-page.mjs'],
   ['analytics over time', 'tests/analytics-trend.mjs'],
   ['security invariants', 'tests/security-invariants.mjs'],
-  // What a visitor who has NOT signed in can touch. Supabase grants the
-  // anonymous role everything on every new table and RLS is what takes it back,
-  // so a policy written without a TO clause quietly applies to the whole
-  // internet. Sweeps every migration rather than a list of tables somebody
-  // remembered to add — which is how it caught three the audit had missed.
   ['the signed-out role', 'tests/the-signed-out-role.mjs'],
-  // What an Explorer's shelf opens with. The kit is shown to everybody, and it
-  // grew into a twenty-item reference shelf that opened with three Bibles and
-  // closed with a lesson archive. That is a filing cabinet, not a welcome, so
-  // an Explorer now gets a short Jesus-first list -- and this keeps it short.
   ['the Explorer starts with Jesus', 'tests/the-explorer-starts-with-jesus.mjs'],
-  // Dead link, or a publisher that dislikes robots? The shelf checker cannot
-  // reach the internet from here and runs in CI instead, but the rule it sorts
-  // by can be tested anywhere -- and it is the part that was wrong, calling
-  // three live sites dead because they answer 403 to a datacentre.
   ['dead is not refused', 'tests/dead-is-not-refused.mjs'],
-  // An alert a phone will actually show. Chrome on Android refuses the
-  // Notification constructor outright, so the live settings screen said "On"
-  // and showed nothing -- on a desktop it worked, which is how it survived.
   ['notifications go through the worker', 'tests/notifications-go-through-the-worker.mjs'],
-  // Browser half: tests/e2e/beacon-has-its-own-sound.js.
   ['Beacon has its own sound', 'tests/beacon-has-its-own-sound.mjs'],
-  // 28 dead exports were found by hand on 19 October 2026; this keeps it at none.
   ['no export nothing uses', 'scripts/unused-exports.mjs'],
-  // A study could be created, published and deleted but never corrected, so
-  // fixing a typo meant deleting the study and losing every handout on it.
-  // The database had always allowed the update; only the app was missing.
   ['a study can be corrected', 'tests/a-study-can-be-corrected.mjs'],
-  // Live updates, both halves. One table was published for realtime and the
-  // rest of the app only changed when somebody pressed refresh; a set naming a
-  // table the migration does not publish is a screen subscribing to silence.
   ['the screen keeps up', 'tests/the-screen-keeps-up.mjs'],
-  // The library could be added to and shared from and never tidied. The delete
-  // policy had always allowed it; only the button was missing, which is a gap
-  // that reports itself as nothing at all.
   ['a resource can be taken off the shelf', 'tests/a-resource-can-be-taken-off-the-shelf.mjs'],
-  // ARCHITECTURE.md described an app with no backend for months after the live
-  // half shipped, and nothing reported it. Stale documentation fails silently.
   ['the docs know what shipped', 'tests/the-docs-know-what-shipped.mjs'],
-  // The white noise was nearly three times as loud as the gentle sounds from
-  // the same slider, and nothing measured it. "Some of it are not pleasing."
   ['the ambience is pleasant', 'tests/the-ambience-is-pleasant.mjs'],
-  // A Guide chosen on an invitation was never paired, because an invited
-  // Explorer arrives already approved and the pairing hung off an approval.
   ['the named Guide is paired', 'tests/the-named-guide-is-paired.mjs'],
-  // The invitation used to carry a one-time link that expired, was spent by
-  // mail scanners, and failed on the second tap. It carries a password now.
   ['a first password', 'tests/a-first-password.mjs'],
   ['the invitation carries a password', 'tests/the-invitation-carries-a-password.mjs'],
-  // The example studies cited nothing, which is what AI filler looks like.
   ['the studies are sourced', 'tests/the-studies-are-sourced.mjs'],
-  // The add form never asked what a link was FOR, every row drew one button
-  // per person, and the shelf could not be searched at any length.
   ['the library is easy to use', 'tests/the-library-is-easy-to-use.mjs'],
-  // Every part of sharing-with-a-note was built except the box: the column,
-  // the data layer and the Explorer's card were all ready, and the Guide's
-  // screen never passed one. Twenty-two shares, twenty-two empty notes.
   ['a share can say why', 'tests/a-share-can-say-why.mjs'],
-  // The "Maria has this" chip was fenced behind pairings.length === 1, so the
-  // only Guide it spoke to was one carrying a single Explorer -- and a Guide
-  // at the cap of five saw nothing. Their OWN shares only: a church-wide
-  // total would cross the boundary migration 0008 states outright.
   ['a Guide sees who already has it', 'tests/a-guide-sees-who-already-has-it.mjs'],
-  // The chat dock was `hidden xl:block`, so only a screen 1280px or wider got
-  // the bubble and a phone was sent to /talk -- a page, which loses whatever
-  // you were reading. One token, no error, invisible in review.
   ['the chat is a bubble everywhere', 'tests/the-chat-is-a-bubble-everywhere.mjs'],
-  // Two permanent explanations took more room than the conversation they
-  // explained -- 204 CSS pixels against 91 for the one message on screen --
-  // and every bubble repeated the speaker's name and its own date.
   ['the thread reads like a conversation', 'tests/the-thread-reads-like-a-conversation.mjs'],
   ['the live app offers what the tutorial offers', 'tests/the-live-app-offers-what-the-tutorial-offers.mjs'],
-  // Emoji suggested from a colon, never from ordinary words: this is the box
-  // somebody tells their Guide about a bereavement in. The trigger must also
-  // refuse `Luke 4:18`, which is the likeliest false positive in a church.
   ['emoji are suggested as you type', 'tests/emoji-are-suggested-as-you-type.mjs'],
-  // One way into the chat. The navigation row opened /talk as a page, which
-  // cost somebody whatever they were reading -- the bubble opens over it. The
-  // thread list must survive: auto-opening the first would strand a Guide in
-  // one conversation with no way to the other four, and nothing would error.
   ['the chat is the bubble and it moves', 'tests/the-chat-is-the-bubble-and-it-moves.mjs'],
-  // The appointments card kept nothing. 36 of 36 notes empty because there was
-  // no box; a proposal nobody answered stopped being drawn once its date went
-  // by, so a silence was delivered on somebody's behalf; and 33 meetings that
-  // actually happened were invisible to the two people they happened between.
   ['an appointment is remembered', 'tests/an-appointment-is-remembered.mjs'],
-  // read_at has been written since this app had messages and nothing ever drew
-  // it. Built on the owner's decision, against a stated product rule -- so the
-  // SHAPE is what is checked: one receipt, under the last thing you sent, never
-  // a column of Seen down the thread and never on the other person's messages.
   ['you can tell whether it was read', 'tests/you-can-tell-whether-it-was-read.mjs'],
-  // The roster showed two names and a stage and no date, and an ended pairing
-  // stopped existing on the screen. created_at was already in the browser; the
-  // END date was never recorded at all. updated_at is NOT it -- it moves on
-  // stage changes -- and substituting it would look complete and be wrong.
   ['a pairing has a track record', 'tests/a-pairing-has-a-track-record.mjs'],
-  // An Apps room whose addresses are the CHURCH'S -- this environment could not
-  // reach those domains, so anything hard-coded would have been written from
-  // memory and shipped untested. And an auto-pair button that PROPOSES: forty
-  // pairings by one tap is not something a Director can supervise, and a minor
-  // assigned to an adult by an algorithm must never happen at all.
   ['the pocket keeps a web app safely', 'tests/the-pocket-keeps-a-web-app-safely.mjs'],
   ['the rail is not the only way to reach something', 'tests/the-rail-is-not-the-only-way-to-reach-something.mjs'],
   ['a case is reachable by whoever is in it', 'tests/a-case-is-reachable-by-whoever-is-in-it.mjs'],
@@ -280,222 +162,66 @@ const staticChecks = [
   ['the room belongs to its owner at any width', 'tests/the-room-belongs-to-its-owner-at-any-width.mjs'],
   ['a study room the church owns', 'tests/a-study-room-the-church-owns.mjs'],
   ['the study room is paid for on arrival', 'tests/the-study-room-is-paid-for-on-arrival.mjs'],
-  // Every other check on the study room opens a room it just made. This one
-  // opens a page of the shape already sitting in the database.
   ['a room that already exists still opens', 'tests/a-room-that-already-exists-still-opens.mjs'],
-  // Two spellings of one tag are two tags forever, and a journal built the
-  // obvious way names the wrong day everywhere west of Greenwich. Both are
-  // silent, and the second one is wrong in Manila before eight in the morning.
   ['a page can be tagged and dated', 'tests/a-page-can-be-tagged-and-dated.mjs'],
-  // Leadership can see that somebody did something, not what they did it with.
-  // The obvious version of this check -- "the screen does not print it" -- is
-  // useless: what is held is that the column is not there to print.
   ['leadership sees the shape, not the thing', 'tests/leadership-sees-the-shape-not-the-thing.mjs'],
-  // The Getting Started page is a gift, not a nag. "Is it there?" is also false
-  // for somebody who read it and binned it, so the wrong question hands it back
-  // every visit forever. A browser cannot ask this: the walkthrough's room
-  // forgets everything on reload.
   ['a guide is given once', 'tests/a-guide-is-given-once.mjs'],
-  // "No Explorers to choose yet" over a church of fourteen Explorers, because
-  // every one of them was already paired. The control was right; the sentence
-  // was the bug, and it is indistinguishable from a failed load.
   ['a picker says why it is empty', 'tests/a-picker-says-why-it-is-empty.mjs'],
-  // "Analysis" is the word under which a conversation gets read: one more
-  // column would answer so many questions. What is held is the SHAPE of the
-  // answer -- counts and dates -- rather than any particular number.
   ['leadership can measure without reading', 'tests/leadership-can-measure-without-reading.mjs'],
-  // The thing that removes comments before a check searches a file. It ate
-  // `xn--` out of the link classifier twice and reported a security rule
-  // missing that was there; "it can only produce a false FAIL" is true and is
-  // not the same as safe.
   ['the comment stripper keeps the code', 'tests/the-comment-stripper-keeps-the-code.mjs'],
-  // The Kind dropdown defaults to Link and sits below the address, so the
-  // field was whatever the form defaulted to -- and then filter chips were
-  // built on it, making a field nobody maintains into a control that lies.
   ['the shelf knows what it is holding', 'tests/the-shelf-knows-what-it-is-holding.mjs'],
-  // An Explorer reads the studies; Guides, Directors and Executive Directors
-  // write them. Two copies of one rule -- the policy and the screen.
   ['an Explorer reads the studies', 'tests/an-explorer-reads-the-studies.mjs'],
-  // A study is marked read by the person who read it, and by nobody else, so a
-  // Director's progress bar is evidence rather than an opinion. Checks the
-  // policy that refuses a read written for somebody else AND the screens that
-  // do not offer what would be refused.
   ['the reading is recorded', 'tests/the-reading-is-recorded.mjs'],
-  // The shipping script hands `git status` paths straight to `git add`, and it
-  // was reading them through a helper that trimmed -- which ate the first
-  // character of the FIRST path whenever that entry was an unstaged edit. It
-  // survived two ships and then killed a 25-minute gate run at the last step.
   ['the ship reads git correctly', 'tests/the-ship-reads-git-correctly.mjs'],
-  // Evidence on a safeguarding report, and the authorisation around it: the
-  // same rule as reports_read, which deliberately keeps it from the reporter
-  // too, and no delete on either the row or the stored object.
   ['a report can carry evidence', 'tests/a-report-can-carry-evidence.mjs'],
-  // The join screen shown to a room without a live link and without creating
-  // anything. The whole value rests on it being incapable of writing, and that
-  // is invisible on screen, so it is checked rather than trusted.
   ['the sign-up can be shown', 'tests/the-sign-up-can-be-shown.mjs'],
-  // Gender and Status as lists, and a Director pinning a post. Both are small
-  // and both destroy data done carelessly: a select holding an unrecognised
-  // saved answer silently rewrites it on the next save.
   ['pinned posts and picked answers', 'tests/pinned-posts-and-picked-answers.mjs'],
-  // A Director opening a member, and recording a guardian's permission. The
-  // consent warning existed with nothing that could ever answer it: the
-  // columns, the RPCs and the red badge were built and no screen called them.
   ['a director can open somebody', 'tests/a-director-can-open-somebody.mjs'],
-  // An invitation creates the account when it is SENT, so a spent link leaves
-  // a real account with no password and no way in. Both ways out are checked:
-  // the person's, at the moment their sign-in is refused, and the Director's.
   ['nobody is stranded without a password', 'tests/nobody-is-stranded-without-a-password.mjs'],
-  // Two people who were unpaired could never be paired again: the unique
-  // constraint had no condition and a disconnect archives rather than deletes,
-  // so the archived row held the pair's slot forever. The same migration adds
-  // the rule nobody had written down, that an Explorer has one Guide.
   ['a pair can be made again', 'tests/a-pair-can-be-made-again.mjs'],
-  // The invitation route that never touches an inbox, for the failure an
-  // expiry setting cannot fix: a mail scanner spending the one-time link
-  // before the person it was sent to ever taps it.
   ['a link can be handed over', 'tests/a-link-can-be-handed-over.mjs'],
-  // No Apple menu contains the word Install, and an iPhone, an iPad and a Mac
-  // are three different sets of steps rather than one Apple set.
   ['Apple says Add, not Install', 'tests/apple-says-add-not-install.mjs'],
-  // Feedback went to the sender's own browser for months, because the sink was
-  // never installed and there was no table for it to be stuck in.
   ['feedback reaches the church', 'tests/feedback-reaches-the-church.mjs'],
   ['security audit and Guild activity', 'tests/security-audit-and-guild-activity.mjs'],
-  // What may become a clickable link. Linkifying user text is how an app like
-  // this grows an XSS hole, so the protocol allowlist and the anti-phishing
-  // rules are checked as rules, not as rendered output.
   ['linkify safety', 'tests/linkify.mjs'],
   ['minor badge', 'tests/minor-badge.mjs'],
   ['email templates', 'tests/email-templates.mjs'],
   ['invite emails', 'tests/invite-emails.mjs'],
-  // The invite edge function is the only code here that does not reach
-  // production through git -- it is deployed by sending its source inline as
-  // JSON. A placeholder went live that way once, and the JSON transport
-  // silently decodes backslash-u escapes. This forbids the escape; the live
-  // comparison is a procedure in the file, because CI has no credentials.
   ['the deployed function is the file', 'tests/the-deployed-function-is-the-file.mjs'],
   ['iPhone install', 'tests/ios-install.mjs'],
   ['plain words', 'tests/plain-words.mjs'],
   ['accounts and sessions', 'tests/accounts-and-sessions.mjs'],
-  // A study is written with **bold** headings, *slanted* titles and bare
-  // addresses, and every one of those was reaching the screen as literal
-  // punctuation or dead text. Fifteen of sixteen studies were affected.
   ['studies are formatted', 'tests/studies-are-formatted.mjs'],
-  // Reported from a Xiaomi phone as "I dont see the names when it comes to
-  // pairing". The names were all there: forty-one approved Guides, all named,
-  // all readable by that Director. The pairing form was simply drawn before
-  // they arrived, and a native <select> that is already open never takes new
-  // options. A phone on mobile data loses that race every time.
   ['the pairing pickers say what they know', 'tests/the-pairing-pickers-say-what-they-know.mjs'],
-  // And the reason those pickers were empty for two real Executive Directors,
-  // which was not the screen at all. An executive's authority rests entirely on
-  // a row in church_executives; handle_new_user never wrote one, so an
-  // executive who was INVITED could read exactly one profile, their own, on
-  // every screen. The third time this shape has been fixed, so this one checks
-  // the cause rather than the symptom.
   ['an invited executive can see their church', 'tests/an-invited-executive-can-see-their-church.mjs'],
-  // The invitation carries a password now, so nobody sees the sign-up form and
-  // signup_completed_at is never stamped. Eight people who were using the app
-  // were still on the Director's re-send list, and Re-send would have REPLACED
-  // the password they were signing in with.
   ['signing in is joining', 'tests/signing-in-is-joining.mjs'],
-  // Sharing wrote a row that no screen ever read. "Shared with you" listed
-  // everything the caller had permission to read, so an Explorer saw their own
-  // resources under a heading saying their Guide sent them, and the same rows
-  // again in the shelf directly above. The picker also closed on the first tap,
-  // which is why a Guide with several Explorers reported it half working.
   ['sharing a resource goes both ways', 'tests/sharing-a-resource-goes-both-ways.mjs'],
-  // The Guide has had the journey all along, as six named stages. The Explorer
-  // had nothing, and could be moved forward without ever knowing. This runs the
-  // bar they see now and holds the two rules that pull against each other: the
-  // width is the position the Guide moved them to, and nothing on the card a
-  // person reads is a stage name or a number.
   ['the Explorer sees their journey', 'tests/the-explorer-sees-their-journey.mjs'],
-  // A series could never be given the line that appears under its title,
-  // because no form ever offered the box -- and renaming one silently erased
-  // the line the seeded series already had. Plus the sidebar door that says
-  // Resources and holds nothing anybody shared.
   ['a series can say what it is', 'tests/a-series-can-say-what-it-is.mjs'],
-  // is_published defaulted to true and no screen ever set it, so every resource
-  // anybody added was readable by every Guide and every Director in the church.
-  // Private by default now, with the church shelf a deliberate act of
-  // leadership's, guarded in the database rather than on a screen.
   ['a resource is personal until it is shared', 'tests/a-resource-is-personal-until-it-is-shared.mjs'],
-  // Thirty-seven tables cascade off profiles, so a record meant to outlive an
-  // account cannot hold a foreign key to one. That is the check that matters
-  // here; the rest keep a name out of it and row level security on.
   ['a record that outlives the people in it', 'tests/a-record-that-outlives-the-people-in-it.mjs'],
-  // Sixteen screens loaded live data and subscribed to nothing, including the
-  // Explorer's, the Guide's and the Director's, and eighteen tables were never
-  // published. Both halves are checked here, because a set that names an
-  // unpublished table looks wired and is deaf.
   ['every room keeps up', 'tests/every-room-keeps-up.mjs'],
-  // The tutorial's steps find their subject by a data-quest string, which no
-  // compiler checks. Rename a tab key or retire a room and the spotlight lands
-  // on nothing, leaving the visitor stuck on a step that cannot be completed.
   ['the tutorial still points at something', 'tests/the-tutorial-still-points-at-something.mjs'],
-  // Sending an invitation creates the account; the church is attached
-  // separately. A profile with no church is invisible to every Director,
-  // because every approval list is scoped by church.
   ['a person waiting is visible to somebody', 'tests/a-person-waiting-is-visible-to-somebody.mjs'],
-  // Sending an invitation creates the account, so Re-send on a row whose person
-  // was deleted rebuilds them. Both send paths must exclude those rows.
   ['re-send cannot rebuild a removed account', 'tests/re-send-cannot-rebuild-a-removed-account.mjs'],
-  // Button composes the variant's colours and the caller's into one class
-  // attribute, and Tailwind settles duplicates by stylesheet order. Both delete
-  // confirmations rendered white text on a white ground: invisible controls.
   ['a button cannot hide its own label', 'tests/a-button-cannot-hide-its-own-label.mjs'],
-  // "Invite them" used to write a status and stop: nothing sent, and the card
-  // -- with the only copy of the address on it -- gone from every screen.
   ['invite them actually invites them', 'tests/invite-them-actually-invites.mjs'],
-  // Leadership the Head Executive Director appoints arrives approved. The rule
-  // grants privilege, so its shape is held: the head only, never any executive,
-  // and never widened to a Guide by accident.
   ['leadership the head appoints does not queue', 'tests/leadership-the-head-appoints-does-not-queue.mjs'],
-  // Editing somebody else's study gives a Guide a private copy. Publishing one
-  // put an empty duplicate in front of every Explorer, under a different topic,
-  // owned by nobody.
   ['a private copy is never published', 'tests/a-private-copy-is-never-published.mjs'],
-  // The place and link fields offer what this person has used before, drawn
-  // from the meetings already on screen. Holds the decision NOT to send a
-  // half-typed meeting address to a search service as somebody types it.
   ['an appointment offers what you used before', 'tests/an-appointment-offers-what-you-used-before.mjs'],
-  // The two notes in a conversation can be put away once read. Holds the line
-  // that dismissing a NOTE is not removing the PROMISE: the privacy page must
-  // still say both things.
   ['a note read once can be put away', 'tests/a-note-read-once-can-be-put-away.mjs'],
-  // Appointments first on the page and the conversation in the bubble, with
-  // its Report in the bubble's header, on both halves (30 September 2026).
-  // Replaces "the diary sits with the conversation", whose rule the owner
-  // reversed; the parts of it that still hold are carried over.
   ['appointments first, the chat in the bubble', 'tests/appointments-first-the-chat-in-the-bubble.mjs'],
-  // Every set of sub-rooms is one drop-down, on every device, and the closed
-  // button still says how many rooms and what is waiting (30 September 2026).
   ['sub-rooms are a drop-down', 'tests/sub-rooms-are-a-drop-down.mjs'],
-  // The desk is a drawer from the right edge on a phone or a pad, and the
-  // column beside the page on a desktop (30 September 2026).
   ['the desk is a drawer', 'tests/the-desk-is-a-drawer.mjs'],
-  // A Guide and a Director can see an Explorer's profile and face
-  // (30 September 2026).
   ['explorer profiles can be seen', 'tests/explorer-profiles-can-be-seen.mjs'],
-  // Every animation stops for somebody who asked their device for less
-  // movement, after it starts; one motion scale in CSS and code (1 October 2026).
   ['every animation can be stilled', 'tests/every-animation-can-be-stilled.mjs'],
-  // A fixed security advisory stays fixed in the lockfile (1 October 2026).
   ['fixed advisories stay fixed', 'tests/fixed-advisories-stay-fixed.mjs'],
-  // docs/DEPLOY-ANYWHERE.md names only files, settings and secrets that exist,
-  // and every scenario says whether it has been run (1 October 2026).
   ['the deploy guide matches the app', 'tests/the-deploy-guide-matches-the-app.mjs'],
-  // Reactions, replies and voice messages, and the rules that keep them as
-  // private as the conversation they are in (1 October 2026).
   ['a conversation can reply, react and speak', 'tests/a-conversation-can-reply-react-and-speak.mjs'],
   ['a stored path cannot leave its folder', 'tests/a-stored-path-cannot-leave-its-folder.mjs'],
   ['the chat works before its database update', 'tests/the-chat-works-before-its-database-update.mjs'],
   ['no hidden characters in the code', 'tests/no-hidden-characters.mjs'],
   ['every dependency is under a licence we can ship', 'tests/dependency-licences.mjs'],
-  // The research agents in .claude/agents read and report, keep real data
-  // out, put security first, and name only files that exist (1 October 2026).
   ['the research agents only read', 'tests/the-research-agents-only-read.mjs'],
   ['the guild wall keeps up without naming anybody', 'tests/the-guild-wall-keeps-up-without-naming-anybody.mjs'],
   ['a message can be changed or taken back', 'tests/a-message-can-be-changed-or-taken-back.mjs'],
@@ -506,196 +232,68 @@ const staticChecks = [
   ['the shelf can be narrowed', 'tests/the-shelf-can-be-narrowed.mjs'],
   ['bulk invite list', 'tests/bulk-invite.mjs'],
   ['stay signed in', 'tests/stay-signed-in.mjs'],
-  // Runs the shipped translator over the exact strings that reached a phone:
-  // "permission denied for table pairings" and a mime type read out in full.
-  // Nothing else here looks at what a failure actually SAYS to a person.
   ['errors are human', 'tests/errors-are-human.mjs'],
-  // The two pop-up rules a browser here CANNOT check, because headless
-  // Chromium has no collapsing address bar and no home indicator: `vh` versus
-  // `dvh`, and the safe area at the bottom of a phone. Both are invisible on a
-  // Mac, which is exactly how they shipped.
   ['pop-ups on a phone', 'tests/overlays-on-a-phone.mjs'],
-  // Characters that are not emoji have no font promised behind them. The
-  // sign-out button was a blank box on every Android phone and perfect on every
-  // Apple one, which is why nobody reviewing it ever saw the problem.
   ['icons render everywhere', 'tests/glyphs-render-everywhere.mjs'],
-  // Turning what somebody typed into an href is an injection surface, and this
-  // field is filled in by a Guide and tapped by the Explorer they walk with.
   ['meeting links', 'tests/meeting-links.mjs'],
-  // Whether somebody signing in with things waiting is told, and whether they
-  // are buried when they are. Neither is reachable from a browser here: pop-ups
-  // need a granted permission, a service worker and a device.
   ['told on arrival', 'tests/notified-on-arrival.mjs'],
-  // The most damaging button on a screen must never be the most inviting one.
   ['destructive is discouraged', 'tests/destructive-is-discouraged.mjs'],
-  // Whether an Explorer can see that their Guide is a person, and — the half
-  // that can bite — whether the query that shows them stays inside the columns
-  // the Guide chose to publish.
   ['the Guide is a person', 'tests/the-guide-is-a-person.mjs'],
-  // The guild board is the one room where a message reaches a group rather
-  // than one person, and some of that group are children. Whether there is a
-  // way out of it, and whether it is still not surveilled.
   ['a way out of the guild room', 'tests/a-way-out-of-the-guild-room.mjs'],
   ['the guild room is archived, not deleted', 'tests/the-guild-room-is-archived-not-deleted.mjs'],
-  // A room is a folder and a subroom is a folder inside it. Whether every
-  // panel in the Office is in exactly one subroom, and whether the links that
-  // point into it name subrooms that exist.
   ['rooms and subrooms', 'tests/rooms-and-subrooms.mjs'],
-  // Three loading screens existed and the app showed the plainest one. This
-  // holds it to the designed one, drawing the real logo.
   ['one loading screen', 'tests/one-loading-screen.mjs'],
-  // Who may put something in the library, who reads the record of it
-  // afterwards, and who may stop somebody. Each rank watches the rank below it
-  // and no further down.
   ['the library is shared and watched', 'tests/the-library-is-shared-and-watched.mjs'],
-  // The claims a privacy notice makes have to stay true in the code. Nothing
-  // breaks when they drift, which is exactly why they need a check.
   ['data protection', 'tests/data-protection.mjs'],
-  // "Send me everything you have about me." The right both laws give, and the
-  // one property that keeps answering it safe: it reads as the person asking.
   ['my own data', 'tests/my-own-data.mjs'],
-  // A photograph in a conversation is shown rather than named. The sample side
-  // had done this correctly for months and the live one had not, which is the
-  // parity rule this project keeps writing down and keeps breaking.
   ['a picture looks like a picture', 'tests/a-picture-looks-like-a-picture.mjs'],
-  // The documents that get printed and handed to people have to render. A bold
-  // phrase that wrapped inside a bullet went out with its asterisks showing.
   ['printed docs render', 'tests/printed-docs-render.mjs'],
   ['themes are readable', 'tests/themes-are-readable.mjs'],
   ['migrations apply cleanly', 'tests/migrations-apply-cleanly.mjs'],
-  // The signed-in header, which is the one layout nothing else here can render:
-  // it exists only behind a session, and the sandbox these run in cannot reach
-  // the backend. It shipped needing ~600px on a 390px phone, which made the
-  // whole page scroll sideways — what iOS users saw as an empty strip down the
-  // right of every screen.
   ['live header fits a phone', 'tests/live-header-fits.mjs'],
   ['live conversations fit phones and tablets', 'tests/live-conversation-mobile.mjs'],
-  // Written, passing, and never wired in until an audit went looking for it.
-  // Six assertions that the presentation screens stay connected to real
-  // feature paths -- a clean card that cannot open, share or send is a mock.
   ['the presentation screens are connected', 'tests/presentation-feature-ui.mjs'],
   ['workflow files', 'tests/workflows.mjs'],
-  // And that the workflows can get past their first step. `npm ci` is the
-  // Install step in both workflows that build this project, and it refuses a
-  // lock that disagrees with package.json -- which `npm install` quietly
-  // repairs, so the machine that causes it is the one machine that cannot see
-  // it. Five days of pushes failed at Install with `Verify` skipped while this
-  // script said everything passed.
   ['the lockfile can install', 'tests/the-lockfile-can-install.mjs'],
-  // The half of the Obsidian bridge that needs no browser: what a file is
-  // called, what its front matter says, and a zip checked against a real
-  // Info-ZIP and Python rather than against our own reader.
   ['a room can become a vault', 'tests/a-room-can-become-a-vault.mjs'],
-  // The Sabbath program in the Office: the template the owner chose, a list
-  // per account kept on the device, and a Word file checked against the order
-  // Word's schema insists on and against Info-ZIP and Python.
   ['a Sabbath program is a Word file', 'tests/a-sabbath-program-is-a-word-file.mjs'],
   ['evangelistic meetings are yours to shape', 'tests/evangelistic-meetings-are-yours-to-shape.mjs'],
   ['a progress report counts what happened', 'tests/a-progress-report-counts-what-happened.mjs'],
   ['the Office follows you: devices, folders, calendars', 'tests/the-office-follows-you.mjs'],
-  // Classic is the look the app has, named in Settings on 3 October 2026, and
-  // a look added later may not change it.
   ['the Classic look stays as it is', 'tests/the-classic-look-stays.mjs'],
   ['a suspension is immediate', 'tests/a-suspension-is-immediate.mjs'],
-  // `x.col = col` inside a subquery is always true: the bare name binds to x.
-  // Two live policies checked nothing because of it.
   ['a door compares the right things', 'tests/a-door-compares-the-right-things.mjs'],
-  // A Guide asks the people they walk with to pray for them, too. Who reads,
-  // who writes, who may change what, who is told, and a way to report.
   ['prayer runs both ways', 'tests/prayer-runs-both-ways.mjs'],
-  // The two ways a church installs the database -- one command, or every file
-  // by hand -- read the folder differently. What each can trip over.
   ['a church can install it either way', 'tests/a-church-can-install-it-either-way.mjs'],
-  // The owner asked for Resources and Lesson studies to be simple rather than
-  // technical. What made them complicated, kept from coming back.
   ['resources and studies stay simple', 'tests/resources-and-studies-stay-simple.mjs'],
   ['a resource can be a file', 'tests/a-resource-can-be-a-file.mjs'],
-  // Asked for the same day: "update policy and security to keep our app
-  // consistent and safe". No photo leaves with its location; what one person
-  // can upload is bounded, and handouts are for the people who write studies.
   ['photos lose their location', 'tests/photos-lose-their-location.mjs'],
   ['what one person can upload', 'tests/what-one-person-can-upload.mjs'],
-  // The lock that stops anybody making themselves an admin, approving
-  // themselves or moving church. In the database since the first migration,
-  // and until 25 September 2026 held by no test at all.
   ['nobody promotes themselves', 'tests/nobody-promotes-themselves.mjs'],
-  // "I need to see the destination name, like auto name in google search, then
-  // just click or tap it to secure the location." The right place, one tap,
-  // and nothing more sent than the words.
   ['place search', 'tests/place-search.mjs'],
   ['a folder does not say whose church', 'tests/a-folder-does-not-say-whose-church.mjs'],
   ['the tutorial ring keeps up', 'tests/the-tutorial-ring-keeps-up.mjs'],
   ['a study takes files anywhere', 'tests/a-study-takes-files-anywhere.mjs'],
-  // A drawing board on every study being written (28 September 2026): Excalidraw,
-  // loaded only when asked for, talking to nobody else, and a saved drawing that
-  // carries the picture and the drawing and nothing else.
   ['a study can have a drawing', 'tests/a-study-can-have-a-drawing.mjs'],
-  // The password an invitation e-mails lasts seven days; choosing a password
-  // signs out every other device (29 September 2026).
   ['an invitation password runs out', 'tests/an-invitation-password-runs-out.mjs'],
   ['an ended session ends at once', 'tests/an-ended-session-ends-at-once.mjs'],
-  // The agent toolkit (docs/DEVELOPER-TOOLKIT.md): vetted, pinned, and switched
-  // on by nobody who clones the repository (29 September 2026).
   ['the toolkit is opt-in', 'tests/the-toolkit-is-opt-in.mjs'],
-  // Menu | People | My Files along the bottom of a phone and a pad, and the
-  // Menu that lists every room the rail has (30 September 2026). The browser
-  // half is tests/e2e/the-rooms-fit-a-phone.js.
   ['the bottom bar', 'tests/the-bottom-bar.mjs'],
-  // Text size is tried in the preview and changes the app only on Apply
-  // (3 October 2026). The browser half is tests/e2e/text-size-is-tried-first.js.
   ['text size is tried first', 'tests/text-size-is-tried-first.mjs'],
-  // Offline says "Offline" and promises nothing (3 October 2026).
   ['offline says offline', 'tests/offline-says-offline.mjs'],
-  // Blog and Announcements are Home's folders; no Publish room (3 October 2026).
   ['blog and announcements are home', 'tests/blog-and-announcements-are-home.mjs'],
-  // Sign out tells the server, for this session only, and never hangs
-  // (the audit of 3 October 2026).
   ['signing out ends the session', 'tests/signing-out-ends-the-session.mjs'],
-  // The desk's colours work under every look, in that look's own light, so
-  // nothing becomes harder to read (4 October 2026). The browser half is
-  // tests/e2e/room-colours-in-every-look.js.
   ['room colours keep the look\'s light', 'tests/room-colours-keep-the-look-light.mjs'],
-  // A light background and its text change together, so no look can turn the
-  // text pale on a ground it cannot reach (4 October 2026).
   ['text and ground change together', 'tests/text-and-ground-change-together.mjs'],
-  // A failing browser walk prints what the browser saw, so a WebKit failure in
-  // CI can be read from the log (30 September 2026).
   ['the walks say what they saw', 'tests/the-walks-say-what-they-saw.mjs'],
-  // A walk forgives a request only when its own next page load cut it short:
-  // the app's release check, on Safari (4 October 2026).
   ['a walk forgives only what it cut short', 'tests/a-walk-forgives-only-what-it-cut-short.mjs'],
-  // No needless work in the frame a screen opens (4 October 2026: "can we even
-  // make our UI animations smoother please").
   ['screens open without a hitch', 'tests/screens-open-without-a-hitch.mjs'],
-  // The Music room (4 October 2026): a tuner, a conductor's beat, a page
-  // scanner and a score to learn a part from, with the player moved out of
-  // My Files. Hostile scores and zips, the microphone let go, nothing sent.
-  // The browser half is tests/e2e/the-music-room.js.
   ['the music room', 'tests/the-music-room.mjs'],
-  // The app works with no signal (16 October 2026: "How is it still and
-  // "offline" first local web app if all of the features are not usable
-  // offline?"): every screen, every tool, and a signed-in person's last read,
-  // kept for them alone. The browser half is tests/e2e/the-app-works-with-no-signal.js.
   ['the app works with no signal', 'tests/the-app-works-with-no-signal.mjs'],
-  // Plan and show, test, polish, and the owner is aware before anything
-  // reaches main, for people and AI tools alike (30 September 2026).
   ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],
-  // Boots `npm run dev` and looks at the page. Everything else in this list
-  // tests the PRODUCTION build, which is how a blank `npm run dev` — the very
-  // first command the README gives a newcomer — survived with thirty green
-  // checks above it.
   ['dev server', 'tests/dev-server.mjs'],
 ];
-// A REGISTERED CHECK THAT IS NOT ON DISK IS A FAILURE, NOT A SKIP.
-//
-// This used to be `if (existsSync(...)) run(...)`, so deleting or renaming a
-// test file removed it from the gate in silence: the run below simply counted
-// one fewer and still printed "All N checks passed". The number is the only
-// place it showed, and nobody reads the number -- they read the last line.
-//
-// Nothing was missing when this was written. That is the point: the hole costs
-// nothing to close while it is empty, and the next person to rename a file
-// gets told rather than quietly losing a guard.
+// A registered check whose file is missing fails the gate instead of being skipped.
 for (const [label, file] of staticChecks) {
   if (fs.existsSync(path.join(root, file))) {
     run(label, 'node', [file]);
@@ -757,18 +355,8 @@ if (withE2e) {
           : '\nThe server never became ready (log above).',
       );
     } else {
-      // A FEW AT A TIME, AND THIS IS THE WHOLE REASON THE WALKS CAN BE IN CI.
-      // Fifty-four suites, each starting its own browser, took a little over
-      // half an hour one after another -- long enough that they were run by
-      // hand when somebody remembered, which in practice meant that every
-      // layout bug reported from the live site this week had passed through a
-      // gate that never looked. Four at a time brings it under ten minutes,
-      // which is a length a push can wait for.
-      //
-      // They do not tread on each other: every suite launches its own browser
-      // with its own profile directory, so what one stores is invisible to the
-      // rest, and the walkthrough they all drive keeps its pages in the tab
-      // rather than in the database.
+      // Walks run four at a time; each launches its own browser profile, so they
+      // do not share state.
       const workers = Math.max(1, Number(process.env.E2E_WORKERS) || 4);
       console.log(`Serving build ${expected || '(unknown)'} — ${suites.length} walks, ${workers} at a time\n`);
       const done = await inParallel(

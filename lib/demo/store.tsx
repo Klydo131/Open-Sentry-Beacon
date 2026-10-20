@@ -35,12 +35,8 @@ import type {
 } from '../types';
 import { nextStage, roleLabel, canKick } from '../brand';
 
-// What an approval notice says. An Explorer is welcomed by name and not told
-// what category they have been filed under; everybody else is told the job they
-// now hold, because for them it is genuinely useful information.
-//
-// The reader IS the subject here, so the viewer argument is the same role —
-// which is exactly what makes roleLabel() withhold 'Explorer'.
+// An Explorer is welcomed by name, never told their category; other roles are
+// told the job they now hold.
 function welcomeLine(role: string): string {
   const label = roleLabel(role, role);
   return label ? `Welcome! You are now a ${label}.` : 'Welcome! Your account is ready.';
@@ -53,36 +49,18 @@ import { REACTIONS, type ReactionTarget } from '../talk/reactions';
 import { plainTitle } from '../talk/thread';
 import { prayerAuthor } from '../types';
 
-// -------------------------------------------------------------------------
-// Demo store. A self-contained, in-browser backend so the app runs and
-// demonstrates with zero configuration. Everything lives in localStorage and
-// nothing here talks to a network. The shapes it stores are the app's real
-// domain types (see lib/types.ts), so the screens are unchanged from a build
-// backed by a database.
-// -------------------------------------------------------------------------
+// The sample church's in-browser backend: everything lives in localStorage and
+// nothing touches the network. It stores the app's real types (lib/types.ts),
+// so the screens are the same as with a database.
 
 const DB_KEY = 'beacon-demo-v1';
 const PERSONA_KEY = 'beacon-persona';
 const TUTORIAL_KEY = 'beacon-tutorial';
 // Where the person's own demo data waits while the tutorial borrows the app.
 const PRETUTORIAL_KEY = 'beacon-demo-pretutorial';
-// WHAT GETS WRITTEN WHEN THERE WAS NOTHING TO PARK.
-//
-// "No saved demo" is a state to put back, and treating it as "nothing to do"
-// is the bug this exists for. Somebody opening the demo for the first time has
-// no `beacon-demo-v1` at all. Starting the tutorial saved nothing, because
-// there was nothing to save; finishing restored nothing, for the same reason;
-// and the tutorial's own database was simply left sitting there as theirs,
-// with whatever they changed during the walk still in it. Their first
-// impression of the demo was the leftovers of a tutorial.
-//
-// It survived because the check for it was written the same way round as the
-// code: "snapshot cleaned up after finishing" passes when no snapshot was ever
-// taken. WebKit is where it finally showed, and it is not a WebKit bug; that
-// engine just happened to reach the tutorial with empty storage.
-//
-// Deliberately not valid JSON, so a restore path that forgets to check for it
-// throws rather than quietly loading a database made of the word none.
+// Written when there was no saved demo to park, so finishing the tutorial
+// restores "nothing" instead of leaving the tutorial's data behind. Not valid
+// JSON on purpose, so a restore that forgets to check for it fails loudly.
 const NOTHING_BEFORE = 'none';
 export const QUEST_KEY = 'beacon-quest-v1';
 // Which walk is running, so a reload mid-tutorial resumes the right one.
@@ -96,14 +74,8 @@ const nowIso = () => new Date().toISOString();
 // read the newest entries, and the global rollup is a count.
 const MAX_ANALYTICS = 500;
 
-// One place that writes the database to localStorage.
-//
-// Why this exists: localStorage holds roughly 5 MB, the whole DB is re-serialised
-// on every action, and profile photos are stored as data URLs. Once the quota is
-// hit, setItem throws — and every call site used to swallow that in an empty
-// catch, so saves failed SILENTLY and the user lost everything on refresh. Now a
-// failed write prunes the largest growable collection and retries once, so the
-// app degrades by forgetting old analytics instead of losing the user's data.
+// The only place that writes the database to localStorage. When the ~5 MB quota
+// is hit, it drops old analytics and retries once instead of losing data.
 function saveDb(next: DB): DB {
   const trimmed: DB =
     next.analytics.length > MAX_ANALYTICS
@@ -114,39 +86,20 @@ function saveDb(next: DB): DB {
     publishDb(trimmed);
     return trimmed;
   } catch {
-    // Out of room: drop all but the most recent analytics and try once more.
     const lean: DB = { ...trimmed, analytics: trimmed.analytics.slice(-50) };
     try {
       localStorage.setItem(DB_KEY, JSON.stringify(lean));
       publishDb(lean);
       return lean;
     } catch {
-      // Still no room (or storage blocked entirely) — keep working in memory.
       return trimmed;
     }
   }
 }
 
-// Bring a saved database up to the shape the code now expects.
-//
-// This exists because of a specific outage, and the shape of the fix is the
-// lesson. There used to be a hand-written list here — `if (!parsed.meetings)
-// parsed.meetings = []`, once per collection — which meant every new collection
-// needed a second edit in a second place, by memory. `lesson_series` shipped
-// without that second edit. Every device holding saved demo data then loaded a
-// database where `db.lesson_series` was undefined, the first `.filter()` on it
-// threw during render, and the app fell to the "Beacon needs a fresh copy"
-// screen. That screen cannot fix it: the bad value is in localStorage and the
-// repair only clears service workers and caches, deliberately never storage. So
-// refreshing, however hard, did nothing at all.
-//
-// Now the shape comes from the seed. Add a collection to makeSeed() and old
-// saves pick it up on the next load; there is no list to keep in step.
-//
-// A key can only be missing if the save predates the collection, which means
-// there is no user data in it to protect — so a missing collection takes the
-// seed's own value and the feature is simply there. A key that is present, even
-// as an empty array, is the person's and is left alone.
+// Bring a saved database up to the current shape: any collection missing from
+// the save takes the seed's value, so a new collection in makeSeed() needs no
+// migration here. Collections already present are left alone.
 export function normalizeDb(parsed: unknown): DB {
   const seed = makeSeed() as unknown as Record<string, unknown>;
   const saved = (parsed && typeof parsed === 'object' ? parsed : {}) as Record<string, unknown>;
@@ -156,15 +109,13 @@ export function normalizeDb(parsed: unknown): DB {
     const want = seed[key];
     const have = saved[key];
     if (Array.isArray(want)) {
-      // Wrong type counts as missing: a null or an object here would throw at
-      // the first .filter() exactly the way undefined did.
+      // A wrong type counts as missing; it would throw at the first .filter().
       out[key] = Array.isArray(have) ? have : want;
     } else {
       out[key] = have === undefined || have === null ? want : have;
     }
   }
-  // Keep anything the save has that the seed does not, so an older build
-  // reading a newer save does not quietly delete the newer build's data.
+  // Keep keys the seed lacks, so an older build does not delete a newer build's data.
   for (const key of Object.keys(saved)) {
     if (!(key in out)) out[key] = saved[key];
   }
@@ -177,25 +128,15 @@ function ev(user_id: string, type: AnalyticsEvent['type'], meta?: string): Analy
   return { id: uid(), user_id, type, meta, at: nowIso() };
 }
 
-// Build the message the app would have emailed. Captured in db.emails and
-// shown in the admin Outbox instead of vanishing into a mail server that does
-// not exist in this build.
+// The email the app would have sent, kept in db.emails for the admin Outbox.
 function mail(m: Omit<DemoEmail, 'id' | 'created_at'>): DemoEmail {
   return { ...m, id: uid(), created_at: nowIso() };
 }
 
 /**
- * THE BACKEND CONTRACT.
- *
- * Everything the app can do is on this interface, and nothing reaches past it —
- * no component fetches, no screen knows where anything is stored. So anything
- * that satisfies these functions can be the backend, and every screen keeps
- * working unchanged. That is what makes this app platform-agnostic: not an
- * abstraction bolted on top, but the fact that there has only ever been one
- * place data comes from.
- *
- * Exported so a real implementation can be typed against it — TypeScript then
- * lists exactly what you still have to write. See docs/BACKENDS.md.
+ * The backend contract: everything the app can do goes through this
+ * interface, so any implementation of it can be the backend. Exported so a
+ * real one can be typed against it (docs/BACKENDS.md).
  */
 export interface Ctx {
   db: DB;
@@ -207,18 +148,10 @@ export interface Ctx {
   advanceStage: (pairingId: string) => void;
   /** Send a message, optionally answering an earlier one in the same thread. */
   sendMessage: (pairingId: string, body: string, replyTo?: string | null) => void;
-  /**
-   * Change or take back your OWN message, as the live app does through
-   * edit_message() and delete_message(). Taking back empties the words and
-   * marks it, so the thread can say a message was there.
-   */
+  /** Change or take back your own message. Taking back empties the words and marks it. */
   editMessage: (messageId: string, body: string) => void;
   deleteMessage: (messageId: string) => void;
-  /**
-   * React to a message or attachment in your own conversation, change the
-   * reaction, or take it away (null). One per person per thing, from the six
-   * in lib/talk/reactions.ts -- the rules react_to() keeps on the live half.
-   */
+  /** React to a message or attachment, change the reaction, or remove it (null). */
   reactTo: (target: ReactionTarget, emoji: string | null) => void;
   shareMaterial: (pairingId: string, materialId: string, note?: string) => void;
   approveUser: (userId: string, role: Role) => void;
@@ -249,10 +182,7 @@ export interface Ctx {
   }) => void;
   giveConsent: () => void;
   addPrayerRequest: (body: string, shareWithBoard: boolean) => void;
-  /**
-   * The author may move a request anywhere; the other side may only move it
-   * from open to praying. The same rule the live database enforces.
-   */
+  /** The author may set any status; the other side may only move it from open to praying. */
   setPrayerStatus: (id: string, status: PrayerRequest['status']) => void;
   /** A Guide asks each chosen Explorer they walk with to pray for them. */
   askForPrayer: (dsIds: string[], body: string) => void;
@@ -288,35 +218,27 @@ export interface Ctx {
   markMessagesRead: (pairingId: string) => void;
   markEmailOpened: (id: string) => void;
   sendRecommendation: (fullName: string, email: string, note: string) => void;
-  // The admin's two answers to a recommendation. Inviting carries the
-  // recommending missionary through to the invite, which is what makes the
-  // pairing happen on acceptance.
+  // Inviting a recommendation carries the recommending Guide through, which
+  // pairs them on acceptance.
   inviteRecommended: (recommendationId: string) => void;
   declineRecommendation: (recommendationId: string) => void;
   actOnEmail: (emailId: string, action: 'approve' | 'disapprove') => void;
   clearEmails: () => void;
   /**
-   * Attach a file to a conversation. Returns the new media id immediately and
-   * writes the bytes in the background, so the attachment appears the instant
-   * it is chosen rather than after the disk finishes — the same optimistic rule
-   * every other write in this store follows. Returns null when the caller is
-   * not in the pairing.
+   * Attach a file to a conversation. Returns the new id at once and writes the
+   * bytes in the background; null when the caller is not in the pairing.
    */
   attachMedia: (pairingId: string, file: File) => string | null;
   /** Remove an attachment and its bytes. The owner only. */
   removeMedia: (id: string) => void;
-  /**
-   * Media the SIGNED-IN person may see in this pairing. Screens must call this
-   * rather than filtering db.pairing_media themselves — the rule belongs in one
-   * place, and in a real deployment that place is a database policy.
-   */
+  /** Media the signed-in person may see in this pairing. Screens must use this, not filter themselves. */
   mediaFor: (pairingId: string) => PairingMedia[];
   addNote: (pairingId: string, body: string) => void;
   deleteNote: (id: string) => void;
   addFollowUp: (pairingId: string, title: string, dueOn?: string) => void;
   toggleFollowUp: (id: string) => void;
   deleteFollowUp: (id: string) => void;
-  // Blog. A Guide writes; the Explorers they walk with read.
+  // Blog: a Guide writes; the Explorers they walk with read.
   addBlogPost: (m: {
     title: string;
     body: string;
@@ -374,8 +296,6 @@ export interface Ctx {
  * Exported so a real backend can provide itself in place of DemoProvider:
  *
  *     <DemoContext.Provider value={yourCtx}>{children}</DemoContext.Provider>
- *
- * Every screen goes on reading from useDemo() and none of them notice.
  */
 export const DemoContext = createContext<Ctx | null>(null);
 
@@ -383,18 +303,15 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [db, setDb] = useState<DB>(makeSeed);
   const [userId, setUserId] = useState<string | null>(null);
   const [tutorialActive, setTutorialActive] = useState(false);
-  // Read from storage on mount rather than during render, so a reload mid-walk
-  // resumes the walk you were on instead of dropping you into the missionary's.
+  // Read on mount, so a reload mid-tutorial resumes the right walk.
   const [tutorialTrack, setTutorialTrack] = useState<QuestTrack>('dm');
   const [ready, setReady] = useState(false);
 
-  // Hydrate from localStorage once, on the client, to avoid SSR mismatch.
+  // Hydrate from localStorage once, on the client, to avoid an SSR mismatch.
   useEffect(() => {
     try {
       const savedDb = localStorage.getItem(DB_KEY);
       if (savedDb) {
-        // Older saves predate newer collections. normalizeDb fills them in from
-        // the seed, so a save written before a feature existed still loads.
         setDb(normalizeDb(JSON.parse(savedDb)));
       }
       const savedPersona = localStorage.getItem(PERSONA_KEY);
@@ -405,22 +322,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         if (saved && saved in QUEST_BY_TRACK) setTutorialTrack(saved as QuestTrack);
       }
     } catch {
-      /* ignore corrupt storage — fall back to seed */
+      /* corrupt storage: fall back to the seed */
     }
     setReady(true);
   }, []);
 
-  // Live sync between every open window of the app on this device.
-  //
-  // Applied with setDb and NOT with saveDb, and that is load-bearing. saveDb
-  // publishes; publishing what we just received would send it straight back and
-  // two windows would volley the database at each other forever. The window
-  // that made the change has already written localStorage, and it is the same
-  // storage, so there is nothing left for this side to save.
-  //
-  // Note what deliberately does NOT sync: who you are signed in as. Each window
-  // keeps its own userId, which is the entire point — one window is the
-  // missionary and the other is the seeker.
+  // Sync with other open windows on this device. Uses setDb, not saveDb, or the
+  // windows would echo the database back and forth. The signed-in person is not
+  // synced: each window keeps its own.
   useEffect(() => subscribeDb((incoming) => setDb(normalizeDb(incoming))), []);
 
   const persist = useCallback((next: DB) => {
@@ -457,7 +366,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         const pairing = prev.pairings.find((p) => p.id === pairingId);
         if (!pairing) return prev;
         const to = nextStage(pairing.journey_stage);
-        if (!to) return prev; // already at Commission
+        if (!to) return prev;
         const from = pairing.journey_stage;
         const dmName =
           prev.profiles.find((p) => p.id === pairing.dm_id)?.full_name ??
@@ -478,10 +387,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
               created_at: nowIso(),
             },
           ],
-          // The seeker used to be told "You advanced to care" — the raw stage
-          // key, addressed to the one person the client asked never to see it.
-          // The advance is real and worth marking, so it is still marked; it is
-          // just no longer a label the church put on them.
+          // Mark the advance without naming the stage to the Explorer.
           notifications: [
             {
               id: uid(),
@@ -508,7 +414,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       setDb((prev) => {
         const pairing = prev.pairings.find((p) => p.id === pairingId);
         if (!pairing) return prev;
-        // A reply stays in its own conversation, as the database holds it.
+        // A reply stays in its own conversation.
         const answers = replyTo
           && prev.messages.some((m) => m.id === replyTo && m.pairing_id === pairingId)
           ? replyTo : undefined;
@@ -589,7 +495,6 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         profiles: prev.profiles.map((p) =>
           p.id === targetId ? { ...p, role, is_approved: true } : p,
         ),
-        // Tell the approved person what happened — admin → user transparency.
         notifications: [
           {
             id: uid(),
@@ -637,7 +542,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const createPairing = useCallback(
     (dmId: string, dsId: string, track: Track) => {
       persistUpdate((prev) => {
-        // One active DM per seeker: guard against a duplicate active pairing.
+        // One active Guide per Explorer.
         const exists = prev.pairings.some(
           (p) => p.ds_id === dsId && p.status === 'active',
         );
@@ -656,7 +561,6 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         return {
           ...prev,
           pairings: [...prev.pairings, pairing],
-          // Notify BOTH sides so the connection is transparent to each of them.
           notifications: [
             {
               id: uid(),
@@ -720,8 +624,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // Create a local account that lives only on this device. Starts as an
-  // unapproved seeker — the admin's approval gate still applies.
+  // A local account on this device only. It starts unapproved.
   const createLocalAccount = useCallback((fullName: string): string => {
     const id = 'local-' + uid();
     persistUpdate((prev) => ({
@@ -754,38 +657,20 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The tutorial gets its own space, and gives the demo back afterwards.
-  //
-  // The tutorial is a script: open THIS seeker, advance them, share with them.
-  // It ran against the same data the person explores freely in, and every run
-  // consumed a little of it — each pass advanced John one stage, so by the fifth
-  // run he had reached the end of the journey, the Advance button no longer
-  // existed, and the step could never be completed. That is what "it doesn't
-  // repeat the same route, sometimes it doesn't respond" was: the script slowly
-  // outgrowing the data it was written for.
-  //
-  // So starting the tutorial parks the person's demo data to one side and lays
-  // out a fresh copy of the sample. Finishing puts their data back exactly as it
-  // was. The tutorial therefore always begins from the same known state — which
-  // is what makes it repeatable — and nothing it does leaks into the demo.
-  // Which walk, and therefore who you become for it.
-  //
-  // This used to sign everybody in as 'dm-maria', which is why a church director
-  // opening the demo was handed a missionary's job. The track is now the
-  // argument, and it decides both the steps and the persona.
+  // Start a tutorial walk: park the person's demo data, lay out a fresh sample
+  // for the walk, and sign in as that walk's persona. Finishing restores the
+  // parked data exactly, so every walk starts from the same state.
   const startTutorial = useCallback(
     (track: QuestTrack = 'dm') => {
       try {
-        // Only snapshot on the way IN, or replaying mid-tutorial would overwrite
-        // the person's real data with the tutorial's own leftovers.
+        // Snapshot only on the way in, or a replay would overwrite the parked data.
         if (localStorage.getItem(TUTORIAL_KEY) !== '1') {
-          // The absence is recorded too. See NOTHING_BEFORE.
+          // Record the absence too (see NOTHING_BEFORE).
           localStorage.setItem(PRETUTORIAL_KEY, localStorage.getItem(DB_KEY) ?? NOTHING_BEFORE);
         }
         localStorage.setItem(TUTORIAL_KEY, '1');
         localStorage.setItem(TRACK_KEY, track);
-        // Replay this walk from its first step. Only this one: the other walks
-        // keep their own progress under their own keys.
+        // Replay this walk from its first step; other walks keep their progress.
         localStorage.removeItem(`${QUEST_KEY}-${track}`);
       } catch {}
       setTutorialTrack(track);
@@ -801,22 +686,16 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem(TUTORIAL_KEY, '0');
       const saved = localStorage.getItem(PRETUTORIAL_KEY);
-      // `!== null` rather than truthiness. An empty string is a value that was
-      // there, and reading it as "nothing was saved" is how the tutorial's data
-      // is left behind.
+      // `!== null`, not truthiness: an empty string was a saved value.
       if (saved !== null) {
         localStorage.removeItem(PRETUTORIAL_KEY);
         if (saved === NOTHING_BEFORE) {
-          // Put back the nothing. Removing the key rather than writing a seed
-          // leaves the demo exactly as a first-time visitor finds it, which is
-          // what "as I left it" means when they left it untouched.
+          // Nothing was saved before: remove the key so the demo is as a first visit.
           localStorage.removeItem(DB_KEY);
           setDb(makeSeed());
         } else {
           localStorage.setItem(DB_KEY, saved);
-          // Through the normaliser too. This snapshot was taken before the walk
-          // began and can be as old as any other save, so restoring it raw is
-          // the same crash by a slower route.
+          // The snapshot can be old, so it goes through the normaliser too.
           setDb(normalizeDb(JSON.parse(saved)));
         }
       }
@@ -845,24 +724,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // Edit your own profile. Identity/role/approval are never editable here (that
-  // is admin-only), matching the backend's column locks.
-  // DEMO ONLY — switch your own account between roles.
-  //
-  // This does not exist in the real app, and must not. There, your role is
-  // given to you by an admin and `updateProfile` below deliberately refuses to
-  // change it (a member who could promote themselves is the whole security
-  // model gone). But this build exists so church admins can
-  // try the app before they commit to it, and nobody can evaluate an admin
-  // screen they are not allowed to open. So here, and only here, you may look
-  // through any role's eyes with your own account.
+  // Sample church only: switch your own account between roles, to try every
+  // screen. The real app has no equivalent and must never have one.
   const setMyRole = useCallback((role: Role) => {
     if (!userId) return;
     persistUpdate((prev) => ({
       ...prev,
       profiles: prev.profiles.map((p) =>
-        // is_approved comes along for the ride: a role you switched into
-        // yourself would otherwise sit at the approval gate forever.
+        // Approve too, or a switched role would wait at the approval gate.
         p.id === userId ? { ...p, role, is_approved: true } : p,
       ),
     }));
@@ -883,12 +752,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // A missionary assigns a built-in lesson to their seeker's pairing.
-  // ---------------------------------------------------------------- series --
-  //
-  // The library builds a course; a missionary pushes the whole thing at a
-  // seeker; the seeker walks it in order. Three actions, and the ordering lives
-  // in the data rather than in any screen.
+  // --- Series: a course a Guide assigns to an Explorer, in order ---
 
   const createSeries = useCallback(
     ({
@@ -914,12 +778,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             title: title.trim(),
             topic: topic.trim(),
             description: description?.trim() || undefined,
-            // De-duplicated but order preserved: picking the same lesson twice
-            // is a slip, and a course that repeats a lesson reads as a bug.
+            // De-duplicated, order kept.
             lesson_ids: Array.from(new Set(lessonIds)),
             is_published: true,
             created_at: nowIso(),
-            // An id only: the picture itself is kept by lib/demo/drawings.ts.
+            // An id only; the picture lives in lib/demo/drawings.ts.
             ...(drawingId ? { drawing_id: drawingId } : {}),
           },
         ],
@@ -960,9 +823,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         const pairing = prev.pairings.find((p) => p.id === pairingId);
         if (!series || !pairing) return prev;
 
-        // Anything already assigned stays as it is, including its progress. A
-        // missionary who assigned two of these by hand last month should not
-        // have that work undone by starting the course they belong to.
+        // Lessons already assigned keep their progress.
         const already = new Set(
           prev.lesson_assignments
             .filter((a) => a.pairing_id === pairingId)
@@ -981,8 +842,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             series_order: i,
           }));
 
-        // Already-assigned lessons join the series too, so the count on the
-        // seeker's screen matches the course rather than only the new part.
+        // Already-assigned lessons join the series, so the count matches the course.
         const adopted = prev.lesson_assignments.map((a) =>
           a.pairing_id === pairingId && series.lesson_ids.includes(a.lesson_id)
             ? { ...a, series_id: series.id, series_order: series.lesson_ids.indexOf(a.lesson_id) }
@@ -1053,8 +913,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // A seeker marks an assigned lesson complete. Their missionary is notified,
-  // and nudged to advance the journey once every assigned lesson is done.
+  // An Explorer completes a lesson; their Guide is told, and nudged to advance
+  // the journey when every assigned lesson is done.
   const completeLesson = useCallback(
     (assignmentId: string) => {
       if (!userId) return;
@@ -1104,7 +964,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // Schedule a meeting (call or in-person study) on a pairing; notify the other.
+  // Schedule a meeting on a pairing and notify the other person.
   const scheduleMeeting = useCallback(
     (
       pairingId: string,
@@ -1184,13 +1044,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // Mark the other side's messages in a conversation as read. Called when a
-  // chat is opened. Without this `read_at` is never written outside the seed,
-  // so the unread dot on the seeker list stays lit forever and the "unread"
-  // triage count is meaningless.
-  // CHANGING AND TAKING BACK YOUR OWN WORDS, as edit_message() and
-  // delete_message() do on the live half: only the author, never an empty
-  // message, and a taken-back message keeps its place with no words in it.
+  // Change or take back your own message, as the live half does: author only,
+  // never empty; a taken-back message keeps its place with no words.
   const editMessage = useCallback(
     (messageId: string, body: string) => {
       const text = body.trim();
@@ -1217,15 +1072,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             ? { ...m, body: '', deleted_at: nowIso(), deleted_by: userId }
             : m,
         ),
-        // Nothing is left to react to.
         message_reactions: prev.message_reactions.filter((r) => r.message_id !== messageId),
       }));
     },
     [userId],
   );
 
-  // REACTIONS, under the rules react_to() keeps live: your own conversation,
-  // one per person per thing, one of the six, never on a taken-back message.
+  // Reactions, under the live rules: your conversation, one per person per
+  // thing, one of the six, never on a taken-back message.
   const reactTo = useCallback(
     (target: ReactionTarget, emoji: string | null) => {
       if (!userId) return;
@@ -1268,7 +1122,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         const stale = prev.messages.some(
           (m) => m.pairing_id === pairingId && m.sender_id !== userId && !m.read_at,
         );
-        if (!stale) return prev; // nothing to do — avoid a pointless write
+        if (!stale) return prev; // nothing to do
         const at = nowIso();
         return {
           ...prev,
@@ -1284,19 +1138,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // ---- Media: files shared inside one pairing ----
-  //
-  // The rule is the one from docs/examples/schema.sql (2b): media follows its
-  // PAIRING. Both people in the pairing may see it; nobody else may, and there
-  // is no admin exception, exactly as with messages. The bytes go to IndexedDB
-  // and never into this database — see PairingMedia in lib/types.ts for why
-  // that is not a preference.
+  // --- Media shared inside one pairing ---
+  // Visible to both people in the pairing and nobody else. The bytes go to
+  // IndexedDB, never into this database.
 
   const attachMedia = useCallback(
     (pairingId: string, file: File): string | null => {
       if (!userId || !file) return null;
-      // Upload as self, into a pairing you are in. The same two conditions as
-      // the "upload as self" policy in the example schema.
+      // Only into a pairing you are in.
       const p = db.pairings.find((x) => x.id === pairingId);
       if (!p || (p.dm_id !== userId && p.ds_id !== userId)) return null;
 
@@ -1313,17 +1162,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         created_at: nowIso(),
       };
 
-      // Show it immediately — the same optimistic rule as every other write.
       persistUpdate((prev) => ({
         ...prev,
         pairing_media: [...prev.pairing_media, row],
         analytics: [...prev.analytics, ev(userId, 'media_upload')],
       }));
 
-      // Then write the bytes. If the disk refuses — quota exceeded, private
-      // browsing, storage blocked — take the row back out. An attachment whose
-      // file does not exist is worse than no attachment: it is a permanent
-      // broken thumbnail that nobody can explain or remove.
+      // Then write the bytes; if that fails, take the row back out, so no attachment
+      // ever points at a missing file.
       void putMedia(
         {
           id,
@@ -1335,15 +1181,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         },
         file,
       ).catch((cause) => {
-        // SAY SOMETHING. This catch used to be empty apart from the rollback,
-        // so a failed write removed the attachment and told nobody: not the
-        // person, who watched their photo appear and vanish, and not a
-        // developer, who had no error to search for. WebKit fails here where
-        // Chromium does not, and the whole investigation started from a test
-        // saying only that the file "did not appear".
-        //
-        // The rollback is still right -- an attachment whose bytes are missing
-        // is a permanent broken thumbnail -- but it must leave a trace.
+        // Log the failure so it can be diagnosed (WebKit fails here where Chromium does not).
         console.error('[beacon] attachment could not be saved to this device:', cause);
         persistUpdate((prev) => ({
           ...prev,
@@ -1361,8 +1199,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     (id: string) => {
       if (!userId) return;
       const row = db.pairing_media.find((m) => m.id === id);
-      // Only the person who attached it. A missionary cannot delete a seeker's
-      // photo, and a seeker cannot delete a missionary's.
+      // Only whoever attached it.
       if (!row || row.owner_id !== userId) return;
       persistUpdate((prev) => ({
         ...prev,
@@ -1370,8 +1207,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         message_reactions: prev.message_reactions.filter((r) => r.media_id !== id),
       }));
       void deleteMedia(id).catch(() => {
-        // The row is gone from the app either way; an orphaned blob is a
-        // storage cost, not a correctness or privacy problem.
+        // The row is gone either way; an orphaned blob only costs storage.
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1390,9 +1226,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [db.pairings, db.pairing_media, userId],
   );
 
-  // ---- A missionary's private workspace: notes and follow-ups ----
-  // Both are visible only to the person who wrote them. The seeker never sees
-  // them, and neither does an admin — that is what makes them useful.
+  // --- A Guide's private notes and follow-ups: visible only to their author ---
 
   const addNote = useCallback(
     (pairingId: string, body: string) => {
@@ -1422,7 +1256,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       if (!userId) return;
       persistUpdate((prev) => ({
         ...prev,
-        // The author check is the demo's stand-in for the RLS policy.
+        // Author only, as the live policy is.
         seeker_notes: prev.seeker_notes.filter(
           (n) => !(n.id === id && n.author_id === userId),
         ),
@@ -1480,15 +1314,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // -------------------------------------------------------------------------
-  // Blog.
-  //
-  // A post belongs to its author and nobody else can touch it — every mutation
-  // below re-checks author_id against the signed-in user rather than trusting
-  // the id it was handed. In the demo store that is belt and braces; in the
-  // live backend the same rule is a row level security policy, and writing them
-  // the same way here keeps the two from drifting.
-  // -------------------------------------------------------------------------
+  // --- Blog: every change re-checks the author, as the live policy does ---
   const addBlogPost = useCallback(
     (m: {
       title: string;
@@ -1517,9 +1343,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           },
           ...prev.blog_posts,
         ],
-        // Named Explorers are only meaningful for a 'selected' post. Writing
-        // them for an 'all' post would leave rows that quietly become wrong the
-        // moment the Guide is paired with somebody new.
+        // Named Explorers only for 'selected', so an 'all' post follows future pairings.
         blog_audience:
           m.audience === 'selected'
             ? [
@@ -1556,11 +1380,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       persistUpdate((prev) => {
         const mine = prev.blog_posts.find((p) => p.id === id && p.author_id === userId);
         if (!mine) return prev;
-        // ITS PHOTOS AND CLIP GO TOO, from this device (lib/post-media.ts):
-        // a deleted post leaves no file behind, here as in a real church.
+        // Its photos and clip are deleted from this device too.
         for (const m of mine.media ?? []) void forgetPostFile(m.src).catch(() => {});
-        // The views and the audience rows go with it. Leaving them behind would
-        // keep counting readers for something nobody can read.
+        // Views and audience rows go with it.
         return {
           ...prev,
           blog_posts: prev.blog_posts.filter((p) => p.id !== id),
@@ -1577,11 +1399,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     (id: string) => {
       if (!userId) return;
       persistUpdate((prev) => {
-        // One row per person, not per open. A number that climbs every time
-        // somebody scrolls past tells the writer nothing about whether anyone
-        // actually read it.
+        // One view per person; the author's own reads do not count.
         const already = prev.blog_views.some((v) => v.post_id === id && v.viewer_id === userId);
-        // A Guide re-reading their own post is not a reader.
         const post = prev.blog_posts.find((p) => p.id === id);
         if (already || !post || post.author_id === userId) return prev;
         return {
@@ -1621,18 +1440,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A missionary writes to the church's admins about someone waiting at the
-  // approval gate. The message carries the sign-up it is about, so the admin can
-  // decide from inside it, and the profile is stamped so the same vouching shows
-  // on the Approvals card without opening the mail.
-  // A missionary puts a name forward. The person has no account yet — that is
-  // the whole point of the change. The old version offered a dropdown of people
-  // who had already signed up, which meant the seeker the client described
-  // (someone the DM knows, who has never heard of the app) could not be
-  // recommended at all: the dropdown was simply empty.
-  //
-  // The DM still cannot invite. They recommend; the admin decides. The security
-  // boundary is exactly where it was.
+  // A Guide recommends a person who has no account yet; only an admin can invite.
   const sendRecommendation = useCallback(
     (fullName: string, email: string, note: string) => {
       if (!userId) return;
@@ -1701,9 +1509,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // The admin decides from inside the message. Approving does exactly what the
-  // Approvals tab does; declining removes the sign-up. Either way the message
-  // records what happened so the thread is not ambiguous later.
+  // The admin decides from inside the message; the message records the outcome.
   const actOnEmail = useCallback(
     (emailId: string, action: 'approve' | 'disapprove') => {
       if (!userId) return;
@@ -1714,7 +1520,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         if (!target) return prev;
         const stamp = (list: DemoEmail[]) =>
           list.map((e) =>
-            // Every admin got a copy; resolving one resolves the question.
+            // Every admin got a copy; resolving one resolves them all.
             e.about_profile_id === em.about_profile_id && !e.action_taken
               ? {
                   ...e,
@@ -1768,7 +1574,6 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Admins name / rename the church.
   const setChurchName = useCallback((name: string) => {
     persistUpdate((prev) => ({
       ...prev,
@@ -1777,8 +1582,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A seeker sends a prayer request. Always goes to their missionary; if shared
-  // it also lands on the church-wide prayer wall (anonymised there).
+  // An Explorer's prayer request goes to their Guide, and if shared, to the wall without a name.
   const addPrayerRequest = useCallback(
     (body: string, shareWithBoard: boolean) => {
       const text = body.trim();
@@ -1803,8 +1607,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             },
             ...prev.prayer_requests,
           ],
-          // No prayer text in the notification, as on the live app, where it
-          // becomes a pop-up on a locked phone.
+          // No prayer text in the notification: it can appear on a locked phone.
           notifications: pairing
             ? [
                 {
@@ -1826,10 +1629,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // Either side says "I am praying for this" and whoever asked is told -- a
-  // Guide answering an Explorer, or an Explorer answering their Guide. Only the
-  // author may do anything else with the status, which is the rule the live
-  // database enforces (20260924100000).
+  // "I am praying" tells whoever asked; only the author may otherwise change the status.
   const setPrayerStatus = useCallback(
     (id: string, status: PrayerRequest['status']) => {
       if (!userId) return;
@@ -1866,9 +1666,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // A Guide asks the Explorers they walk with to pray for them: one request per
-  // Explorer, so each "I am praying" answers exactly one ask and nobody learns
-  // who else was asked. Never on the church wall.
+  // A Guide asks their Explorers to pray: one request per Explorer, never on the wall.
   const askForPrayer = useCallback(
     (dsIds: string[], body: string) => {
       const text = body.trim();
@@ -1929,7 +1727,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // The seeker accepts the privacy notice. The timestamp is the consent record.
+  // Accepting the privacy notice; the timestamp is the consent record.
   const giveConsent = useCallback(() => {
     if (!userId) return;
     persistUpdate((prev) => ({
@@ -1941,8 +1739,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // A seeker adds their own study note / media. Their missionary is notified so
-  // they can study together; admins can monitor it.
+  // An Explorer adds a study note or file; their Guide is notified.
   const addSeekerMedia = useCallback(
     (m: {
       title: string;
@@ -1992,9 +1789,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // Restore a full backup: replace all data and sign out so the restored
-  // church's people are re-selected fresh. Destructive by design — the UI
-  // confirms first (see components/DataManager.tsx).
+  // Restore a full backup and sign out. The screen confirms first.
   const importData = useCallback(
     (next: DB) => {
       persist(next);
@@ -2003,25 +1798,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [persist, signOut],
   );
 
-  // --- Safeguarding: reporting a person ----------------------------------
-  //
-  // A Guide and an Explorer talk privately, and nobody else can read it. That
-  // is right for the conversation and it is also the reason this has to exist:
-  // if one of them sends something inappropriate, there was no third party to
-  // tell short of leaving the church.
-  //
-  // Three rules the shape of this enforces:
-  //
-  //   * EITHER SIDE MAY REPORT. Not only the Explorer. A Guide receiving
-  //     something they should not have received has the same route out, and a
-  //     tool only the "junior" party can use is one nobody uses.
-  //   * THE OTHER PERSON IS NOT TOLD. No notification, no read receipt, no
-  //     change they could notice. Somebody who fears being found out reporting
-  //     does not report.
-  //   * IT GOES TO PEOPLE, NOT TO A QUEUE. Every Director and Executive
-  //     Director of the church is notified by name, because a report that
-  //     nobody is looking at is worse than no report — it teaches the person
-  //     who raised it that speaking up achieves nothing.
+  // --- Safeguarding reports ---
+  // Either side may report. The person reported is never told; every Director
+  // and Executive Director is notified by name.
 
   const reportPerson = useCallback(
     (args: {
@@ -2035,7 +1814,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       setDb((prev) => {
         const reporter = prev.profiles.find((p) => p.id === userId);
         const subject = prev.profiles.find((p) => p.id === args.subjectId);
-        // Reporting yourself is a mis-tap, not a report.
+        // You cannot report yourself.
         if (!reporter || !subject || args.subjectId === userId) return prev;
 
         const leaders = prev.profiles.filter(
@@ -2063,18 +1842,13 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
               user_id: leader.id,
               type: 'report',
               title: 'A safeguarding report needs your attention',
-              // The reporter IS named to the Directors. Anonymous reporting
-              // sounds kinder and is not: a Director cannot ask what happened,
-              // cannot support the person, and cannot tell a grudge from a
-              // genuine concern. What is protected is that the SUBJECT is
-              // never told — which is the part that actually deters people.
+              // The reporter is named to Directors; only the subject is never told.
               body: `${reporter.full_name} reported ${subject.full_name}.`,
               created_at: nowIso(),
             })),
             ...prev.notifications,
           ],
-          // The subject's id is deliberately not the analytics subject here;
-          // the event records that a report happened, not who it was about.
+          // Analytics records that a report happened, not who it was about.
           analytics: [...prev.analytics, ev(userId, 'report_raised', args.reason)],
         });
       });
@@ -2082,17 +1856,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  /**
-   * A Director closes a report.
-   *
-   * Closing is not the same as acting: `dismissed` says a Director looked and
-   * judged there was nothing to answer, which is a real and common outcome and
-   * must be as easy to record as the other. What is NOT offered is deleting
-   * it — a safeguarding record that can be made to disappear is not a record.
-   */
-  // Report a prayer request somebody wrote TO you. The words go into the
-  // report, as the live function copies them, so it still reads after the
-  // request is withdrawn. The author is worked out here, never passed in.
+  // Report a prayer request written to you. Its words are copied into the report.
   const reportPrayerRequest = useCallback(
     (id: string, reason: ReportReason, detail?: string) => {
       if (!userId) return;
@@ -2104,8 +1868,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         (p) => p.status === 'active' &&
           ((p.dm_id === userId && p.ds_id === author) || (p.ds_id === userId && p.dm_id === author)),
       );
-      // Written to me: the Explorer it lives with, or the Guide of an Explorer
-      // who asked.
+      // Written to me: I am the Explorer it lives with, or the Guide of the Explorer who asked.
       const toMe = pr.ds_id === userId || (author === pr.ds_id && pairing?.dm_id === userId);
       if (!pairing || !toMe) return;
       reportPerson({
@@ -2147,7 +1910,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // --- Kick / Disapprove -------------------------------------------------
+  // --- Remove / disapprove ---
 
   const kickMember = useCallback(
     (targetId: string) => {
@@ -2161,9 +1924,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         const admins = prev.profiles.filter(
           (p) => (p.role === 'admin' || p.role === 'executive') && p.id !== userId,
         );
-        // Once someone leaves the church, the private notes and reminders kept
-        // about them go too — they are personal notes about a person who is no
-        // longer here, and nothing in the app can reach them again anyway.
+        // A removed member's private notes and reminders go too.
         const touched = new Set(
           prev.pairings
             .filter((p) => p.dm_id === targetId || p.ds_id === targetId)
@@ -2224,12 +1985,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // --- Invite-only onboarding -------------------------------------------
-  // The app is private: seekers cannot self-register. An admin creates an
-  // invite (name + email), which yields a secure token. In production the
-  // backend emails the link (see docs/BACKEND-EMAIL-INVITES.md); in the demo
-  // the admin copies it. The invited person opens /join?token=… and completes
-  // their sign-up — only then does an account exist.
+  // --- Invitations: there is no self sign-up ---
 
   const inviteByToken = useCallback(
     (token: string) => db.invites.find((i) => i.token === token),
@@ -2246,7 +2002,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     }): Invite => {
       const invite: Invite = {
         id: uid(),
-        token: uid() + uid() + uid(), // long, unguessable token for the link
+        token: uid() + uid() + uid(), // long, unguessable token
         email: m.email.trim(),
         full_name: m.full_name.trim() || 'Invited member',
         role: m.role ?? 'ds',
@@ -2291,12 +2047,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [userId],
   );
 
-  // The admin's two answers to a recommendation.
-  //
-  // Inviting reuses createInvite exactly as it already worked, and adds one
-  // thing: the recommending missionary rides along on the invite, so accepting
-  // it creates the pairing. Declining closes the recommendation and says so,
-  // because a missionary who hears nothing back assumes the app ate it.
+  // Inviting a recommendation carries the Guide through, so acceptance pairs
+  // them; declining closes it and says so.
   const inviteRecommended = useCallback(
     (recommendationId: string) => {
       const rec = db.recommendations.find((r) => r.id === recommendationId);
@@ -2382,10 +2134,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  // Complete an invited sign-up: create the seeker's account (pre-approved,
-  // because an admin already vetted them by inviting), mark the invite used,
-  // and notify the admin. Returns the new profile id (to sign them in), or null
-  // if the token is missing/used/revoked.
+  // Complete an invited sign-up: create the account (approved, since an admin
+  // invited them), mark the invite used and notify the admin. Null if the token
+  // is missing, used or revoked.
   const acceptInvite = useCallback(
     (
       token: string,
@@ -2420,11 +2171,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             city_of_residence: profile.city_of_residence,
             work_industry: profile.work_industry,
             preferred_language: 'en',
-            // Recorded at the moment it was given. A consent nobody wrote down
-            // is not a consent — if the church is ever asked when this person
-            // agreed to their details being held, the answer has to exist.
+            // The moment consent was given is recorded.
             consent_at: profile.consent_at,
-            is_approved: true, // admin-invited → approved, ready to be paired
+            is_approved: true,
             created_at: nowIso(),
           },
         ],
@@ -2433,13 +2182,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             ? { ...i, status: 'accepted' as const, accepted_at: nowIso() }
             : i,
         ),
-        // "The app begins on Create for DM and Connect for DS (initiated by
-        // DM)." The seeker did not walk in off the street: a missionary named
-        // them and an admin invited them, so the relationship exists before the
-        // account does. Creating the pairing here at Connect is what makes that
-        // true in the data rather than only in the story — before this, an
-        // invited seeker landed with nobody attached and waited for an admin to
-        // pick two names out of dropdowns.
+        // Pair them with the recommending Guide at Connect.
         pairings:
           invite.pair_with_dm && invite.role === 'ds'
             ? [
@@ -2469,8 +2212,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             body: `${profile.full_name.trim() || invite.full_name} completed sign-up`,
             created_at: nowIso(),
           },
-          // The missionary who put the name forward hears about it too. They
-          // started this; being told it worked is the least the app owes them.
+          // The recommending Guide is told too.
           ...(invite.pair_with_dm
             ? [
                 {
@@ -2577,7 +2319,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     acceptInvite,
   };
 
-  // Hold render until hydration so persisted state doesn't flash-replace seed.
+  // Render nothing until hydrated, so stored data does not replace the seed on screen.
   if (!ready) return null;
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
