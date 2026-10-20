@@ -2,30 +2,16 @@
 
 // The study room: a workspace of pages, and the editor for one of them.
 //
-// ---------------------------------------------------------------------------
-// THE ROOM IS LIGHT AND THE EDITOR IS HEAVY, and keeping those two facts apart
-// is the shape of this file. The full AFFiNE feature set -- the canvas, the
-// databases, the embeds, the code highlighter's WebAssembly -- is over a
-// megabyte gzipped. The list of pages needs none of it.
+// The page list is light and the editor (BlockSuite/AFFiNE, over a megabyte)
+// is heavy, so the editor's modules are loaded with `await import(...)` only
+// when a page is opened. This file is imported only by
+// components/study/StudyRoom.tsx through next/dynamic (ssr: false); importing
+// it anywhere else puts the editor on every screen
+// (tests/the-study-room-is-paid-for-on-arrival.mjs).
 //
-// So nothing here imports the drawing half at the top. `lib/study/effects.ts`
-// and `lib/study/view-extensions.ts` are fetched with `await import(...)` at
-// the moment somebody opens a page, which is the moment they have asked for an
-// editor. Opening the room itself pays for the schema and this screen, and the
-// page list appears while the editor is still arriving.
-//
-// AND THE WHOLE THING IS STILL BEHIND ONE ROUTE. components/study/StudyRoom.tsx
-// is the only importer and uses next/dynamic with ssr:false. Importing this
-// anywhere else silently puts the editor on every screen in the app, and
-// tests/the-study-room-is-paid-for-on-arrival.mjs is there to stop that.
-//
-// WHY IT LOOKS LIKE PLUMBING. BlockSuite gives you the pieces of an editor
-// rather than an editor: there is no drop-in component at this version, because
-// @blocksuite/presets stopped at 0.19.5 while @blocksuite/affine is at 0.22.4.
-// What follows is the minimum assembly, taken from their own playground: the
-// block registrations, a store manager, a view manager, a standard scope, and
-// Lit rendering the result into a plain div.
-// ---------------------------------------------------------------------------
+// BlockSuite ships pieces rather than an editor at this version, so this is
+// the minimum assembly from its playground: block registrations, a store
+// manager, a view manager, a standard scope, and Lit rendering into a div.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BlockStdScope, TextSelection } from '@blocksuite/affine/std';
@@ -61,16 +47,7 @@ import { useStudyMode } from '@/components/WritingMode';
 /** One room per person. The id is stable so the same room reopens every time. */
 const WORKSPACE = 'study-room';
 
-/**
- * The page a room made before rooms could have more than one.
- *
- * KEPT AS A LITERAL ON PURPOSE. Every room already in the database has its
- * writing in a page with exactly this id, created back when the room was one
- * page and the id was hard-coded. Generating a fresh id for the first page of a
- * new room would be tidier and would also mean that every Explorer who already
- * has a room opens it to find their notes gone -- still stored, still safe,
- * simply not the page being shown.
- */
+/** The first page's id in every existing room. Keep this literal, or older rooms open without their notes. */
 const FIRST_PAGE = 'page-1';
 
 /** How long after somebody stops typing the shelf is brought up to date. */
@@ -92,11 +69,10 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState('');
-  // AN UNREACHED ROOM IS NOT AN EMPTY ONE, and telling them apart is the whole
-  // point of this flag. See where it is set.
+  // Set when the room could not be reached, as opposed to being empty.
   const [stalled, setStalled] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  // NOT SAVED IS NOT THE SAME AS NOT WORKING, and neither is worth hiding.
+  // Saving trouble, shown to the person rather than hidden.
   const [trouble, setTrouble] = useState('');
 
   const [entries, setEntries] = useState<ShelfEntry[]>([]);
@@ -108,14 +84,10 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   const [folder, setFolder] = useState('');
   const [collection, setCollection] = useState('');
   const [collections, setCollections] = useState<Collection[]>([]);
-  // PAGE OR WHITEBOARD, the switch beside the title in AFFiNE's own app. Two
-  // ways of looking at ONE page rather than two kinds of page: the same blocks,
-  // laid out in a column or placed on a canvas.
+  // Page or whiteboard: two views of the same page.
   const [mode, setMode] = useState<'page' | 'edgeless'>('page');
-  // BACK TO SIMPLE PUTS THE ROOM WHERE SIMPLE CAN SEE IT. A tag, a folder or a
-  // saved view chosen in Advanced would otherwise go on narrowing the list
-  // with no control left on screen to undo it, and Starred, the Journal and
-  // the whiteboard are not places Simple shows. Nothing written changes.
+  // Back to Simple clears Advanced-only filters and views, so nothing stays
+  // hidden with no control to undo it.
   useEffect(() => {
     if (!simple) return;
     setTag('');
@@ -124,14 +96,10 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     setView((v) => (v === 'favourites' || v === 'journal' ? 'all' : v));
     setMode('page');
   }, [simple]);
-  // THE EDITOR IS ON ITS WAY. Only true while the chunk is being fetched, and
-  // it is the difference between a blank rectangle and a page that says it is
-  // coming -- which is what a blank rectangle was reported as, three times.
+  // True while the editor chunk is loading, so the page says it is coming.
   const [drawing, setDrawing] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
-  // THE TITLE GROWS WITH ITS WORDS. A textarea keeps whatever height it was
-  // given, so it is measured after every change -- and after the window changes
-  // width, because the same words wrap onto a different number of lines.
+  // The title textarea grows with its words; re-measured on input and on resize.
   const titleBox = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
     const fit = () => {
@@ -153,11 +121,8 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     setCollections(meta.collections);
   }, []);
 
-  // -------------------------------------------------------------------------
-  // OPENING THE ROOM. Once per mount, and never again when somebody changes
-  // page: the workspace holds the sync engine and every page in the room, so
-  // tearing it down to look at a different page would re-download the lot.
-  // -------------------------------------------------------------------------
+  // --- Opening the room: once per mount, not per page (the workspace holds
+  // the sync engine and every page) ---
   useEffect(() => {
     let cancelled = false;
     setStalled(false);
@@ -168,14 +133,9 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
 
     (async () => {
       try {
-        // BUILT HERE, NOT IN THE CALLER'S RENDER. The live source needs a
-        // database client, and asking for one throws when the app is not
-        // connected yet. Thrown during render that is not an error anybody
-        // sees -- it is a component that renders nothing.
-        //
-        // A SOURCE THAT CANNOT SAVE MUST BE ABLE TO SAY SO. DocEngine swallows
-        // whatever a source throws and retries quietly, which is right for a
-        // dropped packet and wrong for a room that will never save again.
+        // Built here, not during render: making the live source needs a database
+        // client, and a throw during render would silently render nothing. The source
+        // also reports when it can no longer save (DocEngine retries silently).
         const source = makeSource() as DocSource & Troubled;
         source.onTrouble = (cause) => {
           if (cancelled) return;
@@ -192,11 +152,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         room.storeExtensions = studyStoreManager().get('store');
         room.start();
 
-        // WAITING FOR THE DATABASE MUST NOT BE ABLE TO STOP THE ROOM OPENING.
-        // This used to be a bare `await waitForSynced()`, which resolves at
-        // once against the tutorial's in-memory source and can hang against the
-        // live one -- and when it hung, nothing after it ever ran: no editor,
-        // no error, an empty white room.
+        // Waiting for the database must never stop the room opening, so the wait is raced.
         const arrived = await Promise.race([
           room.waitForSynced().then(() => true),
           new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
@@ -204,13 +160,8 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         if (cancelled) return;
         synced.current = arrived;
 
-        // INITIALISE AFTER THE WAIT, NEVER BEFORE IT, and this order is a bug
-        // that would have cost somebody their pages. `initialize()` means "if
-        // this room has no page list, give it an empty one". Run before the
-        // database answers, a room that HAS pages looks like a room that has
-        // none, so it writes an empty list -- and when the real list arrives,
-        // two clients have set the same key concurrently and Yjs keeps one.
-        // Measured: a room seeded with two stored pages came back with one.
+        // Initialise after the wait: before it, a room with pages looks empty and an
+        // empty page list would be written over the real one.
         room.meta.initialize();
 
         if (room.meta.docMetas.length === 0) {
@@ -221,11 +172,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           room.createDoc(FIRST_PAGE);
         }
 
-        // THE GETTING STARTED PAGE, ONCE PER ROOM AND NEVER AGAIN. The rule
-        // lives in lib/study/getting-started.ts rather than here, because it
-        // cannot be checked from a browser: the only room a walk can reach is
-        // the walkthrough's, which forgets its pages on reload, so deleting the
-        // guide and reloading correctly gets it back and proves nothing.
+        // Add the Getting Started page once per room (lib/study/getting-started.ts).
         giveTheGuideOnce(room, arrived);
 
         room.slots.docListUpdated.subscribe(() => {
@@ -248,8 +195,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       cancelled = true;
       const room = workspace.current;
       workspace.current = null;
-      // Written work first, then teardown. forceStop loses whatever has not
-      // reached the database, so it is the last resort rather than the exit.
+      // Let unsaved work reach the database before tearing down.
       void room?.waitForGracefulStop().finally(() => {
         room?.forceStop();
         room?.dispose();
@@ -257,10 +203,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     };
   }, [makeSource, makeBlobs, attempt, refresh]);
 
-  // -------------------------------------------------------------------------
-  // SHOWING ONE PAGE. Runs again whenever the open page changes, and only this
-  // part runs: the room, its sync engine and every other page stay as they are.
-  // -------------------------------------------------------------------------
+  // --- Showing one page: re-runs when the open page changes ---
   useEffect(() => {
     const room = workspace.current;
     if (!ready || !openPage || !room) return;
@@ -271,9 +214,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
 
     (async () => {
     try {
-      // THE EDITOR IS FETCHED HERE, not at the top of the file, and this line
-      // is the whole reason the room opens quickly. Everything AFFiNE can draw
-      // arrives now, because now is when somebody asked to write.
+      // The editor is fetched here, when somebody opens a page.
       const [, { studyViewManager }] = await Promise.all([
         import('@/lib/study/effects'),
         import('@/lib/study/view-extensions'),
@@ -296,10 +237,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         return;
       }
 
-      // A WHITEBOARD NEEDS A CANVAS TO DRAW ON, and every page written before
-      // today was written by a version of this room that had no canvas in it.
-      // Without this, switching to the whiteboard on an older page renders
-      // nothing at all and says nothing about why.
+      // Older pages have no canvas; add one so the whiteboard view works.
       if (store.getBlocksByFlavour('affine:surface').length === 0) {
         try { store.addBlock('affine:surface', {}, store.root.id); } catch { /* read-only */ }
       }
@@ -309,11 +247,8 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       render(std.render(), host.current);
       setDrawing(false);
 
-      // WHAT THE SHELF SHOWS COMES FROM HERE, and it has to, because every page
-      // is a separate document that must be fetched before a word of it can be
-      // read. A shelf of twenty pages would be twenty round trips before it
-      // could draw one preview line. So the page writes its own summary as it
-      // is edited, and the list costs nothing to draw.
+      // Each page writes its own summary for the page list, so the list never has to
+      // fetch every page.
       const summarise = () => {
         const text = store
           .getBlocksByFlavour(['affine:paragraph', 'affine:list'])
@@ -325,20 +260,15 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         } as Partial<DocMeta>);
       };
 
-      // AFTER THEY STOP, NOT ON EVERY KEYSTROKE. The summary lives in the
-      // workspace document, which syncs; writing it per character would push
-      // the whole page list to the database on every letter somebody types.
+      // Summarise after typing stops, not per keystroke (the summary syncs).
       const onEdit = () => {
         clearTimeout(settle);
         settle = setTimeout(() => { if (!cancelled) summarise(); }, SETTLE_MS);
       };
       doc.spaceDoc.on('update', onEdit);
 
-      // A PAGE WITH NOTHING IN IT HAS TO STILL LOOK LIKE A PAGE. An untouched
-      // page is one empty paragraph, and BlockSuite draws its placeholder only
-      // while the caret is inside the block -- so with no caret there is no
-      // placeholder and no toolbar: a white rectangle, which is exactly what a
-      // broken page looks like. This was reported as broken three times.
+      // An empty page shows no placeholder until it has the caret, so place the
+      // caret in it; otherwise it looks broken.
       requestAnimationFrame(() => {
         if (cancelled) return;
         const blocks = store.getBlocksByFlavour('affine:paragraph');
@@ -354,8 +284,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
 
       letGo = () => {
         doc.spaceDoc.off('update', onEdit);
-        // Leaving a page brings the shelf up to date at once rather than a
-        // second later, so the list somebody lands on is already right.
+        // Leaving a page updates the list at once.
         summarise();
       };
     } catch (cause) {
@@ -363,10 +292,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     }
     })();
 
-    // THE CLEANUP IS SYNCHRONOUS THOUGH THE WORK IS NOT, which is the one thing
-    // an async effect gets wrong. React takes the function this returns now, so
-    // it cannot be the one the await produces later: `letGo` is filled in when
-    // the editor is up, and leaving before that simply has nothing to undo.
+    // The cleanup must be returned synchronously; `letGo` is filled in once the editor is up.
     return () => {
       cancelled = true;
       clearTimeout(settle);
@@ -374,17 +300,11 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     };
   }, [ready, openPage, mode]);
 
-  // -------------------------------------------------------------------------
-  // KEEPING PAGES
-  // -------------------------------------------------------------------------
+  // --- Inserting blocks ---
   /**
-   * Put a block on the page, where the caret is.
-   *
-   * WHAT THE SLASH MENU DOES, WITHOUT NEEDING A `/` KEY. A phone's on-screen
-   * keyboard sends composition events rather than keydowns, so the character
-   * arrives and BlockSuite's menu never hears the keystroke that opens it.
-   * This does the same job from a button: work out which block the caret is in,
-   * and add the new one immediately after it.
+   * Insert a block after the one with the caret. Phone keyboards send
+   * composition events, so BlockSuite's "/" menu never opens there; this does
+   * the same job from a button.
    */
   const insert = useCallback((kind: InsertKind) => {
     const current = editing.current;
@@ -413,17 +333,14 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         : store.getBlocksByFlavour('affine:note')[0]?.model ?? null;
       if (!parent) return;
 
-      // AFTER THE BLOCK SOMEBODY IS IN, not at the end of the page. Appending
-      // to the bottom is the behaviour that makes a person scroll to find what
-      // they just added, on the screen with the least room to scroll.
+      // After the block being edited, not at the end of the page.
       const index = focused
         ? parent.children.findIndex((child) => child.id === focused.model.id) + 1
         : undefined;
 
       const id = store.addBlock(recipe.flavour, recipe.props, parent, index);
 
-      // AND THE CARET GOES INTO IT. A divider has nowhere to type, so the caret
-      // stays where it was rather than disappearing into a line.
+      // Then put the caret in it (a divider has nowhere to type).
       if (recipe.flavour !== 'affine:divider') {
         requestAnimationFrame(() => {
           std.selection.setGroup('note', [
@@ -444,23 +361,11 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     refresh();
   }, [refresh]);
 
-  // -------------------------------------------------------------------------
-  // OBSIDIAN
-  // -------------------------------------------------------------------------
-  //
-  // Out: every page that is not in the trash becomes a Markdown file, in the
-  // folder it was filed in, with its tags in front matter and journal entries
-  // named for their day. In: Markdown files, or a zipped vault, become pages.
-  //
-  // THE WHOLE ROOM, NOT THE OPEN PAGE. A copy that holds one page is a copy
-  // somebody has to take sixty times, and the pages they forget are the ones
-  // they wanted.
-  // TWO THINGS, NOT ONE. `vaultBusy` is what the person is told; `vaultWorking`
-  // is whether a copy is actually in flight. They were the same value at first,
-  // and because the finished message stays up for a few seconds to be read, an
-  // import started straight after an export was silently refused -- the guard
-  // saw a message and thought the work was still running. Nothing failed, and
-  // nothing happened, which is the worst pair.
+  // --- Obsidian ---
+  // Export: every page not in the trash becomes a Markdown file in its folder,
+  // with tags in front matter. Import: Markdown files or a zipped vault become
+  // pages. `vaultBusy` is the message shown; `vaultWorking` is whether a copy is
+  // in flight (the message stays up after the work ends).
   const [vaultBusy, setVaultBusy] = useState('');
   const vaultWorking = useRef(false);
 
@@ -474,7 +379,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       const titleOf = new Map(living.map((e) => [e.id, e.title]));
       const paths = vaultFilenames(living);
       const files: VaultFile[] = [];
-      // One picture used on three pages is one file in the vault, not three.
+      // One picture used on several pages is one file in the vault.
       const pictures = new Map<string, Uint8Array>();
 
       for (const entry of living) {
@@ -485,8 +390,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         for (const asset of assets) pictures.set(asset.name, asset.bytes);
         files.push({
           path: paths.get(entry.id) ?? `${safeName(entry.title)}.md`,
-          // A link written as an id resolves to nothing in Obsidian, and looks
-          // to the reader like the export lost the page it pointed at.
+          // Links are written by title, so they resolve in Obsidian.
           text: toVaultFile({
             id: entry.id,
             title: entry.title,
@@ -518,8 +422,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       document.body.appendChild(a);
       a.click();
       a.remove();
-      // Revoked on a turn of its own: revoking in the same tick cancels the
-      // download on some browsers before it has started.
+      // Revoke later: revoking at once cancels the download in some browsers.
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
       const pages = files.length - pictures.size;
       setVaultBusy(`${pages} page${pages === 1 ? '' : 's'}`
@@ -540,12 +443,10 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     vaultWorking.current = true;
     setVaultBusy('Reading what you chose…');
     try {
-      // A zip is unpacked; a .md is itself. Anything else is ignored rather
-      // than guessed at.
+      // A zip is unpacked; a .md is itself; anything else is ignored.
       const incoming: Array<{ path: string; text: string }> = [];
       const unreadable: string[] = [];
-      // Pictures by their bare filename, which is how a note asks for one
-      // whether it was written by this app or by a person in Obsidian.
+      // Pictures by bare filename, as notes refer to them.
       const pictures = new Map<string, Uint8Array>();
       const isPicture = /\.(png|jpe?g|gif|webp|avif|bmp|svg)$/i;
 
@@ -580,8 +481,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         const name = file.path.split('/').pop() ?? file.path;
         const doc = room.createDoc();
         doc.load();
-        // Only the pictures THIS note asks for, so one page does not drag
-        // every image in the vault into the room behind it.
+        // Only the pictures this note asks for.
         const wanted: PageAsset[] = picturesWanted(parsed.body)
           .map((name) => ({ name, bytes: pictures.get(name) }))
           .filter((p): p is PageAsset => !!p.bytes);
@@ -614,39 +514,26 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       const made = room.createDoc();
       refresh();
       setTitleDraft('');
-      // A NEW PAGE LANDS IN THE FOLDER BEING LOOKED AT. Somebody who has
-      // narrowed the shelf to "Romans" and pressed New page means a page about
-      // Romans, and making them file it by hand is a step they will skip.
+      // A new page goes into the folder being viewed.
       setFolderDraft(folder);
       if (folder) setMeta(made.id, { folder });
       setOpenPage(made.id);
     } catch (cause) {
       setError(humanError(cause, 'A new page could not be added.'));
     }
-    // `folder` and `setMeta` are read here, so a stale closure would file a new
-    // page in whichever folder was showing when this callback was last built.
+    // `folder` and `setMeta` are dependencies, or a new page lands in a stale folder.
   }, [refresh, folder, setMeta]);
 
   const open = useCallback((id: string) => {
     const meta = workspace.current?.meta.getDocMeta(id) as ShelfMeta | undefined;
     setTitleDraft((meta?.title ?? '').trim());
     setFolderDraft((meta?.folder ?? '').trim());
-    // EVERY PAGE OPENS AS A PAGE. Carrying the whiteboard over from the last
-    // one means somebody who tried the canvas once meets it again on a page
-    // they only wanted to read.
+    // Every page opens as a page, never the whiteboard.
     setMode('page');
     setOpenPage(id);
   }, []);
 
-  /**
-   * Today's page in the journal, made if today has not been written in yet.
-   *
-   * IT FINDS BEFORE IT MAKES, and that is the whole feature. A Today button
-   * that started a fresh page every time it was pressed would give somebody
-   * four pages for one morning and no way to tell which one had the thing they
-   * wrote first. The day is matched on `journalDate` rather than on the title,
-   * so renaming today's page to "Prayer meeting" keeps it as today's page.
-   */
+  /** Today's journal page: found by its date if it exists, made if not. */
   const openToday = useCallback(() => {
     const room = workspace.current;
     if (!room) return;
@@ -678,12 +565,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     trash: entries.filter((e) => e.trashed).length,
   };
 
-  // MOVING SOMEWHERE ELSE DROPS EVERY FILTER. One left on across a change of
-  // place is how somebody lands in the Bin, sees nothing, and concludes the app
-  // lost their pages. Three of them now, which makes it likelier rather than
-  // less. One function, because the places are now in two controls -- the
-  // sidebar and the phone's segmented control -- and two copies of this rule
-  // is how one of them forgets a filter.
+  // Changing place clears every filter, so nobody lands on an empty view.
   const changePlace = (next: ShelfView) => {
     setView(next); setTag(''); setFolder(''); setCollection('');
   };
@@ -744,9 +626,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
               const room = workspace.current;
               if (!room) return;
               room.meta.saveCollection({
-                // The moment is enough of an id: nobody makes two saved views
-                // in the same millisecond, and a uuid here would be a
-                // dependency for a number nothing else ever reads.
+                // A timestamp is enough of an id here.
                 id: `view-${Date.now()}`,
                 name: cleanFolder(name) || nameForView(tag ? [tag] : [], ''),
                 tags: tag ? [tag] : [],
@@ -779,20 +659,14 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         </>
       );
     }
-    // A READING COLUMN FOR READING, THE WHOLE ROOM FOR A CANVAS. A column the
-    // width of a book is right for prose and wrong for a whiteboard: squeezed,
-    // the board is cramped, and AFFiNE's own toolbar lays itself out for more
-    // room than that and overlapped its own zoom controls. A canvas wants the
-    // space -- the whole height of the window as well as the width, so it opens
-    // as a board rather than as a box in the middle of a page.
+    // A reading column for a page; the whole window for the whiteboard.
     const board = mode === 'edgeless';
     return (
       <div
         className={board
           ? 'flex flex-col px-3 pb-3 pt-4 md:px-5'
           : 'mx-auto w-full max-w-[46rem] px-4 pt-6 md:px-8 md:pt-10'}
-        // The window's height less the bar's, which the spacer above this
-        // column already occupies: a definite height for the board to fill.
+        // The window height less the bar's.
         style={board ? { height: 'calc(100% - var(--sr-bar-h))' } : undefined}
       >
         {trouble && (
@@ -805,12 +679,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         )}
         {notice && <p className="sr-note mb-4">{notice}</p>}
 
-        {/* THE TITLE IS PART OF THE PAGE, not a setting hidden behind a menu --
-            the first thing in AFFiNE's document view and the first thing
-            somebody writes when they start a study. And it WRAPS: it was a
-            one-line input, so a long name was cut off at the edge of a phone
-            with no way to read the rest. A textarea that grows with its words,
-            where Return still means "done" as it did before. */}
+        {/* The title is part of the page and wraps; Return still means done. */}
         <textarea
           ref={titleBox}
           value={titleDraft}
@@ -826,9 +695,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           className={`sr-page-title ${board ? 'md:!text-[24px]' : ''}`}
         />
 
-        {/* PAGE OR WHITEBOARD: one page, two ways of looking at it, so it is a
-            segmented control rather than two buttons. Nothing is copied between
-            them because there is nothing to copy. */}
+        {/* Page or whiteboard: one page, two views. */}
         {!simple && <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
           <div role="group" aria-label="How to look at this page" className="sr-seg sr-seg--inline">
             {([['page', 'Page', DocGlyph], ['edgeless', 'Whiteboard', BoardGlyph]] as const).map(([id, label, Icon]) => (
@@ -846,11 +713,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           </div>
         </div>}
 
-        {/* WHICH FOLDER, AND WHAT IT IS ABOUT, as one quiet line of pills under
-            the switch rather than two labelled rows above the writing. The
-            folder is offered from the ones that already exist AND is free
-            text, so the first page of a new study makes the folder by being
-            filed. */}
+        {/* Folder and topic as one line of pills; the folder is free text. */}
         {!board && !simple && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <label className="sr-field">
@@ -864,9 +727,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
                 maxLength={40}
                 placeholder="No folder"
                 aria-label="Which folder this page is filed in"
-                // Wide enough for "Romans study", which the first width cut to
-                // "Romans stud". A folder name is up to 40 characters; the
-                // field scrolls inside itself past this, as any input does.
+                // Wide enough for a typical folder name; longer names scroll inside the field.
                 className="w-36"
               />
               <datalist id="study-folders">
@@ -881,12 +742,9 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           </div>
         )}
 
-        {/* THE INSERT BAR, directly above the writing and held under the
-            navigation bar while the page scrolls. See .sr-formatbar for why it
-            is here and not at the bottom of the screen. */}
-        {/* A direct child of the page's column, not wrapped: a sticky element
-            only sticks within its parent, and a wrapper as tall as the bar
-            gives it nowhere to go. */}
+        {/* The insert bar sits above the writing and sticks under the navigation bar
+           (see .sr-formatbar). */}
+        {/* A direct child of the column: a sticky element only sticks within its parent. */}
         {!board && <StudyInsertBar onInsert={insert} simple={simple} />}
 
         {drawing && (
@@ -896,19 +754,8 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         )}
         <div
           ref={host}
-          // THE CANVAS HAS TO BE GIVEN A HEIGHT. A page viewport grows with its
-          // writing; an edgeless one is a window onto something with no size of
-          // its own, so with `height: auto` it renders as a nought-pixel strip
-          // and looks exactly like a feature that does not work. Here it takes
-          // what is left of a column whose own height is the window's, which is
-          // a definite size, and never less than 360px on a short landscape
-          // phone, where the room scrolls rather than squashing the board.
-          // AND `relative`, WHICH IS THE WHOLE OF A REPORTED BUG. The canvas
-          // draws its toolbar with `position: absolute; bottom: 0`, and an
-          // absolute box anchors to the nearest POSITIONED ancestor. Without
-          // it the toolbar climbed to the full-screen shell and pinned itself
-          // to the bottom of the WINDOW, floating below the board and half cut
-          // off by the edge of the screen.
+          // The canvas needs a definite height (an auto height renders 0px), at least
+          // 360px; `relative` anchors its absolutely positioned toolbar to the board.
           className={board
             ? 'affine-edgeless-viewport relative mt-3 min-h-[360px] flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_0_0_0.5px_rgba(26,34,51,0.12),0_1px_3px_rgba(16,24,40,0.06)]'
             : 'affine-page-viewport min-h-[40vh] [min-height:40dvh] pb-6'}

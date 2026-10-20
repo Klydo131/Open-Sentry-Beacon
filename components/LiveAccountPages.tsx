@@ -1,15 +1,6 @@
 'use client';
 
-// Your profile, and your settings — on the LIVE app.
-//
-// Both of these existed only in the tutorial. /profile and /settings were
-// written against the in-browser demo store and never given a live version, so
-// on a church's real deployment they fell through to AppShell's placeholder —
-// the grey "This live screen is being connected" card. A signed-in member could
-// not change their own name, and nobody could turn notifications on.
-//
-// Not a policy and not a decision anybody made. Just two screens that were
-// never finished, behind a card that made it look deliberate.
+// The live profile, settings and password pages.
 
 import { useCallback, useEffect, useState } from 'react';
 import { useKeepUp, KEEP_UP_ACCOUNT } from '@/lib/live/keep-up';
@@ -42,9 +33,7 @@ import { TwoStepCard } from '@/components/live/TwoStep';
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
 
-// A distinct look per role (the green and blue deepened on 6 October 2026 so
-// white writing reads on them: 5.5:1 and 5.7:1, from 2.6:1 and 3.9:1), so a Director's profile reads differently from an
-// Explorer's at a glance.
+// A look per role. The green and blue are dark enough for white text (5.5:1 and 5.7:1).
 const ROLE_STYLE: Record<Role, { bg: string; icon: string; blurb: string }> = {
   executive: { bg: '#0F172A', icon: '⭐', blurb: 'Oversees every church.' },
   admin: { bg: '#1E2A4A', icon: '🛡️', blurb: 'Keeps the church running.' },
@@ -52,9 +41,7 @@ const ROLE_STYLE: Record<Role, { bg: string; icon: string; blurb: string }> = {
   ds: { bg: '#47741A', icon: '🌱', blurb: 'Exploring faith at your own pace.' },
 };
 
-// ---------------------------------------------------------------------------
-// Profile
-// ---------------------------------------------------------------------------
+// --- Profile ---
 
 export function LiveProfilePage() {
   const { profile, session, refreshProfile } = useLiveSession();
@@ -65,9 +52,7 @@ export function LiveProfilePage() {
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
-  // The banner drew initials even for somebody who had uploaded a photo, with
-  // that same photo showing in the picker directly beneath it. Signed at
-  // render time, never stored, for the reason given on the picker below.
+  // The banner shows the photo too; signed when drawn, never stored.
   const [face, setFace] = useState('');
   const photoPath = profile?.photo_path;
   useEffect(() => {
@@ -76,8 +61,7 @@ export function LiveProfilePage() {
     return () => { alive = false; };
   }, [photoPath]);
 
-  // Filled once the profile arrives. Without the guard an empty form renders
-  // first and then jumps, and anything typed in that moment is lost.
+  // Filled once the profile arrives, so the form does not jump while typed in.
   useEffect(() => {
     if (!profile) return;
     setF({
@@ -137,8 +121,7 @@ export function LiveProfilePage() {
     <div className="space-y-6">
       <div className="rounded-2xl p-6 text-white" style={{ backgroundColor: style.bg }}>
         <div className="flex items-center gap-4">
-          {/* onDark: the fallback circle is navy, which all but vanishes
-              against the navy banner an Executive Director sees. */}
+          {/* onDark: the navy fallback would vanish on an Executive Director's navy banner. */}
           <Avatar
             name={profile.full_name || 'You'}
             size={72}
@@ -158,14 +141,8 @@ export function LiveProfilePage() {
         </div>
       </div>
 
-      {/* A FACE. The live app had no picture and no icon at all: every member
-          in a real church was a pair of initials, including on the card their
-          Guide opens every week. The tutorial has had both from the start. */}
       <LiveFacePicker />
 
-      {/* ON THE PROFILE SCREEN, which is where somebody goes when they are
-          thinking about their own account, rather than in Settings among the
-          switches. Asking for your own information is not a setting. */}
       <LiveMyData />
 
       <Card className="p-5">
@@ -214,11 +191,7 @@ export function LiveProfilePage() {
           <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-red-700 ring-1 ring-red-200">{error}</p>
         )}
 
-        {/* WHAT IS DELIBERATELY NOT ON THIS FORM: role, church, approval.
-            Those are somebody else's to change, and the database enforces it —
-            lock_privileged_profile_columns resets them for an unprivileged
-            caller. A form that cannot even express them is one less thing
-            leaning on that wall. */}
+        {/* Role, church and approval are not on this form; the database refuses them anyway. */}
         <p className="mt-4 text-sm text-gray-500">
           Your role and your church are set by your church&rsquo;s team, not here.
         </p>
@@ -228,86 +201,37 @@ export function LiveProfilePage() {
   );
 }
 
-// THERE IS NO SELF-SERVICE WITHDRAWAL, AND THAT IS A DECISION RATHER THAN AN
-// OMISSION.
-//
-// This file used to carry a "Withdraw permission" card that cleared a member's
-// birthday, contact, city, work and topics. The owner's rule replaces it: a
-// member may change those details whenever they like, as long as what they put
-// there is true, and their Guide and Director see that they changed. Using the
-// app is the undertaking to keep it truthful.
-//
-// The sign-up wording moved with it, in the same commit. A promise of a button
-// that no longer exists is worse than never having offered one.
-//
-// LEAVING IS STILL POSSIBLE. remove_member_by_leader deletes the profile
-// outright, so the route out is a conversation with a Director rather than a
-// button -- which for a church is the more honest shape, because somebody
-// notices that a person has gone.
+// There is no self-service withdrawal: members keep their details true and
+// their Guide and Director see changes. Leaving goes through a Director.
 
-// ---------------------------------------------------------------------------
-// Settings
-// ---------------------------------------------------------------------------
+// --- Settings ---
 
 export function LiveSettingsPage() {
   const { profile } = useLiveSession();
   const leads = profile?.role === 'admin' || profile?.role === 'executive';
   const temporaryPassword = profile?.password_is_temporary === true;
 
-  // THREE FOLDERS. Settings was seven cards for a member and nine for a
-  // Director, at nearly seven screens on a phone: installing, where the app
-  // came from, alerts, the church's name, the tutorial, help and about, one
-  // below the other. Almost nobody opens this room to read all of it; they
-  // open it to change one thing.
-  // FOUR SMALL FOLDERS RATHER THAN THREE, for the same reason the sample side
-  // has five: "This device" was still holding installing, alerts and where the
-  // app came from, which is most of the page it was meant to shorten.
-  // Read after mount, because the user agent does not exist during the server
-  // render and reading it while rendering makes the first paint disagree with
-  // the second.
+  // Read after mount: the user agent does not exist during server rendering.
   const [deviceKind, setDeviceKind] = useState<AppleKind>(null);
   useEffect(() => { setDeviceKind(appleKind()); }, []);
 
   const rooms: Room[] = [
-    // ONE GENERAL FOLDER, BECAUSE SEVEN TABS IS A SCROLLBAR.
-    // "This is too many sub-room for settings, can combine some please for
-    // general settings as a sub room please." Photographed with the row of
-    // tabs cut off mid-word and a horizontal scrollbar under it -- folders
-    // exist to stop a page being a scroll, and a row of folders that is itself
-    // a scroll has put the problem back one level.
-    //
-    // Installing, alerts, language and text size are all the same question --
-    // how this app behaves on this device, for me -- so they are one folder
-    // with headed cards inside it. Password stays out because somebody
-    // following an emailed instruction is hunting for that word, Admin Reports
-    // because it is a different kind of thing entirely, and Help because it is
-    // where people go when lost.
+    // One General folder for device settings (install, alerts, language, text
+    // size). Password, Admin Reports and Help keep their own folders.
     { id: 'general', label: `⚙️ General` },
-    // FIRST FOR SOMEBODY WHO ARRIVED ON AN EMAILED PASSWORD, because the
-    // invitation tells them to come here and change it, and a person following
-    // an instruction should not have to hunt for the folder it named.
+    // First for someone arriving with an emailed password.
     { id: 'account', label: '🔑 Password' },
     { id: 'reports', label: '⚖️ Admin Reports' },
     ...(leads ? [{ id: 'church', label: '⛪ Church' }] : []),
     { id: 'help', label: '❓ Help' },
   ];
 
-  // THE TWO ANCHORS THAT ALREADY EXISTED. The header's Install chip points at
-  // `/settings#install` and the desk points at `/settings#tutorial`. Both name
-  // a card, and a card inside a folder nobody has opened is not on the page for
-  // a hash to find. Apple users are sent to the install card precisely because
-  // Safari cannot install for them, so this one failing would fail exactly the
-  // people it exists for.
+  // Hashes that name a card (#install, #tutorial, #password, #reports) open its folder first.
   const [room, chooseRoom] = useRoom(rooms, `beacon:settings-room:${profile?.role ?? 'none'}`, {
     install: 'general',
     tutorial: 'help',
     faq: 'help',
-    // The invitation e-mail and the reminder card both send people to
-    // /settings#password. Without this they would land on the Install folder.
     password: 'account',
-    // The bell sends a report notification to /settings#reports. Without this
-    // the hash names nothing and somebody arrives on the General folder, which
-    // is the same class of bug as the summons that opened the home page.
     reports: 'reports',
   });
 
@@ -319,13 +243,7 @@ export function LiveSettingsPage() {
 
       {room === 'general' && (
         <>
-          {/* First, because it is the first thing somebody does on a new
-              device, and because device alerts below are far more useful once
-              the app is installed.
-
-              The id stays even though the folder now does the arriving: a hash
-              that lands in the right folder should still put the card itself in
-              front of the person rather than the top of it. */}
+          {/* First: installing comes before device alerts are useful. The id lets a hash land on the card. */}
           <div id="install">
             <InstallCard />
           </div>
@@ -336,22 +254,7 @@ export function LiveSettingsPage() {
 
       {room === 'account' && (
         <div id="password">
-          {/* A SIGNPOST, NOT THE FORM ITSELF.
-              REPORTED: "The change your password should have their own page,
-              users get confuse why there isn't a dedicated page for new
-              password and it's the same page for home."
-
-              That is right, and the reason is worth naming. Changing a
-              password is a task somebody is SENT to -- by an e-mail, by a
-              reminder, by a person on the phone telling them to do it. A task
-              you are sent to needs an address. It was a card inside a folder
-              inside Settings, reachable only by a hash that had to be
-              translated into a folder name, so "go and change your password"
-              could not be said as a place; it had to be said as directions.
-
-              The form now lives at /password and this is the way in from
-              Settings, so the old route still arrives somewhere sensible
-              rather than at a page that no longer holds what it promised. */}
+          {/* A way to /password, which has its own page so an email can send people straight there. */}
           <Card className="p-5">
             <h2 className="text-xl font-bold text-navy">Your password</h2>
             {temporaryPassword ? (
@@ -391,10 +294,7 @@ export function LiveSettingsPage() {
               own words. Only the people in a case can read it.
             </p>
           </Card>
-          {/* THE REPORTS THEMSELVES, above the trial room. A report is where
-              almost everything starts and a trial is the rare escalation, so
-              putting the courtroom first would greet everybody with a hearing
-              they are not in. */}
+          {/* Reports first, then the trial room. */}
           <LiveAdminReports me={profile.id} />
 
           <LiveCourt
@@ -419,10 +319,7 @@ export function LiveSettingsPage() {
           <div id="tutorial">
             <TutorialCard />
           </div>
-          {/* WHAT'S NEW AND FEEDBACK LIVE HERE NOW, and on the live app they
-              did not live anywhere. They were taken out of the rail and only
-              the tutorial made the journey, so on a real church deployment the
-              two buttons simply ceased to exist. */}
+          {/* What's New and Feedback. */}
           <HelpCard />
           <FaqCard />
           <AboutCard />
@@ -433,20 +330,8 @@ export function LiveSettingsPage() {
 }
 
 /**
- * The password page, at /password.
- *
- * WHY IT IS A PAGE AND NOT A CARD. Changing a password is a task somebody is
- * SENT to: by the invitation e-mail, by the reminder in the app, by a Director
- * on the phone saying "go and change it". A task you are sent to needs an
- * ADDRESS, and this one did not have one -- it was a card, inside a folder,
- * inside Settings, reachable only through a hash that had to be translated
- * into a folder name before the card was even on the page. So the instruction
- * could never be a place; it had to be directions, and directions are what
- * people get lost in.
- *
- * IT IS DELIBERATELY THE ONLY THING HERE. No tabs, no neighbouring cards,
- * nothing else to read. Somebody arriving from an e-mail that just told them
- * their password is temporary should see one heading and one form.
+ * The password page, at /password: an address an email or a reminder can send
+ * people to, with nothing else on it.
  */
 export function LivePasswordPage() {
   const { profile } = useLiveSession();
@@ -454,23 +339,13 @@ export function LivePasswordPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      {/* BACK IS ON THE LEFT, and it goes to the person's own home rather than
-          to Settings. Most people arrive here from an e-mail, never having
-          been in Settings at all, so "back to settings" would send them
-          somewhere they have not been. */}
+      {/* Back goes to the person's home: most arrive from an email, not Settings. */}
       <Link href={home} className="tap inline-flex items-center text-base font-semibold text-room">
         &larr; Back to the app
       </Link>
 
       <div>
-        {/* text-room, NOT text-navy. This heading and the link above sit on the
-            page itself rather than inside a Card, and the page is painted by
-            whichever room theme the person chose -- navy text on a navy ground
-            is invisible, which is a bug that has already been reported once on
-            the Announcements heading. `themes-are-readable` caught this one
-            before it shipped; the link is the same mistake in a tag that check
-            does not look at, so it is fixed here rather than left for the day
-            somebody widens the rule. */}
+        {/* text-room, not text-navy: this sits on the room's own background, which can be navy. */}
         <h1 className="text-2xl font-extrabold text-room">Change your password</h1>
         <p className="mt-1 text-sm text-room-soft">
           This is the only place you need. Once it is changed, use the new one
@@ -483,20 +358,7 @@ export function LivePasswordPage() {
   );
 }
 
-/**
- * Change your password.
- *
- * WHY THERE WAS NOWHERE TO DO THIS. The only place anybody ever set a password
- * was the sign-up form at the end of a one-time invitation link. Once you were
- * in, the only route to a new one was signing out and pressing "Forgot your
- * password" -- a strange thing to ask of somebody who has forgotten nothing,
- * and the reason nobody ever did it.
- *
- * The invitation now e-mails a temporary password and tells people to change
- * it. Telling somebody to do a thing the app cannot do is worse than never
- * mentioning it, so this card is not a nicety; it is the other half of that
- * sentence.
- */
+/** Change your password. */
 function PasswordCard() {
   const { profile, refreshProfile } = useLiveSession();
   const [next, setNext] = useState('');
@@ -507,9 +369,7 @@ function PasswordCard() {
   const [done, setDone] = useState(false);
 
   const temporary = profile?.password_is_temporary === true;
-  // WHEN THE LETTER STOPS WORKING, from the database, which is the one that
-  // enforces it. Null for anybody who has chosen their own or was invited
-  // before invitations had an end date.
+  // When the invitation's password stops working; null if they chose their own.
   const [ends, setEnds] = useState<string | null>(null);
   useEffect(() => {
     if (!temporary) { setEnds(null); return; }
@@ -517,11 +377,9 @@ function PasswordCard() {
     live.myTemporaryPasswordEnds().then((at) => { if (current) setEnds(at); }).catch(() => undefined);
     return () => { current = false; };
   }, [temporary]);
-  // Signing out everywhere else, on request: the person's own control over
-  // who is signed in as them.
+  // "Sign out everywhere else", on request.
   const [elsewhere, setElsewhere] = useState<'' | 'busy' | 'done' | 'failed'>('');
-  // Checked here so somebody is told before they press, rather than after. The
-  // same rule is enforced in lib/live/data.ts, which is the one that counts.
+  // A friendly early warning; lib/live/data.ts enforces the rule.
   const tooShort = next.length > 0 && next.length < 10;
   const mismatch = again.length > 0 && next !== again;
   const ready = next.length >= 10 && next === again && !busy;
@@ -590,9 +448,7 @@ function PasswordCard() {
         className="tap mt-1 w-full rounded-xl bg-gray-100 px-4 text-base outline-none focus:ring-2 focus:ring-gold"
       />
 
-      {/* SHOWING IT IS THE ACCESSIBLE OPTION, not the careless one. Typing a
-          password you cannot see, twice, on a phone keyboard is where older
-          members give up. */}
+      {/* Showing the password helps people typing on a phone. */}
       <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
         <input
           type="checkbox"
@@ -632,9 +488,7 @@ function PasswordCard() {
         </Button>
       </div>
 
-      {/* WHO ELSE IS SIGNED IN AS ME is a question only the person can answer,
-          so the answer is theirs to act on: one button, no password needed,
-          because anybody holding this screen already is them. */}
+      {/* Sign out every other device: one button, no password needed. */}
       <div className="mt-5 border-t border-black/5 pt-4">
         <p className="text-sm font-semibold text-navy">Signed in somewhere you do not recognise?</p>
         <p className="mt-1 text-sm leading-relaxed text-gray-600">
@@ -663,14 +517,7 @@ function PasswordCard() {
   );
 }
 
-/**
- * The two buttons that came out of the rail: what changed, and how to say
- * something about it.
- *
- * Both open a panel over the page rather than navigating, so they are anchored
- * on this card — a link to `#whats-new` lands here and the button is the next
- * thing your eye reaches.
- */
+/** What's New and Feedback, opening panels over the page. */
 function HelpCard() {
   return (
     <Card className="p-5">
@@ -689,13 +536,8 @@ function HelpCard() {
   );
 }
 
-// Turning alerts on and off, on this device.
-//
-// Two switches and they are genuinely different, which is why they are not one:
-// the BROWSER's permission is per-device and can only be granted by the person,
-// once, in response to a tap — and once denied, no button here can ask again.
-// The app's own preference is per-person and can be flipped freely. Merging
-// them into a single toggle produces a switch that silently does nothing.
+// Two separate switches: the browser's permission (per device, asked once,
+// and never again once denied) and the app's own preference (per person).
 function NotificationCard() {
   const [perm, setPerm] = useState<NotificationPermission>('default');
   const [enabled, setEnabled] = useState(true);
@@ -714,20 +556,7 @@ function NotificationCard() {
     setPerm(result);
     if (result === 'granted') {
       setNote('Alerts are on for this device.');
-      // THROUGH THE SERVICE WORKER, NEVER `new Notification()`.
-      //
-      // REPORTED FROM A REAL ANDROID PHONE: alerts were turned on, the card
-      // said "✓ On", and nothing ever appeared. Chrome on Android refuses the
-      // Notification constructor outright -- it throws `Illegal constructor`
-      // and only ServiceWorkerRegistration.showNotification() is permitted --
-      // so the confirmation threw inside this handler and the person was left
-      // with a screen claiming success and a phone that had shown them
-      // nothing. On a desktop it worked, which is how it survived review.
-      //
-      // showLocalNotification goes through the registration and keeps the
-      // constructor only as a last-resort fallback in a try/catch. The demo
-      // settings screen has always called it; this one was the copy that
-      // reached for the raw API.
+      // Through the service worker: Chrome on Android refuses `new Notification()`.
       await showLocalNotification(APP_SHORT_NAME, 'Alerts are on for this device.', '/settings',
         { tag: 'beacon-test', renotify: true });
     } else {
@@ -746,13 +575,8 @@ function NotificationCard() {
       <p className="mb-4 text-sm text-gray-500">
         A new message, a prayer request, somebody waiting to be approved.
       </p>
-      {/* SAYING WHAT THIS IS, BECAUSE THE OTHER KIND IS WHAT PEOPLE EXPECT.
-          Alerts are raised by the app while it is open or in the background on
-          this device. Beacon has no push server, so a phone with the app fully
-          closed is not woken -- see lib/push.ts. Somebody who turns this on
-          expecting their phone to buzz overnight and finds it silent will
-          reasonably call that broken, so the card says which kind it is
-          rather than letting them find out by being missed. */}
+      {/* Alerts come from the app while it is open or in the background; with the
+         app fully closed the phone is not woken (lib/push.ts). */}
       <p className="mb-4 rounded-xl bg-sky-50 p-3 text-sm text-gray-600">
         These reach you while {APP_SHORT_NAME} is open or running in the background.
         Your phone is not woken when the app is fully closed.
@@ -781,9 +605,7 @@ function NotificationCard() {
             ✓ On. Turn them off in your browser&rsquo;s settings for this site.
           </p>
         ) : perm === 'denied' ? (
-          // Being honest about a door that is closed from the other side. A
-          // button here would do nothing at all: once denied, the browser will
-          // not show the prompt again however many times it is asked.
+          // Once denied, the browser will not ask again, so no button is offered.
           <p className="mt-1 text-sm text-gray-600">
             Blocked by your browser. Open the padlock beside the address and
             allow notifications for this site. This page cannot ask again.
@@ -896,12 +718,8 @@ function AboutCard() {
 }
 
 /**
- * Field, but the answer comes from a list.
- *
- * `options` arrives already widened by `optionsFor`, so an answer given before
- * this was a list is still in it. A `select` holding a value that is not among
- * its options renders as the FIRST one, and the next save would rewrite that
- * person's answer to something they never picked.
+ * A select whose options include any earlier free-text answer (optionsFor),
+ * because a select showing a value it lacks would save the first option instead.
  */
 function SelectField({
   label, value, options, onChange, hint,
@@ -920,8 +738,7 @@ function SelectField({
         onChange={(event) => onChange(event.target.value)}
         className="tap w-full min-w-0 rounded-xl bg-gray-100 px-4 text-lg outline-none focus:ring-2 focus:ring-gold"
       >
-        {/* Everything on this screen is optional, and a list must not make one
-            question the exception by having no way to leave it alone. */}
+        {/* Every question is optional, lists included. */}
         <option value="">Prefer not to say</option>
         {options.map((o) => (
           <option key={o} value={o}>{o}</option>
@@ -953,17 +770,8 @@ function Field({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Your picture, or an icon instead of one.
-// ---------------------------------------------------------------------------
-//
-// BOTH, BECAUSE PEOPLE DIFFER. Somebody exploring faith quietly may not want a
-// photograph of themselves in an app their church can see, and initials on a
-// coloured circle is not a choice, it is the absence of one. An icon is a way
-// to be recognisable without being photographed.
-//
-// A photo wins when both are set. Removing the photo falls back to the icon
-// rather than to nothing, so choosing an icon first is never wasted.
+// --- Your picture, or an icon ---
+// A photo wins when both are set; removing it falls back to the icon.
 const FACES = ['🙂', '😊', '🧑', '👩', '👨', '🧕', '👵', '👴', '🌱', '✝️', '📖', '🕊️', '🙏', '⭐'];
 
 export function LiveFacePicker() {
@@ -972,8 +780,7 @@ export function LiveFacePicker() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Signed at render time, never stored: a stored signed URL expires and
-  // becomes a broken picture with nothing to explain it.
+  // Signed when drawn, never stored (signed URLs expire).
   useEffect(() => {
     let alive = true;
     void live.avatarUrl(profile?.photo_path).then((u) => { if (alive) setUrl(u); });
@@ -1019,15 +826,8 @@ export function LiveFacePicker() {
                 const input = event.target;
                 const file = input.files?.[0];
                 if (!file) return;
-                // THE RESET COMES AFTER THE UPLOAD, NOT BEFORE IT.
-                //
-                // Clearing the input is what lets somebody pick the same file
-                // twice, and doing it on the line after taking the File aborts
-                // the read on WebKit: Safari and every iPhone browser tie the
-                // File's readable lifetime to the input it came from. It fails
-                // silently, so it looks like the upload button does nothing on
-                // an iPhone and works everywhere else. tests/security-
-                // invariants.mjs fails the build if this order is reversed.
+                // Reset the input only after the upload: on WebKit the File becomes unreadable
+                // once its input is cleared (tests/security-invariants.mjs).
                 void act(async () => {
                   try {
                     const path = await live.uploadAvatar(file);
