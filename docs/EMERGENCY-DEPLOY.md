@@ -52,7 +52,10 @@ fixes the problem and send it through the short checks.
    for this pull request.
 6. Merge when it is green. The host builds `main` and the fix goes live when
    that build finishes.
-7. **Watch the full run on `main`.** The merge runs every check, including the
+7. If a run sits in **Queued**, before or after the merge, GitHub's runners are busy with other pull
+   requests (Dependabot's, usually). Cancel those runs in the **Actions**
+   tab; they can be re-run later.
+8. **Watch the full run on `main`.** The merge runs every check, including the
    ones the emergency lane skipped. If something fails there, fix it in an
    ordinary pull request.
 
