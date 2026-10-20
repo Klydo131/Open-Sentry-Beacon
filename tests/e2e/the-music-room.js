@@ -132,9 +132,13 @@ const clocksOpen = async (page) => {
   const { left, saw } = await page.evaluate(() => {
     const now = performance.now();
     const ago = (t) => `${((now - t) / 1000).toFixed(1)} s ago`;
-    const notShut = window.__clocks.filter((c) => c.state !== 'closed');
+    // The notification sound's clock (lib/alert-sound.ts) is opened on the
+    // first tap of any page and kept, suspended, for the visit. It is not the
+    // Music room's, so it is not counted here; a second one would be.
+    const alert = window.__clocks.filter((c) => c.beaconAlert);
+    const notShut = window.__clocks.filter((c) => c.state !== 'closed' && !c.beaconAlert);
     return {
-      left: notShut.filter((c) => c.__shut === undefined).length,
+      left: notShut.filter((c) => c.__shut === undefined).length + Math.max(0, alert.length - 1),
       saw: notShut.map((c) => `${c.state}, opened ${ago(c.__born)}, ${c.__shut === undefined ? 'never asked to close' : `asked to close ${ago(c.__shut)}`}`).join('; '),
     };
   });

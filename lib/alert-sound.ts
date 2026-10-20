@@ -88,6 +88,10 @@ function audio(): AudioContext | null {
   const C = W.AudioContext ?? W.webkitAudioContext;
   if (!C) return null;
   try { ctx = new C(); } catch { return null; }
+  // Marked, because this is the one audio clock kept for the whole visit
+  // (suspended between sounds); a check counting clocks a room forgot to
+  // close has to be able to tell it apart (tests/e2e/the-music-room.js).
+  (ctx as AudioContext & { beaconAlert?: boolean }).beaconAlert = true;
   return ctx;
 }
 
