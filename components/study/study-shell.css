@@ -597,18 +597,13 @@
   width: 16px;
   height: auto;
 }
-/* A tablet held upright gets the paper's look with narrower margins: at the
-   full width margins the writing column was 79% of the room at 768px, and
-   tests/e2e/the-study-room-on-every-size.js asks for at least 80%. */
+/* The paper's margins stay narrow at every width. Wider ones left the writing
+   column at 79% of the room on an upright tablet (the size walk asks for 80%),
+   and on Safari at 1440px clipped the empty page's hint by 4px. */
 @media (min-width: 768px) {
   .sr-paper { padding: 30px 26px 36px 44px; }
   .sr-paper::before { left: 26px; }
   .sr-paper-ribbon { right: 28px; width: 18px; }
-}
-@media (min-width: 1024px) {
-  .sr-paper { padding: 34px 40px 40px 56px; }
-  .sr-paper::before { left: 34px; }
-  .sr-paper-ribbon { right: 40px; }
 }
 
 /* Where the writing is, under the title: quiet, and never alarming. */
@@ -666,9 +661,6 @@
 }
 @media (min-width: 768px) {
   .sr-paper .sr-formatbar { margin-left: -44px; margin-right: -26px; padding-left: 44px; padding-right: 26px; }
-}
-@media (min-width: 1024px) {
-  .sr-paper .sr-formatbar { margin-left: -56px; margin-right: -40px; padding-left: 56px; padding-right: 40px; }
 }
 
 /* ---- The insert bar on a narrow screen -----------------------------------------
