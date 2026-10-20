@@ -369,8 +369,10 @@ if (withE2e) {
     server.stdout.on('data', (d) => (serverLog += d));
     server.stderr.on('data', (d) => (serverLog += d));
 
+    // SIGTERM, which scripts/run-next.mjs passes on to Next.js. SIGKILL ended
+    // only the wrapper and left the server itself running after every walk.
     const stop = () => {
-      if (!server.killed) server.kill('SIGKILL');
+      if (!server.killed) server.kill('SIGTERM');
     };
     process.on('exit', stop);
     process.on('SIGINT', () => {
