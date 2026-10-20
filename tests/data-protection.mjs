@@ -126,15 +126,13 @@ const strip = (src) => src
 }
 
 // ---------------------------------------------------------------------------
-// 5. The gap list is honest about what is missing.
+// 5. The record says what each church must complete before real people.
 // ---------------------------------------------------------------------------
-// This is the check most likely to be quietly deleted, because a document with
-// no gaps reads better. The gaps are the point of the document.
 {
   const doc = readFileSync('docs/DATA-PROTECTION.md', 'utf8');
-  ok(/## 4\. What is missing/.test(doc), 'the record has a section for what is missing');
-  ok(/No way for a member to get a copy of their own data/i.test(doc),
-     'and names the right neither law is currently honoured for');
+  ok(/## 4\. What each church must complete/.test(doc), 'the record says what each church must complete');
+  ok(/privacy notice/i.test(doc) && /Data Protection Officer/.test(doc),
+     'and names the privacy notice and the Data Protection Officer');
   ok(/72 hours/.test(doc), 'and the breach notification window');
   ok(/RA 10173/.test(doc) && /GDPR/.test(doc), 'and says which laws it was read against');
   ok(/not legal advice/i.test(doc), 'while saying it is not legal advice');

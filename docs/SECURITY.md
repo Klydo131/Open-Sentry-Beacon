@@ -1,7 +1,9 @@
 # Security
 
-Read this before connecting Open Sentry Beacon to anything real. It is short on
-purpose, and it tries to be honest rather than reassuring.
+This guide is for anyone who runs their own Hope Beacon: a church's IT
+volunteer, a developer, or somebody building with AI tools. It covers how to
+report a problem, who is responsible for what, and how to secure your own copy,
+with samples you can adapt.
 
 ---
 
@@ -12,11 +14,29 @@ purpose, and it tries to be honest rather than reassuring.
 on this repository, which is visible only to maintainers until a fix is
 published.
 
-Include what an attacker can do stated as an outcome ("any visitor can read X"),
-the smallest steps that reproduce it, and the commit you tested. You will get an
-acknowledgement within **7 days**. There is no bounty programme — this is a small
-project maintained in spare time, and we would rather say so than imply a
-response time nobody can hold to.
+Include what an attacker can do, stated as an outcome ("any visitor can read
+X"), the smallest steps that reproduce it, and the commit you tested. You will
+get an acknowledgement within **7 days**. There is no bounty programme.
+
+Please do not publish exploit code, proofs of concept or scans of anybody's
+deployment, and do not test against a church's live site. Test against your own
+copy.
+
+---
+
+## Who is responsible for what
+
+Hope Beacon is free software, provided **as is**, without warranty (AGPL-3.0,
+sections 15 and 16). Responsibility follows control:
+
+| Who | Responsible for |
+|---|---|
+| **The church or developer who deploys a copy** (the operator) | Everything about that deployment: the database and its rules, keys and secrets, hosting and its settings, who is given access, backups, updates, and the personal data of its members. The operator is the controller of that data under the law that applies to it, for example the Philippine Data Privacy Act (RA 10173) or the GDPR. |
+| **Contributors** | That a change they submit passes the checks (`npm run verify`) and contains no secret and no real person's details. |
+| **Whoever runs an AI tool** | What that tool does with the access it is given. |
+| **The maintainers of this repository** | The code in `main` and its checks, and fixing vulnerabilities reported in that code. Not any deployment, its data or its settings. |
+
+If you run a copy, read the rest of this guide before you invite real people.
 
 ---
 
@@ -26,252 +46,380 @@ response time nobody can hold to.
 calls, no analytics. Every screen runs from a store in the browser, and the
 sample church is fiction. That is why you can hand it to anybody to try.
 
-Three tests hold that promise rather than a paragraph in a README:
+Three tests hold that promise:
 
 | Check | What it refuses |
 |---|---|
 | `tests/no-backend.js` | A database dependency, an API route that stores data, any analytics or error-reporting SDK, any call to an external server. |
 | `tests/no-secrets.js` | A credential of recognisable shape in any tracked file, a real `.env`, anything secret exposed under a browser-visible prefix, sample data at a domain that could reach a real inbox. |
-| `tests/security-invariants.mjs` | A weakened Content-Security-Policy, a URL guard that stops blocking `javascript:`, CI that could be hijacked by a pull request. |
+| `tests/security-invariants.mjs` | Weakened security headers, a URL guard that stops blocking `javascript:`, CI that could be hijacked by a pull request. |
 
 Run them with `npm test`.
 
 ---
 
-## The moment that changes: connecting a backend
+## Securing your own Hope Beacon
 
-Everything above stops being the whole picture the day you point this at a real
-database. From then on **you own the security of what you connected**, and this
-is the part people get wrong.
+The day you connect a real database, **you own the security of what you
+connected.** The practices below apply to any backend. The samples use Supabase
+(PostgreSQL) and Next.js, because the app does; rename the tables and columns to
+match your own.
 
-### Put authorisation in the database, not in the app
+### 1. Put authorisation in the database
 
-The screens in this app decide what to *show*. They cannot decide what somebody
-is *allowed to have*, because anybody can send a request without using your
-screens at all.
-
-If your backend supports row-level rules, use them. A rule that lives with the
-data applies to every route into it — including a screen somebody adds next year
-without reading this file.
-
-### Never put a secret in this repository
-
-Anything the browser can read, every visitor can read. That includes any key in a
-`.env` file that gets bundled, any key inside a component, and any key in a
-backend adapter you write in `lib/backend/`.
-
-Keys belong on a server you control. The browser talks to your server; your
-server holds the key. `tests/no-secrets.js` fails the build if a credential
-appears here, but it can only catch shapes it recognises — it is a safety net,
-not permission to be careless.
-
-### Rate limit on your server
-
-Anything enforced in the browser can be skipped by opening the network tab. If an
-endpoint you add sends email, writes rows, or costs money, limit it server-side,
-key the limit on something the caller cannot change for free, and give anything
-that sends messages its own separate ceiling.
-
-### Decide what your leaders can see
-
-This app is built so that leaders see counts and Guides see the
-relationship — a pastor cannot read a Guide's conversations, because there
-is no screen that shows them. If you connect a backend, that boundary is now
-yours to enforce in your data rules. It is easy to lose by accident and hard to
-explain afterwards.
-
-### Place suggestions go through your server
-
-The meet-up place box suggests places from OpenStreetMap as somebody types. The
-browser never asks the map service itself: it asks `supabase/functions/places`,
-which checks the caller is signed in, approved and not suspended; limits
-them to the pace of a person typing; sends only the words and a town-level
-point; logs nothing; and holds no master key. The Content-Security-Policy
-therefore still allows the browser to talk to your backend and nothing else.
-`tests/place-search.mjs` fails if any of that changes.
-
-### Nobody promotes themselves
-
-A signed-in person cannot change their own role, approval, church or a
-guardian's consent. The database refuses it (`lock_privileged_profile_columns`,
-error 42501), whatever the screen sends. The one way through is claiming an
-unexpired invitation for exactly that church and role, while still unapproved.
-The app never asks, either: updating your own profile sends a fixed list of
-fields that has none of them. The sample app's role switcher changes a role
-only in the browser's own store, so a pastor can see every screen before
-adopting it; the live half never loads it. `tests/nobody-promotes-themselves.mjs`
-fails if any of that changes, including a later migration that drops the
-trigger.
-
-### An invitation is a way in for three days
-
-An invitation creates the account and e-mails a temporary password, because a
-one-time link is spent by mail scanners and strands people. That password is
-now **a way in for three days and no longer** (seven from 29 September 2026,
-three since 3 October 2026). Since 3 October it is also three ordinary words
-and a two-digit number joined by dashes (`harbor-acorn-river-48`), about 1.5
-billion possibilities, so guessing one in those three days is not practical
-even for somebody who knows the address it was sent to:
-
-- **It runs out on the server, not in the app.** When the three days are up the
-  database replaces it with a random password nobody knows and signs out every
-  device that used it (`end_expired_temporary_passwords`, hourly via pg_cron).
-  A letter found in an old inbox, a forwarded e-mail, or the Director's own
-  screen is useless after that.
-- **It can never touch a password somebody chose.** The database keeps the hash
-  the invitation set and acts only while the account still has exactly that
-  hash. A password changed by any door (the Password page, a reset e-mail, an
-  admin) has a different hash and is left alone. The reminder flag is not
-  trusted for this, because anybody signed in can clear it.
-- **Choosing a password signs out every other device.** A new password always
-  stopped the old one signing anybody in; now a phone or laptop already signed
-  in with the letter is signed out too. The Password page also has **Sign out
-  everywhere else**, for anybody who sees a sign-in they do not recognise.
-- **An ended session is refused at once** (since 29 September 2026). Before,
-  the pass a device already held kept working for up to an hour after its
-  session was ended. Now the database asks, on every request, whether the
-  session is still on record: the data API refuses an ended one with a 401,
-  and the live socket and the file store stop at the same moment. The app hears
-  the 401, asks the sign-in server once, and shows the front door. A signed-out
-  visitor, the server's own requests, and a token with no session id are let
-  through exactly as before.
-- **A re-send cannot take over an account.** It is refused for anybody who has
-  ever signed in (since 7 September 2026), so an invitation can only ever set
-  the password of an account nobody has used.
-- **None of it depends on the code being secret.** The table holding the clock
-  has row-level security with no policies and no grants: no browser can read or
-  change it. Only the invitation (the service role) starts a clock; nobody can
-  run the expiry from a browser; a member can ask only when their own runs out.
-  Knowing exactly how it works tells an attacker that an old letter is useless.
-
-**Accounts invited before 29 September are not on a clock** unless the owner
-starts one: on that day 40 accounts were still flagged as using their e-mailed
-password, including the owner's own, and locking the owner out of their own
-account is not a choice to make for them. To give every one of them seven days
-(anybody who has ever asked for a reset e-mail is left out, because their flag
-may be stale), run once in the SQL editor:
+The screens decide what to *show*. They cannot decide what somebody is
+*allowed to have*, because anybody can send a request without using your
+screens at all. Put the rule next to the data, where every route into it must
+pass.
 
 ```sql
-select public.start_temporary_password(p.id)
-from public.profiles p
-join auth.users u on u.id = p.id
-where p.password_is_temporary and u.recovery_sent_at is null;
+-- A table only its author can read or change.
+alter table public.notes enable row level security;
+
+create policy "authors read their own notes"
+  on public.notes for select to authenticated
+  using (author_id = auth.uid());
+
+create policy "authors add their own notes"
+  on public.notes for insert to authenticated
+  with check (author_id = auth.uid());
 ```
 
-`tests/an-invitation-password-runs-out.mjs` holds all of the above. The migration
-was run on the live database in a transaction that was thrown away, with two
-made-up accounts, before it was applied: the letter's password stopped working
-and its sessions ended; the account that had chosen its own was untouched.
+- Turn on row-level security for **every** table. A table with it on and no
+  policy is closed to the browser, which is the safe default.
+- Test with two real accounts: sign in as one and try to read the other's
+  rows. A rule is not finished until you have watched it refuse.
+- Decide what leaders can see. Hope Beacon shows leaders counts, not
+  conversations; if you connect a backend, that boundary is yours to keep in
+  your rules.
 
-### Two-step sign-in
+### 2. Nobody raises their own privileges
 
-Since 13 October 2026 anybody can add a second step to their sign-in: a
-six-digit code from an authenticator app on their phone (Settings, Password,
-**Two-step sign-in**). It is recommended on that page to Directors and
-Executive Directors, who can see the church's list of members. Supabase does
-the cryptography; the app only asks it (`lib/live/two-step.ts`).
+A person may edit their name and photo. They must never be able to change their
+own role, approval or church, whatever the screen sends.
 
-- **The lock is in the database, not the screen.** A password alone still
-  produces a valid token, marked `aal1`; password and code produce `aal2`. For
-  anybody with a confirmed authenticator app, the data API's check before every
-  request refuses an `aal1` token (HTTP 403), and the live socket and the file
-  store ask the same question. Somebody who learns the password and calls the
-  data API directly gets nothing
-  (`20261013140000_a_second_step_once_set_up_is_required`).
-- **It changes nothing for anybody who has not turned it on.** A person with no
-  authenticator app, or one they started adding and never confirmed with a code,
-  is let in on the password exactly as before. The signed-out visitor and the
-  server's own requests are untouched.
-- **The invite function asks too.** It reads with the service role key, so the
-  database's refusal never reaches it; it refuses a password-only token from a
-  Director who has two-step sign-in on.
-- **A lost phone.** The person cannot finish signing in until a custodian
-  removes their authenticator app. **Confirm who is asking first**, in person or
-  by a phone number you already have: removing it is exactly what somebody who
-  stole the password would ask for. Then, in the SQL editor:
+```sql
+create or replace function public.keep_privileges_unchanged()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if current_user in ('anon', 'authenticated')
+     and (new.role is distinct from old.role
+          or new.approved is distinct from old.approved
+          or new.church_id is distinct from old.church_id) then
+    raise exception 'only an administrator can change this'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
 
-  ```sql
-  delete from auth.mfa_factors
-  where user_id = (select id from auth.users where email = 'their address');
+create trigger keep_privileges_unchanged
+  before update on public.profiles
+  for each row execute function public.keep_privileges_unchanged();
+```
+
+On the app's side, send a fixed list of fields when somebody saves their
+profile, never the whole object.
+
+### 3. Functions that run with more rights
+
+A `security definer` function runs as its owner, so it can read past the
+caller's rules. Write each one to answer only about the caller, and close the
+two common holes: an unpinned `search_path`, and the default grant to everyone.
+
+```sql
+create or replace function public.my_church_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select church_id from public.profiles where id = auth.uid()
+$$;
+
+revoke execute on function public.my_church_id() from public, anon;
+grant execute on function public.my_church_id() to authenticated;
+```
+
+Write every table name in full (`public.profiles`), so a pinned, empty
+`search_path` cannot be pointed elsewhere.
+
+### 4. Keep secrets on the server
+
+Anything the browser can read, every visitor can read. In Next.js, any variable
+whose name starts with `NEXT_PUBLIC_` is sent to the browser.
+
+```bash
+# .env.local: never committed (.gitignore already excludes it)
+
+# Safe in the browser: the project address and the public (anon) key.
+NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Server only. Never give these a NEXT_PUBLIC_ prefix.
+EMAIL_API_KEY=keep-this-in-your-host-or-supabase-secrets
+```
+
+- The public key is safe only because your database rules (sections 1 to 3)
+  decide what it can reach.
+- The service role key skips every rule. Supabase gives it to your server
+  functions on its own; never copy it into a browser file, a component, an
+  `.env` the browser can read, or a commit. The same goes for any other
+  server key, such as your email provider's.
+- Turn on GitHub secret scanning and push protection. If a key is ever
+  exposed, rotate it at once; deleting the commit is not enough.
+
+### 5. Compare secrets in constant time
+
+When a server function checks a key, an ordinary `===` stops at the first
+different character, and the time it takes can hint at how much was right.
+Compare digests instead, so every wrong key takes the same time.
+
+```ts
+// Deno or any runtime with Web Crypto.
+async function sameKey(a: string, b: string): Promise<boolean> {
+  const hash = (s: string) => crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  const [x, y] = (await Promise.all([hash(a), hash(b)])).map((d) => new Uint8Array(d));
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
+const bearer = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
+if (!SERVICE_KEY || !(await sameKey(bearer, SERVICE_KEY))) {
+  return new Response('Forbidden', { status: 403 });
+}
+```
+
+### 6. Check and limit on the server
+
+Anything enforced in the browser can be skipped by opening the network tab.
+Validate input where it lands, and limit anything that sends mail, writes rows
+or costs money.
+
+```sql
+-- The database refuses what the screen should never have sent.
+alter table public.posts
+  add constraint posts_title_length check (char_length(title) between 1 and 200);
+```
+
+```sql
+-- A simple per-person limit: at most max_hits of one action per window.
+create schema if not exists private;
+create table if not exists private.request_log (
+  caller uuid not null,
+  action text not null,
+  at timestamptz not null default now()
+);
+create index if not exists request_log_recent on private.request_log (caller, action, at);
+revoke all on schema private from public, anon, authenticated;
+
+create or replace function public.allow_request(what text, max_hits int, per interval)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare recent int;
+begin
+  select count(*) into recent from private.request_log
+   where caller = auth.uid() and action = what and at > now() - per;
+  if recent >= max_hits then
+    return false;
+  end if;
+  insert into private.request_log (caller, action) values (auth.uid(), what);
+  return true;
+end;
+$$;
+
+revoke execute on function public.allow_request(text, int, interval) from public, anon;
+grant execute on function public.allow_request(text, int, interval) to authenticated;
+```
+
+A server function then asks `allow_request('invite', 5, interval '1 minute')`
+before it does the work. Key a limit on something the caller cannot change for
+free (their account, not a header they send), and clear old rows on a schedule.
+
+### 7. Show people's words as text, never as code
+
+React escapes text by default; keep it that way.
+
+- Do not use `dangerouslySetInnerHTML` for anything a person typed. If you must
+  show HTML, clean it first with a maintained sanitiser such as DOMPurify.
+- Allow only safe link types. A `javascript:` link runs code when tapped.
+
+```ts
+export function safeHref(raw: string): string | null {
+  try {
+    const url = new URL(raw);
+    return ['https:', 'mailto:', 'tel:'].includes(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+```
+
+### 8. Send security headers
+
+Headers tell the browser what your pages may load and who may frame them. In
+Next.js they go in `next.config.js`:
+
+```js
+const supabase = 'https://<ref>.supabase.co';
+
+const securityHeaders = [
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(self)' },
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "default-src 'self'",
+      `connect-src 'self' ${supabase} ${supabase.replace('https', 'wss')}`,
+      `img-src 'self' data: blob: ${supabase}`,
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join('; '),
+  },
+];
+
+module.exports = {
+  async headers() {
+    return [{ source: '/(.*)', headers: securityHeaders }];
+  },
+};
+```
+
+- Next.js needs its start-up scripts allowed by `script-src`. A policy with a
+  per-request nonce is the strongest; the Next.js documentation on Content
+  Security Policy shows how. Test any change in a real browser.
+- Check what your host actually sends: `curl -I https://your-site`.
+
+### 9. Files people upload
+
+Keep uploads in a **private** bucket, open them through signed addresses that
+expire, and give each folder an owner.
+
+```sql
+create policy "people upload into their own folder"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'private-files'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "people open their own files"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'private-files'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+```
+
+- Set a size limit and a list of allowed file types on the bucket. Refuse SVG,
+  which can carry script.
+- Cap what one account can store. Hope Beacon allows each file up to 10 MB, and
+  each person up to 300 files or 200 MB in their Resources and handouts; that
+  bounds what one stolen password can cost the church.
+- Remove the location a phone camera writes into a photo before it is sent.
+- A suspended account should neither upload nor open anything.
+
+### 10. Sign-in and sessions
+
+- **Invitation only.** Turn off public sign-up, and create accounts from a
+  server function that checks the inviter's role.
+- **Temporary passwords expire.** Hope Beacon's invitation password works for
+  three days; after that the database replaces it and signs out every device
+  that used it.
+- **Sign out everywhere.** Choosing a new password signs out every other
+  device, and the Password page has **Sign out everywhere else**.
+- **An ended session is refused at once.** Check on the server, on every
+  request, that the session is still on record, so a signed-out phone cannot
+  keep reading.
+- **Two-step sign-in for leaders.** Anybody can add an authenticator app in
+  Settings, Password, **Two-step sign-in**; recommend it to everybody who can
+  see the member list, and make the database require the second step once it
+  is set up.
+
+**A lost phone with two-step sign-in.** Confirm who is asking first, in person
+or on a phone number you already have: removing the second step is exactly what
+somebody who stole the password would ask for. Then, in the SQL editor:
+
+```sql
+delete from auth.mfa_factors
+where user_id = (select id from auth.users where email = 'their address');
+```
+
+They sign in with their password and can set it up again.
+
+### 11. Your repository, CI and dependencies
+
+- **Updates.** Turn on Dependabot alerts and security updates, and check in a
+  configuration so update pull requests arrive on their own:
+
+  ```yaml
+  # .github/dependabot.yml
+  version: 2
+  updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+        interval: weekly
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+        interval: weekly
   ```
 
-  They sign in with their password and can set it up again. (Written from the
-  sign-in service's table shape; not yet run on a live project.)
-- **Supabase must allow it.** Authentication, Multi-Factor, authenticator app
-  (TOTP) is on by default. If it has been switched off, setting up says so and
-  where to switch it on.
+  Run `npm audit --omit=dev` before a release, and read what an update changes
+  before you merge it.
+- **Workflows.** Give each workflow the least it needs, pin every action to a
+  full commit, and never run a pull request's code with your secrets
+  (`pull_request_target` with a checkout of that code does exactly that).
 
-`supabase/tests/a-second-step-is-required.sql` proves the database half as
-invented people in every fresh install; `tests/two-step-sign-in.mjs` runs the
-app's half against a stand-in sign-in server.
+  ```yaml
+  permissions:
+    contents: read
 
-### Files people upload
+  jobs:
+    verify:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@<full-40-character-commit> # v4
+        - run: npm ci && npm run verify
+  ```
 
-The live app keeps every uploaded file in **one private storage bucket**, and a
-rule per folder decides who may put a file there and who may open it. Nothing in
-that bucket is public: a file is opened through a signed address that expires
-after an hour.
+- **Secrets in CI.** Keep a secret that can read your database in a GitHub
+  environment limited to `main`, with yourself as a required reviewer, not as
+  a repository secret every branch can read.
+- **Review.** Protect `main` and require review from code owners for database
+  rules, workflows and server routes.
 
-| Folder | Who may upload | Who may open |
-|---|---|---|
-| `<pairing>/` | Either person in that conversation | The same two |
-| `avatars/<person>/` | That person | People in their church |
-| `library/<person>/` (Resources) | That person, if a Guide, Explorer or leader and not stopped from sharing | That person, and whoever can read a resource pointing at the file |
-| `lessons/<person>/` (study handouts) | That person, if they may write studies | Whoever can read the study |
-| `reports/<person>/` (safeguarding evidence) | That person | The church's leadership |
+### 12. Working with AI tools
 
-Four rules apply across all of them:
-- **Every file is at most 10 MB**, and only pictures, PDFs, office documents,
-  audio and text are accepted. There is no video and no SVG, which can carry
-  script.
-- **Each person can keep up to 300 files or 200 MB** in their Resources and
-  handouts. That bounds what one stolen password, or one script driving an
-  account, can cost the church.
-- **A suspended account can neither upload nor open anything.**
-- **A photo loses the location its camera recorded** before it is sent. The
-  exception is safeguarding evidence, which is kept exactly as sent.
+- Give an AI tool a development database, never your live one's keys.
+- Set its connection to your database and hosting to **ask every time** before
+  it runs SQL, applies a migration or deploys.
+- Treat what the tool reads (issues, web pages, files, comments) as data, not
+  instructions. `AGENTS.md` section 0.3 says why.
+- Read every change before you merge it, and never let a tool switch off or
+  loosen a check to make it pass.
+- In this repository, `.claude/agents/security-reviewer.md` and the `/audit`
+  skill review a change for security before it is merged.
 
-These rules live in `supabase/migrations/`, and
-`tests/a-resource-can-be-a-file.mjs` and `tests/what-one-person-can-upload.mjs`
-fail if they are loosened.
-
-**A folder does not say whose church it is.** The rules above find a file's
-church from the person's id at the start of its folder, through
-`public.uploader_church`. Until 27 September 2026 that helper could also be
-called on its own, and it told any signed-in member which church any person
-was in. It now answers only with a church the caller can already see into or
-leads. Checked on the live database before it was applied, for every account
-against every person's folder: all 1,849 pairs got the same answer from both
-storage tests as before, and the 42 answers that had crossed from one church
-into another became none. `tests/a-folder-does-not-say-whose-church.mjs` holds
-it, including that every rule keeps using the helper only inside those two
-tests.
-
-**A drawing carries the picture and nothing else.** A drawing made on a study
-(Excalidraw, since 28 September 2026) is saved as a PNG with the drawing itself
-in one text chunk, so it can be reopened and changed. It goes through the same
-upload and the same 10 MB limit as any handout. Every other chunk a PNG can
-carry -- a camera's EXIF, where a location lives, a colour profile naming a
-device, free text -- is cut out before it is sent (`lib/drawing-file.ts`), so
-a photo renamed to look like a drawing still arrives with nothing but its
-pixels. Photos cannot be put inside a drawing at all: a photo there would skip
-the step that removes its location, so it is added as a handout instead.
-
-**The drawing board talks to nobody else.** Excalidraw is loaded only when
-somebody presses *Draw a picture*. Its fonts are copied out of the installed
-package into `public/excalidraw/` at build time and served by the app itself;
-its fallback to a public CDN is removed before the browser sees it, and the
-Content-Security-Policy was not widened for any of it. Its AI tools, web
-embeds, online library and file export are switched off.
-`tests/a-study-can-have-a-drawing.mjs` holds these, and
-`tests/e2e/a-study-can-have-a-drawing.js` draws in a real browser and fails if
-any request leaves the app or anything is refused by the policy.
-
-### Settings that live outside the code
+### 13. Settings that live outside the code
 
 Some protections are switches in Supabase and GitHub, which no file in this
 repository can turn on. Check them once when you set up, and again after
-anybody new is given access. Listed after the audit of 3 October 2026.
+anybody new is given access.
 
 | Where | Set it to | Why |
 |---|---|---|
@@ -282,6 +430,48 @@ anybody new is given access. Listed after the audit of 3 October 2026.
 | GitHub → Settings → Code security | **Private vulnerability reporting, secret scanning and push protection on** | The "report a vulnerability" link above depends on the first; the others stop a key from being pushed by mistake. |
 | GitHub → Settings → Branches (or Rules) for `main` | **Require review from Code Owners** | Then a pull request that touches the files in `.github/CODEOWNERS` (database rules, workflows, server routes, the AI brief) waits for your review. |
 | Any AI tool's connection to your database or hosting | **Ask every time** for running SQL, applying migrations and deploying | The prompt is what stands between an AI session and your live data. `AGENTS.md` section 0.3 says why an AI tool must not act on instructions it merely read. |
+
+### 14. Before you invite real people
+
+Run these on your own project, signed in to its SQL editor.
+
+```sql
+-- Every public table has row-level security on. Expect no rows.
+select tablename from pg_tables
+where schemaname = 'public' and not rowsecurity;
+
+-- Every security definer function pins its search_path. Expect no rows.
+select p.proname
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.prosecdef
+  and not exists (
+    select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%'
+  );
+```
+
+- [ ] Public sign-up is off, and two test accounts cannot read each other's data.
+- [ ] No secret appears in the browser: search the built site for your service
+      role key's first characters.
+- [ ] `curl -I` on your site shows the security headers.
+- [ ] Backups run, and you have restored one to a scratch project at least once.
+- [ ] Leaders have two-step sign-in on.
+- [ ] Your privacy notice at `/privacy` names your church as the controller,
+      with a contact and how long data is kept.
+- [ ] Dependabot alerts are on, and somebody is named to read them.
+
+---
+
+## Making Hope Beacon safer together
+
+Improvements to the code's security are welcome as pull requests: a stricter
+rule, a new check, a clearer sample in this guide.
+
+- A **vulnerability** goes through a private advisory (above), never a public
+  issue or pull request that describes it before a fix is out.
+- Every pull request runs `npm run verify`. A change to database rules,
+  workflows or server routes waits for a code owner's review.
+- A new protection should come with a check that fails when the protection is
+  removed. Break it on purpose once, and watch it fail, before you trust it.
 
 ---
 

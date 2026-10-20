@@ -1,4 +1,4 @@
-# Data protection: what this app holds, and what is still missing
+# Data protection: what this app holds, and what each church must do
 
 **This is not legal advice, and it is not a compliance certificate.** It is what
 an engineer can establish by reading the schema and the access rules: what
@@ -7,14 +7,16 @@ long it stays. A lawyer or a Data Protection Officer needs that map before they
 can write a privacy notice or answer a regulator, and until today it did not
 exist.
 
-The gaps at the end are real and several of them are not engineering problems.
-They need a decision by whoever runs the church.
+**Each church that runs its own copy is the controller of its members' data**
+and is responsible for meeting the law that applies to it. The list in section
+4 is what every church must complete before real people are invited; most of it
+is a decision or a document, not code.
 
 **Reviewed against:** Republic Act 10173, the Philippine Data Privacy Act of
 2012, and its Implementing Rules and Regulations; and the GDPR, because a
 congregation with one member in Europe is inside it.
 
-**Last checked:** 1 September 2026, against the live schema; updated 7 October 2026 with the privacy manual ([`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md)), the erase list and the rank rules below.
+**Checked against** the schema in this repository, with the privacy manual ([`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md)), the erase list and the rank rules below.
 
 ---
 
@@ -230,20 +232,20 @@ These are properties of the running system, not intentions:
 
 ---
 
-## 4. What is missing
+## 4. What each church must complete
 
-Ordered by how much it matters, not by how hard it is.
+Ordered by how much it matters, not by how hard it is. "Your church" means whoever runs the copy.
 
 | # | Gap | What it needs | Who |
 |---|---|---|---|
-| 1 | **No privacy notice.** Nothing tells a member what is collected, why, who sees it, how long it is kept, or how to complain. RA 10173 §16(a) and GDPR Art. 13 both require it before collection. | `/privacy` now exists as a draft in the app. The blanks in it must be filled: who the controller is, the DPO's name and contact, the retention periods, the hosting region. | Owner, then a lawyer |
-| ~~2~~ | ~~**No way for a member to get a copy of their own data.**~~ **Built, 1 September 2026.** *A copy of your information* on the Profile screen produces a JSON file with the profile, the conversation, prayer requests, meetings, posts, library shares, notifications and every change to their own details. | Nothing. See below for what it deliberately leaves out. | Done |
-| 3 | **No named Data Protection Officer.** Expected where sensitive personal information is processed. | A person, an email address, and the NPC filing if the church passes 1,000 members. | Owner |
-| 4 | **Breach procedure written, not yet rehearsed.** RA 10173 and Circular 16-03 require notification to the NPC and to affected people **within 72 hours** of knowing. Section VII of [`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md) is the procedure; the team's names are the church's to fill in. | Fill in the team; rehearse once. | Owner |
-| 5 | **Processor terms unchecked.** Supabase, Vercel, Brevo and GitHub all hold or see personal data, and komoot sees the words typed into the meet-up place box. The hosting region is now recorded: Seoul. | Confirm each one's data-processing terms. | Owner |
-| 6 | **Retention periods are the church's to decide.** Destruction now works end to end (deleted rows take their files with them, through the erase list), but nothing is deleted on a timer except the link record. Section V-C of the privacy manual has the table with the blank. | A period for ended pairings' conversations, written down, then enforced. | Owner decides, engineering enforces |
-| 7 | **Erasure conflicts with the safeguarding record**, and the conflict is unstated. | Write the lawful basis for the exception into the notice, and make the app say so when an account is deleted. | Owner, then engineering |
-| 8 | **No record of who read what.** A Director can open a reported conversation and nothing records that they did. | An access log for the one place where a third party reads a private thread. | Engineering |
+| 1 | **A privacy notice.** Until it is published, nothing tells a member what is collected, why, who sees it, how long it is kept, or how to complain. RA 10173 §16(a) and GDPR Art. 13 both require it before collection. | `/privacy` now exists as a draft in the app. Fill in its blanks: who the controller is, the DPO's name and contact, the retention periods, the hosting region. | Your church, then a lawyer |
+| 2 | **A member's copy of their own data.** Built in: *A copy of your information* on the Profile screen produces a JSON file with the profile, the conversation, prayer requests, meetings, posts, library shares, notifications and every change to their own details. | Nothing. See below for what it deliberately leaves out. | Built in |
+| 3 | **A named Data Protection Officer.** Expected where sensitive personal information is processed. | A person, an email address, and the NPC filing if the church passes 1,000 members. | Your church |
+| 4 | **A rehearsed breach procedure.** RA 10173 and Circular 16-03 require notification to the NPC and to affected people **within 72 hours** of knowing. Section VII of [`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md) is the procedure; the team's names are the church's to fill in. | Fill in the team; rehearse once. | Your church |
+| 5 | **Processor terms.** The services you choose (for example Supabase, Vercel, Brevo and GitHub) hold or see personal data, and komoot sees the words typed into the meet-up place box. | Confirm each one's data-processing terms, and record your hosting region. | Your church |
+| 6 | **Retention periods.** Destruction now works end to end (deleted rows take their files with them, through the erase list), but nothing is deleted on a timer except the link record. Section V-C of the privacy manual has the table with the blank. | A period for ended pairings' conversations, written down, then enforced. | Your church decides; your developer enforces |
+| 7 | **Erasure and the safeguarding record.** The two conflict, and the conflict must be stated. | Write the lawful basis for the exception into the notice, and make the app say so when an account is deleted. | Your church, then your developer |
+| 8 | **A record of who read what.** A Director can open a reported conversation and nothing records that they did. | An access log for the one place where a third party reads a private thread. | Open to contributors |
 
 ---
 

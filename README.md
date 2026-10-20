@@ -326,7 +326,7 @@ screens at all. Put the permission rules with the data, not in the interface.
 | [docs/BACKENDS.md](docs/BACKENDS.md) | The two seams in more detail, and the fifteen-minute feedback warm-up. |
 | [docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md) | Four worked ways to run it: your computer with no accounts, Vercel and Supabase, your computer with a real database, and other hosts. Each says what has been tested. |
 | [docs/EMAIL.md](docs/EMAIL.md) | Sending invitations by mail. Any provider, or none. |
-| [docs/SECURITY.md](docs/SECURITY.md) | What you become responsible for the day you connect one. |
+| [docs/SECURITY.md](docs/SECURITY.md) | Securing your own copy, with samples you can adapt, and who is responsible for what. |
 
 ---
 
@@ -334,9 +334,11 @@ screens at all. Put the permission rules with the data, not in the interface.
 
 Read **[docs/SECURITY.md](docs/SECURITY.md)**. The short version: as shipped
 there is nothing to breach, because there is no backend and no data leaves the
-browser. The day you connect one, the security of what you connected is yours,
-and the two things people get wrong are putting authorisation in the screens
-instead of the database, and putting a key somewhere the browser can read it.
+browser. **Whoever deploys a copy is responsible for it**: its database, its
+keys, its settings, and the personal data of the people in it. The two things
+people most often get wrong are putting authorisation in the screens instead of
+the database, and putting a key somewhere the browser can read it. The guide
+shows how to do both properly, with samples.
 
 ---
 
@@ -351,7 +353,7 @@ instead of the database, and putting a key somewhere the browser can read it.
 | **[docs/DEPLOY-ANYWHERE.md](docs/DEPLOY-ANYWHERE.md)** | Run it on Vercel and Supabase, on your own computer, or on another host, with what has been tested for each. |
 | **[docs/EMAIL.md](docs/EMAIL.md)** | Sending invitations by mail. Any provider, or none, since the app works without it. |
 | **[docs/ONBOARDING.md](docs/ONBOARDING.md)** | How a church actually uses it: who does what, in what order. |
-| **[docs/SECURITY.md](docs/SECURITY.md)** | Read before you put real people in it. |
+| **[docs/SECURITY.md](docs/SECURITY.md)** | Read before you put real people in it: securing your own copy, with samples. |
 | **[docs/UPDATES.md](docs/UPDATES.md)** | How an installed copy updates itself. |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Setup, house style, and what a good pull request looks like. |
 | **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** | Short, and the standard is ordinary decency. |
@@ -449,6 +451,10 @@ Subject to the licence, you may:
 The software is provided **"as is", without warranty of any kind**, and in no
 event will the copyright holder or any contributor be liable for damages
 arising from its use, as set out in sections 15 and 16 of the licence.
+
+Each church or developer who deploys a copy is responsible for that deployment:
+its security, its settings, and the personal data it holds, under the law that
+applies to them.
 
 ### Compliance with section 13 in this repository
 

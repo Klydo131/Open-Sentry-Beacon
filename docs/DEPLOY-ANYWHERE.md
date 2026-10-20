@@ -277,8 +277,8 @@ whatever the database:
 - **Authorisation in the database**, not in the app. Every table's rule is
   listed in [BACKEND-MAP.md](BACKEND-MAP.md).
 - **Nobody can raise their own role.** Here the database refuses it
-  (`lock_privileged_profile_columns`, see SECURITY.md "Nobody promotes
-  themselves", held by `tests/nobody-promotes-themselves.mjs`). A new backend
+  (`lock_privileged_profile_columns`, see SECURITY.md "Nobody raises their
+  own privileges" for a sample, held by `tests/nobody-promotes-themselves.mjs`). A new backend
   needs its own equivalent before anybody signs up.
 - **Add the new backend's address to `connect-src` and nowhere else** in
   `next.config.mjs`. Widening `default-src` is the shortcut that gives every

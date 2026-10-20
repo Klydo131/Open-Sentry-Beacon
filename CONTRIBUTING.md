@@ -33,22 +33,21 @@ between the code that ships and the code that is checked.
 
 ## How a change travels
 
-Every change here, yours or your AI tool's, goes the same way. It is the
-owner's rule, in their words: "test, polish, and before pushing I should be
-aware".
+Every change here, yours or your AI tool's, goes the same way: tested,
+polished, and seen by a maintainer before it reaches `main`.
 
 1. **Plan it and show it.** For anything bigger than a small fix, open an issue
    (the "idea" template) or a draft pull request that says what you mean to
    change and why, before you build it. If it changes how the app behaves for
-   people, the owner decides.
+   people, the maintainers decide.
 2. **Test it.** See below. Break your new check on purpose and watch it go red.
 3. **Polish it.** Run it and look at it. For anything somebody sees, attach
    screenshots at a phone, a pad and a desktop size. If it changes a screen
    that the guides show, `npm run docs:refresh` retakes every picture and
    reprints every guide in one go; look at what changed before committing.
-4. **The owner is told, and merges.** Your pull request says what changed, what
-   passed, and what you could not check. Nothing reaches `main` except through a
-   pull request the owner merges.
+4. **A maintainer reviews, and merges.** Your pull request says what changed,
+   what passed, and what you could not check. Nothing reaches `main` except
+   through a pull request a maintainer merges.
 
 **Using an AI tool?** The same four steps, and three more lines:
 
