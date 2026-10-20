@@ -181,9 +181,12 @@ export function createAuth({ cfg, pool, mailer }) {
 
   async function amrOf(client, sessionId) {
     const { rows } = await client.query(
-      'select authentication_method as method, created_at from auth.mfa_amr_claims where session_id = $1 order by created_at desc',
+      // updated_at, as the Supabase sign-in service does: typing a code again in
+      // the same session moves the totp time forward, which is how the court
+      // room's door knows the code is fresh. created_at would keep the first.
+      'select authentication_method as method, updated_at from auth.mfa_amr_claims where session_id = $1 order by updated_at desc',
       [sessionId]);
-    return rows.map((r) => ({ method: r.method, timestamp: Math.floor(new Date(r.created_at).getTime() / 1000) }));
+    return rows.map((r) => ({ method: r.method, timestamp: Math.floor(new Date(r.updated_at).getTime() / 1000) }));
   }
 
   function accessToken(user, session, amr) {

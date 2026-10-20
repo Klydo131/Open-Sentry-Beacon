@@ -81,8 +81,13 @@ const page = strip(read('app/cases/page.tsx'));
   ok(/id: 'reports'/.test(line) && !/\?|&&|leads|role/.test(line),
      'Settings offers an Admin Reports folder with no role test on it');
 
-  ok(/room === 'reports'/.test(settings) && /<LiveCourt/.test(settings),
-     'and that folder actually draws the courtroom, not a placeholder');
+  // Since the court room (20261020160000), the folder draws CourtOrCases: the
+  // cases as before on a database without the update, and the way into the
+  // court room's door on one with it. Either way it is never a placeholder.
+  const pointer = read('components/court/CourtOrCases.tsx');
+  ok(/room === 'reports'/.test(settings) && /<CourtOrCases/.test(settings)
+     && /<LiveCourt me=\{me\}/.test(pointer) && /href="\/cases"/.test(pointer),
+     'and that folder actually draws the courtroom, or the way into it, not a placeholder');
 
   // The route must still admit everybody: a notification about a case links
   // straight to /cases, and narrowing the page would refuse the person it is

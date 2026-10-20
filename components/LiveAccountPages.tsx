@@ -26,7 +26,7 @@ import { humanError } from '@/lib/live/errors';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
 import { ReadingSettings } from '@/components/ReadingSettings';
-import { LiveCourt } from '@/components/LiveTrialRoom';
+import { CourtOrCases } from '@/components/court/CourtOrCases';
 import { LiveAdminReports } from '@/components/LiveAdminReports';
 import { TwoStepCard } from '@/components/live/TwoStep';
 
@@ -297,7 +297,7 @@ export function LiveSettingsPage() {
           {/* Reports first, then the trial room. */}
           <LiveAdminReports me={profile.id} />
 
-          <LiveCourt
+          <CourtOrCases
             me={profile}
             emptyState={
               <Card className="p-6 text-center">

@@ -196,6 +196,14 @@ export function faqSections(): FaqSection[] {
           ],
         },
         {
+          id: 'court-room',
+          q: 'What if I am called to a trial?',
+          a: [
+            'You are told, and the trial is in Admin Reports, under Settings. Its door asks for your password again before it opens, so the case stays private if somebody else picks up your phone. Inside you can read what has been said, say what happened in your own words, and put photos, recordings or files before it as exhibits.',
+            'Everything said and every exhibit is kept on the trial’s record exactly as given, with a fingerprint that shows nothing was changed afterwards. Nothing you say there can be edited or deleted, by you or anybody else. If you cannot sign in, tell the judge what you want to say and they will write it down as yours.',
+          ],
+        },
+        {
           id: 'edit-delete',
           q: 'Can I change or take back a message?',
           a: [
@@ -290,7 +298,7 @@ export function faqSections(): FaqSection[] {
           q: 'Can a photo I add show where I live?',
           a: [
             'No. Every photo you add, whether in a conversation, on a post or as your profile picture, is resized and has its location data removed before it is stored.',
-            'The only exception is evidence attached to a safeguarding report, which is kept exactly as sent so that its integrity is preserved. Only the leaders handling the report can open it.',
+            'The only exceptions are evidence attached to a safeguarding report and exhibits put before a trial, which are kept exactly as given so that their integrity is preserved. Only the leaders handling a report can open its evidence, and where an exhibit was taken is shown only to the trial’s judge and gallery.',
           ],
         },
         {

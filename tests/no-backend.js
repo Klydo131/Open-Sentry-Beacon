@@ -483,6 +483,7 @@ const GUARDRAILS = new Set([
   // to prove exactly that, so naming the role is the property being tested.
   // It holds no key. The credential-shape scan above still applies.
   'supabase/tests/a-second-step-is-required.sql',
+  'supabase/tests/the-court-room-holds.sql',
   // The examples guard reads every program in examples/ for the server key's
   // name, which no program has a reason to mention, so it has to spell the
   // name to look for it.

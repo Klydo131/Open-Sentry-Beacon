@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-20-the-court-room',
+    date: '2026-10-20',
+    title: 'Trials are heard in a court room',
+    items: [
+      'Admin Reports holds a court room, ready as soon as your church\'s database has its update: until then, the room you had works as before.',
+      'Its door asks who you are again before it opens: a code from your authenticator app for leadership, your password for anybody else called to a case. It stays open for 30 minutes, so a case stays private if somebody else picks up your phone.',
+      'Photos, recordings, videos, PDFs and written statements can be put before a trial as exhibits, lettered A, B, C and kept exactly as given. Each has a fingerprint, checked again every time anybody opens it, so a changed file shows.',
+      'Everything that happens in a trial is written in order on its record, each line chained to the one before, and the decision seals it. Anybody in the trial can check the record and save a copy.',
+      'What was said in a trial now stays on its record when the account of somebody who spoke is removed, as the rest of the safeguarding record always has. Somebody who cannot sign in can still have their say: the judge writes it down as theirs.',
+    ],
+  },
+  {
     id: '2026-10-20-a-study-room-for-everybody',
     date: '2026-10-20',
     title: 'A Study Room for everybody, and one that keeps your writing',

@@ -5,7 +5,7 @@ The words the app uses, and what each one means in it.
 | Word | What it means in Hope Beacon |
 | --- | --- |
 | **Admin** | The Director's room: Approvals, People and Pairing, Materials, Mail, Safeguarding and Analytics. |
-| **Admin Reports** | Reports, trials and the record. In every leader's Menu; a Guide or Explorer who is part of a case reaches it through Settings. Marked beta. |
+| **Admin Reports** | Reports, trials and the record, heard in the court room. In every leader's Menu; a Guide or Explorer who is part of a case reaches it through Settings. Marked beta. |
 | **Advanced settings** | A tick box that shows more choices on a screen that keeps them out of the way, such as minutes and platform notes on a Sabbath program. Nobody ever has to open it. |
 | **Ambience** | Calming sounds made on the phone as they play, in the Music room's Listen folder: *Calm* and *White noise*. |
 | **Announcement** | A notice pinned at the top of everybody's Home, with when it happens. |
@@ -16,14 +16,18 @@ The words the app uses, and what each one means in it.
 | **Commission** | The idea behind the journey: an Explorer who has been walked with becomes a Guide, and walks with somebody else. |
 | **Concert pitch** | The note A that the Tuner measures everything against, 440 Hz unless you change it. |
 | **Conductor** | The Music room's metronome, which draws the conductor's hand for 2, 3, 4 or 6 beats. |
+| **Court room** | Where trials are heard, inside Admin Reports. Its door asks for your code or your password again before it opens, and stays open for 30 minutes. |
 | **Desk** | A Guide's or leader's side panel: the date, what is waiting, a note, the pocket and the colour squares. A drawer on a phone. |
 | **Director** | Runs the church's account: invites, approves, pairs, and reads safeguarding reports. |
 | **Disapprove** | Switch an account off, keeping it. It can be undone. Compare *Delete*, which cannot. |
 | **Evangelistic meetings** | A planner in the Office for a series of meetings, night by night, with a Word file, a picture and a post to share. |
+| **Exhibit** | A photo, recording, file or piece of writing put before a trial, lettered A, B, C and kept exactly as it was given. |
 | **Explorer** | Somebody the church is walking with. They have one Guide. |
+| **Fingerprint** | A long code worked out from a file's contents. If one dot of a photo changed, its fingerprint would not match, so it shows an exhibit is the one that was given. |
 | **Folder** | One part of a room. The button at the top of a room says which folder you are in; tap it to see the rest. |
 | **Front door** | The first page of the app, before signing in. |
 | **Frutiger Aero** | A family of five looks made of glass and light: Frutiger Eco, Dark Aero, Technozen, DORFic and Four Colors. |
+| **Gallery** | The seats from which leadership may watch a hearing. A seat is written on the record and has no voice. |
 | **Guide** | A church member who walks with a few Explorers. |
 | **Guided walk** | The tutorial: a highlight that points at the next thing to tap and says what it is for. **Start a tutorial**, in Settings, Help. |
 | **Home** | The church home: Notices, Blog, the Prayer wall, and for leaders the numbers. First in every Menu. |

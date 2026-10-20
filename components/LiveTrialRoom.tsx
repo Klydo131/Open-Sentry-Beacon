@@ -31,7 +31,9 @@
 // root of authority and the only account that can appoint executives again.
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useKeepUp, KEEP_UP_CASES } from '@/lib/live/keep-up';
+import { useCourtEdition } from '@/lib/live/court';
 import type { Profile } from '@/lib/types';
 import * as live from '@/lib/live/data';
 import { roleNoun } from '@/lib/brand';
@@ -47,6 +49,9 @@ export function LiveTrialRoom({ me, onCaseOpened }: { me: Profile; onCaseOpened?
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [openFor, setOpenFor] = useState('');
+  // Once the church's database has the court room, a trial is opened there,
+  // behind its door, rather than from here.
+  const edition = useCourtEdition();
 
   const load = useCallback(async () => {
     try {
@@ -205,10 +210,19 @@ export function LiveTrialRoom({ me, onCaseOpened }: { me: Profile; onCaseOpened?
                       {/* FIRST, and deliberately so. Hearing both people is the
                           normal response to a report; suspending on the spot is
                           for when somebody has to be stopped right now. */}
-                      <Button variant="gold" disabled={busy === m.id}
-                              onClick={() => void hold(m.id, m.full_name)}>
-                        Hold a trial
-                      </Button>
+                      {edition === 'court' ? (
+                        <Link
+                          href={`/cases?open=${m.id}`}
+                          className="inline-flex min-h-[44px] items-center rounded-xl bg-gold px-4 font-bold text-navy"
+                        >
+                          Hold a trial in the court room
+                        </Link>
+                      ) : (
+                        <Button variant="gold" disabled={busy === m.id}
+                                onClick={() => void hold(m.id, m.full_name)}>
+                          Hold a trial
+                        </Button>
+                      )}
                       <Button variant="ghost" disabled={busy === m.id}
                               onClick={() => void act(m.id, 'suspend', m.full_name)}>
                         Suspend now
@@ -266,9 +280,11 @@ export function LiveTrialRoom({ me, onCaseOpened }: { me: Profile; onCaseOpened?
 // to take over. If no Executive answers, the Director still decides it — there
 // is nothing to wait for and nothing expires.
 //
-// A SUSPENDED PERSON CAN STILL POST HERE, on purpose. Suspending somebody while
-// you look into it must not take away their answer, or every case that began
-// with a precautionary suspension would only ever hear one side.
+// A SUSPENDED PERSON KEEPS THEIR ANSWER, on purpose, or every case that began
+// with a precautionary suspension would only ever hear one side. They cannot
+// post it themselves -- a suspended account cannot sign in at all since 0026
+// and 20260923164500 -- so in the court room the judge writes down what they
+// said, recorded as theirs (court_record_for).
 
 export function LiveCourt({ me, emptyState }: {
   me: Profile;
@@ -378,7 +394,8 @@ export function LiveCourt({ me, emptyState }: {
           <span className="mt-1 block text-xs text-gray-500">
             Opened by {c.opener_name} · Head judge: {c.judge_name}
             {c.am_judge && ' (you)'}
-            {c.escalation === 'requested' && ' · waiting for an Executive Director'}
+            {/* Leadership only: who the senior seat belongs to is not named to members. */}
+            {leads && c.escalation === 'requested' && ' · waiting for an Executive Director'}
           </span>
           {c.status === 'closed' && (
             <span className="mt-1 block text-sm font-semibold text-navy">

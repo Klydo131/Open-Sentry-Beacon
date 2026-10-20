@@ -55,8 +55,9 @@ query anybody can make.
 |---|---|
 | **A report** | The person who wrote it, and the leadership handling it. Nobody else. |
 | **Messages on a report** | Only the people on that report. |
-| **A trial** | Only the people in that trial. |
-| **What is said in a trial** | Only the people in that trial. |
+| **A trial** | Only the people in that trial, and leadership who may watch it. |
+| **What is said in a trial** | Only the people in that trial, and anybody watching from its gallery, whose seat is on the record. |
+| **An exhibit kept for the bench** | The judge and the gallery. Not the other people called. |
 | **The discipline log** | Only those leading the church. |
 | **The activity record** | Leadership, for the ranks below them. It holds no addresses. See Part 3. |
 
@@ -173,8 +174,10 @@ needs more than one person and needs a record.
   of a report.
 - **Other parties**, summoned because they have something to say.
 
-Everybody in a trial can read the whole of it, and nobody outside it can read
-any of it.
+Everybody called to a trial can read what is said in it, and nobody outside it
+can read any of it. Leadership may watch a hearing from the **gallery**: a seat
+that is written on the record, with no voice. The judge can close the gallery,
+and then nobody new may watch.
 
 **Read that third line twice before you file a report about something serious.**
 If your report becomes a trial you are in the room: you will be able to read
@@ -189,13 +192,48 @@ is in neither the report nor the trial reads nothing of either, an Explorer with
 no part in it reads nothing, and the person the trial is about can read it and
 answer in it.
 
+### The door
+
+Trials are held in the **court room**, and its door asks again who you are
+before it opens, even though you are signed in: a code from your authenticator
+app for leadership, your password for anybody else called to a case. It stays
+open for 30 minutes. This is so a case stays private if somebody else picks up
+your phone.
+
 ### Speaking in one
 
 Anyone summoned can add a statement while the trial is **open**. Once it is
 closed, nobody can add anything, including the head judge. That is deliberate:
 a record that can be added to afterwards is not a record.
 
-Statements carry the name of whoever wrote them and the time they wrote it.
+Statements carry the name of whoever wrote them and the time the server
+received them; nobody can choose a different time. If you cannot sign in (for
+example while your account is suspended), you still have your say: tell the
+judge, in person or by phone, and they write it down on the record as yours.
+
+### Exhibits
+
+Anybody called to a trial, and the judge, can put **exhibits** before it: a
+photo, a screenshot, a recording, a video, a PDF, or something written out word
+for word. Each is lettered (Exhibit A, B, C) and kept exactly as it was given,
+nothing changed, up to 25 MB.
+
+Each exhibit has a **fingerprint**, a long code worked out from its contents
+the moment it is chosen. Every time anybody opens it, their phone works out the
+fingerprint again and compares. If even one dot of a photo had been changed,
+the two would not match, the screen would say so, and the judge would be told.
+
+The judge can keep an exhibit **for the bench only**, meaning the judge and the
+gallery, when showing it to everybody would put somebody at risk. If a photo
+records where it was taken, that place is shown only to the bench.
+
+### The record
+
+Everything that happens in a trial is written in order on its record: who was
+called, who spoke, each exhibit, who opened it, who watched, the decision.
+Each line is chained to the one before it, so a line that was changed or
+removed afterwards would show. Anybody in the trial can ask the app to check
+the record, and save a copy of it to keep.
 
 ### Escalation
 
@@ -206,7 +244,9 @@ the time it happened.
 ### The end of it
 
 A trial closes with a **verdict** and a note explaining it. Both stay attached
-to the trial for good.
+to the trial for good, and the verdict **seals** the record: its last line's
+fingerprint is kept with the decision. What was said in a trial stays on its
+record even if the account of somebody who spoke is later removed.
 
 ---
 

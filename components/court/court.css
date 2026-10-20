@@ -1,0 +1,344 @@
+/* The court room.
+ *
+ * ASKED FOR: "it should really look like a court room if you are in the court
+ * room." A panelled wall behind a dark wooden bench with the seal over it; the
+ * record on transcript paper with numbered lines; exhibits on the clerk's
+ * table, each with its tag; the gallery as a row of chairs. The colours are a
+ * courtroom's: walnut, brass, the navy and gold the app already has, and
+ * paper. Every colour below is chosen against its own background, not the
+ * page's look, so the room reads the same in every look the app has.
+ *
+ * Nothing here moves. */
+
+.ct-room {
+  --ct-walnut: #3b2416;
+  --ct-walnut-2: #523320;
+  --ct-oak: #8a5a33;
+  --ct-brass: #e8b84b;
+  --ct-paper: #fffdf6;
+  --ct-paper-line: #ece3cf;
+  --ct-ink: #1b2442;
+  --ct-ink-2: #4a4f63;
+  --ct-margin: #d9a7a7;
+  --ct-tag: #f1e4c3;
+  color: var(--ct-ink);
+}
+
+.ct-furniture { display: block; pointer-events: none; user-select: none; }
+
+/* ---- The wall and the bench ------------------------------------------- */
+
+.ct-wall {
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 64px),
+    linear-gradient(180deg, #6e4a2e 0%, #5a3b24 100%);
+  padding: 14px 14px 0;
+  box-shadow: 0 18px 40px -26px rgba(40, 20, 5, 0.65);
+}
+.ct-wall-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fbf3df;
+  padding: 2px 4px 12px;
+}
+.ct-wall-head .ct-wall-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0;
+}
+.ct-wall-head p { margin: 2px 0 0; font-size: 0.875rem; color: #f0dfbd; }
+.ct-seal { width: 52px; height: 52px; flex: none; }
+
+.ct-bench {
+  position: relative;
+  background: linear-gradient(180deg, var(--ct-walnut-2), var(--ct-walnut));
+  border-top: 4px solid var(--ct-brass);
+  border-radius: 12px 12px 0 0;
+  color: #fbf3df;
+  padding: 16px 16px 18px;
+}
+.ct-bench .ct-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e9cf96;
+  margin: 0;
+}
+.ct-bench h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 2px 0 6px;
+  overflow-wrap: anywhere;
+}
+.ct-bench .ct-summary { margin: 0; color: #f7ecd2; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ct-bench .ct-meta { margin: 8px 0 0; font-size: 0.8125rem; color: #e3d2ad; }
+.ct-gavel { position: absolute; right: 10px; bottom: 6px; width: 72px; opacity: 0.95; }
+@media (max-width: 480px) { .ct-gavel { display: none; } }
+
+.ct-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.ct-chip-session { background: #e8b84b; color: #1b2442; }
+.ct-chip-decided { background: #f7ecd2; color: #3b2416; }
+.ct-chip-place { background: rgba(255, 255, 255, 0.14); color: #fbf3df; }
+
+/* ---- The floor ---------------------------------------------------------- */
+
+.ct-floor {
+  background: #f4ecdc;
+  border-radius: 0 0 14px 14px;
+  padding: 14px;
+  display: grid;
+  gap: 14px;
+}
+/* Two columns only when THE ROOM is wide, not the window: beside the app's
+   rails and desk, a 1280px window leaves the room about 620px, and a window
+   test split that into a record and a strip too narrow for its own buttons. */
+.ct-wall { container-type: inline-size; }
+@container (min-width: 760px) {
+  .ct-floor { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: start; }
+}
+
+.ct-section-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b4226;
+  margin: 0 0 8px;
+}
+
+/* The record: transcript paper with a red margin rule and numbered entries. */
+.ct-record {
+  position: relative;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 27px, var(--ct-paper-line) 27px 28px),
+    var(--ct-paper);
+  border-radius: 8px;
+  box-shadow: 0 0 0 0.5px #d8ccb0, 0 10px 24px -18px rgba(60, 40, 15, 0.6);
+  padding: 14px 14px 16px 44px;
+}
+.ct-record::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 32px;
+  border-left: 1.5px solid var(--ct-margin);
+}
+.ct-entries { list-style: none; margin: 0; padding: 0; }
+.ct-entry { position: relative; padding: 6px 0 10px; }
+.ct-entry + .ct-entry { border-top: 1px dashed #e2d6bb; }
+.ct-entry-n {
+  position: absolute;
+  left: -38px;
+  top: 7px;
+  width: 26px;
+  text-align: right;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  color: #a0846a;
+}
+.ct-entry-who { font-weight: 700; color: var(--ct-ink); }
+.ct-entry-when { font-size: 12px; color: var(--ct-ink-2); }
+.ct-entry-body { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: #232838; }
+.ct-print { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; color: #6c6a75; letter-spacing: 0.02em; }
+
+/* The witness stand: where a person speaks. */
+.ct-stand { margin-top: 12px; }
+.ct-stand textarea, .ct-field textarea, .ct-field input, .ct-field select {
+  width: 100%;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #cdbf9f;
+  padding: 10px 12px;
+  font-size: 16px;
+  color: var(--ct-ink);
+}
+.ct-stand textarea:focus, .ct-field textarea:focus, .ct-field input:focus, .ct-field select:focus {
+  outline: 2px solid var(--ct-brass);
+  outline-offset: 1px;
+}
+.ct-rail { width: 100%; height: 12px; margin-top: 6px; }
+.ct-field { display: block; margin-top: 10px; }
+.ct-field > span { display: block; font-size: 14px; font-weight: 600; color: var(--ct-ink); margin-bottom: 4px; }
+.ct-hint { font-size: 12.5px; color: var(--ct-ink-2); margin: 4px 0 0; }
+
+/* The clerk's table: exhibits, each with its tag. */
+.ct-table {
+  background: linear-gradient(180deg, #7a5235, #6b4226);
+  border-radius: 10px;
+  padding: 12px;
+  color: #fbf3df;
+}
+.ct-table .ct-section-title { color: #f0dfbd; }
+.ct-exhibits { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ct-exhibit {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  background: var(--ct-paper);
+  color: var(--ct-ink);
+  border-radius: 8px;
+  padding: 8px 10px 8px 6px;
+  border: 0;
+  cursor: pointer;
+}
+.ct-exhibit:hover { box-shadow: 0 0 0 2px var(--ct-brass); }
+.ct-exhibit:focus-visible { outline: 3px solid var(--ct-brass); outline-offset: 1px; }
+.ct-tag { width: 34px; flex: none; }
+.ct-exhibit-title { font-weight: 700; overflow-wrap: anywhere; }
+.ct-exhibit-meta { font-size: 12px; color: var(--ct-ink-2); }
+.ct-bench-only {
+  display: inline-block;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: #1b2442;
+  color: #f7ecd2;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+}
+
+/* The gallery. */
+.ct-gallery { background: #efe3c9; border-radius: 10px; padding: 12px; }
+.ct-chairs { width: 100%; max-width: 260px; height: auto; }
+.ct-names { margin: 6px 0 0; font-size: 13px; color: var(--ct-ink-2); }
+
+/* The judge's desk. */
+.ct-desk {
+  background: #fbf6ea;
+  border: 1px solid #d8c8a4;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+/* Findings: what a check found. */
+.ct-finding { border-radius: 10px; padding: 8px 10px; font-size: 14px; margin-top: 8px; }
+.ct-finding-good { background: #e7f4ea; color: #1d4d2c; box-shadow: inset 0 0 0 1px #9fcfaa; }
+.ct-finding-bad { background: #fbe9e7; color: #7a1d12; box-shadow: inset 0 0 0 1px #e6a197; }
+.ct-finding-note { background: #fdf3d8; color: #5c4200; box-shadow: inset 0 0 0 1px #e6cf8e; }
+
+/* The docket: the list of cases. */
+.ct-docket { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ct-docket-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ct-paper);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border-left: 5px solid var(--ct-oak);
+}
+.ct-docket-row[data-open='true'] { border-left-color: var(--ct-brass); }
+.ct-docket-row[data-selected='true'] { box-shadow: 0 0 0 2px var(--ct-brass); }
+.ct-docket-name { font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+
+/* The door. */
+.ct-door {
+  max-width: 480px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, var(--ct-walnut-2), var(--ct-walnut));
+  border-radius: 16px 16px 10px 10px;
+  border-top: 4px solid var(--ct-brass);
+  color: #fbf3df;
+  padding: 22px 18px 18px;
+  text-align: center;
+}
+.ct-door h2 { font-family: Georgia, serif; font-size: 1.4rem; margin: 10px 0 6px; }
+.ct-door p { color: #f0dfbd; margin: 0 0 10px; }
+.ct-door .ct-seal { margin: 0 auto; width: 64px; height: 64px; }
+.ct-door input {
+  width: 100%;
+  max-width: 260px;
+  border-radius: 10px;
+  border: 0;
+  padding: 12px;
+  font-size: 22px;
+  letter-spacing: 0.2em;
+  text-align: center;
+  color: var(--ct-ink);
+  background: #fffdf6;
+}
+.ct-door input[type='password'] { letter-spacing: normal; font-size: 18px; }
+.ct-door input:focus { outline: 3px solid var(--ct-brass); }
+.ct-door .ct-door-error { background: #fbe9e7; color: #7a1d12; border-radius: 10px; padding: 8px; margin-top: 10px; }
+
+/* The exhibit viewer. */
+.ct-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(20, 14, 8, 0.66);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+@media (min-width: 768px) { .ct-viewer-backdrop { align-items: center; padding: 24px; } }
+.ct-viewer {
+  background: #fbf6ea;
+  color: var(--ct-ink);
+  width: 100%;
+  max-width: 980px;
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+}
+@media (min-width: 768px) { .ct-viewer { border-radius: 16px; } }
+.ct-viewer-grid { display: grid; gap: 14px; }
+@media (min-width: 900px) { .ct-viewer-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); } }
+.ct-stage {
+  background: #2a2420;
+  border-radius: 10px;
+  overflow: auto;
+  max-height: 60vh;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: pan-x pan-y pinch-zoom;
+}
+.ct-stage img { max-width: none; display: block; }
+.ct-stage audio, .ct-stage video { width: 100%; max-height: 60vh; }
+.ct-writing {
+  background: var(--ct-paper);
+  border-radius: 8px;
+  padding: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: Georgia, serif;
+  max-height: 60vh;
+  overflow: auto;
+}
+.ct-facts { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; font-size: 14px; }
+.ct-facts dt { color: var(--ct-ink-2); }
+.ct-facts dd { margin: 0; overflow-wrap: anywhere; }
+
+.ct-plain-button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #6b4226;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}

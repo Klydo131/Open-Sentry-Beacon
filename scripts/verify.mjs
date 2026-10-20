@@ -317,6 +317,7 @@ const staticChecks = [
   ['the owner sees it first', 'tests/the-owner-sees-it-first.mjs'],
   ['the Postgres edition installs', 'tests/the-postgres-edition-installs.mjs'],
   ['a study room keeps its promises', 'tests/a-study-room-keeps-its-promises.mjs'],
+  ['the court room keeps its promises', 'tests/the-court-room-keeps-its-promises.mjs'],
   ['dev server', 'tests/dev-server.mjs'],
 ];
 // The emergency lane names its checks by file; one that is not registered here fails it.

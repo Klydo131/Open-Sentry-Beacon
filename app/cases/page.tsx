@@ -16,13 +16,15 @@
 // EVERY ROLE HAS IT, including an Explorer, and that is the point. An Explorer
 // called into a case is the person in it with the least standing, and their
 // answer must be reachable without anybody having to tell them where to look.
-// They can post here even while suspended: suspending somebody pending a
-// hearing must not take away their side of it.
+// Suspending somebody pending a hearing must not take away their side of it,
+// but a suspended account cannot sign in at all (0026, 20260923164500). So
+// their answer reaches the record through the judge, who writes down what they
+// said, recorded as theirs (court_record_for, 20261020160000_the_court_room).
 
 import { AppShell } from '@/components/AppShell';
 import { LiveAppShell } from '@/components/LiveAppShell';
-import { LiveCourt } from '@/components/LiveTrialRoom';
-import { LiveHallOfJustice } from '@/components/LiveHallOfJustice';
+import { LiveCourtRoom } from '@/components/court/CourtRoom';
+import { Seal } from '@/components/court/CourtFurniture';
 import { useLiveSession } from '@/lib/live/session';
 import { useIsLive } from '@/lib/tutorial';
 import { Card } from '@/components/ui';
@@ -80,15 +82,13 @@ function Live() {
   return (
     <div className="space-y-5">
       <Heading />
-      {/* LiveCourt draws nothing when there are no cases, which is right on a
-          dashboard and wrong here: this room would be a blank page. It takes an
-          empty state for exactly this screen. */}
-      {/* THE HALL FIRST, FOR LEADERSHIP. It draws nothing for a Guide or an
-          Explorer, so an Explorer called to answer something still opens this
-          page on their own case and not on a list of other people's. */}
-      <LiveHallOfJustice me={profile} />
-
-      <LiveCourt me={profile} emptyState={<Nothing />} />
+      {/* THE COURT ROOM, OR THE ROOM IT REPLACES. components/court/CourtRoom.tsx
+          asks the database for the court room's door; a database that has not
+          had 20261020160000_the_court_room yet gets the Hall of Justice and the
+          cases it always had, so this page works before and after the update.
+          Either way an Explorer called to answer something opens this page on
+          their own case, not on a list of other people's. */}
+      <LiveCourtRoom me={profile} emptyState={<Nothing />} />
     </div>
   );
 }
@@ -106,11 +106,13 @@ function Demo() {
     <div className="space-y-5">
       <Heading />
       <Card className="p-6 text-center">
+        <Seal className="mx-auto mb-2 h-14 w-14" />
         <p className="text-lg font-bold text-navy">Nothing to show in the tutorial</p>
         <p className="mt-1 text-sm text-gray-500">
           A case is a real proceeding about a real person, so there is none
           among the sample people. On the live app, any case you are called to
-          appears in this room.
+          appears in this room, behind a door that asks for your code or your
+          password again before it opens.
         </p>
       </Card>
     </div>

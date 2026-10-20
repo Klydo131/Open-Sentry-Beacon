@@ -163,16 +163,25 @@ export function createStorage({ cfg, pool, preRequest }) {
                  set metadata = excluded.metadata, version = excluded.version, owner = excluded.owner,
                      owner_id = excluded.owner_id, updated_at = now(), last_accessed_at = now()
                returning id`
-            : `insert into storage.objects (bucket_id, name, owner, owner_id, metadata, version)
-               values ($1, $2, $3, $6, $4, $5) returning id`;
+            // NO `returning` ON A PLAIN UPLOAD. Returning a row asks the read
+            // rule as well as the write rule, and some uploaders may write a
+            // file they may not read back: a person's report evidence, an
+            // exhibit before it is entered. An upload needs INSERT only, as on
+            // Supabase; the id is chosen here instead of read back.
+            : `insert into storage.objects (id, bucket_id, name, owner, owner_id, metadata, version)
+               values ($7, $1, $2, $3, $6, $4, $5)`;
+        const chosen = crypto.randomUUID();
         const params = method === 'PUT'
           ? [bucket.id, name, JSON.stringify(metadata), version]
-          : [bucket.id, name, sub, JSON.stringify(metadata), version, sub];
-        const { rows } = await client.query(sql, params);
-        if (!rows[0]) throw new HttpError(404, 'Object not found', 'not_found');
+          : upsert
+            ? [bucket.id, name, sub, JSON.stringify(metadata), version, sub]
+            : [bucket.id, name, sub, JSON.stringify(metadata), version, sub, chosen];
+        const { rows, rowCount } = await client.query(sql, params);
+        const id = rows[0]?.id ?? (rowCount ? chosen : null);
+        if (!id) throw new HttpError(404, 'Object not found', 'not_found');
         // In place before the row is committed: a committed row always has its file.
-        await fsp.rename(temp, fileOf(bucket.id, rows[0].id));
-        return rows[0];
+        await fsp.rename(temp, fileOf(bucket.id, id));
+        return { id };
       });
       send(res, 200, { Id: row.id, Key: `${bucket.id}/${name}` });
     } catch (err) {

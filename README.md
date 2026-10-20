@@ -327,6 +327,7 @@ screens at all. Put the permission rules with the data, not in the interface.
 | [docs/POSTGRES.md](docs/POSTGRES.md) | No Supabase account: the same app on any Postgres, on a server your church rents or owns, with one `docker compose up`. |
 | [docs/EMAIL.md](docs/EMAIL.md) | Sending invitations by mail. Any provider, or none. |
 | [docs/SECURITY.md](docs/SECURITY.md) | Securing your own copy, with samples you can adapt, and who is responsible for what. |
+| [docs/COURT-ROOM.md](docs/COURT-ROOM.md) | Building a court room: a door that asks again, a record that shows any change, evidence handled the way forensics handles it, and where AI tools help and where they must not go. With samples. |
 
 ---
 

@@ -185,7 +185,14 @@ try {
   const sc3 = await later.json();
   const { data: cProfile } = await as(sc3.access_token).from('profiles').select('id').eq('id', people.c.id).single();
   check(later.ok && cProfile?.id === people.c.id, 'with the next code, the same person reads their profile');
-  sc = sc3;
+  // Typing a code again in the same session moves the code's time forward, as
+  // Supabase's sign-in service does. The court room's door reads that time.
+  const totpAt = (token) => (claimsOf(token).amr ?? []).find((a) => a.method === 'totp')?.timestamp ?? 0;
+  await sleep(31_000 - (Date.now() % 30_000));
+  const sc4 = await (await prove(sc3.access_token, enrolled.id, codeFor(enrolled.totp.secret, stepAt()))).json();
+  check(totpAt(sc4.access_token) > totpAt(sc3.access_token),
+    'a second code in the same session moves its time forward, which the court room\'s door reads');
+  sc = sc4;
 
   // ------------------------------------------------------------- recovery ----
   const before = outbox().length;
@@ -234,6 +241,12 @@ try {
   const { rows: objRows } = await owner.query('select id from storage.objects where bucket_id = $1 and name = $2', ['post-media', name]);
   check(fs.existsSync(path.join(dataDir, 'files', 'post-media', objRows[0]?.id ?? 'none')), 'the file is on disk under its row id, not its name');
   const sb2 = await signIn(people.b.email);
+  // Some uploads may be written and not read back: a member's report evidence,
+  // a court exhibit before it is entered. An upload must need INSERT alone.
+  const evidence = `reports/${people.b.id}/${crypto.randomUUID()}.jpg`;
+  const ev = await as(sb2.access_token).storage.from('pairing-media')
+    .upload(evidence, new Blob([bytes], { type: 'image/jpeg' }), { contentType: 'image/jpeg', upsert: false });
+  check(!ev.error, 'an Explorer uploads evidence for a report, a file they may write and not read back', ev.error?.message);
   const { data: signed, error: signErr } = await as(sb2.access_token).storage.from('post-media').createSignedUrl(name, 60);
   check(Boolean(signed?.signedUrl), 'an Explorer in the same church may open it', signErr?.message);
   const got = signed?.signedUrl ? Buffer.from(await (await fetch(signed.signedUrl)).arrayBuffer()) : Buffer.alloc(0);

@@ -21,8 +21,8 @@ function onDay(iso: string | null | undefined): string {
   });
 }
 import { LiveReportsForDirector } from '@/components/LiveSafeguarding';
-import { LiveTrialRoom, LiveCourt } from '@/components/LiveTrialRoom';
-import { LiveHallOfJustice } from '@/components/LiveHallOfJustice';
+import { LiveTrialRoom } from '@/components/LiveTrialRoom';
+import { CourtOrCases } from '@/components/court/CourtOrCases';
 import { LiveGuilds, LiveChurchPulse } from '@/components/LiveGuilds';
 import { LiveSecurityAudit } from '@/components/LiveSecurityAudit';
 import { LiveFeedbackInbox } from '@/components/LiveFeedbackInbox';
@@ -574,8 +574,9 @@ export function LiveAdminPage() {
 
         {/* Safeguarding in order: reports, then cases, then the trial room. */}
         {/* The cases this Director is judging, beside the reports they come from. */}
-        {room === 'safeguarding' && profile && <LiveHallOfJustice me={profile} />}
-        {room === 'safeguarding' && profile && <LiveCourt me={profile} />}
+        {/* The court room, once the church's database has it; until then the
+            Hall of Justice and the cases, as before (components/court/CourtOrCases). */}
+        {room === 'safeguarding' && profile && <CourtOrCases me={profile} hall />}
         {room === 'safeguarding' && profile && (
           <LiveTrialRoom
             me={profile}

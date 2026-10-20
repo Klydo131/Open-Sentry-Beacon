@@ -166,6 +166,12 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-post-carries-its-own-photos.sql"
 
+# THE COURT ROOM HOLDS: a fresh code or password at the door, a recorded seat
+# to read a case, a record that finds what changed, exhibits that stay as they
+# were entered. Invented people, rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/the-court-room-holds.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"
