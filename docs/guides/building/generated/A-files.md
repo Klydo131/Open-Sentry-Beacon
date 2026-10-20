@@ -488,11 +488,7 @@ The rules about what may become a link live in lib/linkify.ts, which is plain Ty
 
 #### `components/LiveAccountPages.tsx`
 
-Your profile, and your settings — on the LIVE app.
-
-Both of these existed only in the tutorial. /profile and /settings were written against the in-browser demo store and never given a live version, so on a church's real deployment they fell through to AppShell's placeholder — the grey "This live screen is being connected" card. A signed-in member could not change their own name, and nobody could turn notifications on.
-
-Not a policy and not a decision anybody made. Just two screens that were never finished, behind a card that made it look deliberate.
+The live profile, settings and password pages.
 
 #### `components/LiveActivityAnalysis.tsx`
 
@@ -664,11 +660,7 @@ WHAT THIS FILE IS NOT ALLOWED TO DECIDE. Every rule lives in migration 202609161
 
 #### `components/LiveLibrary.tsx`
 
-The church library, against a real database. See migration 0008.
-
-A resource is a title and a LINK, or a FILE kept in the church's own storage (20260925100000). What it must never be is a file held in one person's browser: that was a bug the sibling deployment shipped -- a Guide "shared" a file from IndexedDB, an Explorer received a title with nothing behind it, and the player sat at 0:00. A link opens on any device, and so does a file the church keeps; a file in IndexedDB opens on one.
-
-The Explorer's view is not a filtered copy of the Guide's. Both call the same function and the database returns different rows, because the policy already knows who is asking. A filter here would protect nobody.
+The church library, against a real database. A resource is a link or a file kept in the church's own storage, never a file in one browser. The database decides who sees which rows; nothing here filters for access.
 
 #### `components/LiveLibraryRecord.tsx`
 
@@ -726,13 +718,7 @@ The rules live in the database (migration 0021), not here. A Director reads repo
 
 #### `components/LiveStudies.tsx`
 
-Lesson studies a Guide writes, and an Explorer opens.
-
-WHAT WAS THERE BEFORE. A flat list of series titles and nothing else. No lessons inside them, no files, nothing to click. A Guide could not write one at all: the database policy on lesson_series was manages_church(church_id), so only a Director could, and the person actually sitting with somebody week by week could only look at a list.
-
-WHAT IT IS NOW. A Guide writes a series, adds studies to it, attaches the handouts they already use, and publishes it. Anybody in the church can open it and read the studies and the files. Directors keep the same power over everything, which is what manages_church still means.
-
-A DRAFT IS VISIBLE TO ITS AUTHOR ONLY, which sounds obvious and is the thing the old read policy got wrong: is_published alone meant a Guide could not see what they had just written until they published it, which makes writing it impossible.
+Lesson studies: Guides and leaders write series of studies with handouts and publish them; anybody in the church reads them. A draft is visible only to its author.
 
 #### `components/LiveTrialRoom.tsx`
 
@@ -1154,15 +1140,7 @@ THE NUMBER IS NOT DECORATION. `BeaconLoader` carries a rule in its header that a
 
 #### `components/live/TalkDock.tsx`
 
-The chat that is always within reach, and says when somebody is waiting.
-
-ONE SHAPE NOW, AT EVERY SIZE: a bubble you tap, and a conversation over the page rather than instead of it.
-
-PHONE / PAD bubble in the corner, opening to the WHOLE SCREEN. WIDE the same bubble, opening to a panel beside the page.
-
-WHAT THIS REPLACED, AND WHY THE OLD REASONING WAS HALF RIGHT. This used to be `hidden xl:block`, so only a very wide screen got the floating chat. The comment here defended it: "a small floating panel on a small screen covers the thing it floats over, which is why the phone does not get one." That is true, and it is still true.
-
-What it missed is that the panel does not have to be small. A phone was sent to /talk instead -- a PAGE, which means navigating away from whatever you were reading and losing the place you had scrolled to, every time you want to see whether somebody replied. Reported exactly that way: "I dont like this as a separate sub room on the phone or pad, I want it as a bubble like what you did at desktop."
+The chat bubble on every screen. Tapping it opens the conversation: full screen on a phone or pad, a side panel on a computer. The badge counts unread messages.
 
 #### `components/live/TalkSurface.tsx`
 
@@ -1316,11 +1294,9 @@ THERE IS NO LONGER A BUTTON, and that is the point rather than a loosening. The 
 
 The study room: a workspace of pages, and the editor for one of them.
 
-THE ROOM IS LIGHT AND THE EDITOR IS HEAVY, and keeping those two facts apart is the shape of this file. The full AFFiNE feature set -- the canvas, the databases, the embeds, the code highlighter's WebAssembly -- is over a megabyte gzipped. The list of pages needs none of it.
+The page list is light and the editor (BlockSuite/AFFiNE, over a megabyte) is heavy, so the editor's modules are loaded with `await import(...)` only when a page is opened. This file is imported only by components/study/StudyRoom.tsx through next/dynamic (ssr: false); importing it anywhere else puts the editor on every screen (tests/the-study-room-is-paid-for-on-arrival.mjs).
 
-So nothing here imports the drawing half at the top. `lib/study/effects.ts` and `lib/study/view-extensions.ts` are fetched with `await import(...)` at the moment somebody opens a page, which is the moment they have asked for an editor. Opening the room itself pays for the schema and this screen, and the page list appears while the editor is still arriving.
-
-AND THE WHOLE THING IS STILL BEHIND ONE ROUTE. components/study/StudyRoom.tsx is the only importer and uses next/dynamic with ssr:false. Importing this anywhere else silently puts the editor on every screen in the app, and tests/the-study-room-is-paid-for-on-arrival.mjs is there to stop that.
+BlockSuite ships pieces rather than an editor at this version, so this is the minimum assembly from its playground: block registrations, a store manager, a view manager, a standard scope, and Lit rendering into a div.
 
 #### `components/study/StudyShelf.tsx`
 
@@ -1364,13 +1340,9 @@ WHERE THE BYTES COME FROM IS THE CALLER'S BUSINESS. The live half signs a short-
 
 #### `components/talk/ChatView.tsx`
 
-The conversation: one component, drawn by both halves of the app.
+The conversation, drawn by both halves of the app: the sample church (components/Chat.tsx) and the live app (components/live/shared.tsx) only fetch and save; everything shown is here.
 
-ASKED FOR ON 1 OCTOBER 2026, with a screenshot of the chat: "Can we improve the chat more to be modern looking and functional as well ... most people are digital natives. All users should feel familiar and welcoming to our app (with unique design for sure)." Chosen: keep the soft tints (yours teal, theirs warm sand) and sharpen the shape; add reactions, replies and voice messages.
-
-ONE COMPONENT FOR BOTH HALVES. The sample app (components/Chat.tsx) and the live app (components/live/shared.tsx, Conversation) had drifted into two different chats. Each now only fetches and saves; everything you SEE is here, so the sample is the live app one-to-one and a fix lands in both.
-
-WHAT IS FAMILIAR, ON PURPOSE: * Bubbles in runs: one person's messages within five minutes sit close, their inner corners tighten, and the time is said once, at the end. * The time and the receipt sit INSIDE the bubble, at the end of the last line, instead of on rows of their own underneath. * Hold a message (or right-click, or ⋯) for React, Reply, Copy, Edit and Delete. Swipe a message to the right to reply to it. * Pictures without a bubble around them, opening full screen in the app. * A message of only one to three emoji is drawn large, with no bubble. * A button back to the newest message when you have scrolled up, with how many arrived meanwhile.
+Bubbles group into runs; time and receipt sit inside the bubble; hold, right-click or ⋯ opens React/Reply/Copy/Edit/Delete; swipe right to reply; one to three emoji are drawn large. There is no typing indicator and no online status, and only one read receipt (see `lastMine`).
 
 #### `components/talk/Composer.tsx`
 
@@ -1568,13 +1540,7 @@ ASKED FOR on 2 October 2026: "Make sure Evangelistic Meetings are super customiz
 
 #### `lib/faq.ts`
 
-Questions people ask, answered once.
-
-ASKED FOR (7 October 2026): "I want a complete FAQ in the app too please before users login and inside the app in settings."
-
-ONE SOURCE FOR TWO PLACES. The page anybody can open before signing in (app/faq/page.tsx, linked from the front door and the sign-in screens) and the Help folder in Settings, in the sample church and in a real one, all draw this list through components/Faq.tsx. A question answered in one place and not the other is the drift tests/the-live-app-offers-what-the-tutorial- offers.mjs exists to stop elsewhere.
-
-EVERY ANSWER IS ONE THE APP KEEPS TRUE, which is the only kind worth giving to somebody deciding whether to trust it. Where the answer is a rule, the rule is the database's and its test is named in the comment beside it; where it is a number, the number is read from the code that enforces it, so the two cannot drift apart. The privacy answers say what the privacy notice says (app/privacy/page.tsx) and the oversight answers ARE the oversight wording (lib/oversight.ts), word for word, because the invitation e-mail and the sign-up page say them too, and a person should never read two versions.
+The FAQ, written once. The public page (app/faq/page.tsx) and Settings, Help both render it through components/Faq.tsx. Every answer must stay true to the code: limits are read from the modules that enforce them, and the oversight answers reuse lib/oversight.ts word for word, as the invitation does. Deployment-specific facts (hosting country, the DPO) belong in the church's privacy notice, so answers point there.
 
 #### `lib/folders.ts`
 
@@ -1640,13 +1606,9 @@ Kept on this device, not in the database. Deleting the row would take the record
 
 #### `lib/live/data.ts`
 
-Talking to a real database.
+Data access for a church's real database.
 
-This is the live twin of lib/demo/store.tsx. The demo keeps everything in the browser and can afford to be relaxed, because the only data it can damage is sample data in your own tab. This file talks to a database with real people in it, so the rules are different and worth stating before the code.
-
-THE FOUR RULES THIS FILE IS BUILT ON
-
-1. THE DATABASE DECIDES, NOT THIS FILE. Every function below asks for what it wants and lets row level security return what the caller is entitled to. None of them filters "for security" in JavaScript. A check in this file protects nobody: the browser can call PostgREST directly with the same key, and anything only this file enforces is enforced nowhere. Where you see a filter here it is for correctness or for fewer rows, never for access — and it is commented as such.
+Row-level security in the database decides what each caller may read or write; nothing here filters for access. This file runs in the browser, so it never imports a server key, never sets role, church_id, is_approved or is_head_executive on the caller's own profile, and never selects an Explorer's own journey_stage. Changing somebody's role is setMemberRole(), on somebody else's row; there is no setMyRole() here, and must never be.
 
 #### `lib/live/emoji.ts`
 
@@ -1678,13 +1640,9 @@ The default is right for the open-source build: a church cloning this has no ser
 
 #### `lib/live/keep-up.ts`
 
-The screen keeps up on its own.
+Reload a screen when the tables behind it change (Supabase Realtime).
 
-WHAT THIS FIXES. One table in the whole app was published for realtime — `messages` — so a conversation updated itself and every other screen did not. Post a notice, approve somebody, add a study, share a resource, propose a time: the person looking at that screen saw the old version until they pulled to refresh. In front of a room that reads as the app being broken, and there is no way to explain it that sounds like anything else.
-
-Migration 20260902020000 publishes the tables. This is the other half.
-
-RLS DECIDES, NOT THIS FILE. Realtime evaluates the same policies as a SELECT, per subscriber, so an event only arrives for a row this person could already have read. Nothing here filters for privacy, and nothing here could: a filter in the browser is a courtesy to the network, never a boundary.
+Realtime applies the same row-level security as a SELECT, per subscriber, so events arrive only for rows the person could already read. Screens re-run their own load rather than patching rows, so they cannot drift from the real query.
 
 #### `lib/live/kept.ts`
 
@@ -2058,11 +2016,11 @@ ON THE DEVICE, NOT IN THE CHURCH'S DATABASE. What somebody listens to while they
 
 #### `lib/player.tsx`
 
-One media player, shared by every screen that shows it.
+One media player, shared by every screen that shows it (the library page and the rail strip), provided from the root layout so it survives navigation.
 
-WHY A CONTEXT AND NOT A COMPONENT. The player appears twice: full size on the library page, and as a strip in the right rail of every room. Those are two views of ONE thing. Built as two components each holding their own element, pressing play in the rail while the library was playing would give you both at once, and navigating from the library to anywhere else would cut the sound off mid-track. The element lives here, above both, and outlives the page. The provider sits in the ROOT LAYOUT, so it survives moving between routes too.
+There is one <video> element (it plays audio too), parked in a visually hidden but laid-out node; a full player adopts it into its stage and hands it back on unmount, so playback never stops. A detached or display:none element can be stopped by the browser.
 
-ONE ELEMENT, AND IT IS A <video>. An <audio> element cannot show a picture, and a second element for video would be a second thing that can be playing. A <video> plays audio perfectly well, so there is one, created imperatively and parked in a hidden corner of the document. When the full player mounts it ADOPTS that element into its own stage; when it unmounts the element goes back to the corner, still playing. That is why a video keeps its sound when you walk out of the library, and picks its picture back up when you return.
+The credit line comes from NEXT_PUBLIC_PLAYER_CREDIT; unset, nothing is drawn.
 
 #### `lib/playlists.ts`
 
@@ -2178,13 +2136,9 @@ Two passes over the same layout code, one to measure and one to draw, so the pic
 
 #### `lib/sabbath-program.ts`
 
-A Sabbath program: the order of service for one Sabbath, made in the Office by a Guide or a leader, kept on their own device, and downloaded as a Word file.
+A Sabbath program: the order of service for one Sabbath, made in the Office and downloaded as a Word file (lib/sabbath-program-docx.ts).
 
-ASKED FOR on 2 October 2026: "Guides and all higher up accounts can make their own Sabbath program tool, it can be downloaded to words or docs too in their office."
-
-KEPT ON THE DEVICE, BY THE OWNER'S CHOICE, the same day. Three things follow:
-
-* It works on a church's app the day it ships. There is no table, no security rule and no migration, so a church that has not updated its database still has it. * The names typed into it (who prays, who preaches) stay on that phone or computer. They leave it only inside a file the person downloads or shares, which is their act, not the app's. * A program made on a phone is not on the laptop, and two leaders do not see each other's. They share the file, the way churches already pass a program round.
+Kept on the device, under the signed-in account's id (so a shared office computer keeps each leader's list apart). Names typed into it leave the device only in a file the person downloads or shares.
 
 #### `lib/save-media.ts`
 
@@ -2292,13 +2246,7 @@ a tag -> `tags:` in YAML front matter, which Obsidian reads natively a folder ->
 
 #### `lib/study/shelf.ts`
 
-What the study room knows about each page, beyond the writing on it.
-
-ASKED FOR, WITH A SCREENSHOT OF AFFiNE'S OWN APP: "what I meant for a special room like the library page is, I want the whole Affine features like this but with Hope Beacon brand please."
-
-The screenshot is a workspace, not an editor: a list of documents with a preview line and a date, a star on each, tags, a trash, a search, and a view somebody browses before they open anything. That is a different shape from a strip of tabs above a page, and it is the shape the library already has in this app, which is exactly why it was asked for in those words.
-
-WHERE THIS LIVES. BlockSuite's own DocMeta already carries `title`, `tags`, `createDate`, `updatedDate` and `favorite` -- AFFiNE's list is built on the same fields. Two more are needed for the rest of that screen and are added here rather than invented elsewhere: a short `preview` so a list can show what a page is about without loading every page, and `trashedAt` so deleting is something a person can undo.
+What the study room knows about each page beyond its writing: BlockSuite's DocMeta (title, tags, dates, favourite) plus a stored preview line and a trash date. They live in the workspace document, so they sync with it.
 
 #### `lib/study/vault-io.ts`
 
@@ -2402,7 +2350,7 @@ A visitor must be able to try the second one WITHOUT touching the first — that
 
 #### `lib/types.ts`
 
-Domain types — the shape of everything the app stores. The demo store keeps to these exactly, so the screens don't care where the data comes from.
+The shape of everything the app stores. The sample church keeps to these exactly, so the screens do not care where the data comes from.
 
 #### `lib/ui-themes.ts`
 
@@ -2672,13 +2620,11 @@ node scripts/unused-exports.mjs
 
 #### `scripts/verify.mjs`
 
-One command that runs every guard, so nobody has to remember the list.
+One command that runs every guard.
 
-npm run verify static guards only — no server, no browser, ~30s npm run verify:all the above plus every end-to-end walk (~4 min)
+npm run verify static guards only (no server, no browser) npm run verify:all the above plus every end-to-end walk --walks-only build and walk, skipping the static guards (CI runs those once, elsewhere) --shard=2/4 walk only every fourth suite, starting at the second, so CI can split them --quick the emergency lane: typecheck, build and the safety checks below
 
-Why this exists: the checks were all here already and all run by hand, which meant in practice they ran when someone remembered, which meant a stale assertion could sit green-looking for weeks. Three of them had drifted so far they were asserting the *opposite* of what had been asked for, and the only reason anyone noticed was an unrelated investigation.
-
-The e2e half also owns the server lifecycle, because doing that by hand is its own source of wrong answers: `next start` exits 1 when a previous next-server still holds the port, and a stale server happily answers on the old build so the suite passes against code that no longer exists. This picks a free port, waits for the build id it just built, and always tears down.
+The e2e half owns the server: it picks a free port, waits for the build id it just built (a stale server would answer with old code), and always tears down.
 
 #### `scripts/walkthrough-shots.mjs`
 

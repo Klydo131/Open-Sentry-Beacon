@@ -57,7 +57,7 @@ The app's own release notes (`lib/release-notes.ts`), newest first: 47 releases,
 *2026-10-13*
 
 - You can add a second step to signing in: a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator. Somebody who learns your password still cannot sign in as you.
-- Turn it on in Settings, on the Password page. It is recommended for Directors and Executive Directors.
+- Turn it on in Settings, on the Password page. It is recommended for Directors and other church leaders.
 - Once it is on, each new sign-in asks for your password and then the code.
 
 ### Questions people ask
@@ -72,7 +72,7 @@ The app's own release notes (`lib/release-notes.ts`), newest first: 47 releases,
 
 *2026-10-07*
 
-- Only an Executive Director can make somebody a Director or an Executive Director. A Director looks after Guides and Explorers.
+- Only the church’s senior leadership can make somebody a Director. A Director looks after Guides and Explorers.
 - Directors can give an Explorer a different Guide with Change Guide. The Explorer keeps their place on the journey, the new Guide starts a fresh conversation, and nobody else ever reads what the two wrote to each other.
 
 ### Home is a billboard
@@ -279,7 +279,7 @@ The app's own release notes (`lib/release-notes.ts`), newest first: 47 releases,
 
 *2026-10-02*
 
-- Guides, Directors and Executive Directors have a progress report in the Office, under Reports: for a month or a quarter, how each Explorer is moving along the journey, the Bible studies and lessons, and who needs you this week. Add your own notes, then download it as a Word file.
+- Guides and church leaders have a progress report in the Office, under Reports: for a month or a quarter, how each Explorer is moving along the journey, the Bible studies and lessons, and who needs you this week. Add your own notes, then download it as a Word file.
 - Evangelistic meetings now start from the night as many churches run it: children's time from 5:30 PM, health time, Bible study, then snacks. Each night has an end time too.
 - Keep Sabbath programs and meetings in folders, and put them on your phone's calendar with Add to calendar, or one night at a time in Google Calendar.
 - Your programs and meetings are still saved on your device first, and now also follow you to any phone or computer where you sign in. Only you can see that copy.
