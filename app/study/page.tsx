@@ -19,7 +19,12 @@
 // while reading something else, and that reason does not apply here.
 //
 // BOTH HALVES OF THE APP, like every other room. The live one keeps pages in
-// the church's own database; the walkthrough keeps them nowhere and says so.
+// the church's own database (and a copy on the device); the walkthrough keeps
+// them nowhere and says so.
+//
+// EVERY ROLE SINCE 20 OCTOBER 2026 ("Study room will be implemented to all
+// users now, no longer a Beta"). Each person's room is their own.
+
 // ---------------------------------------------------------------------------
 
 import { AppShell } from '@/components/AppShell';
@@ -33,7 +38,7 @@ import { useDemo } from '@/lib/demo/store';
 function LiveStudyRoom() {
   const { profile } = useLiveSession();
   return (
-    <LiveAppShell allow={['ds']}>
+    <LiveAppShell allow={['ds', 'dm', 'admin', 'executive']}>
       {profile
         ? <StudyRoom me={profile} />
         : <BeaconSpinner inline label="Opening your study room" />}
@@ -44,7 +49,7 @@ function LiveStudyRoom() {
 function DemoStudyRoom() {
   const { currentUser } = useDemo();
   return (
-    <AppShell allow={['ds']}>
+    <AppShell allow={['ds', 'dm', 'admin', 'executive']}>
       {currentUser
         ? <StudyRoom me={currentUser} demo />
         : <BeaconSpinner inline label="Opening your study room" />}

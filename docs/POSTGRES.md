@@ -191,9 +191,19 @@ the `files` volume, and start them again.
 Measured on 20 October 2026, with the app open and in use: the app about 190 MB
 of memory, the Beacon server about 115 MB, PostgREST about 30 MB, Postgres
 about 60 MB to begin with. **1 GB of memory runs it; 2 GB is comfortable**, and
-Postgres uses whatever more it is given to keep things fast. Building the app
-(Step 5, and each update) needs more memory than running it; on a 1 GB machine,
-add swap first or the build may stop.
+Postgres uses whatever more it is given to keep things fast.
+
+**Building the app needs far more than running it.** Step 5, and each update,
+builds the app, and the build peaked at about 3.4 GB of memory, measured twice
+on 20 October 2026 (3.35 GB and 3.5 GB). So:
+
+- **4 GB of memory** builds it with nothing else to do.
+- **On a 1 or 2 GB machine, add swap before building**, or the build stops part
+  way with no clear message. Four commands make a 4 GB swap file:
+  `sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile`.
+  The build is slower on swap; running the app afterwards is not.
+- Or build the image on a bigger computer and copy it across with
+  `docker save` and `docker load`, so the small machine never builds at all.
 
 Disk: the database is small (tens of MB for a church); uploaded photos and
 files are what grow. Each bucket has a size limit per file (10 MB for

@@ -29,6 +29,7 @@ import { useEffect, useState } from 'react';
 import '@/components/study/study-shell.css';
 
 import { APP_NAME } from '@/lib/brand';
+import { Bookshelf, DeskLamp } from '@/components/study/StudyFurniture';
 import { useStudyMode } from '@/components/WritingMode';
 import type { ShelfView } from '@/components/study/StudyShelf';
 import {
@@ -187,7 +188,8 @@ export function StudyWorkspaceShell({
             className="sr-side hidden w-64 shrink-0 overflow-y-auto px-3 pb-6 md:block"
             style={{ paddingTop: 'calc(var(--sr-bar-h) + 20px)' }}
           >
-            <p className="px-2 pb-3 text-[22px] font-bold tracking-tight">Study Room</p>
+            <Bookshelf className="sr-shelf-art" />
+            <p className="sr-side-title px-2 pb-3 text-[22px] font-bold tracking-tight">Study Room</p>
             <ul className="space-y-0.5">
               {places.map(({ id, label, Icon }) => (
                 <li key={id}>
@@ -208,6 +210,8 @@ export function StudyWorkspaceShell({
         )}
 
         <div className="relative min-w-0 flex-1">
+          {/* The reading lamp over the desk, on screens with room for it. */}
+          {!showingPage && <DeskLamp className="sr-lamp-art" />}
           {/* THE PAGE SCROLLS UNDER THE BAR, which is what makes the bar a
               material rather than a stripe. A SPACER the bar's height, safe
               area included, so nothing starts hidden -- and a spacer rather

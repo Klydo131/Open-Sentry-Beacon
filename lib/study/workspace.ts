@@ -49,6 +49,7 @@ import {
   AwarenessEngine,
   BlobEngine,
   DocEngine,
+  DocPeerStep,
   MemoryBlobSource,
   type AwarenessSource,
   type BlobSource,
@@ -84,6 +85,20 @@ type MetaState = {
    */
   collections?: unknown[];
 };
+
+/**
+ * The pictures and files a page shows, by their keys. Read from the blocks
+ * themselves (`sourceId`), which is where BlockSuite keeps them.
+ */
+export function picturesIn(spaceDoc: Y.Doc): string[] {
+  const keys = new Set<string>();
+  const blocks = spaceDoc.getMap('blocks') as Y.Map<Y.Map<unknown>>;
+  blocks.forEach((block) => {
+    const source = block.get?.('prop:sourceId');
+    if (typeof source === 'string' && source) keys.add(source);
+  });
+  return [...keys];
+}
 
 /** The list of pages in a room, and their titles. */
 class StudyMeta implements WorkspaceMeta {
@@ -324,12 +339,24 @@ class StudyDoc implements Doc {
 
 export type StudyWorkspaceOptions = {
   id: string;
-  /** Where pages are kept. The whole point of this file. */
+  /**
+   * Where pages are kept first: this device's copy (lib/study/local-source.ts),
+   * or the database itself where a browser will not keep one.
+   */
   docSource: DocSource;
+  /** Kept in step behind it, both ways: the church's database. */
+  shadowSources?: DocSource[];
   blobSource?: BlobSource;
+  shadowBlobs?: BlobSource[];
   awarenessSources?: AwarenessSource[];
   idGenerator?: IdGenerator;
 };
+
+/** Where the room's writing has reached, for the line under a page's title. */
+export type SaveState = 'device' | 'saving' | 'saved' | 'waiting';
+
+/** A source that can forget a page deleted for good. */
+type Forgetful = { forget?: (docId: string) => Promise<void> };
 
 export class StudyWorkspace implements Workspace {
   readonly id: string;
@@ -349,13 +376,18 @@ export class StudyWorkspace implements Workspace {
 
   get docs() { return this._docs; }
 
+  private readonly _docSources: Array<DocSource & Forgetful>;
+  private readonly _blobSources: BlobSource[];
+
   constructor({
     id,
     docSource,
+    shadowSources = [],
     // Attachments stay in memory until the church decides where they live.
     // Uploads already have rules in this app and a study room must not become
     // a second, quieter way to store files.
     blobSource = new MemoryBlobSource(),
+    shadowBlobs = [],
     awarenessSources = [],
     idGenerator = nanoid,
   }: StudyWorkspaceOptions) {
@@ -366,8 +398,10 @@ export class StudyWorkspace implements Workspace {
     const logger = new NoopLogger();
     this.awarenessStore = new AwarenessStore(new Awareness(this.doc));
     this.awarenessSync = new AwarenessEngine(this.awarenessStore.awareness, awarenessSources);
-    this.docSync = new DocEngine(this.doc, docSource, [], logger);
-    this.blobSync = new BlobEngine(blobSource, [], logger);
+    this.docSync = new DocEngine(this.doc, docSource, shadowSources, logger);
+    this.blobSync = new BlobEngine(blobSource, shadowBlobs, logger);
+    this._docSources = [docSource, ...shadowSources];
+    this._blobSources = [blobSource, ...shadowBlobs];
 
     this.meta = new StudyMeta(this.doc);
     this._followTheList();
@@ -420,6 +454,94 @@ export class StudyWorkspace implements Workspace {
     doc.dispose();
     this.meta.removeDocMeta(docId);
     this._docs.delete(docId);
+  }
+
+  /**
+   * Delete a page for good: off the list, off this device, out of the
+   * database, and the pictures only it used with it. Returns what could not
+   * be forgotten (say, the database while offline), for the room to report.
+   *
+   * PICTURES ARE CLEARED ONLY WHEN EVERY PAGE IS IN HAND. A picture may be on
+   * two pages, and a page still arriving from the database cannot be asked
+   * whether it uses one. So while anything is still loading, the pictures stay;
+   * a picture nobody uses costs a little space, and a picture deleted from under
+   * a page costs that page.
+   */
+  async deleteForever(docId: string): Promise<unknown[]> {
+    const doc = this._docs.get(docId);
+    let theirPictures: string[] = [];
+    if (doc) {
+      doc.load();
+      theirPictures = picturesIn(doc.spaceDoc);
+    }
+    this.removeDoc(docId);
+    const failures: unknown[] = [];
+    await Promise.all(this._docSources.map((source) => source.forget?.(docId).catch((e) => { failures.push(e); })));
+
+    if (theirPictures.length && this.everythingLoaded()) {
+      const stillUsed = new Set<string>();
+      for (const other of this._docs.values()) {
+        other.load();
+        for (const key of picturesIn(other.spaceDoc)) stillUsed.add(key);
+      }
+      const unused = theirPictures.filter((key) => !stillUsed.has(key));
+      await Promise.all(this._blobSources.flatMap((source) => unused.map((key) =>
+        Promise.resolve(source.delete(key)).catch((e) => { failures.push(e); }))));
+    }
+    return failures;
+  }
+
+  /** Every page is in hand from every source. */
+  everythingLoaded(): boolean {
+    const { main, shadows } = this.docSync.status;
+    return [main, ...shadows].every((s) => !!s && s.step >= DocPeerStep.Loaded && s.pendingPullUpdates === 0);
+  }
+
+  /** Resolves when the first source (this device, usually) has every page in hand. */
+  waitForMain(): Promise<void> {
+    return this._waitFor((status) => !!status.main && status.main.step >= DocPeerStep.Loaded);
+  }
+
+  /**
+   * Resolves when the database has answered with the room's page list. Without
+   * a database behind the device copy there is nothing to wait for.
+   */
+  waitForRemoteList(): Promise<void> {
+    if (this.docSync.shadows.length === 0) return this.waitForMain();
+    return this._waitFor((status) => !!status.shadows[0] && status.shadows[0].step >= DocPeerStep.LoadingSubDoc);
+  }
+
+  /** Bring this page to the front of the queue; the rest follow. */
+  putFirst(docId: string) {
+    this.docSync.setPriorityRule((id) => id === docId);
+  }
+
+  /** Where the writing is: on this device only, on its way, or with the church. */
+  saveState(): SaveState {
+    const { main, shadows } = this.docSync.status;
+    const remote = shadows.length ? shadows[0] : main;
+    if (!remote) return 'saving';
+    if (remote.step === DocPeerStep.Retrying) return shadows.length ? 'waiting' : 'saving';
+    if (remote.pendingPushUpdates > 0) return 'saving';
+    return remote.step >= DocPeerStep.Loaded ? 'saved' : 'saving';
+  }
+
+  /** Told whenever the save state may have changed. */
+  onSaveState(cb: () => void): () => void {
+    const sub = this.docSync.onStatusChange.subscribe(() => cb());
+    return () => sub.unsubscribe();
+  }
+
+  private _waitFor(test: (status: DocEngine['status']) => boolean): Promise<void> {
+    if (test(this.docSync.status)) return Promise.resolve();
+    return new Promise((resolve) => {
+      const sub = this.docSync.onStatusChange.subscribe((status) => {
+        if (test(status)) {
+          sub.unsubscribe();
+          resolve();
+        }
+      });
+    });
   }
 
   /** Begin syncing with the database. */

@@ -122,12 +122,24 @@ const ROOM = 'components/study/StudyRoom.tsx';
 }
 
 // ---------------------------------------------------------------------------
-// 3. THE EXPLORER'S ROOM IS THE EXPLORER'S
+// 3. EVERYBODY'S ROOM IS THEIR OWN
 // ---------------------------------------------------------------------------
+//
+// Until 20 October 2026 this read "the Explorer's room is the Explorer's" and
+// checked that nobody else was shown the door at all. The owner then opened the
+// room to everybody ("Study room will be implemented to all users now, no
+// longer a Beta"), so the rule that still matters is the one underneath it:
+// whoever walks in finds THEIR room, never somebody else's. The room is built
+// from the signed-in person's own id and nothing else, and the database holds
+// the same line (study_docs and study_blobs are owner-only).
 {
   const room = strip(read(ROOM));
-  ok(/role\s*!==\s*'ds'/.test(room),
-     'a Guide or a Director is not shown a door into somebody else\'s study room');
+  const ids = [...room.matchAll(/new (?:Supabase|Local)(?:Doc|Blob)Source\(([^\n]*)/g)].map((m) => m[1]);
+  ok(ids.length >= 4 && ids.every((args) => /\bme\.id\b/.test(args) && !/pairing|guide|explorer|dm_id|ds_id/i.test(args)),
+     `every source the room is built from is the signed-in person's own (${ids.length} sources)`);
+  const page = strip(read('app/study/page.tsx'));
+  ok((page.match(/allow=\{\['ds', 'dm', 'admin', 'executive'\]\}/g) || []).length === 2,
+     'and every role may walk in, on both halves of the app');
 }
 
 // ---------------------------------------------------------------------------
@@ -276,11 +288,16 @@ const ROOM = 'components/study/StudyRoom.tsx';
 // before the wait, a room seeded with two stored pages came back with one.
 // This holds the order, because the order is the fix.
 {
+  // Since 20 October 2026 the room opens from this device's copy first
+  // (lib/study/local-source.ts). A device that already holds the room has its
+  // list; one that does not waits for the database's list. Either way, the
+  // list is initialised only after the wait.
   const editor = strip(read(EDITOR));
-  const wait = editor.indexOf('waitForSynced');
+  const main = editor.indexOf('waitForMain()');
+  const remote = editor.indexOf('waitForRemoteList()');
   const init = editor.indexOf('meta.initialize()');
-  ok(wait !== -1 && init !== -1 && init > wait,
-     'the page list is only initialised after the database has had its say');
+  ok(main !== -1 && remote !== -1 && init !== -1 && init > main && init > remote,
+     'the page list is only initialised after the device, and on a new device the database, has had its say');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

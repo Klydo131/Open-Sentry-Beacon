@@ -19,7 +19,7 @@ import { render } from 'lit';
 import type { DocMeta, Store } from '@blocksuite/store';
 import type { BlobSource, DocSource } from '@blocksuite/sync';
 
-import { StudyWorkspace } from '@/lib/study/workspace';
+import { StudyWorkspace, type SaveState } from '@/lib/study/workspace';
 import { giveTheGuideOnce } from '@/lib/study/getting-started';
 import { studyStoreManager } from '@/lib/study/extensions';
 import {
@@ -27,7 +27,8 @@ import {
   previewFrom, readShelf, tagsAcross,
   type Collection, type ShelfEntry, type ShelfMeta,
 } from '@/lib/study/shelf';
-import type { Troubled } from '@/lib/study/doc-source';
+import { STUDY_ROOM, type SupabaseDocSource } from '@/lib/study/doc-source';
+import { forgetWhatWasMissed, rememberToForget } from '@/lib/study/local-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { BoardGlyph, DocGlyph, FolderGlyph } from '@/components/Glyph';
 import { humanError } from '@/lib/live/errors';
@@ -43,30 +44,52 @@ import { StudyInsertBar, type InsertKind } from '@/components/study/StudyInsertB
 import { StudyTags } from '@/components/study/StudyTags';
 import { StudyWorkspaceShell } from '@/components/study/StudyWorkspaceShell';
 import { useStudyMode } from '@/components/WritingMode';
-
-/** One room per person. The id is stable so the same room reopens every time. */
-const WORKSPACE = 'study-room';
-
-/** The first page's id in every existing room. Keep this literal, or older rooms open without their notes. */
-const FIRST_PAGE = 'page-1';
+import { Ribbon } from '@/components/study/StudyFurniture';
 
 /** How long after somebody stops typing the shelf is brought up to date. */
 const SETTLE_MS = 1200;
 
-export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }: {
-  makeSource: () => DocSource;
-  /** Where pictures and files are kept. Left out, they stay in the tab. */
-  makeBlobs?: () => BlobSource;
+/** How long a page may take to arrive before the page (not the room) says so. */
+const PAGE_WAIT_MS = 15_000;
+
+/**
+ * Where a room's pages and pictures are kept, in the order they are used:
+ * this device's copy first, the church's database behind it
+ * (components/study/StudyRoom.tsx builds this).
+ */
+export type StudySources = {
+  docs: DocSource;
+  shadows: DocSource[];
+  blobs?: BlobSource;
+  shadowBlobs: BlobSource[];
+  /** The church's database, wherever it sits above. Null in the walkthrough. */
+  remote: SupabaseDocSource | null;
+  /** Whether this device keeps a copy. */
+  onDevice: boolean;
+};
+
+const wait = (ms: number) => new Promise<false>((resolve) => setTimeout(() => resolve(false), ms));
+
+export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: {
+  makeSources: () => Promise<StudySources>;
+  ownerId: string;
   demo?: boolean;
   onExit: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
   const workspace = useRef<StudyWorkspace | null>(null);
-  const synced = useRef(false);
+  const remote = useRef<SupabaseDocSource | null>(null);
+  const onDevice = useRef(false);
   // Held so the insert bar can put a block where the caret is.
   const editing = useRef<{ std: BlockStdScope; store: Store } | null>(null);
 
-  const [error, setError] = useState('');
+  // TWO KINDS OF TROUBLE, KEPT APART. `fatal` is the room itself not opening,
+  // and takes the screen with a way to try again. Everything else -- a block
+  // that would not insert, an export that failed -- is a `hiccup`: a line
+  // above the room that goes away, never in place of it. Both used to be one
+  // `error` that replaced the whole room and stayed until it was reloaded.
+  const [fatal, setFatal] = useState('');
+  const [hiccup, setHiccup] = useState('');
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState('');
   // Set when the room could not be reached, as opposed to being empty.
@@ -74,6 +97,15 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   const [attempt, setAttempt] = useState(0);
   // Saving trouble, shown to the person rather than hidden.
   const [trouble, setTrouble] = useState('');
+  const [saveState, setSaveState] = useState<SaveState>('saving');
+  // One page that has not arrived yet: said on the page, with its own retry.
+  const [pageMissing, setPageMissing] = useState(false);
+  const [pageAttempt, setPageAttempt] = useState(0);
+  useEffect(() => {
+    if (!hiccup) return;
+    const t = setTimeout(() => setHiccup(''), 9000);
+    return () => clearTimeout(t);
+  }, [hiccup]);
 
   const [entries, setEntries] = useState<ShelfEntry[]>([]);
   const [openPage, setOpenPage] = useState('');
@@ -113,6 +145,20 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     return () => window.removeEventListener('resize', fit);
   });
   const [folderDraft, setFolderDraft] = useState('');
+  // THE NAME IS KEPT AS IT IS TYPED, not only when the box loses focus: a name
+  // typed and then the room closed straight away used to be lost.
+  const titleFor = useRef('');
+  useEffect(() => {
+    const page = titleFor.current;
+    if (!page) return;
+    const t = setTimeout(() => {
+      const meta = workspace.current?.meta.getDocMeta(page) as ShelfMeta | undefined;
+      if (meta && (meta.title ?? '') !== titleDraft.trim()) {
+        workspace.current?.meta.setDocMeta(page, { title: titleDraft.trim() } as Partial<DocMeta>);
+      }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [titleDraft]);
 
   const refresh = useCallback(() => {
     const meta = workspace.current?.meta;
@@ -125,74 +171,97 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   // the sync engine and every page) ---
   useEffect(() => {
     let cancelled = false;
+    let stopSaveState: (() => void) | undefined;
     setStalled(false);
     setNotice('');
-    setError('');
+    setFatal('');
     setTrouble('');
     setReady(false);
 
     (async () => {
       try {
-        // Built here, not during render: making the live source needs a database
-        // client, and a throw during render would silently render nothing. The source
-        // also reports when it can no longer save (DocEngine retries silently).
-        const source = makeSource() as DocSource & Troubled;
-        source.onTrouble = (cause) => {
-          if (cancelled) return;
-          setTrouble(cause === null
-            ? ''
-            : humanError(cause, 'Your writing is not reaching the database.'));
-        };
+        // Built here, not during render: the live sources need a database
+        // client, and a throw during render would silently render nothing.
+        const sources = await makeSources();
+        if (cancelled) return;
+        remote.current = sources.remote;
+        onDevice.current = sources.onDevice;
+        // The database says when it cannot be reached (DocEngine retries
+        // silently). With a copy on this device that is not a loss, only a
+        // delay, and the save line says so; without one it is the warning.
+        if (sources.remote) {
+          sources.remote.onTrouble = (cause) => {
+            if (cancelled) return;
+            setTrouble(cause === null ? '' : humanError(cause, 'Your writing is not reaching the database.'));
+          };
+        }
         const room = new StudyWorkspace({
-          id: WORKSPACE,
-          docSource: source,
-          blobSource: makeBlobs?.(),
+          id: STUDY_ROOM,
+          docSource: sources.docs,
+          shadowSources: sources.shadows,
+          blobSource: sources.blobs,
+          shadowBlobs: sources.shadowBlobs,
         });
         workspace.current = room;
         room.storeExtensions = studyStoreManager().get('store');
         room.start();
 
-        // Waiting for the database must never stop the room opening, so the wait is raced.
-        const arrived = await Promise.race([
-          room.waitForSynced().then(() => true),
-          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
-        ]);
+        // THIS DEVICE'S COPY FIRST, which is there at once and works with no
+        // signal. (Without a copy this is the database, and the race is what
+        // stops a slow connection from keeping the room shut.)
+        const fromFirst = await Promise.race([room.waitForMain().then(() => true), wait(8000)]);
         if (cancelled) return;
-        synced.current = arrived;
+
+        // A DEVICE THAT HAS NEVER HELD THIS ROOM KNOWS NOTHING ABOUT IT, and an
+        // empty list here is not an empty room. So it waits for the database's
+        // page list before deciding, as the room always has; a device that
+        // already holds the room does not wait for anything.
+        const heldHere = room.meta.docMetas.length > 0 || room.meta.guided;
+        const listKnown = heldHere
+          || await Promise.race([room.waitForRemoteList().then(() => true), wait(12_000)]);
+        if (cancelled) return;
 
         // Initialise after the wait: before it, a room with pages looks empty and an
         // empty page list would be written over the real one.
         room.meta.initialize();
 
         if (room.meta.docMetas.length === 0) {
-          if (!arrived) {
+          if (!listKnown) {
             setStalled(true);
             return;
           }
-          room.createDoc(FIRST_PAGE);
+          // A NEW ID, NEVER A FIXED ONE. Every room's first page used to be
+          // `page-1`, so a room emptied by "Delete forever" and then given a
+          // new first page pulled the deleted page's writing straight back.
+          room.createDoc();
         }
 
         // Add the Getting Started page once per room (lib/study/getting-started.ts).
-        giveTheGuideOnce(room, arrived);
+        giveTheGuideOnce(room, listKnown);
 
         room.slots.docListUpdated.subscribe(() => {
           if (!cancelled) refresh();
         });
+        stopSaveState = room.onSaveState(() => { if (!cancelled) setSaveState(room.saveState()); });
+        setSaveState(room.saveState());
 
         refresh();
         setReady(true);
-        if (!arrived) {
+        if (!fromFirst) {
           setNotice('Your saved pages are taking a while to arrive. What is here '
             + 'is yours to read, but give it a moment before you rely on new '
             + 'writing being kept.');
         }
+        // A page deleted while offline is deleted from the database now.
+        if (sources.remote) void forgetWhatWasMissed(ownerId, sources.remote);
       } catch (cause) {
-        if (!cancelled) setError(humanError(cause, 'The study room could not be opened.'));
+        if (!cancelled) setFatal(humanError(cause, 'The study room could not be opened.'));
       }
     })();
 
     return () => {
       cancelled = true;
+      stopSaveState?.();
       const room = workspace.current;
       workspace.current = null;
       // Let unsaved work reach the database before tearing down.
@@ -201,7 +270,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         room?.dispose();
       });
     };
-  }, [makeSource, makeBlobs, attempt, refresh]);
+  }, [makeSources, ownerId, attempt, refresh]);
 
   // --- Showing one page: re-runs when the open page changes ---
   useEffect(() => {
@@ -223,19 +292,45 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
 
       const doc = room.getDoc(openPage) ?? room.createDoc(openPage);
       doc.load();
+      // This page jumps the queue; the others follow behind it.
+      room.putFirst(openPage);
       const store = doc.getStore();
 
-      if (!store.root && synced.current) {
-        const rootId = store.addBlock('affine:page', {});
-        store.addBlock('affine:surface', {}, rootId);
-        const noteId = store.addBlock('affine:note', {}, rootId);
-        store.addBlock('affine:paragraph', {}, noteId);
+      // A PAGE THAT HAS NOT ARRIVED YET IS NOT A BLANK PAGE, AND NOT A ROOM
+      // THAT FAILED. On a device that has never held the room, pages come from
+      // the database one after another; a room of forty pages used to wait
+      // eight seconds for all of them and then call the room unreachable when
+      // somebody opened the thirtieth. Now the page waits for itself, and only
+      // the page says so if it does not come.
+      if (!store.root) {
+        const db = remote.current;
+        const answered = () => !db || db.answered.has(openPage) || room.everythingLoaded();
+        if (!answered()) {
+          await Promise.race([
+            new Promise<void>((resolve) => {
+              const check = () => { if (store.root || answered()) { stop(); resolve(); } };
+              const stopAnswer = db?.whenAnswered(check);
+              doc.spaceDoc.on('update', check);
+              const stop = () => { stopAnswer?.(); doc.spaceDoc.off('update', check); };
+            }),
+            wait(PAGE_WAIT_MS),
+          ]);
+          if (cancelled) return;
+        }
+        if (!store.root && answered()) {
+          const rootId = store.addBlock('affine:page', {});
+          store.addBlock('affine:surface', {}, rootId);
+          const noteId = store.addBlock('affine:note', {}, rootId);
+          store.addBlock('affine:paragraph', {}, noteId);
+        }
       }
 
       if (!store.root) {
-        setStalled(true);
+        setDrawing(false);
+        setPageMissing(true);
         return;
       }
+      setPageMissing(false);
 
       // Older pages have no canvas; add one so the whiteboard view works.
       if (store.getBlocksByFlavour('affine:surface').length === 0) {
@@ -288,7 +383,10 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         summarise();
       };
     } catch (cause) {
-      if (!cancelled) setError(humanError(cause, 'That page could not be opened.'));
+      if (!cancelled) {
+        setDrawing(false);
+        setHiccup(humanError(cause, 'That page could not be opened.'));
+      }
     }
     })();
 
@@ -298,7 +396,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       clearTimeout(settle);
       letGo?.();
     };
-  }, [ready, openPage, mode]);
+  }, [ready, openPage, mode, pageAttempt]);
 
   // --- Inserting blocks ---
   /**
@@ -352,7 +450,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         });
       }
     } catch (cause) {
-      setError(humanError(cause, 'That could not be added to the page.'));
+      setHiccup(humanError(cause, 'That could not be added to the page.'));
     }
   }, []);
 
@@ -410,7 +508,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
 
       if (!files.length) {
         setVaultBusy('');
-        setError('There are no pages to take a copy of yet.');
+        setHiccup('There are no pages to take a copy of yet.');
         return;
       }
 
@@ -431,7 +529,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       setTimeout(() => setVaultBusy(''), 4000);
     } catch (cause) {
       setVaultBusy('');
-      setError(humanError(cause, 'That copy could not be made.'));
+      setHiccup(humanError(cause, 'That copy could not be made.'));
     } finally {
       vaultWorking.current = false;
     }
@@ -469,7 +567,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
 
       if (!incoming.length) {
         setVaultBusy('');
-        setError(unreadable.length
+        setHiccup(unreadable.length
           ? 'That vault is compressed in a way this cannot read yet. Zipping the folder without compression will work.'
           : 'There was no Markdown in what you chose.');
         return;
@@ -501,7 +599,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
       setTimeout(() => setVaultBusy(''), 4000);
     } catch (cause) {
       setVaultBusy('');
-      setError(humanError(cause, 'Those pages could not be brought in.'));
+      setHiccup(humanError(cause, 'Those pages could not be brought in.'));
     } finally {
       vaultWorking.current = false;
     }
@@ -513,19 +611,21 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
     try {
       const made = room.createDoc();
       refresh();
+      titleFor.current = made.id;
       setTitleDraft('');
       // A new page goes into the folder being viewed.
       setFolderDraft(folder);
       if (folder) setMeta(made.id, { folder });
       setOpenPage(made.id);
     } catch (cause) {
-      setError(humanError(cause, 'A new page could not be added.'));
+      setHiccup(humanError(cause, 'A new page could not be added.'));
     }
     // `folder` and `setMeta` are dependencies, or a new page lands in a stale folder.
   }, [refresh, folder, setMeta]);
 
   const open = useCallback((id: string) => {
     const meta = workspace.current?.meta.getDocMeta(id) as ShelfMeta | undefined;
+    titleFor.current = id;
     setTitleDraft((meta?.title ?? '').trim());
     setFolderDraft((meta?.folder ?? '').trim());
     // Every page opens as a page, never the whiteboard.
@@ -547,11 +647,12 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         journalDate: key,
       } as Partial<DocMeta>);
       refresh();
+      titleFor.current = made.id;
       setTitleDraft(dayInWords(key));
       setFolderDraft('');
       setOpenPage(made.id);
     } catch (cause) {
-      setError(humanError(cause, "Today's page could not be started."));
+      setHiccup(humanError(cause, "Today's page could not be started."));
     }
   }, [open, refresh]);
 
@@ -571,10 +672,19 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
   };
 
   const shellBody = () => {
-    if (error) {
+    if (fatal) {
       return (
-        <div className="mx-auto max-w-2xl px-4 pt-6">
-          <p className="sr-note sr-note--trouble">{error}</p>
+        <div className="mx-auto max-w-xl px-4 pt-10">
+          <div className="sr-group px-6 py-8 text-center">
+            <p className="sr-note sr-note--trouble text-left">{fatal}</p>
+            <button
+              type="button"
+              onClick={() => setAttempt((n) => n + 1)}
+              className="tap-sm mt-5 rounded-full bg-navy px-6 text-[17px] font-semibold text-white"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       );
     }
@@ -651,9 +761,18 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
             }}
             onTrash={(id) => setMeta(id, { trashedAt: Date.now() })}
             onRestore={(id) => setMeta(id, { trashedAt: undefined })}
-            onDeleteForever={(id) => {
-              workspace.current?.removeDoc(id);
+            onDeleteForever={async (id) => {
+              const room = workspace.current;
+              if (!room) return;
+              const missed = await room.deleteForever(id);
               refresh();
+              if (missed.length) {
+                // Gone from the list and this device; the database is told
+                // the next time the room opens with a connection.
+                rememberToForget(ownerId, id);
+                setHiccup('Deleted from this device. It will also be removed from your church\u2019s '
+                  + 'database the next time the room opens with a connection.');
+              }
             }}
           />
         </>
@@ -669,7 +788,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         // The window height less the bar's.
         style={board ? { height: 'calc(100% - var(--sr-bar-h))' } : undefined}
       >
-        {trouble && (
+        {trouble && !onDevice.current && (
           <p className="sr-note sr-note--trouble mb-4">
             <span>
               <span className="font-semibold">Not saved yet.</span> {trouble} Keep this
@@ -679,6 +798,9 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         )}
         {notice && <p className="sr-note mb-4">{notice}</p>}
 
+        {/* A SHEET OF PAPER for a page; the whiteboard keeps the whole window. */}
+        <div className={board ? 'contents' : 'sr-paper'}>
+        {!board && <Ribbon className="sr-paper-ribbon" />}
         {/* The title is part of the page and wraps; Return still means done. */}
         <textarea
           ref={titleBox}
@@ -694,6 +816,7 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
           aria-label="Name this page"
           className={`sr-page-title ${board ? 'md:!text-[24px]' : ''}`}
         />
+        <SaveLine state={saveState} demo={demo} onDevice={onDevice.current} />
 
         {/* Page or whiteboard: one page, two views. */}
         {!simple && <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -752,14 +875,31 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
             <BeaconSpinner inline label="Opening this page" />
           </div>
         )}
+        {pageMissing && (
+          <div className="sr-group mt-6 px-6 py-8 text-center" role="status">
+            <p className="text-lg font-semibold">This page has not arrived yet.</p>
+            <p className="sr-row-meta mt-2">
+              It is in your church&rsquo;s database and this device has not fetched it
+              yet, usually because the connection is slow. Nothing has been lost.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setPageMissing(false); setPageAttempt((n) => n + 1); }}
+              className="tap-sm mt-5 rounded-full bg-navy px-6 text-[17px] font-semibold text-white"
+            >
+              Try again
+            </button>
+          </div>
+        )}
         <div
           ref={host}
           // The canvas needs a definite height (an auto height renders 0px), at least
           // 360px; `relative` anchors its absolutely positioned toolbar to the board.
           className={board
-            ? 'affine-edgeless-viewport relative mt-3 min-h-[360px] flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_0_0_0.5px_rgba(26,34,51,0.12),0_1px_3px_rgba(16,24,40,0.06)]'
+            ? 'affine-edgeless-viewport sr-board-frame relative mt-3 min-h-[360px] flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_0_0_0.5px_rgba(26,34,51,0.12),0_1px_3px_rgba(16,24,40,0.06)]'
             : 'affine-page-viewport min-h-[40vh] [min-height:40dvh] pb-6'}
         />
+        </div>
 
       </div>
     );
@@ -778,8 +918,40 @@ export function StudyRoomEditor({ makeSource, makeBlobs, demo = false, onExit }:
         : view === 'journal' ? { label: "Today's page", onClick: openToday }
           : { label: 'New page', onClick: addPage }}
     >
+      {hiccup && (
+        <div className="sticky top-2 z-30 mx-auto mt-2 w-full max-w-[46rem] px-4" role="alert">
+          <p className="sr-note sr-note--trouble sr-hiccup">
+            <span className="min-w-0 flex-1">{hiccup}</span>
+            <button type="button" onClick={() => setHiccup('')} className="sr-hiccup-close tap-sm" aria-label="Dismiss this message">
+              OK
+            </button>
+          </p>
+        </div>
+      )}
       {shellBody()}
     </StudyWorkspaceShell>
+  );
+}
+
+/**
+ * Where the writing on this page is, in a few quiet words under its title.
+ *
+ * ASKED FOR AS "smooth". Smooth writing is writing you never have to wonder
+ * about: the line says when it is with the church, and when it is only on this
+ * device and waiting for a connection, which is not a fault and is not drawn
+ * as one.
+ */
+function SaveLine({ state, demo, onDevice }: { state: SaveState; demo: boolean; onDevice: boolean }) {
+  const text = demo
+    ? 'Practice room: nothing here is kept.'
+    : state === 'saved' ? (onDevice ? 'Saved, on this device and with your church.' : 'Saved with your church.')
+      : state === 'waiting' ? 'Kept on this device. It reaches your church when the connection is back.'
+        : 'Saving\u2026';
+  return (
+    <p className="sr-save-line" data-save-state={demo ? 'practice' : state} aria-live="polite">
+      <span aria-hidden className={`sr-save-dot sr-save-dot--${demo ? 'practice' : state}`} />
+      {text}
+    </p>
   );
 }
 

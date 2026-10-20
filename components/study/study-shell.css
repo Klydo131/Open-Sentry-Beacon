@@ -486,3 +486,205 @@
   .sr-chip-face,
   .sr-icon-btn { transition: none; }
 }
+
+/* ===========================================================================
+ * A STUDY, NOT A LIST (20 October 2026).
+ *
+ * ASKED FOR: "make sure the study room feels like a study room, like a
+ * traditional study room with digital assets on it." So the room is furnished:
+ * a desk under a reading lamp, a bookcase for the places, the page you are on
+ * as a sheet of paper with a margin rule and a ribbon, and the titles in the
+ * system's book face (New York on an iPhone or a Mac, the platform serif
+ * elsewhere; nothing downloaded).
+ *
+ * EVERY LOOK STAYS READABLE. The furniture is drawn as low-alpha layers over
+ * the room's own tokens (--sr-bg, --sr-surface, --sr-ink), which each look
+ * sets for itself, so a dark look gets a dark desk and light writing as it
+ * always did. Nothing here changes a text colour.
+ * =========================================================================== */
+
+.sr {
+  --sr-serif: ui-serif, 'New York', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --sr-wood: rgba(120, 78, 38, 0.05);
+  --sr-lamp: rgba(255, 214, 128, 0.22);
+  --sr-margin-rule: rgba(176, 72, 64, 0.32);
+  background-image:
+    /* The lamp's pool of light on the desk. */
+    radial-gradient(ellipse 70% 55% at 88% 0%, var(--sr-lamp), transparent 70%),
+    /* The grain of the desk: two runs at different spacings and angles, so it
+       reads as wood and not as stripes, and so faint it is felt more than seen. */
+    repeating-linear-gradient(91deg, transparent 0 31px, var(--sr-wood) 31px 32px, transparent 32px 83px),
+    repeating-linear-gradient(88.5deg, transparent 0 47px, var(--sr-wood) 47px 48.5px, transparent 48.5px 127px),
+    /* And the edges of the room a shade darker than its middle. */
+    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 60%, rgba(90, 60, 25, 0.06) 100%);
+  background-attachment: fixed;
+}
+
+/* The bookcase: a light oak case for the places, so the dark ink of Classic
+   reads on it as it did on the plain panel. */
+.sr-side {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 118px, rgba(120, 78, 38, 0.1) 118px 120px),
+    linear-gradient(180deg, #f0e7d8, #e8dcc7);
+  box-shadow: inset -6px 0 12px -10px rgba(80, 50, 20, 0.35);
+}
+
+.sr-furniture { display: block; pointer-events: none; user-select: none; }
+.sr-shelf-art { width: 100%; max-width: 200px; height: auto; margin: 0 0 6px 2px; }
+.sr-lamp-art {
+  position: absolute;
+  top: calc(var(--sr-bar-h) + 6px);
+  right: 14px;
+  width: 104px;
+  height: auto;
+  opacity: 0.95;
+  z-index: 0;
+}
+/* Only where it has a clear corner. The page column is centred beside the
+   288px shelf and is 792px at most, so below about 1340px the lamp's shade
+   would sit against the New page button rather than beside it. */
+@media (max-width: 1339px) { .sr-lamp-art { display: none; } }
+
+/* Titles in the book face. The writing on a page stays in the system's sans,
+   which is what reads best at length on a phone. */
+.sr-title,
+.sr-page-title,
+.sr-side-title,
+.sr-row-title {
+  font-family: var(--sr-serif);
+  letter-spacing: -0.005em;
+}
+.sr-title { font-weight: 700; }
+.sr-row-title { font-weight: 600; }
+
+/* The page list as sheets on the desk: paper, lifted a little. */
+.sr-group {
+  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 1px 2px rgba(16, 24, 40, 0.05), 0 6px 18px -12px rgba(60, 40, 15, 0.35);
+}
+
+/* ---- The page you are writing on: a sheet of paper -------------------------- */
+.sr-paper {
+  position: relative;
+  margin-top: 4px;
+  padding: 22px 18px 28px 30px;
+  border-radius: 6px;
+  background: var(--sr-surface);
+  box-shadow:
+    0 0 0 0.5px var(--sr-sep),
+    0 1px 2px rgba(16, 24, 40, 0.06),
+    0 18px 40px -24px rgba(60, 40, 15, 0.45);
+  /* AFFiNE paints its own page colour; on paper, it paints the paper's. */
+  --affine-background-primary-color: var(--sr-surface);
+}
+/* The margin rule of an exercise book, down the left of the sheet. */
+.sr-paper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 18px;
+  border-left: 1.5px solid var(--sr-margin-rule);
+  pointer-events: none;
+  /* Over the editor's own page colour, under the insert bar. */
+  z-index: 5;
+}
+/* The ribbon hangs at the top right; a long title wraps before it. */
+.sr-paper .sr-page-title { padding-right: 26px; }
+.sr-paper-ribbon {
+  position: absolute;
+  top: -4px;
+  right: 22px;
+  width: 16px;
+  height: auto;
+}
+/* A tablet held upright gets the paper's look with narrower margins: at the
+   full width margins the writing column was 79% of the room at 768px, and
+   tests/e2e/the-study-room-on-every-size.js asks for at least 80%. */
+@media (min-width: 768px) {
+  .sr-paper { padding: 30px 26px 36px 44px; }
+  .sr-paper::before { left: 26px; }
+  .sr-paper-ribbon { right: 28px; width: 18px; }
+}
+@media (min-width: 1024px) {
+  .sr-paper { padding: 34px 40px 40px 56px; }
+  .sr-paper::before { left: 34px; }
+  .sr-paper-ribbon { right: 40px; }
+}
+
+/* Where the writing is, under the title: quiet, and never alarming. */
+.sr-save-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--sr-ink-2);
+}
+.sr-save-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 999px; background: var(--sr-ink-2); }
+.sr-save-dot--saved { background: #2f7a4a; }
+.sr-save-dot--saving { background: #b8860b; }
+.sr-save-dot--waiting { background: #b8860b; }
+.sr-save-dot--practice { background: var(--sr-ink-2); }
+
+/* A hiccup: a line above the room, with its own way to put it away. */
+.sr-hiccup { align-items: center; box-shadow: 0 6px 18px -10px rgba(122, 26, 18, 0.45); }
+.sr-hiccup-close {
+  flex: 0 0 auto;
+  padding-inline: 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: rgba(122, 26, 18, 0.08);
+}
+
+/* ---- The whiteboard: a drawing board in a frame ------------------------------ */
+.affine-edgeless-viewport {
+  /* A finger drawing on a phone draws; it does not scroll the room behind. */
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+.sr-board-frame {
+  box-shadow:
+    0 0 0 6px #b9905e,
+    0 0 0 7px rgba(80, 50, 20, 0.35),
+    0 18px 40px -20px rgba(60, 40, 15, 0.5) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr { background-attachment: scroll; }
+}
+
+/* The insert bar, inside the sheet: it reaches to the paper's edges and is
+   paper behind, so writing scrolling under it is hidden, not shown through. */
+.sr-paper .sr-formatbar {
+  margin-left: -30px;
+  margin-right: -18px;
+  padding-left: 30px;
+  padding-right: 18px;
+  background: var(--sr-surface);
+  background: color-mix(in srgb, var(--sr-surface) 94%, transparent);
+}
+@media (min-width: 768px) {
+  .sr-paper .sr-formatbar { margin-left: -44px; margin-right: -26px; padding-left: 44px; padding-right: 26px; }
+}
+@media (min-width: 1024px) {
+  .sr-paper .sr-formatbar { margin-left: -56px; margin-right: -40px; padding-left: 56px; padding-right: 40px; }
+}
+
+/* ---- The insert bar on a narrow screen -----------------------------------------
+ * REPORTED: on a 390px or 360px phone the Simple bar showed three of its four
+ * buttons and the fourth as a sliver of icon, with nothing to say the row
+ * scrolled. Simple has four, so they wrap onto a second line and every one is
+ * whole. Advanced has ten and still scrolls, so its right edge now fades, which
+ * is the usual sign that there is more. */
+.sr-formatbar[data-simple='true'] [role='toolbar'] { flex-wrap: wrap; overflow-x: visible; row-gap: 4px; }
+.sr-formatbar[data-simple='false'] [role='toolbar'] {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+  padding-right: 28px;
+}
+@media (min-width: 1024px) {
+  .sr-formatbar[data-simple='false'] [role='toolbar'] { -webkit-mask-image: none; mask-image: none; padding-right: 0; }
+}
+.sr-shelf-art--phone { width: 132px; height: auto; margin: 2px 0 10px -2px; }
+@media (min-width: 768px) { .sr-shelf-art--phone { display: none; } }

@@ -61,6 +61,9 @@ function fromBase64(text: string): Uint8Array {
 
 type Row = { state: string; version: number };
 
+/** The one room each person has. Its id is the workspace id in study_docs and study_blobs. */
+export const STUDY_ROOM = 'study-room';
+
 /**
  * A document source that can say when it is in trouble.
  *
@@ -85,6 +88,20 @@ export class SupabaseDocSource implements DocSource, Troubled {
   /** How many times a write may lose the race before it gives up and throws. */
   private static readonly RETRIES = 3;
 
+  /**
+   * The pages the database has answered for, whether or not it held them.
+   * The room asks this before saying a page is blank: a page the database
+   * has not answered for yet is still arriving, not empty.
+   */
+  readonly answered = new Set<string>();
+  private readonly answerListeners = new Set<(docId: string) => void>();
+
+  /** Be told each time a page is answered for (see `answered`). Returns the way to stop. */
+  whenAnswered(cb: (docId: string) => void): () => void {
+    this.answerListeners.add(cb);
+    return () => this.answerListeners.delete(cb);
+  }
+
   constructor(
     private readonly db: SupabaseClient,
     private readonly ownerId: string,
@@ -108,6 +125,9 @@ export class SupabaseDocSource implements DocSource, Troubled {
       this.onTrouble?.(cause);
       throw cause;
     }
+    this.answered.add(docId);
+    // Told after the engine has applied what came back, not before.
+    setTimeout(() => { for (const cb of this.answerListeners) cb(docId); }, 0);
     if (!data) return null;
 
     const update = fromBase64((data as Row).state);
@@ -119,6 +139,10 @@ export class SupabaseDocSource implements DocSource, Troubled {
   }
 
   async push(docId: string, data: Uint8Array): Promise<void> {
+    // A page deleted for good may still have a last change in the engine's
+    // queue (taking a page down clears its blocks, which is itself a change).
+    // Writing it would put the row straight back.
+    if (this.forgotten.has(docId)) return;
     try {
       await this.write(docId, data);
       // The last write got through, so whatever was wrong is over. Reported
@@ -177,6 +201,28 @@ export class SupabaseDocSource implements DocSource, Troubled {
       'Those notes could not be saved because the room kept changing on another '
       + 'device. Close it there and try again.',
     );
+  }
+
+  /**
+   * A page deleted for good is deleted here too.
+   *
+   * THE BUG THIS FIXES. "Delete forever" took a page off the list and left its
+   * row in the database. The first page of every room has the same id, so a
+   * room emptied and then given a new first page pulled the old row straight
+   * back: the deleted writing reappeared. Gone means gone, on the device and
+   * in the database.
+   */
+  private readonly forgotten = new Set<string>();
+
+  async forget(docId: string): Promise<void> {
+    this.forgotten.add(docId);
+    const { error } = await this.db
+      .from('study_docs')
+      .delete()
+      .eq('owner_id', this.ownerId)
+      .eq('workspace_id', this.workspaceId)
+      .eq('doc_id', docId);
+    if (error) throw new Error(error.message);
   }
 
   /**

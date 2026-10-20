@@ -51,7 +51,7 @@ the app would send.
 | **Admin**: approvals, pairing, safeguarding | | | ✓ |
 | **Office**: numbers, lessons, Sabbath program, meetings, reports | | ✓ | ✓ |
 | **This Sabbath**: the program the church has shared | ✓ | ✓ | ✓ |
-| **Study Room**: my own notes while I read | ✓ | | |
+| **Study Room**: my own notes while I read | ✓ | ✓ | ✓ |
 | **Music**: player, tuner, conductor, pieces | ✓ | ✓ | ✓ |
 | **My Files**: my own files on this device | ✓ | ✓ | ✓ |
 | **Admin Reports**: reports and the record | | | ✓ |
@@ -93,9 +93,10 @@ cannot find a button, it is almost always in another folder of the same room.
   row. The chapter *Your information, and how it is protected* says what is kept and for how long.
 - **My Files, the Music room and your settings** are kept on the device you are
   holding. They are never uploaded, and they are there with no signal.
-- **The Study Room** keeps an Explorer's pages in the church's database, under
-  rules that let only that Explorer read them: not their Guide, not a Director,
-  not the person who set up the app.
+- **The Study Room** keeps each person's pages in the church's database, under
+  rules that let only that person read them: not their Guide, not a Director,
+  not the person who set up the app. A copy stays on the device they use, so it
+  works with no signal, and signing out deletes it.
 - **The Sabbath program and evangelistic meetings** are kept on the device as
   you type, so they work with no signal, and in a church's own app they also
   follow you to every device where you sign in.

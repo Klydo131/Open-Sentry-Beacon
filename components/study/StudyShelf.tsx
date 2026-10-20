@@ -32,6 +32,7 @@ import {
   GROUP_ORDER, dayInWords, foldersAcross, groupFor, hasTag, matchesCollection,
   nameForView, tagsAcross, whenWritten, type Collection, type ShelfEntry,
 } from '@/lib/study/shelf';
+import { Bookshelf } from '@/components/study/StudyFurniture';
 
 export type ShelfView = 'all' | 'favourites' | 'journal' | 'trash';
 
@@ -165,6 +166,8 @@ export function StudyShelf({
           the sidebar names the room and this names the place within it. */}
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
+          {/* The bookcase's shelf of books, on a phone, where there is no bookcase. */}
+          <Bookshelf className="sr-shelf-art--phone" />
           <h1 className="sr-title">
             <span className="md:hidden">Study Room</span>
             <span className="hidden md:inline">{place.label}</span>

@@ -1,9 +1,16 @@
 # How to use the Study Room
 
-**For Explorers. Everything in here is yours.**
+**For everybody in the app. Everything in here is yours.**
 
-The Study Room is your own place to write while you read. It is not a chat, it
-is not shared, and nobody is waiting for you to finish anything in it.
+The Study Room is your own place to write while you read: an Explorer's notes on
+a study, a Guide preparing one, a leader's notes on a sermon. It is not a chat,
+it is not shared, and nobody is waiting for you to finish anything in it. Until
+20 October 2026 it was for Explorers only, and marked Beta.
+
+It is furnished like a study: the places in a bookcase, your pages on a desk
+under a reading lamp, and the page you are writing on as a sheet of paper with
+a margin and a ribbon to mark it. The furniture is drawn by the app itself, so
+nothing extra is downloaded and it all works with no signal.
 
 ---
 
@@ -12,9 +19,9 @@ is not shared, and nobody is waiting for you to finish anything in it.
 Tap **📖 Study Room** in My Rooms. It fills the whole screen, because it is a
 room rather than a box on a page.
 
-To leave, tap **← Hope Beacon** at the top left. That puts you back in the app
-exactly where the rest of your journey is. Nothing is lost by leaving; there is
-no Save button anywhere in this room and there does not need to be.
+To leave, tap **← Hope Beacon** at the top left. That puts you back on your own
+home screen in the app. Nothing is lost by leaving; there is no Save button
+anywhere in this room and there does not need to be.
 
 ---
 
@@ -23,7 +30,7 @@ no Save button anywhere in this room and there does not need to be.
 The room starts **Simple**: your pages, **+ New page**, search, and the **Bin**.
 On a page you get its name, the writing, and four things to add: a heading, a
 list, a to-do and a quote. That is all most people need, and it is all a new
-Explorer is shown.
+room shows. On a narrow phone the four sit on two lines, so each one is whole.
 
 Tap **Advanced**, under the room's name, for everything else: **Starred** and
 the **Journal**, folders, tags and saved views, the star on each page, the
@@ -129,40 +136,56 @@ shelf without destroying it. It waits in the Bin until you decide.
 **Put it back** returns a page from the Bin to All pages.
 
 **Delete forever** lives only in the Bin, is the only red button in the room,
-and asks you once before it does anything. After that the page is gone and
-cannot be recovered.
+and asks you once before it does anything. After that the page is gone, from
+this device and from the church's database, with any picture that only that
+page used, and cannot be recovered. Until 20 October 2026 the page's writing
+stayed behind in the database, and an emptied room could bring it back.
 
 ---
 
 ## Saving, and what to do if it says it has not saved
 
-Your writing saves itself as you go. There is nothing to press.
+Your writing saves itself as you go. There is nothing to press. Under each
+page's name a short line says where it is:
+
+- **Saved, on this device and with your church.** Nothing to do.
+- **Saving…** It is on its way; it usually takes a moment.
+- **Kept on this device. It reaches your church when the connection is back.**
+  You are writing without a signal. Keep writing: the room keeps everything on
+  your phone or computer and sends it the next time there is a connection, even
+  if you close the app first.
+
+The room keeps a copy of your pages on the device you use, so it opens at once
+and works with no signal. **Signing out deletes that copy**, so a shared
+tablet keeps nothing of yours. (A private window in some browsers will not keep
+a copy at all; there the room works straight from the database, as it always
+did.)
 
 If something is wrong, the room tells you instead of pretending:
 
-**"Not saved yet"** in red means your writing has not reached the church's
-database. Keep the page open. It keeps trying, and what you have written is
-still on the screen. When it gets through, the message disappears on its own.
-If it stays for more than a few minutes, it is almost always the connection.
+**"This page has not arrived yet"** means you opened a page this device has not
+fetched yet, usually on a slow connection the first time you use a new phone.
+Only that page says so; the rest of the room keeps working. Tap **Try again**.
 
-**"Your study room did not answer"** means the app could not reach your pages at
-all when you opened it. Nothing has been lost; your pages are in the database
-and this device simply could not get to them. Tap **Try again**.
+**"Your study room did not answer"** appears only on a device that has never
+opened your room before, with no connection. Nothing has been lost; your pages
+are in the database. Tap **Try again** when there is a signal.
 
-**"Your saved pages are taking a while to arrive"** means the room opened before
-everything had come back. What is on the screen is yours to read; give it a
-moment before you rely on new writing being kept.
+**A red line at the top of the room** means one thing did not work (adding a
+block, a copy for Obsidian). It goes away on its own or with **OK**, and the
+room stays as it was. It used to replace the whole room until it was reopened.
 
 ---
 
 ## Who can see what you write
 
 **Nobody.** Not your Guide, not a Director, not the person who set up the app.
+That is true for everybody who has a study room, whatever their role.
 
-Your Guide can see **that** you have been working in your study room and **when**
-you last did. They cannot see the pages, the names of the pages, or a single
-word you have written. That is deliberate and it is enforced by the database
-rather than by a setting anybody can change.
+If you are an Explorer, your Guide can see **that** you have been working in
+your study room and **when** you last did. They cannot see the pages, the names
+of the pages, or a single word you have written. That is deliberate and it is
+enforced by the database rather than by a setting anybody can change.
 
 ---
 
@@ -236,7 +259,8 @@ canvas. It is one page, not two: there is nothing to copy across.
 On the whiteboard you have shapes, arrows that stay attached to what they join,
 a pen, text anywhere you like, mindmaps and frames. It is for the things a
 column of text is bad at: how a passage is built, who is related to whom, a plan
-for a study on a wall.
+for a study on a wall. On a phone or tablet a finger on the board draws; it no
+longer scrolls the room behind it.
 
 ---
 
@@ -248,9 +272,11 @@ phone:
 
 - **Pictures and files.** Put a photograph of a page straight into your notes.
   They are kept in the church's own database like everything else in your room,
-  and they are still there tomorrow. There is a size limit of about one
-  megabyte a picture, which is a generous photograph, because the database is
-  shared by the whole church.
+  and they are still there tomorrow. A photo from a phone camera is made
+  smaller by itself before it is kept, and **loses the record of where it was
+  taken**, as every photo in the app does. Other files can be up to one
+  megabyte, because the database is shared by the whole church; for a large
+  document, keep it in My Files and put a link to it here.
 - **Tables**, and **databases** with a **table view** and a **kanban board** if
   you want to track a study across weeks.
 - **Equations**, in proper mathematical notation.

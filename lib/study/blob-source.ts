@@ -19,6 +19,7 @@
 
 import type { BlobSource } from '@blocksuite/sync';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { shrinkImage } from '@/lib/live/shrink-image';
 
 /**
  * The most a single picture may be, in real bytes.
@@ -29,6 +30,33 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * showing a blank. The database still has the last word; this is the message.
  */
 export const BLOB_LIMIT = 1_000_000;
+
+/**
+ * A picture or file as the study room keeps it: a photo made small enough
+ * and stripped of where it was taken, anything still too large refused with
+ * a sentence a person can act on.
+ *
+ * THE BUG IT FIXES: a photograph from a phone camera is two to four
+ * megabytes, so every one was refused at the 1 MB line, and the ones that
+ * fitted kept their GPS coordinates. lib/live/shrink-image.ts is what every
+ * other upload in the app already goes through; now this one does too.
+ */
+export async function prepareStudyFile(value: Blob): Promise<Blob> {
+  let ready = value;
+  if (/^image\//i.test(value.type)) {
+    const asFile = value instanceof File ? value : new File([value], 'picture', { type: value.type });
+    ready = await shrinkImage(asFile);
+  }
+  if (ready.size > BLOB_LIMIT) {
+    throw new Error(
+      `That file is ${Math.round(ready.size / 100_000) / 10} MB. A study room `
+      + `keeps files up to ${BLOB_LIMIT / 1_000_000} MB, so the church's database `
+      + 'stays usable for everybody. A photo is made smaller by itself; for a '
+      + 'large document, keep it in My Files and put a link to it here.',
+    );
+  }
+  return ready;
+}
 
 function toBase64(bytes: Uint8Array): string {
   let binary = '';
@@ -91,15 +119,8 @@ export class SupabaseBlobSource implements BlobSource {
   }
 
   async set(key: string, value: Blob): Promise<string> {
-    if (value.size > BLOB_LIMIT) {
-      throw new Error(
-        `That file is ${Math.round(value.size / 100_000) / 10} MB. A study room `
-        + `keeps files up to ${BLOB_LIMIT / 1_000_000} MB, so the church's database `
-        + 'stays usable for everybody.',
-      );
-    }
-
-    const bytes = new Uint8Array(await value.arrayBuffer());
+    const ready = await prepareStudyFile(value);
+    const bytes = new Uint8Array(await ready.arrayBuffer());
     // UPSERT RATHER THAN INSERT, because the same picture pasted twice is the
     // same key, and the second paste must not be an error on the screen. There
     // is no update policy, so this is an insert that tolerates a row already
@@ -108,12 +129,12 @@ export class SupabaseBlobSource implements BlobSource {
       owner_id: this.ownerId,
       workspace_id: this.workspaceId,
       key,
-      mime: value.type || 'application/octet-stream',
+      mime: ready.type || 'application/octet-stream',
       bytes: toBase64(bytes),
     }, { onConflict: 'owner_id,workspace_id,key', ignoreDuplicates: true });
     if (error) throw new Error(error.message);
 
-    this.seen.set(key, value);
+    this.seen.set(key, ready);
     return key;
   }
 

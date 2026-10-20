@@ -408,7 +408,7 @@ export function faqSections(): FaqSection[] {
           id: 'study-room',
           q: 'What is the Study Room?',
           a: [
-            'A private space for Explorers to write and keep notes on what they are reading. It opens in Simple mode, with pages, search and the Bin. Advanced mode adds folders, tags, a whiteboard and more, and your writing is unchanged when you switch.',
+            'A private space for everybody in the app to write and keep notes on what they are reading. Nobody else can read it. It opens in Simple mode, with pages, search and the Bin. Advanced mode adds folders, tags, a whiteboard and more, and your writing is unchanged when you switch. It keeps a copy on your device, so it works with no signal, and signing out deletes that copy.',
           ],
         },
         {

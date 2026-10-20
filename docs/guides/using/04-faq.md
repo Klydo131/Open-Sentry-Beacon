@@ -120,7 +120,9 @@ never uploaded. A new phone starts with them empty.
 
 Nobody but you: not your Guide, not a Director, not the person who set up the
 app. Your pages are kept in the church's database so they follow you to another
-device, under rules the database itself enforces that let only you read them.
+device, under rules the database itself enforces that let only you read them. A
+copy is also kept on the device you write on, so the room opens with no signal,
+and signing out deletes that copy.
 
 ### Does the tuner record me?
 

@@ -32,6 +32,8 @@
 // account signing in deletes the last one's. It is the same data the screens
 // already showed on this device, kept where the browser keeps the app itself.
 
+import { forgetEveryLocalRoom } from '@/lib/study/local-names';
+
 const PREFIX = 'beacon-kept-';
 
 /** The database functions that change nothing, by the database's own word. */
@@ -109,6 +111,9 @@ const hasCaches = () => typeof caches !== 'undefined';
 
 /** Delete every kept copy on this device: signing out. */
 export async function forgetEverythingKept(): Promise<void> {
+  // The study room's copy on this device goes too: a shared tablet must not
+  // keep somebody's study notes after they sign out (lib/study/local-names.ts).
+  await forgetEveryLocalRoom().catch(() => undefined);
   if (!hasCaches()) return;
   try {
     const keys = await caches.keys();

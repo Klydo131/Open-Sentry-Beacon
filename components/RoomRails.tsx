@@ -64,8 +64,8 @@ export function railGroupsFor(
   // My Files: the person's own media on their device. Nothing shared lands here.
   const myFiles = { href: '/library', label: 'My Files', icon: '📚' };
 
-  // The Study Room, for Explorers; marked beta.
-  const studyRoom = { href: '/study', label: 'Study Room', icon: '📖', beta: true };
+  // The Study Room: everybody's own, since 20 October 2026.
+  const studyRoom = { href: '/study', label: 'Study Room', icon: '📖' };
 
   // This Sabbath: the church's shared program, readable offline.
   const thisSabbath = { href: '/sabbath', label: 'This Sabbath', icon: '🗓️' };
@@ -99,6 +99,7 @@ export function railGroupsFor(
           { href: '/dm', label: 'My Explorers', icon: '🤝', badge: counts.seekers },
           office,
           thisSabbath,
+          studyRoom,
           music,
           myFiles,
         ],
@@ -116,6 +117,7 @@ export function railGroupsFor(
         { href: '/admin', label: 'Admin', icon: '🛡️', badge: counts.approvals },
         office,
         thisSabbath,
+        studyRoom,
         music,
         myFiles,
         cases,

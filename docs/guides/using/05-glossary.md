@@ -53,7 +53,7 @@ The words the app uses, and what each one means in it.
 | **Sample church** | The invented church the app shows when it has no database behind it. Every picture in this guide is from it. |
 | **Shelf** | The church's starter resources. An Explorer is shown eight first, opening with a Bible they can read on a phone. |
 | **Stage** | Where an Explorer has reached on the journey. A note for the Guide, never a score, and never shown to the Explorer. |
-| **Study Room** | An Explorer's own place to write while reading. Nobody else sees it. Marked beta. |
+| **Study Room** | Everybody's own place to write while reading. Nobody else sees it. |
 | **Talk** | The round button in the corner of every screen: your conversation. |
 | **Team only** | A tick on part of an evangelistic meeting that keeps it out of the picture and anything posted. |
 | **Text size** | How big the words are, chosen in Settings, General, and applied with **Apply**. |

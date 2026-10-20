@@ -18,6 +18,20 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-20-a-study-room-for-everybody',
+    date: '2026-10-20',
+    title: 'A Study Room for everybody, and one that keeps your writing',
+    items: [
+      'The Study Room is open to everybody in the app now, not only Explorers, and it is no longer marked Beta. Each person\'s room is their own: nobody else can read it.',
+      'It looks like a study: the places in a bookcase, your pages on a desk under a reading lamp, and the page you are writing on as a sheet of paper with a margin and a ribbon.',
+      'Your writing is kept on your device as well as in the church\'s database, so the room opens at once and works with no signal. What you write offline reaches the church the next time there is a connection. A line under each page\'s name says where it is. Signing out deletes the copy on the device.',
+      'Delete forever now really deletes: from the device, from the database, and any picture only that page used. Before, an emptied room could bring a deleted page\'s writing back.',
+      'A photo from a phone camera is made smaller by itself and loses where it was taken, instead of being refused for being over one megabyte.',
+      'A page that has not arrived yet says so on the page, with Try again, instead of the whole room saying it did not answer. Something that goes wrong once shows a line at the top and goes away, instead of replacing the room.',
+      'On a narrow phone the four buttons above a page sit on two lines, so Quote is no longer cut off. On the whiteboard, a finger draws instead of scrolling the room.',
+    ],
+  },
+  {
     id: '2026-10-18-beacons-own-sound',
     date: '2026-10-18',
     title: 'Alerts have a sound of their own',

@@ -60,7 +60,7 @@ export function StudyInsertBar({ onInsert, simple = false }: {
   simple?: boolean;
 }) {
   return (
-    <div className="sr-formatbar mt-4">
+    <div className="sr-formatbar mt-4" data-simple={simple ? 'true' : 'false'}>
       <div
         role="toolbar"
         aria-label="Add to this page"
