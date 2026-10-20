@@ -20,14 +20,12 @@ The words the app uses, and what each one means in it.
 | **Director** | Runs the church's account: invites, approves, pairs, and reads safeguarding reports. |
 | **Disapprove** | Switch an account off, keeping it. It can be undone. Compare *Delete*, which cannot. |
 | **Evangelistic meetings** | A planner in the Office for a series of meetings, night by night, with a Word file, a picture and a post to share. |
-| **Executive Director** | Oversees one or more churches, appoints Directors, and sees what a Director sees across all of them. |
 | **Explorer** | Somebody the church is walking with. They have one Guide. |
 | **Folder** | One part of a room. The button at the top of a room says which folder you are in; tap it to see the rest. |
 | **Front door** | The first page of the app, before signing in. |
 | **Frutiger Aero** | A family of five looks made of glass and light: Frutiger Eco, Dark Aero, Technozen, DORFic and Four Colors. |
 | **Guide** | A church member who walks with a few Explorers. |
 | **Guided walk** | The tutorial: a highlight that points at the next thing to tap and says what it is for. **Start a tutorial**, in Settings, Help. |
-| **Head Executive Director** | The one account at the root of the church's authority. Nobody can suspend or remove it, so a church can never lock itself out. |
 | **Home** | The church home: Notices, Blog, the Prayer wall, and for leaders the numbers. First in every Menu. |
 | **Install** | Add the app to a home screen or dock so it opens like any other app. |
 | **Journey** | The five stages an Explorer moves through at their own pace: Beginner, Connect, Care, Call and Cultivate. |

@@ -97,18 +97,26 @@ export const ROLE_LABELS: Record<string, string> = {
 /** The roles that read a roster, and so are shown an Explorer's label. */
 const SEES_EXPLORER_LABEL = ['dm', 'admin', 'executive'];
 
+/** Senior leadership is named only to leaders; Guides and Explorers read "Church leader". */
+const SEES_EXECUTIVE_LABEL = ['admin', 'executive'];
+const EXECUTIVE_TO_MEMBERS = 'Church leader';
+
 /**
  * The label beside somebody's name, or null. `viewer` (the reader's role) is
  * required, so no call site can forget it and show a label it should not.
  */
 export function roleLabel(role: string, viewer: string): string | null {
   if (role === 'ds' && !SEES_EXPLORER_LABEL.includes(viewer)) return null;
+  if (role === 'executive' && !SEES_EXECUTIVE_LABEL.includes(viewer)) return EXECUTIVE_TO_MEMBERS;
   const label = ROLE_LABELS[role];
   return label ? label : null;
 }
 
 /** A word for a role where the interface must name it: pickers and explanations. */
-export function roleNoun(role: string): string {
+export function roleNoun(role: string, viewer?: string): string {
+  if (role === 'executive' && viewer !== undefined && !SEES_EXECUTIVE_LABEL.includes(viewer)) {
+    return EXECUTIVE_TO_MEMBERS;
+  }
   return ROLE_LABELS[role] || 'Explorer';
 }
 

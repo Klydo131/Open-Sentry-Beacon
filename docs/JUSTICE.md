@@ -131,7 +131,7 @@ look*, never *this person did wrong*.
 ### Who reads it
 
 - A **Director** reads it for the Guides and Explorers of a church they lead.
-- An **Executive Director**, head or otherwise, reads those and the Directors.
+- The church's **senior leadership** reads those and the Directors.
 - **Nobody reads their own row.** An account that can watch itself is not being
   watched.
 - **A Guide or an Explorer cannot open this record at all.**
@@ -147,7 +147,7 @@ reason a report is not shown to the person reported.
 
 ### Opening a case from it
 
-Any Director or Executive Director can turn one line of the record into a case,
+Any church leader can turn one line of the record into a case,
 from the row itself. It becomes an ordinary report — the same object anybody
 could have raised, answered by the same people, kept for as long — carrying what
 was done and how it was labelled.
@@ -244,7 +244,7 @@ that is modest.
 
 ## Part 7 — If you are asked to handle one
 
-For Directors and Executive Directors.
+For Directors and the church's senior leadership.
 
 - **Claim it before you work on it.** That is what stops two people deciding the
   same report in two different ways.

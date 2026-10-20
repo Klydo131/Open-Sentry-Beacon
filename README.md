@@ -112,14 +112,13 @@ of leaving you to guess. The written version is
 
 ## What it does
 
-Four kinds of people, each seeing a different app built from the same data.
+Three kinds of people, each seeing a different app built from the same data.
 
 | | What they see |
 |---|---|
 | **Explorer** | Messages from the person walking with them, their lessons, how far through a course they are, the Sabbath program and meetings their church posts, and a way to ask for prayer and to pray for their Guide. |
 | **Guide** | Their own people and nobody else's. Conversations, lessons to share, meetings to arrange, private notes, and prayer both ways. An Office for the Sabbath program, evangelistic meetings, and a progress report on the people they walk with. |
-| **Director** | Who gets in, who walks with whom, what is on the library shelf, and a progress report on every Explorer in the church, by stage and by Guide. |
-| **Executive Director** | The church in numbers, and how those numbers are changing. Never anybody's conversations. |
+| **Director** | Who gets in, who walks with whom, what is on the library shelf, the church in numbers, and a progress report on every Explorer in the church, by stage and by Guide. Never anybody's conversations. |
 
 **Four looks, one app.** Settings offers **Classic**, **Beacon** (bright),
 **Study** (warm paper) and **Focus** (dark). Each person picks one for their

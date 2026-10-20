@@ -142,7 +142,6 @@ the Guide and the Director ever see which stage someone is on.
 | | Sees |
 |---|---|
 | **Director** | Everything in their own church. Approves, invites, pairs, monitors. |
-| **Executive Director** | The same, across every church they oversee. |
 | **Guide** | **Only the Explorers paired with them.** Their conversations, their journeys, their own private notes. Nothing about another Guide's Explorers. |
 | **Explorer** | Their own page, their own Guide, and what has been shared with them. |
 | **Church leadership** | No account. Aggregate numbers from the Director, when they ask. |
@@ -177,7 +176,6 @@ in your church?"* and each answer leads somewhere different.
 
 | Who | Tasks | What it teaches |
 |---|---|---|
-| **Executive Director** | 3 | The church at a glance, the journey chart, and the gate everyone passes through to join. Counts, never conversations. |
 | **Director** | 5 | Who is waiting, letting someone in with a role, acting on a Guide's recommendation, pairing a Guide with an Explorer, and stocking the library. |
 | **Guide** | 5 | Open an Explorer, message them, advance their journey, share a resource, make your profile yours. |
 | **Explorer** | 3 | Say hello, open a lesson, ask for prayer. No stage name appears anywhere. |

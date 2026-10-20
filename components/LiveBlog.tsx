@@ -486,7 +486,7 @@ export function LiveBlogFeed({ selfId }: { selfId?: string }) {
                     Narrower audiences keep the ordinary rule. */}
                 {p.author_id !== selfId
                   ? (() => {
-                      if (p.audience === 'church') return ` · ${roleNoun(p.author_role)}`;
+                      if (p.audience === 'church') return ` · ${roleNoun(p.author_role, profile?.role ?? '')}`;
                       const label = profile ? roleLabel(p.author_role, profile.role) : null;
                       return label ? ` · ${label}` : '';
                     })()

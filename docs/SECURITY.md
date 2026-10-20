@@ -124,6 +124,20 @@ create trigger keep_privileges_unchanged
 On the app's side, send a fixed list of fields when somebody saves their
 profile, never the whole object.
 
+**Suggested, not required: a seat above your administrators.** Hope Beacon has
+one role above Director (`executive` in the database). Only that seat can
+appoint, suspend or remove a Director, and it reviews what Directors do in the
+security audit. This separates duties: an administrator who goes wrong can be
+stopped by somebody they cannot remove. The setup script gives the seat to the
+first account, because something has to appoint the first Director. Whether
+anybody else holds it is your church's decision; churches that use it usually
+give it to their most senior leaders.
+
+The seat does not need to be advertised. Screens and documents that members
+read call it "church leader", and your privacy notice should still say that
+church leaders can see how the app is used, so that everything members are told
+stays true.
+
 ### 3. Functions that run with more rights
 
 A `security definer` function runs as its owner, so it can read past the

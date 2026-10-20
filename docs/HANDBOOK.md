@@ -19,7 +19,7 @@ Everything needed to run Hope Beacon, move it to a new project, and keep it work
 > **The pictures** are the real app, photographed in its sample church: the people in them (Maria Santos, John Reyes, Pastor Ramos and the rest) are invented, and nobody real appears anywhere in this handbook. Where the sample church differs from a church's own app, the caption says so.
 
 1. [What the app is](#1-what-the-app-is)
-2. [The four roles](#2-the-four-roles)
+2. [The roles](#2-the-roles)
 3. [The journey](#3-the-journey)
 4. [Running it, week to week](#4-running-it-week-to-week)
 5. [Getting it onto a phone](#5-getting-it-onto-a-phone)
@@ -77,20 +77,19 @@ All three need the database update that came with them (migration `2026100112000
 
 A Guide walks with at most as many Explorers as the church has set, and the database enforces it rather than the screen. The figure started at five, which is roughly what one person can actually walk with; this congregation has raised it to a hundred. The app will run a church of a hundred without complaint, on the plan it is on today and with room to spare. See [What it costs](./WHAT-IT-COSTS.md) for the measured figures. What it cannot do is find you a sixth Guide. Growth here means recruiting and training people, and the app is built to keep that constraint visible rather than hide it behind a number that keeps rising.
 
-## 2. The four roles
+## 2. The roles
 
-A person's role is chosen when they are approved, and it decides everything they can see for as long as they are in the church. **Nobody can change their own role, including the Executive Director.** That is enforced in the database, not in the app.
+A person's role is chosen when they are approved, and it decides everything they can see for as long as they are in the church. **Nobody can change their own role, including the church's most senior leaders.** That is enforced in the database, not in the app.
 
 | Role | What they do | What they can see |
 | --- | --- | --- |
 | **Explorer** | Walks the journey. Reads what their Guide sends, talks with them, asks for prayer. | Their own journey, and their conversation with their Guide. Nothing about anybody else. |
 | **Guide** | Walks with up to the church's own limit of Explorers. Chooses what to share and when. Recommends new people, but cannot invite them. | Only the Explorers paired with them. Never another Guide's people. |
 | **Director** | Runs the church. Invites, approves, pairs, and reads safeguarding reports. | Everyone in their church and the counts behind them. Not private conversations, except inside a report. |
-| **Executive Director** | Oversees one or more churches, and appoints Directors. | Everything a Director sees, across every church they oversee. |
 
-> **NOTE** · The Head Executive Director
+> **NOTE** · Senior leadership
 >
-> One account is the root of authority. It cannot be suspended or removed by anybody, including itself, so a church can never lock itself out of its own app. Guard the password for that account the way you would guard the keys to the building.
+> Directors are appointed by the church's senior leadership, never by another Director. One senior account is the root of authority: it cannot be suspended or removed by anybody, including itself, so a church can never lock itself out of its own app. Whoever sets the app up holds it first. Guard its password the way you would guard the keys to the building.
 
 ### What an Explorer's shelf opens with
 
@@ -148,7 +147,7 @@ A sixth idea sits behind these: **Commission**. An Explorer who has been walked 
 
 Open the **Pairings** room, choose one of each, and press **Create pairing**. They can talk from that moment. A Guide already carrying five will not appear in the list, because the database will not allow a sixth.
 
-**The ceiling is the church's, and a church can move it.** A Guide walks with as many Explorers as the congregation has set, enforced by the database. It may be raised in Church settings, up to a hundred. Only a Director or an Executive Director can, and only for their own church: a Guide can never give themselves more people.
+**The ceiling is the church's, and a church can move it.** A Guide walks with as many Explorers as the congregation has set, enforced by the database. It may be raised in Church settings, up to a hundred. Only a church leader can, and only for their own church: a Guide can never give themselves more people.
 
 Five was the original figure and the number the discipleship shape was designed around. Raising it does not make one person able to walk with more people; it makes the app stop refusing. What the cap protects is not the servers, it is the Explorer at the bottom of a long list.
 
@@ -203,9 +202,9 @@ Delete asks a second time in the row itself rather than through a browser pop-up
 
 **The dangerous buttons are smaller and red, and they are the only red in the app.** Delete, Remove, Disconnect and Disapprove are drawn one size down from an ordinary button, in red on white rather than filled. They are still a full touch target, because discouraged is not the same as fiddly, but they no longer look like the thing to press.
 
-**Change Guide**, beside Disconnect, gives an Explorer a different Guide in one step. Choose the new Guide and press **Change Guide**: the first pairing ends, a new one begins, and the Explorer keeps their place on the journey. The conversation with the first Guide stays between the two of them; the new Guide starts a new one. Nobody in leadership is ever part of a conversation, so changing a pair never lets a Director or an Executive Director read one. A pairing cannot be edited onto other people any other way: the database refuses it.
+**Change Guide**, beside Disconnect, gives an Explorer a different Guide in one step. Choose the new Guide and press **Change Guide**: the first pairing ends, a new one begins, and the Explorer keeps their place on the journey. The conversation with the first Guide stays between the two of them; the new Guide starts a new one. Nobody in leadership is ever part of a conversation, so changing a pair never lets a church leader read one. A pairing cannot be edited onto other people any other way: the database refuses it.
 
-**Who may make whom what.** Only an Executive Director makes somebody a Director or an Executive Director, by invitation or by changing a role, and only an Executive Director approves somebody who signed up as one. A Director approves, disapproves and changes the role of Guides and Explorers in their own church. Nobody changes their own role, and nobody reaches the Head Executive Director from inside the app. Suspension, guardian consent and the record of who approved whom each have their own step and are never written by hand. These rules are kept by the database, and tested as invented people on every fresh install (`supabase/tests/a-leader-stays-within-their-rank.sql`).
+**Who may make whom what.** Only the church's senior leadership makes somebody a Director, by invitation or by changing a role, and only senior leadership approves somebody who signed up as one. A Director approves, disapproves and changes the role of Guides and Explorers in their own church. Nobody changes their own role, and nobody reaches the root senior account from inside the app. Suspension, guardian consent and the record of who approved whom each have their own step and are never written by hand. These rules are kept by the database, and tested as invented people on every fresh install (`supabase/tests/a-leader-stays-within-their-rank.sql`).
 
 **Who answers for whom.** The Director who brought a Guide or an Explorer into the app, by inviting or approving them, is responsible for them. That Director looks into it with the leadership tools (pairings, journey stages, counts and dates, reported messages), never by reading the conversation. The app keeps who sent each invitation and who approved each person, so the responsible Director can always be found. Any Director can still suspend an account or end a pairing at once to keep somebody safe; the responsible Director follows up. That follow-up is the church's procedure, written in its privacy manual; the app does not enforce it.
 
@@ -225,7 +224,7 @@ Three things about it are worth knowing before you use it on twenty people.
 
 > **NOTE** · Who may delete whom
 >
-> Decided by the database, not the screen. An Executive Director may act on anyone in a church they oversee. A Director may act on Guides and Explorers only, never another Director. Nobody may act on themselves, and nobody at all may act on the Head Executive Director. If an action is refused you are told why, in a sentence.
+> Decided by the database, not the screen. Senior leadership may act on anyone in a church they oversee. A Director may act on Guides and Explorers only, never another Director. Nobody may act on themselves, and nobody at all may act on the root senior account. If an action is refused you are told why, in a sentence.
 
 ### The conversation
 
@@ -306,14 +305,14 @@ Before this, an online meeting had a title and a time and nowhere to put the add
 
 The card says what it is for where it appears: **Resources** in the Office, **Send John something** on one Explorer's page, and **Your resources** in an Explorer's own Study folder, which opens on what was sent to them and their studies before their own.
 
-#### What a Director sees, and what an Executive Director sees
+#### What a Director sees, and what senior leadership sees
 
 Freedom to share is not freedom from oversight, and the oversight is a record afterwards rather than a gate in front of every share.
 
 | You are | You see the record for | You do not see |
 | --- | --- | --- |
-| A Director | Guides and Explorers in your church | Other Directors, or an Executive Director |
-| An Executive Director | Directors | Guides and Explorers |
+| A Director | Guides and Explorers in your church | Other Directors, or senior leadership |
+| Senior leadership | Directors | Guides and Explorers |
 
 Each rank watches the rank below it and no further down, which is the same shape as the security audit. The record is in **Admin → Security**, under the audit, and shows who added or shared what, with whom, and when. Nothing from a conversation appears in it.
 
@@ -323,7 +322,7 @@ Each rank watches the rank below it and no further down, which is the same shape
 
 #### Stopping somebody
 
-A Director can **block a Guide or an Explorer** from sharing anything. An Executive Director can block a Director. Nobody can block themselves, and nobody can block upward or sideways; the database refuses it rather than the screen hiding a button.
+A Director can **block a Guide or an Explorer** from sharing anything. Senior leadership can block a Director. Nobody can block themselves, and nobody can block upward or sideways; the database refuses it rather than the screen hiding a button.
 
 Blocking takes away the library and nothing else. The person keeps their account and their conversation, and can be let back in with one press. It is the right answer for somebody misusing the shelf, and the wrong answer for somebody who needs a safeguarding report or a case.
 
@@ -377,7 +376,7 @@ Directors keep the same control over everything, which is what running the churc
 
 ### Questions people ask
 
-**Anybody can read them, signed in or not**, at `/faq`: the front door, the sign-in screen and the invitation page all link there, so somebody holding an invitation can find out what they are joining, and who can see what, before they join. Signed in, the same answers are in **Settings**, under **Help**. Fifty-seven questions in eight groups: about the app, joining and signing in, your Guide and your conversation, your information and the law, using the app, for Guides, for Directors and Executive Directors, and trying it out.
+**Anybody can read them, signed in or not**, at `/faq`: the front door, the sign-in screen and the invitation page all link there, so somebody holding an invitation can find out what they are joining, and who can see what, before they join. Signed in, the same answers are in **Settings**, under **Help**. Fifty-seven questions in eight groups: about the app, joining and signing in, your Guide and your conversation, your information and the law, using the app, for Guides, for Directors, and trying it out.
 
 **Search narrows the list** and says how many matched, and when three or fewer are left their answers are already open. A link to one answer, such as `/faq#faq-sign-out`, opens that answer, so a Director can send somebody straight to it.
 
@@ -407,7 +406,7 @@ Directors keep the same control over everything, which is what running the churc
 
 A notice pinned where the church will see it: an icon, a title, a line of detail, and a free-text when, because "This Sabbath, 9:00 AM" and "Every evening this week" are what a church actually writes and neither is a date. Notices come down by being taken down, not by a clock nobody set.
 
-**Guides, Directors and Executive Directors can write one.** Guides were left out at first, which meant a Guide arranging something for the five people they walk with had nowhere to pin it and sent the same message five times.
+**Guides and church leaders can write one.** Guides were left out at first, which meant a Guide arranging something for the five people they walk with had nowhere to pin it and sent the same message five times.
 
 **Explorers cannot.** A notice sits above everybody's church screen, and pinning something there is an act of leading rather than of speaking. An Explorer with something to say to the church has Community Blogs, which is exactly that and does not sit above everyone else's.
 
@@ -417,14 +416,14 @@ A notice pinned where the church will see it: an icon, a title, a line of detail
 
 **Where a notice appears depends on whose screen it is**, because the two jobs are different:
 
-- **Guides, Directors and Executive Directors** see notices first, under the greeting. Their job is the church, and a Guide in particular carries the notices onward to the people they walk with.
+- **Guides and church leaders** see notices first, under the greeting. Their job is the church, and a Guide in particular carries the notices onward to the people they walk with.
 - **An Explorer** sees them after their Guide's card and before **Message** and their appointments. An Explorer opening their journey is looking for their person, not for the church; putting the church's notices above that answered a question they had not asked.
 
 Nothing is drawn at all when nothing is pinned, so an ordinary day costs no space on any screen.
 
 ### Community Blogs
 
-**Anybody approved in the church can write a post.** Explorers, Guides, Directors and Executive Directors all write from **Write a post** on Home, or Home's **Blog** folder. There was a time when only Guides and leaders could, and an Explorer who tried was shown an error from the database.
+**Anybody approved in the church can write a post.** Explorers, Guides and church leaders all write from **Write a post** on Home, or Home's **Blog** folder. There was a time when only Guides and leaders could, and an Explorer who tried was shown an error from the database.
 
 Three audiences, and the choice is made before publishing.
 
@@ -448,7 +447,7 @@ Past three posts it gets a scroll bar of its own instead of growing down the pag
 
 On an Explorer's **My Journey**, the first thing on the screen is their Guide's name. The whole design says the journey is a relationship, and an Explorer opening that screen is looking for their person.
 
-**Directors and Executive Directors can delete any post in their church.** That is not tidying up; it is the reason an audience open to every member is safe to have at all. A church-wide megaphone with no way to switch it off is a problem waiting for a Sabbath morning. Anybody can always delete their own.
+**Church leaders can delete any post in their church.** That is not tidying up; it is the reason an audience open to every member is safe to have at all. A church-wide megaphone with no way to switch it off is a problem waiting for a Sabbath morning. Anybody can always delete their own.
 
 ### The Guild Room
 
@@ -462,7 +461,7 @@ The **Guild Room** is that group's shared board: Guides and the Explorers in it,
 
 **The board updates on its own.** A post or an *Amen* from anybody in the guild appears on everyone else's screen within a second or two, with no refresh. This was the last room in the app that still needed one, and it was left until last because the obvious way to do it would have broken the paragraph above: making the posts readable by the browser would have handed over who wrote each one, which is precisely what the room exists not to do. Instead the app watches a separate signal that records only *that this guild's wall changed* — no author, no words, nothing about a person — and then re-asks for the board through the same route as always, labels and all. **Nothing about how little you are told changed; only how quickly you are told it.**
 
-**Directors and Executive Directors are not in it.** A group talking honestly is what the room is for, and a Director reading over their shoulder is a different product. Guild membership itself is still managed by a Director, from the Church room.
+**Church leaders are not in it.** A group talking honestly is what the room is for, and a Director reading over their shoulder is a different product. Guild membership itself is still managed by a Director, from the Church room.
 
 **Anybody can report a post, and a Director can take it down.** That is the one way leadership sees into the room, and it opens only when somebody reports something:
 
@@ -508,7 +507,7 @@ Cases, the Guild Room, Mail and Profile are left alone. They are one or two scre
 
 ### The Office
 
-Guides, Directors and Executive Directors have an **Office**, in the Menu on every screen. It holds the work: the numbers, the progress report, the downloads, the studies you write, the Sabbath program, evangelistic meetings and the shelf you stock. Its subrooms are:
+Guides and church leaders have an **Office**, in the Menu on every screen. It holds the work: the numbers, the progress report, the downloads, the studies you write, the Sabbath program, evangelistic meetings and the shelf you stock. Its subrooms are:
 
 | A Guide's subrooms | A Director's subrooms |
 | --- | --- |
@@ -542,7 +541,7 @@ Follow-ups and prayer requests stayed on the Guide's roster, because they are ab
 
 #### The progress report
 
-**How the Explorers you walk with are moving, for a month or a quarter, and who needs you this week.** It is in the Office under **Reports**, for Guides, Directors and Executive Directors. Asked for on 2 October 2026: "a progress report for Guides and higher up accounts ... make sure it integrates with the data and relevance on how Explorers are progressing rightly."
+**How the Explorers you walk with are moving, for a month or a quarter, and who needs you this week.** It is in the Office under **Reports**, for Guides and church leaders. Asked for on 2 October 2026: "a progress report for Guides and higher up accounts ... make sure it integrates with the data and relevance on how Explorers are progressing rightly."
 
 ![The progress report on a Guide's phone: the period, then the totals for October, each a number and what it counts.](screenshots/walkthrough/31-progress-report.png)
 
@@ -564,7 +563,7 @@ Follow-ups and prayer requests stayed on the Guide's roster, because they are ab
 
 ![Each Explorer: John Reyes at Connect, with a follow-up overdue, and Grace Lim at Care.](screenshots/walkthrough/32-progress-explorers.png)
 
-**Each person's report is what the database already let them read.** A Guide's is their own Explorers, in full. A Director's or an Executive Director's is every Explorer in the church, by stage and by Guide, from the stage and its history only: meetings, lessons and follow-ups stay between each Guide and Explorer, so they are in that Guide's report and not in leadership's, and the screen says so rather than showing zeros. No rule was changed or widened for it.
+**Each person's report is what the database already let them read.** A Guide's is their own Explorers, in full. A church leader's is every Explorer in the church, by stage and by Guide, from the stage and its history only: meetings, lessons and follow-ups stay between each Guide and Explorer, so they are in that Guide's report and not in leadership's, and the screen says so rather than showing zeros. No rule was changed or widened for it.
 
 **Your notes for this report** is a box for what numbers miss: an answered prayer, a family that came along. It is kept on the device, per account and per period, and goes into the Word file and the text and nowhere else. **Download Word file** gives `Progress-report-2026-10.docx` (or `Progress-report-2026-Q4.docx` for a quarter), and **Copy as text** the same for a message. The report keeps up: a stage moved or a study confirmed elsewhere changes it while it is open.
 
@@ -572,7 +571,7 @@ For leadership, **Reports** also keeps the board report and the downloads, as be
 
 #### The Sabbath program
 
-**Plan a Sabbath's order of service, then send it where people will read it: a Word file, a picture, text for a group chat, or a post your Explorers find on This Sabbath.** It is the **Sabbath program** folder in the Office, beside Lesson studies, for Guides, Directors and Executive Directors. Asked for on 2 October 2026, and widened the same day.
+**Plan a Sabbath's order of service, then send it where people will read it: a Word file, a picture, text for a group chat, or a post your Explorers find on This Sabbath.** It is the **Sabbath program** folder in the Office, beside Lesson studies, for Guides and church leaders. Asked for on 2 October 2026, and widened the same day.
 
 ![The Sabbath program on a phone: the parts of the day, each line saying what happens, which hymn or passage, and who leads it.](screenshots/walkthrough/24-sabbath-program.png)
 
@@ -594,7 +593,7 @@ For leadership, **Reports** also keeps the board report and the downloads, as be
 
 ##### Sharing it with Explorers: This Sabbath
 
-**Share in the app**, under the program, makes it a post. Choose **Who sees it**: **The people I walk with**, which is where a Guide's share goes unless they choose otherwise and which includes anybody paired with them later, or **Everyone in the church**, where a Director's or an Executive Director's goes, and which also puts it on the church home screen like any post for the whole church. Press **Post it**.
+**Share in the app**, under the program, makes it a post. Choose **Who sees it**: **The people I walk with**, which is where a Guide's share goes unless they choose otherwise and which includes anybody paired with them later, or **Everyone in the church**, where a church leader's goes, and which also puts it on the church home screen like any post for the whole church. Press **Post it**.
 
 **It is an ordinary post, with your name on it, read by the rules every post follows.** So an Explorer a Guide does not walk with does not see that Guide's program, and nobody outside the church sees any of it. To take one down, open **Publish**, where the posts you have made are listed. Posting needs a signal; with none, the button says so and nothing typed is lost.
 
@@ -630,7 +629,7 @@ Tick **Advanced settings**, above the list. The choice is remembered for that ac
 
 #### Evangelistic meetings
 
-**A series of meetings, shaped the church's own way.** It is the **Evangelistic meetings** folder in the Office, beside the Sabbath program, for Guides, Directors and Executive Directors. Asked for on 2 October 2026: "super customizable, unlike Sabbath program it has a template that can put input, but for EMs users can have much more freedom to customise their meeting."
+**A series of meetings, shaped the church's own way.** It is the **Evangelistic meetings** folder in the Office, beside the Sabbath program, for Guides and church leaders. Asked for on 2 October 2026: "super customizable, unlike Sabbath program it has a template that can put input, but for EMs users can have much more freedom to customise their meeting."
 
 **Where the Sabbath program has a fixed shape, this has none.** It has four freedoms:
 
@@ -684,7 +683,7 @@ What the calendar is not: something that updates itself. Change a night, and dow
 | Saved on this device. It reaches your other devices when there is a signal. | No signal, or the account could not be reached. It goes up when the signal comes back, by itself. |
 | (only "Saved", or "Kept on this device") | The sample church, or a database without the account copy yet. The device is all there is, as before. |
 
-If the same program is changed on two devices, **the newer change wins**, item by item: the phone's edit to one program and the laptop's to another both survive. A program deleted on one device stays deleted on the others, even one that was offline at the time. **The account's copy is its owner's alone.** Not a Director, not an Executive Director: nobody else's sign-in reads it, by the database's own rule. A program reaches other people the way it always did, as a post somebody chose to make.
+If the same program is changed on two devices, **the newer change wins**, item by item: the phone's edit to one program and the laptop's to another both survive. A program deleted on one device stays deleted on the others, even one that was offline at the time. **The account's copy is its owner's alone.** Not a Director, not any other church leader: nobody else's sign-in reads it, by the database's own rule. A program reaches other people the way it always did, as a post somebody chose to make.
 
 #### Asking to walk with somebody
 
@@ -743,9 +742,9 @@ Who sees whom follows rank, and only in one direction:
 | You are | You see activity about |
 | --- | --- |
 | A Director | Guides and Explorers in your church |
-| An Executive Director | The same, plus Directors |
+| Senior leadership | The same, plus Directors |
 
-A Director is not shown which *leader* acted on something, and those lines read *Church leadership*, because a Director reading a log of another Director's decisions is oversight pointing the wrong way. An Executive Director sees the names.
+A Director is not shown which *leader* acted on something, and those lines read *Church leadership*, because a Director reading a log of another Director's decisions is oversight pointing the wrong way. Senior leadership sees the names.
 
 It lives inside Admin rather than as a room of its own, because it is a leadership tool and a door in the room list that only two roles can open is a door most of the church is invited to rattle.
 
@@ -763,7 +762,7 @@ The Church screen opens with four headline figures: Explorers, Guides, Graduated
 >
 > Today will almost always look low, and that is the day, not the church. Read the week and the month.
 
-**Who is arriving.** Four small charts, one for each role: Executive Directors, Directors, Guides and Explorers. Choose the period from Daily, Weekly, Monthly, Quarterly or Yearly. All four share one scale, so a tall bar means the same number of people wherever it appears.
+**Who is arriving.** One small chart for each role. Choose the period from Daily, Weekly, Monthly, Quarterly or Yearly. All four share one scale, so a tall bar means the same number of people wherever it appears.
 
 Somebody counts as arriving on the day they finished signing up, not the day their invitation was sent. An invitation that sat unopened for three weeks would otherwise land on the wrong week.
 
@@ -986,7 +985,7 @@ Six of those rooms have **subrooms** inside them, offered as **one drop-down** a
 
 ### On the desk
 
-The right-hand column carries a panel for Guides, Directors and Executive Directors: what is **coming up**, and what is **waiting for you**.
+The right-hand column carries a panel for Guides and church leaders: what is **coming up**, and what is **waiting for you**.
 
 Coming up is the next three meetings, with the day and the time; pressing one opens the conversation it belongs to. Waiting for you is everything somebody is waiting on you for: unread notifications, prayer requests, people awaiting approval, Explorers with no Guide, open safeguarding reports, and Guides asking to be paired with somebody.
 
@@ -1190,7 +1189,7 @@ Brevo templates are supported as an alternative but not recommended: they put th
 
 | What | Where it is |
 | --- | --- |
-| Every feature in this handbook, Explorer to Executive Director | The code |
+| Every feature in this handbook, for every role | The code |
 | The whole database: every table, every security rule, the conversation's replies, reactions and voice | `supabase/migrations/`, 138 files that build an empty database from nothing, in order |
 | The server functions: invitations, notifications to phones, place suggestions | `supabase/functions/` |
 | A setup guide that assumes no technical knowledge | `docs/START-HERE.md` |
@@ -1349,7 +1348,7 @@ Every privacy promise this app makes is kept by the database, not by the screens
 | An Explorer sees only themselves. | Row level security on every table, scoped by church and by pairing. |
 | A Guide sees only the Explorers paired with them. | The same. |
 | A Guide carries at most the church's own number of Explorers. | A trigger that counts, because a limit across rows cannot be a constraint. |
-| The Head Executive Director cannot be removed. | The discipline check, refused before anything happens. |
+| The root senior account cannot be removed. | The discipline check, refused before anything happens. |
 | A removal is always recorded. | A log written before the deletion, which outlives the person it describes. |
 | A change to somebody's details is visible to their Guide. | An append-only table with no write policy at all, filled by a trigger. |
 | Nothing new is readable by a signed-out visitor. | A check that fails the build if any table grants anything to anonymous. |
@@ -1360,7 +1359,7 @@ Every privacy promise this app makes is kept by the database, not by the screens
 | A guild board never publishes who is in the guild. | The function returns *You*, *A Guide* or *A fellow Explorer*, and no identifier at all. |
 | Reporting a guild post never reveals its author. | The browser sends a post, not a person. The author is resolved inside the database and never returned. |
 | A reported post survives being deleted. | Its text is copied into the report when the report is made. |
-| Only leadership of that church can take a post down. | `leads_church`, which also covers an Executive Director set over several congregations. |
+| Only leadership of that church can take a post down. | `leads_church`, which also covers a senior leader set over several congregations. |
 | The security audit is leadership only. | A definer function that refuses anybody else. The table has row-level security on and every grant revoked, so the function is the only way in. |
 | An unapproved account cannot approve itself. | The same trigger that pins roles. The one exception it allows, claiming an invitation, cannot set approval, only church and role, and only from an unexpired invitation addressed to that account's own email. |
 | A reply can only quote a message from the same conversation. | A key on a message and its conversation together, so the database itself refuses a quote from anywhere else. |
@@ -1460,7 +1459,7 @@ So the signed-out role now holds no table privilege at all, every policy names t
 
 ### The bytes get the same boundary as the rows
 
-Two storage rules matched on the folder name alone, so any signed-in account could list and download every lesson file and every avatar in the instance, whatever church it belonged to. The table describing those files was correctly scoped by church the whole time; only the files were not. Both are now scoped through `can_access_church`, which still lets an Executive Director see the churches they oversee.
+Two storage rules matched on the folder name alone, so any signed-in account could list and download every lesson file and every avatar in the instance, whatever church it belonged to. The table describing those files was correctly scoped by church the whole time; only the files were not. Both are now scoped through `can_access_church`, which still lets senior leadership see the churches they oversee.
 
 **A path one person writes must not become a request in another person's browser.** To show a photo, the viewer's app asks the file store to sign the file's path, with the viewer's own sign-in, and the storage library puts that path into the address as it is. The path is written by whoever sent the file. Until 1 October 2026 nothing checked it, so a crafted path such as `../../auth/v1/logout` could have signed the other person out of every device each time they opened the conversation. The security review of that day found it. The database now accepts only the shape the app writes, and every link the app makes to a stored file, in every bucket, refuses a path that a browser would read as anything more than a name.
 
@@ -1607,7 +1606,7 @@ Written down because a church that cannot hand this to somebody else owns a liab
 | Looking for | Open |
 | --- | --- |
 | The signed-out door: home, sign-in, sign-up, joining by invitation | `components/live/DoorPages.tsx` |
-| The Director and Executive Director screen | `components/live/AdminPage.tsx` |
+| The leaders' admin screen | `components/live/AdminPage.tsx` |
 | A Guide's roster, and one Explorer's page | `components/live/GuidePages.tsx` |
 | An Explorer's own journey | `components/live/ExplorerPage.tsx` |
 | The conversation, and the small parts screens share | `components/live/shared.tsx` |
@@ -1708,7 +1707,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | A restored backup | The job runs and its failure paths are tested. No restore has ever been performed. |
 | Non-English wording | Eleven translations still use the old words for Explorer and Guide. Whether those names translate at all is a decision per language. |
 | The guided tutorial | **Fixed.** The spotlight really was landing on nothing, on a phone, for the Guide's and the Explorer's walks: the panel reserved its clear space on the wrong side, a placement that left the target off screen still counted as done, and the ring could be drawn past the right edge of a 412px screen. All four walks now finish at 393, 412, 768 and 1280 wide. |
-| The tutorial at 375px | The Executive Director's walk still mis-points at one step, and only at iPhone SE width. Director, Guide and Explorer pass at every size. |
+| The tutorial at 375px | The senior leader's walk still mis-points at one step, and only at iPhone SE width. Director, Guide and Explorer pass at every size. |
 | Three photographs of deleted people | Three avatars belong to accounts that no longer exist. No rule can reach them, so no user can see them, and no rule can delete them either. They need removing from the Storage dashboard by hand. |
 | Creating a new church without a developer | Possible in the database, not yet possible from a screen. |
 | Bulk invitations | **Built**: pasting a list, and dragging a spreadsheet onto the screen. Suggested pairing after a batch is the part still to do. |
@@ -1726,7 +1725,7 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | A picture on most Guides' profiles | Almost none have set one, so the card meant to show an Explorer a real person falls back to initials. The app asks them; somebody has to follow it up. |
 | Guild boards in use | The room, the report route and the take-down are built and were proved against the live database. Nothing has yet been posted on one by a real member. |
 | The one-tap Safari handoff on a real device | Tested against simulated iPhone browsers. Never run on a physical iPhone. |
-| Publishing a post, from a real sign-in | The rules were proved against the live database as a real Explorer, Guide, Director and Executive Director, including that a draft never reaches anybody else. It has not been done through the app by a person with a password. |
+| Publishing a post, from a real sign-in | The rules were proved against the live database as a real account in every role, including that a draft never reaches anybody else. It has not been done through the app by a person with a password. |
 | "Active" as a count of visits | Not built and deliberately so. Beacon does not record when somebody opens the app, and the screen says what the number does mean instead of implying otherwise. |
 | The new conversation on a real iPhone, and with a screen reader | Not tried. Checked in Chromium at phone and computer sizes, with a pretend microphone. |
 | What else other open-source chats do well | A "New messages" line, "Not sent: try again", an offline line and more, each traced to the file it would change, in `docs/CHAT-RESEARCH.md`. |

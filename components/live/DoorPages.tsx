@@ -319,7 +319,7 @@ export function LiveLoginPage() {
         <div className="mx-auto max-w-md px-4 py-8">
           <Card className="p-6 text-center">
             <p className="text-gray-600">
-              {say('A Director or Executive Director must approve your account before you enter the app.')}
+              {say('A church leader must approve your account before you enter the app.')}
             </p>
             <Button
               className="mt-5"
@@ -832,7 +832,7 @@ export function LiveJoinPage() {
         <PublicHeader title="Your account is ready" subtitle="One approval remains." />
         <div className="mx-auto max-w-md px-4 py-8">
           <Card className="p-6 text-center">
-            <p className="text-gray-600">A Director or Executive Director must approve your account before you enter the app.</p>
+            <p className="text-gray-600">A church leader must approve your account before you enter the app.</p>
             <Link href="/login" className="mt-4 inline-block font-semibold text-navy underline">Go to sign in</Link>
           </Card>
         </div>

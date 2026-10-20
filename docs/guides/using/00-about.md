@@ -13,9 +13,9 @@ host it and change it. You do not need it to use the app.
 | --- | --- | --- |
 | **An Explorer**, somebody the church is walking with | *Getting it on your phone*, then *If you are an Explorer* | *The Study Room* and *The Music room* |
 | **A Guide**, walking with Explorers | *If you are a Guide* | *Running it, week to week*, and your own screens in *Every screen, in pictures* |
-| **A Director** or **Executive Director** | *The four roles* and *Onboarding a church* | *If you are a Director*, then all of Part IV |
+| **A Director** | *The roles* and *Onboarding a church* | *If you are a Director*, then all of Part IV |
 | **The church office**, or whoever helps people get started | *Getting started* (Part II) | *If something looks wrong* and *Questions people ask* |
-| **Deciding whether your church should use it** | *Hope Beacon in one look* | *What it costs*, *Your information* and *Showing it to a church* |
+| **Deciding whether your church should use it** | *Hope Beacon in one look* | *What it costs* and *Your information*; whoever presents it to a church will find *Showing it to a church* in the Building guide |
 
 Nobody needs to read it all. Every chapter stands on its own, and the
 **Contents** page numbers are clickable.
@@ -38,8 +38,7 @@ Every picture is the real app, photographed on the day this edition was built.
 None of it is drawn or mocked up.
 
 The people in the pictures are the **sample church**: John Reyes (an Explorer),
-Maria Santos (a Guide), Pastor Ramos (a Director) and Bishop Alonzo (an
-Executive Director). They are invented. The sample church runs inside the
+Maria Santos (a Guide) and Pastor Ramos (a Director). They are invented. The sample church runs inside the
 browser with no database at all, which is why a purple bar along the top says
 *Tutorial* and *No database connected*. **No real member of any church appears
 anywhere in this guide.**
@@ -63,7 +62,7 @@ people in it.
   which folder you are in, such as *My Guide, 1 of 4*. Tap it to see the rest.
 - **Bold words** are what is written on the screen, so you can look for them:
   **Write a post**, **Apply**, **Listen for the A**.
-- *The four roles* have a chapter of their own, and every other word the app uses
+- *The roles* have a chapter of their own, and every other word the app uses
   is in the **Glossary** near the end.
 
 The notes in coloured boxes mean:

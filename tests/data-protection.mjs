@@ -163,7 +163,7 @@ const read = (p) => readFileSync(p, 'utf8');
 const STATEMENTS = [
   'is a private app for one-to-one discipleship and the ministry of',
   'It is overseen by the church.',
-  "Directors and Executive Directors approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.",
+  "leaders approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.",
   "What you write to the person you walk with stays between the two of you. Nobody else can read it, the church\\'s leaders included, unless one of you reports a message; a reported message goes to leadership so they can keep everybody safe.",
   'keeps your information under the Data Privacy Act of 2012 (Republic Act 10173). You can ask for a copy of it, have it corrected, or have your account removed.',
 ];
@@ -177,7 +177,7 @@ for (const sentence of STATEMENTS) {
 
 // With no church name yet, neither copy reads "the ministry of Your church".
 for (const [src, where] of [[app, 'the app'], [email, 'the e-mail']]) {
-  ok(/\|\| 'your church'/.test(src) && /\$\{Church\}'s Directors/.test(src) && /\$\{Church\} keeps your information/.test(src),
+  ok(/\|\| 'your church'/.test(src) && /\$\{Church\}'s leaders/.test(src) && /\$\{Church\} keeps your information/.test(src),
      `${where} says "your church" mid-sentence and "Your church" only to start one`);
 }
 

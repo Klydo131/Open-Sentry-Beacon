@@ -26,7 +26,7 @@ const ROOMS = {
   'Study Room': 'An Explorer’s own place to write while they read. Nobody else sees it. It is marked beta because the editor inside it is borrowed and is the heaviest part of the app.',
   Music: 'For the choir and anybody who loves music. Everything in it happens on the phone or computer itself; nothing is sent anywhere.',
   'My Files': 'A person’s own music, video and documents, saved on their own device. Nothing in it is shared and nothing comes from anybody else.',
-  Mail: 'In the sample church, a mailbox showing what the app sends, without sending real email. In a church’s own app, Mail is for Directors and Executive Directors, and lists the invitations still open, to resend or cancel.',
+  Mail: 'In the sample church, a mailbox showing what the app sends, without sending real email. In a church’s own app, Mail is for church leaders, and lists the invitations still open, to resend or cancel.',
   'Admin Reports': 'Reports, trials and the record: the part of the app nobody wants to need. It is always in a leader’s Menu, and says plainly when nothing is open.',
   Settings: 'Everything about this device and this account: text size, the look, installing, alerts, language, the guided walk, what is new, and help. A church’s own app adds a Password folder and an Admin Reports folder.',
 };
@@ -83,7 +83,7 @@ export const USING = {
   title: 'Using Hope Beacon',
   subtitle: 'Every room, every folder and every role, explained in plain words and shown on a phone and a computer.',
   audience: [
-    'Explorers, Guides, Directors and Executive Directors',
+    'Explorers, Guides and church leaders',
     'The church office, and whoever helps people get started',
     'Anybody deciding whether their church should use it',
   ],
@@ -97,7 +97,7 @@ export const USING = {
       chapters: [
         { src: { file: 'docs/guides/using/01-in-one-look.md' } },
         { src: { file: H, section: /^1\. What the app is/ } },
-        { src: { file: H, section: /^2\. The four roles/ } },
+        { src: { file: H, section: /^2\. The roles/ } },
         { src: { file: H, section: /^3\. The journey/ } },
         { src: { file: 'docs/ONBOARDING.md' } },
       ],
@@ -143,7 +143,6 @@ export const USING = {
         { title: 'Explorer screens', file: 'docs/guides/using/', lead: 'What John Reyes, an Explorer in the sample church, sees: his own journey, the church, music and his own files.', atlas: { role: 'Explorer', about } },
         { title: 'Guide screens', file: 'docs/guides/using/', lead: 'What Maria Santos, a Guide in the sample church, sees: the people she walks with, her Office, and everything an Explorer has.', atlas: { role: 'Guide', about } },
         { title: 'Director screens', file: 'docs/guides/using/', lead: 'What Pastor Ramos, the sample church’s Director, sees: approvals, pairing, safeguarding and the church’s numbers.', atlas: { role: 'Director', about } },
-        { title: 'Executive Director screens', file: 'docs/guides/using/', lead: 'What Bishop Alonzo, the sample Executive Director, sees: everything a Director does, across every church they oversee.', atlas: { role: 'Executive Director', about } },
         { title: 'On a tablet, and before signing in', file: 'docs/guides/using/', lead: 'The same rooms on a tablet held upright, which uses the phone’s layout with more room, and the two screens anybody can open.',
           gallery: { filter: (e) => e.device === 'tablet' || e.group === 'start', columns: 2, heading: (e) => (e.group === 'start' ? 'Before signing in' : `A ${e.role} on a tablet`) } },
       ],
@@ -157,8 +156,6 @@ export const USING = {
         { src: { file: 'docs/guides/using/04-faq.md' } },
         { src: { file: H, section: /^11\. Data protection/ }, title: 'Your information, and how it is protected' },
         { src: { file: H, section: /^10\. What it costs/ } },
-        { src: { file: 'docs/PRESENTING.md' }, title: 'Showing it to a church' },
-        { src: { file: 'docs/LIVE-DEMO-RUNBOOK.md' } },
         { src: { file: 'docs/guides/using/05-glossary.md' } },
         { src: { file: `${G}/G-release-notes.md` }, title: 'What changed, release by release' },
         { src: { file: H, section: /^14\. What is not finished/ }, title: 'What is not finished yet' },
@@ -212,6 +209,8 @@ export const BUILDING = {
         { src: { file: START, section: /^Part 6/ }, title: 'When setting up goes wrong' },
         { src: { file: 'docs/WHAT-IT-COSTS.md' } },
         { src: { file: 'docs/COST-AND-FUTURE.md' } },
+        { src: { file: 'docs/PRESENTING.md' }, title: 'Showing it to a church' },
+        { src: { file: 'docs/LIVE-DEMO-RUNBOOK.md' } },
       ],
     },
     {

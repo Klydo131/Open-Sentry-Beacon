@@ -45,7 +45,7 @@ export function oversightPoints(churchName?: string | null): OversightPoint[] {
     },
     {
       icon: '🛡️',
-      text: `It is overseen by the church. ${Church}'s Directors and Executive Directors approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.`,
+      text: `It is overseen by the church. ${Church}'s leaders approve who joins, decide who walks with whom, and can see how the app is being used: who is paired with whom, where each person is on the journey, and counts and dates of meetings and messages.`,
     },
     {
       icon: '🔒',

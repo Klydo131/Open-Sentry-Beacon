@@ -23,7 +23,7 @@ without any of the private detail.
 | **Your church's own copy**, with its own database and its own people. | A service run by somebody else who holds your members' details. |
 | **Open source.** Anybody may read how it works, and a church may change it. | Finished. The last chapters say plainly what is still being built. |
 
-## The four roles, at a glance
+## The roles, at a glance
 
 Everybody in the app has one role. It is chosen by the church when they are let
 in, and **nobody can change their own role**: that rule is kept by the database
@@ -34,9 +34,8 @@ itself, not just by the screens.
 | **Explorer** | Somebody the church is walking with | Talks with their Guide, reads what they send, asks for prayer |
 | **Guide** | A church member walking with a few Explorers | Talks, sends lessons, records each step, plans the Sabbath |
 | **Director** | Runs the church's account | Invites, approves, pairs Explorers with Guides, reads safeguarding reports |
-| **Executive Director** | Oversees one or more churches | Everything a Director does, across every church they oversee |
 
-The chapter *The four roles* says exactly what each can and cannot see.
+The chapter *The roles* says exactly what each can and cannot see.
 
 ## The rooms each role has
 
@@ -44,20 +43,20 @@ The **Menu** lists every room a person has. These are the rooms in a church's
 own app; the sample church also has a **Mail** room for everybody, to show what
 the app would send.
 
-| Room | Explorer | Guide | Director | Executive Director |
-| --- | :---: | :---: | :---: | :---: |
-| **Home**: notices, blog, prayer wall | ✓ | ✓ | ✓ | ✓ |
-| **My Journey**: my Guide, study, church, prayer | ✓ | | | |
-| **My Explorers**: the people I walk with | | ✓ | | |
-| **Admin**: approvals, pairing, safeguarding | | | ✓ | ✓ |
-| **Office**: numbers, lessons, Sabbath program, meetings, reports | | ✓ | ✓ | ✓ |
-| **This Sabbath**: the program the church has shared | ✓ | ✓ | ✓ | ✓ |
-| **Study Room**: my own notes while I read | ✓ | | | |
-| **Music**: player, tuner, conductor, pieces | ✓ | ✓ | ✓ | ✓ |
-| **My Files**: my own files on this device | ✓ | ✓ | ✓ | ✓ |
-| **Admin Reports**: reports and the record | | | ✓ | ✓ |
-| **Profile** and **Settings** | ✓ | ✓ | ✓ | ✓ |
-| **Mail**: invitations still open | | | ✓ | ✓ |
+| Room | Explorer | Guide | Director |
+| --- | :---: | :---: | :---: |
+| **Home**: notices, blog, prayer wall | ✓ | ✓ | ✓ |
+| **My Journey**: my Guide, study, church, prayer | ✓ | | |
+| **My Explorers**: the people I walk with | | ✓ | |
+| **Admin**: approvals, pairing, safeguarding | | | ✓ |
+| **Office**: numbers, lessons, Sabbath program, meetings, reports | | ✓ | ✓ |
+| **This Sabbath**: the program the church has shared | ✓ | ✓ | ✓ |
+| **Study Room**: my own notes while I read | ✓ | | |
+| **Music**: player, tuner, conductor, pieces | ✓ | ✓ | ✓ |
+| **My Files**: my own files on this device | ✓ | ✓ | ✓ |
+| **Admin Reports**: reports and the record | | | ✓ |
+| **Profile** and **Settings** | ✓ | ✓ | ✓ |
+| **Mail**: invitations still open | | | ✓ |
 
 A Guide or an Explorer who is part of a report reaches it through
 **Settings**, so it is never out of reach for the person it concerns.
@@ -114,6 +113,6 @@ time it starts, with nothing to press.
 - **New to the app?** *Getting it on your phone*, in Part II.
 - **An Explorer?** *If you are an Explorer*, in Part III.
 - **A Guide?** *If you are a Guide*, in Part III.
-- **A Director?** *The four roles* and *Onboarding a church*, then *If you are
+- **A Director?** *The roles* and *Onboarding a church*, then *If you are
   a Director* and all of Part IV.
 - **Looking for one screen?** Part V shows every one of them.

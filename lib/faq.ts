@@ -58,12 +58,11 @@ export function faqSections(): FaqSection[] {
         },
         {
           id: 'roles',
-          q: 'What are Explorers, Guides, Directors and Executive Directors?',
+          q: 'What are Explorers, Guides and Directors?',
           a: [
             'An Explorer walks the journey, with one Guide beside them.',
             'A Guide walks with a few Explorers and chooses what to share with them and when.',
             'A Director looks after the church in the app: invites people, approves them, and decides who walks with whom.',
-            'An Executive Director oversees one or more churches and appoints the Directors.',
           ],
         },
         {
@@ -137,7 +136,7 @@ export function faqSections(): FaqSection[] {
           q: 'What is two-step sign-in, and should I turn it on?',
           a: [
             'Two-step sign-in adds a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator, after your password. Someone who learns your password still cannot sign in as you.',
-            'Turn it on in Settings, on the Password page, under “Two-step sign-in”. It is strongly recommended for Directors and Executive Directors, who can see the church’s member list.',
+            'Turn it on in Settings, on the Password page, under “Two-step sign-in”. It is strongly recommended for Directors and other church leaders, who can see the church’s member list.',
             'If you lose the phone that holds your authenticator app, contact a Director at your church. Once your identity is confirmed, your church’s administrator can remove it so you can sign in with your password and set it up again.',
           ],
         },
@@ -173,7 +172,7 @@ export function faqSections(): FaqSection[] {
         {
           id: 'who-reads',
           q: 'Who can read my messages?',
-          a: [between, 'No other account can open it, including other Guides, Directors and Executive Directors. This is enforced on the server, not only by the app’s screens.'],
+          a: [between, 'No other account can open it, including other Guides and every church leader. This is enforced on the server, not only by the app’s screens.'],
         },
         {
           id: 'encrypted',
@@ -388,7 +387,7 @@ export function faqSections(): FaqSection[] {
           id: 'announcements',
           q: 'Who can pin an announcement?',
           a: [
-            'Guides, Directors and Executive Directors. An announcement goes to the whole church, and its author or any leader can take it down.',
+            'Guides and church leaders. An announcement goes to the whole church, and its author or any leader can take it down.',
           ],
         },
         {
@@ -450,14 +449,14 @@ export function faqSections(): FaqSection[] {
     {
       id: 'leaders',
       icon: '🏛️',
-      title: 'For Directors and Executive Directors',
+      title: 'For Directors',
       items: [
         {
           // supabase/tests/a-leader-stays-within-their-rank.sql proves each sentence.
           id: 'who-makes-whom',
           q: 'Who can invite or promote whom?',
           a: [
-            'Only an Executive Director makes somebody a Director or an Executive Director, whether by invitation or by changing a role, and only an Executive Director approves one. A Director invites, approves and changes the role of Guides and Explorers in their own church. Nobody changes their own role.',
+            'Directors are appointed by the church’s senior leadership, never by another Director. A Director invites, approves and changes the role of Guides and Explorers in their own church. Nobody changes their own role.',
             'These rules are enforced on the server, not only by the app’s screens.',
           ],
         },
@@ -493,7 +492,7 @@ export function faqSections(): FaqSection[] {
           id: 'suspend',
           q: 'Who can a leader act on?',
           a: [
-            'A Director acts on Guides and Explorers, never on another Director. An Executive Director acts on anyone in the churches they oversee except another Executive Director. No one can act on themselves, and no one can act on the Head Executive Director.',
+            'A Director acts on Guides and Explorers, never on another Director; only the church’s senior leadership can act on a Director. No one can act on themselves.',
           ],
         },
       ],

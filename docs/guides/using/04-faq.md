@@ -141,8 +141,8 @@ is in the file, and the three things that are left out and why.
 
 ### Can I change my own role?
 
-No, and nobody else can change their own either, including the Executive
-Director. A role is chosen by the church when somebody is let in, and the
+No, and nobody else can change their own either, including the church's most
+senior leaders. A role is chosen by the church when somebody is let in, and the
 database itself refuses anybody who tries to change their own.
 
 ## For Guides
