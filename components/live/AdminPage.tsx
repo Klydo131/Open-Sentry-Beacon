@@ -3,7 +3,8 @@
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { MinorBadge } from '@/components/MinorBadge';
 import { copyText } from '@/lib/share';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { scrollMotion } from '@/lib/motion';
 import { useKeepUp, KEEP_UP_ROSTER } from '@/lib/live/keep-up';
 import { roleNoun, stageInfo, APP_SHORT_NAME } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
@@ -104,6 +105,21 @@ export function LiveAdminPage() {
 
   // The one profile open beside the list.
   const [openId, setOpenId] = useState('');
+  // The panel is drawn above the tabs, and on a phone the row that opened it is
+  // a long way below, so opening it scrolls it into view. Counted, so a second
+  // tap on the same person scrolls back up to it too.
+  const [opened, setOpened] = useState(0);
+  const profilePanel = useRef<HTMLDivElement | null>(null);
+  const openProfile = useCallback((id: string) => {
+    setOpenId(id);
+    setOpened((n) => n + 1);
+  }, []);
+  useEffect(() => {
+    const panel = profilePanel.current;
+    if (!opened || !panel) return;
+    panel.scrollIntoView({ block: 'start', behavior: scrollMotion() });
+    panel.focus({ preventScroll: true });
+  }, [opened]);
   const [contact, setContact] = useState<Record<string, { email: string; joined_at: string }>>({});
 
   useEffect(() => {
@@ -401,16 +417,18 @@ export function LiveAdminPage() {
 
         {/* Shown above the rooms only while a profile is open. */}
         {openPerson && (
-          <MemberProfile
-            person={openPerson}
-            email={contact[openPerson.id]?.email}
-            joinedAt={contact[openPerson.id]?.joined_at}
-            pairedWith={openPartner}
-            members={members}
-            canManage
-            onChanged={() => void load()}
-            onClose={() => setOpenId('')}
-          />
+          <div ref={profilePanel} tabIndex={-1} data-open-profile className="outline-none">
+            <MemberProfile
+              person={openPerson}
+              email={contact[openPerson.id]?.email}
+              joinedAt={contact[openPerson.id]?.joined_at}
+              pairedWith={openPartner}
+              members={members}
+              canManage
+              onChanged={() => void load()}
+              onClose={() => setOpenId('')}
+            />
+          </div>
         )}
 
         {/* The room tabs come first, always in the same place (docs/DESIGN.md rule 1). */}
@@ -450,7 +468,7 @@ export function LiveAdminPage() {
             kind={room}
             pairings={pairings}
             cap={church?.guide_cap ?? 100}
-            onOpen={setOpenId}
+            onOpen={openProfile}
           />
         )}
 
@@ -1054,7 +1072,7 @@ export function LiveAdminPage() {
                 {/* Both names open their profiles. */}
                 <button
                   type="button"
-                  onClick={() => setOpenId(pairing.dm_id)}
+                  onClick={() => openProfile(pairing.dm_id)}
                   className="font-semibold text-navy underline underline-offset-2"
                 >
                   {pairing.dm_name}
@@ -1062,7 +1080,7 @@ export function LiveAdminPage() {
                 <span className="text-gray-500">walking with</span>
                 <button
                   type="button"
-                  onClick={() => setOpenId(pairing.ds_id)}
+                  onClick={() => openProfile(pairing.ds_id)}
                   className="font-semibold text-navy underline underline-offset-2"
                 >
                   {pairing.ds_name}
@@ -1176,7 +1194,7 @@ export function LiveAdminPage() {
                     <div key={p.id} className="flex flex-wrap items-center gap-2 border-t border-navy/5 pt-2 text-sm first:border-0 first:pt-0">
                       <button
                         type="button"
-                        onClick={() => setOpenId(p.dm_id)}
+                        onClick={() => openProfile(p.dm_id)}
                         className="font-semibold text-navy underline underline-offset-2"
                       >
                         {p.dm_name}
@@ -1184,7 +1202,7 @@ export function LiveAdminPage() {
                       <span className="text-gray-500">walked with</span>
                       <button
                         type="button"
-                        onClick={() => setOpenId(p.ds_id)}
+                        onClick={() => openProfile(p.ds_id)}
                         className="font-semibold text-navy underline underline-offset-2"
                       >
                         {p.ds_name}

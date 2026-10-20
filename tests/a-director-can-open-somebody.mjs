@@ -48,8 +48,22 @@ const data = read('lib/live/data.ts');
 ok(/export function MemberProfile/.test(panel), 'there is a profile panel');
 ok(/<MemberProfile/.test(admin), 'and the Director’s screen renders it');
 ok(/onOpen\(person\.id\)/.test(admin), 'a roster name opens it');
-ok((admin.match(/setOpenId\(pairing\.(dm|ds)_id\)/g) ?? []).length === 2,
+ok((admin.match(/openProfile\(pairing\.(dm|ds)_id\)/g) ?? []).length === 2,
    'and BOTH names on a pairing row open, not just one');
+
+// The panel is drawn above the tabs. On a phone the row that opened it can be
+// a long scroll below, and a profile that opened off-screen looked like a
+// Profile button that did nothing (reported 20 October 2026).
+const adminCode = stripComments(admin);
+ok(/onOpen=\{openProfile\}/.test(adminCode), 'the roster opens profiles through the one opener');
+ok((adminCode.match(/setOpenId\(/g) ?? []).length === 2,
+   'and nothing else opens one without it (the opener, and Close)');
+ok(/ref=\{profilePanel\}/.test(adminCode)
+   && /panel\.scrollIntoView\(/.test(adminCode)
+   && /panel\.focus\(/.test(adminCode),
+   'opening a profile scrolls it into view and moves focus to it');
+ok(/setOpened\(\(n\) => n \+ 1\)/.test(adminCode) && /\}, \[opened\]\);/.test(adminCode),
+   'and a second tap on the same person scrolls to it again');
 
 // The two questions it exists to answer.
 ok(/label="Email"/.test(panel), 'it shows the address they were invited at');
