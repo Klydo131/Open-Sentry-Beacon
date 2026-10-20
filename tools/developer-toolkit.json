@@ -1,16 +1,16 @@
 {
-  "reviewed": "2026-09-29",
+  "reviewed": "2026-10-19",
   "note": "Opt-in only. Nothing here is switched on by cloning this repository. See docs/DEVELOPER-TOOLKIT.md.",
   "tools": [
     {
       "id": "caveman",
       "name": "Caveman",
       "repo": "Klydo131/caveman",
-      "commit": "0bbd46c390319481c6c5a7a48de53fdf124b1aff",
-      "licence": "MIT",
+      "commit": "bad48a0e1df55e05e3f52249afa35ecc1909ee76",
+      "licence": "Apache-2.0",
       "category": "cost",
       "status": "already-ours",
-      "runs_on_its_own": "SessionStart, UserPromptSubmit (sets the mode)",
+      "runs_on_its_own": "SessionStart, SubagentStart, UserPromptSubmit (sets the mode), SessionEnd (counts usage on the machine)",
       "sends": "nothing",
       "why": "The project's token saver, from the owner's fork of JuliusBrussee/caveman. Rules for its use are in AGENTS.md section 0.1.",
       "install": [
@@ -26,12 +26,12 @@
       "id": "ponytail",
       "name": "Ponytail",
       "repo": "Klydo131/ponytail",
-      "commit": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156",
+      "commit": "09c434ab73ca43761c5d8b0c5d341926c2fba710",
       "licence": "MIT",
       "category": "cost",
       "status": "already-ours",
-      "runs_on_its_own": "SessionStart, SubagentStart, UserPromptSubmit (loads its rules, into subagents too, and tracks its mode)",
-      "sends": "nothing",
+      "runs_on_its_own": "SessionStart, SubagentStart, UserPromptSubmit (loads its rules, into subagents too, and tracks its mode); after each turn it writes cost and token counts to a CSV on the machine",
+      "sends": "nothing, unless you set its webhook address",
       "why": "The project's code minimiser, from the owner's fork of DietrichGebert/ponytail. Rules for its use are in AGENTS.md section 0.1.",
       "install": [
         "claude plugin marketplace add Klydo131/ponytail",

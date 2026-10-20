@@ -65,8 +65,8 @@ could fit, the one with that exact name and purpose was taken.
 
 | Tool | What it does | Install | Runs on its own | Sends |
 | --- | --- | --- | --- | --- |
-| **Caveman** (`Klydo131/caveman`) | The project's token saver, from the owner's fork of JuliusBrussee/caveman. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/caveman`<br>`claude plugin install caveman@caveman`<br>Codex:<br>`git clone https://github.com/Klydo131/caveman`<br>open Codex in that folder, then /plugins, search Caveman, Install | SessionStart, UserPromptSubmit (sets the mode) | nothing |
-| **Ponytail** (`Klydo131/ponytail`) | The project's code minimiser, from the owner's fork of DietrichGebert/ponytail. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/ponytail`<br>`claude plugin install ponytail@ponytail`<br>Codex:<br>`codex plugin marketplace add Klydo131/ponytail`<br>in Codex: /plugins, the Ponytail marketplace, Install; then /hooks to review and trust its hooks | SessionStart, SubagentStart, UserPromptSubmit (loads its rules, into subagents too, and tracks its mode) | nothing |
+| **Caveman** (`Klydo131/caveman`) | The project's token saver, from the owner's fork of JuliusBrussee/caveman. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/caveman`<br>`claude plugin install caveman@caveman`<br>Codex:<br>`git clone https://github.com/Klydo131/caveman`<br>open Codex in that folder, then /plugins, search Caveman, Install | SessionStart, SubagentStart, UserPromptSubmit (sets the mode), SessionEnd (counts usage on the machine) | nothing |
+| **Ponytail** (`Klydo131/ponytail`) | The project's code minimiser, from the owner's fork of DietrichGebert/ponytail. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/ponytail`<br>`claude plugin install ponytail@ponytail`<br>Codex:<br>`codex plugin marketplace add Klydo131/ponytail`<br>in Codex: /plugins, the Ponytail marketplace, Install; then /hooks to review and trust its hooks | SessionStart, SubagentStart, UserPromptSubmit (loads its rules, into subagents too, and tracks its mode); after each turn it writes cost and token counts to a CSV on the machine | nothing, unless you set its webhook address |
 
 Both forks are exact copies of their authors' work: every commit in them is
 upstream's. They sit under the owner's account so that a change upstream
@@ -78,42 +78,25 @@ read what changed upstream, sync the fork, then record its new commit in
 steps are each fork's own README pointed at the fork. They have not been run
 from here, because this sandbox has no Codex.
 
-**Where the two forks stand (29 September 2026).**
+**Where the two forks stand.**
 
-- **Caveman: stay on the fork for now.** Upstream is 622 commits ahead and
-  has moved parts of its repository (its engine, proxy, browser driver, MCP
-  server and more) to the Business Source License, which is not an
-  open-source licence; new engine-linked parts default to it. The skill and
-  the hooks this project uses stay MIT upstream, but a sync would bring the
-  rest into the owner's public fork. It stays on its all-MIT copy until
-  somebody decides otherwise, having read upstream's `LICENSING.md`.
-- **Ponytail: synced, 29 September 2026.** Upstream was 62 commits ahead:
-  adapters for more agents and documentation. At its newest commit it was
-  still MIT, with the same three Claude Code hooks, nothing new that reaches
-  the network and no new dependencies, so the fork was fast-forwarded to it
-  (version 4.10.0). The commit in `tools/developer-toolkit.json` is that one.
+- **Both synced, 19 October 2026.** Each fork was fast-forwarded to
+  upstream's newest commit; neither had commits of its own.
+  - **Caveman** `bad48a0` (version 4.0.1). From 3.0.0 the whole repository is
+    Apache-2.0, including the parts that were under the Business Source
+    License. Its Claude Code plugin runs only its own Node scripts, on
+    SessionStart, SubagentStart, UserPromptSubmit and SessionEnd (that one
+    counts usage on the machine), and sends nothing. The rest of the
+    repository (engine, proxy, browser extension) is not part of the plugin.
+  - **Ponytail** `09c434a` (version 5.3.2). Still MIT. Ponytail 5 rebuilt its
+    rules and added `/ponytail-audit`, which the `/audit` skill follows. After
+    every turn its "band" writes that task's cost and token counts to a CSV
+    under `~/.config/ponytail/band/`, and it can post that row to a webhook
+    address, which is empty unless somebody sets one. Its code-comment marker
+    is now `// shortcut:`; older `// ponytail:` markers still count.
 
-**Where the two forks stand (19 October 2026).** Both are behind upstream,
-and both are now safe to sync. Read at upstream's newest commit on that day:
-
-- **Caveman, 1,721 commits behind** (upstream `bad48a0`, version 4.0.1). The
-  licence worry above is gone: from 3.0.0 the whole repository is Apache-2.0,
-  including the parts that were under the Business Source License. Its Claude
-  Code plugin runs only its own Node scripts, on SessionStart, SubagentStart,
-  UserPromptSubmit and SessionEnd (that one records usage counts on the
-  machine), and sends nothing. The rest of the repository (engine, proxy,
-  browser extension) is not part of the plugin.
-- **Ponytail, 139 commits behind** (upstream `09c434a`, version 5.3.2). Still
-  MIT. Ponytail 5 rebuilt its rules and added `/ponytail-audit`, which the
-  `/audit` skill follows. New: after every turn its "band" writes that task's
-  cost and token counts to a CSV under `~/.config/ponytail/band/`, and it can
-  post that row to a webhook address, which is empty unless somebody sets one.
-  Its code-comment marker is now `// shortcut:`; older `// ponytail:` markers
-  still count.
-
-To sync: on GitHub, open each fork and press **Sync fork**. Then record the new
-commit in `tools/developer-toolkit.json`, with Caveman's licence as Apache-2.0
-and the two lines above.
+To sync again: on GitHub, open each fork and press **Sync fork**, read what
+changed, then record the new commit in `tools/developer-toolkit.json`.
 
 ## Recommended, opt-in
 
