@@ -52,12 +52,10 @@ const src   = read('components/talk/ChatView.tsx');
 const code  = strip(src);
 const data  = strip(read('lib/live/data.ts'));
 const dock  = read('components/live/TalkDock.tsx');
-/** The dock's PROSE, as prose: comment markers removed and wrapping undone.
- *  This section is deliberately about the comment rather than the code, so it
- *  cannot strip comments -- but a sentence written across two `//` lines is
- *  still one sentence, and matching the raw text would make every check here
- *  depend on where the line happened to wrap. */
-const dockProse = dock.replace(/^\s*\/\/ ?/gm, '').replace(/\s+/g, ' ');
+/** The conversation's code with comments removed, for the rule below. */
+const talkCode = ['components/live/TalkDock.tsx', 'components/live/TalkSurface.tsx', 'components/talk/ChatView.tsx']
+  .map((f) => read(f).replace(/\{\/\*[\s\S]*?\*\/\}|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, ''))
+  .join('\n');
 
 // ---------------------------------------------------------------------------
 // 1. THE DATA WAS ALREADY THERE, AND STILL IS
@@ -124,20 +122,14 @@ const dockProse = dock.replace(/^\s*\/\/ ?/gm, '').replace(/\s+/g, ' ');
 }
 
 // ---------------------------------------------------------------------------
-// 5. THE RULE WAS AMENDED, NOT QUIETLY DROPPED
+// 5. ONE RECEIPT, AND NOTHING ELSE ABOUT PRESENCE
 // ---------------------------------------------------------------------------
-//
-// THE PART THAT OUTLIVES EVERYBODY. TalkDock stated a product rule against read
-// receipts. Deleting that sentence and shipping the feature would leave no
-// trace that the question was ever asked, and the next person would reopen it
-// from nothing. The reasoning has to survive the decision.
+// The receipt is the one exception to the rule against presence features (the
+// decision and its reasoning are in this file's header). No online status and
+// no typing indicator.
 {
-  ok(/THIS RULE CHANGED/.test(dockProse),
-     'TalkDock records that its own rule about receipts was changed');
-  ok(/owner/i.test(dockProse) && /pressure/i.test(dockProse),
-     'and records who decided it and what the objection was');
-  ok(/no presence, no typing indicator/.test(dockProse),
-     'while the rest of the rule against presence features still stands');
+  ok(!/presence|isTyping|typing_?indicator|\.track\(/i.test(talkCode),
+     'the conversation has no presence or typing indicator');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
