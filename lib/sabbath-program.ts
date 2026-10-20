@@ -1,28 +1,9 @@
-// A Sabbath program: the order of service for one Sabbath, made in the Office by
-// a Guide or a leader, kept on their own device, and downloaded as a Word file.
+// A Sabbath program: the order of service for one Sabbath, made in the Office
+// and downloaded as a Word file (lib/sabbath-program-docx.ts).
 //
-// ASKED FOR on 2 October 2026: "Guides and all higher up accounts can make
-// their own Sabbath program tool, it can be downloaded to words or docs too in
-// their office."
-//
-// KEPT ON THE DEVICE, BY THE OWNER'S CHOICE, the same day. Three things follow:
-//
-//   * It works on a church's app the day it ships. There is no table, no
-//     security rule and no migration, so a church that has not updated its
-//     database still has it.
-//   * The names typed into it (who prays, who preaches) stay on that phone or
-//     computer. They leave it only inside a file the person downloads or
-//     shares, which is their act, not the app's.
-//   * A program made on a phone is not on the laptop, and two leaders do not
-//     see each other's. They share the file, the way churches already pass a
-//     program round.
-//
-// ONE LIST PER ACCOUNT. A church office computer is often shared, so the list
-// is kept under the signed-in account's id: a second leader on the same
-// computer starts with their own empty list, not the first leader's names.
-//
-// Word itself is written by lib/sabbath-program-docx.ts. This file is the
-// program, its starting template, and keeping it.
+// Kept on the device, under the signed-in account's id (so a shared office
+// computer keeps each leader's list apart). Names typed into it leave the
+// device only in a file the person downloads or shares.
 
 import { uuid } from '@/lib/uuid';
 
@@ -49,12 +30,7 @@ export interface ProgramSection {
   lines: ProgramLine[];
 }
 
-/**
- * A detail of a church's own (Advanced), for whatever the standard fields do
- * not cover: "Deacons on duty", "Offering for", "Sunset". Asked for on
- * 2 October 2026: "users can add additional input in the advance settings if
- * the basic is not enough for them".
- */
+/** A church's own detail (Advanced) for what the standard fields do not cover: "Deacons on duty". */
 export interface ProgramExtra {
   id: string;
   label: string;
@@ -80,13 +56,8 @@ export interface SabbathProgram {
 }
 
 /**
- * The four parts of a Sabbath the owner chose to start from, in the order the
- * day runs. Every line is a starting point: each can be renamed, moved or
- * removed, and a church that has no afternoon program removes that part once.
- *
- * NO HYMN TITLES ARE SHIPPED. The hymnal's numbering and titles belong to its
- * publisher, and every church already has the book. A line says "Opening hymn";
- * the person types the number and title they are using.
+ * The four parts of a Sabbath to start from. Each line can be renamed, moved
+ * or removed. No hymn titles are shipped: they belong to the hymnal's publisher.
  */
 export const TEMPLATE: ReadonlyArray<{ title: string; parts: readonly string[] }> = [
   {
@@ -111,8 +82,7 @@ export const TEMPLATE: ReadonlyArray<{ title: string; parts: readonly string[] }
   },
 ];
 
-// How long each field may be. Generous for anything a program says; they exist
-// so that a paste of something enormous cannot fill the device's storage.
+// Field limits, so a giant paste cannot fill the device's storage.
 export const LIMITS = {
   programs: 120, // two years of Sabbaths, kept in folders
   folder: 60,
@@ -136,11 +106,9 @@ export const LIMITS = {
   extraValue: 200,
 } as const;
 
-// Control characters, the marks that reverse or hide text (the trick behind
-// CVE-2021-42574, here it would print one name in place of another), the
-// byte-order mark, and the two code points XML refuses outright. Nothing a
-// person types on purpose, and each one can corrupt the Word file or what it
-// shows.
+// Control characters, direction overrides and invisible marks (as in
+// CVE-2021-42574), the BOM, and code points XML refuses: each can corrupt the
+// Word file or what it shows.
 const HIDDEN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u202A-\u202E\u2066-\u2069\uFEFF\uFFFE\uFFFF]/g;
 
 /** One line of text, tidied: no hidden characters, no line breaks, no runaway length. */
@@ -242,10 +210,8 @@ export function copyForNextSabbath(p: SabbathProgram, now: Date = new Date()): S
 }
 
 /**
- * Whatever came out of storage, made safe to use: right shape, tidy text,
- * within the limits. Anything that is not a program at all is dropped rather
- * than guessed at. Storage is the person's own, but it is also anything an
- * older version of this file, or another tab, left there.
+ * Whatever came out of storage, made safe: right shape, tidy text, within the
+ * limits. Anything that is not a program is dropped.
  */
 export function tidyProgram(raw: unknown): SabbathProgram | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -331,12 +297,7 @@ export function loadPrograms(owner: string): SabbathProgram[] {
   return list.map(tidyProgram).filter((p): p is SabbathProgram => !!p).sort(byDate);
 }
 
-/**
- * Keep this account's programs on this device. False when the browser would
- * not: a private window, storage that is full, or storage switched off. The
- * screen says so, because "saved" that was not saved is how a Sabbath program
- * goes missing on Friday night.
- */
+/** Keep this account's programs. False when the browser refused, so the screen can say so. */
 export function savePrograms(owner: string, list: SabbathProgram[]): boolean {
   return keep(programsKey(owner), list.slice(0, LIMITS.programs));
 }
@@ -366,15 +327,11 @@ export function printable(s: ProgramSection): boolean {
   return filledLines(s).length > 0 || !!s.time;
 }
 
-// ---------------------------------------------------------------------------
-// TIMES (Advanced)
-// ---------------------------------------------------------------------------
+// --- Times (Advanced) ---
 
 /**
  * The first clock time in a part's time, in minutes after midnight, and
- * whether it was written with AM or PM. "9:00 AM", "9am", "09:00", "9.00",
- * "9:00-10:15" and "14:30" are all read. A bare "9" is not a time, because it
- * could as easily be a page number.
+ * whether it used AM/PM. A bare "9" is not a time (it could be a page number).
  */
 export function parseClock(text: string): { minutes: number; twelve: boolean } | null {
   const m = /(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?\s?m\.?|p\.?\s?m\.?)?/i.exec(text);
@@ -410,10 +367,8 @@ export interface Schedule {
 }
 
 /**
- * When each line of a part starts: the part's time, plus the minutes of the
- * lines before it. A line with no minutes ends the count, because every time
- * after it would be a guess, and a guessed time on a printed program is one a
- * person turns up for.
+ * When each line of a part starts: the part's time plus the minutes before it.
+ * A line without minutes ends the count rather than guess.
  */
 export function schedule(s: ProgramSection): Schedule {
   const clock = parseClock(s.time);
@@ -443,9 +398,7 @@ export function overruns(p: SabbathProgram): { part: string; next: string; by: n
   return out;
 }
 
-// ---------------------------------------------------------------------------
-// WHO IS TAKING PART (Advanced: reminders)
-// ---------------------------------------------------------------------------
+// --- Who is taking part (Advanced: reminders) ---
 
 export interface Duty {
   section: string;
@@ -498,23 +451,15 @@ export function stillToFill(p: SabbathProgram): number {
   return p.sections.reduce((n, s) => n + s.lines.filter((l) => l.part && !l.who.trim()).length, 0);
 }
 
-// ---------------------------------------------------------------------------
-// THE TWO COPIES
-// ---------------------------------------------------------------------------
+// --- The two copies ---
 
 /**
- * Who a copy is for. The congregation's copy is what is shared, posted and
- * drawn as a picture. The platform copy adds each line's start time and the
- * private notes, for the people leading the service, and is only ever
- * downloaded or copied by the person who made it.
+ * The congregation's copy is shared, posted and drawn as a picture. The
+ * platform copy adds start times and private notes and is only downloaded.
  */
 export type ProgramCopy = 'congregation' | 'platform';
 
-/**
- * The whole program as plain text, for pasting into a group chat. Churches
- * pass the program round in Messenger and Viber; a Word file is the wrong
- * thing to make somebody open on a phone to find out when Sabbath School starts.
- */
+/** The program as plain text, for pasting into a group chat. */
 export function programAsText(p: SabbathProgram, copy: ProgramCopy = 'congregation'): string {
   const platform = copy === 'platform';
   const out: string[] = [];
@@ -546,9 +491,7 @@ export function programAsText(p: SabbathProgram, copy: ProgramCopy = 'congregati
   return out.join('\n').trim();
 }
 
-// ---------------------------------------------------------------------------
-// A CHURCH'S OWN TEMPLATES (Advanced)
-// ---------------------------------------------------------------------------
+// --- A church's own templates (Advanced) ---
 
 export interface OwnTemplate {
   id: string;
@@ -563,12 +506,7 @@ export function templatesKey(owner: string): string {
   return `${TEMPLATES_KEY}:${owner}`;
 }
 
-/**
- * A program's shape, kept as a template: its parts, their times, its lines and
- * their minutes. Never its names, details or notes, which are this week's and
- * not next month's: a template that carried names would print last Sabbath's
- * preacher on a program nobody had checked.
- */
+/** A program's shape as a template: parts, times, lines and minutes; never names or notes. */
 export function templateFrom(p: SabbathProgram, name: string): OwnTemplate {
   return {
     id: uuid(),
@@ -641,14 +579,9 @@ export function saveTemplates(owner: string, list: OwnTemplate[]): boolean {
   return keep(templatesKey(owner), list.slice(0, LIMITS.templates));
 }
 
-// ---------------------------------------------------------------------------
-// PROGRAMS SHARED WITH THIS PERSON (This Sabbath)
-// ---------------------------------------------------------------------------
-//
-// A program reaches Explorers as a post in the app (lib/live/data.ts
-// createBlogPost, under the existing rules for who may read a post), titled so
-// it can be recognised. This Sabbath keeps the ones a person has seen, on their
-// device, so they can be read with no signal on the Sabbath itself.
+// --- Programs shared with this person (This Sabbath) ---
+// A program reaches Explorers as a post; This Sabbath keeps the ones a person
+// has seen on their device, to read with no signal.
 
 /** How a shared program's post is titled, which is also how This Sabbath knows one. */
 export const SHARE_PREFIX = 'Sabbath program · ';
@@ -728,11 +661,7 @@ export interface SharedView {
   parts: { heading: string; items: string[] }[];
 }
 
-/**
- * A shared program's text, read back into headings and lines for showing.
- * It is a post somebody wrote, so it is read as text and nothing else: any
- * line that does not look like a program line is shown as it is.
- */
+/** A shared program's text, read back into headings and lines. Treated as plain text. */
 export function readShared(body: string): SharedView {
   const blocks = body.replace(/\r\n?/g, '\n').split(/\n\s*\n/).map((b) => b.split('\n').filter((l) => l.trim()));
   const [head = [], ...rest] = blocks;
@@ -745,9 +674,7 @@ export function readShared(body: string): SharedView {
   };
 }
 
-// ---------------------------------------------------------------------------
-// SMALL THINGS REMEMBERED ON THE DEVICE
-// ---------------------------------------------------------------------------
+// --- Small things remembered on the device ---
 
 /** Whether this person has Advanced switched on, on this device. */
 export function loadAdvanced(owner: string): boolean {
@@ -759,10 +686,8 @@ export function saveAdvanced(owner: string, on: boolean): boolean {
 }
 
 /**
- * The role this person had the last time the app could ask, so This Sabbath
- * can offer a leader their own programs with no signal. It only decides what
- * this device shows of this device's own storage; nothing it unlocks reaches
- * the church.
+ * The role this person last had, so This Sabbath can offer a leader their own
+ * programs offline. It only affects what this device shows of its own storage.
  */
 export function rememberRole(owner: string, role: string): void {
   keep(`beacon-sabbath-role:${owner}`, role);

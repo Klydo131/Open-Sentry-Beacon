@@ -1,22 +1,8 @@
 'use client';
 
-// Lesson studies a Guide writes, and an Explorer opens.
-//
-// WHAT WAS THERE BEFORE. A flat list of series titles and nothing else. No
-// lessons inside them, no files, nothing to click. A Guide could not write one
-// at all: the database policy on lesson_series was manages_church(church_id),
-// so only a Director could, and the person actually sitting with somebody week
-// by week could only look at a list.
-//
-// WHAT IT IS NOW. A Guide writes a series, adds studies to it, attaches the
-// handouts they already use, and publishes it. Anybody in the church can open
-// it and read the studies and the files. Directors keep the same power over
-// everything, which is what manages_church still means.
-//
-// A DRAFT IS VISIBLE TO ITS AUTHOR ONLY, which sounds obvious and is the thing
-// the old read policy got wrong: is_published alone meant a Guide could not see
-// what they had just written until they published it, which makes writing it
-// impossible.
+// Lesson studies: Guides and leaders write series of studies with handouts and
+// publish them; anybody in the church reads them. A draft is visible only to
+// its author.
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import * as live from '@/lib/live/data';
@@ -34,18 +20,9 @@ import { ReadingBar } from '@/components/live/ReadingProgress';
 import type { Role } from '@/lib/types';
 
 /**
- * Who may write teaching material.
- *
- * Guides, Directors and Executive Directors. An Explorer reads every published
- * study in their church and everything their Guide shares, and writes none of
- * it -- the owner's decision, and the right shape: a study is something
- * prepared for somebody, and the person it is prepared for is not preparing it.
- *
- * THE SAME SENTENCE AS THE DATABASE. `public.may_write_studies()` in migration
- * `an_explorer_reads_the_studies` is the one that actually refuses. This exists
- * so nobody is shown a button that would be refused, and the two are checked
- * against each other by tests/an-explorer-reads-the-studies.mjs -- because two
- * copies of a rule are two things to change and one to forget.
+ * Who may write studies: Guides, Directors and Executive Directors. Mirrors
+ * `public.may_write_studies()`, which is what actually refuses
+ * (tests/an-explorer-reads-the-studies.mjs keeps the two in step).
  */
 export function canWriteStudies(role: Role | undefined | null): boolean {
   return role === 'dm' || role === 'admin' || role === 'executive';
@@ -93,44 +70,18 @@ function FileRow({ file, canRemove, onRemove }: {
   );
 }
 
-/**
- * One series, opened.
- *
- * `mine` decides whether the writing controls appear. It is a convenience, not
- * a control: the database refuses a write from anybody else regardless of what
- * this component draws.
- */
-/**
- * What a Guide can actually do in that box, said where they are standing.
- *
- * THE SECOND HALF OF THE ASK, and the half that decides whether the first one
- * matters: "Make sure those who are making those Lesson studies (such as
- * guides) are aware of this functions."
- *
- * The box used to promise one thing in its placeholder text -- "Links become
- * clickable" -- which vanishes the moment somebody starts typing, and said
- * nothing at all about the bold and italic marks that fifteen of the sixteen
- * studies on the shelf were already using. Somebody was formatting their
- * studies and being shown asterisks, with no way to learn from the app whether
- * that was their mistake or its own.
- *
- * Under the box rather than inside it, so it is still there while they write.
- */
+/** One series, opened. `mine` only decides which controls show; the database enforces writes. */
+/** Formatting tips for the study box, shown under it while writing. */
 function WritingHints() {
   const Mark = ({ children }: { children: ReactNode }) => (
     <code className="rounded bg-white px-1 py-0.5 font-mono text-[11px] ring-1 ring-black/5">
       {children}
     </code>
   );
-  // ADVANCED ONLY (28 September 2026). Asterisks are a thing to learn, and a
-  // Guide on Simple has not asked to learn it: the box is a plain box, and what
-  // they type is what an Explorer reads. Every study box still carries this, so
-  // switching to Advanced shows the tips under all of them at once.
+  // Advanced only: on Simple, what is typed is exactly what is shown.
   const mode = useWritingMode();
   if (mode !== 'advanced') return null;
-  // FOLDED, AND OPENED BY ASKING. The tips were an always-open grey box under
-  // every study being written; the owner asked on 25 September 2026 for the
-  // advanced parts to be optional. Still under the box, still one tap away.
+  // Folded; opened on request.
   return (
     <details className="rounded-xl bg-gray-100 px-3 py-2 text-xs leading-relaxed text-gray-600">
       <summary className="cursor-pointer font-semibold text-gray-700">Formatting tips</summary>
@@ -151,10 +102,7 @@ function WritingHints() {
   );
 }
 
-/**
- * Handouts held on a form before the study exists. A drawing shows as the
- * picture it is, with Change drawing; anything else by its name.
- */
+/** Handouts on a form before the study exists; a drawing shows as its picture. */
 function HeldFiles({ files, busy, onRemove, onReplace }: {
   files: File[];
   busy: boolean;
@@ -218,9 +166,8 @@ function HeldDrawing({ file, busy, onRemove, onReplace }: {
 }
 
 /**
- * A drawing on a saved study. Everybody who can read the study sees the
- * picture; whoever drew it can change it. Changing ADDS the new picture before
- * it takes the old one away, so a failure half way leaves two, never none.
+ * A drawing on a saved study. Changing adds the new picture before removing
+ * the old, so a failure leaves two, never none.
  */
 function SavedDrawing({ file, canChange, busy, onReplace, onRemove }: {
   file: live.LessonFile;
@@ -294,9 +241,7 @@ function SeriesBody({ series, mine, ownSeries }: {
   const [files, setFiles] = useState<Record<string, live.LessonFile[]>>({});
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  // Which study is open for editing, and the words as they are being changed.
-  // One at a time on purpose: a phone has no room for two open editors, and
-  // "which of these am I saving" is not a question worth creating.
+  // The study being edited; one at a time.
   const [editing, setEditing] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editBody, setEditBody] = useState('');
@@ -304,18 +249,15 @@ function SeriesBody({ series, mine, ownSeries }: {
   const [error, setError] = useState('');
   // Which study is asking "are you sure" before it is deleted.
   const [confirmDelete, setConfirmDelete] = useState('');
-  // The new-study form is shut until somebody asks for it: a series you are
-  // READING should read like one, not open on an empty form.
+  // The new-study form is closed until asked for.
   const [adding, setAdding] = useState(false);
   // Handouts dropped onto the new study, sent once the study exists.
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  // WHICH OF THESE I HAVE READ. Mine alone: the database refuses a read row
-  // written for anybody else, so this never holds somebody else's answer.
+  // My own reads only; the database refuses a read row for anyone else.
   const [reads, setReads] = useState<Set<string>>(new Set());
   const { profile } = useLiveSession();
 
-  // A FILE TOO BIG IS REFUSED WHEN IT IS DROPPED, by name -- the same words the
-  // new-series form uses, so the two ways of writing a study agree.
+  // Files over the limit are refused by name when dropped.
   const addNewFiles = (picked: File[]) => {
     const tooBig = picked.filter((f) => f.size > live.MAX_RESOURCE_FILE);
     setError(tooBig.length
@@ -334,7 +276,6 @@ function SeriesBody({ series, mine, ownSeries }: {
     } catch (cause) { setLessons([]); setError(message(cause)); }
   }, [series.id]);
   useEffect(() => { void load(); }, [load]);
-  // The screen keeps up when somebody else changes something.
   useKeepUp(KEEP_UP_STUDIES, load);
 
   const act = async (fn: () => Promise<void>) => {
@@ -354,8 +295,7 @@ function SeriesBody({ series, mine, ownSeries }: {
         </p>
       )}
 
-      {/* MY OWN PROGRESS THROUGH THIS SERIES. Drawn from the same two numbers
-          the Director sees, so nobody is ever looking at a different figure. */}
+      {/* My progress through this series: the same numbers the Director sees. */}
       {lessons !== null && lessons.length > 0 && (
         <div className="mb-3">
           <ReadingBar
@@ -377,9 +317,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                     <Rich text={lesson.body} />
                   </p>
                 )}
-                {/* A DRAWING IS SHOWN, NOT LISTED. It was made to be looked at
-                    beside the words, so it sits under them as the picture it
-                    is; a handout is a file to open, so it stays a line. */}
+                {/* A drawing is shown as a picture; a handout is a line to open. */}
                 {(files[lesson.id] ?? []).filter((f) => isDrawingName(f.name)).map((f) => (
                   <div key={f.id} className="mt-2">
                     <SavedDrawing file={f} canChange={false} busy={busy} />
@@ -398,11 +336,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                   </ul>
                 )}
                 <div className="mt-2 flex flex-wrap items-center gap-3">
-                  {/* A BUTTON, NOT A SIDE EFFECT OF SCROLLING. Every lesson in an
-                      open series is on screen at once, so marking one read
-                      because it rendered would record the whole series on a
-                      single tap and hand a Director a number that measures
-                      nothing. The person says so themselves. */}
+                  {/* Reading is marked by a button, never by scrolling past. */}
                   <button
                     type="button"
                     disabled={busy}
@@ -418,11 +352,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                   >
                     {reads.has(lesson.id) ? '✓ Read' : 'Mark as read'}
                   </button>
-                  {/* ONE WRITING CONTROL ON A STUDY, NOT THREE. Edit, attach and
-                      delete sat under every study all the time, so a series read
-                      like a form. Everything a writer does to one study happens
-                      inside Edit -- including the destructive control, which is
-                      therefore never the first thing a thumb finds. */}
+                  {/* One Edit control per study; everything else, including delete, is inside it. */}
                   {mine && (
                     <button
                       type="button"
@@ -441,15 +371,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                 </div>
               </>
             ) : (
-              /* EDITING IN PLACE, NOT ON ANOTHER SCREEN. The handouts stay
-                 visible while the words are being changed, because the study
-                 and the sheet that goes with it are one thing to the person
-                 teaching from them.
-
-                 THE WHOLE CARD TAKES A DROPPED FILE, not only the small box
-                 at the bottom of it (28 September 2026). A file let go over
-                 the words, a few pixels from the box, used to be opened by the
-                 browser itself -- out of the app, and the edit with it. */
+              /* Edit in place with the handouts visible. The whole card accepts dropped files. */
               <DropArea
                 busy={busy}
                 label="Drop to add to this study"
@@ -528,8 +450,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                       ))}
                     </ul>
                   )}
-                  {/* DRAG HANDOUTS IN, or choose them -- several at once. It
-                      was a single "Attach a file" link, one file per trip. */}
+                  {/* Drag handouts in, or choose several at once. */}
                   <div className="mt-2">
                     <FileDrop
                       compact
@@ -541,8 +462,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                       })}
                     />
                   </div>
-                  {/* DRAW IT, the tool asked for on 28 September 2026. The
-                      picture goes straight onto the study, like a handout. */}
+                  {/* Draw a picture straight onto the study. */}
                   <div className="mt-2">
                     <DrawButton
                       busy={busy}
@@ -553,8 +473,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                   </div>
                 </div>
 
-                {/* LAST, RED, AND IT ASKS FIRST. Deleting a study was one tap on
-                    a red word beside Edit; nothing asked. */}
+                {/* Delete last, in red, and it asks first. */}
                 <div className="mt-2 border-t border-black/5 pt-2">
                   {confirmDelete === lesson.id ? (
                     <div className="flex flex-wrap items-center gap-3">
@@ -663,9 +582,7 @@ function SeriesBody({ series, mine, ownSeries }: {
                 const id = await live.addLesson(series.id, {
                   title, body, position: (lessons?.length ?? 0) + 1,
                 });
-                // The study exists now: the form closes BEFORE the handouts
-                // go, so a failed file cannot tempt a second tap that writes
-                // the study twice. A file that fails can be added under Edit.
+                // Close the form before sending handouts, so a failed file cannot cause a second save.
                 const handouts = newFiles;
                 setTitle(''); setBody(''); setNewFiles([]); setAdding(false);
                 for (const f of handouts) await live.attachLessonFile(id, f);
@@ -692,27 +609,10 @@ type DraftStudy = { key: string; title: string; body: string; files: File[] };
 const blankStudy = (): DraftStudy => ({ key: uuid(), title: '', body: '', files: [] });
 
 /**
- * A NEW SERIES, WRITTEN IN ONE FORM.
- *
- * Asked for on 25 September 2026: "the lesson study making in guide is
- * complicated". It was. Making a series with two studies and a handout took
- * four separate forms and a dozen taps -- create the empty series, open it,
- * "+ Add a study", save, "+ Add a study" again, save, then "Edit this study" to
- * find "Attach a file" -- and nothing on the first form said any of that was
- * coming.
- *
- * Now it is one page: the series' name, then the studies written out under it
- * with their handouts dropped in beside them, then Save. What most people never
- * need -- the topic it is grouped under, the line shown under its name, how to
- * make text bold -- is shown only on Advanced (28 September 2026; it was
- * folded under "More options" and "Formatting tips" before that). Simple, where
- * everybody starts, is the name, the studies, their handouts and drawings, and
- * Save.
- *
- * SAVED IN ORDER, AND NOTHING SHARED UNTIL ALL OF IT IS. The series is written
- * as a draft, then each study, then its files, and only then is it shared if
- * that was asked for -- so a failure half way leaves a private draft to finish,
- * never a half-written series on everybody's shelf.
+ * A new series in one form: its name, its studies and their handouts, then
+ * Save. Topic and subtitle appear on Advanced only. Saved in order (series,
+ * each study, its files) and shared only once all of it is saved, so a failure
+ * leaves a private draft.
  */
 function NewSeries({ onSaved, onCancel }: {
   /** The series now exists: open it, and say what happened (or what did not). */
@@ -731,8 +631,7 @@ function NewSeries({ onSaved, onCancel }: {
   const change = (key: string, patch: Partial<DraftStudy>) =>
     setStudies((list) => list.map((s) => (s.key === key ? { ...s, ...patch } : s)));
 
-  // A FILE TOO BIG IS REFUSED WHEN IT IS DROPPED, by name, not after the rest
-  // of the series has been saved around it.
+  // Files over the limit are refused by name when dropped.
   const addFiles = (key: string, files: File[]) => {
     const tooBig = files.filter((f) => f.size > live.MAX_RESOURCE_FILE);
     setError(tooBig.length
@@ -753,8 +652,7 @@ function NewSeries({ onSaved, onCancel }: {
       for (let i = 0; i < written.length; i++) {
         const s = written[i];
         setProgress(`Saving study ${i + 1} of ${written.length}…`);
-        // An untitled study is called by its place in the series, rather than
-        // refused: the words are what matter, and a title can come later.
+        // An untitled study is named by its place in the series.
         const lessonId = await live.addLesson(id, {
           title: s.title.trim() || `Study ${i + 1}`, body: s.body, position: i + 1,
         });
@@ -770,8 +668,7 @@ function NewSeries({ onSaved, onCancel }: {
           : `“${title.trim()}” is saved as a draft. Only you can see it until you share it.`,
       });
     } catch (cause) {
-      // Whatever was saved is kept, as a draft, and opened so it can be
-      // finished from where it stopped.
+      // Keep whatever was saved as a draft and open it.
       if (id) onSaved(id, { error: `Saved as a draft so far, but not all of it: ${message(cause)}` });
       else setError(message(cause));
     } finally {
@@ -799,11 +696,7 @@ function NewSeries({ onSaved, onCancel }: {
         />
       </div>
 
-      {/* WHERE IT SITS ON THE SHELF, on Advanced only. Beside the name because
-          that is what they describe; left empty, the series is filed under
-          General, which is the same answer the database gives. (Until 28
-          September 2026 these were folded under "More options" at the foot of
-          the form, below every study, which is a long way from the name.) */}
+      {/* Topic and subtitle, on Advanced only. Empty topic means General. */}
       {advanced && (
         <div className="grid gap-2 rounded-xl bg-white p-3 ring-1 ring-navy/5">
           <label className="text-sm font-semibold text-navy" htmlFor="new-series-topic">
@@ -830,7 +723,7 @@ function NewSeries({ onSaved, onCancel }: {
         </div>
       )}
 
-      {/* THE STUDIES, WRITTEN HERE, not in a second form after this one. */}
+      {/* The studies are written here, in the same form. */}
       <ol className="grid grid-cols-1 gap-3">
         {studies.map((s, i) => (
           <li key={s.key}>
@@ -903,17 +796,13 @@ function NewSeries({ onSaved, onCancel }: {
         + Add another study
       </button>
 
-      {/* (grid-cols-1 on the grids above: a single track is minmax(0, 1fr),
-          so a long file name that will not wrap is cut with an ellipsis
-          instead of widening the whole form past the edge of a phone.) */}
+      {/* grid-cols-1 makes long file names truncate instead of widening the form. */}
 
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">{error}</p>}
       {progress && <p className="text-sm font-semibold text-gray-600" aria-live="polite">{progress}</p>}
 
       <div className="flex flex-wrap items-center gap-3">
-        {/* "Save and share", not "Share with the church": the longer words
-            wrapped onto two lines of a phone-sized button. The line below says
-            who it is shared with. */}
+        {/* Short enough to fit a phone-sized button. */}
         <Button disabled={busy || !title.trim()} onClick={() => void save(true)}>
           Save and share
         </Button>
@@ -939,49 +828,28 @@ function NewSeries({ onSaved, onCancel }: {
 
 export function LiveStudies({ openSeries = '', readOnly = false, note }: {
   openSeries?: string;
-  /**
-   * READING, NOT WRITING, on a screen whose job is something else. A Guide on
-   * one Explorer's Lessons tab is there to see what that person can read and
-   * how far they have got; the whole writing desk -- new series, rename,
-   * publish, delete -- sat on top of that and made it look like the Office.
-   * This only REMOVES controls. It can never grant one: the role decides that,
-   * below, and the database decides it for real.
-   */
+  /** Hide every writing control on a screen meant for reading. It can only take controls away. */
   readOnly?: boolean;
   /** A line under the heading, for a screen that wants to point somewhere. */
   note?: ReactNode;
 }) {
   const { profile } = useLiveSession();
-  // THE ROLE DECIDES, NOT THE CALLER. This was a `canWrite` prop each screen
-  // passed by hand, and the four call sites had already drifted: the Guide's
-  // own studies tab passed nothing, so a Guide -- somebody whose job is
-  // preparing studies -- could not start one. Meanwhile a screen could pass
-  // `canWrite` for an Explorer and hand them a form the database would refuse.
-  //
-  // One rule, read from the profile, matching `may_write_studies()` in the
-  // database. A prop that four callers guess at is four chances to get a
-  // permission wrong. `readOnly` can only take away.
+  // The role decides who may write (matching may_write_studies()); readOnly can only take away.
   const canWrite = canWriteStudies(profile?.role) && !readOnly;
   const advancedWriting = useWritingMode() === 'advanced';
   const [rows, setRows] = useState<live.LessonSeries[] | null>(null);
-  // ARRIVING FROM "READ NEXT" OPENS THE RIGHT SERIES. Without this the card
-  // would name a study and then drop somebody on a shelf of closed folders to
-  // find it again, which is most of the way back to the problem it solves.
+  // Arriving from "Read next" opens that series.
   const [open, setOpen] = useState(openSeries);
   useEffect(() => { if (openSeries) setOpen(openSeries); }, [openSeries]);
-  // THE NEW-SERIES FORM IS SHUT UNTIL ASKED FOR. It was three empty boxes at
-  // the top of the card on every visit, above the studies people came to read,
-  // for the one day in a month somebody starts a series.
+  // The new-series form is closed until asked for.
   const [creating, setCreating] = useState(false);
   const [flash, setFlash] = useState('');
-  // Which series is being renamed. Same one-at-a-time rule as the studies
-  // inside them.
+  // The series being renamed; one at a time.
   const [renaming, setRenaming] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [newTopic, setNewTopic] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  // Which series is asking "are you sure" before it goes. Deleting a series --
-  // and every study in it -- was ONE TAP on a red word sitting beside Rename.
+  // The series asking for confirmation before it is deleted.
   const [confirming, setConfirming] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -991,7 +859,6 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
     catch (cause) { setRows([]); setError(message(cause)); }
   }, []);
   useEffect(() => { void load(); }, [load]);
-  // The screen keeps up when somebody else changes something.
   useKeepUp(KEEP_UP_STUDIES, load);
 
   const act = async (fn: () => Promise<void>) => {
@@ -1004,8 +871,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
   const byTopic = (rows ?? []).reduce<Record<string, live.LessonSeries[]>>((acc, s) => {
     (acc[s.topic || 'General'] ??= []).push(s); return acc;
   }, {});
-  // The topics already in use, offered as suggestions, so the same group is
-  // not typed three ways ("Prayer", "prayer", "Prayers").
+  // Existing topics are offered as suggestions, so one group is not typed three ways.
   const topics = Object.keys(byTopic);
 
   return (
@@ -1059,20 +925,10 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
             <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-teal-700">{t}</h3>
             <div className="mt-2 space-y-2">
               {list.map((s) => {
-                // WHO MAY WRITE. Guides, Directors and Executive Directors, and
-                // a Guide correcting a church sample gets their OWN copy rather
-                // than rewriting it for the other forty Guides (the copy is made
-                // in lib/live/data.ts). An Explorer reads; they do not write.
-                //
-                // NOT THE BOUNDARY. `an_explorer_reads_the_studies` is what
-                // actually refuses, and it refuses a request that never went
-                // near a screen. This only stops offering a button that would
-                // be refused, which is a courtesy, not a lock.
+                // Who may write. A Guide editing a church sample gets their own copy
+                // (lib/live/data.ts). A convenience only; the database refuses anyone else.
                 const mine = canWriteStudies(profile?.role) && !readOnly;
-                // PUBLISHING IS THE EXCEPTION, and it is the one act here that
-                // is genuinely church-wide: it puts a study on everybody's
-                // shelf. Editing privately and publishing universally cannot
-                // share a gate, so this one stays with whoever wrote it.
+                // Publishing puts a study on everybody's shelf, so it stays with the author.
                 const canPublish = !!profile && !readOnly && (
                   s.author_id === profile.id
                   || profile.role === 'admin'
@@ -1082,10 +938,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
                 const opened = open === s.id;
                 return (
                   <div key={s.id} className="rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-navy/5">
-                    {/* THE WHOLE ROW OPENS IT, and the row carries nothing else
-                        but a Draft tag. Rename, Publish and Delete were three
-                        words beside every title -- a list to read, not a
-                        shelf -- and they now sit inside the series you open. */}
+                    {/* The whole row opens the series; its controls are inside. */}
                     <button
                       type="button"
                       onClick={() => { setOpen(opened ? '' : s.id); setConfirming(''); setRenaming(''); }}
@@ -1112,9 +965,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
                     )}
                     {opened && <SeriesBody series={s} mine={mine} ownSeries={ownSeries} />}
 
-                    {/* LOOKING AFTER THE SERIES ITSELF, at the foot of it once
-                        it is open: the studies come first because reading them
-                        is what the series is for. */}
+                    {/* Managing the series comes after its studies. */}
                     {opened && mine && (
                       <div className="mt-4 border-t border-black/5 pt-3">
                         {renaming === s.id ? (
@@ -1131,9 +982,7 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
                               placeholder="Series title"
                               className="tap w-full min-w-0 rounded-xl bg-white px-4 text-base ring-1 ring-navy/10 outline-none focus:ring-2 focus:ring-blue-600"
                             />
-                            {/* The topic and the line under the name, on Advanced
-                                only -- the same split as the new-series form.
-                                Whatever they hold is saved either way. */}
+                            {/* Topic and subtitle, on Advanced only. */}
                             {advancedWriting && (
                               <>
                               <label className="text-xs font-semibold text-navy" htmlFor={`series-topic-${s.id}`}>
@@ -1207,8 +1056,6 @@ export function LiveStudies({ openSeries = '', readOnly = false, note }: {
                           </div>
                         ) : (
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                            {/* Renaming a series was once only possible by
-                                deleting it, which took every study with it. */}
                             <button
                               type="button"
                               disabled={busy}
