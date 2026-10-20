@@ -4,7 +4,8 @@
 // write; nothing here filters for access. This file runs in the browser, so it
 // never imports a server key, never sets role, church_id, is_approved or
 // is_head_executive on the caller's own profile, and never selects an
-// Explorer's own journey_stage.
+// Explorer's own journey_stage. Changing somebody's role is setMemberRole(),
+// on somebody else's row; there is no setMyRole() here, and must never be.
 
 import {
   endBrowserSession,
@@ -1369,7 +1370,7 @@ export async function reportPrayerRequest(
   // File the report first, then the evidence, so a failed upload cannot lose it.
   if (reportId && evidence?.length) {
     for (const file of evidence) {
-      try { await attachReportEvidence(reportId, file); } catch { }
+      try { await attachReportEvidence(reportId, file); } catch { /* the report stands */ }
     }
   }
   return reportId;
@@ -2709,7 +2710,7 @@ export async function reportPerson(args: {
   // File the report first and attach evidence after, so a failed upload cannot lose it.
   if (reportId && args.evidence?.length) {
     for (const file of args.evidence) {
-      try { await attachReportEvidence(reportId, file); } catch { }
+      try { await attachReportEvidence(reportId, file); } catch { /* the report stands */ }
     }
   }
   return reportId;

@@ -121,9 +121,9 @@ export function greetingName(fullName: string): string {
   const first = (fullName ?? '').trim().split(/\s+/)[0] ?? '';
   if (first.length < 2 || first.length > 24) return '';
   // Letters plus the straight and curly apostrophes and the hyphen. The
-  // apostrophes are typed literally, never as backslash-u escapes: deploying
-  // sends this source as JSON, which would decode an escape
-  // (tests/the-deployed-function-is-the-file.mjs).
+  // apostrophes are typed literally, NEVER AS BACKSLASH-U ESCAPES: deploying
+  // sends this source as JSON, which would decode an escape, and the deployed
+  // file would stop matching this one (tests/the-deployed-function-is-the-file.mjs).
   if (!/^[\p{L}][\p{L}'’-]*$/u.test(first)) return '';
   // An all-lowercase name is capitalised; MacLeod and O'Brien keep their own capitals.
   return first === first.toLowerCase()
