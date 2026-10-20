@@ -1,31 +1,9 @@
-// Questions people ask, answered once.
-//
-// ASKED FOR (7 October 2026): "I want a complete FAQ in the app too please
-// before users login and inside the app in settings."
-//
-// ONE SOURCE FOR TWO PLACES. The page anybody can open before signing in
-// (app/faq/page.tsx, linked from the front door and the sign-in screens) and
-// the Help folder in Settings, in the sample church and in a real one, all draw
-// this list through components/Faq.tsx. A question answered in one place and
-// not the other is the drift tests/the-live-app-offers-what-the-tutorial-
-// offers.mjs exists to stop elsewhere.
-//
-// EVERY ANSWER IS ONE THE APP KEEPS TRUE, which is the only kind worth giving
-// to somebody deciding whether to trust it. Where the answer is a rule, the
-// rule is the database's and its test is named in the comment beside it; where
-// it is a number, the number is read from the code that enforces it, so the
-// two cannot drift apart. The privacy answers say what the privacy notice says
-// (app/privacy/page.tsx) and the oversight answers ARE the oversight wording
-// (lib/oversight.ts), word for word, because the invitation e-mail and the
-// sign-up page say them too, and a person should never read two versions.
-//
-// WHAT IS NOT HERE. Anything that is one deployment's and not the app's: which
-// country the database is in, who the Data Protection Officer is. Those are in
-// the church's own privacy notice, and these answers point there instead of
-// guessing.
-//
-// Plain words, no clause numbers, no "user". Written for somebody who has just
-// been invited by a person they trust and wants to know what they are joining.
+// The FAQ, written once. The public page (app/faq/page.tsx) and Settings, Help
+// both render it through components/Faq.tsx. Every answer must stay true to the
+// code: limits are read from the modules that enforce them, and the oversight
+// answers reuse lib/oversight.ts word for word, as the invitation does.
+// Deployment-specific facts (hosting country, the DPO) belong in the church's
+// privacy notice, so answers point there.
 
 import { APP_NAME, APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
 import { oversightPoints } from '@/lib/oversight';
@@ -56,7 +34,7 @@ export interface FaqSection {
 const CLIP_MB = Math.round(CLIP_MOST_BYTES / 1024 / 1024);
 
 export function faqSections(): FaqSection[] {
-  // The same four sentences as the invitation e-mail and the sign-up page.
+  // The same four sentences as the invitation email and the sign-up page.
   const [whatItIs, overseen, between, law] = oversightPoints(null).map((p) => p.text);
 
   return [
@@ -70,7 +48,7 @@ export function faqSections(): FaqSection[] {
           q: `What is ${APP_NAME}?`,
           a: [
             whatItIs,
-            'Two people walk together: an Explorer, who is finding out about Jesus, and a Guide from the church who walks alongside them. The app carries what that takes: your conversation, readings, prayer requests and the times you meet.',
+            'It pairs an Explorer, who is learning about Jesus, with a Guide from the church who walks alongside them. The app holds what that relationship needs: your conversation, readings, prayer requests and meeting times.',
           ],
         },
         {
@@ -90,24 +68,24 @@ export function faqSections(): FaqSection[] {
         },
         {
           id: 'who-can-join',
-          q: 'Can anybody join, or see what is inside?',
+          q: 'Can anyone join or see what is inside?',
           a: [
-            'No. It is by invitation only, and there is no public sign-up. Somebody who finds the address sees the front door, these questions, the privacy notice and a tutorial with sample people in it, and nothing about any member. Nothing inside is shown to search engines.',
+            'No. Membership is by invitation only; there is no public sign-up. A visitor who finds the address can see the welcome page, these questions, the privacy notice and a tutorial with sample data, but nothing about any member. The app is not indexed by search engines.',
           ],
         },
         {
           id: 'cost-and-ads',
-          q: 'Does it cost anything? Are there adverts?',
+          q: 'Does it cost anything? Is there advertising?',
           a: [
-            'Nothing for members, and there are no adverts. Nothing about you is sold, and no outside company is given your activity to study. The only numbers kept are the counts and dates the church’s leaders see.',
-            `${APP_NAME} is free, open-source software. Your church pays only for the services that run its copy.`,
+            'It is free for members and contains no advertising. Your information is never sold or shared with outside companies for analysis. The only usage figures kept are the counts and dates your church’s leaders see.',
+            `${APP_NAME} is free, open-source software. Your church pays only for the hosting services that run its copy.`,
           ],
         },
         {
           id: 'open-source',
-          q: 'Who made it? Can another church have its own?',
+          q: 'Who made it? Can another church use it?',
           a: [
-            'It is free software under the GNU Affero General Public License, and anybody can read how it works. Any church can run its own copy, with its own members and its own database. Nothing is shared between churches.',
+            'It is free software under the GNU Affero General Public License, and its source code is public. Any church can run its own copy, with its own members and database, and is responsible for that copy. No information is shared between churches.',
           ],
           links: [{ label: 'The code, on GitHub', href: SOURCE_URL }],
         },
@@ -122,35 +100,35 @@ export function faqSections(): FaqSection[] {
           id: 'how-to-join',
           q: 'How do I join?',
           a: [
-            'Somebody at your church sends you an invitation by e-mail. It holds your sign-in details and a button that opens the app. Sign in, then choose your own password.',
-            'A Director approves each new account. Until they have, the app tells you that you are waiting, rather than letting you in to an empty screen.',
+            'A leader at your church sends you an invitation by email. It contains your sign-in details and a button that opens the app. Sign in, then choose your own password.',
+            'A Director approves each new account. Until then, the app shows that your account is awaiting approval.',
           ],
         },
         {
           id: 'invitation-password',
           q: 'The password in my invitation stopped working.',
           a: [
-            'It works for three days, or until you choose your own, because anybody who can read the e-mail could use it. Tap “Forgot your password?” on the sign-in screen and a link to choose a new one is sent to you.',
+            'The temporary password expires after three days, or as soon as you choose your own, so that it cannot be reused by anyone who sees the email. Tap “Forgot your password?” on the sign-in screen to receive a link for setting a new one.',
           ],
           links: [{ label: 'Sign in', href: '/login' }],
         },
         {
           id: 'two-invitations',
           q: 'I have two invitations. Which do I use?',
-          a: ['The newest. Sending a new invitation switches off the one before it.'],
+          a: ['Use the most recent one. Each new invitation replaces the one before it.'],
         },
         {
           id: 'no-email',
           q: 'My invitation never arrived.',
           a: [
-            'Look in Spam or Promotions first. If it is not there, check the address with whoever invited you; they can send it again.',
+            'Check your Spam or Promotions folder first. If it is not there, confirm your email address with the person who invited you; they can send it again.',
           ],
         },
         {
           id: 'forgot-password',
           q: 'I forgot my password.',
           a: [
-            'Tap “Forgot your password?” on the sign-in screen, and a link to choose a new one is sent to your e-mail. Once you are in, you can change it any time on the Password page.',
+            'Tap “Forgot your password?” on the sign-in screen, and a link to choose a new one will be sent to your email. Once signed in, you can change your password at any time on the Password page.',
           ],
           links: [{ label: 'Sign in', href: '/login' }],
         },
@@ -158,31 +136,31 @@ export function faqSections(): FaqSection[] {
           id: 'two-step',
           q: 'What is two-step sign-in, and should I turn it on?',
           a: [
-            'It adds a second step after your password: a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator. Somebody who learns your password still cannot sign in as you.',
-            'Turn it on in Settings, on the Password page, under “Two-step sign-in”. It is recommended for Directors and Executive Directors, who can see the church’s list of members.',
-            'If you lose the phone with your authenticator app, ask your church’s Director to contact whoever looks after the app. They can remove it from your account so you can sign in with your password and set it up again.',
+            'Two-step sign-in adds a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator, after your password. Someone who learns your password still cannot sign in as you.',
+            'Turn it on in Settings, on the Password page, under “Two-step sign-in”. It is strongly recommended for Directors and Executive Directors, who can see the church’s member list.',
+            'If you lose the phone that holds your authenticator app, contact a Director at your church. Once your identity is confirmed, your church’s administrator can remove it so you can sign in with your password and set it up again.',
           ],
         },
         {
           id: 'under-18',
           q: 'I am under 18. Can I join?',
           a: [
-            'Yes, once a parent or guardian has agreed. That is why the app asks for your birthday: somebody under 18 is walked with differently, and their parent or guardian agrees first.',
+            'Yes, with the consent of a parent or guardian. This is why the app asks for your date of birth: members under 18 join only after a parent or guardian has agreed.',
           ],
         },
         {
           id: 'devices',
           q: 'Can I use it on my phone and my computer?',
           a: [
-            'Yes. Sign in on each. On a phone, put it on your home screen and it opens like any other app (see “How do I put it on my phone’s home screen?” below).',
+            'Yes. Sign in on each device. On a phone, add it to your home screen and it opens like any other app (see “How do I put it on my phone’s home screen?” below).',
           ],
         },
         {
           id: 'sign-out',
-          q: 'How do I sign out? I lost my phone.',
+          q: 'How do I sign out? What if my phone is lost or stolen?',
           a: [
-            'Sign out is at the bottom of the Menu. It ends that sign-in on the server too, not only on the screen in front of you.',
-            'For a lost or shared device, open the Password page on any device you still have and press “Sign out everywhere else”. Every other device is signed out at once.',
+            'Sign out is at the bottom of the Menu. It ends the session completely, not only on the screen in front of you.',
+            'If a device is lost, stolen or shared, open the Password page on any device you still have and press “Sign out everywhere else”. Every other device is signed out immediately.',
           ],
         },
       ],
@@ -195,70 +173,70 @@ export function faqSections(): FaqSection[] {
         {
           id: 'who-reads',
           q: 'Who can read my messages?',
-          a: [between, 'No other account in the app can open it: not other Guides, not Directors, not Executive Directors. The database refuses them, whatever is used to ask.'],
+          a: [between, 'No other account can open it, including other Guides, Directors and Executive Directors. This is enforced on the server, not only by the app’s screens.'],
         },
         {
           id: 'encrypted',
           q: 'Is my conversation encrypted?',
           a: [
-            'On its way to and from your phone, always, and where it is stored. It is not end-to-end encrypted: the church’s server keeps it, so that it can be reported, removed when you ask, and given to you in a copy. That means the very few people who run the church’s database could reach it there, outside the app. Who they are is the church’s to limit, and its privacy manual says how.',
+            'Yes, while it travels to and from your device and while it is stored. It is not end-to-end encrypted: your church’s server keeps it so that a message can be reported, deleted at your request, or included in a copy of your data. This means the few people who administer your church’s database could access it outside the app. Your church is responsible for limiting who they are, as described in its privacy manual.',
           ],
         },
         {
           id: 'what-leaders-see',
           q: 'What do the church’s leaders see about me?',
           a: [
-            'Who is paired with whom, where each person is on the journey, and counts and dates: that a message was sent on Tuesday, never what it said. They use these to look after the church and to notice when somebody has been left without a Guide.',
+            'Who is paired with whom, each person’s stage on the journey, and counts and dates: for example, that a message was sent on Tuesday, never what it said. Leaders use this to care for the church and to notice when someone has been left without a Guide.',
           ],
         },
         {
           id: 'report',
           q: 'What happens when I report a message?',
           a: [
-            'It goes to the church’s leadership, so they can keep everybody safe. The screen says this before you report. It is the one way a leader ever reads a message, and the person you reported is not told who did.',
+            'The message is sent to your church’s leadership so they can keep everyone safe, and the app tells you this before you confirm. Reporting is the only way a leader ever reads a message, and the person you reported is not told who reported it.',
           ],
         },
         {
           id: 'edit-delete',
           q: 'Can I change or take back a message?',
           a: [
-            'Yes: your own, and only your own. An edited message is marked “edited”. A deleted one leaves a line saying a message was deleted, so the other person is never left wondering whether they imagined it.',
-            'Deleting takes the words off the screen, not out of the record. They are kept where neither of you can read them, and leadership sees them only if a safeguarding report is looked at.',
+            'Yes, but only your own. An edited message is marked “edited”, and a deleted message is replaced by a note that it was deleted, so the conversation stays clear for both of you.',
+            'Deleting removes the words from view, not from the record. They are kept where neither of you can read them, and leadership sees them only when reviewing a safeguarding report.',
           ],
         },
         {
           id: 'photos-voice',
           q: 'Can I send photos, voice messages and reactions?',
           a: [
-            'Yes. A photo is made smaller, and the place it was taken is removed, before it is kept. A voice message is up to two minutes, and the app uses your microphone only while you are recording. Reactions are seen by the two of you, like the conversation.',
+            'Yes. Photos are resized and their location data is removed before they are stored. Voice messages can be up to two minutes long, and the app uses your microphone only while you are recording. Reactions, like the conversation itself, are visible only to the two of you.',
           ],
         },
         {
           id: 'different-guide',
           q: 'What if I need a different Guide?',
           a: [
-            'Tell a Director at your church. They can give you a different Guide in one step, and you keep your place on the journey. Your first conversation stays between you and your first Guide; the new Guide starts a new one.',
+            'Speak to a Director at your church. They can assign you a different Guide in one step, and you keep your place on the journey. Your earlier conversation remains between you and your first Guide; your new Guide starts a new one.',
           ],
         },
         {
           id: 'meetings',
           q: 'How do we arrange to meet?',
           a: [
-            'From Appointments. Suggest a time online, with the link to the call, or in person, with a place search that suggests where you mean. The other person agrees or says not this time. A meeting that is called off says so, and you can clear it from your list once you have seen it.',
+            'Use Appointments. Propose a time to meet online, with a link to the call, or in person, with a place search to help you choose the location. The other person accepts or declines. A cancelled meeting is marked as such, and you can clear it from your list once you have seen it.',
           ],
         },
         {
           id: 'prayer',
           q: 'Can I ask for prayer?',
           a: [
-            'Yes, at the foot of your own screen. It goes to your Guide and nobody else. When they press “I’m praying”, you are told, with the date. A Guide can ask the people they walk with to pray for them too.',
+            'Yes, from the bottom of your own screen. Your request goes to your Guide and no one else. When they press “I’m praying”, you are notified, with the date. A Guide can also ask the people they walk with to pray for them.',
           ],
         },
         {
           id: 'journey',
           q: 'What are the stages of the journey?',
           a: [
-            'Beginner, Connect, Care, Call and Cultivate. The stage is a note for your Guide, not a score, and nothing in the app hurries anybody along.',
+            'Beginner, Connect, Care, Call and Cultivate. A stage is a note for your Guide, not a score, and the app never pressures anyone to move on.',
           ],
         },
       ],
@@ -272,7 +250,7 @@ export function faqSections(): FaqSection[] {
           id: 'what-is-kept',
           q: 'What is kept about me?',
           a: [
-            'Your name and e-mail, and whatever you choose to add: a picture, your city, your work, what you are interested in. Your birthday. What you write. And what the church records: when you were approved, and any safeguarding report or decision about you.',
+            'Your name, email address and date of birth; anything you choose to add, such as a photo, your city, your work or your interests; what you write; and what the church records, such as when you were approved and any safeguarding report or decision concerning you.',
           ],
           links: [{ label: 'The privacy notice', href: '/privacy' }],
         },
@@ -280,14 +258,14 @@ export function faqSections(): FaqSection[] {
           id: 'why-agree',
           q: 'Why am I asked to agree so clearly?',
           a: [
-            'Under the Philippine Data Privacy Act of 2012 (Republic Act 10173), your age and your connection with a church are sensitive personal information. So you are told first what is kept and who looks after it, and you agree by ticking an empty box yourself, never by carrying on.',
+            'Under the Philippine Data Privacy Act of 2012 (Republic Act 10173), your age and your connection with a church are sensitive personal information. You are therefore told first what is kept and who is responsible for it, and you give consent by ticking an empty box yourself, never simply by continuing.',
           ],
         },
         {
           id: 'where-kept',
           q: 'Where is my information kept?',
           a: [
-            'With the services your church uses to run its copy of the app. The privacy notice names them, says which country the information is kept in, and says plainly if that is outside the Philippines.',
+            'With the hosting services your church uses to run its copy of the app. The privacy notice names them, states the country where your information is kept, and says clearly if that is outside the Philippines.',
           ],
           links: [{ label: 'The privacy notice', href: '/privacy' }],
         },
@@ -296,7 +274,7 @@ export function faqSections(): FaqSection[] {
           q: 'Can I see, correct or delete what is kept about me?',
           a: [
             law,
-            'In the app, “Download my information” on your profile gives you a copy in one file, whenever you like. For anything else, write to the church’s Data Protection Officer, who is named in the privacy notice. You will have an answer within 30 days.',
+            '“Download my information” on your profile gives you a copy in a single file at any time. For any other request, write to your church’s Data Protection Officer, who is named in the privacy notice. You will receive a response within 30 days.',
           ],
           links: [{ label: 'The privacy notice', href: '/privacy' }],
         },
@@ -304,30 +282,30 @@ export function faqSections(): FaqSection[] {
           id: 'when-deleted',
           q: 'What happens when an account is deleted?',
           a: [
-            'What is in it goes at once, not after a waiting period, and so does every file that belonged to it: pictures straight away, and the rest at the nightly clean-up, which removes each stored file whose record is gone.',
-            'Two things are kept: safeguarding reports, and the record that the account was removed. A church has to be able to show that it acted, and a record the person it describes could erase would show nothing.',
+            'Its contents are removed immediately, with no waiting period, along with every file that belonged to it: photos at once, and other files during the nightly clean-up.',
+            'Two things are kept: safeguarding reports, and the record that the account was removed. A church must be able to show how it acted, which a record its subject could erase would not allow.',
           ],
         },
         {
           id: 'photo-location',
           q: 'Can a photo I add show where I live?',
           a: [
-            'No. Every photo you add, in a conversation, on a post or as your picture, is made smaller and has the location your camera recorded taken out before it is kept.',
-            'The one exception is evidence attached to a safeguarding report, which is kept exactly as it was sent, because changing it could make it worth less. Only the leadership handling the report can open it.',
+            'No. Every photo you add, whether in a conversation, on a post or as your profile picture, is resized and has its location data removed before it is stored.',
+            'The only exception is evidence attached to a safeguarding report, which is kept exactly as sent so that its integrity is preserved. Only the leaders handling the report can open it.',
           ],
         },
         {
           id: 'if-wrong',
           q: 'What if something goes wrong with my information?',
           a: [
-            'If your information is exposed in a way that could harm you, you and the National Privacy Commission are told within 72 hours of it being known, as the law requires.',
+            'If your information is exposed in a way that could harm you, your church must notify you and the National Privacy Commission within 72 hours of becoming aware of it, as the law requires.',
           ],
         },
         {
           id: 'complain',
           q: 'Who do I complain to?',
           a: [
-            'The church’s Data Protection Officer first, who is named in the privacy notice. If you are not satisfied with the answer, you can complain to the National Privacy Commission at privacy.gov.ph.',
+            'First, your church’s Data Protection Officer, who is named in the privacy notice. If you are not satisfied with the response, you may file a complaint with the National Privacy Commission at privacy.gov.ph.',
           ],
           links: [{ label: 'The privacy notice', href: '/privacy' }],
         },
@@ -342,103 +320,103 @@ export function faqSections(): FaqSection[] {
           id: 'install',
           q: 'How do I put it on my phone’s home screen?',
           a: [
-            'Settings, General, Install. On an iPhone or iPad, open the app in Safari first; the Install card shows the two taps Apple asks for (Share, then Add to Home Screen).',
+            'Go to Settings, General, Install. On an iPhone or iPad, open the app in Safari first; the Install card shows the two steps Apple requires (Share, then Add to Home Screen).',
           ],
         },
         {
           id: 'alerts',
           q: 'How do I get alerts on my phone?',
           a: [
-            'Tap the bell, then “Turn on device alerts”, and allow it when your phone asks. On an iPhone, put the app on your home screen first: Apple allows alerts only from apps installed there.',
-            'Alerts never carry the words of a message or a prayer request, because an alert can appear on a locked phone.',
+            'Tap the bell, then “Turn on device alerts”, and allow notifications when your phone asks. On an iPhone, add the app to your home screen first: Apple allows alerts only from apps installed there.',
+            'Alerts show who sent a message, never its words or the words of a prayer request, because an alert can appear on a locked screen.',
           ],
         },
         {
           id: 'alert-sound',
           q: 'What does an alert sound like, and can I change it?',
           a: [
-            `While ${APP_SHORT_NAME} is on your screen, an alert plays ${APP_SHORT_NAME}’s own sound: three quick glassy notes, rising and then settling. Settings, General, Notifications has a “Hear it” button and a switch to turn it off.`,
-            `When ${APP_SHORT_NAME} is not on your screen, your phone plays its own notification sound, which follows your ringer and Do Not Disturb. No website or web app can choose that sound; it belongs to the phone. On Android you may be able to pick a different one in your phone’s notification settings for ${APP_SHORT_NAME} or for your browser. On an iPhone it cannot be changed.`,
-            `On an iPhone, ${APP_SHORT_NAME}’s own sound is quiet when the silent switch is on. On Android it follows the media volume, which is one reason it plays only while you are looking at the app.`,
+            `While ${APP_SHORT_NAME} is open on your screen, alerts play ${APP_SHORT_NAME}’s own sound: three quick, bright notes that rise and then settle. Settings, General, Notifications has a “Hear it” button and a switch to turn the sound off.`,
+            `When ${APP_SHORT_NAME} is not on your screen, your phone plays its own notification sound, which follows your ringer and Do Not Disturb settings. Web apps cannot choose that sound. On Android you may be able to select a different one in your phone’s notification settings for ${APP_SHORT_NAME} or for your browser; on an iPhone it cannot be changed.`,
+            `On an iPhone, ${APP_SHORT_NAME}’s own sound is muted when the silent switch is on. On Android it follows the media volume, which is one reason it plays only while the app is open.`,
           ],
         },
         {
           id: 'no-signal',
           q: 'Does it work with no signal?',
           a: [
-            'Its screens do. Once the app has been opened with a signal, every screen and every tool is kept on your phone: the Music room, This Sabbath, the Office, the study room, the drawing board, and the books of the Bible you saved. Settings, General says when all of it is there.',
-            'Signed in, you see what you last saw, and the top of the screen says Offline. Sending a message, posting or answering needs a signal, and the app tells you when it could not.',
+            'Yes, its screens do. Once the app has been opened with a connection, every screen and tool is stored on your device, including the Music room, This Sabbath, the Office, the study room, the drawing board and any books of the Bible you have saved. Settings, General confirms when everything is available offline.',
+            'When you are signed in, you see what you last viewed, and the top of the screen shows Offline. Sending a message, posting or replying requires a connection, and the app tells you if something could not be sent.',
           ],
         },
         {
           id: 'text-size',
-          q: 'Can I make the writing bigger?',
+          q: 'Can I make the text larger?',
           a: [
-            'Yes: Settings, General, Text size. It shows you the new size first and changes the app only when you press Apply. The same place has the language and the look.',
+            'Yes: Settings, General, Text size. You see a preview first, and the app changes only when you press Apply. The same section has the language and appearance settings.',
           ],
         },
         {
           id: 'looks',
-          q: 'Can I change how it looks?',
+          q: 'Can I change how the app looks?',
           a: [
-            'Settings, General, Look. Classic is the app as it was made; Beacon, Study and Focus, and a family of Frutiger Aero looks, change its colours, and some are dark. The choice is kept on that device.',
+            'Yes: Settings, General, Look. Classic is the original design; Beacon, Study, Focus and the Frutiger Aero family offer other colour schemes, some of them dark. Your choice is saved on that device.',
           ],
         },
         {
           id: 'home',
           q: 'What is on Home?',
           a: [
-            'The church’s billboard: announcements, then the newest blog posts, in two rows you swipe sideways. Tap a card to read the whole post with its photos.',
+            'Your church’s noticeboard: announcements, then the latest blog posts, in two rows you can swipe sideways. Tap a card to read the full post with its photos.',
           ],
         },
         {
           id: 'posts',
           q: 'Who can write a post, and who reads it?',
           a: [
-            'Anybody approved in the church can, from “Write a post” on Home. A post goes to the whole church, or, under Advanced settings, only to the people you walk with or people you pick.',
-            `A post can carry up to ${POST_FILES_MOST} photos and one short video of about a minute (${CLIP_MB} MB at most). For anything longer, put a YouTube or Facebook link in the post and it plays inside it.`,
+            'Any approved member can, using “Write a post” on Home. A post goes to the whole church or, under Advanced settings, only to the people you walk with or to people you choose.',
+            `A post can include up to ${POST_FILES_MOST} photos and one short video of about a minute (${CLIP_MB} MB at most). For longer videos, add a YouTube or Facebook link and it plays within the post.`,
           ],
         },
         {
           id: 'share',
           q: 'Can I share a post with somebody?',
           a: [
-            'Yes: Share, on an open post, sends its title and a link. The link opens only for somebody signed in to your church who may read that post, so sharing it can never carry a member’s writing outside the church.',
+            'Yes. Share, on an open post, sends its title and a link. The link opens only for someone signed in to your church who is allowed to read that post, so a member’s writing never leaves the church.',
           ],
         },
         {
           id: 'announcements',
           q: 'Who can pin an announcement?',
           a: [
-            'Guides, Directors and Executive Directors. An announcement goes to the whole church. Its writer, or anybody in leadership, can take it down.',
+            'Guides, Directors and Executive Directors. An announcement goes to the whole church, and its author or any leader can take it down.',
           ],
         },
         {
           id: 'my-files',
           q: 'What is My Files?',
           a: [
-            'Your files in one place. Files under “On this device” stay on your phone and go straight to the person you send them to; they never reach a server. Resources are kept by the church: only you can open one until you send it, and then so can the person you sent it to.',
+            'All your files in one place. Files under “On this device” stay on your device and go directly to the person you send them to, without passing through a server. Resources are stored by the church: only you can open one until you share it, after which the recipient can open it too.',
           ],
         },
         {
           id: 'music',
           q: 'What is the Music room?',
           a: [
-            'A tuner, a conductor’s beat, your pieces and something to listen to, all working on your phone. The tuner listens only after you tap its microphone button, and nothing it hears is recorded or sent.',
+            'A tuner, a conductor’s beat, your music pieces and something to listen to, all running on your device. The tuner listens only after you tap its microphone button, and nothing it hears is recorded or sent.',
           ],
         },
         {
           id: 'study-room',
           q: 'What is the Study Room?',
           a: [
-            'An Explorer’s own place to write and keep notes on what they are reading. It starts Simple, with pages, search and the Bin. Advanced adds folders, tags, a whiteboard and more, and nothing written changes when you switch.',
+            'A private space for Explorers to write and keep notes on what they are reading. It opens in Simple mode, with pages, search and the Bin. Advanced mode adds folders, tags, a whiteboard and more, and your writing is unchanged when you switch.',
           ],
         },
         {
           id: 'office',
           q: 'What is the Office?',
           a: [
-            'For Guides and leadership. Plan a Sabbath program or a series of evangelistic meetings, download it as a Word file or a picture, post it to the church, and make a progress report.',
+            'A workspace for Guides and leaders to plan a Sabbath program or a series of evangelistic meetings, download it as a Word file or an image, post it to the church, and prepare progress reports.',
           ],
         },
       ],
@@ -452,20 +430,20 @@ export function faqSections(): FaqSection[] {
           id: 'how-many',
           q: 'How many Explorers can I walk with?',
           a: [
-            'As many as your church has set, and the database holds to it. It started at five, because that is about how many people one person can really walk with.',
+            'Your church sets the limit, up to 100, and the app enforces it.',
           ],
         },
         {
           id: 'guide-sees',
           q: 'What can I see about the Explorers I walk with?',
           a: [
-            'Their profile and picture, what they write to you, their prayer requests and where they are on the journey. Never another Guide’s people.',
+            'Their profile and photo, what they write to you, their prayer requests and their stage on the journey. You cannot see the Explorers of other Guides.',
           ],
         },
         {
           id: 'recommend',
           q: 'Can I invite somebody?',
-          a: ['Guides recommend; Directors invite. Recommend the person, and a Director decides.'],
+          a: ['Guides recommend; Directors invite. Recommend the person, and a Director will decide.'],
         },
       ],
     },
@@ -475,48 +453,47 @@ export function faqSections(): FaqSection[] {
       title: 'For Directors and Executive Directors',
       items: [
         {
-          // supabase/tests/a-leader-stays-within-their-rank.sql keeps every
-          // sentence of this answer, as invented people, on every fresh install.
+          // supabase/tests/a-leader-stays-within-their-rank.sql proves each sentence.
           id: 'who-makes-whom',
           q: 'Who can invite or promote whom?',
           a: [
             'Only an Executive Director makes somebody a Director or an Executive Director, whether by invitation or by changing a role, and only an Executive Director approves one. A Director invites, approves and changes the role of Guides and Explorers in their own church. Nobody changes their own role.',
-            'The database keeps these rules, not only the screens, so they hold whatever is used to reach it.',
+            'These rules are enforced on the server, not only by the app’s screens.',
           ],
         },
         {
           id: 'change-pairs',
           q: 'Can leaders change who walks with whom?',
           a: [
-            'Yes. Change Guide, beside Disconnect, gives an Explorer a different Guide in one step: the first pairing ends, a new one begins, and the Explorer keeps their place on the journey. Changing a pair never opens a conversation to anybody, leaders included.',
+            'Yes. Change Guide, next to Disconnect, assigns an Explorer a different Guide in one step: the first pairing ends, a new one begins, and the Explorer keeps their place on the journey. Changing a pairing never opens a conversation to anyone, including leaders.',
           ],
         },
         {
           id: 'read-a-chat',
           q: 'Can I read a conversation if I am worried about somebody?',
           a: [
-            'No. A conversation reaches leadership only when somebody in it reports a message. Everything else you see is pairings, journey stages, and counts and dates, and those are what you look after the church with.',
+            'No. A conversation reaches leadership only when one of its participants reports a message. Otherwise you see pairings, journey stages, and counts and dates, which are the tools for caring for the church.',
           ],
         },
         {
           id: 'who-answers',
           q: 'Who looks into a problem between a Guide and an Explorer?',
           a: [
-            'The Director who brought them into the app, by inviting or approving them. The app keeps who did, so that Director can always be found. Any Director can still suspend an account or end a pairing at once to keep somebody safe; the responsible Director then follows up.',
+            'The Director who brought them into the app, by inviting or approving them. The app records who did, so that Director can always be identified. Any Director can still suspend an account or end a pairing immediately to keep someone safe; the responsible Director then follows up.',
           ],
         },
         {
           id: 'disapprove-delete',
           q: 'What is the difference between Disapprove and Delete?',
           a: [
-            'Disapprove switches an account off: they cannot come in, but they and their history stay, and you can approve them again. Delete removes the account, its messages and its pairings for good, and frees the e-mail address. The app asks a second time before a delete, and keeps a record of who removed whom.',
+            'Disapprove deactivates an account: the person cannot sign in, but their account and history remain, and you can approve them again. Delete permanently removes the account, its messages and its pairings, and frees the email address. The app asks for confirmation before deleting and keeps a record of who removed whom.',
           ],
         },
         {
           id: 'suspend',
           q: 'Who can a leader act on?',
           a: [
-            'A Director acts on Guides and Explorers, never another Director. An Executive Director acts on anybody in the churches they oversee except another Executive Director. Nobody acts on themselves, and nobody at all can act on the Head Executive Director.',
+            'A Director acts on Guides and Explorers, never on another Director. An Executive Director acts on anyone in the churches they oversee except another Executive Director. No one can act on themselves, and no one can act on the Head Executive Director.',
           ],
         },
       ],
@@ -530,18 +507,18 @@ export function faqSections(): FaqSection[] {
           id: 'tutorial',
           q: 'What is the tutorial?',
           a: [
-            'A complete working church with sample people in it, so you can try every role before anybody invites you. It runs entirely in your browser: no account, nothing sent anywhere, and nothing you do there can touch a church’s real information.',
+            'A complete working church with sample data, so you can try every role before you are invited. It runs entirely in your browser: no account is needed, nothing is sent anywhere, and nothing you do there affects any church’s real information.',
           ],
         },
         {
           id: 'sample-photos',
           q: 'Where do photos I add in the sample church go?',
-          a: ['They stay in your own browser, on your own device, and go nowhere else.'],
+          a: ['They stay in your browser, on your device, and are not sent anywhere.'],
         },
         {
           id: 'reset',
           q: 'Can I start the sample church again?',
-          a: ['Yes: “Reset demo data”, at the foot of the sample sign-in screen.'],
+          a: ['Yes: use “Reset demo data” at the bottom of the sample sign-in screen.'],
         },
       ],
     },

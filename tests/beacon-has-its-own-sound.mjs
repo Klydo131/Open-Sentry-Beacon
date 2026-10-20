@@ -130,6 +130,9 @@ ok(sharing.length === 0, sharing.length ? `still sharing one tag: ${sharing.join
 const dock = fs.readFileSync(path.join(root, 'components/live/TalkDock.tsx'), 'utf8');
 ok(/tag:\s*`beacon-talk:\$\{t\.pairing_id\}`,\s*renotify:\s*true/.test(dock),
   'a conversation has its own tag, and each new message in it sounds again');
+const dockCode = dock.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, '');
+ok(!/last_preview/.test(dockCode) && /sent you a message`/.test(dockCode),
+  'a message alert names who sent it, never the words, because it can show on a locked phone');
 
 const base = { body: 'b', url: '/x', tag: 'beacon:abc' };
 const ALL = { silent: true, renotify: true };

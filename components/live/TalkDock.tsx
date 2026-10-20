@@ -102,7 +102,8 @@ export function TalkDock() {
                             && window.location.search.includes(t.pairing_id))) {
             void showLocalNotification(
               APP_SHORT_NAME,
-              `${t.other_name}: ${t.last_preview ?? 'sent you a message'}`,
+              // An alert can show on a locked phone: who sent it, never the words.
+              `${t.other_name} sent you a message`,
               `/talk?with=${encodeURIComponent(t.pairing_id)}`,
               { tag: `beacon-talk:${t.pairing_id}`, renotify: true },
             );
