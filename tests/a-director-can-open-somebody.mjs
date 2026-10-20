@@ -65,6 +65,24 @@ ok(/ref=\{profilePanel\}/.test(adminCode)
 ok(/setOpened\(\(n\) => n \+ 1\)/.test(adminCode) && /\}, \[opened\]\);/.test(adminCode),
    'and a second tap on the same person scrolls to it again');
 
+// Sign-in details, Disapprove and Delete answer in the row that was tapped.
+// Their results used to go to the invitation card and the notice at the top of
+// the page, off-screen on a phone, so the button looked dead (20 October 2026).
+const bodyOf = (name) => {
+  const at = adminCode.indexOf(`const ${name} = async`);
+  return at < 0 ? '' : adminCode.slice(at, adminCode.indexOf('\n  };', at));
+};
+for (const name of ['showSignIn', 'disapprove', 'deleteAccount']) {
+  const body = bodyOf(name);
+  ok(body !== '' && !/setError\((?!'')/.test(body) && /setRowNote\(\{ id: member\.id/.test(body),
+     `${name} reports a refusal in its own row, not at the top of the page`);
+}
+ok(/forMember: member\.id/.test(bodyOf('showSignIn')), 'Sign-in details marks its result as that row\'s');
+ok(/rowNote\?\.id === member\.id/.test(adminCode) && /handLink\?\.forMember === member\.id && handOverCard/.test(adminCode),
+   'and the row draws the refusal or the details under itself');
+ok(/handLink && !handLink\.forMember && handOverCard/.test(adminCode),
+   'while an invitation\'s details stay in the invitation card');
+
 // The two questions it exists to answer.
 ok(/label="Email"/.test(panel), 'it shows the address they were invited at');
 ok(/label="Joined"/.test(panel), 'and the day they arrived');

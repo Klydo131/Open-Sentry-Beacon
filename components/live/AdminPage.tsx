@@ -67,9 +67,13 @@ export function LiveAdminPage() {
   const [changing, setChanging] = useState('');
   const [nextGuide, setNextGuide] = useState('');
   // Set when the invitation could not be emailed and must be passed on by hand.
+  // `forMember` is set when it came from a row's Sign-in details, so it is
+  // drawn under that row rather than in the invitation card at the top.
   const [handLink, setHandLink] = useState<
-    { to: string; url: string; why: string; wait?: number; pass?: string } | null
+    { to: string; url: string; why: string; wait?: number; pass?: string; forMember?: string } | null
   >(null);
+  // Why a row's Sign-in details made nothing, shown in that row.
+  const [rowNote, setRowNote] = useState<{ id: string; text: string } | null>(null);
   // '' not tried, 'yes' copied, 'failed' (Safari refuses when unfocused; no
   // clipboard over plain http). The link is also in a selectable box.
   const [linkCopied, setLinkCopied] = useState<'' | 'yes' | 'failed'>('');
@@ -139,12 +143,12 @@ export function LiveAdminPage() {
    */
   const showSignIn = async (member: Profile) => {
     const email = contact[member.id]?.email;
+    setRowNote(null);
     if (!email) {
-      setError('That account has no address on file, so there is nothing to hand over.');
+      setRowNote({ id: member.id, text: 'That account has no address on file, so there is nothing to hand over.' });
       return;
     }
     setBusy(member.id);
-    setError('');
     setLinkCopied('');
     try {
       const result = await live.inviteMember({
@@ -162,15 +166,19 @@ export function LiveAdminPage() {
               || 'Made for you to pass on. Nothing was e-mailed.',
             wait: result.waitSeconds,
             pass: result.tempPassword,
+            forMember: member.id,
           }
         : null);
       if (!result.link) {
-        setError(result.mailNote
-          || 'No sign-in details could be made for that account. Somebody who has '
-          + 'already chosen their own password keeps it, and it cannot be read here.');
+        setRowNote({
+          id: member.id,
+          text: result.mailNote
+            || 'No sign-in details could be made for that account. Somebody who has '
+            + 'already chosen their own password keeps it, and it cannot be read here.',
+        });
       }
     } catch (cause) {
-      setError(errorText(cause));
+      setRowNote({ id: member.id, text: errorText(cause) });
     } finally {
       setBusy('');
     }
@@ -315,12 +323,13 @@ export function LiveAdminPage() {
     setBusy(member.id);
     setError('');
     setNotice('');
+    setRowNote(null);
     try {
       await live.disapproveMember(member.id);
       setNotice(`${member.full_name || 'Member'} no longer has workspace access.`);
       await load();
     } catch (cause) {
-      setError(errorText(cause));
+      setRowNote({ id: member.id, text: errorText(cause) });
     } finally {
       setBusy('');
     }
@@ -332,9 +341,10 @@ export function LiveAdminPage() {
     setBusy(member.id);
     setError('');
     setNotice('');
+    setRowNote(null);
     try {
       const verdict = await live.removeMemberByLeader(member.id);
-      if (verdict !== 'ok') { setError(verdict); return; }
+      if (verdict !== 'ok') { setRowNote({ id: member.id, text: verdict }); return; }
       setNotice(
         `${member.full_name || 'That account'} was deleted. Their email address is `
         + 'free again, so you can invite them as a new member whenever you want.',
@@ -342,7 +352,7 @@ export function LiveAdminPage() {
       setConfirmDelete('');
       await load();
     } catch (cause) {
-      setError(errorText(cause));
+      setRowNote({ id: member.id, text: errorText(cause) });
     } finally {
       setBusy('');
     }
@@ -407,6 +417,96 @@ export function LiveAdminPage() {
       setBusy('');
     }
   };
+
+  // Sign-in details, drawn under the row that asked for them, or in the
+  // invitation card when they came from sending an invitation.
+  const handOverCard = handLink ? (
+    // No mail provider yet is normal: the Director passes the details on by hand.
+    <div className={`mt-4 rounded-2xl p-4 ring-1 ${
+      handLink.wait
+        ? 'bg-blue-50 ring-blue-300'
+        : handLink.why === 'sent'
+          ? 'bg-green-50 ring-green-300'
+          : 'bg-amber-50 ring-amber-300'
+    }`}>
+      {/* A cooldown ("wait a moment") looks different from a fault ("change a setting"). */}
+      <p className={`font-bold ${
+        handLink.wait ? 'text-blue-900' : handLink.why === 'sent' ? 'text-green-900' : 'text-amber-900'
+      }`}>
+        {handLink.wait
+          ? `Nearly there. Wait ${handLink.wait} seconds, then press Send once`
+          : handLink.why === 'sent'
+            ? 'Their sign-in details, in case the e-mail does not arrive'
+            : `Pass these to ${handLink.to} yourself`}
+      </p>
+      <p className={`mt-1 text-sm ${
+        handLink.wait ? 'text-blue-800' : handLink.why === 'sent' ? 'text-green-800' : 'text-amber-800'
+      }`}>
+        {handLink.why === 'sent'
+          ? 'Worth keeping. The app built this one itself, so it is correct even if the address in the e-mail is not.'
+          : handLink.why || 'No email service is set up on this project yet.'}
+      </p>
+      <p className={`mt-1 text-sm ${
+        handLink.wait ? 'text-blue-800' : handLink.why === 'sent' ? 'text-green-800' : 'text-amber-800'
+      }`}>
+        The account is ready. The link can be used as often as they need; the
+        password works for three days, or until they choose their own.
+      </p>
+
+      {/* The password, to read out if the email does not arrive. */}
+      {handLink.pass && (
+        <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-black/10">
+          <p className="text-xs font-bold uppercase tracking-wider text-gray-500">E-mail</p>
+          <p className="break-all font-mono text-sm font-bold text-navy">{handLink.to}</p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-gray-500">Password</p>
+          <p className="break-all font-mono text-lg font-bold text-navy">{handLink.pass}</p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-500">
+            All small letters, with the dashes. Ask them to change it once
+            they are in, under Settings, then Password.
+          </p>
+          <div className="mt-2">
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                const done = await copyText(
+                  `${APP_SHORT_NAME}\nE-mail: ${handLink.to}\nPassword: ${handLink.pass}\nSign in: ${handLink.url}`,
+                );
+                setLinkCopied(done ? 'yes' : 'failed');
+              }}
+            >
+              Copy all of it
+            </Button>
+          </div>
+        </div>
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <input
+          readOnly
+          value={handLink.url}
+          onFocus={(e) => e.currentTarget.select()}
+          className={`tap min-w-0 flex-1 rounded-xl bg-white px-3 text-sm ring-1 ${
+            handLink.wait
+              ? 'ring-blue-300'
+              : handLink.why === 'sent' ? 'ring-green-300' : 'ring-amber-300'
+          }`}
+        />
+        <Button
+          variant="ghost"
+          onClick={async () => {
+            const done = await copyText(handLink.url);
+            setLinkCopied(done ? 'yes' : 'failed');
+          }}
+        >
+          {linkCopied === 'yes'
+            ? '✓ Copied'
+            : linkCopied === 'failed'
+              ? 'Select the box above'
+              : 'Copy link'}
+        </Button>
+        <Button variant="ghost" onClick={() => setHandLink(null)}>Done</Button>
+      </div>
+    </div>
+  ) : null;
 
   return (
     <LiveAppShell allow={['admin', 'executive']}>
@@ -509,93 +609,7 @@ export function LiveAdminPage() {
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Send an invitation e-mail</h2>
           <p className="mt-1 text-sm text-gray-500">The chosen role comes from the server-side invitation record.</p>
-          {handLink && (
-            // No mail provider yet is normal: the Director passes the details on by hand.
-            <div className={`mt-4 rounded-2xl p-4 ring-1 ${
-              handLink.wait
-                ? 'bg-blue-50 ring-blue-300'
-                : handLink.why === 'sent'
-                  ? 'bg-green-50 ring-green-300'
-                  : 'bg-amber-50 ring-amber-300'
-            }`}>
-              {/* A cooldown ("wait a moment") looks different from a fault ("change a setting"). */}
-              <p className={`font-bold ${
-                handLink.wait ? 'text-blue-900' : handLink.why === 'sent' ? 'text-green-900' : 'text-amber-900'
-              }`}>
-                {handLink.wait
-                  ? `Nearly there. Wait ${handLink.wait} seconds, then press Send once`
-                  : handLink.why === 'sent'
-                    ? 'Their sign-in details, in case the e-mail does not arrive'
-                    : `Pass these to ${handLink.to} yourself`}
-              </p>
-              <p className={`mt-1 text-sm ${
-                handLink.wait ? 'text-blue-800' : handLink.why === 'sent' ? 'text-green-800' : 'text-amber-800'
-              }`}>
-                {handLink.why === 'sent'
-                  ? 'Worth keeping. The app built this one itself, so it is correct even if the address in the e-mail is not.'
-                  : handLink.why || 'No email service is set up on this project yet.'}
-              </p>
-              <p className={`mt-1 text-sm ${
-                handLink.wait ? 'text-blue-800' : handLink.why === 'sent' ? 'text-green-800' : 'text-amber-800'
-              }`}>
-                The account is ready. The link can be used as often as they need; the
-                password works for three days, or until they choose their own.
-              </p>
-
-              {/* The password, to read out if the email does not arrive. */}
-              {handLink.pass && (
-                <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-black/10">
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">E-mail</p>
-                  <p className="break-all font-mono text-sm font-bold text-navy">{handLink.to}</p>
-                  <p className="mt-2 text-xs font-bold uppercase tracking-wider text-gray-500">Password</p>
-                  <p className="break-all font-mono text-lg font-bold text-navy">{handLink.pass}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-gray-500">
-                    All small letters, with the dashes. Ask them to change it once
-                    they are in, under Settings, then Password.
-                  </p>
-                  <div className="mt-2">
-                    <Button
-                      variant="ghost"
-                      onClick={async () => {
-                        const done = await copyText(
-                          `${APP_SHORT_NAME}\nE-mail: ${handLink.to}\nPassword: ${handLink.pass}\nSign in: ${handLink.url}`,
-                        );
-                        setLinkCopied(done ? 'yes' : 'failed');
-                      }}
-                    >
-                      Copy all of it
-                    </Button>
-                  </div>
-                </div>
-              )}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <input
-                  readOnly
-                  value={handLink.url}
-                  onFocus={(e) => e.currentTarget.select()}
-                  className={`tap min-w-0 flex-1 rounded-xl bg-white px-3 text-sm ring-1 ${
-                    handLink.wait
-                      ? 'ring-blue-300'
-                      : handLink.why === 'sent' ? 'ring-green-300' : 'ring-amber-300'
-                  }`}
-                />
-                <Button
-                  variant="ghost"
-                  onClick={async () => {
-                    const done = await copyText(handLink.url);
-                    setLinkCopied(done ? 'yes' : 'failed');
-                  }}
-                >
-                  {linkCopied === 'yes'
-                    ? '✓ Copied'
-                    : linkCopied === 'failed'
-                      ? 'Select the box above'
-                      : 'Copy link'}
-                </Button>
-                <Button variant="ghost" onClick={() => setHandLink(null)}>Done</Button>
-              </div>
-            </div>
-          )}
+          {handLink && !handLink.forMember && handOverCard}
 
           <form onSubmit={sendInvite} className="mt-4 grid gap-3 sm:grid-cols-2">
             <Field label="Full name" value={name} onChange={setName} />
@@ -845,6 +859,12 @@ export function LiveAdminPage() {
                     </Button>
                   </div>
                 </div>
+
+                {/* Sign-in details answer here, where they were asked for. */}
+                {rowNote?.id === member.id && (
+                  <div className="mt-3"><Notice tone="error">{rowNote.text}</Notice></div>
+                )}
+                {handLink?.forMember === member.id && handOverCard}
 
                 {/* The second tap says what is lost: messages, pairings, and their way back in. */}
                 {confirmDelete === member.id && (
