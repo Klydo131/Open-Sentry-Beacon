@@ -102,6 +102,10 @@ const pkg = JSON.parse(read('package.json'));
 const envReads = [];
 for (const f of source) {
   if (f.startsWith('tests/')) continue;
+  // The edition's server is not the app: it is the backend a church chose to
+  // run, and it must refuse to start without its own secrets rather than run
+  // with none. The app it serves is held to this rule like any other.
+  if (f.startsWith('selfhost/server/')) continue;
   read(f)
     .split('\n')
     .forEach((line, i) => {
@@ -483,6 +487,29 @@ const GUARDRAILS = new Set([
   // name, which no program has a reason to mention, so it has to spell the
   // name to look for it.
   'tests/the-examples-keep-the-rules.mjs',
+  // The Postgres edition (20 October 2026, docs/POSTGRES.md). Its server is a
+  // church's OWN backend, run on a machine the church controls, the same kind
+  // of code as supabase/functions/ above: it never reaches a browser. It must
+  // create and name the service_role role the migrations grant to, sign that
+  // role's key, and read SITE_URL to know where e-mailed links go. Listed file
+  // by file, as everything here is. Same limits: it may NAME these, the
+  // credential-shape scan still applies, and a hostname in it must be a
+  // placeholder.
+  'docs/POSTGRES.md',
+  'selfhost/.env.example',
+  'selfhost/docker-compose.yml',
+  'selfhost/server/src/auth.mjs',
+  'selfhost/server/src/config.mjs',
+  'selfhost/server/src/db.mjs',
+  'selfhost/server/src/functions.mjs',
+  'selfhost/server/src/keys.mjs',
+  'selfhost/server/src/main.mjs',
+  'selfhost/server/src/migrate.mjs',
+  'selfhost/server/src/realtime.mjs',
+  'selfhost/server/src/jobs.mjs',
+  'selfhost/sql/platform.sql',
+  'selfhost/server/test/the-edition-holds.mjs',
+  'tests/the-postgres-edition-installs.mjs',
 ]);
 // AN EXEMPTION IS FOR NAMING, NOT FOR CARRYING. Until 1 October 2026 a file on
 // the list above skipped every term, the live-hostname patterns included, so a
