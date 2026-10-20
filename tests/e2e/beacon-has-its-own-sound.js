@@ -32,7 +32,11 @@ const SIZES = [
 ];
 
 (async () => {
-  const browser = await engine.launch(launchOptions);
+  // The push checks need the full Chromium. Playwright's default headless
+  // build (chromium-headless-shell, which CI gets) keeps no notifications, so
+  // getNotifications() came back empty there and only there (20 October 2026).
+  const full = engineName === 'chromium' && !launchOptions.executablePath ? { channel: 'chromium' } : {};
+  const browser = await engine.launch({ ...launchOptions, ...full });
 
   for (const size of SIZES) {
     const context = await browser.newContext({

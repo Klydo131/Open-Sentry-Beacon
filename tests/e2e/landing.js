@@ -142,9 +142,21 @@ async function signInAs(page, who) {
     el.removeAttribute('id');
     setTimeout(() => el.setAttribute('id', 'install'), 900);
   });
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await page.waitForTimeout(300);
-  const waited = await page.evaluate(() => window.scrollY);
+  // At the bottom before the link is pressed, and still there. On a busy CI
+  // machine the previous landing's last correction arrived after this scroll
+  // and pulled the page back to the card, so the check below started from the
+  // card and saw nothing move (20 October 2026).
+  let waited = -1;
+  for (let i = 0; i < 10; i++) {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(300);
+    const at = await page.evaluate(() => ({
+      y: window.scrollY,
+      max: document.documentElement.scrollHeight - window.innerHeight,
+    }));
+    waited = at.y;
+    if (at.max - at.y < 8) break;
+  }
   ok(
     await page.locator('#install').count() === 0,
     'the card is genuinely absent when the link is pressed',
