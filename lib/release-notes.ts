@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-20-leave-to-answer',
+    date: '2026-10-20',
+    title: 'A suspended member can answer, and a deleted account stays on the record',
+    items: [
+      'The judge of a trial can give somebody called to it, whose account is suspended, leave to answer: for an hour, a day, three days or a week they can sign in and use the court room for that trial, and nothing else in the app opens. It ends when the judge ends it, when its time runs out, or at the decision, and the account is switched off again on every phone. It is written on the record and the church\'s leaders are told.',
+      'A suspended member can now be called to a trial as a witness.',
+      'Safeguarding reports, their conversations and their evidence stay when the account of the person who raised them, or of the person they are about, is deleted. A deleted person\'s name is shown with "(account deleted)" in reports and trials, and nothing else about them is kept.',
+      'Ready as soon as your church\'s database has its update.',
+    ],
+  },
+  {
     id: '2026-10-20-the-court-room',
     date: '2026-10-20',
     title: 'Trials are heard in a court room',

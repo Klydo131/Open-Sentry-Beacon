@@ -183,6 +183,53 @@ Reading takes a seat in the gallery, which is a row in `trial_parties` and an
 entry in the record. That way "who read this case?" always has an answer. Do
 the same for any record about a person: make reading leave a trace.
 
+### Letting a locked-out party answer
+
+A suspended account is shut out of everything, which is right until that person
+is the one a case is about. Hearing one side is not a hearing. Hope Beacon's
+answer is **leave to answer**: a narrow, timed, recorded lift that the judge
+gives and the database enforces.
+
+1. **Lift the switch, not the suspension.** The sign-in service's own ban is
+   lifted so the person can prove who they are; the suspension flag that every
+   other rule reads stays set, so everything that refuses a suspended account
+   keeps refusing it.
+2. **Open one door, by name.** The function the API server runs before every
+   request lets a suspended account through to a fixed list of the court room's
+   own calls, and only while its leave lasts. Which call it is comes from the
+   address the API server was asked, which the server sets itself; nothing the
+   browser sends can change it.
+
+   ```sql
+   -- inside the function PostgREST runs before every request (db_pre_request)
+   if exists (select 1 from public.profiles p
+               where p.id = (select auth.uid()) and p.suspended_at is not null) then
+     if not (
+       coalesce(current_setting('request.path', true), '') ~ '^/rpc/(court_door|court_case|court_say)/?$'
+       and private.court_leave_case() is not null
+     ) then
+       raise exception 'This account is suspended.' using errcode = '42501';
+     end if;
+   end if;
+   ```
+
+   Anchor the pattern at both ends. Without `^` and `$`, a function named
+   `court_case_and_everything_else` would match too.
+3. **One case, not a role.** The place function gives a suspended account its
+   part in the one case it has leave for, and nothing anywhere else, so being
+   called to a second case opens nothing there.
+4. **Time-boxed, and locked again by a job.** Every check asks for leave that
+   has not run out, so an expired leave opens nothing even before anything
+   runs. A job every minute then switches the account off again and ends every
+   session it holds; so does the verdict, and so does the judge.
+5. **On the record, and told.** Giving and ending leave are entries in the
+   case's chain, and the church's other leaders are notified, so nobody is ever
+   let in quietly.
+
+Prove the allow-list through the real API server, not only in SQL: the request
+address is set by the server, so only a test that goes through it shows the
+rule works (`selfhost/server/test/the-edition-holds.mjs` does).
+
 ---
 
 ## 4. The record: append-only, hash-chained, sealed
@@ -272,6 +319,31 @@ database's owner cannot reach:
   Backblaze B2, Azure immutable blobs, Google Cloud bucket lock) keeps exported
   records and exhibits for a fixed term that not even the account owner can
   shorten.
+
+### When an account is deleted
+
+A safeguarding record that disappears with the person it describes is not a
+record, and data-protection law generally recognises keeping what is needed to
+establish or defend a claim. Keep the record, and keep **only** what it needs:
+
+- **No link from the record to an account that cascades.** Use
+  `on delete set null`, or no link at all; the chain holds ids and names as
+  text, because a link that turned to null would change what the hash covers.
+- **Keep the name as it was**, in the row, and bring it up to date just before
+  the account goes, so the last name is the one that stays.
+- **Write the deletion down**: an entry in each case's chain saying whose
+  account went and what part they had.
+- **Show it as deleted.** Hope Beacon's views add "(account deleted)" to the
+  kept name, so nobody mistakes a departed person for a present one.
+- **Keep nothing else.** The rest of the person's data goes with the account.
+- **Never let the bookkeeping block the deletion.** If writing the entry fails,
+  the deletion still happens.
+
+```sql
+create trigger court_remembers_the_departed
+  before delete on public.profiles
+  for each row execute function private.court_remembers_the_departed();
+```
 
 ---
 
@@ -489,6 +561,11 @@ gallery speak) and confirm a check goes red. A test that cannot fail is not a
 test; one of this room's checks was added because a deliberate break went
 unnoticed the first time.
 
+The same file's companion, `supabase/tests/leave-to-answer-holds.sql`, does it
+for leave to answer and for deletions: a suspended account reaches one case
+and nothing else while its leave lasts, is shut out again when it ends, and a
+deleted account stays on the record, marked deleted.
+
 **Walk it end to end.** An authenticator code can be computed in a test the same
 way the phone does (HMAC-SHA1 of the 30-second step, RFC 6238), so a browser
 walk can sign in with two steps, open a case, enter an exhibit and check its
@@ -505,6 +582,10 @@ fingerprint for real.
 - [ ] Reading leaves a trace; the gallery has no voice; only the judge decides.
 - [ ] Statements and exhibits cannot be edited, deleted or backdated, and
       outlive the accounts that made them.
+- [ ] Deleting an account keeps the record, marks the person as deleted, and
+      keeps nothing else about them.
+- [ ] A party who is locked out can still be heard, through a lift that is
+      narrow (one case), timed, recorded, and locked again by the database.
 - [ ] Every exhibit has a fingerprint recorded before upload and is checked on
       every opening; nothing that can run is ever shown.
 - [ ] The record's seal is anchored somewhere the database's owner cannot reach.

@@ -278,7 +278,7 @@ privately as [SECURITY.md](SECURITY.md) describes, not in a public issue.
   something it shows has changed, and reads it again through the usual rules.
   The app only ever used them that way.
 - **Scheduled jobs and outgoing requests** (pg_cron and pg_net on Supabase) are
-  run by the Beacon server. The same three jobs run at the same times, in UTC.
+  run by the Beacon server. The same four jobs run at the same times, in UTC.
 - **The vault** on Supabase encrypts what is put in it. Here it does not, so
   nothing secret is put in it: the server adds its own key to its own requests.
 - **No Supabase dashboard.** You look at the data with any Postgres tool

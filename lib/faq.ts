@@ -204,6 +204,21 @@ export function faqSections(): FaqSection[] {
           ],
         },
         {
+          id: 'leave-to-answer',
+          q: 'My account is suspended. Can I still answer a trial?',
+          a: [
+            'Yes. Tell the judge what you want to say and they write it down as yours, or the judge can give you leave to answer: for an hour, a day, three days or a week, you can sign in and use the court room for that one trial, and nothing else in the app opens. The door still asks for your password.',
+            'Leave to answer ends when the judge ends it, when its time runs out, or when the trial is decided, and your account is switched off again on every phone. It does not lift your suspension; only a Director can do that. Giving it is written on the trial’s record.',
+          ],
+        },
+        {
+          id: 'deleted-record',
+          q: 'What stays if my account is deleted?',
+          a: [
+            'Everything in your account goes. Safeguarding reports and trials stay, because a church has to be able to show what it did: a report you raised or that was about you, and a trial you were in, with what was said in it. Your name stays in them as it was, shown with “(account deleted)”, and nothing else about you is kept.',
+          ],
+        },
+        {
           id: 'edit-delete',
           q: 'Can I change or take back a message?',
           a: [

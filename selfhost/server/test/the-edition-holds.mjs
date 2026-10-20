@@ -276,6 +276,34 @@ try {
   const sup = await as(ss.access_token).storage.from('post-media').upload(`${C1}/${post}/${crypto.randomUUID()}.jpg`, new Blob([bytes], { type: 'image/jpeg' }));
   check(Boolean(sup.error), 'a suspended account uploads nothing');
 
+  // ------------------------------------------------------ leave to answer ----
+  // The data API's check before every request lets a suspended account make
+  // the court room's own calls while a judge's leave lasts, and nothing else.
+  // Which call it is comes from the address PostgREST was asked, so this is
+  // proved through PostgREST itself, not only in SQL.
+  const asC = as(sc.access_token);
+  const asS = as(ss.access_token);
+  const { data: trial, error: openErr } = await asC.rpc('open_trial', { p_subject: people.s.id, p_summary: 'Invented case', p_report: null, p_other: null });
+  check(Boolean(trial) && !openErr, 'a Director with a fresh code opens a case about a suspended Explorer', openErr?.message);
+  const noLeave = await asS.rpc('court_door');
+  check(noLeave.error?.code === '42501', 'without leave, the suspended account is refused even the court room\'s door', noLeave.error?.message);
+  const { data: granted } = await asC.rpc('court_grant_leave', { p_trial: trial, p_person: people.s.id, p_hours: 1 });
+  check(granted === 'ok', 'the judge gives them an hour\'s leave to answer', String(granted));
+  const onLeave = await asS.rpc('court_door');
+  check(onLeave.data?.open === true && onLeave.data?.leave?.case === trial,
+    'on leave, the same account opens the court room\'s door, for that case', onLeave.error?.message);
+  const { data: theirCase } = await asS.rpc('court_case', { p_trial: trial });
+  check(theirCase?.case?.my_place === 'accused', 'and reads the case it is about');
+  const { error: profileShut } = await asS.from('profiles').select('id').limit(1);
+  const { error: callShut } = await asS.rpc('court_summon', { p_trial: trial, p_person: people.b.id });
+  check(profileShut?.code === '42501' && callShut?.code === '42501',
+    'but every other table and call is still refused');
+  const { data: ended } = await asC.rpc('court_end_leave', { p_trial: trial, p_person: people.s.id });
+  const afterLeave = await asS.rpc('court_door');
+  check(ended === 'ok' && Boolean(afterLeave.error), 'when the judge ends it, the court room shuts again at once', afterLeave.error?.message);
+  const { data: bannedNow } = await anon().auth.signInWithPassword({ email: people.s.email, password: PASSWORD });
+  check(!bannedNow?.session, 'and the account cannot sign in again');
+
   // ------------------------------------------------------------ live data ----
   const heard = { b: 0, d: 0, bMsg: 0, dMsg: 0 };
   const rb = as(sb2.access_token);
@@ -337,8 +365,8 @@ try {
 
   // -------------------------------------------------------------- schedule ----
   const { rows: jobs } = await owner.query('select jobname from cron.job order by jobname');
-  check(jobs.map((j) => j.jobname).join(',') === 'erase-deleted-files,invitation-passwords-run-out,link-record-runs-out',
-    'the three jobs the migrations schedule are on the schedule');
+  check(jobs.map((j) => j.jobname).join(',') === 'court-leave-runs-out,erase-deleted-files,invitation-passwords-run-out,link-record-runs-out',
+    'the four jobs the migrations schedule are on the schedule');
   await running.jobs.runDue(new Date(Date.UTC(2026, 0, 1, 5, 17)));
   const { rows: ran } = await owner.query(`select status from cron.job_run_details d join cron.job j using (jobid)
                                            where j.jobname = 'invitation-passwords-run-out' order by runid desc limit 1`);

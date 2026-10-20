@@ -33,6 +33,7 @@ The words the app uses, and what each one means in it.
 | **Home** | The church home: Notices, Blog, the Prayer wall, and for leaders the numbers. First in every Menu. |
 | **Install** | Add the app to a home screen or dock so it opens like any other app. |
 | **Journey** | The five stages an Explorer moves through at their own pace: Beginner, Connect, Care, Call and Cultivate. |
+| **Leave to answer** | A judge's permission for somebody called to a trial, whose account is suspended, to sign in and answer that trial alone, for an hour to a week. Nothing else in the app opens for them. |
 | **Lesson study** | A study a Guide writes once in the Office and sends to the people who need it. |
 | **Look** | How the whole app is drawn: its colours and shapes. Chosen in Settings, General, Look, and kept on the device. |
 | **Mail** | In the sample church, a mailbox showing what the app sends. In a church's own app, the invitations still open, for leaders. |

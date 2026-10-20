@@ -2,7 +2,8 @@
 
 // The court room's calls to the church's database.
 //
-// Every rule lives in supabase/migrations/20261020160000_the_court_room.sql.
+// Every rule lives in supabase/migrations/20261020160000_the_court_room.sql
+// and 20261020180000_leave_to_answer_and_a_record_that_outlives_the_account.sql.
 // This file only asks: who may enter, read, speak, present or decide is the
 // database's answer, and a refusal comes back as a sentence to show as it is.
 //
@@ -24,8 +25,17 @@ export interface CourtDoor {
   minutes: number;
   leader: boolean;
   two_step: boolean;
-  /** What the door needs next: a code, a password, two-step sign-in set up, or nothing. */
-  needs: 'code' | 'password' | 'two_step' | 'sign_in' | null;
+  /**
+   * What the door needs next: a code, a password, two-step sign-in set up, or
+   * nothing. 'suspended': the account is suspended and holds no leave to answer.
+   */
+  needs: 'code' | 'password' | 'two_step' | 'sign_in' | 'suspended' | null;
+  /** Older databases do not say; read as false. */
+  suspended?: boolean;
+  /** The one case a suspended account may answer, while its leave lasts. */
+  leave?: { case: string; until: string } | null;
+  /** Who is asking, for a screen whose profile is closed to it (leave to answer). */
+  me?: { id: string; name: string; role: string };
 }
 
 export type CourtPlace = 'judge' | 'opener' | 'accused' | 'reporter' | 'witness' | 'observer' | null;
@@ -55,9 +65,14 @@ export interface CourtCaseRow {
 
 export interface CourtPerson {
   id: string;
+  /** Ends in "(account deleted)" once their account has gone. */
   name: string;
   part: 'accused' | 'reporter' | 'witness' | 'observer';
-  since: string;
+  since: string | null;
+  deleted?: boolean;
+  /** For the bench only: their account is suspended, and any leave to answer they hold. */
+  suspended?: boolean | null;
+  leave_until?: string | null;
 }
 
 export interface CourtStatement {
@@ -98,6 +113,9 @@ export interface CourtCaseFull {
     closed_at: string | null;
     subject_id: string | null;
     subject_name: string;
+    subject_deleted?: boolean;
+    /** For the bench only. */
+    subject_suspended?: boolean | null;
     opener_name: string;
     judge_id: string | null;
     judge_name: string;
@@ -107,6 +125,8 @@ export interface CourtCaseFull {
     sealed_at: string | null;
     my_place: Exclude<CourtPlace, null>;
     i_lead: boolean;
+    /** When this person's own leave to answer ends, if they are answering on leave. */
+    my_leave_until?: string | null;
     may_speak: boolean;
     may_present: boolean;
     may_decide: boolean;
@@ -139,6 +159,11 @@ function fail(error: { message?: string; code?: string } | null): never {
 /** The door is shut: the pass ran out while the room was open. */
 export function isCourtLocked(cause: unknown): boolean {
   return cause instanceof Error && /court room is locked/i.test(cause.message);
+}
+
+/** The account is suspended and holds no leave to answer (any more). */
+export function isAccountSuspended(cause: unknown): boolean {
+  return cause instanceof Error && /account is suspended|sign-in has ended/i.test(cause.message);
 }
 
 /** A database that has not had the court room's update yet. */
@@ -184,6 +209,21 @@ export async function courtDoor(): Promise<CourtDoor> {
   return data as CourtDoor;
 }
 
+/**
+ * Is this signed-in account suspended and answering a case on leave? Asked
+ * after a sign-in whose profile was refused. Never answered from a copy kept
+ * on the device: a door is a question about now.
+ */
+export async function courtLeaveHeld(): Promise<boolean> {
+  try {
+    const { data, error } = await db().rpc('court_door');
+    if (error) return false;
+    return typeof (data as CourtDoor | null)?.leave?.case === 'string';
+  } catch {
+    return false;
+  }
+}
+
 export async function courtCases(): Promise<CourtCaseRow[]> {
   const { data, error } = await db().rpc('court_cases');
   if (error) fail(error);
@@ -221,6 +261,17 @@ export const courtCallJudge = (id: string) => sentence('call_head_judge', { p_tr
 export const courtTakeSeat = (id: string) => sentence('take_head_judge', { p_trial: id });
 export const courtDecide = (id: string, verdict: 'dismissed' | 'suspended' | 'removed', note: string) =>
   sentence('close_trial', { p_trial: id, p_verdict: verdict, p_note: note.trim() || null });
+
+/** How long the judge may give leave to answer for, in hours. */
+export const LEAVE_HOURS = [1, 24, 72, 168] as const;
+export type LeaveHours = (typeof LEAVE_HOURS)[number];
+
+/** The judge lets somebody called to the case, whose account is suspended, sign in to answer it. */
+export const courtGrantLeave = (id: string, person: string, hours: LeaveHours) =>
+  sentence('court_grant_leave', { p_trial: id, p_person: person, p_hours: hours });
+/** The judge ends that leave before its time. */
+export const courtEndLeave = (id: string, person: string) =>
+  sentence('court_end_leave', { p_trial: id, p_person: person });
 
 /** Take a seat in the gallery. Written on the record. */
 export async function courtWatch(id: string): Promise<void> {

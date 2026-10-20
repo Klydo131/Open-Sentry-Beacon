@@ -15,15 +15,22 @@
 // WHO SEES WHAT IS THE DATABASE'S ANSWER. This screen draws what court_case
 // returned: a person called to the case gets no gallery and no custody chain,
 // because the database sends them none.
+//
+// LEAVE TO ANSWER. Somebody called to the case whose account is suspended
+// cannot sign in. The judge can let them in for this case alone (the panel
+// below the record); the database lifts the switch, keeps everything else
+// shut, and ends it when the judge does, when its time runs out or at the
+// verdict. An account that has been deleted keeps its name here, marked
+// "(account deleted)" by the database.
 
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
 import { Gavel, GalleryChairs, Seal, StandRail } from '@/components/court/CourtFurniture';
 import { ClerksTable, SameFileCheck } from '@/components/court/Exhibits';
 import {
-  courtCallJudge, courtCase, courtCheckRecord, courtDecide, courtExported, courtGallery,
-  courtRecordFor, courtSay, courtSummon, isCourtLocked,
-  type CourtCaseFull, type RecordCheck,
+  courtCallJudge, courtCase, courtCheckRecord, courtDecide, courtEndLeave, courtExported, courtGallery,
+  courtGrantLeave, courtRecordFor, courtSay, courtSummon, isCourtLocked, LEAVE_HOURS,
+  type CourtCaseFull, type CourtPerson, type LeaveHours, type RecordCheck,
 } from '@/lib/live/court';
 import { ACT_WORDS, checkChain, shortFingerprint, type ChainCheck } from '@/lib/court/forensics';
 import { recordText } from '@/lib/court/record-text';
@@ -50,12 +57,25 @@ const VERDICT_WORDS: Record<string, string> = {
 
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
-export function Hearing({ id, me, advanced, onLocked, onChanged }: {
+const LEAVE_WORDS: Record<LeaveHours, string> = {
+  1: 'For an hour',
+  24: 'For a day',
+  72: 'For three days',
+  168: 'For a week',
+};
+
+export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }: {
   id: string;
   me: Profile;
   advanced: boolean;
   onLocked: () => void;
   onChanged: () => void | Promise<void>;
+  /**
+   * Also read the case again every half minute. For somebody answering on
+   * leave, whose account the live connection keeps shut, so they would hear
+   * of nothing that happens unless they ask.
+   */
+  poll?: boolean;
 }) {
   const [full, setFull] = useState<CourtCaseFull | null>(null);
   const [error, setError] = useState('');
@@ -80,6 +100,11 @@ export function Hearing({ id, me, advanced, onLocked, onChanged }: {
   useEffect(() => { void load(); }, [load]);
   // Every act in a case touches the case's row, so this hears all of them.
   useKeepUp(KEEP_UP_CASES, load);
+  useEffect(() => {
+    if (!poll) return;
+    const timer = window.setInterval(() => { void load(); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [poll, load]);
   useEffect(() => { setCheck(null); setChain(null); setConfirmRemove(false); }, [id]);
 
   // Every act goes through here: one place for "busy", the refusal sentence,
@@ -162,6 +187,9 @@ export function Hearing({ id, me, advanced, onLocked, onChanged }: {
                 <span className="ct-chip ct-chip-place">An Executive Director has been asked</span>
               )}
               {!c.gallery_open && <span className="ct-chip ct-chip-place">Heard in private</span>}
+              {c.my_leave_until && (
+                <span className="ct-chip ct-chip-place" data-court-my-leave>You may answer until {when(c.my_leave_until)}</span>
+              )}
             </div>
             {c.status === 'closed' && c.verdict_note && <p className="ct-meta">The judge&rsquo;s reason: {c.verdict_note}</p>}
             {c.seal_hash && <p className="ct-meta">Sealed &middot; <span className="ct-print text-[#e3d2ad]">{shortFingerprint(c.seal_hash)}</span></p>}
@@ -225,6 +253,14 @@ export function Hearing({ id, me, advanced, onLocked, onChanged }: {
           </div>
 
           {c.may_decide && (
+            <LeaveToAnswer people={full.people} busy={busy}
+              grant={(person, name, hours) => void act('Giving leave', () => courtGrantLeave(c.id, person, hours),
+                `${name} may now sign in and answer this case, and nothing else. Tell them yourself; they are told in the app too.`)}
+              end={(person, name) => void act('Ending it', () => courtEndLeave(c.id, person),
+                `${name} can no longer sign in.`)} />
+          )}
+
+          {c.may_decide && (
             <JudgeDesk
               busy={busy}
               reason={reason}
@@ -232,6 +268,8 @@ export function Hearing({ id, me, advanced, onLocked, onChanged }: {
               confirmRemove={confirmRemove}
               setConfirmRemove={setConfirmRemove}
               subject={c.subject_name}
+              subjectSuspended={Boolean(c.subject_suspended)}
+              subjectDeleted={Boolean(c.subject_deleted)}
               decide={(verdict, words) => void act('Deciding', () => courtDecide(c.id, verdict, reason), words)}
             />
           )}
@@ -254,7 +292,7 @@ export function Hearing({ id, me, advanced, onLocked, onChanged }: {
               <p className="ct-names">
                 {watching.length ? watching.map((p) => (p.id === me.id ? 'you' : p.name)).join(', ') : 'Nobody is watching.'}
               </p>
-              <p className="ct-names">Called: {called.map((p) => `${p.name} (${p.part === 'accused' ? 'the case is about them' : p.part === 'reporter' ? 'raised it' : 'witness'})`).join(', ') || 'nobody'}</p>
+              <p className="ct-names">Called: {called.map((p) => `${p.name} (${p.part === 'accused' ? 'the case is about them' : p.part === 'reporter' ? 'raised it' : 'witness'}${p.suspended ? ', suspended' : ''})`).join(', ') || 'nobody'}</p>
             </div>
           )}
 
@@ -301,19 +339,29 @@ export function Hearing({ id, me, advanced, onLocked, onChanged }: {
 
 // ------------------------------------------------------- the decision ----
 
-function JudgeDesk({ busy, reason, setReason, confirmRemove, setConfirmRemove, subject, decide }: {
+function JudgeDesk({ busy, reason, setReason, confirmRemove, setConfirmRemove, subject, subjectSuspended, subjectDeleted, decide }: {
   busy: string;
   reason: string;
   setReason: (v: string) => void;
   confirmRemove: boolean;
   setConfirmRemove: (v: boolean) => void;
   subject: string;
+  subjectSuspended: boolean;
+  subjectDeleted: boolean;
   decide: (verdict: 'dismissed' | 'suspended' | 'removed', words: string) => void;
 }) {
   return (
     <div className="ct-desk mt-3" data-court-decide>
       <h3 className="ct-section-title">Your decision</h3>
       <p className="ct-hint">Read everything on the record and every exhibit first. A decision closes the case and seals its record.</p>
+      {subjectSuspended && (
+        <p className="ct-hint">
+          Their account is suspended now. Dismissing the case does not lift that: a Director lifts it from their page.
+        </p>
+      )}
+      {subjectDeleted && (
+        <p className="ct-hint">Their account has been deleted, so the case can only be dismissed. Its record stays.</p>
+      )}
       <label className="ct-field">
         <span>Your reason <span className="font-normal">(kept with the decision)</span></span>
         <input value={reason} maxLength={1000} onChange={(e) => setReason(e.target.value)} placeholder="Both sides were heard." />
@@ -322,10 +370,10 @@ function JudgeDesk({ busy, reason, setReason, confirmRemove, setConfirmRemove, s
         <Button variant="ghost" disabled={Boolean(busy)} onClick={() => decide('dismissed', 'The case is dismissed. Nothing happens to them.')}>
           Dismiss
         </Button>
-        <Button variant="gold" disabled={Boolean(busy)} onClick={() => decide('suspended', 'They are suspended: their account is switched off until a Director lifts it.')}>
+        <Button variant="gold" disabled={Boolean(busy) || subjectDeleted} onClick={() => decide('suspended', 'They are suspended: their account is switched off until a Director lifts it.')}>
           Suspend them
         </Button>
-        <Button variant="danger" disabled={Boolean(busy)} onClick={() => setConfirmRemove(!confirmRemove)}>
+        <Button variant="danger" disabled={Boolean(busy) || subjectDeleted} onClick={() => setConfirmRemove(!confirmRemove)}>
           Remove from the church
         </Button>
       </div>
@@ -342,6 +390,58 @@ function JudgeDesk({ busy, reason, setReason, confirmRemove, setConfirmRemove, s
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// --------------------------------------------------- leave to answer ----
+
+/**
+ * For the judge: everybody called to the case whose account is suspended, and
+ * the one thing to do about each. Drawn only when there is somebody to let in.
+ */
+function LeaveToAnswer({ people, busy, grant, end }: {
+  people: CourtPerson[];
+  busy: string;
+  grant: (person: string, name: string, hours: LeaveHours) => void;
+  end: (person: string, name: string) => void;
+}) {
+  const [hours, setHours] = useState<LeaveHours>(24);
+  const shut = people.filter((p) => p.part !== 'observer' && !p.deleted && p.suspended);
+  if (shut.length === 0) return null;
+  return (
+    <div className="ct-desk mt-3" data-court-leave>
+      <h3 className="ct-section-title">Leave to answer</h3>
+      <p className="ct-hint">
+        A suspended account cannot sign in. You can let them in to answer this case and nothing else: the rest of the
+        app stays closed to them. The leave ends when you end it, when its time runs out, or when you decide the case.
+        It is written on the record, and your church&rsquo;s leaders are told.
+      </p>
+      <ul className="mt-2 grid gap-2">
+        {shut.map((p) => (
+          <li key={p.id} className="flex flex-wrap items-center justify-between gap-2" data-court-leave-for={p.id}>
+            <span className="min-w-0">
+              <span className="block font-semibold text-[#1b2442]">{p.name}</span>
+              <span className="block text-sm text-[#4a4f63]">
+                {p.leave_until ? `May sign in and answer until ${when(p.leave_until)}` : 'Suspended: cannot sign in'}
+              </span>
+            </span>
+            {p.leave_until ? (
+              <Button variant="ghost" disabled={Boolean(busy)} onClick={() => end(p.id, p.name)}>End their leave</Button>
+            ) : (
+              <span className="flex flex-wrap items-center gap-2">
+                <label className="ct-field !mt-0">
+                  <span className="sr-only">For how long</span>
+                  <select value={hours} onChange={(e) => setHours(Number(e.target.value) as LeaveHours)} data-court-leave-hours>
+                    {LEAVE_HOURS.map((h) => <option key={h} value={h}>{LEAVE_WORDS[h]}</option>)}
+                  </select>
+                </label>
+                <Button variant="gold" disabled={Boolean(busy)} onClick={() => grant(p.id, p.name, hours)}>Let them answer</Button>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -366,12 +466,12 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
   useEffect(() => {
     if (!judge || c.status !== 'open') return;
     live.listMembers()
-      .then((rows) => setMembers(rows.filter((p) => p.id !== me.id && p.is_approved && !p.suspended_at
+      .then((rows) => setMembers(rows.filter((p) => p.id !== me.id && p.is_approved
         && !full.people.some((x) => x.id === p.id))))
       .catch(() => setMembers([]));
   }, [judge, c.status, me.id, full.people]);
 
-  const callable = full.people.filter((p) => p.part !== 'observer');
+  const callable = full.people.filter((p) => p.part !== 'observer' && !p.deleted);
 
   return (
     <div className="ct-desk" data-court-advanced>
@@ -383,7 +483,7 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
             <span>Call a witness</span>
             <select value={witness} onChange={(e) => setWitness(e.target.value)}>
               <option value="">Choose somebody from the church</option>
-              {(members ?? []).map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+              {(members ?? []).map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.suspended_at ? ' (suspended)' : ''}</option>)}
             </select>
           </label>
           <div className="mt-2">

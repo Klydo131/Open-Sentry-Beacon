@@ -67,7 +67,7 @@ secret's value, so its output can go straight into your go-live record.
 | It checks | Why, from the trial |
 | --- | --- |
 | Row-level security on every table | The rules that keep each person to their own information |
-| The three scheduled jobs exist | A 30-day promise was kept only when somebody happened to share a link |
+| The four scheduled jobs exist | A 30-day promise was kept only when somebody happened to share a link; and a suspended account let in to answer a case must be switched off again on time |
 | The Vault entries the nightly jobs read | The trial's Vault was empty, so the nightly file removal could never have run |
 | No files of deleted records waiting | Deleted records had left their files behind |
 | No shared-link entries older than 30 days | The privacy notice promises 30 days |

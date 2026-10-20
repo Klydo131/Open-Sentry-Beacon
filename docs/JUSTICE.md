@@ -208,8 +208,28 @@ a record that can be added to afterwards is not a record.
 
 Statements carry the name of whoever wrote them and the time the server
 received them; nobody can choose a different time. If you cannot sign in (for
-example while your account is suspended), you still have your say: tell the
-judge, in person or by phone, and they write it down on the record as yours.
+example while your account is suspended), you still have your say, in one of
+two ways: tell the judge, in person or by phone, and they write it down on the
+record as yours; or the judge gives you **leave to answer**.
+
+### Leave to answer
+
+A suspended account cannot sign in. When somebody called to a trial is
+suspended, the judge, who is always one of the church's leaders, can let them
+sign in to answer that trial, and nothing else:
+
+- **Only the court room opens**, and in it only that one trial. Everything else
+  in the app (messages, the library, your profile, other trials) stays closed
+  exactly as a suspension closes it. The door still asks for your password.
+- **It is for a time the judge chooses**: an hour, a day, three days or a week.
+  It ends sooner if the judge ends it, and always when the trial is decided.
+- **When it ends, the account is switched off again** at once, on every phone it
+  was signed in on.
+- **It is on the record**, with who gave it and until when, and the church's
+  other leaders are told. Nobody is let in quietly.
+
+Leave to answer does not lift the suspension. Only a Director lifting it from
+the member's page does that.
 
 ### Exhibits
 
@@ -247,6 +267,24 @@ A trial closes with a **verdict** and a note explaining it. Both stay attached
 to the trial for good, and the verdict **seals** the record: its last line's
 fingerprint is kept with the decision. What was said in a trial stays on its
 record even if the account of somebody who spoke is later removed.
+
+### If an account is deleted
+
+Deleting an account removes the person from the app: their messages, notes,
+photos and everything else in it. Two things stay, because a church has to be
+able to show what it did: **its safeguarding reports and its trials.**
+
+- A report stays, with its conversation and its evidence, whether it was the
+  account of the person who raised it or of the person it was about that went.
+- A trial stays, with everything said and entered in it. The deletion itself is
+  written on its record.
+- Wherever the person's name appears in either, it is shown followed by
+  **(account deleted)**, so nobody mistakes them for somebody still here.
+
+Nothing else about them is kept: not an address, not a phone number, not a
+photo. Only the name as it was, and what the record already held. Who can read
+a report or a trial does not change when somebody's account goes; a report
+about a leader stays with the leaders it was always for.
 
 ---
 

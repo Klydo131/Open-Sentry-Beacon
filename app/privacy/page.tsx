@@ -205,11 +205,14 @@ export default function PrivacyPage() {
               period. Every stored file that belonged to it, or to a conversation that
               went with it, goes too: your pictures straight away, and the rest at the
               nightly clean-up, which removes each file whose record is gone.</li>
-            <li><strong>Safeguarding reports and the record of a removal are kept
-              permanently</strong>, including after an account is deleted. A church has
-              to be able to show that it acted, and a record the person it describes can
-              erase would not show anything. This is the one thing that survives a
-              deletion request.</li>
+            <li><strong>Safeguarding reports, trials in the court room and the record of
+              a removal are kept permanently</strong>, including after an account is
+              deleted. A church has to be able to show that it acted, and a record the
+              person it describes can erase would not show anything. This is the one
+              thing that survives a deletion request. What stays is the name as it was,
+              shown with &ldquo;(account deleted)&rdquo;, and what the report or the
+              trial already held: nothing else about the person, and it is read only by
+              those who could read it before.</li>
           </ul>
         </Card>
 

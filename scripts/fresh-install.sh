@@ -172,6 +172,13 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/the-court-room-holds.sql"
 
+# LEAVE TO ANSWER HOLDS, AND THE RECORD OUTLIVES THE ACCOUNT: a suspended
+# member let in by the judge reaches one case and nothing else, and is shut out
+# again when the leave ends; a report or a case stays when an account is
+# deleted, showing it as deleted. Invented people, rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/leave-to-answer-holds.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

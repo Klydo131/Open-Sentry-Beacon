@@ -16,8 +16,8 @@
 --
 -- THREE THINGS ARE STAND-INS, not the real extensions, because most Postgres
 -- servers outside Supabase do not ship them:
---   cron   the schedule (pg_cron). The migrations schedule three nightly and
---          hourly jobs; the Beacon server runs them (src/jobs.mjs).
+--   cron   the schedule (pg_cron). The migrations schedule four jobs (nightly,
+--          hourly and every minute); the Beacon server runs them (src/jobs.mjs).
 --   net    outgoing web requests (pg_net). The migrations queue a request when
 --          a notification should reach a phone; the Beacon server sends it.
 --   vault  named settings (supabase_vault). NOT ENCRYPTED here. Nothing secret

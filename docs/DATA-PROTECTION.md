@@ -120,16 +120,22 @@ the picture.
 
 | Where | What | Retention |
 |---|---|---|
-| `reports` | safeguarding reports, their decision, and a copy of any reported guild post | **Never deleted, deliberately** |
+| `reports` | safeguarding reports, their decision, and a copy of any reported guild post; with their conversation (`report_messages`) and evidence (`report_files`) | **Never deleted, deliberately**, including when the account of the person who raised it or the person it is about is deleted: the link is set to nothing and the name kept, shown "(account deleted)" |
+| `trials`, `trial_statements`, `court_record`, `court_exhibits` | the court room: a case, what was said, the chained record of every act, and the exhibits | **Never deleted, deliberately**, as reports; a deletion is written on the case's record |
+| `court_departed` | the name and part of somebody called to a case whose account was deleted | With the case |
+| `court_leave` | leave to answer: who was let in, to which case, by whom, until when, and why it ended | With the case |
 | `discipline_log` | approval, suspension, removal, by whom | **Outlives the person it describes, deliberately** |
 | `profile_changes` | a change to somebody's own details | Kept |
 | `security_audit_events` | account activity, by rank | Kept |
 | `library_activity` | who added or shared which link or file, with whom | **30 days, then deleted** |
 | `notifications` | alerts sent to one person | Kept |
 
-Two of those are deliberately permanent, and that is a decision with a legal
-consequence: an erasure request cannot empty them without destroying the only
-record that a church acted on a safeguarding concern. The lawful basis for
+The reports, the court room's records and the discipline log are deliberately
+permanent, and that is a decision with a legal consequence: an erasure request
+cannot empty them without destroying the only record that a church acted on a
+safeguarding concern. What they keep of a deleted person is the least that
+record needs: the name as it was, marked "(account deleted)", and what was
+said or entered in the case; nothing from the rest of the app. The lawful basis for
 keeping them is the establishment or defence of a legal claim and the protection
 of vital interests, and **that has to be written into the privacy notice rather
 than assumed**.

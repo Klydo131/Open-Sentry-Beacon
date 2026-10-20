@@ -394,4 +394,7 @@ export const ACT_WORDS: Record<string, string> = {
   judge_called: 'Another judge asked for',
   judge_seated: 'Judge took the seat',
   verdict: 'Verdict',
+  account_deleted: 'An account was deleted',
+  leave_granted: 'Leave to answer given',
+  leave_ended: 'Leave to answer ended',
 };

@@ -195,7 +195,14 @@ const fn = (name) => functions.get(name) ?? { head: '', body: '' };
     'only somebody a request was written TO can report it');
   ok(/v_request\.body/.test(report.body) && /insert into public\.reports/.test(report.body),
     'the words are copied into the report, so it outlives a withdrawn request');
-  ok(/role in \('admin', 'executive'\)/.test(report.body), 'every Director of the church is told');
+  // Since 20261020180000 the note to leadership has one home, shared by every
+  // way of filing a report (private.tell_report_handlers): the leaders of the
+  // report's church, never the person it is about. A prayer request is
+  // written by a Guide or an Explorer, so every Director of the church is told.
+  const tell = fn('private.tell_report_handlers');
+  ok(/private\.tell_report_handlers\(v_id/.test(report.body)
+     && /p\.role in \('admin', 'executive'\)/.test(tell.body) && /p\.church_id = r\.church_id/.test(tell.body),
+    'every Director of the church is told');
   const all = texts.map((t) => t.text).join('\n');
   ok(/revoke\s+all\s+on\s+function\s+public\.report_prayer_request\(uuid,\s*text,\s*text\)\s+from\s+public,\s*anon/i.test(all)
      && /grant\s+execute\s+on\s+function\s+public\.report_prayer_request\(uuid,\s*text,\s*text\)\s+to\s+authenticated/i.test(all),

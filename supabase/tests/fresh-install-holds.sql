@@ -89,6 +89,18 @@ begin
     raise exception 'nothing deletes the record of shared links after 30 days unless somebody shares another link';
   end if;
 
+  -- 8. Leave to answer a case ends on time: a suspended account let in to
+  --    answer is switched off again within a minute of its leave running out
+  --    (20261020180000_leave_to_answer_and_a_record_that_outlives_the_account).
+  if not exists (
+    select 1 from cron.job
+     where jobname = 'court-leave-runs-out'
+       and schedule = '* * * * *'
+       and command like '%private.court_leave_sweep()%'
+  ) then
+    raise exception 'nothing switches a suspended account off again when its leave to answer runs out';
+  end if;
+
   raise notice 'a fresh install holds every checked protection';
 end
 $holds$;

@@ -136,6 +136,23 @@ export async function POST(request: NextRequest) {
       .select('role,is_approved')
       .eq('id', authData.user.id)
       .single();
+
+    // LEAVE TO ANSWER (20261020180000). A suspended account signs in at all
+    // only while a judge has let it in to answer a case, and then the
+    // database refuses it everything but the court room, its own profile
+    // included. So a refused profile is asked one more question, of the court
+    // room's door: is this account answering on leave? If it is, it goes to
+    // the one screen it can use.
+    if (profileError?.code === '42501') {
+      const { data: door } = await supabase.rpc('court_door');
+      const leave = (door as { leave?: { case?: unknown } | null } | null)?.leave;
+      if (typeof leave?.case === 'string') {
+        return expectsJson
+          ? jsonResponse({ court_leave: true, session: authData.session }, 200, pendingCookies, pendingHeaders)
+          : formRedirect(request, '/answer', pendingCookies, pendingHeaders);
+      }
+    }
+
     if (profileError || !profile || !roles.has(profile.role as Role)) {
       return expectsJson
         ? jsonResponse(

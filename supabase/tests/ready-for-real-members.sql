@@ -35,7 +35,8 @@ begin
   what_to_do := case when v = 0 then '' else 'Build the database only from the repository (npx supabase db push). Never add a table by hand.' end;
   return next;
 
-  -- 2 to 4. The scheduled jobs that keep the privacy notice's promises.
+  -- 2 to 5. The scheduled jobs that keep the privacy notice's promises, and
+  -- the one that switches a suspended account off again when leave to answer ends.
   if to_regclass('cron.job') is null then
     n := 2; item := 'Scheduled jobs'; seen := 'pg_cron is not switched on';
     status := 'NOT YET'; what_to_do := 'Run every database change: they switch it on and schedule each job.';
@@ -44,7 +45,8 @@ begin
     for n, item, t in values
       (2, 'Job: invitation passwords run out (hourly)', 'invitation-passwords-run-out'),
       (3, 'Job: shared-link record kept 30 days (daily)', 'link-record-runs-out'),
-      (4, 'Job: files of deleted records removed (daily)', 'erase-deleted-files')
+      (4, 'Job: files of deleted records removed (daily)', 'erase-deleted-files'),
+      (5, 'Job: leave to answer ends on time (every minute)', 'court-leave-runs-out')
     loop
       -- pg_cron marks a paused job inactive; a stand-in without the column has none.
       execute 'select count(*) from cron.job where jobname = $1'
@@ -59,90 +61,90 @@ begin
     end loop;
   end if;
 
-  -- 5 and 6. The Vault entries the nightly file removal needs. Names only.
+  -- 6 and 7. The Vault entries the nightly file removal needs. Names only.
   if to_regclass('vault.secrets') is null then
-    n := 5; item := 'Vault'; seen := 'not available';
+    n := 6; item := 'Vault'; seen := 'not available';
     status := 'NOT YET'; what_to_do := 'Supabase projects have a Vault; check that this is the right project.';
     return next;
   else
     execute 'select count(*) from vault.secrets where name = $1' into v using 'notify_service_key';
-    n := 5; item := 'Vault: key for the nightly jobs (notify_service_key)';
+    n := 6; item := 'Vault: key for the nightly jobs (notify_service_key)';
     seen := case when v > 0 then 'present' else 'missing' end;
     status := case when v > 0 then 'READY' else 'NOT YET' end;
     what_to_do := case when v > 0 then '' else 'Add it in the SQL editor: docs/START-HERE.md Part 3, Step 6, item 5.' end;
     return next;
 
     execute 'select count(*) from vault.secrets where name = any($1)' into v using array['erase_function_url', 'notify_function_url'];
-    n := 6; item := 'Vault: where the erase function lives';
+    n := 7; item := 'Vault: where the erase function lives';
     seen := case when v > 0 then 'present' else 'missing' end;
     status := case when v > 0 then 'READY' else 'NOT YET' end;
     what_to_do := case when v > 0 then '' else 'Add notify_function_url (or erase_function_url), and deploy the erase function.' end;
     return next;
   end if;
 
-  -- 7. The erase list is being emptied, not just filled.
+  -- 8. The erase list is being emptied, not just filled.
   if to_regclass('private.files_to_erase') is not null then
     execute 'select count(*) from private.files_to_erase where queued_at < now() - interval ''2 days''' into v;
-    n := 7; item := 'Files of deleted records waiting more than 2 days';
+    n := 8; item := 'Files of deleted records waiting more than 2 days';
     seen := v::text;
     status := case when v = 0 then 'READY' else 'NOT YET' end;
     what_to_do := case when v = 0 then '' else 'The nightly removal is not running: check checks 4 to 6, and that the erase function is deployed.' end;
     return next;
   else
-    n := 7; item := 'Erase list for files of deleted records'; seen := 'not installed';
+    n := 8; item := 'Erase list for files of deleted records'; seen := 'not installed';
     status := 'NOT YET'; what_to_do := 'Apply the newest database changes.';
     return next;
   end if;
 
-  -- 8. The 30-day link record holds nothing older.
+  -- 9. The 30-day link record holds nothing older.
   if to_regclass('public.library_activity') is not null then
     execute 'select count(*) from public.library_activity where occurred_at < now() - interval ''31 days''' into v;
-    n := 8; item := 'Shared-link entries older than 30 days';
+    n := 9; item := 'Shared-link entries older than 30 days';
     seen := v::text;
     status := case when v = 0 then 'READY' else 'NOT YET' end;
     what_to_do := case when v = 0 then '' else 'Check job 3 is scheduled; it removes these daily.' end;
     return next;
   end if;
 
-  -- 9. Sample people never share a database with real ones.
+  -- 10. Sample people never share a database with real ones.
   select count(*) into v from auth.users
    where lower(email) ~ '@(example\.(test|com|org|net)|[^@]*\.example)$';
-  n := 9; item := 'Sample or test addresses (example.test and the like)';
+  n := 10; item := 'Sample or test addresses (example.test and the like)';
   seen := v::text;
   status := case when v = 0 then 'READY' else 'NOT YET' end;
   what_to_do := case when v = 0 then '' else 'This project holds sample people. Never run the demonstration file on production; start a clean project.' end;
   return next;
 
-  -- 10. Invitation passwords do not outlive their three days.
+  -- 11. Invitation passwords do not outlive their three days.
   if to_regclass('public.temporary_passwords') is not null then
     execute 'select count(*) from public.temporary_passwords where expires_at <= now()' into v;
-    n := 10; item := 'Expired invitation passwords still active';
+    n := 11; item := 'Expired invitation passwords still active';
     seen := v::text;
     status := case when v = 0 then 'READY' else 'NOT YET' end;
     what_to_do := case when v = 0 then '' else 'Check job 2 is scheduled and active.' end;
     return next;
   end if;
 
-  -- 11. Somebody holds the first seat.
+  -- 12. Somebody holds the first seat.
   select count(*) into v from public.profiles where role = 'executive' and is_approved;
-  n := 11; item := 'Approved Executive Directors';
+  n := 12; item := 'Approved Executive Directors';
   seen := v::text;
   status := case when v > 0 then 'READY' else 'NOT YET' end;
   what_to_do := case when v > 0 then '' else 'Create the first one: supabase/seed/01_make_me_the_first_director.sql.' end;
   return next;
 
-  -- 12. Consent: counted, never listed.
+  -- 13. Consent: counted, never listed.
   if exists (select 1 from information_schema.columns
               where table_schema = 'public' and table_name = 'profiles' and column_name = 'consent_at') then
     select count(*), count(*) filter (where consent_at is null) into v, v2 from public.profiles;
-    n := 12; item := 'Accounts without consent on record';
+    n := 13; item := 'Accounts without consent on record';
     seen := v2 || ' of ' || v;
     status := case when v2 = 0 then 'READY' else 'INFO' end;
     what_to_do := case when v2 = 0 then '' else 'Each is asked at their next sign-in. A number that does not fall within two weeks needs looking into.' end;
     return next;
   end if;
 
-  -- 13. Two-step sign-in for leaders.
+  -- 14. Two-step sign-in for leaders.
   if to_regclass('auth.mfa_factors') is not null then
     execute $q$
       select count(*),
@@ -151,17 +153,17 @@ begin
         from public.profiles p
        where p.role in ('admin', 'executive') and p.is_approved$q$
       into v, v2;
-    n := 13; item := 'Leaders using two-step sign-in';
+    n := 14; item := 'Leaders using two-step sign-in';
     seen := v2 || ' of ' || v;
     status := case when v > 0 and v2 = v then 'READY' else 'NOT YET' end;
     what_to_do := case when v > 0 and v2 = v then '' else 'Each leader turns it on in Settings, Password, Two-step sign-in. Console administrators also turn it on in GitHub, Supabase, Vercel and the e-mail service.' end;
     return next;
   end if;
 
-  -- 14. Which database changes this project has.
+  -- 15. Which database changes this project has.
   if to_regclass('supabase_migrations.schema_migrations') is not null then
     execute 'select max(version) from supabase_migrations.schema_migrations' into t;
-    n := 14; item := 'Newest database change applied';
+    n := 15; item := 'Newest database change applied';
     seen := coalesce(t, 'none recorded');
     status := 'INFO';
     what_to_do := 'Compare with the newest file in supabase/migrations. Different means a change is waiting.';

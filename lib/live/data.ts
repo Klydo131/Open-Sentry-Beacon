@@ -66,7 +66,16 @@ export interface SecondStepNext {
   second_step: true;
 }
 
-export async function signIn(email: string, password: string): Promise<SignInResult | SecondStepNext> {
+/**
+ * The account is suspended, and a judge has let it in to answer one case:
+ * the court room is all it can open (app/answer).
+ */
+export interface CourtLeaveNext {
+  court_leave: true;
+  second_step?: false;
+}
+
+export async function signIn(email: string, password: string): Promise<SignInResult | SecondStepNext | CourtLeaveNext> {
   let response: Response;
   try {
     response = await fetch('/api/auth/sign-in', {
@@ -95,6 +104,21 @@ export async function signIn(email: string, password: string): Promise<SignInRes
       throw new Error('Your account signed in, but the app could not save the session.');
     }
     return { second_step: true };
+  }
+
+  // Suspended, and answering a case on leave: the court room is all it opens.
+  if (
+    response.ok &&
+    payload?.court_leave === true &&
+    typeof payload?.session?.access_token === 'string' &&
+    typeof payload?.session?.refresh_token === 'string'
+  ) {
+    try {
+      saveBrowserSession(payload.session as Session);
+    } catch {
+      throw new Error('Your account signed in, but the app could not save the session.');
+    }
+    return { court_leave: true };
   }
 
   if (
