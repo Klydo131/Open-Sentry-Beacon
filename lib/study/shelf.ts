@@ -1,86 +1,24 @@
 'use client';
 
-// What the study room knows about each page, beyond the writing on it.
-//
-// ---------------------------------------------------------------------------
-// ASKED FOR, WITH A SCREENSHOT OF AFFiNE'S OWN APP: "what I meant for a special
-// room like the library page is, I want the whole Affine features like this but
-// with Hope Beacon brand please."
-//
-// The screenshot is a workspace, not an editor: a list of documents with a
-// preview line and a date, a star on each, tags, a trash, a search, and a view
-// somebody browses before they open anything. That is a different shape from a
-// strip of tabs above a page, and it is the shape the library already has in
-// this app, which is exactly why it was asked for in those words.
-//
-// WHERE THIS LIVES. BlockSuite's own DocMeta already carries `title`, `tags`,
-// `createDate`, `updatedDate` and `favorite` -- AFFiNE's list is built on the
-// same fields. Two more are needed for the rest of that screen and are added
-// here rather than invented elsewhere: a short `preview` so a list can show
-// what a page is about without loading every page, and `trashedAt` so deleting
-// is something a person can undo.
-//
-// They ride in the same workspace document as the rest of the page list, so
-// they sync, they survive a reinstall, and they cost one row in `study_docs`
-// rather than a table of their own.
-// ---------------------------------------------------------------------------
+// What the study room knows about each page beyond its writing: BlockSuite's
+// DocMeta (title, tags, dates, favourite) plus a stored preview line and a
+// trash date. They live in the workspace document, so they sync with it.
 
 import type { DocMeta, WorkspaceMeta } from '@blocksuite/store';
 
 /** DocMeta plus the two things a browsable shelf needs and BlockSuite has not. */
 export type ShelfMeta = DocMeta & {
-  /**
-   * The first line or so of the page, kept so the list can be useful.
-   *
-   * WHY IT IS STORED RATHER THAN READ. Every page is a separate Yjs document
-   * that has to be pulled from the database before a word of it can be read.
-   * A shelf of twenty pages would be twenty round trips before it could draw a
-   * single preview line, on a phone, before the person has opened anything.
-   */
+  /** The page's first line or so, stored so the list never has to load every page. */
   preview?: string;
   /** When it was put in the trash. Absent means it is not in the trash. */
   trashedAt?: number;
-  /**
-   * `YYYY-MM-DD` when this page is the journal entry for that day.
-   *
-   * WHY A DAY AND NOT A TITLE. The journal has to reopen the same page every
-   * time somebody taps Today, and a title is a thing people rename. Matching on
-   * the date it stands for means renaming "Thursday, 17 September" to "Prayer
-   * meeting" keeps it as that day's page rather than quietly starting a second
-   * one the next time the button is pressed.
-   */
+  /** `YYYY-MM-DD` when this is that day's journal page (matched by date, so a rename keeps it). */
   journalDate?: string;
-  /**
-   * The folder this page is filed in, by name. Absent means it is filed nowhere.
-   *
-   * ONE FOLDER, NOT MANY, AND THAT IS A DECISION. AFFiNE lets a document sit in
-   * several folders at once, which is right for them and wrong here for a
-   * reason that has nothing to do with difficulty: this room already has TAGS,
-   * and a page in five folders is a page with five tags wearing a different
-   * name. What a folder adds that a tag does not is the feeling of a place --
-   * "the Romans study is in there" -- and a place somebody's page can be in
-   * five of at once is not a place.
-   *
-   * BY NAME AND NOT BY ID, for the same reason tags are. There is no folder
-   * object to keep in step, renaming is a rename, and a folder stops existing
-   * when the last page leaves it, which is what people expect of a thing they
-   * never deliberately created.
-   */
+  /** The page's folder, by name; one folder per page (tags cover the rest). Absent means none. */
   folder?: string;
 };
 
-/**
- * A saved way of looking at the shelf: some tags, and some words.
- *
- * WHAT A COLLECTION IS, AND WHY IT IS NOT A FOLDER. A folder is a place a page
- * is IN; a collection is a QUESTION the shelf answers, saved so nobody has to
- * ask it again. "Everything tagged Romans that mentions grace" is a collection.
- * The pages in it were never put there and do not know they are in it: write a
- * new page, tag it Romans, and it appears.
- *
- * That difference is the whole reason both exist. A folder is what somebody
- * decides; a collection is what is true.
- */
+/** A saved view of the shelf (tags and words). Pages match it; they are never put in it. */
 export type Collection = {
   id: string;
   name: string;
@@ -129,14 +67,7 @@ export function readShelf(meta: WorkspaceMeta): ShelfEntry[] {
   });
 }
 
-/**
- * WHEN SOMETHING WAS LAST WRITTEN, IN WORDS RATHER THAN A DATE.
- *
- * A study room is somewhere people come back to, and "3 days ago" answers the
- * question they are actually asking -- is this the one I was working on? -- in
- * a way that "14/09/2026" does not. Past a week the date is the more useful
- * answer, so it switches.
- */
+/** When something was last written, in words ("3 days ago"); a date after a week. */
 export function whenWritten(at: number, now = Date.now()): string {
   if (!at) return 'Not written in yet';
   const seconds = Math.max(0, Math.round((now - at) / 1000));
@@ -153,13 +84,7 @@ export function whenWritten(at: number, now = Date.now()): string {
   });
 }
 
-/**
- * The heading a page sits under in the list.
- *
- * GROUPED BY WHEN, NOT BY NAME, because that is how somebody looks for a page
- * they were writing on Tuesday. Alphabetical order is useful when you know what
- * a thing is called; a study room is full of pages people have not named.
- */
+/** The list heading a page sits under, grouped by when it was written. */
 export function groupFor(at: number, now = Date.now()): string {
   if (!at) return 'Not written in yet';
   const day = 24 * 60 * 60 * 1000;
@@ -181,51 +106,21 @@ export const GROUP_ORDER = [
   'Not written in yet',
 ];
 
-/**
- * Cut a page's text down to a line worth showing.
- *
- * NO NEWLINES AND NO RUNAWAY. A preview is one line in a list; a heading
- * followed by three paragraphs would push every other page off a phone screen,
- * and the whole point of the shelf is seeing several at once.
- */
+/** A page's text cut to one line for the list. */
 export function previewFrom(text: string, limit = 140): string {
   const flat = text.replace(/\s+/g, ' ').trim();
   if (flat.length <= limit) return flat;
   return `${flat.slice(0, limit).trimEnd()}…`;
 }
 
-// ---------------------------------------------------------------------------
-// TAGS
-//
-// ASKED FOR, IN THE SAME SCREENSHOT AS THE SHELF: AFFiNE's All docs carries a
-// tag on each row and a list of tags down the side. BlockSuite's own DocMeta
-// already has the field; nothing had ever written to it or drawn it.
-//
-// WHY TAGS RATHER THAN FOLDERS FIRST. A page about Romans 8 belongs to the
-// sermon it came from AND to the book it is in AND to the study group it was
-// written for, and a folder makes somebody pick one. Tags are also the thing
-// that survives a phone: a tree needs somewhere to show the tree, and a chip
-// fits on any screen. Folders are still worth having; they are not the first
-// thing to build.
-// ---------------------------------------------------------------------------
+// --- Tags ---
 
 /** The longest a tag can be. A tag is a label, not a sentence. */
 export const TAG_LIMIT = 24;
 
-/**
- * A tag as it will be stored, or an empty string when there is nothing to store.
- *
- * TIDIED RATHER THAN REFUSED. Somebody typing "  romans 8 " means the same
- * thing as "Romans 8", and a study room that rejected the first would be
- * teaching people to type carefully instead of taking notes. A leading `#` goes
- * the same way: it is how people write tags everywhere else, and it is not part
- * of the word.
- */
+/** A tag as stored: trimmed, single-spaced, without a leading `#`; '' when empty. */
 export function cleanTag(raw: string): string {
-  // TRIMMED BEFORE THE HASH IS LOOKED FOR, and a test caught the other order.
-  // " #daniel " has a space in front of the hash, so a `^#+` against the raw
-  // string matches nothing and the hash is stored as part of the tag -- which
-  // then sorts apart from "daniel" and counts as a second tag forever.
+  // Trim before removing the hash, or " #daniel" keeps it.
   return raw.trim().replace(/^#+/, '').replace(/\s+/g, ' ').trim()
     .slice(0, TAG_LIMIT).trim();
 }
@@ -234,9 +129,7 @@ export function cleanTag(raw: string): string {
 export function withTag(tags: string[], raw: string): string[] {
   const tag = cleanTag(raw);
   if (!tag) return tags;
-  // CASE-INSENSITIVE, because "romans" and "Romans" are one tag to a person and
-  // two tags in a list is how a tag list stops being useful. The spelling
-  // already in the room wins, so a room does not slowly acquire both.
+  // Case-insensitive; the spelling already in the room wins.
   const already = tags.find((t) => t.toLowerCase() === tag.toLowerCase());
   return already ? tags : [...tags, tag];
 }
@@ -264,37 +157,16 @@ export function hasTag(entry: ShelfEntry, tag: string): boolean {
   return entry.tags.some((t) => t.toLowerCase() === needle);
 }
 
-// ---------------------------------------------------------------------------
-// THE JOURNAL
-//
-// AFFiNE gives every day a page of its own, reached by one button. It is the
-// feature that fits a church best of everything in that screenshot: morning
-// devotion, a sermon on Sabbath, what somebody prayed about on Tuesday. Nobody
-// names those pages, and nobody should have to.
-// ---------------------------------------------------------------------------
+// --- The journal: one page per day ---
 
-/**
- * The day a moment falls on, as `YYYY-MM-DD`, in the reader's own timezone.
- *
- * LOCAL, NOT UTC, and it matters here more than it usually does. Manila is
- * UTC+8, so anything written before eight in the morning would be filed under
- * the previous day if this used UTC -- which is most of the morning devotions
- * this is for.
- */
+/** The day as `YYYY-MM-DD` in local time (UTC would misfile Manila mornings). */
 export function dayKey(at: number | Date = Date.now()): string {
   const d = at instanceof Date ? at : new Date(at);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/**
- * A day key as somebody would say it: "Thursday, 17 September 2026".
- *
- * BUILT FROM THE PARTS, NOT PARSED. `new Date('2026-09-17')` is read as
- * midnight UTC and then shown in local time, which in Manila is the 17th at
- * eight in the morning and in Los Angeles is the 16th at five in the evening.
- * A journal that names the wrong day is worse than one with no name at all.
- */
+/** A day key in words, built from its parts (parsing it would shift the day by timezone). */
 export function dayInWords(key: string): string {
   const [y, m, d] = key.split('-').map((part) => Number(part));
   if (!y || !m || !d) return key;
@@ -308,9 +180,7 @@ export function journalFor(entries: ShelfEntry[], key: string): ShelfEntry | und
   return entries.find((e) => e.journalDate === key && !e.trashed);
 }
 
-// ---------------------------------------------------------------------------
-// FOLDERS AND COLLECTIONS
-// ---------------------------------------------------------------------------
+// --- Folders and collections ---
 
 /** Every folder in the room, with how many pages are filed in each. */
 export function foldersAcross(entries: ShelfEntry[]): Array<{ folder: string; count: number }> {
@@ -330,13 +200,7 @@ export function cleanFolder(raw: string): string {
   return raw.replace(/\s+/g, ' ').trim().slice(0, 40).trim();
 }
 
-/**
- * Whether a page belongs in a saved collection.
- *
- * EVERY TAG, NOT ANY TAG. A collection named "Romans, for Sabbath school" that
- * returned everything tagged either one would be a wider net than the name
- * promises, and a saved view somebody cannot predict is one they stop opening.
- */
+/** Whether a page matches a collection: every tag, not any. */
 export function matchesCollection(entry: ShelfEntry, collection: Collection): boolean {
   if (entry.trashed) return false;
   for (const tag of collection.tags) {

@@ -7,47 +7,17 @@ import { useRoom, type RoomTheme, type RoomPrefs } from '@/lib/room-theme';
 import { PlayerStrip } from '@/components/PlayerBar';
 import { Pocket } from '@/components/Pocket';
 
-// -------------------------------------------------------------------------
-// The room rails — the workspace either side of the page on a wide screen.
-//
-// The brief, in one line: a Digital Seeker's room is a place to STUDY, not a
-// place to be seen. There is no feed here, no follower count, no activity of
-// other people. It is a desk, a lamp, a timer and a line they wrote for
-// themselves. Everything about it is private and lives on their own device.
-//
-// Staff rooms are the same idea pointed at a different job. An admin
-// member and a missionary all have people waiting on them, so their rail leads
-// with the work: what is on the desk today, and one tap to each place they go.
-// Same customisation, different furniture.
-//
-// THE ROOMS ARE LISTED HERE AND DRAWN BY THE MENU. The bottom bar (Menu |
-// People | My Files) is the navigation at every width, and its Menu draws the
-// groups railGroupsFor returns. There used to be a left rail drawing them too,
-// on a desktop; see the note where it was.
-// THE RIGHT RAIL IS NOT. It used to be, and everything personal in it -- the
-// study timer, the theme, the line you write for yourself -- was therefore
-// missing on every phone and tablet. It now stacks under the main column below
-// `xl` rather than hiding, so the room belongs to its owner at any width.
-//
-// Nothing here touches a backend. Counts arrive as props so this file can be
-// used by the demo shell and the live shell without pulling a database client
-// into either bundle.
-// -------------------------------------------------------------------------
+// The room rails. railGroupsFor lists each role's rooms, which the Menu draws.
+// RightRail is the personal desk (timer or work desk, pocket, player, a note
+// to yourself, theme); it stacks under the page below `xl`. Counts arrive as
+// props, so no database client is pulled into either shell's bundle.
 
 export interface RailLink {
   href: string;
   label: string;
   icon: string;
   badge?: number;
-  /**
-   * Still being built, and said so where somebody decides whether to open it.
-   *
-   * A CHIP RATHER THAN "(Still on Beta)" AFTER THE NAME. The label is
-   * `truncate` inside a narrow rail, so "Guild Room (Still on Beta)" renders as
-   * "Guild Room (Still on…" — the warning is the half that gets cut. The chip
-   * cannot be truncated away, and the full phrase is on the link's title and
-   * its accessible name for anybody hovering or listening.
-   */
+  /** Still in beta: shown as a chip, which cannot be truncated away like a suffix. */
   beta?: boolean;
 }
 
@@ -56,8 +26,7 @@ export interface RailGroup {
   links: RailLink[];
 }
 
-// What each role sees, and in what order. The first group is the job; the last
-// is always the person themselves.
+// What each role sees, in order: the job first, the person last.
 export function railGroupsFor(
   role: Role,
   counts: {
@@ -67,8 +36,7 @@ export function railGroupsFor(
     /** Unread release notes, or 1 when an update is waiting to be applied. */
     updates?: number;
   } = {},
-  // The simulated mailbox is a demo-only screen; the live site has no /mail
-  // route, and a rail link to a 404 is worse than no link.
+  // The mail screen exists only in the sample church.
   opts: { mail?: boolean } = { mail: true },
 ): RailGroup[] {
   const personal: RailGroup = {
@@ -78,93 +46,31 @@ export function railGroupsFor(
       ...(opts.mail
         ? [{ href: '/mail', label: 'Mail', icon: '✉️', badge: counts.mail }]
         : []),
-      // TUTORIAL, WHAT'S NEW AND FEEDBACK LIVE IN SETTINGS, not out here.
-      //
-      // They were rail entries for a while, put there because each had been
-      // reported as missing when it was only reachable by scrolling Settings.
-      // That fixed the wrong half: it made the rail six items long for three
-      // things somebody uses once a month, and the rail is the thing people
-      // look at all day. They are cards in Settings, which is one tap away and
-      // is where a person already looks for the occasional thing.
-      //
-      // The unread badge moves onto Settings itself, so a release nobody has
-      // read is still visible from every screen without costing a whole row.
+      // Tutorial, What's New and Feedback live in Settings; the unread badge sits on Settings.
       { href: '/settings', label: 'Settings', icon: '⚙️', badge: counts.updates },
     ],
   };
 
-  // The church home leads every rail. The billboard is where a person catches
-  // up on the whole church before dropping into their own desk, so it sits at
-  // the very top, ahead of the role dashboard and the resources shelf.
+  // Home leads every role's list.
   const home = { href: '/church', label: 'Home', icon: '🏠' };
 
-  // CASES ARE A ROOM, FOR EVERY ROLE, AND ALWAYS PRESENT.
-  //
-  // A case used to be a card partway down a dashboard, which is easy to scroll
-  // past on the one day it matters and puts a formal hearing in the same visual
-  // rank as a study plan. It is also the screen an Explorer most needs to be
-  // able to find without being told, because an Explorer called into a case is
-  // the person in it with the least standing.
-  //
-  // The link does not appear and disappear with the caseload. A rail entry that
-  // comes and goes is one nobody trusts is there, and its absence on a quiet
-  // day is indistinguishable from it being broken. The room says plainly that
-  // nothing is open.
-  // Leadership only, and renamed. A Guide or an Explorer reaches a case they
-  // are party to through Settings -> Admin Reports; see LiveAppShell.
+  // Cases (Admin Reports): a room for leadership. Guides and Explorers reach
+  // their own cases through Settings.
   const cases = { href: '/cases', label: 'Admin Reports', icon: '⚖️', beta: true };
 
-  // THE OFFICE, for everybody who has work to do in this app rather than a
-  // journey to walk. The tools were scattered through the screens that are
-  // about people, which made those screens long and the tools hard to find.
-  // Explorers do not get it: none of it is theirs to do, and an empty room
-  // tells somebody they are missing something.
+  // The Office, for everyone but Explorers.
   const office = { href: '/office', label: 'Office', icon: '🗂️' };
 
-  // MY FILES, AND IT USED TO BE CALLED RESOURCES.
-  //
-  // Three screens in this app were called Resources and only two of them hold
-  // anything somebody handed you: the church shelf inside the Office, and the
-  // Resources tab on one Explorer's page, which is where sharing lands. This
-  // door is neither. It opens a person's OWN media, saved on their own device,
-  // with playlists and favourites -- nothing shared, nothing from anybody else.
-  //
-  // A Guide looking for what their Explorer had sent them came here first,
-  // reasonably, and found their own files. The room was not wrong; its name
-  // was. It also had two names for the same page -- an Explorer saw "My
-  // Library" and everybody else saw "Resources" -- so a Guide reading an
-  // Explorer's screen over their shoulder saw a room they did not have.
+  // My Files: the person's own media on their device. Nothing shared lands here.
   const myFiles = { href: '/library', label: 'My Files', icon: '📚' };
 
-  // NO PUBLISH ROOM. It was one, for every role, from late September; on 3
-  // October 2026 the owner moved its two halves into Home: "Blog and
-  // announcement will be the sub rooms of home, so basically we will take out
-  // publish". /publish now opens Home's Blog folder (app/publish/page.tsx).
-  // The Guild Room is archived. Its rail entries are gone with its nav entry;
-  // see the note in LiveAppShell. Nothing in the database was touched.
-
-  // THE STUDY ROOM IS A ROOM, and that was asked for twice. It arrived first as
-  // a card at the bottom of the Study tab inside My Journey, which is not what
-  // a room is in this app and gave a full editor about a third of a screen to
-  // live in. Explorers only: it is a place to write while you read, and nobody
-  // else here has that job.
-  // BETA, AND SAID WHERE SOMEBODY DECIDES WHETHER TO OPEN IT. The editor is
-  // borrowed -- AFFiNE's BlockSuite, assembled from internal APIs on a version
-  // whose own presets package is three minors behind -- and it is the heaviest
-  // thing in the app by a wide margin. Somebody should know that before they
-  // trust their study notes to it.
+  // The Study Room, for Explorers; marked beta.
   const studyRoom = { href: '/study', label: 'Study Room', icon: '📖', beta: true };
 
-  // THIS SABBATH, for everybody: the program the church has shared, kept on
-  // the phone so it opens with no signal, and for a leader their own programs
-  // as well. Asked for on 2 October 2026 ("can be share to Explorers too ...
-  // accessible to all devices, offline and online").
+  // This Sabbath: the church's shared program, readable offline.
   const thisSabbath = { href: '/sabbath', label: 'This Sabbath', icon: '🗓️' };
 
-  // MUSIC, for everybody, asked for on 4 October 2026: "another room for music
-  // for music lovers and choir". The player, playlists and calming sounds moved
-  // here from My Files, beside a tuner, a conductor's metronome and the
-  // choir's pieces. Nothing in it touches the church's database.
+  // Music: player, playlists, tuner, conductor and pieces.
   const music = { href: '/music', label: 'Music', icon: '🎵' };
 
   if (role === 'ds') {
@@ -219,16 +125,9 @@ export function railGroupsFor(
   ];
 }
 
-// ---------------------------------------------------------------- left rail
-//
-// THERE IS NO LEFT RAIL ANY MORE (30 September 2026). It was the navigation
-// from 1280px up, drawn from railGroupsFor above. The bottom bar -- Menu,
-// People, My Files -- is the navigation at every width now, asked for as "the
-// same dropdown and UI with Desktops", and its Menu (components/MenuList.tsx)
-// draws these same groups. The list stays here because it is still the one
-// list of rooms; only its second drawing is gone.
+// The Menu draws these groups; there is no separate left rail.
 
-// --------------------------------------------------------------- right rail
+// --- Right rail ---
 
 export function RightRail({
   role,
@@ -252,50 +151,14 @@ export function RightRail({
   chosen: string;
   choose: (key: string) => void;
   today?: { label: string; value: string }[];
-  /**
-   * Replaces the desk card entirely.
-   *
-   * The live shell passes a real one that loads what is coming up and what is
-   * waiting; the tutorial keeps the simple list of numbers. Passing the whole
-   * card rather than its data keeps this file free of every live query.
-   */
+  /** Replaces the desk card: the live shell passes its own; the tutorial uses the simple list. */
   desk?: React.ReactNode;
 }) {
   const seeker = role === 'ds';
 
-  // NOT HIDDEN ANY MORE, AND NOT DUPLICATED EITHER.
-  //
-  // This was `hidden ... xl:block`, so everything in it died below 1280px: an
-  // iPad Pro is 1024 across and a phone is 375, which is every device an
-  // Explorer actually owns. What died with it was the study timer and the whole
-  // "make it mine" surface -- the theme picker and the line you write for
-  // yourself -- neither of which Settings offers, so below 1280px they were not
-  // merely awkward to reach, they were gone.
-  //
-  // The pocket was rescued from this last week by rendering a SECOND copy in
-  // the main column at `xl:hidden`. That works for the pocket, which only reads
-  // rows, and would be wrong for what sits beside it: FocusTimer owns a
-  // setInterval, so two copies is two timers, the hidden one still counting,
-  // and a study that reads 25:00 after somebody rotates their tablet.
-  //
-  // So the rail MOVES instead of being copied. Below xl it is an ordinary
-  // full-width block falling under the main column, because the parent stacks
-  // there; from xl it is the sticky 288px column it always was. One instance,
-  // one timer, every width.
-  //
-  // AND BELOW xl IT IS THE LAST THING ON THE PAGE, so it takes the deep floor
-  // <main> has (`pb-28`, see the shells) rather than main's. Things float over
-  // the bottom of a phone -- the sample-data pill, the chat bubble, the install
-  // bar -- and they now stand on top of the bottom bar. With 24px under it, the
-  // player at the end of this rail sat behind the pill on every phone and pad
-  // (tests/e2e/the-rooms-fit-a-phone.js found it).
-  //
-  // FROM xl IT IS A STICKY COLUMN THAT SCROLLS ITSELF, and since the bottom bar
-  // is on a desktop too it has to end ABOVE the bar, with the same deep floor
-  // inside it. Its height was the window less 96px, which put its last 40px
-  // (the player again) under the bar however far it was scrolled. Where it
-  // sticks and how tall it is are `.desk-rail` in globals.css, because both
-  // spend measured heights: the header's above it and the bar's below.
+  // One instance at every width: below xl it stacks under the page (with the deep
+  // bottom padding the floating controls need); from xl it is a sticky column
+  // sized in globals.css (.desk-rail). Never duplicate it: FocusTimer owns a timer.
   return (
     <aside
       aria-label={seeker ? 'My room' : 'My office'}
@@ -313,24 +176,13 @@ export function RightRail({
         choose={choose}
       />
 
-      {/* AN EXPLORER GETS THE TIMER, EVERYBODY ELSE GETS THE DESK, and that
-          split is deliberate: an Explorer has no queue of work, and giving them
-          a "waiting for you" panel would invent one. The desk is passed in when
-          the caller has a real one; the tutorial keeps the simple list. */}
+      {/* An Explorer gets the study timer; everyone else gets the desk. */}
       {seeker ? <FocusTimer theme={theme} /> : (desk ?? <TodayCard theme={theme} today={today} />)}
 
-      {/* THE POCKET SITS BETWEEN THE DESK AND THE PLAYER, which is exactly
-          where it was asked for, with the gap circled in red. It is a bridge to
-          the web apps somebody already uses -- Spotify, YouTube, the office
-          suite -- so it belongs with the other things that are open while you
-          work, not in a room of its own. Every role gets it: "that can be
-          helpful to ALL users". */}
+      {/* The pocket: shortcuts to the web apps somebody already uses. */}
       <Pocket theme={theme} />
 
-      {/* THE PLAYER LIVES IN THE RAIL, on every room, because that is the
-          point of it: something quiet in the background while you work. The
-          audio element is above both this and the library's full player, so
-          moving between rooms never cuts it off. */}
+      {/* The player strip; the audio element lives above every room, so it never stops on navigation. */}
       <PlayerStrip theme={theme} />
 
     </aside>
@@ -383,8 +235,7 @@ function RoomCard({
         </p>
       )}
 
-      {/* A line you write for yourself. Nobody else ever sees it — it is not
-          a status, it is a note on your own desk. */}
+      {/* A private note to yourself. */}
       <div className="mt-3">
         {editing ? (
           <div className="space-y-2">
@@ -440,17 +291,14 @@ function RoomCard({
         )}
       </div>
 
-      {/* Theme picker — the actual "make it mine" control. */}
+      {/* Theme picker. */}
       <p
         className="mb-1.5 mt-4 text-[11px] font-bold uppercase tracking-wider"
         style={{ color: theme.inkSoft }}
       >
         {seeker ? 'Room' : 'Office'}
       </p>
-      {/* UNDER ANOTHER LOOK the first swatch is that look's own colours and
-          the rest recolour it; under Classic they are the page, as always
-          (lib/room-theme.ts, useRoom). Six to a row so a seeker's five rooms
-          and the look's own still fit. */}
+      {/* Under another look, the first swatch is that look's colours (lib/room-theme.ts). */}
       <div className={`grid ${themes.length > 5 ? 'grid-cols-6' : 'grid-cols-5'} gap-1.5`} data-room-palettes>
         {themes.map((t) => {
           const on = t.key === chosen;
@@ -479,8 +327,7 @@ function RoomCard({
   );
 }
 
-// A study timer. The one thing a private study room needs that a feed never
-// gives you: a defined stretch of undisturbed time.
+// A study timer.
 function FocusTimer({ theme }: { theme: RoomTheme }) {
   const PRESETS = [15, 25, 45];
   const [mins, setMins] = useState(25);
@@ -594,7 +441,7 @@ function FocusTimer({ theme }: { theme: RoomTheme }) {
   );
 }
 
-// The staff equivalent: what is on the desk right now.
+// The staff desk: what needs attention today.
 function TodayCard({
   theme,
   today,
