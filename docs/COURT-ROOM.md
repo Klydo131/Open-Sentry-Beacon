@@ -238,8 +238,10 @@ A live room shows who is there. Do it without a record and without a socket
 the database cannot police: each open screen calls a small function every few
 seconds that refuses anybody without a place in the case, and the case reports
 who was seen in the last minute and a bit. Presence is not evidence; reading
-the case already leaves its own trace on the record. Draw people from nothing
-more than an id, so a room of figures leaks no photo and stores nothing.
+the case already leaves its own trace on the record. So keep it only while the
+hearing is in session, and clear it when the hearing ends. Draw people from
+nothing more than an id, so a room of figures leaks no photo and stores
+nothing.
 
 ### Letting a locked-out party answer
 

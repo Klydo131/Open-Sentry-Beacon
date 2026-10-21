@@ -4,7 +4,8 @@
 -- ---------------------------------------------------------------------------
 -- WHAT THIS PROVES, against a database built from nothing by
 -- scripts/fresh-install.sh, signed in as invented people
--- (20261020200000_a_judge_is_drawn_and_the_church_board_rules):
+-- (20261020200000_a_judge_is_drawn_and_the_church_board_rules, and
+-- 20261020210000_who_is_in_the_room_is_kept_only_while_in_session):
 --
 --   THE DRAW      the judge is drawn from the leaders free to hear the case,
 --                 never the person it is about, anybody called to it, the one
@@ -249,6 +250,12 @@ select pg_temp.check((select status = 'with_board' and seal_hash is not null and
   'the record is sealed and the case waits for the Board; nothing has happened to anybody''s account');
 select pg_temp.as_claims(pg_temp.who('a1'), format($q$select public.court_say(%L, 'Too late')::text$q$, pg_temp.k('T')),
   'ended', 'nothing more is said');
+select pg_temp.check(not exists (select 1 from public.court_presence where trial_id = pg_temp.k('T')::uuid),
+  'and who had the room open, and when, is no longer kept');
+select pg_temp.as_claims(pg_temp.who('a1'), format($q$select public.court_here(%L)::text$q$, pg_temp.k('T')),
+  'ok', 'a screen a moment behind the end is not an error');
+select pg_temp.check(not exists (select 1 from public.court_presence where trial_id = pg_temp.k('T')::uuid),
+  'but it writes nothing down');
 select pg_temp.check(pg_temp.answer(pg_temp.who('e1'), format($q$select public.court_case(%L) -> 'case' ->> 'recommendation'$q$, pg_temp.k('T'))) = 'suspend'
     and pg_temp.answer(pg_temp.who('a1'), format($q$select coalesce(public.court_case(%L) -> 'case' ->> 'recommendation', 'not shown')$q$, pg_temp.k('T'))) = 'not shown',
   'the recommendation is for the bench, not for the person it is about');

@@ -154,6 +154,8 @@ function latest(name) {
   ok(/court_require_door\(\)/.test(here) && /court_place\(p_trial\) is null then/.test(here),
     'saying "I am here" takes the door and a place in the case');
   ok(/court_here\|/.test(latest('public.refuse_suspended_requests').body), 'which somebody answering on leave may also say');
+  ok(/status = 'open'/.test(here) && /delete from public\.court_presence where trial_id = p_trial/.test(latest('public.court_close_hearing').body),
+    'who had the room open is kept only while the hearing is in session');
   const hearing = code('components/court/Hearing.tsx');
   ok(/<CourtStage full=\{full\} meId=\{me\.id\} \/>/.test(hearing), 'every hearing is drawn as a room with its people in it');
   ok(/document\.visibilityState !== 'visible'/.test(hearing) && /if \(!inSession\) return;/.test(hearing),
