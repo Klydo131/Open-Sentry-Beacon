@@ -23,9 +23,12 @@ import {
   beginSecondStep,
   cleanCode,
   confirmedFactors,
+  diagnoseCode,
   enterCode,
+  explainRefusedCode,
   finishSecondStep,
   groupedSecret,
+  isWrongCode,
   refreshMyFactors,
   turnOffSecondStep,
   unfinishedFactor,
@@ -402,7 +405,14 @@ export function TwoStepCard() {
                 label="Code from your authenticator app"
                 action="Turn it on"
                 onCode={async (code) => {
-                  await finishSecondStep(setup.factorId, code);
+                  try {
+                    await finishSecondStep(setup.factorId, code);
+                  } catch (cause) {
+                    // The key is still on screen: say WHY the code was refused.
+                    if (!isWrongCode(cause)) throw cause;
+                    throw new Error(explainRefusedCode(await diagnoseCode(setup.secret, code), APP_NAME)
+                      ?? (cause as Error).message);
+                  }
                   setOn(setup.factorId);
                   setSetup(null);
                   setDone('Two-step sign-in is on. Next time you sign in, have your phone with you.');

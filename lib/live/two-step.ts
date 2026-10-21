@@ -167,7 +167,11 @@ async function authCall<T>(path: string, method: 'GET' | 'POST' | 'DELETE', body
     throw new Error('Could not reach sign-in. Check your connection and try again.');
   }
   const payload = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(refusal(res.status, payload));
+  if (!res.ok) {
+    const error = new Error(refusal(res.status, payload)) as Error & { errorCode?: string };
+    error.errorCode = payload?.error_code;
+    throw error;
+  }
   return payload as T;
 }
 
@@ -251,6 +255,121 @@ export async function beginSecondStep(): Promise<NewSecondStep> {
 /** Confirm the new authenticator app with its first code. */
 export async function finishSecondStep(factorId: string, code: string): Promise<void> {
   await prove(factorId, code);
+}
+
+/** The sign-in service refused the code itself (as opposed to anything else going wrong). */
+export function isWrongCode(error: unknown): boolean {
+  return (error as { errorCode?: string } | null)?.errorCode === 'mfa_verification_failed';
+}
+
+// ---------------------------------------------------------------------------
+// WHY A CODE WAS REFUSED, worked out on this device while setting up.
+//
+// Asked for on 21 October 2026, after codes from a brand-new key were refused
+// on live with nothing to say why ("it generated the code and copy pasted the
+// code and code doesn't work"). The sign-in service only ever says "invalid
+// code". While setting up, this screen still holds the key, so it can work
+// the code out itself, the way the authenticator app does (RFC 6238), and say
+// which of the three usual reasons it is: the phone's clock, the key added as
+// counter-based, or the code read from an older entry. It runs only AFTER the
+// service has refused a code, so a code the service accepts is never second-
+// guessed, and nothing about the key leaves the device.
+// ---------------------------------------------------------------------------
+
+/** What a refused code turned out to be. */
+export type CodeDiagnosis =
+  | { kind: 'now' }
+  | { kind: 'shifted'; seconds: number }
+  | { kind: 'counter' }
+  | { kind: 'other' }
+  | { kind: 'unknown' };
+
+function keyBytes(secret: string): Uint8Array<ArrayBuffer> | null {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const clean = secret.toUpperCase().replace(/[\s=-]/g, '');
+  if (!clean) return null;
+  const out: number[] = [];
+  let bits = 0;
+  let value = 0;
+  for (const ch of clean) {
+    const i = alphabet.indexOf(ch);
+    if (i < 0) return null;
+    value = ((value << 5) | i) & 0xfff;
+    bits += 5;
+    if (bits >= 8) {
+      out.push((value >>> (bits - 8)) & 0xff);
+      bits -= 8;
+    }
+  }
+  return new Uint8Array(out);
+}
+
+/** The six-digit code for each counter (RFC 4226), for a key as the app shows it. */
+export async function codesForKey(secret: string, counters: number[]): Promise<Map<number, string>> {
+  const bytes = keyBytes(secret);
+  const subtle = globalThis.crypto?.subtle;
+  const codes = new Map<number, string>();
+  if (!bytes || !subtle) return codes;
+  const key = await subtle.importKey('raw', bytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  for (const counter of counters) {
+    const message = new DataView(new ArrayBuffer(8));
+    message.setUint32(0, Math.floor(counter / 2 ** 32));
+    message.setUint32(4, counter >>> 0);
+    const mac = new Uint8Array(await subtle.sign('HMAC', key, message.buffer));
+    const at = mac[mac.length - 1] & 0x0f;
+    const number = ((mac[at] & 0x7f) << 24) | (mac[at + 1] << 16) | (mac[at + 2] << 8) | mac[at + 3];
+    codes.set(counter, String(number % 1_000_000).padStart(6, '0'));
+  }
+  return codes;
+}
+
+/** Which of the usual reasons a refused code was refused for. */
+export async function diagnoseCode(secret: string, code: string, nowMs = Date.now()): Promise<CodeDiagnosis> {
+  const digits = cleanCode(code);
+  if (!digits) return { kind: 'unknown' };
+  try {
+    const step = Math.floor(nowMs / 30_000);
+    // Twenty minutes either side: a clock further out than that is not a
+    // clock somebody has set by hand.
+    const around = Array.from({ length: 81 }, (_, i) => step - 40 + i);
+    const timed = await codesForKey(secret, around);
+    if (!timed.size) return { kind: 'unknown' };
+    let nearest: number | null = null;
+    for (const [counter, value] of timed) {
+      const k = counter - step;
+      if (value === digits && (nearest === null || Math.abs(k) < Math.abs(nearest))) nearest = k;
+    }
+    if (nearest !== null) return Math.abs(nearest) <= 1 ? { kind: 'now' } : { kind: 'shifted', seconds: nearest * 30 };
+    const counted = await codesForKey(secret, Array.from({ length: 21 }, (_, i) => i));
+    if ([...counted.values()].includes(digits)) return { kind: 'counter' };
+    return { kind: 'other' };
+  } catch {
+    return { kind: 'unknown' };
+  }
+}
+
+/** A refused code's reason, in words a person can act on. */
+export function explainRefusedCode(why: CodeDiagnosis, appName: string): string | null {
+  const minutes = (seconds: number) => {
+    const m = Math.max(1, Math.round(Math.abs(seconds) / 60));
+    return `${m} minute${m === 1 ? '' : 's'}`;
+  };
+  switch (why.kind) {
+    case 'now':
+      // Right by this device's clock, refused by the service's: the clocks
+      // disagree. (Nothing here can read the service's clock to show by how much.)
+      return 'Your code is right for this key by this device’s clock, but the sign-in service’s clock disagrees. Turn on automatic date and time in your phone’s Settings (and on the device with your authenticator app, if that is another one), then type the code showing now.';
+    case 'shifted':
+      return why.seconds < 0
+        ? `That code is from about ${minutes(why.seconds)} ago: it was typed late, or the clock on the device with your authenticator app is behind. Make sure that device sets its date and time automatically, then type the code showing now.`
+        : `That code is about ${minutes(why.seconds)} ahead: the clock on the device with your authenticator app is ahead. Turn on automatic date and time there, then type the code showing now.`;
+    case 'counter':
+      return 'Your authenticator app added this key as counter-based. Delete that entry and add the key again, choosing Time-based.';
+    case 'other':
+      return `That code does not come from this key. Your authenticator app is probably showing an older ${appName} entry: delete every ${appName} entry in it, add this key again (scan the picture, or paste the key), and type the code from the new entry.`;
+    default:
+      return null;
+  }
 }
 
 /** Take the authenticator app off this account. Needs the code-confirmed session. */

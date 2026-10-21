@@ -130,9 +130,12 @@ const stored = () => JSON.parse(storage.get(STORE));
     ? json({ id: 'challenge-2' })
     : json({ code: 422, error_code: 'mfa_verification_failed', msg: 'Invalid TOTP code entered' }, 422));
   let message = '';
-  try { await T.enterCode('000000'); } catch (cause) { message = cause.message; }
+  let wrong = null;
+  try { await T.enterCode('000000'); } catch (cause) { message = cause.message; wrong = cause; }
   ok(/did not match/.test(message) && !/TOTP/.test(message),
     `a wrong code is told in plain words ("${message}")`);
+  ok(T.isWrongCode(wrong) && !T.isWrongCode(new Error('offline')),
+    'and a refused code is told apart from anything else going wrong');
   ok(storage.get(STORE) === before, 'and nothing is saved over the session');
 
   calls = [];
@@ -240,6 +243,39 @@ const stored = () => JSON.parse(storage.get(STORE));
     'an unfinished set-up asks for its code before offering to start again');
   ok(/onClick=\{\(\) => \{ setPending\(setup\.factorId\); setSetup\(null\)/.test(card),
     'and Cancel keeps the key, so the code can still be typed later');
+}
+
+// 9. WHY A CODE WAS REFUSED, worked out on the device (21 October 2026: codes
+// from a brand-new key refused on live, with nothing to say why). Proved
+// against the published test values, so it agrees with every authenticator app.
+{
+  // RFC 6238 / RFC 4226: the key "12345678901234567890", written as an app shows it.
+  const KEY_ = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+  const at = await T.codesForKey(KEY_, [0, 1, 2, Math.floor(1111111109 / 30), Math.floor(1234567890 / 30)]);
+  ok(at.get(0) === '755224' && at.get(1) === '287082' && at.get(2) === '359152'
+    && at.get(Math.floor(1111111109 / 30)) === '081804' && at.get(Math.floor(1234567890 / 30)) === '005924',
+    'codes are worked out exactly as the standard and every authenticator app work them out');
+  ok((await T.codesForKey('gezd gnbv gy3t qojq gezd gnbv gy3t qojq', [1])).get(1) === '287082',
+    'and from the key as grouped on screen, in either case');
+  const now = 1111111109_000;
+  const step = Math.floor(now / 30_000);
+  const timed = await T.codesForKey(KEY_, [step, step + 6, step - 4]);
+  ok((await T.diagnoseCode(KEY_, timed.get(step), now)).kind === 'now',
+    'a right code the service still refused means the phone and the service disagree on the time');
+  const ahead = await T.diagnoseCode(KEY_, timed.get(step + 6), now);
+  const behind = await T.diagnoseCode(KEY_, timed.get(step - 4), now);
+  ok(ahead.kind === 'shifted' && ahead.seconds === 180 && behind.kind === 'shifted' && behind.seconds === -120,
+    'a code from minutes away is told as the clock (or a late code), with how far');
+  ok((await T.diagnoseCode(KEY_, '755224', now)).kind === 'counter', 'a code from a counter-based entry is recognised');
+  ok((await T.diagnoseCode(KEY_, '123456', now)).kind === 'other', 'and a code from another key, such as an older entry, is told as that');
+  const say = (d) => T.explainRefusedCode(d, 'Hope Beacon') ?? '';
+  ok(/automatic date and time/.test(say({ kind: 'now' })) && /Time-based/.test(say({ kind: 'counter' }))
+    && /older Hope Beacon entry/.test(say({ kind: 'other' })) && /3 minutes ahead/.test(say(ahead))
+    && T.explainRefusedCode({ kind: 'unknown' }, 'Hope Beacon') === null,
+    'each reason is said with what to do about it');
+  const card = fs.readFileSync(path.join(root, 'components/live/TwoStep.tsx'), 'utf8');
+  ok(/await finishSecondStep\(setup\.factorId, code\);\s*\} catch \(cause\) \{[\s\S]{0,120}if \(!isWrongCode\(cause\)\) throw cause;[\s\S]{0,80}diagnoseCode\(setup\.secret, code\)/.test(card),
+    'the set-up asks the service first, and explains only a code the service refused');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
