@@ -709,11 +709,13 @@ A place for Guides and their Directors to talk to each other. Explorers cannot s
 
 **Cases have a room of their own: Admin Reports.** It is in every leader's Menu. A Guide or an Explorer who is part of a case reaches it from Settings, Admin Reports, or straight from the notification that tells them about it. A case is a formal proceeding about a person, sometimes about the person reading it. It used to be a card partway down a dashboard, easy to scroll past on the one day it mattered. The room is always there, whether or not anything is open, and says so when nothing is.
 
-**The door.** Admin Reports opens onto a court room, and its door asks again who you are, even though you are signed in. A leader types the six-digit code from their authenticator app; anybody else called to a case types their password. The door stays open for 30 minutes, and everything read or added inside is written on the case's record, so a case stays private if somebody else picks up the phone.
+**The door.** Admin Reports opens onto a court room, and its door asks again who you are, even though you are signed in. A leader types the six-digit code from their authenticator app, or, where the church's project uses email codes, presses **Email me a code** and types the code from that email; anybody else called to a case types their password. The door stays open for 30 minutes, and everything read or added inside is written on the case's record, so a case stays private if somebody else picks up the phone.
 
 > **IMPORTANT** · Leaders turn on two-step sign-in first
 >
 > A Director, or anybody in senior leadership, needs two-step sign-in before the court room opens for them: **Settings, Password, Two-step sign-in**. It takes about two minutes, once. A leader without it is never drawn as a judge either, so a church needs at least two leaders with it before a case can be heard.
+>
+> **If your church's project uses email codes** (whoever looks after it chooses), there is nothing to set up: the door emails the code to the address you sign in with, and every leader can be drawn as a judge.
 
 **Your cases, on two shelves.** **Now** has what is still going on, and anything the Church Board ruled this week. **Earlier** has the rest, with a search once there are more than a few. Tap anywhere on a case to open it, and **All cases** to go back to the list. Leaders also see the hearings they may watch from the gallery, and **Open a case**.
 

@@ -27,10 +27,12 @@ export interface CourtDoor {
   leader: boolean;
   two_step: boolean;
   /**
-   * What the door needs next: a code, a password, two-step sign-in set up, or
-   * nothing. 'suspended': the account is suspended and holds no leave to answer.
+   * What the door needs next: a code, an emailed code, a password, two-step
+   * sign-in set up, or nothing. 'suspended': the account is suspended and holds no leave to answer.
    */
-  needs: 'code' | 'password' | 'two_step' | 'sign_in' | 'suspended' | null;
+  needs: 'code' | 'email' | 'password' | 'two_step' | 'sign_in' | 'suspended' | null;
+  /** How this project's leaders open the door. Older databases do not say: an authenticator app. */
+  method?: 'email' | 'authenticator';
   /** Older databases do not say; read as false. */
   suspended?: boolean;
   /** The one case a suspended account may answer, while its leave lasts. */

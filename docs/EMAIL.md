@@ -206,6 +206,20 @@ Whichever provider you choose:
   `PUBLIC` — so only the service role can read it. Never in a
   `NEXT_PUBLIC_` variable.
 
+## The court room's door code
+
+A project can choose to open the court room with a code sent by email rather
+than an authenticator app (`COURT_DOOR_METHOD = email`; see
+[COURT-ROOM.md](./COURT-ROOM.md#choosing-email-for-the-door)). Those codes are
+sent by `supabase/functions/door-code` through Brevo's API, with the same
+`BREVO_API_KEY` and `BREVO_SENDER` as the invitations, read the same way
+(**Edge Functions → Secrets** first, then `app_settings`). Without both, the
+door says the project cannot send codes yet, and nothing is sent. Supabase's own
+mailer is not used for these: its templates cannot carry a code the app made.
+
+Each leader can be sent one code every 30 seconds and five an hour, which keeps
+well inside Brevo's free 300 a day.
+
 ## When an invitation cannot be emailed
 
 The Director gets the one-time link on screen with a **Copy link** button, and

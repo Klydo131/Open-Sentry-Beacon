@@ -491,7 +491,9 @@ Cases are heard in **Admin Reports**, in your Menu. Its door asks for the
 six-digit code from your authenticator app, so **turn on two-step sign-in
 first**: Settings, Password, Two-step sign-in. It takes about two minutes, once.
 A leader without it is never drawn as a judge, so your church needs at least two
-leaders with it before a case can be heard.
+leaders with it before a case can be heard. If your church's project uses email
+codes instead, there is nothing to set up: press **Email me a code** at the door
+and type the code from the email.
 
 Your cases are on two shelves, **Now** and **Earlier**; tap one to open it. To
 start one, press **Open a case**. A judge is drawn at random, the hearing ends

@@ -221,6 +221,7 @@
 .ct-door input[type='password'] { letter-spacing: normal; font-size: 18px; }
 .ct-door input:focus { outline: 3px solid var(--ct-brass); }
 .ct-door .ct-door-error { background: #fbe9e7; color: #7a1d12; border-radius: 10px; padding: 8px; margin-top: 10px; }
+.ct-door [data-court-email-resend] { color: #fbf3df; background: transparent; }
 
 /* The exhibit viewer. */
 .ct-viewer-backdrop {

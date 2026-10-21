@@ -213,6 +213,11 @@ sign-in). Without it the door shows how to set it up, and a leader without it is
 never drawn as a judge, so a church needs at least two leaders with it before a
 case can be heard.
 
+**Or, if your church's project uses email codes**, there is nothing to set up.
+The door has an **Email me a code** button; the code arrives at the address you
+sign in with, lasts ten minutes and works once, on the phone or computer that
+asked for it. Every leader can then be drawn as a judge.
+
 ### Speaking in one
 
 Anyone summoned can add a statement while the hearing is in session. Once the

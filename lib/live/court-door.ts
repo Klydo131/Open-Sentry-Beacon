@@ -20,15 +20,67 @@
 //     not two.
 // Leadership has only the first way. The database refuses the second for a
 // Director or an Executive Director however it is asked.
+//
+// A THIRD, WHERE A PROJECT CHOOSES IT. With COURT_DOOR_METHOD = email
+// (supabase/migrations/20261021100000_the_court_room_door_by_email.sql), a
+// leader without an authenticator app is emailed a code instead
+// (supabase/functions/door-code) and types it here. It is proved against the
+// session this phone already has, so nothing about the session changes.
 // ---------------------------------------------------------------------------
 
 import type { Session } from '@supabase/supabase-js';
+import { db } from '@/lib/live/data';
 import { enterCode } from '@/lib/live/two-step';
 import { readBrowserSession, saveBrowserSession } from '@/lib/supabase/client';
 
 /** Open the door with the six digits from the authenticator app. */
 export async function openWithCode(code: string): Promise<void> {
   await enterCode(code);
+}
+
+/** Email this leader a code for the door. Returns the address, partly hidden. */
+export async function sendDoorCode(): Promise<string> {
+  const { data, error } = await db().functions.invoke('door-code', { body: {} });
+  if (error) {
+    // Non-2xx replies carry the function's own reason on `context`.
+    const response = (error as { context?: unknown }).context;
+    if (response instanceof Response) {
+      const body = await response.clone().json().catch(() => null) as { error?: string } | null;
+      if (body?.error) throw new Error(body.error);
+    }
+    throw new Error('Could not send the code. Check your connection and try again.');
+  }
+  return String((data as { sent_to?: unknown } | null)?.sent_to ?? 'your email');
+}
+
+/** What the database said about an emailed code it did not accept. */
+export function emailCodeRefusal(answer: { reason?: string; left?: number } | null): string {
+  switch (answer?.reason) {
+    case 'shape':
+      return 'Type the six digits from the email.';
+    case 'wrong':
+      return answer.left === 1
+        ? 'That code did not match. One more try, then ask for a new code.'
+        : `That code did not match. ${answer.left ?? 'A few'} more tries.`;
+    case 'spent':
+      return 'Too many wrong codes. Ask for a new one.';
+    case 'expired':
+      return 'That code has run out (they last ten minutes). Ask for a new one.';
+    case 'none':
+      return 'There is no code waiting for this phone. Ask for one, then type the newest.';
+    default:
+      return 'That did not open the door. Try again.';
+  }
+}
+
+/** Open the door with the six digits from the email. */
+export async function openWithEmailCode(code: string): Promise<void> {
+  const digits = code.replace(/\s+/g, '');
+  if (!/^\d{6}$/.test(digits)) throw new Error('Type the six digits from the email.');
+  const { data, error } = await db().rpc('court_email_code_prove', { p_code: digits });
+  if (error) throw new Error(error.message);
+  const answer = data as { ok?: boolean; reason?: string; left?: number } | null;
+  if (!answer?.ok) throw new Error(emailCodeRefusal(answer));
 }
 
 /** Open the door with the account's password. Not for leadership. */

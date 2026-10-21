@@ -111,6 +111,45 @@ Choices to make for your own deployment:
 - **Who must use two steps.** Hope Beacon requires it of leadership and accepts
   a fresh password from members called to a case, so nobody is shut out of
   answering what is said about them.
+- **Email instead of an authenticator app, if you choose.** See below.
+
+### Choosing email for the door
+
+Some churches cannot get leaders onto an authenticator app. Hope Beacon lets a
+project choose a code sent by email instead, with one row only the service role
+can write:
+
+```sql
+insert into public.app_settings (key, value) values ('COURT_DOOR_METHOD', 'email')
+on conflict (key) do update set value = excluded.value, updated_at = now();
+```
+
+Delete the row (or set anything else) to go back to authenticator apps. Without
+it, nothing changes. Email also needs `BREVO_API_KEY` and `BREVO_SENDER` (the
+same two the invitations use, [EMAIL.md](./EMAIL.md)) and the `door-code`
+function deployed.
+
+How it works (`20261021100000_the_court_room_door_by_email.sql`):
+
+1. The leader presses **Email me a code**. `supabase/functions/door-code`
+   checks the token, then asks the database for a code **for that user and
+   that sign-in session** (`court_email_code_issue`, service role only), and
+   emails it. The code never goes back to the browser, and only a salted hash
+   is stored.
+2. The leader types it. `court_email_code_prove` checks it against the same
+   session: ten minutes, five tries, used once. A wrong code is answered, not
+   raised, so the try is counted rather than rolled back.
+3. `court_pass_until` then counts the moment it was proved, for that session
+   only. Signing out ends the session and the pass.
+
+A leader who has an authenticator app is still asked for its code, and every
+leader can be drawn as judge.
+
+**What email gives up.** Whoever can read a leader's email can reset their
+password from the same inbox, so with email the court room is as safe as each
+leader's email account. An authenticator app does not share that weakness.
+Choose email when the alternative is a court room nobody can enter, and ask
+leaders to protect their email with its own second step.
 
 ### Opening the door from the browser
 
@@ -126,9 +165,9 @@ if (error) throw error;
 ```
 
 Never decide in the browser whether the door is open. Ask the database (Hope
-Beacon's `court_door()` returns what the door needs: a code, a password, or two
-steps set up), and treat any "locked" refusal from any call as the door
-closing.
+Beacon's `court_door()` returns what the door needs: a code, an emailed code, a
+password, or two steps set up), and treat any "locked" refusal from any call as
+the door closing.
 
 ---
 
