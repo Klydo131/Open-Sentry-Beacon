@@ -196,9 +196,21 @@ function fn(name) {
   ok(/courtExhibitHandled\(exhibit\.id, matches \? 'matched' : 'differed'\)/.test(ex), 'and every opening re-checks the fingerprint, on the record');
 
   const hearing = code('components/court/Hearing.tsx');
-  ok(/\{bench && \(\s*<div className="ct-gallery"/.test(hearing), 'the gallery is drawn for the bench only');
-  ok(/\{c\.may_decide && \(/.test(hearing) && /\{advanced && \(\s*<AdvancedTools/.test(hearing),
-    'deciding is the judge\'s, and the extra tools wait behind Advanced settings');
+  // Since 21 October 2026 the gallery is drawn once, in the live room, not in
+  // a panel of its own as well; the same rule holds there.
+  const stage = code('components/court/CourtStage.tsx');
+  ok(!/ct-gallery/.test(hearing)
+    && /const bench = c\.my_place === 'judge' \|\| c\.my_place === 'opener' \|\| c\.my_place === 'observer';/.test(stage)
+    && /\{bench && gallery\.length > 0 && \(/.test(stage),
+    'the gallery is drawn for the bench only');
+  // The judge's tools moved from behind Advanced settings to the judge's own
+  // desk (asked for on 21 October 2026: "the best available tools for all
+  // users"); the tools for examining evidence still wait behind it.
+  ok(/\{c\.may_decide && \(/.test(hearing)
+    && /c\.status === 'open' && c\.may_decide \? 'judge'/.test(hearing)
+    && /\{desk === 'judge' && <JudgeTools/.test(hearing)
+    && /\{advanced \? \(\s*<ForensicTools/.test(hearing),
+    'deciding and the judge\'s tools are the judge\'s alone, and the tools for examining evidence wait behind Advanced settings');
   ok(fs.existsSync(path.join(root, 'docs/COURT-ROOM.md')), 'the developers\' guide is written');
 }
 

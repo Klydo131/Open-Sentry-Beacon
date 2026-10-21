@@ -42,7 +42,7 @@ export function CourtOrCases({ me, hall = false, emptyState }: {
             <h2 className="text-xl font-bold text-navy">The court room</h2>
             <p className="mt-1 text-sm text-gray-600">
               {leads
-                ? 'Cases are heard in the court room: open one, watch a hearing, examine exhibits and decide. Its door asks for your code from your authenticator app.'
+                ? 'Cases are heard in the court room: open one, hear it or watch it, and examine exhibits; the Church Board gives the final ruling. Its door asks for your code from your authenticator app.'
                 : 'Any case you are called to is in the court room. Its door asks for your password again, so a case stays private if somebody else picks up your phone.'}
             </p>
             <Link

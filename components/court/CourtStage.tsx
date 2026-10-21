@@ -35,6 +35,8 @@ interface Seat {
   part: AvatarPart;
   here: boolean;
   deleted: boolean;
+  /** For the bench only, as the database sends it: their account is suspended. */
+  suspended?: boolean;
 }
 
 export function CourtStage({ full, meId, now = Date.now() }: { full: CourtCaseFull; meId: string; now?: number }) {
@@ -56,15 +58,18 @@ export function CourtStage({ full, meId, now = Date.now() }: { full: CourtCaseFu
     ? { id: c.opener_id, name: c.opener_name, part: 'opener', here: Boolean(c.opener_here) || c.opener_id === meId, deleted: false }
     : null;
   const seat = (p: CourtCaseFull['people'][number]): Seat => ({
-    id: p.id, name: p.name, part: p.part, deleted: Boolean(p.deleted),
+    id: p.id, name: p.name, part: p.part, deleted: Boolean(p.deleted), suspended: Boolean(p.suspended),
     here: !p.deleted && (Boolean(p.here) || p.id === meId),
   });
   const about = full.people.filter((p) => p.part === 'accused').map(seat);
   const raised = full.people.filter((p) => p.part === 'reporter').map(seat);
   const witnesses = full.people.filter((p) => p.part === 'witness').map(seat);
   const gallery = full.people.filter((p) => p.part === 'observer').map(seat);
+  // The database sends the gallery to the bench alone; the room draws it for
+  // the bench alone too, rather than trust that it was left out.
+  const bench = c.my_place === 'judge' || c.my_place === 'opener' || c.my_place === 'observer';
 
-  const everyone = [judge, opener, ...about, ...raised, ...witnesses, ...gallery].filter(Boolean) as Seat[];
+  const everyone = [judge, opener, ...about, ...raised, ...witnesses, ...(bench ? gallery : [])].filter(Boolean) as Seat[];
   const inRoom = everyone.filter((s) => s.here).length;
   const status = c.status === 'open'
     ? 'Live session'
@@ -103,7 +108,7 @@ export function CourtStage({ full, meId, now = Date.now() }: { full: CourtCaseFu
           <Group label="The witness box" className="ct-scene-witnesses" seats={witnesses.map((s) => figure(s))} />
         )}
 
-        {gallery.length > 0 && (
+        {bench && gallery.length > 0 && (
           <Group label="The gallery" className="ct-scene-gallery" seats={gallery.map((s) => figure(s))} />
         )}
       </div>
@@ -133,7 +138,7 @@ function EmptySeat({ label }: { label: string }) {
 }
 
 function Figure({ seat, me, bubble, live }: { seat: Seat; me: boolean; bubble?: string; live: boolean }) {
-  const words = `${seat.name}, ${PART_WORDS[seat.part]}${seat.deleted ? '' : seat.here ? ', in the room now' : ', away'}${me ? ' (you)' : ''}`;
+  const words = `${seat.name}, ${PART_WORDS[seat.part]}${seat.suspended ? ', suspended' : ''}${seat.deleted ? '' : seat.here ? ', in the room now' : ', away'}${me ? ' (you)' : ''}`;
   return (
     <div
       className="ct-seat"
@@ -153,7 +158,9 @@ function Figure({ seat, me, bubble, live }: { seat: Seat; me: boolean; bubble?: 
       {seat.here && <span className="ct-here-light" aria-hidden />}
       <span className="ct-plate">
         <span className="ct-plate-name">{me ? 'You' : seat.name}</span>
-        <span className="ct-plate-part">{seat.deleted ? 'account deleted' : seat.here ? PART_WORDS[seat.part] : `${PART_WORDS[seat.part]} · away`}</span>
+        <span className="ct-plate-part">
+          {seat.deleted ? 'account deleted' : `${PART_WORDS[seat.part]}${seat.suspended ? ' · suspended' : ''}${seat.here ? '' : ' · away'}`}
+        </span>
       </span>
     </div>
   );

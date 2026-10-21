@@ -4,9 +4,17 @@
 //
 // SIMPLE, BY DEFAULT: the bench (who it is about, who judges it), the live
 // session (everybody in the room as an avatar, components/court/CourtStage),
-// the record (what was said, numbered like a transcript), the witness stand
-// (say your piece), the clerk's table (exhibits), and for the judge, the end
-// of the hearing.
+// how it ended, once it has, and then four tabs: the record (what was said,
+// numbered like a transcript, and the witness stand to say your piece), the
+// clerk's table (exhibits), the desk (the judge's, or the Church Board's
+// ruling, for whoever writes it down) and tools (check the record, keep a
+// copy). Where the case is wide, the tabs go and it is two columns.
+//
+// ON EVERY SCREEN (asked for on 21 October 2026). The tabs are the default
+// and the two columns are the container query (court.css), so a phone, a pad
+// and a computer whose rails leave the case 620px all get tabs, and a browser
+// without container queries still gets tabs that work. What an act did is
+// said in a message pinned above the bottom bar, where the person is looking.
 //
 // HOW A CASE ENDS (20261020200000). The judge, drawn at random, ends the
 // hearing with a recommendation; nothing happens to anybody's account. The
@@ -14,11 +22,13 @@
 // or a leader who sat on the case writes it down here, which is when a
 // suspension or a removal is carried out, if it is.
 //
+// THE JUDGE'S TOOLS are on the judge's desk, each folded until wanted: call a
+// witness, write down what somebody said for them, hear it in private, ask an
+// Executive Director to take the seat.
+//
 // ADVANCED, A TICK AWAY (the same Advanced settings tick as elsewhere in the
-// app): call a witness, write down what somebody said for them, ask an
-// Executive Director to take the seat, hear it in private, check the record
-// on this device, compare a file with the exhibits, save a copy of the
-// record, and read the chain of custody.
+// app): every fingerprint, compare a file with the exhibits, check the
+// judge's draw, and read the chain of custody.
 //
 // WHO SEES WHAT IS THE DATABASE'S ANSWER. This screen draws what court_case
 // returned: a person called to the case gets no gallery and no custody chain,
@@ -31,9 +41,10 @@
 // end of the hearing. An account that has been deleted keeps its name here, marked
 // "(account deleted)" by the database.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui';
-import { Gavel, GalleryChairs, Seal, StandRail } from '@/components/court/CourtFurniture';
+import { ChevronGlyph, CloseGlyph } from '@/components/Glyph';
+import { Gavel, Seal, StandRail } from '@/components/court/CourtFurniture';
 import { ClerksTable, SameFileCheck } from '@/components/court/Exhibits';
 import { CourtStage } from '@/components/court/CourtStage';
 import {
@@ -95,10 +106,14 @@ const LEAVE_WORDS: Record<LeaveHours, string> = {
   168: 'For a week',
 };
 
-export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }: {
+type Tab = 'record' | 'exhibits' | 'desk' | 'tools';
+
+export function Hearing({ id, me, advanced, onAdvanced, onLocked, onChanged, poll = false }: {
   id: string;
   me: Profile;
   advanced: boolean;
+  /** Turns Advanced settings on from the Tools tab, where there is a switch for it. */
+  onAdvanced?: (on: boolean) => void;
   onLocked: () => void;
   onChanged: () => void | Promise<void>;
   /**
@@ -117,6 +132,8 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
   const [draft, setDraft] = useState('');
   const [check, setCheck] = useState<RecordCheck | null>(null);
   const [chain, setChain] = useState<ChainCheck | null>(null);
+  const [tab, setTab] = useState<Tab>('record');
+  const tabsRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -151,7 +168,13 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
     const timer = window.setInterval(beat, 25_000);
     return () => { gone = true; window.clearInterval(timer); };
   }, [id, inSession, onLocked]);
-  useEffect(() => { setCheck(null); setChain(null); }, [id]);
+  useEffect(() => { setCheck(null); setChain(null); setTab('record'); }, [id]);
+  // Good news goes away on its own; a refusal stays until it is read.
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(''), 6000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   // Every act goes through here: one place for "busy", the refusal sentence,
   // a shut door, and reading the case again afterwards.
@@ -178,8 +201,6 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
 
   const c = full.case;
   const bench = c.my_place === 'judge' || c.my_place === 'opener' || c.my_place === 'observer';
-  const watching = full.people.filter((p) => p.part === 'observer');
-  const called = full.people.filter((p) => p.part !== 'observer');
 
   const checkRecord = async () => {
     setBusy('Checking the record');
@@ -212,8 +233,33 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
     }
   };
 
+  // THE DESK: the judge's while the hearing is in session; afterwards, the
+  // place to write the Church Board's ruling down, for whoever may.
+  const desk: 'judge' | 'board' | null = c.status === 'open' && c.may_decide ? 'judge' : c.may_record_ruling ? 'board' : null;
+  const tabs: { key: Tab; label: string; count?: number }[] = [
+    { key: 'record', label: 'Record', count: full.statements.length },
+    { key: 'exhibits', label: 'Exhibits', count: full.exhibits.length },
+    ...(desk ? [{ key: 'desk' as Tab, label: desk === 'judge' ? 'Desk' : 'Ruling' }] : []),
+    { key: 'tools', label: 'Tools' },
+  ];
+  const active: Tab = tabs.some((t) => t.key === tab) ? tab : 'record';
+  const show = (key: Tab) => {
+    setTab(key);
+    // Switching tabs from far down a long record starts the new one at its top.
+    window.requestAnimationFrame(() => {
+      const bar = tabsRef.current;
+      const stuck = bar ? bar.getBoundingClientRect().top <= (parseFloat(getComputedStyle(bar).top) || 0) + 1 : false;
+      if (stuck) document.getElementById(`ct-${c.id}-${key}`)?.scrollIntoView({ block: 'start' });
+    });
+  };
+  const panel = (key: Tab, children: React.ReactNode) => (
+    <div key={key} id={`ct-${c.id}-${key}`} className="ct-panel" role="tabpanel" data-active={active === key} data-court-panel={key}>
+      {children}
+    </div>
+  );
+
   return (
-    <section className="ct-wall mt-4" data-court-hearing={c.id}>
+    <section className="ct-hearing" data-court-hearing={c.id}>
       <div className="ct-bench">
         <div className="flex items-start gap-3">
           <Seal className="ct-seal hidden sm:block" />
@@ -242,7 +288,11 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
               )}
             </div>
             {c.status === 'closed' && !c.ruling_words && c.verdict_note && <p className="ct-meta">The judge&rsquo;s reason: {c.verdict_note}</p>}
-            {c.seal_hash && <p className="ct-meta">Sealed &middot; <span className="ct-print text-[#e3d2ad]">{shortFingerprint(c.seal_hash)}</span></p>}
+            {c.seal_hash && (
+              <p className="ct-meta">
+                Sealed{advanced && <> &middot; <span className="ct-print text-[#e3d2ad]">{shortFingerprint(c.seal_hash)}</span></>}
+              </p>
+            )}
           </div>
         </div>
         <Gavel className="ct-gavel" />
@@ -250,184 +300,212 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
 
       <CourtStage full={full} meId={me.id} />
 
-      <div className="ct-floor">
-        <div>
-          <div className="ct-record" data-court-record>
-            <h3 className="ct-section-title">The record &middot; what was said</h3>
-            {full.statements.length === 0 ? (
-              <p className="text-sm text-[#4a4f63]">Nobody has spoken yet.</p>
-            ) : (
-              <ol className="ct-entries">
-                {full.statements.map((s, i) => (
-                  <li key={s.id} className="ct-entry">
-                    <span className="ct-entry-n" aria-hidden>{i + 1}</span>
-                    <span className="ct-entry-who">
-                      {s.for_name ? `${s.for_name}, written down by ${s.author_id === me.id ? 'you' : s.author_name}` : s.author_id === me.id ? 'You' : s.author_name}
-                    </span>{' '}
-                    <span className="ct-entry-when">{when(s.at)}</span>
-                    <p className="ct-entry-body">{s.body}</p>
-                    {advanced && <span className="ct-print">SHA-256 {shortFingerprint(s.sha256)}</span>}
-                  </li>
-                ))}
-              </ol>
-            )}
-
-            {c.may_speak && (
-              <div className="ct-stand">
-                <label className="block">
-                  <span className="text-sm font-semibold">
-                    {c.my_place === 'judge' ? 'Speak from the bench' : c.my_place === 'opener' ? 'Present the case' : 'Say your piece'}
-                  </span>
-                  <textarea
-                    data-court-say
-                    rows={3}
-                    value={draft}
-                    maxLength={4000}
-                    onChange={(e) => setDraft(e.target.value)}
-                    placeholder={c.my_place === 'judge' ? 'A question, or what happens next.'
-                      : c.my_place === 'opener' ? 'Why this case was brought, and what the court should look at.'
-                      : 'Tell the court what happened, in your own words.'}
-                  />
-                </label>
-                <StandRail className="ct-rail" />
-                <div className="mt-2">
-                  <Button
-                    variant="gold"
-                    disabled={Boolean(busy) || !draft.trim()}
-                    onClick={() => void act('Adding it', async () => { await courtSay(c.id, draft); setDraft(''); }, 'It is on the record.')}
-                  >
-                    Add to the record
-                  </Button>
-                </div>
-              </div>
-            )}
-            {!c.may_speak && c.status === 'open' && c.my_place === 'observer' && (
-              <p className="ct-hint mt-3">Watching from the gallery is silent: only the judge and the people called speak here.</p>
+      {/* HOW IT ENDED, where nobody has to look for it. */}
+      <div className="ct-outcome">
+        {c.status === 'with_board' && (
+          <div className="ct-desk" data-court-with-board>
+            <h3 className="ct-section-title">With the Church Board</h3>
+            <p className="ct-hint">
+              The hearing ended {c.heard_at ? when(c.heard_at) : ''}. The Church Board gives the final ruling, outside the court room;
+              nothing happens to anybody&rsquo;s account until it has.
+            </p>
+            {c.recommendation && (
+              <p className="mt-2 text-sm" data-court-recommendation>
+                <strong>The judge recommends:</strong> {RECOMMEND_WORDS[c.recommendation]}
+                {c.recommendation_note ? ` -- ${c.recommendation_note}` : ''}
+              </p>
             )}
           </div>
-
-          {c.may_decide && (
-            <LeaveToAnswer people={full.people} busy={busy}
-              grant={(person, name, hours) => void act('Giving leave', () => courtGrantLeave(c.id, person, hours),
-                `${name} may now sign in and answer this case, and nothing else. Tell them yourself; they are told in the app too.`)}
-              end={(person, name) => void act('Ending it', () => courtEndLeave(c.id, person),
-                `${name} can no longer sign in.`)} />
-          )}
-
-          {c.may_decide && (c.may_step_down === undefined ? (
-            // A database with the court room but not its newest update: the
-            // judge decided there, which the Church Board now does.
-            <p className="ct-finding ct-finding-bad mt-3" data-court-needs-update>
-              Ending a hearing waits for your church&rsquo;s database to have its newest update, so the Church Board can give the final ruling.
+        )}
+        {c.status === 'closed' && c.ruling_words && (
+          <div className="ct-desk" data-court-ruling>
+            <h3 className="ct-section-title">The ruling of the Church Board</h3>
+            <p className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>{VERDICT_WORDS[c.verdict ?? ''] ?? c.verdict}</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm">{c.ruling_words}</p>
+            <p className="ct-hint mt-2">
+              Presented {c.ruling_presented_on ? new Date(`${c.ruling_presented_on}T12:00:00`).toLocaleDateString(undefined, { dateStyle: 'medium' }) : ''}
+              {c.ruling_presented_by ? ` by ${c.ruling_presented_by}` : ''}. Written down by {c.ruling_recorded_name ?? 'Someone'}.
             </p>
-          ) : (
-            <HearingDesk
-              busy={busy}
-              subject={c.subject_name}
-              subjectSuspended={Boolean(c.subject_suspended)}
-              subjectDeleted={Boolean(c.subject_deleted)}
-              close={(recommendation, note) => void act('Ending the hearing', () => courtCloseHearing(c.id, recommendation, note),
-                'The hearing has ended and its record is sealed. The Church Board gives the final ruling.')}
-              stepDown={(why) => void act('Stepping down', () => courtStepDown(c.id, why),
-                'You have stepped down. Another judge has been drawn, or the seat waits until one is free.')}
+          </div>
+        )}
+      </div>
+
+      <div ref={tabsRef} className="ct-tabs compact-ui" role="tablist" aria-label="This case">
+        {tabs.map((t) => (
+          <button key={t.key} type="button" role="tab" className="ct-tab" aria-selected={active === t.key}
+                  aria-controls={`ct-${c.id}-${t.key}`} onClick={() => show(t.key)} data-court-tab={t.key}>
+            {t.label}
+            {t.count !== undefined && <span className="ct-count">{t.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="ct-cols">
+        <div className="ct-col">
+          {panel('record', (
+            <div className="ct-record" data-court-record>
+              <h3 className="ct-section-title">The record &middot; what was said</h3>
+              {full.statements.length === 0 ? (
+                <p className="text-sm text-[#4a4f63]">Nobody has spoken yet.</p>
+              ) : (
+                <ol className="ct-entries">
+                  {full.statements.map((s, i) => (
+                    <li key={s.id} className="ct-entry">
+                      <span className="ct-entry-n" aria-hidden>{i + 1}</span>
+                      <span className="ct-entry-who">
+                        {s.for_name ? `${s.for_name}, written down by ${s.author_id === me.id ? 'you' : s.author_name}` : s.author_id === me.id ? 'You' : s.author_name}
+                      </span>{' '}
+                      <span className="ct-entry-when">{when(s.at)}</span>
+                      <p className="ct-entry-body">{s.body}</p>
+                      {advanced && <span className="ct-print">SHA-256 {shortFingerprint(s.sha256)}</span>}
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              {c.may_speak && (
+                <div className="ct-stand">
+                  <label className="block">
+                    <span className="text-sm font-semibold">
+                      {c.my_place === 'judge' ? 'Speak from the bench' : c.my_place === 'opener' ? 'Present the case' : 'Say your piece'}
+                    </span>
+                    <textarea
+                      data-court-say
+                      rows={3}
+                      value={draft}
+                      maxLength={4000}
+                      onChange={(e) => setDraft(e.target.value)}
+                      placeholder={c.my_place === 'judge' ? 'A question, or what happens next.'
+                        : c.my_place === 'opener' ? 'Why this case was brought, and what the court should look at.'
+                        : 'Tell the court what happened, in your own words.'}
+                    />
+                  </label>
+                  <StandRail className="ct-rail" />
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <Button
+                      variant="gold"
+                      disabled={Boolean(busy) || !draft.trim()}
+                      onClick={() => void act('Adding it', async () => { await courtSay(c.id, draft); setDraft(''); }, 'It is on the record.')}
+                    >
+                      Add to the record
+                    </Button>
+                    {draft.length > 3500 && <span className="ct-hint">{4000 - draft.length} characters left</span>}
+                  </div>
+                </div>
+              )}
+              {!c.may_speak && c.status === 'open' && c.my_place === 'observer' && (
+                <p className="ct-hint mt-3">Watching from the gallery is silent: only the judge and the people called speak here.</p>
+              )}
+            </div>
+          ))}
+
+          {desk && panel('desk', (
+            <div className="grid gap-3">
+              {c.may_decide && (
+                <LeaveToAnswer people={full.people} busy={busy}
+                  grant={(person, name, hours) => void act('Giving leave', () => courtGrantLeave(c.id, person, hours),
+                    `${name} may now sign in and answer this case, and nothing else. Tell them yourself; they are told in the app too.`)}
+                  end={(person, name) => void act('Ending it', () => courtEndLeave(c.id, person),
+                    `${name} can no longer sign in.`)} />
+              )}
+
+              {desk === 'judge' && <JudgeTools full={full} me={me} busy={busy} act={act} />}
+
+              {c.may_decide && (c.may_step_down === undefined ? (
+                // A database with the court room but not its newest update: the
+                // judge decided there, which the Church Board now does.
+                <p className="ct-finding ct-finding-bad" data-court-needs-update>
+                  Ending a hearing waits for your church&rsquo;s database to have its newest update, so the Church Board can give the final ruling.
+                </p>
+              ) : (
+                <HearingDesk
+                  busy={busy}
+                  subject={c.subject_name}
+                  subjectSuspended={Boolean(c.subject_suspended)}
+                  subjectDeleted={Boolean(c.subject_deleted)}
+                  close={(recommendation, note) => void act('Ending the hearing', () => courtCloseHearing(c.id, recommendation, note),
+                    'The hearing has ended and its record is sealed. The Church Board gives the final ruling.')}
+                  stepDown={(why) => void act('Stepping down', () => courtStepDown(c.id, why),
+                    'You have stepped down. Another judge has been drawn, or the seat waits until one is free.')}
+                />
+              ))}
+
+              {c.may_record_ruling && (
+                <BoardRuling
+                  busy={busy}
+                  subject={c.subject_name}
+                  subjectDeleted={Boolean(c.subject_deleted)}
+                  record={(args) => void act('Writing it down', () => courtRecordRuling({ trialId: c.id, ...args }),
+                    args.carryOut ? 'The Church Board\'s ruling is on the record, and it has been carried out.' : 'The Church Board\'s ruling is on the record.')}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="ct-col">
+          {panel('exhibits', (
+            <ClerksTable
+              trialId={c.id}
+              exhibits={full.exhibits}
+              mayPresent={c.may_present}
+              onBench={bench}
+              advanced={advanced}
+              onChanged={async () => { await load(); await onChanged(); }}
             />
           ))}
 
-          {c.status === 'with_board' && (
-            <div className="ct-desk mt-3" data-court-with-board>
-              <h3 className="ct-section-title">With the Church Board</h3>
-              <p className="ct-hint">
-                The hearing ended {c.heard_at ? when(c.heard_at) : ''}. The Church Board gives the final ruling, outside the court room;
-                nothing happens to anybody&rsquo;s account until it has.
-              </p>
-              {c.recommendation && (
-                <p className="mt-2 text-sm" data-court-recommendation>
-                  <strong>The judge recommends:</strong> {RECOMMEND_WORDS[c.recommendation]}
-                  {c.recommendation_note ? ` -- ${c.recommendation_note}` : ''}
-                </p>
+          {panel('tools', (
+            <div className="ct-desk" data-court-tools>
+              <h3 className="ct-section-title">Tools</h3>
+              <div className="ct-tool">
+                <p className="ct-tool-title">Does the record hold?</p>
+                <p className="ct-hint mb-2">Checks every entry, statement and exhibit against the fingerprint it was given.</p>
+                <Button variant="ghost" disabled={Boolean(busy)} onClick={() => void checkRecord()}>Check the record</Button>
+                {check && (
+                  <p className={`ct-finding ${check.holds && check.seal_holds ? 'ct-finding-good' : 'ct-finding-bad'}`} data-court-check={check.holds ? 'holds' : 'broken'}>
+                    {check.holds && check.seal_holds
+                      ? `It holds: ${check.entries} entries, each chained to the one before, and every statement and exhibit still matches its fingerprint.`
+                      : `It does not hold${check.broken_at ? `: the chain breaks at entry ${check.broken_at}` : ''}${check.statements_differing ? `; ${check.statements_differing} statement(s) changed` : ''}${check.exhibits_differing ? `; ${check.exhibits_differing} exhibit(s) changed` : ''}. Tell whoever looks after your church’s database.`}
+                  </p>
+                )}
+                {chain && (
+                  <p className={`ct-finding ${chain.holds ? 'ct-finding-good' : 'ct-finding-bad'}`}>
+                    {chain.holds
+                      ? `Checked again on this device, without trusting the server: ${chain.entries} entries hold.`
+                      : `On this device, the chain breaks at entry ${chain.brokenAt}.`}
+                  </p>
+                )}
+              </div>
+              <div className="ct-tool">
+                <p className="ct-tool-title">Keep a copy</p>
+                <p className="ct-hint mb-2">A plain text file with every fingerprint, and how to check them. Saving it is written on the record.</p>
+                <Button variant="ghost" disabled={Boolean(busy)} onClick={() => void saveCopy()}>Save a copy of the record</Button>
+              </div>
+              {advanced ? (
+                <ForensicTools full={full} />
+              ) : onAdvanced && (
+                <div className="ct-tool">
+                  <p className="ct-hint">
+                    Comparing a file with the exhibits, checking how the judge was drawn and the chain of custody are
+                    under Advanced settings.
+                  </p>
+                  <button type="button" className="ct-plain-button mt-1" onClick={() => onAdvanced(true)}>
+                    Turn on Advanced settings
+                  </button>
+                </div>
               )}
             </div>
-          )}
-
-          {c.may_record_ruling && (
-            <BoardRuling
-              busy={busy}
-              subject={c.subject_name}
-              subjectDeleted={Boolean(c.subject_deleted)}
-              record={(args) => void act('Writing it down', () => courtRecordRuling({ trialId: c.id, ...args }),
-                args.carryOut ? 'The Church Board\'s ruling is on the record, and it has been carried out.' : 'The Church Board\'s ruling is on the record.')}
-            />
-          )}
-
-          {c.status === 'closed' && c.ruling_words && (
-            <div className="ct-desk mt-3" data-court-ruling>
-              <h3 className="ct-section-title">The ruling of the Church Board</h3>
-              <p className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>{VERDICT_WORDS[c.verdict ?? ''] ?? c.verdict}</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm">{c.ruling_words}</p>
-              <p className="ct-hint mt-2">
-                Presented {c.ruling_presented_on ? new Date(`${c.ruling_presented_on}T12:00:00`).toLocaleDateString(undefined, { dateStyle: 'medium' }) : ''}
-                {c.ruling_presented_by ? ` by ${c.ruling_presented_by}` : ''}. Written down by {c.ruling_recorded_name ?? 'Someone'}.
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="grid gap-3">
-          <ClerksTable
-            trialId={c.id}
-            exhibits={full.exhibits}
-            mayPresent={c.may_present}
-            onBench={bench}
-            advanced={advanced}
-            onChanged={async () => { await load(); await onChanged(); }}
-          />
-
-          {bench && (
-            <div className="ct-gallery" data-court-gallery>
-              <h3 className="ct-section-title">The gallery &middot; {watching.length} watching</h3>
-              <GalleryChairs taken={watching.length} className="ct-chairs" />
-              <p className="ct-names">
-                {watching.length ? watching.map((p) => (p.id === me.id ? 'you' : p.name)).join(', ') : 'Nobody is watching.'}
-              </p>
-              <p className="ct-names">Called: {called.map((p) => `${p.name} (${p.part === 'accused' ? 'the case is about them' : p.part === 'reporter' ? 'raised it' : 'witness'}${p.suspended ? ', suspended' : ''})`).join(', ') || 'nobody'}</p>
-            </div>
-          )}
-
-          <div className="ct-desk">
-            <h3 className="ct-section-title">Does the record hold?</h3>
-            <Button variant="ghost" disabled={Boolean(busy)} onClick={() => void checkRecord()}>Check the record</Button>
-            {check && (
-              <p className={`ct-finding ${check.holds && check.seal_holds ? 'ct-finding-good' : 'ct-finding-bad'}`} data-court-check={check.holds ? 'holds' : 'broken'}>
-                {check.holds && check.seal_holds
-                  ? `It holds: ${check.entries} entries, each chained to the one before, and every statement and exhibit still matches its fingerprint.`
-                  : `It does not hold${check.broken_at ? `: the chain breaks at entry ${check.broken_at}` : ''}${check.statements_differing ? `; ${check.statements_differing} statement(s) changed` : ''}${check.exhibits_differing ? `; ${check.exhibits_differing} exhibit(s) changed` : ''}. Tell whoever looks after your church’s database.`}
-              </p>
-            )}
-            {chain && (
-              <p className={`ct-finding ${chain.holds ? 'ct-finding-good' : 'ct-finding-bad'}`}>
-                {chain.holds
-                  ? `Checked again on this device, without trusting the server: ${chain.entries} entries hold.`
-                  : `On this device, the chain breaks at entry ${chain.brokenAt}.`}
-              </p>
-            )}
-          </div>
-
-          {advanced && (
-            <AdvancedTools
-              full={full}
-              me={me}
-              busy={busy}
-              act={act}
-              saveCopy={() => void saveCopy()}
-            />
-          )}
+          ))}
         </div>
       </div>
 
       {(error || notice) && (
-        <div className="bg-[#f4ecdc] px-3 pb-3">
-          {error && <p className="ct-finding ct-finding-bad" role="alert">{error}</p>}
-          {notice && <p className="ct-finding ct-finding-good" role="status">{notice}</p>}
+        <div className="ct-toast compact-ui" role={error ? 'alert' : 'status'} data-court-toast={error ? 'bad' : 'good'}>
+          <span>{error || notice}</span>
+          <button type="button" className="ct-toast-x" aria-label="Dismiss" onClick={() => { setError(''); setNotice(''); }}>
+            <CloseGlyph size={18} />
+          </button>
         </div>
       )}
     </section>
@@ -647,41 +725,46 @@ function LeaveToAnswer({ people, busy, grant, end }: {
   );
 }
 
-// ---------------------------------------------------- advanced settings ----
+// ------------------------------------------------- the judge's tools ----
 
-function AdvancedTools({ full, me, busy, act, saveCopy }: {
+/**
+ * For the judge while the hearing is in session: the lesser tools, each folded
+ * until it is wanted, so the desk reads as one decision with help beside it.
+ */
+function JudgeTools({ full, me, busy, act }: {
   full: CourtCaseFull;
   me: Profile;
   busy: string;
   act: (label: string, fn: () => Promise<string | void>, done: string) => Promise<void>;
-  saveCopy: () => void;
 }) {
   const c = full.case;
-  const judge = c.my_place === 'judge';
   const [members, setMembers] = useState<Profile[] | null>(null);
   const [witness, setWitness] = useState('');
   const [forWho, setForWho] = useState('');
   const [theirWords, setTheirWords] = useState('');
-  const [showChain, setShowChain] = useState(false);
 
   useEffect(() => {
-    if (!judge || c.status !== 'open') return;
     live.listMembers()
       .then((rows) => setMembers(rows.filter((p) => p.id !== me.id && p.is_approved
         && !full.people.some((x) => x.id === p.id))))
       .catch(() => setMembers([]));
-  }, [judge, c.status, me.id, full.people]);
+  }, [me.id, full.people]);
 
   const callable = full.people.filter((p) => p.part !== 'observer' && !p.deleted);
+  const more = (title: string, body: React.ReactNode, mark?: string) => (
+    <details className="ct-more" data-court-more={mark}>
+      <summary>{title}<ChevronGlyph size={18} className="ct-more-chev" /></summary>
+      <div className="ct-more-body">{body}</div>
+    </details>
+  );
 
   return (
     <div className="ct-desk" data-court-advanced>
-      <h3 className="ct-section-title">Advanced settings</h3>
-
-      {judge && c.status === 'open' && (
+      <h3 className="ct-section-title">The judge&rsquo;s tools</h3>
+      {more('Call a witness', (
         <>
-          <label className="ct-field">
-            <span>Call a witness</span>
+          <label className="ct-field !mt-0">
+            <span className="sr-only">Who to call</span>
             <select value={witness} onChange={(e) => setWitness(e.target.value)}>
               <option value="">Choose somebody from the church</option>
               {(members ?? []).map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.suspended_at ? ' (suspended)' : ''}</option>)}
@@ -693,9 +776,13 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
               Call them
             </Button>
           </div>
+        </>
+      ), 'witness')}
 
-          <label className="ct-field">
-            <span>Write down what somebody said</span>
+      {more('Write down what somebody said', (
+        <>
+          <label className="ct-field !mt-0">
+            <span className="sr-only">Who said it</span>
             <select value={forWho} onChange={(e) => setForWho(e.target.value)}>
               <option value="">Who said it</option>
               {callable.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -713,41 +800,51 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
               Put it on the record
             </Button>
           </div>
-
-          <label className="mt-4 flex items-start gap-2 text-sm">
-            <input type="checkbox" className="mt-1" checked={!c.gallery_open} disabled={Boolean(busy)}
-                   onChange={(e) => void act('Changing it', () => courtGallery(c.id, !e.target.checked),
-                     e.target.checked ? 'Heard in private from now on: nobody new may watch.' : 'Leadership may watch again.')} />
-            <span><strong>Hear it in private.</strong> Nobody new may take a seat in the gallery. Those already there stay, on the record.</span>
-          </label>
-
-          {me.role === 'admin' && c.escalation !== 'accepted' && (
-            <div className="mt-4">
-              <Button variant="ghost" disabled={Boolean(busy) || c.escalation === 'requested'}
-                      onClick={() => void act('Asking', () => courtCallJudge(c.id), 'An Executive Director has been asked. You stay the judge until one takes the seat.')}>
-                {c.escalation === 'requested' ? 'An Executive Director has been asked' : 'Ask an Executive Director to judge this'}
-              </Button>
-              <p className="ct-hint">You keep the seat until one answers. If none does, you go on hearing it.</p>
-            </div>
-          )}
         </>
-      )}
+      ), 'record-for')}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="ghost" disabled={Boolean(busy)} onClick={saveCopy}>Save a copy of the record</Button>
-      </div>
-      <p className="ct-hint">A plain text file with every fingerprint, and how to check them. Saving it is written on the record.</p>
+      {more('Hear it in private', (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" checked={!c.gallery_open} disabled={Boolean(busy)}
+                 onChange={(e) => void act('Changing it', () => courtGallery(c.id, !e.target.checked),
+                   e.target.checked ? 'Heard in private from now on: nobody new may watch.' : 'Leadership may watch again.')} />
+          <span>Nobody new may take a seat in the gallery. Those already there stay, on the record.</span>
+        </label>
+      ), 'private')}
 
-      <div className="mt-3">
+      {me.role === 'admin' && c.escalation !== 'accepted' && more('Ask an Executive Director to judge this', (
+        <>
+          <Button variant="ghost" disabled={Boolean(busy) || c.escalation === 'requested'}
+                  onClick={() => void act('Asking', () => courtCallJudge(c.id), 'An Executive Director has been asked. You stay the judge until one takes the seat.')}>
+            {c.escalation === 'requested' ? 'An Executive Director has been asked' : 'Ask an Executive Director'}
+          </Button>
+          <p className="ct-hint">You keep the seat until one answers. If none does, you go on hearing it.</p>
+        </>
+      ), 'escalate')}
+    </div>
+  );
+}
+
+// ------------------------------------------- tools for checking evidence ----
+
+/** Under Advanced settings: compare a file, check the judge's draw, read the chain of custody. */
+function ForensicTools({ full }: { full: CourtCaseFull }) {
+  const c = full.case;
+  const [showChain, setShowChain] = useState(false);
+  return (
+    <>
+      <div className="ct-tool">
         <SameFileCheck exhibits={full.exhibits} />
       </div>
 
       {full.record && full.record.some((r) => r.act === 'judge_drawn') && (
-        <DrawCheckPanel trialId={c.id} entries={full.record.filter((r) => r.act === 'judge_drawn')} />
+        <div className="ct-tool">
+          <DrawCheckPanel trialId={c.id} entries={full.record.filter((r) => r.act === 'judge_drawn')} />
+        </div>
       )}
 
       {full.record && (
-        <div className="mt-4">
+        <div className="ct-tool">
           <button type="button" className="ct-plain-button" onClick={() => setShowChain(!showChain)}>
             {showChain ? 'Hide' : 'Show'} the chain of custody ({full.record.length} entries)
           </button>
@@ -765,7 +862,7 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
 

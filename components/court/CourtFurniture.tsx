@@ -48,31 +48,6 @@ export function Gavel({ className = '' }: { className?: string }) {
   );
 }
 
-/**
- * The gallery: a row of chairs, the taken ones in gold. Eight drawn however
- * many are filled, because an empty seat is the point: a hearing one person is
- * watching should look like it.
- */
-export function GalleryChairs({ taken, className = '' }: { taken: number; className?: string }) {
-  const seats = Array.from({ length: 8 }, (_, i) => i < taken);
-  return (
-    <svg viewBox="0 0 176 30" className={`ct-furniture ${className}`} aria-hidden="true" focusable="false">
-      {seats.map((on, i) => {
-        const x = 4 + i * 21.5;
-        const wood = on ? '#e8b84b' : '#7a5235';
-        return (
-          <g key={i}>
-            <rect x={x} y="2" width="16" height="13" rx="2.5" fill={wood} opacity={on ? 1 : 0.55} />
-            <rect x={x - 1} y="15" width="18" height="4" rx="1.5" fill={wood} opacity={on ? 1 : 0.7} />
-            <rect x={x + 1} y="19" width="2.5" height="9" fill={wood} opacity={on ? 1 : 0.7} />
-            <rect x={x + 12.5} y="19" width="2.5" height="9" fill={wood} opacity={on ? 1 : 0.7} />
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
 /** An exhibit tag on its string, with the letter written on it. */
 export function ExhibitTag({ label, className = '' }: { label: string; className?: string }) {
   return (

@@ -37,13 +37,16 @@ import type { Role } from '@/lib/types';
 // turn both into a refusal for the person the case is actually about.
 const ALL: Role[] = ['executive', 'admin', 'dm', 'ds'];
 
-function Heading() {
+function Heading({ role }: { role?: Role }) {
+  const leads = role === 'admin' || role === 'executive';
   return (
     <div>
       <h1 className="text-3xl font-extrabold text-room">⚖️ Admin Reports</h1>
 
       <p className="mt-1 text-room-soft">
-        Any case you have been called to. Say what happened in your own words.
+        {leads
+          ? 'The cases of your church: open one, hear it, and keep its record.'
+          : 'Any case you have been called to. Say what happened in your own words.'}
       </p>
     </div>
   );
@@ -73,7 +76,7 @@ function Live() {
   if (!profile) return null;
   return (
     <div className="space-y-5">
-      <Heading />
+      <Heading role={profile.role} />
       {/* THE COURT ROOM, OR THE ROOM IT REPLACES. components/court/CourtRoom.tsx
           asks the database for the court room's door; a database that has not
           had 20261020160000_the_court_room yet gets the Hall of Justice and the

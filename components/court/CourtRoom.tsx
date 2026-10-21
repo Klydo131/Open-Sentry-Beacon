@@ -23,6 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Card } from '@/components/ui';
+import { ChevronGlyph, ChevronLeftGlyph, SearchGlyph } from '@/components/Glyph';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { LiveCourt } from '@/components/LiveTrialRoom';
 import { LiveHallOfJustice } from '@/components/LiveHallOfJustice';
@@ -70,6 +71,9 @@ export function LiveCourtRoom({ me, emptyState }: { me: Profile; emptyState: Rea
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
   const [tick, setTick] = useState(0);
+  const [shelf, setShelf] = useState<'now' | 'earlier'>('now');
+  const [find, setFind] = useState('');
+  const roomRef = useRef<HTMLDivElement | null>(null);
   // Read inside loadCases, so a live change cannot ask a database without the
   // court room for its cases before anybody knows which database this is.
   const editionRef = useRef<'court' | 'cases' | null>(null);
@@ -127,9 +131,15 @@ export function LiveCourtRoom({ me, emptyState }: { me: Profile; emptyState: Rea
     try { window.localStorage.setItem(ADVANCED_KEY, on ? 'on' : 'off'); } catch { /* per device only */ }
   };
 
+  // One thing at a time: choosing a case puts it where the list was, and the
+  // top of the room back in view; "All cases" brings the list back.
   const choose = (id: string) => {
     setSelected(id);
     writeCaseParam(id);
+    window.requestAnimationFrame(() => {
+      const top = roomRef.current?.getBoundingClientRect().top ?? 0;
+      if (top < 0) roomRef.current?.scrollIntoView({ block: 'start' });
+    });
   };
 
   // ----------------------------------------------------------------- drawing --
@@ -194,24 +204,77 @@ export function LiveCourtRoom({ me, emptyState }: { me: Profile; emptyState: Rea
     }
   };
 
+  const selectedCase = selected ? (cases ?? []).find((c) => c.id === selected && c.my_place) : undefined;
+
+  // THE TWO SHELVES. Now: the cases still going, yours and the hearings you
+  // may watch. Earlier: everything that has ended. A closed case used to sit
+  // among "hearings you may watch", where nobody could watch it.
+  // A case ruled this week stays on Now: somebody told "the Church Board has
+  // ruled" opens this page to read it, and must not have to know to look
+  // under Earlier.
+  const lately = (c: CourtCaseRow) => c.status === 'closed' && Boolean(c.closed_at)
+    && Date.now() - new Date(c.closed_at ?? 0).getTime() < RULED_LATELY_MS;
+  const nowMine = mine.filter((c) => c.status !== 'closed');
+  const ruledLately = mine.filter(lately);
+  const nowWatch = leads ? watchable.filter((c) => c.status === 'open') : [];
+  const earlierMine = mine.filter((c) => c.status === 'closed' && !lately(c));
+  const earlierOther = leads ? watchable.filter((c) => c.status !== 'open') : [];
+  const nowCount = nowMine.length + ruledLately.length + nowWatch.length;
+  const earlierCount = earlierMine.length + earlierOther.length;
+  const shelfSize = shelf === 'now' ? nowCount : earlierCount;
+  const needle = find.trim().toLowerCase();
+  const found = (c: CourtCaseRow) => !needle
+    || `${c.subject_name}\n${c.summary}\n${c.judge_name}\n${c.opener_name}`.toLowerCase().includes(needle);
+
   return (
-    <div className="ct-room space-y-4" data-court-room>
-      <div className="ct-wall">
-        <div className="ct-wall-head">
-          <Seal className="ct-seal" />
-          <div className="min-w-0 flex-1">
-            <h2 className="ct-wall-title">The court room</h2>
-            <p>The door stays open for {minutesLeft(door.until)} more minutes. Everything read or added here is on the record.</p>
-          </div>
+    <div ref={roomRef} className="ct-room space-y-3" data-court-room>
+      <header className="ct-top">
+        <Seal className="ct-seal" />
+        <div className="ct-top-words">
+          <h2 className="ct-top-title">The court room</h2>
+          <p className="ct-top-door" data-court-door-time>
+            <span className="ct-door-dot" aria-hidden />
+            Door open for {minutesLeft(door.until)} more minutes. Everything here is on the record.
+          </p>
         </div>
-        <div className="ct-floor !rounded-b-[14px]" style={{ gridTemplateColumns: '1fr' }}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-sm font-semibold text-[#1b2442]">
-              <input type="checkbox" checked={advanced} onChange={(e) => toggleAdvanced(e.target.checked)} data-court-advanced-toggle />
-              Advanced settings
-            </label>
+        <label className="ct-switch">
+          <input type="checkbox" role="switch" checked={advanced} onChange={(e) => toggleAdvanced(e.target.checked)} data-court-advanced-toggle />
+          <span>Advanced settings</span>
+        </label>
+      </header>
+
+      {error && <p className="ct-finding ct-finding-bad" role="alert">{error}</p>}
+
+      {selectedCase ? (
+        <>
+          <div className="ct-casebar">
+            <button type="button" className="ct-back" onClick={() => choose('')} data-court-back>
+              <ChevronLeftGlyph size={20} /> All cases
+            </button>
+          </div>
+          <Hearing
+            id={selectedCase.id}
+            me={me}
+            advanced={advanced}
+            onAdvanced={toggleAdvanced}
+            onLocked={lock}
+            onChanged={loadCases}
+          />
+        </>
+      ) : (
+        <div className="ct-list" data-court-list>
+          <div className="ct-listbar">
+            <div className="ct-shelves" role="tablist" aria-label="Which cases">
+              {(['now', 'earlier'] as const).map((k) => (
+                <button key={k} type="button" role="tab" className="ct-shelf" aria-selected={shelf === k}
+                        onClick={() => setShelf(k)} data-court-shelf={k}>
+                  {k === 'now' ? 'Now' : 'Earlier'}
+                  <span className="ct-count">{k === 'now' ? nowCount : earlierCount}</span>
+                </button>
+              ))}
+            </div>
             {leads && (
-              <Button variant="gold" onClick={() => setOpenFor(openFor ? '' : 'choose')}>
+              <Button variant={openFor ? 'ghost' : 'gold'} onClick={() => setOpenFor(openFor ? '' : 'choose')}>
                 {openFor ? 'Cancel' : 'Open a case'}
               </Button>
             )}
@@ -221,53 +284,69 @@ export function LiveCourtRoom({ me, emptyState }: { me: Profile; emptyState: Rea
             <OpenCase
               me={me}
               preselected={openFor === 'choose' ? '' : openFor}
-              onOpened={async (id) => { setOpenFor(''); await loadCases(); choose(id); }}
+              onOpened={async (id) => { setOpenFor(''); setShelf('now'); await loadCases(); choose(id); }}
               onLocked={lock}
             />
           )}
 
-          {error && <p className="ct-finding ct-finding-bad" role="alert">{error}</p>}
+          {shelfSize > 5 && (
+            <label className="ct-search">
+              <SearchGlyph size={18} />
+              <span className="sr-only">Find a case</span>
+              <input type="search" value={find} onChange={(e) => setFind(e.target.value)}
+                     placeholder="Find a case: a name, or what it is about" data-court-find />
+            </label>
+          )}
 
           {!cases ? (
             <BeaconSpinner inline label="Reading the docket" />
-          ) : (
+          ) : shelf === 'now' ? (
             <>
-              <div>
-                <h2 className="ct-section-title">The docket &middot; your cases</h2>
-                {mine.length === 0 ? (
-                  leads ? <p className="text-sm text-[#4a4f63]">No case you are in. Open one, or watch a hearing below.</p> : <>{emptyState}</>
-                ) : (
-                  <ul className="ct-docket">
-                    {mine.map((c) => (
-                      <DocketRow key={c.id} c={c} selected={selected === c.id} onOpen={() => choose(selected === c.id ? '' : c.id)} />
-                    ))}
+              {(nowMine.length > 0 || (!leads && ruledLately.length === 0)) && (
+                <CaseGroup title="Your cases">
+                  {nowMine.length === 0 ? (
+                    mine.length === 0 ? <>{emptyState}</> : (
+                      <p className="ct-empty">Nothing open now. Your earlier cases are under Earlier.</p>
+                    )
+                  ) : (
+                    <ul className="ct-cases">
+                      {nowMine.filter(found).map((c) => <CaseRow key={c.id} c={c} onOpen={() => choose(c.id)} />)}
+                    </ul>
+                  )}
+                </CaseGroup>
+              )}
+              {ruledLately.length > 0 && (
+                <CaseGroup title="Ruled this week">
+                  <ul className="ct-cases">
+                    {ruledLately.filter(found).map((c) => <CaseRow key={c.id} c={c} onOpen={() => choose(c.id)} />)}
                   </ul>
-                )}
-              </div>
-
-              {leads && (
-                <div>
-                  <h2 className="ct-section-title">Hearings you may watch</h2>
+                </CaseGroup>
+              )}
+              {leads && !openFor && nowCount === 0 && (
+                <p className="ct-empty">No case is open. Open one, or look under Earlier.</p>
+              )}
+              {nowWatch.length > 0 && (
+                <CaseGroup title="Hearings you may watch">
                   <p className="ct-hint mb-2">
                     Watching is a recorded seat in the gallery, with no voice. A case about you, or about another
                     Director, is not here: those are heard by Executive Directors.
                   </p>
-                  {watchable.length === 0 ? (
-                    <p className="text-sm text-[#4a4f63]">Nothing else is being heard.</p>
-                  ) : (
-                    <ul className="ct-docket">
-                      {watchable.map((c) => (
-                        <li key={c.id} className="ct-docket-row" data-open={c.status === 'open'}>
-                          <span className="min-w-0">
-                            <span className="ct-docket-name block">{c.subject_name}</span>
-                            <span className="block text-sm text-[#4a4f63]">
+                  <ul className="ct-cases">
+                    {nowWatch.filter(found).map((c) => (
+                      <li key={c.id} className="ct-case" data-status={c.status} data-court-watch={c.id}>
+                        <div className="ct-case-still">
+                          <span className="ct-case-body">
+                            <span className="ct-case-top">
+                              <span className="ct-case-name">{c.subject_name}</span>
+                              <span className="ct-status" data-status={c.status}>{standing(c)}</span>
+                            </span>
+                            <span className="ct-case-meta">
                               {c.subject_role ? `${roleNoun(c.subject_role as Profile['role'])} · ` : ''}
-                              {standing(c)} · Judge: {c.judge_name}
-                              {c.watching ? ` · ${c.watching} watching` : ''}
+                              Judge: {c.judge_name}{c.watching ? ` · ${c.watching} watching` : ''}
                             </span>
                           </span>
-                          <span className="flex flex-wrap gap-2">
-                            {me.role === 'executive' && c.escalation === 'requested' && c.status === 'open' && (
+                          <span className="ct-case-actions">
+                            {me.role === 'executive' && c.escalation === 'requested' && (
                               <Button variant="gold" disabled={busy === c.id} onClick={() => void takeSeat(c.id)}>
                                 Take the seat as judge
                               </Button>
@@ -277,56 +356,110 @@ export function LiveCourtRoom({ me, emptyState }: { me: Profile; emptyState: Rea
                                 {busy === c.id ? 'Taking a seat' : 'Watch from the gallery'}
                               </Button>
                             ) : (
-                              <span className="text-sm text-[#4a4f63]">{c.gallery_open ? 'Closed' : 'Heard in private'}</span>
+                              <span className="text-sm text-[#4a4f63]">Heard in private</span>
                             )}
                           </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CaseGroup>
+              )}
+            </>
+          ) : (
+            <>
+              {earlierMine.length + earlierOther.length === 0 && <p className="ct-empty">Nothing has ended yet.</p>}
+              {earlierMine.length > 0 && (
+                <CaseGroup title="Your earlier cases">
+                  <ul className="ct-cases ct-cases-earlier">
+                    {earlierMine.filter(found).map((c) => <CaseRow key={c.id} c={c} onOpen={() => choose(c.id)} />)}
+                  </ul>
+                </CaseGroup>
+              )}
+              {earlierOther.length > 0 && (
+                <CaseGroup title="Other cases in the church">
+                  <ul className="ct-cases ct-cases-earlier">
+                    {earlierOther.filter(found).map((c) => (
+                      <li key={c.id} className="ct-case" data-status={c.status}>
+                        <div className="ct-case-still">
+                          <span className="ct-case-body">
+                            <span className="ct-case-top">
+                              <span className="ct-case-name">{c.subject_name}</span>
+                              <span className="ct-status" data-status={c.status}>{standing(c)}</span>
+                            </span>
+                            <span className="ct-case-meta">Judge: {c.judge_name} · {ago(c.touched_at)}</span>
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CaseGroup>
               )}
             </>
           )}
+          {needle && shelfSize > 0 && !(shelf === 'now' ? [...nowMine, ...ruledLately, ...nowWatch] : [...earlierMine, ...earlierOther]).some(found) && (
+            <p className="ct-empty">No case matches &ldquo;{find.trim()}&rdquo;.</p>
+          )}
         </div>
-      </div>
-
-      {selected && cases && cases.some((c) => c.id === selected && c.my_place) && (
-        <Hearing
-          id={selected}
-          me={me}
-          advanced={advanced}
-          onLocked={lock}
-          onChanged={loadCases}
-        />
       )}
     </div>
   );
 }
 
+const RULED_LATELY_MS = 7 * 86_400_000;
+
 const VERDICT_SHORT: Record<string, string> = {
   dismissed: 'Dismissed', counselled: 'Counselled', suspended: 'Suspended', removed: 'Removed',
 };
 
-/** Where a case stands, in a few words for the docket. */
+/** Where a case stands, in a few words for the list. */
 function standing(c: CourtCaseRow): string {
   if (c.status === 'open') return 'In session';
-  if (c.status === 'with_board') return 'Heard, with the Church Board';
+  if (c.status === 'with_board') return 'With the Church Board';
   return `Ruled: ${VERDICT_SHORT[c.verdict ?? ''] ?? c.verdict ?? ''}`;
 }
 
-function DocketRow({ c, selected, onOpen }: { c: CourtCaseRow; selected: boolean; onOpen: () => void }) {
+const PLACE_SHORT: Record<string, string> = {
+  judge: 'You judge it', opener: 'You brought it', accused: 'It is about you',
+  reporter: 'You raised it', witness: 'You are a witness', observer: 'You are watching',
+};
+
+/** When something last happened in it, as people say it. */
+function ago(iso: string): string {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (!Number.isFinite(s)) return '';
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86_400) { const h = Math.floor(s / 3600); return `${h} hour${h === 1 ? '' : 's'} ago`; }
+  return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' });
+}
+
+function CaseGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <li className="ct-docket-row" data-open={c.status === 'open'} data-selected={selected} data-court-case={c.id}>
-      <span className="min-w-0">
-        <span className="ct-docket-name block">{c.subject_name}</span>
-        <span className="block text-sm text-[#4a4f63]">
-          {standing(c)} · Judge: {c.judge_name} · {c.statements} said · {c.exhibits} exhibit{c.exhibits === 1 ? '' : 's'}
+    <section>
+      <h3 className="ct-group-title">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+/** One of your cases: the whole row opens it. */
+function CaseRow({ c, onOpen }: { c: CourtCaseRow; onOpen: () => void }) {
+  return (
+    <li className="ct-case" data-status={c.status} data-court-case={c.id}>
+      <button type="button" className="ct-case-open" onClick={onOpen} aria-label={`Open the case about ${c.subject_name}`}>
+        <span className="ct-case-body">
+          <span className="ct-case-top">
+            <span className="ct-case-name">{c.subject_name}</span>
+            <span className="ct-status" data-status={c.status}>{standing(c)}</span>
+          </span>
+          {c.summary && <span className="ct-case-summary">{c.summary}</span>}
+          <span className="ct-case-meta">
+            {PLACE_SHORT[c.my_place ?? ''] ?? ''} · Judge: {c.judge_name} · {c.statements} said · {c.exhibits} exhibit{c.exhibits === 1 ? '' : 's'} · {ago(c.touched_at)}
+          </span>
         </span>
-      </span>
-      {/* "Hide", not "Close": closing a case is the judge's decision, and the
-          same word on a button that only folds it away would read as one. */}
-      <Button variant={selected ? 'gold' : 'ghost'} onClick={onOpen}>{selected ? 'Hide the case' : 'Open the case'}</Button>
+        <ChevronGlyph size={22} className="ct-case-go" />
+      </button>
     </li>
   );
 }

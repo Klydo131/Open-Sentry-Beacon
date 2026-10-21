@@ -263,6 +263,21 @@ Each line is chained to the one before it, so a line that was changed or
 removed afterwards would show. Anybody in the trial can ask the app to check
 the record, and save a copy of it to keep.
 
+### Finding your way
+
+Admin Reports keeps your cases on two shelves. **Now** has what is still going
+on, and anything the Church Board ruled this week; **Earlier** has the rest,
+with a search once there are more than a few. Tap a case to open it, and
+**All cases** to go back to the list.
+
+A case has four tabs on a phone, a tablet, or a computer where the case has
+little room: **Record** (what was said, and where you say your piece),
+**Exhibits**, the judge's **Desk** (or, once the hearing has ended, the Church
+Board's **Ruling**, for whoever writes it down), and **Tools** (check the
+record, keep a copy). On a wide screen they sit side by side. When you do
+something, the app says what happened just above the bar at the bottom of the
+screen.
+
 ### The room
 
 A trial in session is drawn as a court room with everybody in it as a figure in
@@ -270,7 +285,7 @@ their place: the judge at the bench, the person it is about and the person who
 raised it at their stands, the leader who brought it at their table, witnesses
 in the box. Whoever has the trial open right now is lit up; whoever does not is
 shown as away. When somebody speaks, the start of what they said appears over
-their figure for a few minutes; all of it is in the record below. The figures
+their figure for a few minutes; all of it is in the record. The figures
 are made from nothing but each account's number: no photo is used and nothing
 about them is stored. If your phone or computer is set to reduce motion, they
 stand still.

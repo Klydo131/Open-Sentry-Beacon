@@ -29,30 +29,6 @@
 
 /* ---- The wall and the bench ------------------------------------------- */
 
-.ct-wall {
-  border-radius: 18px;
-  overflow: hidden;
-  background:
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 64px),
-    linear-gradient(180deg, #6e4a2e 0%, #5a3b24 100%);
-  padding: 14px 14px 0;
-  box-shadow: 0 18px 40px -26px rgba(40, 20, 5, 0.65);
-}
-.ct-wall-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #fbf3df;
-  padding: 2px 4px 12px;
-}
-.ct-wall-head .ct-wall-title {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.15;
-  margin: 0;
-}
-.ct-wall-head p { margin: 2px 0 0; font-size: 0.875rem; color: #f0dfbd; }
 .ct-seal { width: 52px; height: 52px; flex: none; }
 
 .ct-bench {
@@ -96,22 +72,6 @@
 .ct-chip-decided { background: #f7ecd2; color: #3b2416; }
 .ct-chip-place { background: rgba(255, 255, 255, 0.14); color: #fbf3df; }
 
-/* ---- The floor ---------------------------------------------------------- */
-
-.ct-floor {
-  background: #f4ecdc;
-  border-radius: 0 0 14px 14px;
-  padding: 14px;
-  display: grid;
-  gap: 14px;
-}
-/* Two columns only when THE ROOM is wide, not the window: beside the app's
-   rails and desk, a 1280px window leaves the room about 620px, and a window
-   test split that into a record and a strip too narrow for its own buttons. */
-.ct-wall { container-type: inline-size; }
-@container (min-width: 760px) {
-  .ct-floor { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: start; }
-}
 
 .ct-section-title {
   font-size: 12px;
@@ -216,10 +176,6 @@
   padding: 1px 8px;
 }
 
-/* The gallery. */
-.ct-gallery { background: #efe3c9; border-radius: 10px; padding: 12px; }
-.ct-chairs { width: 100%; max-width: 260px; height: auto; }
-.ct-names { margin: 6px 0 0; font-size: 13px; color: var(--ct-ink-2); }
 
 /* The judge's desk. */
 .ct-desk {
@@ -235,22 +191,6 @@
 .ct-finding-bad { background: #fbe9e7; color: #7a1d12; box-shadow: inset 0 0 0 1px #e6a197; }
 .ct-finding-note { background: #fdf3d8; color: #5c4200; box-shadow: inset 0 0 0 1px #e6cf8e; }
 
-/* The docket: the list of cases. */
-.ct-docket { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.ct-docket-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--ct-paper);
-  border-radius: 10px;
-  padding: 10px 12px;
-  border-left: 5px solid var(--ct-oak);
-}
-.ct-docket-row[data-open='true'] { border-left-color: var(--ct-brass); }
-.ct-docket-row[data-selected='true'] { box-shadow: 0 0 0 2px var(--ct-brass); }
-.ct-docket-name { font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
 
 /* The door. */
 .ct-door {
@@ -542,8 +482,360 @@
 }
 
 /* Asked for less movement: none of it. Last, so it wins. */
+/* ---- Clean and simple, on every screen -----------------------------------
+ *
+ * ASKED FOR on 21 October 2026: "I want the UI to be clean and simple with the
+ * best available tools for all users in the Admin reports room. Make sure
+ * everything is well adapted to all devices, desktop, tab, mobile."
+ *
+ * What that changed, and why:
+ *   * ONE THING AT A TIME. The list of cases, or one case: never a case drawn
+ *     under a list twenty cards long, where on a phone it began 4,000px down.
+ *   * THE LIST HAS TWO SHELVES, Now and Earlier, and a search once there are
+ *     more than a few. A closed case is no longer offered as a hearing to
+ *     watch, where nobody could watch it.
+ *   * A CASE HAS TABS (record, exhibits, the desk, tools) wherever the room is
+ *     narrow: a phone, a pad, and a computer, where the rails leave the room
+ *     about 620px. Where the room is wide it is two columns and the tabs go.
+ *     The narrow layout is the default and the wide one is the container
+ *     query, so a browser without container queries still gets working tabs.
+ *   * WHAT HAPPENED IS SAID WHERE YOU ARE LOOKING: a message pinned above the
+ *     bottom bar, not at the foot of a case three screens down. */
+
+.ct-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #6e4a2e 0%, #5a3b24 100%);
+  border-top: 3px solid var(--ct-brass);
+  color: #fbf3df;
+  padding: 10px 12px;
+}
+.ct-top .ct-seal { width: 40px; height: 40px; }
+.ct-top-words { min-width: 0; flex: 1 1 220px; }
+.ct-top-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+.ct-top-door { margin: 2px 0 0; font-size: 0.8125rem; color: #f0dfbd; display: flex; align-items: center; gap: 6px; }
+.ct-door-dot { width: 8px; height: 8px; border-radius: 999px; background: #3ddc84; flex: none; }
+
+/* A switch, drawn from the checkbox it is: the label is the target. */
+.ct-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ct-switch input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  flex: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+.ct-switch input::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform 150ms ease;
+}
+.ct-switch input:checked { background: var(--ct-brass); }
+.ct-switch input:checked::after { transform: translateX(16px); }
+.ct-switch input:focus-visible { outline: 3px solid var(--ct-brass); outline-offset: 2px; }
+
+/* The list. */
+.ct-list {
+  background: #f4ecdc;
+  border-radius: 16px;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+.ct-listbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.ct-shelves {
+  display: inline-flex;
+  gap: 4px;
+  border-radius: 14px;
+  background: #e8dcc2;
+  padding: 4px;
+}
+.ct-shelf {
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #4a3420;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.ct-shelf[aria-selected='true'] { background: #fffdf6; color: var(--ct-ink); box-shadow: 0 1px 3px rgba(60, 40, 15, 0.25); }
+.ct-shelf:focus-visible, .ct-tab:focus-visible { outline: 3px solid var(--ct-brass); outline-offset: 1px; }
+.ct-count {
+  min-width: 22px;
+  border-radius: 999px;
+  background: rgba(59, 36, 22, 0.12);
+  padding: 1px 7px;
+  font-size: 12px;
+  text-align: center;
+}
+.ct-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #cdbf9f;
+  padding: 0 12px;
+  color: var(--ct-ink-2);
+}
+.ct-search:focus-within { outline: 2px solid var(--ct-brass); outline-offset: 1px; }
+.ct-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 16px;
+  color: var(--ct-ink);
+  outline: none;
+}
+.ct-group-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b4226;
+  margin: 0 0 6px;
+}
+.ct-cases { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+@container (min-width: 900px) {
+  .ct-cases-earlier { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.ct-list { container-type: inline-size; }
+.ct-case {
+  border-radius: 12px;
+  background: var(--ct-paper);
+  border-left: 5px solid var(--ct-oak);
+  box-shadow: 0 1px 2px rgba(60, 40, 15, 0.12);
+}
+.ct-case[data-status='open'] { border-left-color: var(--ct-brass); }
+.ct-case[data-status='with_board'] { border-left-color: #3d5a99; }
+.ct-case-open {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 10px 10px 10px 12px;
+  color: var(--ct-ink);
+  cursor: pointer;
+  border-radius: 0 12px 12px 0;
+}
+.ct-case-open:hover { background: #fff8e6; }
+.ct-case-open:focus-visible { outline: 3px solid var(--ct-brass); outline-offset: -3px; }
+.ct-case-body { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.ct-case-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ct-case-name { font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+.ct-case-summary {
+  font-size: 14px;
+  color: #232838;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+.ct-case-meta { font-size: 12.5px; color: var(--ct-ink-2); overflow-wrap: anywhere; }
+.ct-case-go { color: #8a6a4a; flex: none; }
+.ct-case-still { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 12px; }
+.ct-case-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ct-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.ct-status[data-status='open'] { background: #e8b84b; color: #1b2442; }
+.ct-status[data-status='with_board'] { background: #dfe7f7; color: #22335c; }
+.ct-status[data-status='closed'] { background: #ece3cf; color: #3b2416; }
+.ct-empty { border-radius: 12px; background: var(--ct-paper); padding: 14px; text-align: center; color: var(--ct-ink-2); font-size: 14px; }
+
+/* One case: the way back, and the case. */
+.ct-casebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ct-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: #fffdf6;
+  color: var(--ct-ink);
+  font-weight: 700;
+  padding: 0 14px 0 8px;
+  box-shadow: 0 1px 3px rgba(60, 40, 15, 0.25);
+  cursor: pointer;
+  flex: none;
+}
+.ct-back:focus-visible { outline: 3px solid var(--ct-brass); outline-offset: 1px; }
+
+.ct-hearing {
+  container-type: inline-size;
+  border-radius: 18px;
+  box-shadow: 0 18px 40px -26px rgba(40, 20, 5, 0.65);
+  background: #f4ecdc;
+}
+.ct-hearing > .ct-bench { border-radius: 18px 18px 0 0; }
+.ct-outcome { padding: 12px 12px 0; display: grid; gap: 10px; }
+.ct-outcome:empty { display: none; }
+
+/* The tabs: sticky under the app's header, so the way between them is always in reach. */
+.ct-tabs {
+  position: sticky;
+  top: calc(var(--beacon-chrome-top, 0px) + var(--app-header, 0px));
+  z-index: 6;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: #f4ecdc;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e2d6bb;
+}
+.ct-tabs::-webkit-scrollbar { display: none; }
+/* 44px, the size every phone maker asks for: four of them have to share a
+   360px phone with their counts, which 56px each and their padding did not. */
+.ct-tabs .ct-tab {
+  flex: 1 1 auto;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #4a3420;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ct-tab .ct-count { min-width: 18px; padding: 0 5px; font-size: 11.5px; }
+.ct-tab[aria-selected='true'] { background: #fffdf6; color: var(--ct-ink); box-shadow: 0 1px 3px rgba(60, 40, 15, 0.25); }
+.ct-cols { padding: 12px; border-radius: 0 0 18px 18px; }
+.ct-col { display: contents; }
+.ct-panel:not([data-active='true']) { display: none; }
+.ct-panel { scroll-margin-top: calc(var(--beacon-chrome-top, 0px) + var(--app-header, 0px) + 72px); }
+.ct-panel + .ct-panel { margin-top: 0; }
+@container (min-width: 760px) {
+  .ct-tabs { display: none; }
+  .ct-cols { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .ct-col { display: grid; gap: 14px; align-content: start; }
+  .ct-cols .ct-panel { display: block; }
+}
+
+/* The judge's lesser tools, folded until wanted. */
+.ct-more { border-top: 1px solid #e2d6bb; }
+.ct-more:first-of-type { border-top: 0; }
+.ct-more > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ct-more > summary::-webkit-details-marker { display: none; }
+.ct-more > summary:focus-visible { outline: 3px solid var(--ct-brass); outline-offset: 2px; border-radius: 6px; }
+.ct-more[open] > summary .ct-more-chev { transform: rotate(90deg); }
+.ct-more-chev { transition: transform 150ms ease; color: #8a6a4a; }
+.ct-more-body { padding: 0 0 12px; }
+.ct-tool + .ct-tool { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2d6bb; }
+.ct-tool-title { font-weight: 700; margin: 0; }
+
+/* What just happened, above the bottom bar and clear of the home indicator. */
+.ct-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 16px;
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--tab-bar, 0px)) + 12px);
+  z-index: 70;
+  width: min(560px, calc(100vw - 24px));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 6px 6px 6px 14px;
+  font-size: 15px;
+  box-shadow: 0 12px 30px -10px rgba(20, 14, 8, 0.55);
+}
+/* Above the Talk bubble when there is one (16px off the bar, 56px tall), as
+   the install prompt stands clear of it (globals.css): side by side, the
+   message covered the way into a conversation. */
+body:has([data-talk-bubble]) .ct-toast {
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--tab-bar, 0px)) + 82px);
+}
+.ct-toast[data-court-toast='good'] { background: #1d4d2c; color: #f2fbf4; }
+.ct-toast[data-court-toast='bad'] { background: #7a1d12; color: #fff3f1; }
+.ct-toast > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ct-toast-x {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ct-seat[data-here='true'] .ct-figure,
   .ct-seat[data-speaking='true'] .ct-figure,
   .ct-live[data-live='true'] .ct-live-dot { animation: none; }
+  .ct-switch input,
+  .ct-switch input::after,
+  .ct-more-chev { transition: none; }
 }

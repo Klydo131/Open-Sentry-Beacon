@@ -243,6 +243,18 @@ hearing is in session, and clear it when the hearing ends. Draw people from
 nothing more than an id, so a room of figures leaks no photo and stores
 nothing.
 
+### A room that fits every screen
+
+Most people open a case on a phone, and a case is long. Show the list of
+cases or one case, never a case under the list. Inside a case, make tabs the
+default and two columns the exception, decided by the case's own width (a
+container query), not the window's: beside a desktop's navigation, a 1280px
+window can leave the case narrower than a tablet. A browser without container
+queries then still gets tabs that work. Say what an act did where the person
+is looking, pinned above any bottom bar and clear of the phone's home
+indicator, and let a refusal stay until it is read.
+`tests/the-court-room-fits-every-screen.mjs` holds Hope Beacon to this.
+
 ### Letting a locked-out party answer
 
 A suspended account is shut out of everything, which is right until that person

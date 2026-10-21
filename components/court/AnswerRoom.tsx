@@ -137,26 +137,22 @@ export function AnswerRoom() {
   const me = { id: door.me.id, full_name: door.me.name, role: door.me.role as Role } as Profile;
 
   return (
-    <div className="ct-room space-y-4" data-answer-room>
-      <div className="ct-wall">
-        <div className="ct-wall-head">
-          <Seal className="ct-seal" />
-          <div className="min-w-0 flex-1">
-            <h2 className="ct-wall-title">Leave to answer</h2>
-            <p>
-              A church leader has let you sign in to answer this case, until {when(door.leave.until)}. Only the court
-              room is open to you; the rest of the app stays closed while your account is suspended. Everything you
-              read or add here is on the record.
-            </p>
-            <p className="mt-1 text-sm">The door stays open for {minutesLeft(door.until)} more minutes.</p>
-            {/* Under the words, not beside them: beside them, a phone squeezed
-                the heading into a column one word wide. */}
-            <div className="mt-3">
-              <Button variant="ghost" onClick={() => void signOut()}>Sign out</Button>
-            </div>
-          </div>
+    <div className="ct-room space-y-3" data-answer-room>
+      {/* The same short header as the court room's: what this is, until when,
+          and the way out. The rest of the app stays closed while the account
+          is suspended, and everything here is on the record. */}
+      <header className="ct-top">
+        <Seal className="ct-seal" />
+        <div className="ct-top-words">
+          <h2 className="ct-top-title">Leave to answer</h2>
+          <p className="ct-top-door">
+            <span className="ct-door-dot" aria-hidden />
+            You may answer this case until {when(door.leave.until)}. Only the court room is open to you, and
+            everything here is on the record. The door stays open {minutesLeft(door.until)} more minutes.
+          </p>
         </div>
-      </div>
+        <Button variant="ghost" onClick={() => void signOut()}>Sign out</Button>
+      </header>
       {error && <p className="ct-finding ct-finding-bad" role="alert">{error}</p>}
       <Hearing
         id={door.leave.case}

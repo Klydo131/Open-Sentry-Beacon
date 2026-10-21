@@ -18,6 +18,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-21-admin-reports-on-every-screen',
+    date: '2026-10-21',
+    title: 'Admin Reports is simpler, on a phone, a tablet and a computer',
+    items: [
+      'Your cases are on two shelves: Now, for what is still going on and anything ruled this week, and Earlier, with a search once there are more than a few. Tap anywhere on a case to open it, and All cases to go back.',
+      'A case opens on its own, at the top of the screen, instead of under the list.',
+      'Inside a case, Record, Exhibits, the Desk and Tools are tabs on a phone, a tablet and a narrow computer window, and side by side on a wide screen. The tabs stay under the top bar as you scroll.',
+      'What you just did is said just above the bar at the bottom of the screen, where you are looking.',
+      'Tools are in one place: anybody in a case can check its record and keep a copy. The judge\'s tools are on the judge\'s desk.',
+      'Ready as soon as your church\'s database has the court room\'s update.',
+    ],
+  },
+  {
     id: '2026-10-21-the-board-rules',
     date: '2026-10-21',
     title: 'A trial is a live room, its judge is drawn, and the Church Board rules',
