@@ -85,11 +85,13 @@ ok(/admin\.auth\.getUser\(token\)/.test(fn) && fn.indexOf('getUser(token)') < fn
   'the function checks who is asking before any code is made');
 ok(/p_session: session/.test(fn) && /sessionOf\(token\)/.test(fn),
   'and makes it for the session of the token that asked');
-const replies = [...fn.matchAll(/return json\(\{([\s\S]*?)\}\s*(?:,\s*\d+)?\)/g)].map((r) => r[1]);
+const replies = [...fn.matchAll(/return json\(\{([^{}]*)\}/g)].map((r) => r[1]);
 ok(replies.length >= 5 && replies.every((r) => !/\bcode\b\s*[,:}]|\bcode\s*$/.test(r.trim())),
   'no reply carries the code back to the browser');
 ok(/BREVO_API_KEY/.test(fn) && /503/.test(fn),
   'a project that cannot send email is told so, plainly, rather than left waiting');
+ok(fn.indexOf("setting(admin, 'BREVO_API_KEY')") > 0 && fn.indexOf("setting(admin, 'BREVO_API_KEY')") < fn.indexOf("rpc('court_email_code_issue'"),
+  'and is told before a code is made, so nobody\'s codes for the hour are used up for nothing');
 
 // 6. The screen.
 ok(/door\.needs === 'email'[\s\S]{0,80}<EmailDoor/.test(door), 'the door asks for an emailed code when the database says so');

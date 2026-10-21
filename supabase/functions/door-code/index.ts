@@ -111,6 +111,17 @@ async function handle(req: Request): Promise<Response> {
     return json({ error: 'This sign-in cannot be sent a code. Sign out, sign in again, and ask again.' }, 400);
   }
 
+  // Checked before a code is made, so a project that cannot send does not
+  // use up anybody's codes for the hour.
+  const brevoKey = await setting(admin, 'BREVO_API_KEY');
+  const sender = brevoKey ? await setting(admin, 'BREVO_SENDER') : '';
+  if (!brevoKey || !sender) {
+    console.log(JSON.stringify({ at: 'door-code', warn: 'BREVO_API_KEY or BREVO_SENDER is not set; no code was sent' }));
+    return json({
+      error: 'This project cannot send email codes yet. Whoever looks after it needs to add BREVO_API_KEY and BREVO_SENDER (docs/EMAIL.md).',
+    }, 503);
+  }
+
   // Everything about who may have a code, and how often, is the database's
   // decision, and the code it makes is for this session only.
   const { data: code, error: codeErr } = await admin.rpc('court_email_code_issue', {
@@ -123,14 +134,6 @@ async function handle(req: Request): Promise<Response> {
     return json({ error: said || 'Could not make a code. Please try again.' }, busy ? 429 : 403);
   }
 
-  const brevoKey = await setting(admin, 'BREVO_API_KEY');
-  const sender = brevoKey ? await setting(admin, 'BREVO_SENDER') : '';
-  if (!brevoKey || !sender) {
-    console.log(JSON.stringify({ at: 'door-code', warn: 'BREVO_API_KEY or BREVO_SENDER is not set; no code was sent' }));
-    return json({
-      error: 'This project cannot send email codes yet. Whoever looks after it needs to add BREVO_API_KEY and BREVO_SENDER (docs/EMAIL.md).',
-    }, 503);
-  }
   const senderName = (await setting(admin, 'BREVO_SENDER_NAME')) || 'Hope Beacon';
   const site = (await setting(admin, 'SITE_URL')).replace(/\/+$/, '');
   // Only for a test server standing in for Brevo; unset, it is Brevo itself.
