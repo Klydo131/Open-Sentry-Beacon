@@ -144,6 +144,15 @@
   "group": "rooms"
  },
  {
+  "file": "screenshots/complete/tablet-guide-study-room.jpg",
+  "device": "tablet",
+  "role": "Guide",
+  "room": "Study Room",
+  "folder": "",
+  "caption": "Guide · Study Room",
+  "group": "rooms"
+ },
+ {
   "file": "screenshots/complete/tablet-guide-music.jpg",
   "device": "tablet",
   "role": "Guide",

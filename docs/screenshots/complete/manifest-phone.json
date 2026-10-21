@@ -324,6 +324,15 @@
   "group": "rooms"
  },
  {
+  "file": "screenshots/complete/phone-guide-study-room.jpg",
+  "device": "phone",
+  "role": "Guide",
+  "room": "Study Room",
+  "folder": "",
+  "caption": "Guide · Study Room",
+  "group": "rooms"
+ },
+ {
   "file": "screenshots/complete/phone-guide-music-1-listen.jpg",
   "device": "phone",
   "role": "Guide",
@@ -591,6 +600,15 @@
   "room": "This Sabbath",
   "folder": "",
   "caption": "Director · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/phone-director-study-room.jpg",
+  "device": "phone",
+  "role": "Director",
+  "room": "Study Room",
+  "folder": "",
+  "caption": "Director · Study Room",
   "group": "rooms"
  },
  {
@@ -888,6 +906,15 @@
   "room": "This Sabbath",
   "folder": "",
   "caption": "Executive Director · This Sabbath",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/phone-executive-study-room.jpg",
+  "device": "phone",
+  "role": "Executive Director",
+  "room": "Study Room",
+  "folder": "",
+  "caption": "Executive Director · Study Room",
   "group": "rooms"
  },
  {

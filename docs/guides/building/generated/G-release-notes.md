@@ -1,6 +1,60 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 47 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 52 releases, as members read them in Settings, What's new.
+
+### Admin Reports is simpler, on a phone, a tablet and a computer
+
+*2026-10-21*
+
+- Your cases are on two shelves: Now, for what is still going on and anything ruled this week, and Earlier, with a search once there are more than a few. Tap anywhere on a case to open it, and All cases to go back.
+- A case opens on its own, at the top of the screen, instead of under the list.
+- Inside a case, Record, Exhibits, the Desk and Tools are tabs on a phone, a tablet and a narrow computer window, and side by side on a wide screen. The tabs stay under the top bar as you scroll.
+- What you just did is said just above the bar at the bottom of the screen, where you are looking.
+- Tools are in one place: anybody in a case can check its record and keep a copy.
+- The judge's desk has Simple and Advanced. Simple is what every hearing needs: call a witness, and end the hearing. Advanced adds the rest of the judge's tools.
+- Ready as soon as your church's database has the court room's update.
+
+### A trial is a live room, its judge is drawn, and the Church Board rules
+
+*2026-10-21*
+
+- A trial in session is drawn as a court room with everybody in it as a figure in their place: the judge at the bench, the people called at their stands and in the witness box. Whoever has it open now is lit up; whoever does not is shown as away. When somebody speaks, the start of what they said appears over them. The figures stand still if your device is set to reduce motion.
+- The judge is drawn at random from the church's leaders free to hear the case, never the person it is about or anybody called to it, and the draw is on the record so anybody on the bench can check it. A judge can step down, and another is drawn.
+- The leader who brought a case presents it: they can speak and put exhibits before it.
+- The judge no longer decides the case. The hearing ends with the judge's recommendation, and nothing happens to anybody's account. The Church Board gives the final ruling outside the court room, and it is written into the trial, which is when a suspension or removal is carried out.
+- Admin Reports is no longer marked beta.
+- Ready as soon as your church's database has its update.
+
+### A suspended member can answer, and a deleted account stays on the record
+
+*2026-10-20*
+
+- The judge of a trial can give somebody called to it, whose account is suspended, leave to answer: for an hour, a day, three days or a week they can sign in and use the court room for that trial, and nothing else in the app opens. It ends when the judge ends it, when its time runs out, or at the decision, and the account is switched off again on every phone. It is written on the record and the church's leaders are told.
+- A suspended member can now be called to a trial as a witness.
+- Safeguarding reports, their conversations and their evidence stay when the account of the person who raised them, or of the person they are about, is deleted. A deleted person's name is shown with "(account deleted)" in reports and trials, and nothing else about them is kept.
+- Ready as soon as your church's database has its update.
+
+### Trials are heard in a court room
+
+*2026-10-20*
+
+- Admin Reports holds a court room, ready as soon as your church's database has its update: until then, the room you had works as before.
+- Its door asks who you are again before it opens: a code from your authenticator app for leadership, your password for anybody else called to a case. It stays open for 30 minutes, so a case stays private if somebody else picks up your phone.
+- Photos, recordings, videos, PDFs and written statements can be put before a trial as exhibits, lettered A, B, C and kept exactly as given. Each has a fingerprint, checked again every time anybody opens it, so a changed file shows.
+- Everything that happens in a trial is written in order on its record, each line chained to the one before, and the decision seals it. Anybody in the trial can check the record and save a copy.
+- What was said in a trial now stays on its record when the account of somebody who spoke is removed, as the rest of the safeguarding record always has. Somebody who cannot sign in can still have their say: the judge writes it down as theirs.
+
+### A Study Room for everybody, and one that keeps your writing
+
+*2026-10-20*
+
+- The Study Room is open to everybody in the app now, not only Explorers, and it is no longer marked Beta. Each person's room is their own: nobody else can read it.
+- It looks like a study: the places in a bookcase, your pages on a desk under a reading lamp, and the page you are writing on as a sheet of paper with a margin and a ribbon.
+- Your writing is kept on your device as well as in the church's database, so the room opens at once and works with no signal. What you write offline reaches the church the next time there is a connection. A line under each page's name says where it is. Signing out deletes the copy on the device.
+- Delete forever now really deletes: from the device, from the database, and any picture only that page used. Before, an emptied room could bring a deleted page's writing back.
+- A photo from a phone camera is made smaller by itself and loses where it was taken, instead of being refused for being over one megabyte.
+- A page that has not arrived yet says so on the page, with Try again, instead of the whole room saying it did not answer. Something that goes wrong once shows a line at the top and goes away, instead of replacing the room.
+- On a narrow phone the four buttons above a page sit on two lines, so Quote is no longer cut off. On the whiteboard, a finger draws instead of scrolling the room.
 
 ### Alerts have a sound of their own
 

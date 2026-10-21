@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 180 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 186 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -1825,6 +1825,66 @@ Every change is planned, shown, tested and polished, and the owner is aware of i
 The owner's words, 30 September 2026: "Just remember to test, polish, and before pushing I should be aware. Same principle for the developers who will participate in this open source project with their AI tools."
 
 A rule that lives only in documents can be deleted in a tidy-up without anybody noticing. This holds the places it was written: the brief every AI tool reads first, the contributor guide, the pull-request checklist, and the Claude-specific notes.
+
+#### the Postgres edition installs
+
+`tests/the-postgres-edition-installs.mjs`
+
+The Postgres edition keeps up with the app.
+
+Asked for on 20 October 2026: "For database, some will not use Supabase for it is not cheap, so create an alternative that focuses more on Postgres." The edition (selfhost/, docs/POSTGRES.md) runs the SAME migrations and the SAME functions as a Supabase project. Its real proof runs in CI on an actual Postgres (.github/workflows/fresh-install.yml); this file is the part that can be read without a database, so a change that would quietly break the edition fails here first, on every computer:
+
+1. every migration can be installed by it (no extension it lacks), 2. every function's imports are ones it provides, at the versions pinned, 3. everything it starts is pinned, so "the same setup" stays the same, 4. the database proof keeps running in CI, and hides nothing it should not, 5. every setting the server reads is in the settings template.
+
+#### a study room keeps its promises
+
+`tests/a-study-room-keeps-its-promises.mjs`
+
+The study room keeps what it promises: deleted is gone, offline writing is kept, a page arrives when it is asked for, and pictures leave with the last page that shows them.
+
+REPORTED ON 19 OCTOBER 2026 (the Study room bug report), and fixed on the 20th, when the owner asked: "I dont want to see any more repeated bugs throughout updated version." So each fix has a check that fails if the bug comes back:
+
+* "Delete forever" left the page's row in the database, and every room's first page had the same id, so emptying a room and starting again brought the deleted writing back. * Nothing was kept on the device: writing done without a signal was lost when the tab closed, and the room could not open offline. * Pages came from the database all at once with an eight-second wait, so opening page thirty of forty said the whole room "did not answer". * Pictures stayed in the database after the last page showing them went.
+
+#### the court room keeps its promises
+
+`tests/the-court-room-keeps-its-promises.mjs`
+
+The court room keeps its promises: the door, the room, the record, the exhibits, and the screens that draw them.
+
+ASKED FOR on 20 October 2026: a court room for Directors and Executive Directors with one of the highest securities in the app at its door, digital forensic and exhibit tools, simple with simple advanced settings, and that looks like a court room.
+
+TWO HALVES, BECAUSE EACH CAN FAIL WITHOUT THE OTHER NOTICING. * The database's rules are proven as invented people, against a database built from nothing, by supabase/tests/the-court-room-holds.sql (run by scripts/fresh-install.sh in CI). This file checks that proof is wired in and that the migration still says what it proved. * The forensic code runs here for real (tests/fixtures/the-court-room- keeps-its-promises.ts): fingerprints, file types, picture details from hostile files, the chain recomputed and broken on purpose. And the screens: a database without the update still gets the room it had.
+
+#### leave to answer keeps its word
+
+`tests/leave-to-answer-keeps-its-word.mjs`
+
+Leave to answer keeps its word, and the record outlives the account.
+
+ASKED FOR on 20 October 2026: a suspended member may be called to the court room when a Director or an Executive Director allows it, with a temporary lift of their account for that alone; a deleted person is recorded as deleted, and only the court room's and Admin Reports' records remain of them; the system's own rules made to hold everywhere.
+
+TWO HALVES, as for the court room itself. * The rules are proven as invented people, from nothing, on the Supabase image and on plain Postgres, by supabase/tests/leave-to-answer-holds.sql (scripts/fresh-install.sh, in CI); and through real PostgREST by selfhost/server/test/the-edition-holds.mjs. This file checks both are wired in, and that the newest definition of each rule still says what was proven, so a later migration cannot quietly undo it. * The screens: the page a suspended member lands on asks nothing the database will refuse it, and the sign-in path takes them there.
+
+#### a judge is drawn and the Church Board rules
+
+`tests/a-judge-is-drawn-and-the-board-rules.mjs`
+
+A judge is drawn, the hearing ends with a recommendation, the Church Board rules, and the room shows who is in it.
+
+ASKED FOR on 20 October 2026: "The judge will be random picked by the Church Directors base on the case, the final ruling will be outside of the Court and will be presented by the Church Board, they will be the people who will have the final words to say." "I want the UI to be some kind of a game avatar for live session court." And Admin Reports is no longer beta.
+
+TWO HALVES, as for the court room itself. * The rules are proven as invented people, from nothing, on the Supabase image and on plain Postgres, by supabase/tests/a-judge-is-drawn-and-the- board-rules.sql (scripts/fresh-install.sh, in CI). This file checks it is wired in, and that the newest definition of each rule still says what was proven. * The draw is worked out here, in Node, independently, and the browser's own check (lib/court/forensics.ts, checkDraw) must agree with it, and must find a draw that was changed.
+
+#### the court room fits every screen
+
+`tests/the-court-room-fits-every-screen.mjs`
+
+Admin Reports is clean and simple, and fits a phone, a pad and a computer.
+
+ASKED FOR on 21 October 2026: "I want the UI to be clean and simple with the best available tools for all users in the Admin reports room. Make sure everything is well adapted to all devices, desktop, tab, mobile, etc."
+
+WHAT WAS WRONG, measured in a browser at 360, 390, 768, 1024, 1280 and 1440px before the change: * a case opened UNDER the list of cases, which was one big card per case, so on a phone with twenty earlier cases it began about 4,000px down; * every closed case in the church was offered under "Hearings you may watch", where nobody could watch it; * a case on a phone was one column 5,900px long (7,900px for the judge), and so was a case on a computer, where the rails leave it about 620px; * what an act did ("It is on the record.") was said at the foot of the case, out of sight of the button that did it.
 
 #### dev server
 

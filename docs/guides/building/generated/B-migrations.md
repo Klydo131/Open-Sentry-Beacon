@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-147 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+151 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1271,3 +1271,37 @@ The function that reads them never worked: it looked for the church on the pairi
 A person who has set up two-step sign-in is let in only after both steps.
 
 WHAT WAS TRUE. The app had no two-step sign-in at all. The review for the Data Protection Officer (13 October 2026) found that no leader used it and that the app offered no screen to set it up, and the owner asked for it to be built. The sign-in service already supports it: a person adds an authenticator app, and each sign-in then ends with a six-digit code. A token from the password alone is marked `aal1`; a token from password and code is marked `aal2`.
+
+#### `20261020160000_the_court_room.sql`
+
+*2026-10-20*
+
+The court room.
+
+ASKED FOR (20 October 2026): a court room for Directors and Executive Directors that works, is simple, has simple advanced settings, holds "one of the highest" securities in the app at its door because it holds some of the most sensitive things a church ever writes down, and has digital forensic and exhibit tools, so evidence is handled the way evidence should be.
+
+#### `20261020180000_leave_to_answer_and_a_record_that_outlives_the_account.sql`
+
+*2026-10-20*
+
+Leave to answer, a record that outlives the account, and the same rules everywhere.
+
+ASKED FOR (20 October 2026), in the owner's words, after the court room:
+
+"It will remain admin reports not court room, but it can function as mini court room ... 30 minutes is ok. Suspended person can be summoned if an ED or Director allowed them (permitted by the local church leaders), suspended accounts will have temporary lift of using the account on a permission to use to be summoned on the digital court. You can fix the problems in the system codes if you see any loopholes on it. The admin report is strictly for local church installed only. The only available data can be presented is the court room or admin reports remains, if the person is deleted it is recorded as deleted. We must respect the rules of Data privacy too."
+
+#### `20261020200000_a_judge_is_drawn_and_the_church_board_rules.sql`
+
+*2026-10-20*
+
+A judge is drawn at random, the hearing ends with a recommendation, and the Church Board gives the final ruling. And the room knows who is in it.
+
+ASKED FOR (20 October 2026), in the owner's words: "The judge will be random picked by the Church Directors base on the case, the final ruling will be outside of the Court and will be presented by the Church Board, they will be the people who will have the final words to say." And: "I want the UI to be some kind of a game avatar for live session court."
+
+#### `20261020210000_who_is_in_the_room_is_kept_only_while_in_session.sql`
+
+*2026-10-20*
+
+Who is in the court room is kept only while the hearing is in session.
+
+WHY. 20261020200000 gave the hearing a live room: each open screen says "I am here" (court_here), and the case shows who was seen in the last minute and a bit. Each of those is one row per person per case: when they last had it open. A case is kept for good, so without this those rows would be kept for good too, long after the room they described had closed, and they are not evidence (reading the case is already on its record). The owner asked for the rules of data privacy to be respected: keep no more about a person than the purpose needs, for no longer than it needs.

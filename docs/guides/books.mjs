@@ -130,8 +130,8 @@ export const USING = {
       chapters: [
         { src: { file: H, from: /^Inviting somebody/, until: /^The conversation$/ }, title: 'People: inviting, pairing and looking after accounts' },
         { src: { file: H, from: /^The conversation$/, until: /^Rooms and subrooms/ }, title: 'Conversations, meetings, the library, prayer and writing' },
-        { src: { file: H, from: /^Rooms and subrooms/, until: /^Cases$/ }, title: 'Rooms, folders and the Office' },
-        { src: { file: H, from: /^Cases$/, until: /^5\. Getting it onto a phone/ }, title: 'Cases, safeguarding, the audit and the numbers' },
+        { src: { file: H, from: /^Rooms and subrooms/, until: /^Admin Reports: the court room$/ }, title: 'Rooms, folders and the Office' },
+        { src: { file: H, from: /^Admin Reports: the court room$/, until: /^5\. Getting it onto a phone/ }, title: 'Admin Reports, safeguarding, the audit and the numbers' },
         { src: { file: 'docs/guides/using/03-music-room.md' } },
         { src: { file: 'docs/JUSTICE.md' } },
       ],
