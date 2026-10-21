@@ -592,7 +592,7 @@
   gap: 8px;
   cursor: pointer;
 }
-.ct-shelf[aria-selected='true'] { background: #fffdf6; color: var(--ct-ink); box-shadow: 0 1px 3px rgba(60, 40, 15, 0.25); }
+.ct-shelf[aria-selected='true'], .ct-shelf[aria-pressed='true'] { background: #fffdf6; color: var(--ct-ink); box-shadow: 0 1px 3px rgba(60, 40, 15, 0.25); }
 .ct-shelf:focus-visible, .ct-tab:focus-visible { outline: 3px solid var(--ct-brass); outline-offset: 1px; }
 .ct-count {
   min-width: 22px;
@@ -769,6 +769,9 @@
   .ct-col { display: grid; gap: 14px; align-content: start; }
   .ct-cols .ct-panel { display: block; }
 }
+
+/* The judge's desk: Simple or Advanced. */
+.ct-desk-mode { display: grid; gap: 6px; justify-items: start; }
 
 /* The judge's lesser tools, folded until wanted. */
 .ct-more { border-top: 1px solid #e2d6bb; }

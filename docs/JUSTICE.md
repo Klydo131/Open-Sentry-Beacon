@@ -274,7 +274,8 @@ A case has four tabs on a phone, a tablet, or a computer where the case has
 little room: **Record** (what was said, and where you say your piece),
 **Exhibits**, the judge's **Desk** (or, once the hearing has ended, the Church
 Board's **Ruling**, for whoever writes it down), and **Tools** (check the
-record, keep a copy). On a wide screen they sit side by side. When you do
+record, keep a copy). The judge's desk is **Simple** or **Advanced**: Simple
+is what every hearing needs, and Advanced adds the rest of the judge's tools. On a wide screen they sit side by side. When you do
 something, the app says what happened just above the bar at the bottom of the
 screen.
 

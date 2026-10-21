@@ -203,14 +203,23 @@ function fn(name) {
     && /const bench = c\.my_place === 'judge' \|\| c\.my_place === 'opener' \|\| c\.my_place === 'observer';/.test(stage)
     && /\{bench && gallery\.length > 0 && \(/.test(stage),
     'the gallery is drawn for the bench only');
-  // The judge's tools moved from behind Advanced settings to the judge's own
-  // desk (asked for on 21 October 2026: "the best available tools for all
-  // users"); the tools for examining evidence still wait behind it.
+  // The judge's tools are on the judge's own desk, which has Simple and
+  // Advanced (asked for on 21 October 2026: "We can have advance and simple
+  // settings for the judge"); the tools for examining evidence still wait
+  // behind Advanced settings too.
   ok(/\{c\.may_decide && \(/.test(hearing)
     && /c\.status === 'open' && c\.may_decide \? 'judge'/.test(hearing)
-    && /\{desk === 'judge' && <JudgeTools/.test(hearing)
+    && /\{desk === 'judge' && <JudgeTools[^>]*advanced=\{advanced\}/.test(hearing)
     && /\{advanced \? \(\s*<ForensicTools/.test(hearing),
     'deciding and the judge\'s tools are the judge\'s alone, and the tools for examining evidence wait behind Advanced settings');
+  ok(/\{more\('Call a witness'/.test(hearing)
+    && /\{advanced && more\('Write down what somebody said'/.test(hearing)
+    && /\{advanced && more\('Hear it in private'/.test(hearing)
+    && /\{advanced && me\.role === 'admin' && c\.escalation !== 'accepted' && more\('Ask an Executive Director/.test(hearing),
+    'the judge\'s desk is simple (call a witness, end the hearing), and the rest of the judge\'s tools wait behind Advanced');
+  ok(/aria-pressed=\{!advanced\}\s+onClick=\{\(\) => onAdvanced\(false\)\} data-court-desk-mode="simple"/.test(hearing)
+    && /aria-pressed=\{advanced\}\s+onClick=\{\(\) => onAdvanced\(true\)\} data-court-desk-mode="advanced"/.test(hearing),
+    'and the desk\'s Simple and Advanced are the room\'s own Advanced settings, so the two never disagree');
   ok(fs.existsSync(path.join(root, 'docs/COURT-ROOM.md')), 'the developers\' guide is written');
 }
 

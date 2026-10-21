@@ -22,9 +22,12 @@
 // or a leader who sat on the case writes it down here, which is when a
 // suspension or a removal is carried out, if it is.
 //
-// THE JUDGE'S TOOLS are on the judge's desk, each folded until wanted: call a
-// witness, write down what somebody said for them, hear it in private, ask an
-// Executive Director to take the seat.
+// THE JUDGE'S DESK HAS SIMPLE AND ADVANCED (asked for on 21 October 2026).
+// Simple is what every hearing needs: leave to answer when somebody called is
+// suspended, call a witness, end the hearing, step down. Advanced adds the
+// rest, each folded until wanted: write down what somebody said for them,
+// hear it in private, ask an Executive Director to take the seat. It is the
+// same setting as the room's Advanced settings switch.
 //
 // ADVANCED, A TICK AWAY (the same Advanced settings tick as elsewhere in the
 // app): every fingerprint, compare a file with the exhibits, check the
@@ -401,6 +404,25 @@ export function Hearing({ id, me, advanced, onAdvanced, onLocked, onChanged, pol
 
           {desk && panel('desk', (
             <div className="grid gap-3">
+              {/* SIMPLE AND ADVANCED, FOR THE JUDGE (asked for on 21 October
+                  2026). The same setting as the room's Advanced settings
+                  switch, so the two can never disagree. */}
+              {desk === 'judge' && onAdvanced && (
+                <div className="ct-desk-mode" data-court-desk-modes>
+                  <div className="ct-shelves" role="group" aria-label="How much the desk shows">
+                    <button type="button" className="ct-shelf" aria-pressed={!advanced}
+                            onClick={() => onAdvanced(false)} data-court-desk-mode="simple">Simple</button>
+                    <button type="button" className="ct-shelf" aria-pressed={advanced}
+                            onClick={() => onAdvanced(true)} data-court-desk-mode="advanced">Advanced</button>
+                  </div>
+                  <p className="ct-hint">
+                    {advanced
+                      ? 'Every tool the judge has, and every fingerprint.'
+                      : 'What every hearing needs: call a witness, and end the hearing. Writing down what somebody said, hearing it in private and asking for another judge are under Advanced.'}
+                  </p>
+                </div>
+              )}
+
               {c.may_decide && (
                 <LeaveToAnswer people={full.people} busy={busy}
                   grant={(person, name, hours) => void act('Giving leave', () => courtGrantLeave(c.id, person, hours),
@@ -409,7 +431,7 @@ export function Hearing({ id, me, advanced, onAdvanced, onLocked, onChanged, pol
                     `${name} can no longer sign in.`)} />
               )}
 
-              {desk === 'judge' && <JudgeTools full={full} me={me} busy={busy} act={act} />}
+              {desk === 'judge' && <JudgeTools full={full} me={me} busy={busy} act={act} advanced={advanced} />}
 
               {c.may_decide && (c.may_step_down === undefined ? (
                 // A database with the court room but not its newest update: the
@@ -731,11 +753,13 @@ function LeaveToAnswer({ people, busy, grant, end }: {
  * For the judge while the hearing is in session: the lesser tools, each folded
  * until it is wanted, so the desk reads as one decision with help beside it.
  */
-function JudgeTools({ full, me, busy, act }: {
+function JudgeTools({ full, me, busy, act, advanced }: {
   full: CourtCaseFull;
   me: Profile;
   busy: string;
   act: (label: string, fn: () => Promise<string | void>, done: string) => Promise<void>;
+  /** Simple: calling a witness. Advanced: the rest of the judge's tools as well. */
+  advanced: boolean;
 }) {
   const c = full.case;
   const [members, setMembers] = useState<Profile[] | null>(null);
@@ -779,7 +803,7 @@ function JudgeTools({ full, me, busy, act }: {
         </>
       ), 'witness')}
 
-      {more('Write down what somebody said', (
+      {advanced && more('Write down what somebody said', (
         <>
           <label className="ct-field !mt-0">
             <span className="sr-only">Who said it</span>
@@ -803,7 +827,7 @@ function JudgeTools({ full, me, busy, act }: {
         </>
       ), 'record-for')}
 
-      {more('Hear it in private', (
+      {advanced && more('Hear it in private', (
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-1" checked={!c.gallery_open} disabled={Boolean(busy)}
                  onChange={(e) => void act('Changing it', () => courtGallery(c.id, !e.target.checked),
@@ -812,7 +836,7 @@ function JudgeTools({ full, me, busy, act }: {
         </label>
       ), 'private')}
 
-      {me.role === 'admin' && c.escalation !== 'accepted' && more('Ask an Executive Director to judge this', (
+      {advanced && me.role === 'admin' && c.escalation !== 'accepted' && more('Ask an Executive Director to judge this', (
         <>
           <Button variant="ghost" disabled={Boolean(busy) || c.escalation === 'requested'}
                   onClick={() => void act('Asking', () => courtCallJudge(c.id), 'An Executive Director has been asked. You stay the judge until one takes the seat.')}>
