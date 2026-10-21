@@ -34,6 +34,7 @@ export interface Factor {
   id: string;
   status?: string;
   factor_type?: string;
+  created_at?: string;
 }
 
 /** A second step being set up: the picture to scan and the key to type instead. */
@@ -84,6 +85,25 @@ function factorsOf(session: Session | null): Factor[] {
 /** The second steps this person has confirmed with a code. */
 export function confirmedFactors(session: Session | null): Factor[] {
   return factorsOf(session).filter((f) => f.status === 'verified');
+}
+
+/**
+ * The newest authenticator app that was set up but never confirmed with a code.
+ *
+ * WHY THIS IS ASKED FOR. Setting up means leaving this screen for the
+ * authenticator app and coming back, and on a phone coming back often reloads
+ * the page; so does the app updating itself. The set-up lived only on the
+ * screen, so the next "Set it up" deleted the key the person had just added to
+ * their app and showed a new one, and every code their app gave from then on
+ * was refused (live, 21 October 2026: four set-ups in an hour, eight codes,
+ * none accepted). The unfinished set-up is still on the account, so the screen
+ * asks for its code instead of starting over.
+ */
+export function unfinishedFactor(session: Session | null): Factor | null {
+  const open = factorsOf(session)
+    .filter((f) => f.status !== 'verified' && f.factor_type === 'totp' && FACTOR_ID.test(f.id))
+    .sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
+  return open[0] ?? null;
 }
 
 /** Whether this session still owes the code: a confirmed second step and a password-only token. */
@@ -200,8 +220,10 @@ export async function enterCode(code: string): Promise<void> {
 }
 
 /**
- * Start setting up an authenticator app. Anything started earlier and never
- * confirmed is cleared first, so starting again always works.
+ * Start setting up an authenticator app, with a new key. Anything started
+ * earlier and never confirmed is cleared first, which stops its key working:
+ * only ever called when the person chooses to start again, never on its own
+ * (see unfinishedFactor).
  */
 export async function beginSecondStep(): Promise<NewSecondStep> {
   const me = await refreshMyFactors();

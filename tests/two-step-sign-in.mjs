@@ -217,5 +217,30 @@ const stored = () => JSON.parse(storage.get(STORE));
     'a project with authenticator apps switched off says where to switch them on');
 }
 
+// 8. A SET-UP THAT WAS INTERRUPTED IS FINISHED, NOT REPLACED (21 October 2026).
+// Leaving for the authenticator app and coming back can reload the page, and
+// the next "Set it up" deleted the key the person had just added: on live,
+// four set-ups in an hour and eight codes, none accepted.
+{
+  const older = { ...factor(HALF_DONE, 'unverified'), created_at: '2026-10-21T07:07:47Z' };
+  const newer = { ...factor(NEW_FACTOR, 'unverified'), created_at: '2026-10-21T07:47:31Z' };
+  store('aal1', [older, newer, factor(APP_FACTOR, 'verified')]);
+  ok(T.unfinishedFactor(stored())?.id === NEW_FACTOR,
+    'the newest set-up never confirmed is found, so its code can be typed after a reload');
+  store('aal1', [factor(APP_FACTOR, 'verified')]);
+  ok(T.unfinishedFactor(stored()) === null, 'and a confirmed app is not mistaken for one');
+}
+{
+  const card = fs.readFileSync(path.join(root, 'components/live/TwoStep.tsx'), 'utf8');
+  ok(!/useEffect\([^;]*(beginSecondStep|start\(\))/.test(card) && (card.match(/beginSecondStep\(/g) ?? []).length === 1
+    && /const start = async \(\) => \{[\s\S]*?await beginSecondStep\(\)/.test(card),
+    'a new key is only ever made when the person presses a button, never when the screen opens');
+  ok(/\{!on && !setup && pending && \(/.test(card) && /\{!on && !setup && !pending && \(/.test(card)
+    && /await finishSecondStep\(pending, code\)/.test(card),
+    'an unfinished set-up asks for its code before offering to start again');
+  ok(/onClick=\{\(\) => \{ setPending\(setup\.factorId\); setSetup\(null\)/.test(card),
+    'and Cancel keeps the key, so the code can still be typed later');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

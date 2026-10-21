@@ -17,7 +17,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { NAVY } from '@/lib/brand';
+import { APP_NAME, NAVY } from '@/lib/brand';
 import { useLiveSession } from '@/lib/live/session';
 import {
   beginSecondStep,
@@ -28,6 +28,7 @@ import {
   groupedSecret,
   refreshMyFactors,
   turnOffSecondStep,
+  unfinishedFactor,
   type NewSecondStep,
 } from '@/lib/live/two-step';
 import { humanError } from '@/lib/live/errors';
@@ -195,6 +196,9 @@ export function TwoStepCard() {
   const { session, profile, refreshProfile } = useLiveSession();
   const [on, setOn] = useState<string | null>(() => confirmedFactors(session)[0]?.id ?? null);
   const [setup, setSetup] = useState<NewSecondStep | null>(null);
+  // A set-up started earlier and not yet confirmed: its key may already be in
+  // the person's authenticator app, so it is finished, not replaced.
+  const [pending, setPending] = useState<string | null>(() => unfinishedFactor(session)?.id ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
@@ -206,7 +210,10 @@ export function TwoStepCard() {
   // stands until it can be checked.
   const recheck = useCallback(async () => {
     const fresh = await refreshMyFactors().catch(() => null);
-    if (fresh) setOn(confirmedFactors(fresh)[0]?.id ?? null);
+    if (fresh) {
+      setOn(confirmedFactors(fresh)[0]?.id ?? null);
+      setPending(unfinishedFactor(fresh)?.id ?? null);
+    }
   }, []);
   useEffect(() => { void recheck(); }, [recheck]);
 
@@ -216,6 +223,7 @@ export function TwoStepCard() {
     setBusy(true); setError(''); setDone('');
     try {
       setSetup(await beginSecondStep());
+      setPending(null);
     } catch (cause) {
       setError(failed(cause));
     } finally {
@@ -287,7 +295,43 @@ export function TwoStepCard() {
         </>
       )}
 
-      {!on && !setup && (
+      {!on && !setup && pending && (
+        <div data-two-step-unfinished>
+          <p className="mt-1 text-sm leading-relaxed text-gray-600">
+            You started setting up an authenticator app. If you added this account to
+            the app, type the code it shows now.
+          </p>
+          <div className="mt-3">
+            <CodeEntry
+              id="two-step-finish-code"
+              label="Code from your authenticator app"
+              action="Turn it on"
+              onCode={async (code) => {
+                await finishSecondStep(pending, code);
+                setOn(pending);
+                setPending(null);
+                setDone('Two-step sign-in is on. Next time you sign in, have your phone with you.');
+                await refreshProfile().catch(() => null);
+              }}
+            />
+          </div>
+          <p className="mt-4 text-sm leading-relaxed text-gray-600">
+            Did not add it, or the code is not accepted? Start again with a new key.
+            First delete the old {APP_NAME} entry in your authenticator app: once you
+            start again, its codes stop working.
+          </p>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={start}
+            className="tap-sm mt-2 rounded-full bg-white px-4 text-sm font-bold text-navy ring-1 ring-navy/20 disabled:opacity-50"
+          >
+            {busy ? 'Starting…' : 'Start again with a new key'}
+          </button>
+        </div>
+      )}
+
+      {!on && !setup && !pending && (
         <>
           <p className="mt-1 text-sm leading-relaxed text-gray-600">
             Add a second step after your password: a six-digit code from an
@@ -320,6 +364,11 @@ export function TwoStepCard() {
           <li>
             <p className="font-semibold text-navy">2. Add this account to it</p>
             <p className="mt-1">In the app, choose to add an account and scan this picture.</p>
+            <p className="mt-1">
+              Tried before? Delete any earlier {APP_NAME} entry in the app first: only this
+              new key works. If this page reloads while you are in the app, come back
+              here and type the code; you will not need to scan again.
+            </p>
             {/* A data: address: shown by <img>, which runs nothing, and fetched from nowhere. */}
             <img
               src={setup.qr}
@@ -363,7 +412,8 @@ export function TwoStepCard() {
             </div>
             <button
               type="button"
-              onClick={() => { setSetup(null); setCopied(false); }}
+              // The key may already be in the app: keep it, to finish later.
+              onClick={() => { setPending(setup.factorId); setSetup(null); setCopied(false); }}
               className="tap-sm mt-3 rounded-full px-4 text-sm font-bold text-navy ring-1 ring-navy/20"
             >
               Cancel
