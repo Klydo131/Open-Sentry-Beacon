@@ -208,10 +208,15 @@ app for leadership, your password for anybody else called to a case. It stays
 open for 30 minutes. This is so a case stays private if somebody else picks up
 your phone.
 
+**Leaders turn on two-step sign-in first** (Settings, Password, Two-step
+sign-in). Without it the door shows how to set it up, and a leader without it is
+never drawn as a judge, so a church needs at least two leaders with it before a
+case can be heard.
+
 ### Speaking in one
 
-Anyone summoned can add a statement while the trial is **open**. Once it is
-closed, nobody can add anything, including the head judge. That is deliberate:
+Anyone summoned can add a statement while the hearing is in session. Once the
+judge has ended the hearing, nobody can add anything, including the judge. That is deliberate:
 a record that can be added to afterwards is not a record.
 
 Statements carry the name of whoever wrote them and the time the server
@@ -372,6 +377,12 @@ that is modest.
 
 For Directors and the church's senior leadership.
 
+- **To start a trial**, open **Admin Reports** and press **Open a case**. You
+  present it; the judge is drawn for you.
+- **If you are drawn as the judge**, your **Desk** tab is Simple or Advanced.
+  Simple is what every hearing needs: call a witness, end the hearing, step
+  down. Advanced adds writing down what somebody said, hearing it in private and
+  asking for another judge.
 - **Claim it before you work on it.** That is what stops two people deciding the
   same report in two different ways.
 - **Decide in the app, not in a conversation.** The outcome field is what

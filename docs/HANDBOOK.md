@@ -503,7 +503,7 @@ Six rooms work this way now. Measured on a phone, with the sample church in them
 | **My Explorers**, a Guide's home | 4 screens | 4 folders: My Explorers, Follow-ups, Prayer, Church |
 | **The Office** | 3 screens, and nine cards | 5 or 6 folders, below |
 
-Cases, the Guild Room, Mail and Profile are left alone. They are one or two screens and mostly one thing; a list of choices above a single card is furniture, not navigation.
+Admin Reports, the Guild Room, Mail and Profile are left alone. They are one or two screens and mostly one thing (Admin Reports keeps its own shelves and tabs inside a case); a list of choices above a single card is furniture, not navigation.
 
 ### The Office
 
@@ -705,27 +705,52 @@ A place for Guides and their Directors to talk to each other. Explorers cannot s
 >
 > Everybody in the room reads everything in it, and that is what makes it safe to have rather than a limitation. Guide-to-Guide direct messages would be a second private channel with no oversight, in an app whose whole design is that private conversation happens in one place and can be reported. Anyone can delete their own message; Directors can delete any.
 
-### Cases
+### Admin Reports: the court room
 
-**Cases have a room of their own**, in the Menu on every screen (for leadership, as **Admin Reports**; a Guide or an Explorer who is part of a case reaches it through Settings). A case is a formal proceeding about a person, sometimes about the person reading it, and it used to be a card partway down a dashboard: easy to scroll past on the one day it mattered, and sitting in the same visual rank as a study plan.
+**Cases have a room of their own: Admin Reports.** It is in every leader's Menu. A Guide or an Explorer who is part of a case reaches it from Settings, Admin Reports, or straight from the notification that tells them about it. A case is a formal proceeding about a person, sometimes about the person reading it. It used to be a card partway down a dashboard, easy to scroll past on the one day it mattered. The room is always there, whether or not anything is open, and says so when nothing is.
 
-The link is always there, whether or not anything is open. A link that comes and goes is one nobody trusts is there, and its absence on a quiet day looks the same as it being broken. When there is nothing, the room says so.
+**The door.** Admin Reports opens onto a court room, and its door asks again who you are, even though you are signed in. A leader types the six-digit code from their authenticator app; anybody else called to a case types their password. The door stays open for 30 minutes, and everything read or added inside is written on the case's record, so a case stays private if somebody else picks up the phone.
 
-An **Explorer** has the room too, and that matters most. An Explorer called into a case is the person in it with the least standing, and their answer has to be findable without anybody having to tell them where to look. They can write in it even while suspended: suspending somebody pending a hearing must not take away their side of it.
+> **IMPORTANT** · Leaders turn on two-step sign-in first
+>
+> A Director, or anybody in senior leadership, needs two-step sign-in before the court room opens for them: **Settings, Password, Two-step sign-in**. It takes about two minutes, once. A leader without it is never drawn as a judge either, so a church needs at least two leaders with it before a case can be heard.
+
+**Your cases, on two shelves.** **Now** has what is still going on, and anything the Church Board ruled this week. **Earlier** has the rest, with a search once there are more than a few. Tap anywhere on a case to open it, and **All cases** to go back to the list. Leaders also see the hearings they may watch from the gallery, and **Open a case**.
+
+**Inside a case.** At the top: who it is about, what it is about, and who judges it. Below that, the **live room**: everybody in the case drawn as a figure in their place, with the judge at the bench. Whoever has the case open now is lit, whoever does not is shown as away, and whoever spoke in the last few minutes has a speech bubble. The figures stand still if your phone or computer is set to reduce motion. Then four tabs, which sit side by side on a wide screen:
+
+| Tab | What is in it |
+| --- | --- |
+| **Record** | Everything said, numbered like a transcript, and the box to say your piece |
+| **Exhibits** | Photos, files and writing put before the case, lettered A, B, C and kept exactly as they were given |
+| **Desk** or **Ruling** | The judge's desk while the hearing is in session; afterwards, the place to write the Church Board's ruling down |
+| **Tools** | Check that the record holds, and keep a copy of it |
+
+When you do something, the app says what happened just above the bar at the bottom of the screen.
+
+**Who judges.** The judge is drawn at random from the leaders free to hear the case: never the person it is about, nobody called to it, and not the leader who brought it unless nobody else is free. For a case about a leader, the judge is drawn from senior leadership. The draw is written on the record, and anybody on the bench can check it under Advanced settings. A judge who cannot hear a case fairly steps down, with the reason on the record, and another is drawn.
+
+**The judge's desk is Simple or Advanced.** Simple is what every hearing needs: call a witness, end the hearing, step down, and give leave to answer when somebody called is suspended. Advanced adds writing down what somebody said in person or by phone, hearing the case in private, and asking for another judge.
+
+**How a case ends.** The judge does not decide it. When everybody has been heard, the judge ends the hearing with what they recommend: dismiss, counsel, suspend or remove. The record is sealed, and nothing happens to anybody's account. The **Church Board** gives the final ruling, outside the court room, and the judge or a leader who sat on the case writes it into the case: the outcome, the Board's own words, who presented it and when. Only then is a suspension or a removal carried out, if the Board ruled one.
+
+**A suspended person still has their say.** They cannot sign in, so the judge either writes down what they say, recorded as theirs, or gives them **leave to answer**: an hour, a day, three days or a week to sign in and answer that one case, with the rest of the app still closed to them.
+
+**Nothing in a case is lost when an account goes.** If somebody's account is deleted, the reports and cases they were part of stay, with their name shown as *(account deleted)*. Who had a case open, and when, is kept only while the hearing is in session.
+
+The full rules, in plain words, are in *Reports, trials and the record*.
 
 On a Guide's **Care** tab for one Explorer, prayer requests are always shown, even when there are none. The card used to disappear when empty, so the tab held only private notes and read as though a Guide could not see prayer requests at all.
-
-A Director judging a case still works through it in **Admin → Safeguarding**, beside the reports the cases came from. That is a different job from answering one, and the screen tells the two apart by itself.
 
 ### Safeguarding
 
 Anybody can report a conversation. When they do:
 
-- Every Director of that church is notified at once.
+- The church's Directors are notified at once, except the person the report is about. A report about a Director goes to senior leadership instead.
 - A Director can read the conversation in place, with what came before and after, rather than as a single quoted line.
 - **The person reported is never told.** No message, no notification, nothing they could notice.
 - The reporter's name is visible to Directors, because a Director cannot support them or tell a genuine concern from a grudge without it.
-- Reports are never deleted, whatever is decided.
+- Reports are never deleted, whatever is decided, and they stay when an account is deleted.
 
 **A post on a guild board is reported the same way** and arrives in the same queue, marked *Guild Room post*, with the post quoted underneath. The Director can close the report as usual and can also **delete the post**. Only leadership of that church can take a post down, and the removal is recorded in the security audit.
 
@@ -1096,7 +1121,7 @@ All five are glass and light: cards a little see-through over soft glows, a brig
 
 The bell in the header holds both the list and its switch. Alerts in the app are **on by default**.
 
-**Pressing one opens what it is about.** A safeguarding notice opens the Safeguarding room for a Director and the Cases room for anybody who has been called to one; a prayer notice opens the prayer card; an approval opens Approvals. It also marks the notice read, which it always did — before tonight that was *all* it did, so the bold went away and the person was left on whatever screen they were already on with no idea where to go.
+**Pressing one opens what it is about.** A safeguarding notice opens the Safeguarding room for a Director and Admin Reports for anybody who has been called to a case; a prayer notice opens the prayer card; an approval opens Approvals. It also marks the notice read, which it always did — before tonight that was *all* it did, so the bold went away and the person was left on whatever screen they were already on with no idea where to go.
 
 **They pop up on the device, not only in the list.** Tap **Turn on device alerts**, allow it when the browser asks, and one appears straight away so you can see it worked. After that, anything new reaches the notification tray on your phone or computer while Beacon is open in a tab or installed, and tapping it opens the app on the right screen.
 
@@ -1588,7 +1613,7 @@ The two largest gaps today:
 | "You do not have permission to do that" when adding to the library | Fixed on 1 September 2026, and it was never about permission. The app saved the resource and asked the database for it back in the same breath, and the read rule could not recognise a row that did not exist a moment ago. It is the same fault as the blog error in Part 9. | Nothing to do. Anybody in the church can add a link now, Explorers included. |
 | A card I used to scroll to has disappeared | Nothing was removed. Six rooms now open in folders, and the card is in one of them: the drop-down at the top of the room lists them all. | Tap the drop-down and choose the folder it belongs to. The room remembers your choice, so it will open there next time. |
 | A link took me to a room but not to the card I pressed for | Fixed on 31 August 2026. Links that pointed at a card by name were pointing at something a folder might not be drawing. | Nothing to do. Those links now name the folder as well, and old ones are translated. |
-| A study cannot be written on a phone or an iPad | Fixed on 28 August 2026. The Office was reachable only from the left column, which does not exist below laptop width. | Nothing to do. Office and Cases are in the Menu, on the bar at the bottom of every phone and tablet screen, and down the left on a computer. |
+| A study cannot be written on a phone or an iPad | Fixed on 28 August 2026. The Office was reachable only from the left column, which does not exist below laptop width. | Nothing to do. Office and Admin Reports are in the Menu, on the bar at the bottom of every phone and tablet screen, and down the left on a computer. |
 | Reply, reactions and the microphone are not in the conversation | The database has not had migration `20261001120000`. Working as designed: the conversation keeps everything else. | Nothing, or run that migration to switch them on (Part 9). |
 | No microphone, on a database that does have the update | The browser cannot record here: the page is not on its real `https://` address, or the browser is too old to record. | Open the real address in a current browser. Typing still works, and so does attaching a recording. |
 | "The microphone is switched off for this app" | The browser was once told no, and remembers. | Allow the microphone for this site in the browser's settings, then tap the microphone again. |

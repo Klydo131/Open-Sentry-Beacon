@@ -481,9 +481,23 @@ Notices, your **Blog**, **Announcements**, the prayer wall, and the numbers.
 1. Is anybody unpaired?
 2. Is any Guide at their limit of five while Explorers wait?
 3. Is any guild flagged "Needs a look"?
-4. Is there anything in the trial room?
+4. Is anything waiting in **Admin Reports**?
 
 Without that rhythm the numbers are decoration.
+
+### Admin Reports
+
+Cases are heard in **Admin Reports**, in your Menu. Its door asks for the
+six-digit code from your authenticator app, so **turn on two-step sign-in
+first**: Settings, Password, Two-step sign-in. It takes about two minutes, once.
+A leader without it is never drawn as a judge, so your church needs at least two
+leaders with it before a case can be heard.
+
+Your cases are on two shelves, **Now** and **Earlier**; tap one to open it. To
+start one, press **Open a case**. A judge is drawn at random, the hearing ends
+with the judge's recommendation, and the **Church Board** gives the final
+ruling, which a leader who sat on the case then writes in. *Reports, trials and
+the record* says the rest.
 
 ### The progress report
 

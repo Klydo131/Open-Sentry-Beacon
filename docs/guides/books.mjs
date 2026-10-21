@@ -27,7 +27,7 @@ const ROOMS = {
   Music: 'For the choir and anybody who loves music. Everything in it happens on the phone or computer itself; nothing is sent anywhere.',
   'My Files': 'A person’s own music, video and documents, saved on their own device. Nothing in it is shared and nothing comes from anybody else.',
   Mail: 'In the sample church, a mailbox showing what the app sends, without sending real email. In a church’s own app, Mail is for church leaders, and lists the invitations still open, to resend or cancel.',
-  'Admin Reports': 'Reports, trials and the record: the part of the app nobody wants to need. It is always in a leader’s Menu, and says plainly when nothing is open.',
+  'Admin Reports': 'Reports, trials and the record, heard in the court room: the part of the app nobody wants to need. It is always in a leader’s Menu, keeps cases on two shelves, Now and Earlier, and says plainly when nothing is open.',
   Settings: 'Everything about this device and this account: text size, the look, installing, alerts, language, the guided walk, what is new, and help. A church’s own app adds a Password folder and an Admin Reports folder.',
 };
 

@@ -136,7 +136,7 @@ export function faqSections(): FaqSection[] {
           q: 'What is two-step sign-in, and should I turn it on?',
           a: [
             'Two-step sign-in adds a six-digit code from an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator, after your password. Someone who learns your password still cannot sign in as you.',
-            'Turn it on in Settings, on the Password page, under “Two-step sign-in”. It is strongly recommended for Directors and other church leaders, who can see the church’s member list.',
+            'Turn it on in Settings, on the Password page, under “Two-step sign-in”. It is strongly recommended for Directors and other church leaders, who can see the church’s member list, and they need it to open Admin Reports’ court room.',
             'If you lose the phone that holds your authenticator app, contact a Director at your church. Once your identity is confirmed, your church’s administrator can remove it so you can sign in with your password and set it up again.',
           ],
         },

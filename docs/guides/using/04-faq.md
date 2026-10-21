@@ -188,8 +188,9 @@ waiting there is somebody being left alone.
 
 **Disapprove** switches an account off and keeps it, and can be undone.
 **Delete** removes the account, its messages and its pairings for good, and
-frees the email address. Use Disapprove when you are looking into something,
-and Delete when somebody has left.
+frees the email address. Reports and cases the person was part of stay, with
+their name shown as *(account deleted)*. Use Disapprove when you are looking
+into something, and Delete when somebody has left.
 
 ### What should I look at each week?
 
@@ -201,6 +202,26 @@ anything in **Admin Reports**.
 
 Open **Admin**, then **Safeguarding**. *Reports, trials and the record* explains
 the whole process, and why the person reported is never told who reported them.
+If it needs a hearing, open a case in **Admin Reports**.
+
+### Admin Reports asks for a code. Which one?
+
+The six-digit code from your authenticator app. Leaders need **two-step
+sign-in** turned on before the court room opens for them: Settings, Password,
+Two-step sign-in. Anybody else called to a case types their password instead.
+The door stays open for 30 minutes.
+
+### Who decides a case?
+
+Not the judge. A judge is drawn at random from the leaders free to hear it, and
+ends the hearing with what they recommend. The **Church Board** gives the final
+ruling, outside the court room, and a leader who sat on the case writes it in.
+Only then is anything done to anybody's account.
+
+### A case I was in has gone from Now.
+
+It is under **Earlier**. A case stays on **Now** while it is going on, and for a
+week after the Church Board rules.
 
 ## About the app itself
 

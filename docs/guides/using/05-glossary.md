@@ -12,13 +12,13 @@ The words the app uses, and what each one means in it.
 | **Approvals** | Who is waiting to be let in, and the names Guides have put forward. The most important screen for a Director. |
 | **Beta** | A part of the app that works but is still being finished. It says so beside its name. |
 | **Blog** | Posts written for the church, in Home. Anybody may write one with **Write a post**. |
+| **Church Board** | The church's board. It gives the final ruling on a trial, outside the court room; the ruling is then written into the trial. |
 | **Classic** | The app's own look, and the default. Every other look is chosen beside it. |
 | **Commission** | The idea behind the journey: an Explorer who has been walked with becomes a Guide, and walks with somebody else. |
 | **Concert pitch** | The note A that the Tuner measures everything against, 440 Hz unless you change it. |
-| **Church Board** | The church's board. It gives the final ruling on a trial, outside the court room; the ruling is then written into the trial. |
 | **Conductor** | The Music room's metronome, which draws the conductor's hand for 2, 3, 4 or 6 beats. |
 | **Court room** | Where trials are heard, inside Admin Reports. The judge is drawn at random; the hearing ends with the judge's recommendation, and the Church Board rules. Its door asks for your code or your password again before it opens, and stays open for 30 minutes. |
-| **Desk** | A Guide's or leader's side panel: the date, what is waiting, a note, the pocket and the colour squares. A drawer on a phone. |
+| **Desk** | A Guide's or leader's side panel: the date, what is waiting, a note, the pocket and the colour squares. A drawer on a phone. In a case, the **Desk** tab is the judge's, and is Simple or Advanced. |
 | **Director** | Runs the church's account: invites, approves, pairs, and reads safeguarding reports. |
 | **Disapprove** | Switch an account off, keeping it. It can be undone. Compare *Delete*, which cannot. |
 | **Evangelistic meetings** | A planner in the Office for a series of meetings, night by night, with a Word file, a picture and a post to share. |
@@ -44,6 +44,7 @@ The words the app uses, and what each one means in it.
 | **My Files** | Your own files, on this device. Never uploaded. |
 | **My Journey** | An Explorer's own room: My Guide, Study, Church and Prayer. |
 | **New** | A green mark on anybody who joined in the last seven days. |
+| **Now and Earlier** | The two shelves in Admin Reports: **Now** has what is still going on and anything ruled this week; **Earlier** has the rest. |
 | **Office** | The room for work rather than conversation: numbers, lesson studies, the Sabbath program, evangelistic meetings and reports. |
 | **Pairing** | Putting an Explorer with a Guide. They can talk from that moment. |
 | **People** | The second of the three words along the bottom: the people you walk with. |
@@ -52,6 +53,7 @@ The words the app uses, and what each one means in it.
 | **Post it** | Share a Sabbath program or a series of meetings inside the app, for the people you walk with or the whole church. |
 | **Prayer wall** | Requests the church has been asked to pray for, in Home. Names are never shown. |
 | **Progress report** | In the Office, Reports: how the Explorers are doing over a month or a quarter, with a Word file to hand in. |
+| **Recommendation** | What the judge suggests when ending a hearing: dismiss, counsel, suspend or remove. It decides nothing; the Church Board rules. |
 | **Reduce motion** | A setting on your own phone or computer. Hope Beacon follows it everywhere and stops things moving. |
 | **Report** | Telling the church's leaders about a message or a person. The person reported is never told who made it. |
 | **Room** | One of the places in the Menu, such as Home, Music or the Office. |
@@ -66,4 +68,5 @@ The words the app uses, and what each one means in it.
 | **Text size** | How big the words are, chosen in Settings, General, and applied with **Apply**. |
 | **This Sabbath** | The room that shows the program and meetings your church has posted. Opens with no signal once seen. |
 | **Tuner** | The Music room's folder that names the note you sing or play and says whether it is flat or sharp. |
+| **Two-step sign-in** | A six-digit code from an authenticator app after your password. Leaders need it to open the court room. Settings, Password. |
 | **Vault** | The Listen folder's tab for your own music and video, saved on this device. |
