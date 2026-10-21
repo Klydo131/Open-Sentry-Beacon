@@ -66,7 +66,7 @@ export function AnswerRoom() {
 
   useEffect(() => { void look(); }, [look]);
 
-  // The leave can end at any moment: by the judge, by its time, by the verdict.
+  // The leave can end at any moment: by the judge, by its time, at the end of the hearing.
   useEffect(() => {
     if (state !== 'answering') return;
     const timer = window.setInterval(() => { void look(); }, 60_000);

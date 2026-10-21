@@ -8,7 +8,8 @@
  * paper. Every colour below is chosen against its own background, not the
  * page's look, so the room reads the same in every look the app has.
  *
- * Nothing here moves. */
+ * Only the live session's avatars move (below), and not for anybody who
+ * asked their device for less motion. */
 
 .ct-room {
   --ct-walnut: #3b2416;
@@ -341,4 +342,208 @@
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
+}
+
+/* ---- The live session: the room as a scene, everybody as an avatar ------
+ *
+ * ASKED FOR on 20 October 2026: "some kind of a game avatar for live session
+ * court." The room seen from the gallery: the bench across the back, the
+ * stands either side, the witness box, the gallery's rows at the front. Who is
+ * in the room now is lit, with a green light; who is not is dimmed. The only
+ * movement is a gentle bob while somebody is in the room and a small bounce
+ * while they are speaking, and both stop for anybody who asked their device
+ * for less motion (the switch-off is the last rule in this file, after them). */
+
+.ct-scene {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 38%),
+    repeating-linear-gradient(90deg, #7a5233 0 46px, #70492c 46px 48px),
+    #7a5233;
+  border-bottom: 4px solid var(--ct-brass, #e8b84b);
+  padding: 10px 10px 14px;
+  color: #fbf3df;
+  container-type: inline-size;
+}
+.ct-scene-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ct-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(20, 12, 6, 0.55);
+  color: #f7ecd2;
+}
+.ct-live-dot { width: 9px; height: 9px; border-radius: 999px; background: #9a958c; }
+.ct-live[data-live='true'] .ct-live-dot {
+  background: #3ddc84;
+  box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.6);
+  animation: ct-live-pulse 1.8s ease-out infinite;
+}
+.ct-hud-count {
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(20, 12, 6, 0.4);
+}
+
+.ct-scene-room { display: grid; gap: 10px; }
+.ct-scene-bench { display: flex; flex-direction: column; align-items: center; }
+.ct-bench-desk {
+  width: min(320px, 92%);
+  margin-top: 4px;
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(180deg, #4a2c19, #351f12);
+  border-top: 3px solid var(--ct-brass, #e8b84b);
+  text-align: center;
+  padding: 4px 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #e9cf96;
+}
+.ct-scene-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ct-scene-group {
+  flex: 1 1 140px;
+  border-radius: 12px;
+  background: rgba(30, 18, 10, 0.32);
+  padding: 6px 6px 8px;
+  min-width: 0;
+}
+.ct-scene-label {
+  margin: 0 0 4px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e9cf96;
+}
+.ct-scene-seats { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; }
+.ct-scene-gallery { background: rgba(20, 12, 6, 0.45); }
+.ct-scene-gallery .ct-figure { width: 46px; height: 58px; }
+
+.ct-seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 108px;
+  padding-top: 4px;
+}
+.ct-figure { width: 60px; height: 75px; display: block; transition: opacity 200ms ease, filter 200ms ease; }
+.ct-seat[data-here='false'] .ct-figure { opacity: 0.5; filter: grayscale(0.55); }
+.ct-seat[data-me='true'] .ct-plate { box-shadow: 0 0 0 2px var(--ct-brass, #e8b84b); }
+.ct-here-light {
+  position: absolute;
+  top: 8px;
+  right: 18px;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: #3ddc84;
+  border: 2px solid #2a1a0f;
+}
+.ct-seat[data-here='true'] .ct-figure { animation: ct-bob 3.2s ease-in-out infinite; }
+.ct-seat[data-speaking='true'] .ct-figure { animation: ct-talk 0.9s ease-in-out 3; }
+.ct-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  margin-top: 2px;
+  border-radius: 8px;
+  text-align: center;
+  background: #f7ecd2;
+  color: #2a1a0f;
+  padding: 2px 6px;
+  line-height: 1.2;
+}
+/* A name gets two lines before it is cut, and the part under it wraps: on a
+   phone, one line cut most names to their first few letters and let the
+   part spill past the plate. */
+.ct-plate-name {
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.ct-plate-part { max-width: 100%; font-size: 10px; color: #5b4636; overflow-wrap: anywhere; }
+.ct-seat-empty .ct-plate { background: rgba(247, 236, 210, 0.75); }
+.ct-bubble {
+  position: absolute;
+  bottom: calc(100% - 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: max-content;
+  max-width: 180px;
+  border-radius: 12px;
+  background: #fffdf6;
+  color: #1b2442;
+  padding: 6px 9px;
+  font-size: 12px;
+  line-height: 1.3;
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+  overflow-wrap: anywhere;
+}
+.ct-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-top-color: #fffdf6;
+}
+/* Room for a bubble above whoever might speak. */
+.ct-scene-seats .ct-seat:has(.ct-bubble) { margin-top: 44px; }
+
+@container (max-width: 420px) {
+  .ct-seat { width: 96px; }
+  .ct-figure { width: 50px; height: 62px; }
+  .ct-bubble { max-width: 140px; font-size: 11px; }
+}
+
+@keyframes ct-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@keyframes ct-talk {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.03); }
+}
+@keyframes ct-live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.6); }
+  100% { box-shadow: 0 0 0 9px rgba(61, 220, 132, 0); }
+}
+
+/* Asked for less movement: none of it. Last, so it wins. */
+@media (prefers-reduced-motion: reduce) {
+  .ct-seat[data-here='true'] .ct-figure,
+  .ct-seat[data-speaking='true'] .ct-figure,
+  .ct-live[data-live='true'] .ct-live-dot { animation: none; }
 }

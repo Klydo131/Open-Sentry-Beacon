@@ -5,7 +5,7 @@ The words the app uses, and what each one means in it.
 | Word | What it means in Hope Beacon |
 | --- | --- |
 | **Admin** | The Director's room: Approvals, People and Pairing, Materials, Mail, Safeguarding and Analytics. |
-| **Admin Reports** | Reports, trials and the record, heard in the court room. In every leader's Menu; a Guide or Explorer who is part of a case reaches it through Settings. Marked beta. |
+| **Admin Reports** | Reports, trials and the record, heard in the court room. In every leader's Menu; a Guide or Explorer who is part of a case reaches it through Settings. |
 | **Advanced settings** | A tick box that shows more choices on a screen that keeps them out of the way, such as minutes and platform notes on a Sabbath program. Nobody ever has to open it. |
 | **Ambience** | Calming sounds made on the phone as they play, in the Music room's Listen folder: *Calm* and *White noise*. |
 | **Announcement** | A notice pinned at the top of everybody's Home, with when it happens. |
@@ -15,8 +15,9 @@ The words the app uses, and what each one means in it.
 | **Classic** | The app's own look, and the default. Every other look is chosen beside it. |
 | **Commission** | The idea behind the journey: an Explorer who has been walked with becomes a Guide, and walks with somebody else. |
 | **Concert pitch** | The note A that the Tuner measures everything against, 440 Hz unless you change it. |
+| **Church Board** | The church's board. It gives the final ruling on a trial, outside the court room; the ruling is then written into the trial. |
 | **Conductor** | The Music room's metronome, which draws the conductor's hand for 2, 3, 4 or 6 beats. |
-| **Court room** | Where trials are heard, inside Admin Reports. Its door asks for your code or your password again before it opens, and stays open for 30 minutes. |
+| **Court room** | Where trials are heard, inside Admin Reports. The judge is drawn at random; the hearing ends with the judge's recommendation, and the Church Board rules. Its door asks for your code or your password again before it opens, and stays open for 30 minutes. |
 | **Desk** | A Guide's or leader's side panel: the date, what is waiting, a note, the pocket and the colour squares. A drawer on a phone. |
 | **Director** | Runs the church's account: invites, approves, pairs, and reads safeguarding reports. |
 | **Disapprove** | Switch an account off, keeping it. It can be undone. Compare *Delete*, which cannot. |
@@ -34,6 +35,7 @@ The words the app uses, and what each one means in it.
 | **Install** | Add the app to a home screen or dock so it opens like any other app. |
 | **Journey** | The five stages an Explorer moves through at their own pace: Beginner, Connect, Care, Call and Cultivate. |
 | **Leave to answer** | A judge's permission for somebody called to a trial, whose account is suspended, to sign in and answer that trial alone, for an hour to a week. Nothing else in the app opens for them. |
+| **Live session** | A trial in session, drawn as a court room with everybody in it as a figure in their place, lit when they are there. |
 | **Lesson study** | A study a Guide writes once in the Office and sends to the people who need it. |
 | **Look** | How the whole app is drawn: its colours and shapes. Chosen in Settings, General, Look, and kept on the device. |
 | **Mail** | In the sample church, a mailbox showing what the app sends. In a church's own app, the invitations still open, for leaders. |

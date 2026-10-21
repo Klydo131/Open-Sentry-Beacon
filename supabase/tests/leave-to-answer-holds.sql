@@ -232,6 +232,10 @@ select pg_temp.check(pg_temp.answer(pg_temp.who('d1'), format($q$select public.s
 select pg_temp.as_claims(pg_temp.who('d1'),
   format($q$select public.open_trial(%L, 'Invented case about a1', %L)::text$q$, pg_temp.id('a1'), pg_temp.k('R1')),
   'ok', 'a Director opens a case about a suspended Explorer', 'T');
+-- The judge is drawn at random (20261020200000); leave is under test here, so
+-- the leader who opened it is seated, as before the draw.
+update public.trials set head_judge_id = pg_temp.id('d1'), judge_name = 'Person d1'
+ where id = pg_temp.k('T')::uuid;
 select pg_temp.check(pg_temp.answer(pg_temp.who('a1'), $q$select public.court_door() ->> 'needs'$q$) = 'suspended',
   'without leave, the suspended Explorer''s door says so');
 select pg_temp.as_claims(pg_temp.who('a1'), format($q$select public.court_case(%L)::text$q$, pg_temp.k('T')),
@@ -284,6 +288,7 @@ select pg_temp.check(pg_temp.answer(pg_temp.who('a1'),
   'and the pass never lasts past the leave');
 select pg_temp.check(pg_temp.before_request(pg_temp.who('a1'), '/rpc/court_case') = 'ok'
     and pg_temp.before_request(pg_temp.who('a1'), '/rpc/court_door') = 'ok'
+    and pg_temp.before_request(pg_temp.who('a1'), '/rpc/court_here') = 'ok'
     and pg_temp.before_request(pg_temp.who('a1'), '/rpc/court_exhibit_begin') = 'ok',
   'the data API lets the court room''s own calls through');
 select pg_temp.check(pg_temp.before_request(pg_temp.who('a1'), '/profiles') = '42501'
@@ -317,6 +322,10 @@ select pg_temp.as_claims(pg_temp.who('a1'),
 select pg_temp.as_claims(pg_temp.who('d2'),
   format($q$select public.open_trial(%L, 'Invented case about b2')::text$q$, pg_temp.id('b2')),
   'ok', 'another Director opens a second case', 'T2');
+-- The judge is drawn at random (20261020200000); leave is under test here, so
+-- the leader who opened it is seated, as before the draw.
+update public.trials set head_judge_id = pg_temp.id('d2'), judge_name = 'Person d2'
+ where id = pg_temp.k('T2')::uuid;
 select pg_temp.check(pg_temp.answer(pg_temp.who('d2'),
     format($q$select public.court_summon(%L, %L)$q$, pg_temp.k('T2'), pg_temp.id('a1'))) = 'ok',
   'a suspended member may be called as a witness');
@@ -414,17 +423,17 @@ select pg_temp.as_claims(pg_temp.who('b2'),
   format($q$select public.court_exhibit_write(%L, 'One more', 'Invented')$q$, pg_temp.k('T2')),
   'great many exhibits', 'the thirty-first waits');
 
--- A VERDICT ENDS LEAVE -----------------------------------------------------------------
+-- THE END OF THE HEARING ENDS LEAVE ---------------------------------------------------
 select pg_temp.check(pg_temp.answer(pg_temp.who('d1'),
-    format($q$select public.close_trial(%L, 'suspended', 'Invented reason')$q$, pg_temp.k('T'))) = 'ok',
-  'the judge decides the first case');
+    format($q$select public.court_close_hearing(%L, 'suspend', 'Invented reason')$q$, pg_temp.k('T'))) = 'ok',
+  'the judge ends the first hearing');
 select pg_temp.check(pg_temp.banned('a1')
     and exists (select 1 from public.court_leave where person_id = pg_temp.id('a1') and ended_why = 'case_closed')
     and not exists (select 1 from public.court_leave where person_id = pg_temp.id('a1') and ended_at is null),
   'and the leave ends with it');
-select pg_temp.check((select max(seq) filter (where act = 'verdict') < max(seq) filter (where act = 'leave_ended')
+select pg_temp.check((select max(seq) filter (where act = 'hearing_closed') < max(seq) filter (where act = 'leave_ended')
                         from public.court_record where trial_id = pg_temp.k('T')::uuid),
-  'the record reads verdict, then the end of the leave');
+  'the record reads the end of the hearing, then the end of the leave');
 
 -- THE RECORD OUTLIVES THE ACCOUNT -----------------------------------------------------
 delete from auth.users where id = pg_temp.id('b1');
@@ -472,13 +481,19 @@ select pg_temp.check(pg_temp.answer(pg_temp.who('e1'), format($q$select public.t
 select pg_temp.as_claims(pg_temp.who('e1'),
   format($q$select public.open_trial(%L, 'Invented case about a2')::text$q$, pg_temp.id('a2')),
   'ok', 'an Executive Director opens a case about the other suspended Explorer', 'T3');
+-- The judge is drawn at random (20261020200000); leave is under test here, so
+-- the leader who opened it is seated, as before the draw.
+update public.trials set head_judge_id = pg_temp.id('e1'), judge_name = 'Person e1'
+ where id = pg_temp.k('T3')::uuid;
 select pg_temp.check(pg_temp.answer(pg_temp.who('e1'),
-    format($q$select public.close_trial(%L, 'removed', 'Invented')$q$, pg_temp.k('T3'))) = 'ok',
-  'and removes them from the church');
+    format($q$select public.court_close_hearing(%L, 'remove', 'Invented')$q$, pg_temp.k('T3'))) = 'ok'
+  and pg_temp.answer(pg_temp.who('e1'),
+    format($q$select public.court_record_ruling(%L, 'removed', 'Invented ruling', 'The Church Board', current_date, true)$q$, pg_temp.k('T3'))) = 'ok',
+  'the hearing ends, and the Church Board''s ruling to remove them is written down and carried out');
 select pg_temp.check(not exists (select 1 from auth.users where id = pg_temp.id('a2'))
-    and (select max(seq) filter (where act = 'verdict') < max(seq) filter (where act = 'account_deleted')
+    and (select max(seq) filter (where act = 'ruling') < max(seq) filter (where act = 'account_deleted')
            from public.court_record where trial_id = pg_temp.k('T3')::uuid),
-  'the account goes, and the record reads verdict, then the deletion');
+  'the account goes, and the record reads the ruling, then the deletion');
 select pg_temp.check(pg_temp.answer(pg_temp.who('e1'),
     format($q$select public.court_case(%L) -> 'case' ->> 'subject_name'$q$, pg_temp.k('T3'))) = 'Person a2 (account deleted)'
   and pg_temp.answer(pg_temp.who('e1'),

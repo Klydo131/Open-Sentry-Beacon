@@ -2,8 +2,9 @@
 
 // The court room's calls to the church's database.
 //
-// Every rule lives in supabase/migrations/20261020160000_the_court_room.sql
-// and 20261020180000_leave_to_answer_and_a_record_that_outlives_the_account.sql.
+// Every rule lives in supabase/migrations/20261020160000_the_court_room.sql,
+// 20261020180000_leave_to_answer_and_a_record_that_outlives_the_account.sql
+// and 20261020200000_a_judge_is_drawn_and_the_church_board_rules.sql.
 // This file only asks: who may enter, read, speak, present or decide is the
 // database's answer, and a refusal comes back as a sentence to show as it is.
 //
@@ -40,11 +41,18 @@ export interface CourtDoor {
 
 export type CourtPlace = 'judge' | 'opener' | 'accused' | 'reporter' | 'witness' | 'observer' | null;
 
+/** In session; heard and waiting for the Church Board; ruled on by the Board. */
+export type CourtStatus = 'open' | 'with_board' | 'closed';
+/** The Church Board's ruling (older cases: the judge's verdict). */
+export type CourtRuling = 'dismissed' | 'counselled' | 'suspended' | 'removed';
+/** What the judge recommends to the Board when the hearing ends. */
+export type CourtRecommendation = 'dismiss' | 'counsel' | 'suspend' | 'remove';
+
 export interface CourtCaseRow {
   id: string;
   summary: string;
-  status: 'open' | 'closed';
-  verdict: 'dismissed' | 'suspended' | 'removed' | null;
+  status: CourtStatus;
+  verdict: CourtRuling | null;
   verdict_note: string | null;
   opened_at: string;
   closed_at: string | null;
@@ -70,6 +78,8 @@ export interface CourtPerson {
   part: 'accused' | 'reporter' | 'witness' | 'observer';
   since: string | null;
   deleted?: boolean;
+  /** Seen in the room in the last minute and a bit. */
+  here?: boolean;
   /** For the bench only: their account is suspended, and any leave to answer they hold. */
   suspended?: boolean | null;
   leave_until?: string | null;
@@ -79,6 +89,8 @@ export interface CourtStatement {
   id: string;
   author_id: string | null;
   author_name: string;
+  /** Whose words the judge wrote down, when it was for somebody else. */
+  for_id?: string | null;
   for_name: string | null;
   body: string;
   sha256: string;
@@ -106,8 +118,8 @@ export interface CourtCaseFull {
   case: {
     id: string;
     summary: string;
-    status: 'open' | 'closed';
-    verdict: 'dismissed' | 'suspended' | 'removed' | null;
+    status: CourtStatus;
+    verdict: CourtRuling | null;
     verdict_note: string | null;
     opened_at: string;
     closed_at: string | null;
@@ -116,13 +128,25 @@ export interface CourtCaseFull {
     subject_deleted?: boolean;
     /** For the bench only. */
     subject_suspended?: boolean | null;
+    opener_id?: string | null;
     opener_name: string;
+    opener_here?: boolean;
     judge_id: string | null;
     judge_name: string;
+    judge_here?: boolean;
     escalation: 'none' | 'requested' | 'accepted' | null;
     gallery_open: boolean;
     seal_hash: string | null;
     sealed_at: string | null;
+    heard_at?: string | null;
+    /** The judge's recommendation to the Board: for the bench only. */
+    recommendation?: CourtRecommendation | null;
+    recommendation_note?: string | null;
+    /** The Church Board's ruling, as written down. */
+    ruling_words?: string | null;
+    ruling_presented_by?: string | null;
+    ruling_presented_on?: string | null;
+    ruling_recorded_name?: string | null;
     my_place: Exclude<CourtPlace, null>;
     i_lead: boolean;
     /** When this person's own leave to answer ends, if they are answering on leave. */
@@ -130,6 +154,8 @@ export interface CourtCaseFull {
     may_speak: boolean;
     may_present: boolean;
     may_decide: boolean;
+    may_step_down?: boolean;
+    may_record_ruling?: boolean;
   };
   people: CourtPerson[];
   statements: CourtStatement[];
@@ -147,6 +173,8 @@ export interface RecordCheck {
   exhibits_differing: number;
   seal: string | null;
   seal_holds: boolean;
+  /** The Board's ruling still says what was written down. Older databases do not say. */
+  ruling_holds?: boolean;
 }
 
 /** The database's refusal, as the sentence it was written in. */
@@ -259,8 +287,36 @@ export const courtGallery = (id: string, open: boolean) =>
   sentence('court_gallery', { p_trial: id, p_open: open });
 export const courtCallJudge = (id: string) => sentence('call_head_judge', { p_trial: id });
 export const courtTakeSeat = (id: string) => sentence('take_head_judge', { p_trial: id });
-export const courtDecide = (id: string, verdict: 'dismissed' | 'suspended' | 'removed', note: string) =>
-  sentence('close_trial', { p_trial: id, p_verdict: verdict, p_note: note.trim() || null });
+/** The judge ends the hearing with a recommendation to the Church Board. */
+export const courtCloseHearing = (id: string, recommendation: CourtRecommendation, note: string) =>
+  sentence('court_close_hearing', { p_trial: id, p_recommendation: recommendation, p_note: note.trim() || null });
+
+/** The judge steps down; the database draws another. */
+export const courtStepDown = (id: string, reason: string) =>
+  sentence('court_step_down', { p_trial: id, p_reason: reason.trim() || null });
+
+/** The Church Board's ruling, written down; carried out only when asked. */
+export const courtRecordRuling = (args: {
+  trialId: string;
+  ruling: CourtRuling;
+  words: string;
+  presentedBy: string;
+  presentedOn: string;
+  carryOut: boolean;
+}) => sentence('court_record_ruling', {
+  p_trial: args.trialId,
+  p_ruling: args.ruling,
+  p_words: args.words.trim(),
+  p_presented_by: args.presentedBy.trim() || null,
+  p_presented_on: args.presentedOn || null,
+  p_carry_out: args.carryOut,
+});
+
+/** "I am here", from an open hearing. Presence only; never on the record. */
+export async function courtHere(id: string): Promise<void> {
+  const { error } = await db().rpc('court_here', { p_trial: id });
+  if (error) fail(error);
+}
 
 /** How long the judge may give leave to answer for, in hours. */
 export const LEAVE_HOURS = [1, 24, 72, 168] as const;

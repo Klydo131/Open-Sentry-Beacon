@@ -2,9 +2,17 @@
 
 // One case, as a hearing.
 //
-// SIMPLE, BY DEFAULT: the bench (who it is about, who judges it), the record
-// (what was said, numbered like a transcript), the witness stand (say your
-// piece), the clerk's table (exhibits), and for the judge, the decision.
+// SIMPLE, BY DEFAULT: the bench (who it is about, who judges it), the live
+// session (everybody in the room as an avatar, components/court/CourtStage),
+// the record (what was said, numbered like a transcript), the witness stand
+// (say your piece), the clerk's table (exhibits), and for the judge, the end
+// of the hearing.
+//
+// HOW A CASE ENDS (20261020200000). The judge, drawn at random, ends the
+// hearing with a recommendation; nothing happens to anybody's account. The
+// Church Board gives the final ruling outside the court room, and the judge
+// or a leader who sat on the case writes it down here, which is when a
+// suspension or a removal is carried out, if it is.
 //
 // ADVANCED, A TICK AWAY (the same Advanced settings tick as elsewhere in the
 // app): call a witness, write down what somebody said for them, ask an
@@ -20,19 +28,21 @@
 // cannot sign in. The judge can let them in for this case alone (the panel
 // below the record); the database lifts the switch, keeps everything else
 // shut, and ends it when the judge does, when its time runs out or at the
-// verdict. An account that has been deleted keeps its name here, marked
+// end of the hearing. An account that has been deleted keeps its name here, marked
 // "(account deleted)" by the database.
 
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
 import { Gavel, GalleryChairs, Seal, StandRail } from '@/components/court/CourtFurniture';
 import { ClerksTable, SameFileCheck } from '@/components/court/Exhibits';
+import { CourtStage } from '@/components/court/CourtStage';
 import {
-  courtCallJudge, courtCase, courtCheckRecord, courtDecide, courtEndLeave, courtExported, courtGallery,
-  courtGrantLeave, courtRecordFor, courtSay, courtSummon, isCourtLocked, LEAVE_HOURS,
-  type CourtCaseFull, type CourtPerson, type LeaveHours, type RecordCheck,
+  courtCallJudge, courtCase, courtCheckRecord, courtCloseHearing, courtEndLeave, courtExported, courtGallery,
+  courtGrantLeave, courtHere, courtRecordFor, courtRecordRuling, courtSay, courtStepDown, courtSummon,
+  isCourtLocked, LEAVE_HOURS,
+  type CourtCaseFull, type CourtPerson, type CourtRecommendation, type CourtRuling, type LeaveHours, type RecordCheck,
 } from '@/lib/live/court';
-import { ACT_WORDS, checkChain, shortFingerprint, type ChainCheck } from '@/lib/court/forensics';
+import { ACT_WORDS, checkChain, checkDraw, shortFingerprint, type ChainCheck, type DrawCheck } from '@/lib/court/forensics';
 import { recordText } from '@/lib/court/record-text';
 import { humanError } from '@/lib/live/errors';
 import { useKeepUp, KEEP_UP_CASES } from '@/lib/live/keep-up';
@@ -42,7 +52,7 @@ import type { Profile } from '@/lib/types';
 
 const PLACE_WORDS: Record<string, string> = {
   judge: 'You are the judge',
-  opener: 'You opened this case',
+  opener: 'You brought this case',
   accused: 'This case is about you',
   reporter: 'You raised this',
   witness: 'You are a witness',
@@ -51,9 +61,30 @@ const PLACE_WORDS: Record<string, string> = {
 
 const VERDICT_WORDS: Record<string, string> = {
   dismissed: 'Dismissed',
+  counselled: 'Counselled',
   suspended: 'Suspended',
   removed: 'Removed from the church',
 };
+
+const RECOMMEND_WORDS: Record<CourtRecommendation, string> = {
+  dismiss: 'Dismiss the case',
+  counsel: 'Counsel, with no change to their account',
+  suspend: 'Suspend them',
+  remove: 'Remove them from the church',
+};
+
+const RULING_WORDS: Record<CourtRuling, string> = {
+  dismissed: 'Dismissed',
+  counselled: 'Counselled, with no change to their account',
+  suspended: 'Suspended',
+  removed: 'Removed from the church',
+};
+
+/** Today, as the date input wants it, on this device's calendar. */
+function today(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -71,9 +102,11 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
   onLocked: () => void;
   onChanged: () => void | Promise<void>;
   /**
-   * Also read the case again every half minute. For somebody answering on
-   * leave, whose account the live connection keeps shut, so they would hear
-   * of nothing that happens unless they ask.
+   * Read the case again every twenty seconds even when it is not in session.
+   * For somebody answering on leave, whose account the live connection keeps
+   * shut, so they would hear of nothing that happens unless they ask. A case
+   * in session is read again on that timer for everybody, so the room shows
+   * who has come and gone.
    */
   poll?: boolean;
 }) {
@@ -82,8 +115,6 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState('');
   const [draft, setDraft] = useState('');
-  const [reason, setReason] = useState('');
-  const [confirmRemove, setConfirmRemove] = useState(false);
   const [check, setCheck] = useState<RecordCheck | null>(null);
   const [chain, setChain] = useState<ChainCheck | null>(null);
 
@@ -100,12 +131,27 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
   useEffect(() => { void load(); }, [load]);
   // Every act in a case touches the case's row, so this hears all of them.
   useKeepUp(KEEP_UP_CASES, load);
+  const inSession = full?.case.status === 'open';
   useEffect(() => {
-    if (!poll) return;
-    const timer = window.setInterval(() => { void load(); }, 30_000);
+    if (!poll && !inSession) return;
+    const timer = window.setInterval(() => { void load(); }, 20_000);
     return () => window.clearInterval(timer);
-  }, [poll, load]);
-  useEffect(() => { setCheck(null); setChain(null); setConfirmRemove(false); }, [id]);
+  }, [poll, inSession, load]);
+  // "I am here", while the hearing is in session and this screen is in front
+  // of somebody. A database without the update has no court_here: say
+  // nothing about it, the room still works.
+  useEffect(() => {
+    if (!inSession) return;
+    let gone = false;
+    const beat = () => {
+      if (document.visibilityState !== 'visible') return;
+      courtHere(id).catch((cause) => { if (!gone && isCourtLocked(cause)) onLocked(); });
+    };
+    beat();
+    const timer = window.setInterval(beat, 25_000);
+    return () => { gone = true; window.clearInterval(timer); };
+  }, [id, inSession, onLocked]);
+  useEffect(() => { setCheck(null); setChain(null); }, [id]);
 
   // Every act goes through here: one place for "busy", the refusal sentence,
   // a shut door, and reading the case again afterwards.
@@ -176,12 +222,16 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
             <h2>{c.subject_name}</h2>
             <p className="ct-summary">{c.summary}</p>
             <p className="ct-meta">
-              Judge: {c.judge_name} &middot; Opened {when(c.opened_at)} by {c.opener_name}
+              Judge: {c.judge_name} &middot; Brought on {when(c.opened_at)} by {c.opener_name}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
-              {c.status === 'open'
-                ? <span className="ct-chip ct-chip-session">In session</span>
-                : <span className="ct-chip ct-chip-decided">Decided: {VERDICT_WORDS[c.verdict ?? ''] ?? c.verdict}</span>}
+              {c.status === 'open' && <span className="ct-chip ct-chip-session">In session</span>}
+              {c.status === 'with_board' && <span className="ct-chip ct-chip-decided" data-court-status="with_board">Heard &middot; with the Church Board</span>}
+              {c.status === 'closed' && (
+                <span className="ct-chip ct-chip-decided" data-court-status="closed">
+                  {c.ruling_words ? 'Ruled by the Church Board' : 'Decided'}: {VERDICT_WORDS[c.verdict ?? ''] ?? c.verdict}
+                </span>
+              )}
               <span className="ct-chip ct-chip-place" data-court-place={c.my_place}>{PLACE_WORDS[c.my_place]}</span>
               {c.i_lead && c.escalation === 'requested' && (
                 <span className="ct-chip ct-chip-place">An Executive Director has been asked</span>
@@ -191,12 +241,14 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
                 <span className="ct-chip ct-chip-place" data-court-my-leave>You may answer until {when(c.my_leave_until)}</span>
               )}
             </div>
-            {c.status === 'closed' && c.verdict_note && <p className="ct-meta">The judge&rsquo;s reason: {c.verdict_note}</p>}
+            {c.status === 'closed' && !c.ruling_words && c.verdict_note && <p className="ct-meta">The judge&rsquo;s reason: {c.verdict_note}</p>}
             {c.seal_hash && <p className="ct-meta">Sealed &middot; <span className="ct-print text-[#e3d2ad]">{shortFingerprint(c.seal_hash)}</span></p>}
           </div>
         </div>
         <Gavel className="ct-gavel" />
       </div>
+
+      <CourtStage full={full} meId={me.id} />
 
       <div className="ct-floor">
         <div>
@@ -224,7 +276,7 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
               <div className="ct-stand">
                 <label className="block">
                   <span className="text-sm font-semibold">
-                    {c.my_place === 'judge' ? 'Speak from the bench' : 'Say your piece'}
+                    {c.my_place === 'judge' ? 'Speak from the bench' : c.my_place === 'opener' ? 'Present the case' : 'Say your piece'}
                   </span>
                   <textarea
                     data-court-say
@@ -232,7 +284,9 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
                     value={draft}
                     maxLength={4000}
                     onChange={(e) => setDraft(e.target.value)}
-                    placeholder={c.my_place === 'judge' ? 'A question, or what happens next.' : 'Tell the court what happened, in your own words.'}
+                    placeholder={c.my_place === 'judge' ? 'A question, or what happens next.'
+                      : c.my_place === 'opener' ? 'Why this case was brought, and what the court should look at.'
+                      : 'Tell the court what happened, in your own words.'}
                   />
                 </label>
                 <StandRail className="ct-rail" />
@@ -260,18 +314,61 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
                 `${name} can no longer sign in.`)} />
           )}
 
-          {c.may_decide && (
-            <JudgeDesk
+          {c.may_decide && (c.may_step_down === undefined ? (
+            // A database with the court room but not its newest update: the
+            // judge decided there, which the Church Board now does.
+            <p className="ct-finding ct-finding-bad mt-3" data-court-needs-update>
+              Ending a hearing waits for your church&rsquo;s database to have its newest update, so the Church Board can give the final ruling.
+            </p>
+          ) : (
+            <HearingDesk
               busy={busy}
-              reason={reason}
-              setReason={setReason}
-              confirmRemove={confirmRemove}
-              setConfirmRemove={setConfirmRemove}
               subject={c.subject_name}
               subjectSuspended={Boolean(c.subject_suspended)}
               subjectDeleted={Boolean(c.subject_deleted)}
-              decide={(verdict, words) => void act('Deciding', () => courtDecide(c.id, verdict, reason), words)}
+              close={(recommendation, note) => void act('Ending the hearing', () => courtCloseHearing(c.id, recommendation, note),
+                'The hearing has ended and its record is sealed. The Church Board gives the final ruling.')}
+              stepDown={(why) => void act('Stepping down', () => courtStepDown(c.id, why),
+                'You have stepped down. Another judge has been drawn, or the seat waits until one is free.')}
             />
+          ))}
+
+          {c.status === 'with_board' && (
+            <div className="ct-desk mt-3" data-court-with-board>
+              <h3 className="ct-section-title">With the Church Board</h3>
+              <p className="ct-hint">
+                The hearing ended {c.heard_at ? when(c.heard_at) : ''}. The Church Board gives the final ruling, outside the court room;
+                nothing happens to anybody&rsquo;s account until it has.
+              </p>
+              {c.recommendation && (
+                <p className="mt-2 text-sm" data-court-recommendation>
+                  <strong>The judge recommends:</strong> {RECOMMEND_WORDS[c.recommendation]}
+                  {c.recommendation_note ? ` -- ${c.recommendation_note}` : ''}
+                </p>
+              )}
+            </div>
+          )}
+
+          {c.may_record_ruling && (
+            <BoardRuling
+              busy={busy}
+              subject={c.subject_name}
+              subjectDeleted={Boolean(c.subject_deleted)}
+              record={(args) => void act('Writing it down', () => courtRecordRuling({ trialId: c.id, ...args }),
+                args.carryOut ? 'The Church Board\'s ruling is on the record, and it has been carried out.' : 'The Church Board\'s ruling is on the record.')}
+            />
+          )}
+
+          {c.status === 'closed' && c.ruling_words && (
+            <div className="ct-desk mt-3" data-court-ruling>
+              <h3 className="ct-section-title">The ruling of the Church Board</h3>
+              <p className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>{VERDICT_WORDS[c.verdict ?? ''] ?? c.verdict}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm">{c.ruling_words}</p>
+              <p className="ct-hint mt-2">
+                Presented {c.ruling_presented_on ? new Date(`${c.ruling_presented_on}T12:00:00`).toLocaleDateString(undefined, { dateStyle: 'medium' }) : ''}
+                {c.ruling_presented_by ? ` by ${c.ruling_presented_by}` : ''}. Written down by {c.ruling_recorded_name ?? 'Someone'}.
+              </p>
+            </div>
           )}
         </div>
 
@@ -337,59 +434,163 @@ export function Hearing({ id, me, advanced, onLocked, onChanged, poll = false }:
   );
 }
 
-// ------------------------------------------------------- the decision ----
+// --------------------------------------------- the end of the hearing ----
 
-function JudgeDesk({ busy, reason, setReason, confirmRemove, setConfirmRemove, subject, subjectSuspended, subjectDeleted, decide }: {
+/**
+ * For the judge: end the hearing with a recommendation, or step down. Ending
+ * it touches nobody's account; the Church Board rules afterwards.
+ */
+function HearingDesk({ busy, subject, subjectSuspended, subjectDeleted, close, stepDown }: {
   busy: string;
-  reason: string;
-  setReason: (v: string) => void;
-  confirmRemove: boolean;
-  setConfirmRemove: (v: boolean) => void;
   subject: string;
   subjectSuspended: boolean;
   subjectDeleted: boolean;
-  decide: (verdict: 'dismissed' | 'suspended' | 'removed', words: string) => void;
+  close: (recommendation: CourtRecommendation, note: string) => void;
+  stepDown: (why: string) => void;
 }) {
+  const [recommendation, setRecommendation] = useState<CourtRecommendation>('dismiss');
+  const [note, setNote] = useState('');
+  const [confirm, setConfirm] = useState(false);
+  const [why, setWhy] = useState('');
+  const [leaving, setLeaving] = useState(false);
   return (
     <div className="ct-desk mt-3" data-court-decide>
-      <h3 className="ct-section-title">Your decision</h3>
-      <p className="ct-hint">Read everything on the record and every exhibit first. A decision closes the case and seals its record.</p>
+      <h3 className="ct-section-title">End the hearing</h3>
+      <p className="ct-hint">
+        When everybody has been heard, end the hearing with what you recommend. Its record is sealed and nothing more can be
+        said. The Church Board gives the final ruling, outside this room: nothing happens to {subject}&rsquo;s account until it has.
+      </p>
       {subjectSuspended && (
-        <p className="ct-hint">
-          Their account is suspended now. Dismissing the case does not lift that: a Director lifts it from their page.
-        </p>
+        <p className="ct-hint">Their account is suspended now, as a precaution. Ending the hearing does not lift that: a Director lifts it from their page.</p>
       )}
       {subjectDeleted && (
-        <p className="ct-hint">Their account has been deleted, so the case can only be dismissed. Its record stays.</p>
+        <p className="ct-hint">Their account has been deleted. The case and its record stay; there is nothing left to carry out.</p>
       )}
       <label className="ct-field">
-        <span>Your reason <span className="font-normal">(kept with the decision)</span></span>
-        <input value={reason} maxLength={1000} onChange={(e) => setReason(e.target.value)} placeholder="Both sides were heard." />
+        <span>You recommend</span>
+        <select value={recommendation} onChange={(e) => { setRecommendation(e.target.value as CourtRecommendation); setConfirm(false); }} data-court-recommend>
+          {(Object.keys(RECOMMEND_WORDS) as CourtRecommendation[]).map((r) => <option key={r} value={r}>{RECOMMEND_WORDS[r]}</option>)}
+        </select>
+      </label>
+      <label className="ct-field">
+        <span>Why <span className="font-normal">(for the Church Board, kept with the record)</span></span>
+        <textarea rows={2} value={note} maxLength={2000} onChange={(e) => setNote(e.target.value)} placeholder="Both sides were heard, and the exhibits match." />
       </label>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="ghost" disabled={Boolean(busy)} onClick={() => decide('dismissed', 'The case is dismissed. Nothing happens to them.')}>
-          Dismiss
-        </Button>
-        <Button variant="gold" disabled={Boolean(busy) || subjectDeleted} onClick={() => decide('suspended', 'They are suspended: their account is switched off until a Director lifts it.')}>
-          Suspend them
-        </Button>
-        <Button variant="danger" disabled={Boolean(busy) || subjectDeleted} onClick={() => setConfirmRemove(!confirmRemove)}>
-          Remove from the church
-        </Button>
+        {!confirm ? (
+          <Button variant="gold" disabled={Boolean(busy)} onClick={() => setConfirm(true)}>End the hearing</Button>
+        ) : (
+          <>
+            {/* The marker on a wrapper: Button keeps a fixed list of props and drops the rest. */}
+            <span data-court-end-hearing>
+              <Button variant="gold" disabled={Boolean(busy)} onClick={() => close(recommendation, note)}>
+                Yes, end it and send it to the Board
+              </Button>
+            </span>
+            <Button variant="ghost" onClick={() => setConfirm(false)}>Not yet</Button>
+          </>
+        )}
       </div>
-      {confirmRemove && (
-        <div className="mt-3 rounded-xl bg-red-50 p-3 ring-1 ring-red-200">
-          <p className="text-sm font-semibold text-red-900">
-            Remove {subject} from the church? This cannot be undone. The case and its record stay.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button variant="danger" disabled={Boolean(busy)} onClick={() => decide('removed', `${subject} has been removed from the church.`)}>
-              Yes, remove them
-            </Button>
-            <Button variant="ghost" onClick={() => setConfirmRemove(false)}>Keep them</Button>
+
+      <div className="mt-4 border-t border-[#e2d6bb] pt-3">
+        <button type="button" className="ct-plain-button" onClick={() => setLeaving(!leaving)}>
+          {leaving ? 'Keep the seat' : 'Step down as judge'}
+        </button>
+        {leaving && (
+          <div className="mt-2">
+            <p className="ct-hint">
+              If you cannot hear this case fairly, step down. Another judge is drawn at random from the leaders free to hear it,
+              and your reason is on the record.
+            </p>
+            <label className="ct-field">
+              <span className="sr-only">Why you are stepping down</span>
+              <input value={why} maxLength={500} onChange={(e) => setWhy(e.target.value)} placeholder="I know them too well to judge this." />
+            </label>
+            <div className="mt-2">
+              <span data-court-step-down>
+                <Button variant="ghost" disabled={Boolean(busy)} onClick={() => stepDown(why)}>Step down</Button>
+              </span>
+            </div>
           </div>
-        </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------- the Church Board's ruling ----
+
+/**
+ * For the judge, or a leader who sat on the case: write the Church Board's
+ * ruling down as it was given, and carry it out if it says to.
+ */
+function BoardRuling({ busy, subject, subjectDeleted, record }: {
+  busy: string;
+  subject: string;
+  subjectDeleted: boolean;
+  record: (args: { ruling: CourtRuling; words: string; presentedBy: string; presentedOn: string; carryOut: boolean }) => void;
+}) {
+  const [ruling, setRuling] = useState<CourtRuling>('dismissed');
+  const [words, setWords] = useState('');
+  const [by, setBy] = useState('The Church Board');
+  const [on, setOn] = useState(today());
+  const [carryOut, setCarryOut] = useState(true);
+  const [confirm, setConfirm] = useState(false);
+  const acts = ruling === 'suspended' || ruling === 'removed';
+  return (
+    <div className="ct-desk mt-3" data-court-board>
+      <h3 className="ct-section-title">The Church Board&rsquo;s ruling</h3>
+      <p className="ct-hint">
+        The Church Board has the final word, and gives it outside the court room. When it has, write its ruling down here as
+        it was given. It goes on the record after the seal.
+      </p>
+      <label className="ct-field">
+        <span>The Board ruled</span>
+        <select value={ruling} onChange={(e) => { setRuling(e.target.value as CourtRuling); setConfirm(false); }} data-court-ruling-outcome>
+          {(Object.keys(RULING_WORDS) as CourtRuling[]).map((r) => <option key={r} value={r}>{RULING_WORDS[r]}</option>)}
+        </select>
+      </label>
+      <label className="ct-field">
+        <span>In the Board&rsquo;s own words</span>
+        <textarea rows={3} value={words} maxLength={4000} onChange={(e) => setWords(e.target.value)} data-court-ruling-words
+                  placeholder="What the Board decided, and anything it asked to be done." />
+      </label>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="ct-field">
+          <span>Presented by</span>
+          <input value={by} maxLength={200} onChange={(e) => setBy(e.target.value)} />
+        </label>
+        <label className="ct-field">
+          <span>On</span>
+          <input type="date" value={on} max={today()} onChange={(e) => setOn(e.target.value)} />
+        </label>
+      </div>
+      {acts && !subjectDeleted && (
+        <label className="mt-3 flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" checked={carryOut} onChange={(e) => setCarryOut(e.target.checked)} data-court-carry-out />
+          <span>
+            <strong>Carry it out now.</strong> {ruling === 'suspended'
+              ? `${subject}'s account is switched off until a Director lifts it.`
+              : `${subject} is removed from the church and their account deleted. The case and its record stay.`}
+            {' '}Leave this unticked to do it later from their page.
+          </span>
+        </label>
       )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {!confirm ? (
+          <Button variant="gold" disabled={Boolean(busy) || !words.trim()} onClick={() => setConfirm(true)}>Write the ruling down</Button>
+        ) : (
+          <>
+            <span data-court-record-ruling>
+              <Button variant={acts && carryOut ? 'danger' : 'gold'} disabled={Boolean(busy)}
+                      onClick={() => record({ ruling, words, presentedBy: by, presentedOn: on, carryOut: acts && carryOut && !subjectDeleted })}>
+                {acts && carryOut && !subjectDeleted ? 'Yes, write it down and carry it out' : 'Yes, write it down'}
+              </Button>
+            </span>
+            <Button variant="ghost" onClick={() => setConfirm(false)}>Not yet</Button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -414,7 +615,7 @@ function LeaveToAnswer({ people, busy, grant, end }: {
       <h3 className="ct-section-title">Leave to answer</h3>
       <p className="ct-hint">
         A suspended account cannot sign in. You can let them in to answer this case and nothing else: the rest of the
-        app stays closed to them. The leave ends when you end it, when its time runs out, or when you decide the case.
+        app stays closed to them. The leave ends when you end it, when its time runs out, or when you end the hearing.
         It is written on the record, and your church&rsquo;s leaders are told.
       </p>
       <ul className="mt-2 grid gap-2">
@@ -526,7 +727,7 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
                       onClick={() => void act('Asking', () => courtCallJudge(c.id), 'An Executive Director has been asked. You stay the judge until one takes the seat.')}>
                 {c.escalation === 'requested' ? 'An Executive Director has been asked' : 'Ask an Executive Director to judge this'}
               </Button>
-              <p className="ct-hint">You keep the seat until one answers. If none does, you decide the case.</p>
+              <p className="ct-hint">You keep the seat until one answers. If none does, you go on hearing it.</p>
             </div>
           )}
         </>
@@ -540,6 +741,10 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
       <div className="mt-3">
         <SameFileCheck exhibits={full.exhibits} />
       </div>
+
+      {full.record && full.record.some((r) => r.act === 'judge_drawn') && (
+        <DrawCheckPanel trialId={c.id} entries={full.record.filter((r) => r.act === 'judge_drawn')} />
+      )}
 
       {full.record && (
         <div className="mt-4">
@@ -560,6 +765,29 @@ function AdvancedTools({ full, me, busy, act, saveCopy }: {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Work every draw of this case's judge out again, on this device, from the
+ * record alone: who was free, the hash before the draw, and who was drawn.
+ */
+function DrawCheckPanel({ trialId, entries }: { trialId: string; entries: NonNullable<CourtCaseFull['record']> }) {
+  const [results, setResults] = useState<DrawCheck[] | null>(null);
+  return (
+    <div className="mt-4" data-court-draw-check>
+      <button type="button" className="ct-plain-button" onClick={() => void Promise.all(entries.map((e) => checkDraw(trialId, e))).then(setResults)}>
+        Check the judge&rsquo;s draw
+      </button>
+      <p className="ct-hint">Judges are drawn at random from the leaders free to hear a case. This works each draw out again from the record.</p>
+      {results && results.map((r, i) => (
+        <p key={entries[i].seq} className={`ct-finding ${r.holds ? 'ct-finding-good' : 'ct-finding-bad'}`} data-court-draw={r.holds ? 'holds' : 'broken'}>
+          {r.holds
+            ? `Draw ${i + 1} holds: ${entries[i].detail.replace(/^Judge drawn at random from \d+ free to hear it: /, '')}, from ${r.from} free to hear it.`
+            : `Draw ${i + 1} does not work out from the record. Tell whoever looks after your church's database.`}
+        </p>
+      ))}
     </div>
   );
 }

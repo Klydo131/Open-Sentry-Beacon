@@ -178,6 +178,11 @@ select pg_temp.as_claims(pg_temp.who('d1', 45),
 select pg_temp.as_claims(pg_temp.who('d1'),
   $q$select public.open_trial('00000000-0000-0000-0000-00000000c0a1', 'Invented case about a1', '00000000-0000-0000-0000-00000000c101')$q$,
   'ok', 'a Director opens a case from the report about that person', 'T');
+-- The judge is drawn at random (20261020200000; proven in
+-- a-judge-is-drawn-and-the-board-rules.sql). Here the room's own rules are
+-- under test, so the Director who opened it is seated, as before the draw.
+update public.trials set head_judge_id = '00000000-0000-0000-0000-00000000c0d1', judge_name = 'Person d1'
+ where id = pg_temp.k('T')::uuid;
 select pg_temp.check((select church_id from public.trials where id = pg_temp.k('T')::uuid) = '00000000-0000-0000-0000-00000000cc01',
   'the case is in the church of the person it is about');
 select pg_temp.check((select count(*) from public.trial_parties where trial_id = pg_temp.k('T')::uuid) = 2,
@@ -350,18 +355,23 @@ select pg_temp.check(pg_temp.answer(pg_temp.who('d3'),
     format($q$select count(*)::text from public.trial_statements where trial_id = %L$q$, pg_temp.k('T'))) = '4',
   'and the gallery already seated stays, on the record');
 
--- THE VERDICT AND THE SEAL --------------------------------------------------------
+-- THE END OF THE HEARING AND THE SEAL ---------------------------------------------
+-- Since 20261020200000 the judge ends the hearing with a recommendation, and
+-- the Church Board's ruling is written down after it.
 select pg_temp.check(pg_temp.answer(pg_temp.who('d3'),
-    format($q$select public.close_trial(%L, 'dismissed', 'Invented')$q$, pg_temp.k('T'))) like 'Only the head judge%',
-  'the gallery cannot decide');
+    format($q$select public.court_close_hearing(%L, 'dismiss', 'Invented')$q$, pg_temp.k('T'))) like 'Only the judge%',
+  'the gallery cannot end the hearing');
 select pg_temp.check(pg_temp.answer(pg_temp.who('d1', 45),
-    format($q$select public.close_trial(%L, 'dismissed', 'Invented')$q$, pg_temp.k('T'))) = 'The court room is locked.',
+    format($q$select public.court_close_hearing(%L, 'dismiss', 'Invented')$q$, pg_temp.k('T'))) like '%court room is locked%',
   'nor the judge with a stale pass');
 select pg_temp.check(pg_temp.answer(pg_temp.who('d1'),
-    format($q$select public.close_trial(%L, 'dismissed', 'Both heard. Invented.')$q$, pg_temp.k('T'))) = 'ok',
-  'the judge decides');
-select pg_temp.check((select seal_hash is not null and status = 'closed' from public.trials where id = pg_temp.k('T')::uuid),
-  'and the case is sealed');
+    format($q$select public.court_close_hearing(%L, 'dismiss', 'Both heard. Invented.')$q$, pg_temp.k('T'))) = 'ok',
+  'the judge ends the hearing');
+select pg_temp.check((select seal_hash is not null and status = 'with_board' from public.trials where id = pg_temp.k('T')::uuid),
+  'and the case is sealed, waiting for the Church Board');
+select pg_temp.check(pg_temp.answer(pg_temp.who('d1'),
+    format($q$select public.court_record_ruling(%L, 'dismissed', 'Invented ruling of the Board')$q$, pg_temp.k('T'))) = 'ok',
+  'the judge writes the Board''s ruling down');
 select pg_temp.check((select status = 'dismissed' from public.reports where id = '00000000-0000-0000-0000-00000000c101'),
   'the report it came from is answered');
 select pg_temp.check(pg_temp.answer(pg_temp.who('a1'),
@@ -369,7 +379,7 @@ select pg_temp.check(pg_temp.answer(pg_temp.who('a1'),
   'the record and its seal hold');
 select pg_temp.as_claims(pg_temp.who('a1'),
   format($q$select public.court_say(%L, 'Too late')::text$q$, pg_temp.k('T')),
-  'closed', 'nothing is said after the verdict');
+  'ended', 'nothing is said after the hearing');
 
 -- THE RECORD FINDS WHAT CHANGED ---------------------------------------------------
 update public.trial_statements set body = 'Quietly changed' where id = pg_temp.k('S2')::uuid;

@@ -204,11 +204,19 @@ export function faqSections(): FaqSection[] {
           ],
         },
         {
+          id: 'who-decides',
+          q: 'Who judges a trial, and who decides it?',
+          a: [
+            'The judge is drawn at random from the church’s leaders who are free to hear it: never the person it is about, nobody called to it, and not the leader who brought it unless nobody else is free. The draw is on the trial’s record, so nobody can choose the judge.',
+            'The judge does not decide the case. When everybody has been heard, the judge ends the hearing with what they recommend, and nothing happens to anybody’s account. The Church Board gives the final ruling, outside the court room, and it is written into the trial when it has.',
+          ],
+        },
+        {
           id: 'leave-to-answer',
           q: 'My account is suspended. Can I still answer a trial?',
           a: [
             'Yes. Tell the judge what you want to say and they write it down as yours, or the judge can give you leave to answer: for an hour, a day, three days or a week, you can sign in and use the court room for that one trial, and nothing else in the app opens. The door still asks for your password.',
-            'Leave to answer ends when the judge ends it, when its time runs out, or when the trial is decided, and your account is switched off again on every phone. It does not lift your suspension; only a Director can do that. Giving it is written on the trial’s record.',
+            'Leave to answer ends when the judge ends it, when its time runs out, or when the hearing ends, and your account is switched off again on every phone. It does not lift your suspension; only a Director can do that. Giving it is written on the trial’s record.',
           ],
         },
         {

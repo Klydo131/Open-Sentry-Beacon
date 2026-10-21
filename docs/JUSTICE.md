@@ -168,7 +168,15 @@ needs more than one person and needs a record.
 
 ### Who is in it
 
-- **A head judge**, who runs it.
+- **A judge**, who runs it. The judge is **drawn at random** from the church's
+  leaders who are free to hear it: never the person it is about, never anybody
+  called to it, never the leader who brought it unless nobody else is free, and
+  for a case about a leader, only from more senior leadership. The draw is
+  written on the trial's record in a way anybody on the bench can work out
+  again, so nobody can choose the judge. A judge who cannot hear a case fairly
+  can step down, with their reason on the record, and another is drawn.
+- **The leader who brought it**, who presents it: they can speak and put
+  exhibits before it.
 - **The subject**, the person the matter is about.
 - **The person who reported it**, put in automatically when the trial comes out
   of a report.
@@ -222,7 +230,7 @@ sign in to answer that trial, and nothing else:
   in the app (messages, the library, your profile, other trials) stays closed
   exactly as a suspension closes it. The door still asks for your password.
 - **It is for a time the judge chooses**: an hour, a day, three days or a week.
-  It ends sooner if the judge ends it, and always when the trial is decided.
+  It ends sooner if the judge ends it, and always when the hearing ends.
 - **When it ends, the account is switched off again** at once, on every phone it
   was signed in on.
 - **It is on the record**, with who gave it and until when, and the church's
@@ -255,6 +263,18 @@ Each line is chained to the one before it, so a line that was changed or
 removed afterwards would show. Anybody in the trial can ask the app to check
 the record, and save a copy of it to keep.
 
+### The room
+
+A trial in session is drawn as a court room with everybody in it as a figure in
+their place: the judge at the bench, the person it is about and the person who
+raised it at their stands, the leader who brought it at their table, witnesses
+in the box. Whoever has the trial open right now is lit up; whoever does not is
+shown as away. When somebody speaks, the start of what they said appears over
+their figure for a few minutes; all of it is in the record below. The figures
+are made from nothing but each account's number: no photo is used and nothing
+about them is stored. If your phone or computer is set to reduce motion, they
+stand still.
+
 ### Escalation
 
 A trial can be escalated when it is beyond the people currently in it. That is a
@@ -263,10 +283,22 @@ the time it happened.
 
 ### The end of it
 
-A trial closes with a **verdict** and a note explaining it. Both stay attached
-to the trial for good, and the verdict **seals** the record: its last line's
-fingerprint is kept with the decision. What was said in a trial stays on its
-record even if the account of somebody who spoke is later removed.
+**The judge does not decide the case. The Church Board does.**
+
+When everybody has been heard, the judge **ends the hearing** with what they
+recommend: dismissing the case, counsel, suspension or removal, and why. That
+**seals** the record (its last line's fingerprint is kept), nothing more can be
+said or put before it, and **nothing happens to anybody's account**.
+
+The **Church Board** then gives the final ruling, outside the court room. When
+it has, the judge, or a leader of the church who sat on the case, writes the
+ruling down in the trial as it was given: the outcome, the Board's own words,
+who presented it and when. That goes on the record after the seal, everybody
+called to the trial is told, and only then is a suspension or a removal carried
+out, if the Board ruled one. Nobody called to a trial can write its ruling down.
+
+What was said in a trial stays on its record even if the account of somebody who
+spoke is later removed.
 
 ### If an account is deleted
 

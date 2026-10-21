@@ -18,6 +18,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-21-the-board-rules',
+    date: '2026-10-21',
+    title: 'A trial is a live room, its judge is drawn, and the Church Board rules',
+    items: [
+      'A trial in session is drawn as a court room with everybody in it as a figure in their place: the judge at the bench, the people called at their stands and in the witness box. Whoever has it open now is lit up; whoever does not is shown as away. When somebody speaks, the start of what they said appears over them. The figures stand still if your device is set to reduce motion.',
+      'The judge is drawn at random from the church\'s leaders free to hear the case, never the person it is about or anybody called to it, and the draw is on the record so anybody on the bench can check it. A judge can step down, and another is drawn.',
+      'The leader who brought a case presents it: they can speak and put exhibits before it.',
+      'The judge no longer decides the case. The hearing ends with the judge\'s recommendation, and nothing happens to anybody\'s account. The Church Board gives the final ruling outside the court room, and it is written into the trial, which is when a suspension or removal is carried out.',
+      'Admin Reports is no longer marked beta.',
+      'Ready as soon as your church\'s database has its update.',
+    ],
+  },
+  {
     id: '2026-10-20-leave-to-answer',
     date: '2026-10-20',
     title: 'A suspended member can answer, and a deleted account stays on the record',

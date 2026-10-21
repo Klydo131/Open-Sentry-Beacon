@@ -11,8 +11,16 @@ import { ACT_WORDS } from '@/lib/court/forensics';
 
 const VERDICT: Record<string, string> = {
   dismissed: 'Dismissed',
+  counselled: 'Counselled',
   suspended: 'Suspended',
   removed: 'Removed from the church',
+};
+
+const RECOMMENDATION: Record<string, string> = {
+  dismiss: 'Dismiss the case',
+  counsel: 'Counsel, with no change to their account',
+  suspend: 'Suspend them',
+  remove: 'Remove them from the church',
 };
 
 const when = (iso: string | null | undefined) => (iso ? new Date(iso).toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC') : '');
@@ -26,9 +34,21 @@ export function recordText(full: CourtCaseFull, check: RecordCheck | null, saved
   lines.push(`What it is about: ${c.summary}`);
   lines.push(`Opened: ${when(c.opened_at)} by ${c.opener_name}`);
   lines.push(`Judge: ${c.judge_name}`);
-  lines.push(`Status: ${c.status === 'open' ? 'In session' : `Decided, ${when(c.closed_at)}`}`);
-  if (c.verdict) lines.push(`Verdict: ${VERDICT[c.verdict] ?? c.verdict}${c.verdict_note ? ` -- ${c.verdict_note}` : ''}`);
-  if (c.seal_hash) lines.push(`Seal (SHA-256 of the verdict's entry): ${c.seal_hash}`);
+  lines.push(`Status: ${c.status === 'open' ? 'In session'
+    : c.status === 'with_board' ? `Heard ${when(c.heard_at)}, waiting for the Church Board's ruling`
+    : `Decided, ${when(c.closed_at)}`}`);
+  if (c.recommendation) {
+    lines.push(`The judge recommended: ${RECOMMENDATION[c.recommendation] ?? c.recommendation}`
+      + `${c.recommendation_note ? ` -- ${c.recommendation_note}` : ''}`);
+  }
+  if (c.ruling_words && c.verdict) {
+    lines.push(`Ruling of the Church Board: ${VERDICT[c.verdict] ?? c.verdict}, presented ${c.ruling_presented_on ?? ''}`
+      + ` by ${c.ruling_presented_by ?? 'the Church Board'}, written down by ${c.ruling_recorded_name ?? 'Someone'}`);
+    lines.push(...c.ruling_words.split('\n').map((l) => `   ${l}`));
+  } else if (c.verdict) {
+    lines.push(`Verdict: ${VERDICT[c.verdict] ?? c.verdict}${c.verdict_note ? ` -- ${c.verdict_note}` : ''}`);
+  }
+  if (c.seal_hash) lines.push(`Seal (SHA-256 of the record's entry that closed the hearing): ${c.seal_hash}`);
   lines.push(`Case id: ${c.id}`);
   lines.push(`Saved: ${when(new Date().toISOString())} by ${savedBy}`);
   if (check) {

@@ -124,6 +124,7 @@ the picture.
 | `trials`, `trial_statements`, `court_record`, `court_exhibits` | the court room: a case, what was said, the chained record of every act, and the exhibits | **Never deleted, deliberately**, as reports; a deletion is written on the case's record |
 | `court_departed` | the name and part of somebody called to a case whose account was deleted | With the case |
 | `court_leave` | leave to answer: who was let in, to which case, by whom, until when, and why it ended | With the case |
+| `court_presence` | when each person in a case last had it open, for the live room | One row per person per case, overwritten each time; goes with the case or the account |
 | `discipline_log` | approval, suspension, removal, by whom | **Outlives the person it describes, deliberately** |
 | `profile_changes` | a change to somebody's own details | Kept |
 | `security_audit_events` | account activity, by rank | Kept |

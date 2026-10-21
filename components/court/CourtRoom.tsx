@@ -262,7 +262,7 @@ export function LiveCourtRoom({ me, emptyState }: { me: Profile; emptyState: Rea
                             <span className="ct-docket-name block">{c.subject_name}</span>
                             <span className="block text-sm text-[#4a4f63]">
                               {c.subject_role ? `${roleNoun(c.subject_role as Profile['role'])} · ` : ''}
-                              {c.status === 'open' ? 'In session' : 'Decided'} · Judge: {c.judge_name}
+                              {standing(c)} · Judge: {c.judge_name}
                               {c.watching ? ` · ${c.watching} watching` : ''}
                             </span>
                           </span>
@@ -304,14 +304,24 @@ export function LiveCourtRoom({ me, emptyState }: { me: Profile; emptyState: Rea
   );
 }
 
+const VERDICT_SHORT: Record<string, string> = {
+  dismissed: 'Dismissed', counselled: 'Counselled', suspended: 'Suspended', removed: 'Removed',
+};
+
+/** Where a case stands, in a few words for the docket. */
+function standing(c: CourtCaseRow): string {
+  if (c.status === 'open') return 'In session';
+  if (c.status === 'with_board') return 'Heard, with the Church Board';
+  return `Ruled: ${VERDICT_SHORT[c.verdict ?? ''] ?? c.verdict ?? ''}`;
+}
+
 function DocketRow({ c, selected, onOpen }: { c: CourtCaseRow; selected: boolean; onOpen: () => void }) {
-  const verdict = c.verdict === 'dismissed' ? 'Dismissed' : c.verdict === 'suspended' ? 'Suspended' : c.verdict === 'removed' ? 'Removed' : '';
   return (
     <li className="ct-docket-row" data-open={c.status === 'open'} data-selected={selected} data-court-case={c.id}>
       <span className="min-w-0">
         <span className="ct-docket-name block">{c.subject_name}</span>
         <span className="block text-sm text-[#4a4f63]">
-          {c.status === 'open' ? 'In session' : `Decided: ${verdict}`} · {c.statements} said · {c.exhibits} exhibit{c.exhibits === 1 ? '' : 's'}
+          {standing(c)} · Judge: {c.judge_name} · {c.statements} said · {c.exhibits} exhibit{c.exhibits === 1 ? '' : 's'}
         </span>
       </span>
       {/* "Hide", not "Close": closing a case is the judge's decision, and the
@@ -380,8 +390,10 @@ function OpenCase({ me, preselected, onOpened, onLocked }: {
       <Card className="p-4">
         <h2 className="text-lg font-bold text-navy" style={{ fontFamily: 'Georgia, serif' }}>Open a case</h2>
         <p className="ct-hint">
-          You will be its judge. The person it is about is told and can answer it here, and so is anybody you name
-          as having raised it. You can ask an Executive Director to take the seat later.
+          You present it. Its judge is drawn at random from the church&rsquo;s leaders free to hear it: never you unless
+          nobody else is free, never anybody in it. The person it is about is told and can answer it here, and so is
+          anybody you name as having raised it. The hearing ends with the judge&rsquo;s recommendation, and the Church
+          Board gives the final ruling.
         </p>
         {!people ? <BeaconSpinner inline label="Loading the members" /> : (
           <>

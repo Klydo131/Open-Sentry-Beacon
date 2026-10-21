@@ -183,6 +183,64 @@ Reading takes a seat in the gallery, which is a row in `trial_parties` and an
 entry in the record. That way "who read this case?" always has an answer. Do
 the same for any record about a person: make reading leave a trace.
 
+### A judge nobody chose
+
+Who hears a case matters as much as how. Hope Beacon draws the judge at random
+from the leaders free to hear it, and makes the draw **checkable**, not merely
+random: a secret random number is a claim; a draw anybody can work out again is
+a proof.
+
+1. **The pool is a rule, not a list somebody keeps.** One function answers "who
+   is free to judge this case?": the right rank for the case, not the person it
+   is about, not anybody called to it, not anybody who stepped down from it,
+   only those who can open the door. The one who brought it is left out unless
+   nobody else is free, and then the record says so.
+2. **The seed is something nobody can choose.** The SHA-256 of a fixed phrase,
+   the case's id and the hash of the record entry just before the draw. That
+   hash covers the time to the microsecond, so it is not known until the case
+   is open.
+3. **The draw is on the record**: who was drawn and the sorted pool, in the
+   entry itself, so the check needs nothing else.
+
+```sql
+seed := encode(extensions.digest(
+          'Hope Beacon judge draw' || chr(10) || p_trial::text || chr(10) || head, 'sha256'), 'hex');
+pick := pool[1 + (('x' || lpad(substr(seed, 1, 12), 16, '0'))::bit(64)::bigint % n)::integer];
+```
+
+```ts
+const seed = await sha256Hex(`Hope Beacon judge draw\n${trialId}\n${entry.prev_hash}`);
+const index = parseInt(seed.slice(0, 12), 16) % pool.length;   // 48 bits: exact in JavaScript
+```
+
+Twelve hex digits is 48 bits, which a JavaScript number holds exactly, so the
+browser's check and the database's draw cannot disagree by rounding. Test them
+against each other with a draw worked out a third way.
+
+### Deciding outside the room
+
+Sometimes the people who hear a case are not the people who decide it. In Hope
+Beacon the judge ends the hearing with a recommendation and the Church Board
+rules, outside the app. Build that as two steps with nothing in between:
+
+- **Ending the hearing seals the record and changes no account.** Make it
+  impossible, not merely unlikely: the function that ends a hearing simply has
+  no path to the functions that suspend or remove.
+- **The ruling is written down, not decided, in the app**: the outcome, the
+  body's own words, who presented it and when, by somebody entitled to, once,
+  with its fingerprint on the record after the seal.
+- **Carrying it out is a choice made when writing it down**, checked against
+  the same rules as any other suspension or removal before anything is written.
+
+### Who is in the room
+
+A live room shows who is there. Do it without a record and without a socket
+the database cannot police: each open screen calls a small function every few
+seconds that refuses anybody without a place in the case, and the case reports
+who was seen in the last minute and a bit. Presence is not evidence; reading
+the case already leaves its own trace on the record. Draw people from nothing
+more than an id, so a room of figures leaks no photo and stores nothing.
+
 ### Letting a locked-out party answer
 
 A suspended account is shut out of everything, which is right until that person
@@ -586,6 +644,10 @@ fingerprint for real.
       keeps nothing else about them.
 - [ ] A party who is locked out can still be heard, through a lift that is
       narrow (one case), timed, recorded, and locked again by the database.
+- [ ] Nobody chooses the judge, and anybody on the bench can check the draw.
+- [ ] Ending a hearing changes no account; whoever has the final word, their
+      ruling is written down once, by somebody entitled to, and carried out
+      only then.
 - [ ] Every exhibit has a fingerprint recorded before upload and is checked on
       every opening; nothing that can run is ever shown.
 - [ ] The record's seal is anchored somewhere the database's owner cannot reach.

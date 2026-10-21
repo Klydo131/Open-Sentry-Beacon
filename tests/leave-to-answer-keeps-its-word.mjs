@@ -140,7 +140,8 @@ function latestForeignKey(constraint) {
   ok(/'ran_out'/.test(latest('private.court_leave_sweep').body)
     && /cron\.schedule\('court-leave-runs-out', '\* \* \* \* \*', 'select private\.court_leave_sweep\(\)'\)/.test(sqlCode(read(MIGRATION))),
     'and leave whose time has run out is ended within the minute');
-  ok(/court_close_leave\(l\.id, 'case_closed'\)/.test(latest('public.close_trial').body), 'and at the verdict');
+  ok(/court_close_leave\(l\.id, 'case_closed'\)/.test(latest('public.court_close_hearing').body),
+    'and when the hearing ends (20261020200000: a hearing ends, the Church Board rules)');
 }
 
 // ---------------------------------------------------------------------------
@@ -208,8 +209,8 @@ function latestForeignKey(constraint) {
 
   const hearing = code('components/court/Hearing.tsx');
   ok(/\{c\.may_decide && \(\s*<LeaveToAnswer/.test(hearing), 'only the judge is offered leave to give');
-  ok(/if \(!poll\) return;\s*const timer = window\.setInterval\(\(\) => \{ void load\(\); \}, 30_000\)/.test(hearing),
-    'a hearing on leave reads itself again every half minute, since the live connection tells it nothing');
+  ok(/if \(!poll && !inSession\) return;\s*const timer = window\.setInterval\(\(\) => \{ void load\(\); \}, 20_000\)/.test(hearing),
+    'a hearing on leave reads itself again on a timer, since the live connection tells it nothing');
 }
 
 // ---------------------------------------------------------------------------

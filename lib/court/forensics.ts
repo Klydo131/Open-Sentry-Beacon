@@ -397,4 +397,34 @@ export const ACT_WORDS: Record<string, string> = {
   account_deleted: 'An account was deleted',
   leave_granted: 'Leave to answer given',
   leave_ended: 'Leave to answer ended',
+  judge_drawn: 'Judge drawn at random',
+  judge_stepped_down: 'Judge stepped down',
+  hearing_closed: 'Hearing closed, with a recommendation to the Church Board',
+  ruling: 'Ruling of the Church Board',
 };
+
+/** What working a judge's draw out again found. */
+export interface DrawCheck {
+  holds: boolean;
+  /** How many were free to hear the case when it was drawn. */
+  from: number;
+  drawn: string;
+}
+
+/**
+ * Work a judge's draw out again from its record entry, trusting nothing but
+ * the entry: the seed is the SHA-256 of "Hope Beacon judge draw", the case id
+ * and the entry's prev_hash, each on its own line; the one drawn is the pool's
+ * entry at (the seed's first twelve hex digits, as a number) modulo the size
+ * of the pool. The same rule as private.court_draw_judge in
+ * 20261020200000_a_judge_is_drawn_and_the_church_board_rules.sql.
+ */
+export async function checkDraw(trialId: string, entry: RecordEntry): Promise<DrawCheck> {
+  const drawn = /^drawn=([0-9a-f-]{36});/.exec(entry.about)?.[1] ?? '';
+  const pool = (/;from=(.*)$/.exec(entry.about)?.[1] ?? '').split(',').filter(Boolean);
+  if (!drawn || pool.length === 0) return { holds: false, from: pool.length, drawn };
+  const seed = await sha256Hex(`Hope Beacon judge draw\n${trialId}\n${entry.prev_hash}`);
+  const index = parseInt(seed.slice(0, 12), 16) % pool.length;
+  const sorted = [...pool].sort();
+  return { holds: pool[index] === drawn && sorted.join(',') === pool.join(','), from: pool.length, drawn };
+}
