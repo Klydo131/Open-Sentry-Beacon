@@ -278,9 +278,10 @@ The flow already modelled in this app:
 3. Opening the link lets that person set a password, and only that person.
 4. The token is marked used, and it expires whether it is used or not.
 
-**Password reset.** Your provider has one. Point the "Forgot your password?"
-link on the front page at it — that link currently explains that this build has
-no passwords, and it is the natural place to wire yours in.
+**Password reset.** Your provider has one. Give it pages of its own rather than
+a box on the sign-in screen: Hope Beacon's live side has `/forgot-password`
+(type your address, get a link) and `/new-password` (the link opens here),
+in `components/live/PasswordPages.tsx`, which is a working example to copy.
 
 > **Never let a person choose their own role.** If your "update my profile"
 > endpoint accepts a `role` field, then anybody can make themselves a Director

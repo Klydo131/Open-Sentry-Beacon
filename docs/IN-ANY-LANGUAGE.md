@@ -274,7 +274,7 @@ Translated so far, in all fifteen languages besides English:
 | Screen | Words |
 |---|---|
 | The front door | [`lib/words/door.ts`](../lib/words/door.ts) |
-| The sign-in page, its messages and "Forgot your password?" | [`lib/words/door.ts`](../lib/words/door.ts) |
+| The sign-in page, its messages, and the forgotten-password pages | [`lib/words/door.ts`](../lib/words/door.ts) |
 | The code screens of two-step sign-in | [`lib/words/two-step.ts`](../lib/words/two-step.ts) |
 | The bar along the bottom, the signed-in header, the Language card | [`lib/words/frame.ts`](../lib/words/frame.ts) |
 | Older shared words (Settings, the Director's tabs, analytics) | [`lib/i18n.tsx`](../lib/i18n.tsx) |

@@ -112,10 +112,13 @@ for (const file of files) {
     ok(!/token_hash=\{\{\s*\.TokenHash\s*\}\}&amp;/.test(html),
        `${file}: joins its parameters with a bare & so the type survives the inbox`);
     const kind = /recovery/.test(file) ? 'recovery' : 'invite';
+    // A password link opens its own page since 26 October 2026; an invitation
+    // still opens /join.
+    const page = kind === 'recovery' ? 'new-password' : 'join';
     const built = new RegExp(
-      String.raw`href="\{\{ \.SiteURL \}\}/join\?token_hash=\{\{ \.TokenHash \}\}&type=` + kind + '"', 'g');
+      String.raw`href="\{\{ \.SiteURL \}\}/` + page + String.raw`\?token_hash=\{\{ \.TokenHash \}\}&type=` + kind + '"', 'g');
     const hrefs = (html.match(built) || []).length;
-    ok(hrefs >= 2, `${file}: the link appears as both a button and copyable text, and says type=${kind}`);
+    ok(hrefs >= 2, `${file}: the link opens /${page}, as both a button and copyable text, and says type=${kind}`);
   }
 }
 
@@ -123,13 +126,18 @@ for (const file of files) {
 //
 // A template and the screen that receives its link are one contract, and half
 // of it lives in another file. The template writes `&type=`; some clients
-// re-encode that ampersand and deliver `amp;type` instead. `/join` must read
-// both spellings or a password reset silently arrives as an invitation.
+// re-encode that ampersand and deliver `amp;type` instead. A reset link that
+// reaches `/join` (an older e-mail, or a project still on the old template)
+// is handed to `/new-password`, so the reading of both spellings decides
+// whether a password reset silently arrives as an invitation.
 const door = readFileSync('components/live/DoorPages.tsx', 'utf8');
-ok(/params\.get\('type'\)\s*\?\?\s*params\.get\('amp;type'\)/.test(door),
-   'DoorPages reads type in both spellings, so a re-encoded ampersand cannot lose it');
-ok(/verifyOtp\(\{ token_hash: tokenHash, type: kind \}\)/.test(door),
-   'and redeems the token in the browser, where no mail scanner follows');
+const reset = readFileSync('lib/live/password.ts', 'utf8');
+ok(/search\.get\('type'\)\s*\?\?\s*search\.get\('amp;type'\)/.test(reset)
+   && /if \(isResetLink\(params, window\.location\.hash\)\) \{\s*router\.replace\(`\$\{NEW_PASSWORD_PATH\}/.test(door),
+   'type is read in both spellings, and /join hands a reset link to /new-password before redeeming anything');
+ok(/verifyOtp\(\{ token_hash: tokenHash, type: kind \}\)/.test(door)
+   && /verifyOtp\(\{ token_hash: tokenHash, type: 'recovery' \}\)/.test(reset),
+   'and each page redeems its token in the browser, where no mail scanner follows');
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

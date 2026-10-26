@@ -20,11 +20,13 @@ import { TwoStepSignInCard } from '@/components/live/TwoStep';
 import { LanguagePick } from '@/components/LanguagePick';
 import { usePhrases } from '@/lib/i18n';
 import { DOOR_WORDS } from '@/lib/words/door';
+import { NEW_PASSWORD_PATH, isResetLink, passwordProblem, sendPasswordLink } from '@/lib/live/password';
+import { humanError } from '@/lib/live/errors';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 
 // The signed-out screens: the front door, sign-in and the invited person's join page.
 
-function PublicHeader({ title, subtitle }: { title: string; subtitle: string }) {
+export function PublicHeader({ title, subtitle }: { title: string; subtitle: string }) {
   const say = usePhrases(DOOR_WORDS);
   return (
     <div className="px-4 py-8 text-center text-white" style={{ backgroundColor: NAVY }}>
@@ -278,21 +280,12 @@ export function LiveLoginPage() {
     }
   };
 
-  const resetPassword = async () => {
-    if (!emailLooksValid(email)) {
-      setError('Enter your e-mail first.');
-      return;
-    }
-    const client = supabaseAuth();
-    if (!client) return;
-    setBusy(true);
-    setError('');
-    const { error: resetError } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-      redirectTo: `${window.location.origin}/join?recovery=1`,
-    });
-    setBusy(false);
-    if (resetError) setError(resetError.message);
-    else setNotice('If that address has an account, a password-reset e-mail is on its way.');
+  // A forgotten password has its own page (components/live/PasswordPages.tsx);
+  // the address typed here goes with the person so they need not type it twice.
+  const forgotHref = (extra = '') => {
+    const typed = email.trim().toLowerCase();
+    const q = [extra, typed ? `email=${encodeURIComponent(typed)}` : ''].filter(Boolean).join('&');
+    return `/forgot-password${q ? `?${q}` : ''}`;
   };
 
   if (codeStep || secondStep) {
@@ -409,8 +402,6 @@ export function LiveLoginPage() {
             </Button>
           </form>
 
-          <form onSubmit={() => {}} className="hidden">
-          </form>
           {/* "Never had a password?": the same reset as "Forgot your password?", in words that fit. */}
           {couldBeUnfinished && (
             // Blue, not sky: dark looks repaint blue-50 readably, but not sky-50.
@@ -422,25 +413,22 @@ export function LiveLoginPage() {
               <p className="mt-1 text-sm text-gray-700">
                 {say('If you were invited but never got as far as choosing one, there is nothing to type here yet. The password in an invitation e-mail also stops working three days after it was sent. Either way, we can send you a link that lets you choose your own now.')}
               </p>
-              <Button
-                variant="gold"
-                className="mt-3 w-full"
-                disabled={busy}
-                onClick={resetPassword}
+              <Link
+                href={forgotHref('first=1')}
+                className="tap mt-3 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 font-bold text-navy"
               >
-                {busy ? say('Sending…') : say('Send me a link to set my password')}
-              </Button>
+                {say('Send me a link to set my password')}
+              </Link>
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={resetPassword}
-            disabled={busy}
-            className="mx-auto mt-4 block text-sm text-gray-500 underline"
+          <Link
+            href={forgotHref()}
+            className="mx-auto mt-4 block w-fit text-sm text-gray-500 underline"
+            data-forgot-link
           >
             {say('Forgot your password?')}
-          </button>
+          </Link>
         </Card>
 
         <Card className="p-5 text-center">
@@ -519,7 +507,6 @@ export function LiveJoinPage() {
   const [rescueBusy, setRescueBusy] = useState(false);
   const [churchName, setChurchName] = useState('');
   const [role, setRole] = useState<Role>('ds');
-  const recovery = params.get('recovery') === '1' || params.get('type') === 'recovery';
 
   // `?preview=ds|dm|admin|executive` shows the real form to a room without an
   // invitation. It never creates a session and submit returns before the
@@ -562,6 +549,15 @@ export function LiveJoinPage() {
   useEffect(() => {
     let alive = true;
     const establishSession = async () => {
+      // A RESET LINK HAS ITS OWN PAGE (components/live/PasswordPages.tsx). One
+      // can still arrive here: an e-mail already in somebody's inbox, or a
+      // project whose recovery template still points at /join. Hand it over
+      // untouched, before anything is redeemed, and never show the invitation
+      // form to somebody who only forgot a password.
+      if (isResetLink(params, window.location.hash)) {
+        router.replace(`${NEW_PASSWORD_PATH}${window.location.search}${window.location.hash}`);
+        return;
+      }
       // A preview returns before any client call, so it cannot redeem or sign out.
       if (preview) {
         setRole(preview);
@@ -576,10 +572,8 @@ export function LiveJoinPage() {
         const tokenHash = params.get('token_hash');
         const code = params.get('code');
         const codeEmail = params.get('email');
-        // Read `type` twice: a mail client that re-encodes & as &amp; leaves `amp;type`.
-        const kind = (params.get('type') ?? params.get('amp;type')) === 'recovery'
-          ? 'recovery'
-          : 'invite';
+        // Only invitations are redeemed here; a reset link was handed over above.
+        const kind = 'invite';
 
         // Supabase reports an expired or used link in the hash (#error=...&error_code=otp_expired).
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -681,7 +675,7 @@ export function LiveJoinPage() {
     return () => {
       alive = false;
     };
-  }, [params, refreshProfile, handover]);
+  }, [params, refreshProfile, handover, router]);
 
   const isSeeker = role === 'ds';
 
@@ -691,16 +685,21 @@ export function LiveJoinPage() {
       setRescueNotice('Enter the address your invitation was sent to.');
       return;
     }
-    const client = supabaseAuth();
-    if (!client) return;
     setRescueBusy(true);
-    await client.auth
-      .resetPasswordForEmail(address, { redirectTo: `${window.location.origin}/join?recovery=1` })
-      .catch(() => {});
-    setRescueBusy(false);
-    // The same words whether or not the address has an account, so this cannot
-    // reveal who is a member.
-    setRescueNotice('If that address has an account, a fresh link is on its way. It lasts one hour.');
+    try {
+      // The link lands on /new-password, which sets the password for an
+      // invited account exactly as for a forgotten one (lib/live/password.ts).
+      await sendPasswordLink(address);
+      // The same words whether or not the address has an account, so this cannot
+      // reveal who is a member.
+      setRescueNotice('If that address has an account, a fresh link is on its way. It lasts one hour.');
+    } catch (cause) {
+      // Refused, usually for asking twice within the minute: say so, instead of
+      // promising an e-mail that is not coming.
+      setRescueNotice(humanError(cause));
+    } finally {
+      setRescueBusy(false);
+    }
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -715,15 +714,13 @@ export function LiveJoinPage() {
       return;
     }
     const { chosen: chosenPassword, confirmation } = readPasswordFields();
-    if (chosenPassword.length < 10) {
-      setError('Use at least 10 characters.');
+    // The same rules as every page that sets a password (lib/live/password.ts).
+    const problem = passwordProblem(chosenPassword, confirmation, email);
+    if (problem) {
+      setError(problem);
       return;
     }
-    if (chosenPassword !== confirmation) {
-      setError('The passwords do not match.');
-      return;
-    }
-    if (!recovery && !consent) {
+    if (!consent) {
       setError('Tick the permission box to continue.');
       return;
     }
@@ -752,7 +749,7 @@ export function LiveJoinPage() {
       await live.signOutOtherDevices().catch(() => undefined);
       await live.clearTemporaryPasswordReminder().catch(() => undefined);
 
-      if (!recovery) {
+      {
         await live.updateMyProfile({
           full_name: name.trim() || undefined,
           preferred_contact: extra.preferred_contact.trim() || undefined,
@@ -766,8 +763,6 @@ export function LiveJoinPage() {
             : undefined,
           consent_at: new Date().toISOString(),
         });
-      } else if (name.trim()) {
-        await live.updateMyProfile({ full_name: name.trim() });
       }
 
       // Sign-up counts as finished only here, once a password has been chosen.
@@ -864,13 +859,11 @@ export function LiveJoinPage() {
   return (
     <div className="min-h-screen">
       <PublicHeader
-        title={recovery ? 'Set a new password' : `You’re invited to ${APP_SHORT_NAME}`}
+        title={`You’re invited to ${APP_SHORT_NAME}`}
         subtitle={
-          recovery
-            ? 'Choose a password only you know.'
-            : isSeeker
-              ? 'Someone from your church will walk with you, at whatever pace suits you.'
-              : 'Your church has already chosen your role. Confirm your details to get started.'
+          isSeeker
+            ? 'Someone from your church will walk with you, at whatever pace suits you.'
+            : 'Your church has already chosen your role. Confirm your details to get started.'
         }
       />
       {previewBanner}
@@ -938,18 +931,16 @@ export function LiveJoinPage() {
                 </span>
               </label>
 
-              {!recovery && (
-                <label className="block">
-                  <span className="text-sm font-semibold text-gray-600">Your name</span>
-                  <input
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    autoComplete="name"
-                    className="tap mt-1 w-full rounded-xl bg-gray-100 px-4 text-lg outline-none focus:ring-2 focus:ring-gold"
-                    required
-                  />
-                </label>
-              )}
+              <label className="block">
+                <span className="text-sm font-semibold text-gray-600">Your name</span>
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="name"
+                  className="tap mt-1 w-full rounded-xl bg-gray-100 px-4 text-lg outline-none focus:ring-2 focus:ring-gold"
+                  required
+                />
+              </label>
 
               <div id="new-password-help" className="rounded-xl bg-blue-50 p-4 text-sm leading-relaxed text-slate-700 ring-1 ring-blue-100">
                 <p className="font-semibold text-navy">Choose a password only you know.</p>
@@ -964,7 +955,7 @@ export function LiveJoinPage() {
 
               <label className="block">
                 <span className="text-sm font-semibold text-gray-600">
-                  {recovery ? 'New password' : 'Choose a password'}
+                  Choose a password
                 </span>
                 <div className="relative mt-1">
                   <input
@@ -1020,7 +1011,6 @@ export function LiveJoinPage() {
                 />
               </label>
 
-              {!recovery && (
                 <>
                   {/* Consent: names the church and what is agreed to. Unticked by default. */}
                   {/* Who looks after this app, before the box is ticked (lib/oversight.ts). */}
@@ -1109,18 +1099,17 @@ export function LiveJoinPage() {
                     </div>
                   )}
                 </>
-              )}
 
               {error && <Notice tone="error">{error}</Notice>}
               <Button
                 type="submit"
                 variant="gold"
                 className="w-full"
-                disabled={busy || (!recovery && !consent)}
+                disabled={busy || !consent}
               >
-                {busy ? 'Saving…' : recovery ? 'Save new password' : `Join ${APP_SHORT_NAME} →`}
+                {busy ? 'Saving…' : `Join ${APP_SHORT_NAME} →`}
               </Button>
-              {!recovery && !consent && (
+              {!consent && (
                 <p className="text-xs text-gray-500">Tick the permission box above to continue.</p>
               )}
             </form>

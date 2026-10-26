@@ -72,8 +72,9 @@ npm run test:all  # the above, plus the real-browser walks (~4 min)
 somebody clicks — it drives a real browser through the guided walks and catches
 the class of bug where the code is right and the button is under a banner.
 
-If you touched sign-in, input, uploads, headers, secrets or a workflow, run the
-security reviewer (`.claude/agents/security-reviewer.md`) or `/audit` on your
+If you touched sign-in, input, uploads, headers, secrets or a workflow, answer
+the questions in [docs/SECURITY-LAYERS.md](./docs/SECURITY-LAYERS.md), "Adding
+something new", and run the security reviewer (`.claude/agents/security-reviewer.md`) or `/audit` on your
 change before you open the pull request.
 
 If your change adds a migration, read [CHANGELOG.md](./CHANGELOG.md) first. It

@@ -407,6 +407,15 @@ Directors keep the same control over everything, which is what running the churc
 
 Each church pays for its own copy of the app: on the standard plan, Supabase Pro, about **₱1,710 a month** ($25 plus 12% GST). Members can give toward it the way they give toward anything else in the church, and the app shows how close each month is. **No money passes through the app.**
 
+**It is optional, and off until your church switches it on.** A church that pays for its hub another way never sees any of this. Whoever looks after the church's Supabase project switches it on once, in the SQL editor:
+
+```sql
+insert into public.app_settings (key, value) values ('HUB_GIVING', 'on')
+on conflict (key) do update set value = excluded.value, updated_at = now();
+```
+
+Delete that row to switch it off again. Everything set up and recorded stays, and comes back when it is switched on.
+
 **What members see.** Under the notices on Home, a card: **💛 Keep our Hope Hub running**, with what it pays for, the month's goal and how much has been given ("October 2026: ₱1,250 of ₱1,710"), and how to give: the church's GCash name and number, its GCash QR code, and its bank account. **Copy** puts a number on the clipboard. Nobody sees who gave or how much anybody gave.
 
 **Setting it up (Directors).** Settings, **💛 Giving**. Type the monthly goal, one line on what it pays for, and the church's own GCash and bank details (use the church's accounts, not a person's), add a picture of the GCash QR code if you have one, and press **Save**. Until you do, Home shows Directors a card that points here, and shows everybody else nothing.
@@ -417,7 +426,7 @@ Each church pays for its own copy of the app: on the standard plan, Supabase Pro
 
 **A month is a calendar month, in Philippine time.** A short month is covered from the church's budget like any other bill. Before collecting, ask the church board to approve the app's cost as a line in the church budget, so the treasurer may receive gifts for it.
 
-**The database change.** Giving needs `20261026120000_a_hub_is_kept_running_by_gifts`. Until a church applies it, the card and the folder are simply not there.
+**The database change.** Giving needs `20261026120000_a_hub_is_kept_running_by_gifts` and `20261026200000_giving_is_a_choice`, then the switch above. Until all three, the card and the folder are simply not there.
 ### Announcements
 
 A notice pinned where the church will see it: an icon, a title, a line of detail, and a free-text when, because "This Sabbath, 9:00 AM" and "Every evening this week" are what a church actually writes and neither is a date. Notices come down by being taken down, not by a clock nobody set.
@@ -1307,7 +1316,7 @@ on conflict (key) do update set value = excluded.value;
 
    That table has row level security on and no policy granting anybody access, so only the server can read it. It is not in the repository and never will be.
 
-**Step 5.** **Set the sign-in redirect.** *Authentication → URL Configuration*. Set *Site URL* to your address, and add `https://your-address/join` to the redirect allow list. Get this wrong and invitations arrive but land nowhere.
+**Step 5.** **Set the sign-in redirect.** *Authentication → URL Configuration*. Set *Site URL* to your address, and add `https://your-address/join` and `https://your-address/new-password` to the redirect allow list. Get this wrong and invitations and password links arrive but land nowhere.
 
 **Step 6.** **Turn on custom SMTP** for password resets, as in Part 6.
 

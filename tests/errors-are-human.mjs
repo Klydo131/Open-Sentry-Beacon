@@ -116,6 +116,37 @@ ok(!/duplicate key|constraint|some_future_thing/i.test(dupUnknown),
 // ---- Offline --------------------------------------------------------------
 ok(/connection/i.test(said('Failed to fetch')), 'a dead network is reported as a connection');
 
+// ---- Setting a password -----------------------------------------------------
+//
+// Found on 26 October 2026, reading every screen that sets one. Each string is
+// the sign-in service's own, with the `code` it sends (Supabase Auth and the
+// Postgres edition, selfhost/server/src/auth.mjs, use the same ones).
+const authErr = (message, code, extra = {}) => Object.assign(new Error(message), { code, ...extra });
+const aal = humanError(authErr('AAL2 session is required to update password', 'insufficient_aal'), 'FALLBACK');
+ok(/authenticator/i.test(aal) && !/AAL2/.test(aal),
+  'a member with an authenticator app is asked for its code, not told "AAL2 session is required"');
+ok(/already have/i.test(humanError(authErr('New password should be different from the old password.', 'same_password'))),
+  'typing the old password again is answered in words');
+ok(/leaked/i.test(humanError(authErr('Password is known to be weak and easy to guess, please choose a different one.',
+  'weak_password', { reasons: ['pwned'] }))), 'a leaked password is called that');
+ok(/too long/i.test(humanError(authErr('Password should be at most 72 characters.', 'weak_password'))),
+  'a password over 72 characters is told it is too long');
+ok(/mix of/i.test(humanError(authErr(
+  'Password should contain at least one character of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789.',
+  'weak_password', { reasons: ['characters'] }))), "a church's character rule is said in words");
+const wait = humanError(authErr('For security purposes, you can only request this after 37 seconds.', 'over_email_send_rate_limit'));
+const waitNoCode = said('For security purposes, you can only request this after 37 seconds.');
+ok(/37 seconds/.test(wait) && /37 seconds/.test(waitNoCode),
+  'a second reset request within the minute is told to wait, and for how long when that is known');
+ok(/run out|already been used/i.test(humanError(authErr('Email link is invalid or has expired', 'otp_expired'))),
+  'a dead reset link says so, and that a new one can be asked for');
+ok(/too long/i.test(said('Auth session missing!')), 'a page left open past its session says so, not "Auth session missing!"');
+ok(/confirm it is you/i.test(humanError(authErr('Password update requires reauthentication.', 'reauthentication_needed'))),
+  'a church that requires a fresh confirmation is asked for one');
+// The library's errors are not always Error instances.
+ok(/already have/i.test(humanError({ name: 'AuthApiError', message: 'x', code: 'same_password' })),
+  'an error object that is not an Error is still read by its code');
+
 // ---- Anything else is passed through, and nothing is lost ------------------
 ok(said('Choose somebody to walk with first.') === 'Choose somebody to walk with first.',
   "a sentence already written for a person is left exactly as it is");

@@ -1,0 +1,23 @@
+{
+  "about": "Advisories this project has read, judged and accepted for now, each with the reason and the date it must be looked at again. scripts/audit-gate.mjs fails on any advisory of moderate severity or worse that is not here, and on any entry here whose review_by date has passed. Add an entry only with a reason a reviewer can check; never to make the gate pass. docs/SECURITY-LAYERS.md, layer 1.",
+  "accepted": [
+    {
+      "id": "GHSA-mrhx-c7xc-m3w5",
+      "package": "zod",
+      "severity": "high",
+      "where": "the Study Room's editor (@blocksuite/* 0.22.4), in the reader's own browser",
+      "why": "Memory exhaustion while validating very large constrained collections. The editor validates its own document model, not data from other people, and the only fix is zod 4.6.6, which @blocksuite does not support yet; the only editor release without zod 3 is 0.20.0, which lacks features the Study Room uses. docs/SECURITY.md, October 2026.",
+      "accepted_on": "2026-10-26",
+      "review_by": "2027-01-31"
+    },
+    {
+      "id": "GHSA-238p-pmpm-9mq7",
+      "package": "katex",
+      "severity": "low",
+      "where": "the Study Room's editor (@blocksuite/* 0.22.4), in the reader's own browser",
+      "why": "An existing prototype pollution can bypass KaTeX's trust setting. It needs a separate prototype-pollution flaw to exist first, and the editor renders the reader's own formulas. Fixed in KaTeX 0.18.2, which the editor pins below. docs/SECURITY.md, October 2026.",
+      "accepted_on": "2026-10-26",
+      "review_by": "2027-01-31"
+    }
+  ]
+}

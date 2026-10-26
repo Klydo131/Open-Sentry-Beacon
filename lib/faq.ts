@@ -109,7 +109,7 @@ export function faqSections(): FaqSection[] {
           a: [
             'The temporary password expires after three days, or as soon as you choose your own, so that it cannot be reused by anyone who sees the email. Tap “Forgot your password?” on the sign-in screen to receive a link for setting a new one.',
           ],
-          links: [{ label: 'Sign in', href: '/login' }],
+          links: [{ label: 'Forgot your password?', href: '/forgot-password' }],
         },
         {
           id: 'two-invitations',
@@ -127,9 +127,10 @@ export function faqSections(): FaqSection[] {
           id: 'forgot-password',
           q: 'I forgot my password.',
           a: [
-            'Tap “Forgot your password?” on the sign-in screen, and a link to choose a new one will be sent to your email. Once signed in, you can change your password at any time on the Password page.',
+            'Tap “Forgot your password?” on the sign-in screen. It opens a page of its own: type your e-mail address, and a link to choose a new password is sent to you. The link opens the page where you choose it. If your account uses an authenticator app, that page asks for the code too.',
+            'Each link works once, for one hour, and only the newest one works. Once signed in, you can change your password at any time on the Password page.',
           ],
-          links: [{ label: 'Sign in', href: '/login' }],
+          links: [{ label: 'Forgot your password?', href: '/forgot-password' }],
         },
         {
           id: 'two-step',

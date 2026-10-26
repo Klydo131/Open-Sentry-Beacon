@@ -3,7 +3,8 @@
 //
 // The messages are the repository's own templates (docs/email-templates/),
 // filled in the same way Supabase fills them, so a link is always
-// <your app>/join?token_hash=…&type=… and is redeemed by the app itself. A mail
+// <your app>/join?token_hash=…&type=invite, or /new-password?…&type=recovery
+// for a password, and is redeemed by the app itself. A mail
 // scanner that opens the link spends nothing: the token is only spent when the
 // person presses the button on that page.
 //
@@ -60,7 +61,10 @@ export function createMailer(cfg) {
         siteUrl: cfg.siteUrl,
         tokenHash,
       });
-      const link = `${cfg.siteUrl}/join?token_hash=${tokenHash}&type=${kind === 'recovery' ? 'recovery' : 'invite'}`;
+      // A password link opens its own page (components/live/PasswordPages.tsx).
+      const link = kind === 'recovery'
+        ? `${cfg.siteUrl}/new-password?token_hash=${tokenHash}&type=recovery`
+        : `${cfg.siteUrl}/join?token_hash=${tokenHash}&type=invite`;
       const message = {
         from: smtp.from ? { name: smtp.fromName, address: smtp.from } : undefined,
         to,

@@ -35,14 +35,21 @@ const ok = (c, m) => {
   console.log(`${c ? 'OK ' : 'BAD'} ${m}`);
 };
 
+// The sign-in page, and since 26 October 2026 the forgotten-password pages it
+// links to (components/live/PasswordPages.tsx, lib/live/password.ts).
 const door = read('components/live/DoorPages.tsx');
+const passwordPages = read('components/live/PasswordPages.tsx');
+const passwordCalls = read('lib/live/password.ts');
 const church = read('components/LiveChurchPages.tsx');
 
 // ---- The person's own way out ----
 ok(/couldBeUnfinished/.test(door), 'a refused sign-in is examined, not just shown');
 ok(/Never set a password yet\?/.test(door),
    'and somebody who never had one is addressed in those words');
-ok(/Send me a link to set my password/.test(door), 'with a button that sends one');
+ok(/Send me a link to set my password/.test(door) && /href=\{forgotHref\('first=1'\)\}/.test(door),
+   'with a button that takes them to the page that sends one, in words for somebody who never had one');
+ok(/first \? say\('Set your password'\)/.test(passwordPages) && /sendPasswordLink\(address\)/.test(passwordPages),
+   'and that page sends it'); 
 // "Forgot your password?" was already there and is not enough: it describes a
 // different person, which is exactly why the stuck ones did not press it.
 ok(/Forgot your password\?/.test(door), 'the ordinary forgotten-password door is still there too');
@@ -51,8 +58,10 @@ ok(/setCouldBeUnfinished\(false\)/.test(door), 'and it is cleared when they try 
 
 // resetPasswordForEmail is the mechanism, and it is the right one BECAUSE it
 // works for an account that has never had a password.
-ok(/resetPasswordForEmail/.test(door), 'it uses the reset path, which works with no password set');
-ok(/join\?recovery=1/.test(door), 'and lands them on the screen that sets one');
+ok(/resetPasswordForEmail/.test(passwordCalls), 'it uses the reset path, which works with no password set');
+ok(/redirectTo: `\$\{window\.location\.origin\}\$\{NEW_PASSWORD_PATH\}`/.test(passwordCalls)
+   && /NEW_PASSWORD_PATH = '\/new-password'/.test(passwordCalls),
+   'and lands them on the page that sets one');
 
 // ---- The Director's way out ----
 ok(/resendAllUnfinished/.test(church), 'a Director can re-send to everybody unfinished');

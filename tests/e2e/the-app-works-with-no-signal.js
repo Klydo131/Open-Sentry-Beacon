@@ -45,7 +45,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 // checks the worker's list against app/; this walks the same list).
 const SCREENS = ['/', '/menu', '/church', '/library', '/settings', '/profile', '/ds', '/dm', '/talk', '/mail',
   '/study', '/guilds', '/cases', '/publish', '/apps', '/admin', '/office', '/sabbath', '/music', '/faq',
-  '/privacy', '/policy', '/login', '/signup', '/join', '/password', '/setup'];
+  '/privacy', '/policy', '/login', '/signup', '/join', '/password', '/forgot-password', '/new-password', '/setup'];
 const FOLDERS = { Listen: '[data-music-listen]', Tuner: '[data-music-tuner]', Conductor: '[data-music-conductor]', Pieces: '[data-music-pieces]', Play: '[data-music-play]' };
 
 /** A relay in front of the app, so the signal can be cut for this walk only. */

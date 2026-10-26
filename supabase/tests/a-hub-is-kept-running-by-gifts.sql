@@ -3,8 +3,12 @@
 -- ---------------------------------------------------------------------------
 -- WHAT THIS PROVES, against a database built from nothing by
 -- scripts/fresh-install.sh, signed in as invented people
--- (20261026120000_a_hub_is_kept_running_by_gifts):
+-- (20261026120000_a_hub_is_kept_running_by_gifts,
+-- 20261026200000_giving_is_a_choice):
 --
+--   THE SWITCH    giving is off until the project sets HUB_GIVING = 'on': no
+--                 card for anybody, and nothing can be set up or recorded;
+--                 switched off again, it all disappears and nothing is lost.
 --   THE CARD      every approved member of a church sees its goal, how to give
 --                 and the month's total, and nothing else: no gift, no giver;
 --                 another church sees nothing of it; signed out, nothing.
@@ -121,8 +125,18 @@ create or replace function pg_temp.save(p_gcash text, p_bank text, p_qr text) re
                   'Gift Chapel Treasury', %L, 'Example Bank', 'Gift Chapel', %L, %L)::text$q$, p_gcash, p_bank, p_qr)
 $$;
 
+-- THE SWITCH, OFF AS THE APP COMES ---------------------------------------------------
+delete from public.app_settings where key = 'HUB_GIVING';
+select pg_temp.check(pg_temp.card('b1') = '{"enabled": false}'::jsonb and pg_temp.card('d1') = '{"enabled": false}'::jsonb,
+  'with no setting, giving is off: a member and a Director are told only that');
+select pg_temp.as_('d1', pg_temp.save('0917 123 4567', null, null), 'Only a Director', 'and nothing can be set up');
+select pg_temp.as_('d1', 'select public.hub_treasurers_list()::text', 'Only a Director or a treasurer', 'nor treasurers listed');
+select pg_temp.check(not has_function_privilege('authenticated', 'private.hub_giving_on()', 'execute'),
+  'nobody signed in can ask the switch directly');
+insert into public.app_settings (key, value) values ('HUB_GIVING', ' On ');
+
 -- BEFORE IT IS SET UP --------------------------------------------------------------
-select pg_temp.check(pg_temp.card('b1') = '{"set_up": false, "i_lead": false, "i_keep_the_books": false}'::jsonb,
+select pg_temp.check(pg_temp.card('b1') = '{"enabled": true, "set_up": false, "i_lead": false, "i_keep_the_books": false}'::jsonb,
   'before a Director sets it up, a member sees that there is nothing yet');
 select pg_temp.check(pg_temp.card('d1') ->> 'i_lead' = 'true', 'and a Director is told they may set it up');
 select pg_temp.as_('anon', 'select public.hub_giving_card()::text', 'permission denied', 'signed out, there is no card at all');
@@ -141,7 +155,7 @@ select pg_temp.check(pg_temp.card('b1') @> '{"set_up": true, "monthly_goal": 171
   'every member then sees the goal, how to give and the month''s total');
 select pg_temp.check(not (pg_temp.card('b1') ? 'gifts') and not (pg_temp.card('b1')::text ilike '%recorded_by%'),
   'and no gift and nobody who gave');
-select pg_temp.check(pg_temp.card('d2') = '{"set_up": false, "i_lead": true, "i_keep_the_books": false}'::jsonb,
+select pg_temp.check(pg_temp.card('d2') = '{"enabled": true, "set_up": false, "i_lead": true, "i_keep_the_books": false}'::jsonb,
   'another church sees nothing of it');
 
 -- TREASURERS ---------------------------------------------------------------------------
@@ -199,6 +213,16 @@ select pg_temp.as_('d1', format('select public.hub_treasurer_name(%L)', pg_temp.
 update public.profiles set church_id = '00000000-0000-0000-0000-00000000ee42' where id = pg_temp.id('a1');
 select pg_temp.as_('a1', format($q$select public.hub_gift_record(100, %L::date, 'gcash', null)::text$q$, private.hub_today()), 'Only a treasurer',
   'a treasurer who moves to another church keeps no books for the old one');
+
+-- SWITCHED OFF AGAIN, NOTHING IS LOST --------------------------------------------------------
+update public.profiles set church_id = '00000000-0000-0000-0000-00000000ee41' where id = pg_temp.id('a1');
+update public.app_settings set value = 'off' where key = 'HUB_GIVING';
+select pg_temp.check(pg_temp.card('b1') = '{"enabled": false}'::jsonb, 'switched off, the card is gone for everybody');
+select pg_temp.as_('a1', $q$select public.hub_gifts_list(null)::text$q$, 'Only a treasurer', 'and the treasurer''s book is closed');
+select pg_temp.check((select count(*) from public.hub_gifts where church_id = '00000000-0000-0000-0000-00000000ee41') = 2,
+  'but every gift recorded is still there');
+update public.app_settings set value = 'on' where key = 'HUB_GIVING';
+select pg_temp.check((pg_temp.card('b1') ->> 'given_this_month')::numeric = 700, 'and switched on again, the month is as it was');
 
 -- THE TABLES -------------------------------------------------------------------------------
 select pg_temp.as_('d1', 'select count(*)::text from public.hub_gifts', 'permission denied', 'nobody signed in reads the gifts table');

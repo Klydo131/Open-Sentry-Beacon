@@ -91,6 +91,15 @@ are and the app takes you to your own part of it.
 
 ![Signing in. There is no public sign-up: if you have no invitation yet, ask your church for one.](screenshots/walkthrough/02-who-are-you.png)
 
+**Forgot your password?** Tap **Forgot your password?** under the sign-in
+button. It opens a page of its own (`/forgot-password`): type your e-mail
+address and press **E-mail me a link**. The link in that e-mail opens another
+page, **Choose a new password** (`/new-password`), where you type the new one
+twice. If your account uses an authenticator app, it asks for the code too.
+Each link works once, for one hour, and only the newest one works. Once you
+are signed in, you can change your password at any time in **Settings,
+Password**.
+
 ### Finding your way
 
 Along the bottom of every screen are three words. **Menu** lists every place you
@@ -488,7 +497,9 @@ Without that rhythm the numbers are decoration.
 ### Giving toward the app
 
 Members can help pay for the app the way they give toward anything else in the
-church. In **Settings, 💛 Giving**, set the monthly goal (about ₱1,710 on the
+church. It is optional: it appears only once whoever looks after your church's
+database switches it on (the Handbook, "Keep our Hope Hub running", says how).
+Then, in **Settings, 💛 Giving**, set the monthly goal (about ₱1,710 on the
 standard plan) and the church's own GCash and bank details, then name the
 treasurer. Members then see the month's goal and total on Home, with how to
 give. Only the treasurer records each gift and sees it; nobody sees who gave.

@@ -5,6 +5,12 @@ volunteer, a developer, or somebody building with AI tools. It covers how to
 report a problem, who is responsible for what, and how to secure your own copy,
 with samples you can adapt.
 
+**[SECURITY-LAYERS.md](SECURITY-LAYERS.md) puts all of this in order**: eight
+layers, from the packages the app is built from to the people who run it, each
+with what it stops, where it lives, the check that proves it, how to keep it
+current, and the questions to answer when you add something new. Start there
+if you maintain a copy.
+
 ---
 
 ## Reporting a vulnerability
@@ -496,6 +502,8 @@ anybody new is given access.
 |---|---|---|
 | Supabase → Authentication → "Allow new users to sign up" | **Off** | The app is invitation-only, and invitations are made through the service role, so nothing breaks. Left on, the public key alone can create accounts. |
 | Supabase → Authentication → email code expiry | **Under an hour** | A sign-in code that lasts longer is longer to steal. |
+| Supabase → Authentication → "Prevent use of leaked passwords" | **On** (Pro plan) | Refuses any password already in the Have I Been Pwned list, which is the list an attacker tries first. The app's own rules (`lib/password-rules.ts`) cannot know it. |
+| Supabase → Authentication → minimum password length | **10** | The same as the app, so the service and the screens agree. |
 | Supabase → Authentication → Multi-Factor → authenticator app (TOTP) | **Enabled** (the default) | Two-step sign-in in the app uses it. Switched off, nobody can set it up. |
 | GitHub → Settings → Environments → `backup` | Allow `main` only, you as **required reviewer**, `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` as its secrets | The database address can read everything. As a repository secret, any workflow on any branch can read it, so anybody who can push, or an AI tool working with that access, could copy it out. `.github/workflows/backup.yml` explains. |
 | GitHub → Settings → Code security | **Private vulnerability reporting, secret scanning and push protection on** | The "report a vulnerability" link above depends on the first; the others stop a key from being pushed by mistake. |

@@ -7,6 +7,11 @@
 // members give through the church's own GCash or bank, with nothing paid in the
 // app; members see the month's goal and total, and no names.
 //
+// THEN, THE SAME DAY: "Donation features are only optional if developers want
+// to put it on their own home brewed Hope Beacon." So giving is off until a
+// project sets HUB_GIVING = 'on' (20261026200000_giving_is_a_choice), and the
+// sample church, which is the app as it comes, has no giving card.
+//
 // WHAT HOLDS, each checked below and each broken on purpose once to watch the
 // check go red. Who may do what is proved by running it, as invented people,
 // in supabase/tests/a-hub-is-kept-running-by-gifts.sql, which this checks is
@@ -33,6 +38,22 @@ const m = sql('supabase/migrations/20261026120000_a_hub_is_kept_running_by_gifts
 const fnOf = (name) => new RegExp(`function ${name.replace('.', '\\.')}\\([\\s\\S]*?\\$\\$;`).exec(m)?.[0] ?? '';
 const screens = code('components/live/HubGiving.tsx');
 const calls = code('lib/live/giving.ts');
+
+// 0. Optional, and off as the app comes.
+const choice = sql('supabase/migrations/20261026200000_giving_is_a_choice.sql');
+const choiceFn = (name) => new RegExp(`function ${name.replace('.', '\\.')}\\([\\s\\S]*?\\$\\$;`).exec(choice)?.[0] ?? '';
+ok(/s\.key = 'HUB_GIVING'/.test(choiceFn('private.hub_giving_on')) && /= 'on'/.test(choiceFn('private.hub_giving_on')),
+  'giving is on only where the project has set HUB_GIVING = on; no row means off');
+ok(/and private\.hub_giving_on\(\)/.test(choiceFn('private.hub_my_church')),
+  'switched off, no caller has a church for giving, so every giving function refuses');
+ok(/if not private\.hub_giving_on\(\) then\s+return jsonb_build_object\('enabled', false\)/.test(choiceFn('public.hub_giving_card')),
+  'switched off, the card says so instead of failing');
+ok(/revoke all on function private\.hub_giving_on\(\)\s+from public, anon, authenticated;/.test(choice),
+  'nobody signed in can ask the switch directly');
+ok(/card\?\.enabled === false\) return null/.test(calls),
+  'the screens treat a switched-off project as no giving at all');
+ok(!/GivingCardView|HubGiving/.test(code('app/church/page.tsx')),
+  'the sample church, which is the app as it comes, shows no giving card');
 
 // 1. The tables are locked, and keep no giver.
 ok(/revoke all on public\.hub_giving, public\.hub_treasurers, public\.hub_gifts from public, anon, authenticated/.test(m)
@@ -90,14 +111,16 @@ const view = /export function GivingCardView[\s\S]*?\n}\n/.exec(screens)?.[0] ??
 ok(view && !/gifts|recorded_by|GiftBook/.test(view), 'the card a member sees draws no gift and no name');
 ok(/giving\.i_lead \|\| giving\.i_keep_the_books/.test(code('components/LiveAccountPages.tsx')),
   'Settings offers the Giving folder only to Directors and treasurers');
-ok(/<LiveHubGivingCard \/>/.test(code('components/LiveChurchPages.tsx')) && /<GivingCardView/.test(code('app/church/page.tsx')),
-  'the card is on Home in the live church and in the sample church');
+ok(/<LiveHubGivingCard \/>/.test(code('components/LiveChurchPages.tsx')),
+  'where giving is switched on, the card is on Home in the live church');
 
 // 7. Proved on every fresh install, and written down.
 ok(/supabase\/tests\/a-hub-is-kept-running-by-gifts\.sql/.test(read('scripts/fresh-install.sh')),
   'the database proof runs on every fresh install (and so in CI)');
 ok(/Keep our Hope Hub running/.test(read('docs/HANDBOOK.md')) && /Giving/.test(read('docs/HOW-TO-USE.md')),
   'the Handbook and How-To-Use say how it works');
+ok(/HUB_GIVING/.test(read('docs/HANDBOOK.md')) && /HUB_GIVING/.test(read('CHANGELOG.md')),
+  'and the Handbook and the changelog say how a project switches it on');
 
 console.log(bad ? `\nRESULT: ${bad} FAILED` : '\nRESULT: ALL OK');
 process.exit(bad ? 1 : 0);

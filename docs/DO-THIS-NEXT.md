@@ -22,7 +22,9 @@ These came with the October security update and the giving room.
 2. **Say yes to the two database updates** when you are asked: the giving room,
    and every table opened by name. Nothing is applied to the live database until
    you say so, and until then Home simply has no giving card.
-   After it, a Director opens **Settings → Giving**, types the month's goal and
+   Giving is optional and starts off, so the update also asks whether to
+   switch it on for your church. After that, a Director opens **Settings →
+   Giving**, types the month's goal and
    the church's GCash or bank details, and names the treasurers. Members see
    nothing about giving until that is done.
 3. **If a leader presses "Email me a code" at the court room and is told it

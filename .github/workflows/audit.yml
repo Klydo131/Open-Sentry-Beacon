@@ -1,0 +1,41 @@
+# Known security advisories against the app's packages, every week and on
+# every change to a lockfile (scripts/audit-gate.mjs).
+#
+# A new advisory of moderate severity or worse fails this run until it is
+# either fixed or written into security/accepted-advisories.json with a reason
+# and a date to look again; an acceptance past its date fails it too. Layer 1
+# in docs/SECURITY-LAYERS.md.
+#
+# Read-only, like every workflow here: it installs nothing (npm audit reads the
+# lockfiles), so no package's install script runs, and it needs no secrets.
+
+name: audit
+
+on:
+  push:
+    branches: [main]
+    paths: ['package-lock.json', 'selfhost/server/package-lock.json', 'security/accepted-advisories.json', 'scripts/audit-gate.mjs']
+  pull_request:
+    paths: ['package-lock.json', 'selfhost/server/package-lock.json', 'security/accepted-advisories.json', 'scripts/audit-gate.mjs']
+  schedule:
+    # Mondays, 01:17 UTC (09:17 in the Philippines): a new advisory is found
+    # within a week even when nobody changes anything.
+    - cron: '17 1 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # The newest 22.x, not whatever the runner cached.
+          check-latest: true
+      - name: Advisories, against the register
+        run: node scripts/audit-gate.mjs

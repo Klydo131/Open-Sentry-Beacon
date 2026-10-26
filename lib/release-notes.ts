@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-27-a-forgotten-password-has-its-own-page',
+    date: '2026-10-27',
+    title: 'A forgotten password has a page of its own',
+    items: [
+      'Tap Forgot your password? on the sign-in screen and it opens its own page: type your e-mail address, and we send you a link.',
+      'The link opens a page for choosing your new password, with your account named at the top. If your account uses an authenticator app, it asks for the code there too.',
+      'When something cannot be done, the app now says why in plain words: a link that has run out, a password you already have, or asking for a second e-mail too soon.',
+      'Once your new password is saved, every other phone or computer signed in to your account is signed out.',
+    ],
+  },
+  {
     id: '2026-10-26-giving-and-safety-updates',
     date: '2026-10-26',
     title: 'You can help keep the app running, and it has the October safety updates',
@@ -26,7 +37,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       'Directors set it up in Settings, under Giving, and name the treasurers.',
       'Treasurers record each gift when it reaches the church\'s account, and only they see the list. The app never takes or holds any money.',
       'The app is built on the newest versions of the pieces it is made from, with the safety fixes released in the week of 14 to 21 October.',
-      'Ready as soon as your church\'s database has its update.',
+      'Giving is optional. It appears only if your church chooses to switch it on.',
     ],
   },
   {

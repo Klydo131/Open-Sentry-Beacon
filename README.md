@@ -113,12 +113,19 @@ of leaving you to guess. The written version is
 
 ## What's new
 
+**27 October 2026.** A forgotten password has pages of its own,
+`/forgot-password` and `/new-password`, instead of a button on the sign-in
+page, and every refusal from the sign-in service is said in plain words. The
+app's security is written up as eight layers, with a routine for keeping each
+current ([docs/SECURITY-LAYERS.md](docs/SECURITY-LAYERS.md)).
+
 **26 October 2026.** The October security releases are in: React 19.0.9,
 DOMPurify 3.4.17, Node 22.23.4 in the self-hosted images, and the newest Node 22
 in CI. Every table is now opened to the app **by name**, which a Supabase
 project created from 30 October 2026 needs, because Supabase starts closing new
 tables by default that day. And members can give toward keeping their hub
-running. **If you run a copy, run the two new migrations.**
+running, if a church switches that on: it is optional and starts off. **If
+you run a copy, run the new migrations.**
 
 **21 October 2026.** A church can let its leaders into the court room with a
 code sent by email instead of an authenticator app.
@@ -196,7 +203,8 @@ whoever leads the church, can still change or delete it for real; that is the
 moderation, and it is the database that decides which of the two happens, not
 the button.
 
-**Giving toward the app, without the app touching money.** A hub on a paid
+**Giving toward the app, without the app touching money, if you want it.** It
+is optional and starts switched off; one setting turns it on. A hub on a paid
 database plan costs the church every month. Members see the month's goal, how
 much has come in and the church's own GCash, bank or QR code to give to, and
 never who gave what. Treasurers the Directors name record each gift as it
@@ -380,6 +388,7 @@ shows how to do both properly, with samples.
 | **[docs/EMAIL.md](docs/EMAIL.md)** | Sending invitations by mail. Any provider, or none, since the app works without it. |
 | **[docs/ONBOARDING.md](docs/ONBOARDING.md)** | How a church actually uses it: who does what, in what order. |
 | **[docs/SECURITY.md](docs/SECURITY.md)** | Read before you put real people in it: securing your own copy, with samples. |
+| **[docs/SECURITY-LAYERS.md](docs/SECURITY-LAYERS.md)** | The app's security as eight layers: what each stops, where it lives, the check that proves it, and how to keep it current and make it stronger in your own copy. |
 | **[docs/UPDATES.md](docs/UPDATES.md)** | How an installed copy updates itself. |
 | **[docs/EMERGENCY-DEPLOY.md](docs/EMERGENCY-DEPLOY.md)** | When the live app is broken: roll back, then a short checked fix. |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Setup, house style, and what a good pull request looks like. |

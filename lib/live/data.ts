@@ -193,13 +193,17 @@ export async function signOut(): Promise<void> {
  * Change your own password, then sign out every other device. Clearing the
  * temporary-password reminder is best effort, so its failure is not reported.
  */
-export async function changeMyPassword(next: string): Promise<void> {
+export async function changeMyPassword(next: string, nonce?: string): Promise<void> {
   if (next.length < 10) throw new Error('Use at least 10 characters.');
   const client = supabaseAuth();
   if (!client) throw new NotLive();
 
-  const { data, error } = await client.auth.updateUser({ password: next });
-  if (error) throw new Error(error.message);
+  // `nonce` is the code e-mailed by askToConfirmPasswordChange(), for a project
+  // that requires a recent sign-in before a password changes.
+  const { data, error } = await client.auth.updateUser({ password: next, ...(nonce ? { nonce } : {}) });
+  // Thrown as the service sent it: its `code` is how humanError() and the
+  // screen tell "same as before" from "confirm it is you" (lib/live/errors.ts).
+  if (error) throw error;
 
   // updateUser rotates the tokens, so the saved session must be replaced.
   try {
@@ -217,6 +221,19 @@ export async function changeMyPassword(next: string): Promise<void> {
       await db().from('profiles').update({ password_is_temporary: false }).eq('id', me);
     } catch { }
   }
+}
+
+/**
+ * E-mail a code that confirms it is really the account holder changing the
+ * password. Only needed where the project has switched on Supabase's "secure
+ * password change" and the sign-in is more than a day old; the change then
+ * answers `reauthentication_needed` until the code is given.
+ */
+export async function askToConfirmPasswordChange(): Promise<void> {
+  const client = supabaseAuth();
+  if (!client) throw new NotLive();
+  const { error } = await client.auth.reauthenticate();
+  if (error) throw error;
 }
 
 export async function clearTemporaryPasswordReminder(): Promise<void> {

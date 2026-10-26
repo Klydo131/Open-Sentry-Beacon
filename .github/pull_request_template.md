@@ -23,6 +23,7 @@ phone".
 - [ ] A new table is granted to `authenticated` by name, or closed by name (`tests/every-table-says-who-may-reach-it.mjs`)
 - [ ] A new or updated dependency: publisher and date checked, lockfile diff read, nothing added that was not asked for
 - [ ] Anything a church running a copy has to do (a migration, a setting, a secret) is in `CHANGELOG.md`
+- [ ] If it touches security: the questions in `docs/SECURITY-LAYERS.md`, "Adding something new", are answered
 - [ ] If an AI tool wrote any of this: it worked on a branch, and "What I could not check" is filled in
 
 ## Licence

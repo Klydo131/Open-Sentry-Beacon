@@ -4,6 +4,10 @@
 // Settings folder where Directors set giving up and treasurers record gifts.
 // What each person may see and do is the database's decision
 // (lib/live/giving.ts); these screens only ask.
+//
+// OPTIONAL. Nothing here is drawn until the project switches giving on
+// (HUB_GIVING = 'on', 20261026200000_giving_is_a_choice): givingCard() answers
+// null, and every component below starts from it.
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -24,9 +28,9 @@ const message = (cause: unknown) => humanError(cause);
 // ------------------------------------------------------------------ card ---
 
 /**
- * The card itself, drawn from what it is given: the live app passes the
- * church's card, the sample church a made-up one. Only the goal, the month's
- * total and how to give; never a gift or a giver.
+ * The card itself, drawn from what it is given: the church's card from the
+ * database. Only the goal, the month's total and how to give; never a gift or
+ * a giver.
  */
 export function GivingCardView({ card }: { card: GivingCard }) {
   const [copied, setCopied] = useState('');

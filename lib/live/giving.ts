@@ -12,8 +12,10 @@
 // members see the goal and the month's total and never a gift or a giver; only
 // treasurers see each gift.
 //
-// A DATABASE WITHOUT THE UPDATE simply has no giving: the card is not drawn
-// and the Settings folder not offered (lib/live/not-yet.ts).
+// OPTIONAL, AND OFF UNTIL A PROJECT SWITCHES IT ON (HUB_GIVING = 'on' in
+// app_settings, 20261026200000_giving_is_a_choice). Switched off, or on a
+// database without the update, there is simply no giving: the card is not
+// drawn and the Settings folder not offered (lib/live/not-yet.ts).
 // ---------------------------------------------------------------------------
 
 import { db } from '@/lib/live/data';
@@ -21,6 +23,8 @@ import { isMissingFromDatabase } from '@/lib/live/not-yet';
 
 /** What everybody in the church sees. */
 export interface GivingCard {
+  /** False when this project has not switched giving on. Absent before 20261026200000. */
+  enabled?: boolean;
   set_up: boolean;
   i_lead: boolean;
   i_keep_the_books: boolean;
@@ -77,7 +81,10 @@ function fail(error: { message?: string } | null): never {
   throw new Error(error?.message || 'Something went wrong. Please try again.');
 }
 
-/** The church's card, or null when this database has no giving yet. */
+/**
+ * The church's card, or null when there is no giving here: this project has
+ * not switched it on, or its database does not have it yet.
+ */
 export async function givingCard(): Promise<GivingCard | null> {
   const { data, error } = await db().rpc('hub_giving_card');
   if (error) {
@@ -85,6 +92,7 @@ export async function givingCard(): Promise<GivingCard | null> {
     fail(error);
   }
   const card = data as GivingCard;
+  if (card?.enabled === false) return null;
   // numeric arrives as a number or a string, depending on the data API.
   for (const key of ['monthly_goal', 'given_this_month', 'given_last_month'] as const) {
     if (card[key] !== undefined) card[key] = Number(card[key]);

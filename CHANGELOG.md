@@ -10,6 +10,95 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 27 October 2026: a forgotten password has its own pages, and security in layers
+
+### If you run a copy, do this
+
+1. **Let the site rebuild.** Nothing in the database changes for this entry.
+2. **Re-paste the recovery e-mail template**: `docs/email-templates/recovery.html`
+   into Supabase, **Authentication → Email Templates → Reset Password**. Its
+   button now opens `/new-password`. Until you do, the old link still works:
+   `/join` hands any reset link to the new page.
+3. **Add `https://your-address/new-password` to Redirect URLs** (Supabase,
+   Authentication, URL Configuration), unless you already allow
+   `https://your-address/**`.
+4. **Redeploy the `invite` function** when convenient
+   (`npx supabase functions deploy invite`): for an account that already
+   existed, its link now opens `/new-password` directly.
+5. **In Supabase, Authentication:** turn on **Prevent use of leaked passwords**
+   (Pro plan) and set the **minimum password length to 10**, to match the app.
+6. **Postgres edition:** rebuild the images as usual; its mailer now sends
+   password links to `/new-password`.
+
+### A forgotten password has its own pages
+
+Asked for: "for making new password, it should be a separate web page, not in
+the log in page so that users will not be confused why it was used in the log
+in page." Until now **Forgot your password?** sent the e-mail straight from the
+sign-in page, and the link opened the *invitation* page, which told somebody
+who had only forgotten a password "This is the address your invitation was
+sent to."
+
+- `/forgot-password`: type your address, get a link. The answer is the same
+  whether or not the address has an account.
+- `/new-password`: the link opens here. It names the account, asks for the new
+  password twice, and says it is done. It asks before replacing whoever is
+  already signed in on the device, takes the link out of the address bar, and
+  signs out every other device afterwards.
+- The sign-in page only links to them, carrying the address already typed.
+- Code: `components/live/PasswordPages.tsx`, `lib/live/password.ts`, and the
+  rules in `lib/password-rules.ts`. Proof: `tests/a-new-password-has-its-own-page.mjs`.
+
+### What a person could do that ended in an error, and now does not
+
+Found by reading every screen that sets a password, then walking each one in a
+browser against the Postgres edition:
+
+- **A member with an authenticator app who reset a forgotten password** was
+  refused with "AAL2 session is required to update password" and could go no
+  further. The page now asks for the code, then saves the password.
+- **A password over 72 bytes** (bcrypt's limit) was refused by the service
+  with no warning; every screen now says so first.
+- **The old password typed again** read "New password should be different from
+  the old password." It now says that in plain words.
+- **Asking for a second link within the minute** printed "For security
+  purposes, you can only request this after 60 seconds", and the invitation
+  page's "send me a new link" swallowed that refusal and promised an e-mail
+  that was not coming. Both now say how long to wait.
+- **A project with Supabase's "secure password change" on**: Settings,
+  Password now e-mails the confirmation code and asks for it, instead of
+  failing with "Password update requires reauthentication".
+- Every refusal from the sign-in service is translated by its `code` in
+  `lib/live/errors.ts` (`humanError`), with the wording as a fallback.
+- One set of rules for every page that sets a password: at least 10
+  characters, at most 72 bytes, not the e-mail address, not the app's name,
+  not a row of the keyboard.
+
+### Security, in layers
+
+[docs/SECURITY-LAYERS.md](docs/SECURITY-LAYERS.md) puts the app's security in
+eight layers, each with what it stops, where it lives, the check that proves
+it, how to keep it current, and how to make it stronger in your own copy; then
+a routine (weekly, monthly, quarterly, yearly), a procedure for when an
+advisory lands, and the questions to answer when adding a table, a function, a
+page, a dependency or an optional feature. `tests/the-security-layers-hold.mjs`
+fails the build if the map names a file that does not exist or a check that
+does not run. New with it:
+
+- **An advisory gate.** `scripts/audit-gate.mjs` runs every week and on every
+  lockfile change (`.github/workflows/audit.yml`). It fails on any advisory of
+  moderate severity or worse that is not in `security/accepted-advisories.json`
+  with a reason and a review date at most six months away, and on any
+  acceptance past its date. It installs nothing.
+- **Dependabot** now watches the Postgres edition's server packages and its
+  Docker image too.
+- **The edge**: `object-src 'none'`, `Cross-Origin-Opener-Policy: same-origin`
+  and `X-Permitted-Cross-Domain-Policies: none`.
+- **`/.well-known/security.txt`** (RFC 9116) says where to report a problem. A
+  church running its own copy adds its own `Contact:` line first.
+
+---
+
 ## 26 October 2026: the October security releases, tables opened by name, and giving
 
 ### If you run a copy, do this
@@ -23,6 +112,8 @@ the part that goes wrong when nobody reads past the headline.
      October 2026 needs this one**, or every screen answers "permission
      denied". On an older project it changes nothing a member can do, and
      takes away four table privileges nobody signed in should have had.
+   - `20261026200000_giving_is_a_choice.sql`, which keeps giving switched off
+     until you choose it (below).
 2. **Let the site rebuild** (a push to `main`, or Sync fork on GitHub). The
    rebuild carries React 19.0.9 and the other patched packages below. On
    Vercel, a deployment made after 21 October 2026 also runs on Vercel's
@@ -100,11 +191,23 @@ that adds packages you did not ask for is a question to answer before you
 commit it. This update changed six versions in `package-lock.json` and added
 no package.
 
-### New: members can give toward keeping their hub running
+### New, and optional: members can give toward keeping their hub running
 
 A Hope Hub on Supabase's paid plan costs money every month, and that money has
 to come from the church. The giving room gives a church one honest place to say
-so, without the app ever handling a payment:
+so, without the app ever handling a payment.
+
+**It is off until a project switches it on**, so a church that pays another way,
+or a developer building their own Hope Beacon, never sees it. To switch it on,
+run the third migration below, then in the SQL editor:
+
+```sql
+insert into public.app_settings (key, value) values ('HUB_GIVING', 'on')
+on conflict (key) do update set value = excluded.value, updated_at = now();
+```
+
+Delete the row to switch it off; what was set up and recorded is kept. With
+it on:
 
 - **Every member** sees, on Home under Notices, the month's goal, how much
   has come in, what it is for, and how to give: the church's own GCash number,
@@ -113,7 +216,11 @@ so, without the app ever handling a payment:
 - **Treasurers** record each gift as it arrives in the church's own account,
   and only they see the list. A gift has no giver field at all.
 
-For developers: `public.hub_giving`, `public.hub_treasurers` and
+For developers: the switch is `private.hub_giving_on()`. While it is off,
+`private.hub_my_church()` answers nobody, so every giving function refuses, and
+`hub_giving_card()` returns `{"enabled": false}`, which the screens treat as no
+giving at all. The sample church shows no giving card, because it is the app
+as it comes. `public.hub_giving`, `public.hub_treasurers` and
 `public.hub_gifts` are locked tables (row-level security on, no policies,
 every privilege revoked), reached only through the `hub_*` functions in
 `20261026120000_a_hub_is_kept_running_by_gifts.sql`, which decide who may do

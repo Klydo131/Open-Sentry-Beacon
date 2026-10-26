@@ -292,10 +292,11 @@ const DATA = 'lib/live/data.ts';
   const door = read('components/live/DoorPages.tsx');
   const deadLink = door.slice(door.indexOf('const [rescueEmail'));
 
-  ok(/resetPasswordForEmail/.test(deadLink),
+  const passwordCalls = read('lib/live/password.ts');
+  ok(/await sendPasswordLink\(address\)/.test(deadLink) && /resetPasswordForEmail/.test(passwordCalls),
      'a stuck invitee can send themselves a fresh link without asking their church');
-  ok(/redirectTo:[^\n]*\/join\?recovery=1/.test(deadLink),
-     'and that link brings them back to set a password');
+  ok(/redirectTo: `\$\{window\.location\.origin\}\$\{NEW_PASSWORD_PATH\}`/.test(passwordCalls),
+     'and that link brings them to the page that sets a password');
   ok(/E-mail me a new link/i.test(door),
      'the way out is offered in their words, not as "forgot your password"');
 

@@ -325,6 +325,8 @@ const staticChecks = [
   ['a hub is kept running by gifts', 'tests/a-hub-is-kept-running-by-gifts.mjs'],
   ['every table says who may reach it', 'tests/every-table-says-who-may-reach-it.mjs'],
   ['the October 2026 patches hold', 'tests/the-october-2026-patches-hold.mjs'],
+  ['a new password has its own page', 'tests/a-new-password-has-its-own-page.mjs'],
+  ['the security layers hold', 'tests/the-security-layers-hold.mjs'],
   ['dev server', 'tests/dev-server.mjs'],
 ];
 // The emergency lane names its checks by file; one that is not registered here fails it.

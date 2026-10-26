@@ -22,3 +22,22 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+  # THE POSTGRES EDITION'S SERVER AND ITS IMAGE (26 October 2026, layer 1 in
+  # docs/SECURITY-LAYERS.md). They were watched by nobody: nodemailer's
+  # October fix and Node 22.23.4 were found by hand. A pull request that moves
+  # the Node image's digest fails tests/the-october-2026-patches-hold.mjs on
+  # purpose: confirm the new image is 22.23.4 or later, then move the digest
+  # there and in selfhost/app.Dockerfile together.
+  - package-ecosystem: npm
+    directory: /selfhost/server
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    groups:
+      edition:
+        patterns: ["*"]
+  - package-ecosystem: docker
+    directory: /selfhost/server
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1

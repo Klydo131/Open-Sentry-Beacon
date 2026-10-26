@@ -39,10 +39,11 @@ const ok = (c, m) => {
 const BOOKS = [
   {
     file: 'lib/words/door.ts', name: 'DOOR_WORDS',
-    screens: ['components/live/DoorPages.tsx'],
+    screens: ['components/live/DoorPages.tsx', 'components/live/PasswordPages.tsx'],
     // The sign-in refusals arrive from here, in English, and are translated
-    // where the page draws them.
-    sources: ['components/live/DoorPages.tsx', 'app/api/auth/sign-in/route.ts', 'lib/live/data.ts', 'lib/live/errors.ts'],
+    // where the page draws them. The forgotten-password pages share the book.
+    sources: ['components/live/DoorPages.tsx', 'components/live/PasswordPages.tsx', 'app/api/auth/sign-in/route.ts',
+      'lib/live/data.ts', 'lib/live/errors.ts', 'lib/live/password.ts'],
   },
   {
     file: 'lib/words/two-step.ts', name: 'TWO_STEP_WORDS',

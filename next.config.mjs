@@ -94,6 +94,11 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANO
 
 const csp = [
   "default-src 'self'",
+  // NO PLUGINS (26 October 2026, the layered review, docs/SECURITY-LAYERS.md).
+  // <object> and <embed> are how a document or a file can carry its own code
+  // past the other rules here, and nothing in the app uses either: PDFs open
+  // through pdf.js. 'none' instead of falling back to 'self'.
+  "object-src 'none'",
   `img-src ${imageSources.join(' ')}`,
   "font-src 'self' data:",
   // Next.js injects small inline bootstrap scripts; 'unsafe-inline' is scoped to
@@ -150,6 +155,14 @@ const securityHeaders = [
   // tap that starts a recording and released when it stops. Camera and
   // location stay off: nothing in the app uses them.
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
+  // A WINDOW OF ITS OWN (26 October 2026, the layered review). Another site
+  // that opens this app in a pop-up, or that this app opens, cannot reach
+  // into it through window.opener: the classic way to swap a signed-in tab
+  // for a look-alike sign-in page. Every link out already opens with
+  // noopener (components/talk/ChatView.tsx and the rest), so nothing breaks.
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  // Old document plug-ins (Flash, Acrobat) may not load policy files from here.
+  { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
   ...(indexable ? [] : [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }]),
 ];
 

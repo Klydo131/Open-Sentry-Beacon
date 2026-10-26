@@ -11,9 +11,7 @@ import { ChurchBillboard } from '@/components/ChurchBillboard';
 import { BlogDesk, BlogFeed } from '@/components/Blog';
 import { WritePostPrompt } from '@/components/WritePost';
 import { FeedbackButton } from '@/components/Feedback';
-import { GivingCardView } from '@/components/live/HubGiving';
-import { todayInManila } from '@/lib/live/giving';
-import { APP_NAME, STAGES, roleLabel } from '@/lib/brand';
+import { STAGES, roleLabel } from '@/lib/brand';
 import { inkOn } from '@/lib/room-theme';
 import type { Role } from '@/lib/types';
 
@@ -83,20 +81,9 @@ function Body() {
           the live stream of what's happening across the church. */}
       {room === 'notices' && <ChurchBillboard />}
 
-      {/* KEEPING THE HUB RUNNING, as the live church shows it once a Director
-          sets it up (components/live/HubGiving.tsx). Made-up numbers and a
-          made-up account: nothing here can be given to. */}
-      {room === 'notices' && (
-        <GivingCardView
-          card={{
-            set_up: true, i_lead: false, i_keep_the_books: false,
-            currency: 'PHP', monthly_goal: 1710,
-            purpose: `Our ${APP_NAME} app: the database it runs on, its backups and its email.`,
-            gcash_name: 'Sample Church Treasury', gcash_number: '0900 000 0000',
-            month: todayInManila().slice(0, 7), given_this_month: 1250, given_last_month: 1710,
-          }}
-        />
-      )}
+      {/* No giving card here: giving is optional, off until a project switches
+          it on (20261026200000_giving_is_a_choice), and the sample church is the
+          app as it comes. */}
 
       {/* Home is where people land, so the way to report something lives here
           too rather than only behind a Settings menu. It stays in the first

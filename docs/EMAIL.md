@@ -24,9 +24,15 @@ two things depending on whether the person already has an account:
 | A new address | `inviteUserByEmail` — creates the account and sends "you have been invited" |
 | Someone who never finished joining | `resetPasswordForEmail` — sends "set a password" |
 
-Both messages link to `/join`, which is the screen that finishes the sign-up
-either way. Pressing **Re-send** on a waiting invitation mints a fresh link and
-posts it again, with nothing to retype.
+The invitation links to `/join`. The "set a password" message links to
+`/new-password`, the page for choosing a password whether it was forgotten or
+never chosen (since 26 October 2026; it claims the invitation the same way).
+A reset link that still reaches `/join`, from an older e-mail or a project
+still on the old template, is handed to `/new-password` untouched, so nothing
+breaks while you update the template. To update it, paste
+`docs/email-templates/recovery.html` into Supabase's **Reset Password**
+template again. Pressing **Re-send** on a waiting invitation mints a fresh
+link and posts it again, with nothing to retype.
 
 ## What this costs you
 

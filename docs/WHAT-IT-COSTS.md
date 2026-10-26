@@ -8,9 +8,10 @@ Measured against the live systems on 1 September 2026, not estimated.
 > that is about **₱2,350 a month**.
 > The plan is per organisation, and each church runs its own project, because
 > one shared project would make the hubs one company's service, not each
-> church's own. To meet the monthly cost, a church can now ask its members:
-> the giving room shows the month's goal and how to give, and never who gave
-> ([HANDBOOK.md](HANDBOOK.md), "Keep our Hope Hub running").
+> church's own. To meet the monthly cost, a church can now choose to ask its
+> members: the giving room, optional and off until switched on, shows the
+> month's goal and how to give, and never who gave ([HANDBOOK.md](HANDBOOK.md),
+> "Keep our Hope Hub running").
 
 **Two things turned up while costing this, and both change the answer.**
 

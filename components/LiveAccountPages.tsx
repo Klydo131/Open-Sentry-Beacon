@@ -23,6 +23,7 @@ import { FaqCard } from '@/components/Faq';
 import { WhatsNewButton } from '@/components/WhatsNew';
 import { FeedbackButton } from '@/components/Feedback';
 import { humanError } from '@/lib/live/errors';
+import { passwordProblem } from '@/lib/live/password';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
 import { ReadingSettings } from '@/components/ReadingSettings';
@@ -371,7 +372,7 @@ export function LivePasswordPage() {
 
 /** Change your password. */
 function PasswordCard() {
-  const { profile, refreshProfile } = useLiveSession();
+  const { profile, session, refreshProfile } = useLiveSession();
   const [next, setNext] = useState('');
   const [again, setAgain] = useState('');
   const [show, setShow] = useState(false);
@@ -390,19 +391,37 @@ function PasswordCard() {
   }, [temporary]);
   // "Sign out everywhere else", on request.
   const [elsewhere, setElsewhere] = useState<'' | 'busy' | 'done' | 'failed'>('');
-  // A friendly early warning; lib/live/data.ts enforces the rule.
+  // A project that requires a recent sign-in e-mails a code first
+  // (lib/live/data.ts, askToConfirmPasswordChange): '' until it is asked for.
+  const [confirmCode, setConfirmCode] = useState<'' | 'sent'>('');
+  const [nonce, setNonce] = useState('');
+  // A friendly early warning, with the same rules as every page that sets a
+  // password (lib/live/password.ts); the sign-in service checks again.
   const tooShort = next.length > 0 && next.length < 10;
   const mismatch = again.length > 0 && next !== again;
-  const ready = next.length >= 10 && next === again && !busy;
+  const problem = next.length >= 10 && again.length > 0 ? passwordProblem(next, again, session?.user?.email ?? '') : '';
+  const ready = next.length >= 10 && next === again && !problem && !busy;
 
   const save = async () => {
     if (!ready) return;
     setBusy(true); setError(''); setDone(false);
     try {
-      await live.changeMyPassword(next);
-      setNext(''); setAgain(''); setDone(true);
+      await live.changeMyPassword(next, confirmCode === 'sent' ? nonce.replace(/\s/g, '') : undefined);
+      setNext(''); setAgain(''); setDone(true); setConfirmCode(''); setNonce('');
       await refreshProfile();
     } catch (cause) {
+      // This project asks for a recent sign-in before a password changes: send
+      // the code that confirms it, and ask for it here.
+      if ((cause as { code?: string })?.code === 'reauthentication_needed' && confirmCode !== 'sent') {
+        try {
+          await live.askToConfirmPasswordChange();
+          setConfirmCode('sent');
+          setError('');
+        } catch (sending) {
+          setError(humanError(sending, 'Could not change your password.'));
+        }
+        return;
+      }
       setError(humanError(cause, 'Could not change your password.'));
     } finally {
       setBusy(false);
@@ -480,6 +499,25 @@ function PasswordCard() {
         <p className="mt-2 text-sm font-semibold text-amber-800">
           The two do not match yet.
         </p>
+      )}
+      {!mismatch && problem && (
+        <p className="mt-2 text-sm font-semibold text-amber-800" data-password-problem>{problem}</p>
+      )}
+      {confirmCode === 'sent' && (
+        <div className="mt-3 rounded-xl bg-blue-50 p-4 ring-1 ring-blue-200" data-password-confirm>
+          <p className="text-sm font-semibold text-navy">
+            To keep your account safe, we e-mailed you a code. Type it here, then press
+            Change my password again.
+          </p>
+          <input
+            value={nonce}
+            onChange={(e) => setNonce(e.target.value)}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            aria-label="Code from the e-mail"
+            className="tap mt-2 w-full rounded-xl bg-white px-4 text-center text-xl font-bold tracking-[0.3em] text-navy outline-none focus:ring-2 focus:ring-gold"
+          />
+        </div>
       )}
       {error && (
         <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 ring-1 ring-red-200">

@@ -999,7 +999,8 @@ Nobody else can join until this is done.
    - `BREVO_SENDER` — the sender address you verified
    - `SITE_URL` — your Vercel address, starting `https://`
 5. In Supabase: **Authentication → URL Configuration**. Set **Site URL** to your
-   Vercel address, and add `https://your-address/join` under **Redirect URLs**.
+   Vercel address, and add `https://your-address/join` and
+   `https://your-address/new-password` under **Redirect URLs**.
 
 > **Check, and actually do it:** in your app, invite a second email address of
 > your own. The message should arrive **from your church**, and its link should

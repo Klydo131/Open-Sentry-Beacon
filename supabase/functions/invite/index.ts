@@ -420,7 +420,9 @@ async function handle(req: Request): Promise<Response> {
       via = 'invite';
     } else if (/already|registered|exists/i.test(String(inviteMailErr.message ?? ''))) {
       const { error: resetErr } = await admin.auth.resetPasswordForEmail(email, {
-        redirectTo: `${site}/join?recovery=1`,
+        // Opens /new-password, which claims the invitation; /join hands any
+        // older link there too.
+        redirectTo: `${site}/new-password`,
       });
       if (!resetErr) via = 'recovery';
       else sendError = String(resetErr.message ?? '');
