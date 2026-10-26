@@ -15,8 +15,8 @@
     "test": "node test/the-edition-holds.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.112.3",
-    "nodemailer": "10.1.7",
+    "@supabase/supabase-js": "2.118.0",
+    "nodemailer": "10.2.1",
     "pg": "8.23.1",
     "qrcode": "1.5.4",
     "web-push": "3.6.7",
