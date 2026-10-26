@@ -402,6 +402,22 @@ Directors keep the same control over everything, which is what running the churc
 
 ![Write a post, on a phone, after the tap on Home: the cursor in Title, Publish, and Advanced settings under it.](screenshots/walkthrough/34-home-blog.png)
 
+
+### Keep our Hope Hub running: members' gifts
+
+Each church pays for its own copy of the app: on the standard plan, Supabase Pro, about **₱1,710 a month** ($25 plus 12% GST). Members can give toward it the way they give toward anything else in the church, and the app shows how close each month is. **No money passes through the app.**
+
+**What members see.** Under the notices on Home, a card: **💛 Keep our Hope Hub running**, with what it pays for, the month's goal and how much has been given ("October 2026: ₱1,250 of ₱1,710"), and how to give: the church's GCash name and number, its GCash QR code, and its bank account. **Copy** puts a number on the clipboard. Nobody sees who gave or how much anybody gave.
+
+**Setting it up (Directors).** Settings, **💛 Giving**. Type the monthly goal, one line on what it pays for, and the church's own GCash and bank details (use the church's accounts, not a person's), add a picture of the GCash QR code if you have one, and press **Save**. Until you do, Home shows Directors a card that points here, and shows everybody else nothing.
+
+**Treasurers.** In the same folder, a Director names one or more treasurers from the church's members, and can remove them again. Only a treasurer records gifts and sees each one.
+
+**Recording a gift (treasurers).** Settings, **💛 Giving**, **Record a gift**: the amount, the day it reached the church, how it came (GCash, Maya, bank transfer, cash, other) and an optional note such as the GCash reference. The month's total on everybody's card updates. **Take back** removes a gift recorded by mistake; **← Earlier** shows past months. The app keeps no giver's name: receipts and names stay in the church's own books.
+
+**A month is a calendar month, in Philippine time.** A short month is covered from the church's budget like any other bill. Before collecting, ask the church board to approve the app's cost as a line in the church budget, so the treasurer may receive gifts for it.
+
+**The database change.** Giving needs `20261026120000_a_hub_is_kept_running_by_gifts`. Until a church applies it, the card and the folder are simply not there.
 ### Announcements
 
 A notice pinned where the church will see it: an icon, a title, a line of detail, and a free-text when, because "This Sabbath, 9:00 AM" and "Every evening this week" are what a church actually writes and neither is a date. Notices come down by being taken down, not by a clock nobody set.

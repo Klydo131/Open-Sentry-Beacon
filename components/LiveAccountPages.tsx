@@ -29,6 +29,7 @@ import { ReadingSettings } from '@/components/ReadingSettings';
 import { CourtOrCases } from '@/components/court/CourtOrCases';
 import { LiveAdminReports } from '@/components/LiveAdminReports';
 import { TwoStepCard } from '@/components/live/TwoStep';
+import { LiveGivingRoom, useGivingAccess } from '@/components/live/HubGiving';
 
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
@@ -215,6 +216,12 @@ export function LiveSettingsPage() {
   const [deviceKind, setDeviceKind] = useState<AppleKind>(null);
   useEffect(() => { setDeviceKind(appleKind()); }, []);
 
+  // Giving (26 October 2026): for the Directors who set it up and the
+  // treasurers who record gifts; nobody else has anything to do there. Asked of
+  // the database, which is also what decides what each of them may do.
+  const giving = useGivingAccess();
+  const givingRoom = Boolean(giving && (giving.i_lead || giving.i_keep_the_books));
+
   const rooms: Room[] = [
     // One General folder for device settings (install, alerts, language, text
     // size). Password, Admin Reports and Help keep their own folders.
@@ -223,6 +230,7 @@ export function LiveSettingsPage() {
     { id: 'account', label: '🔑 Password' },
     { id: 'reports', label: '⚖️ Admin Reports' },
     ...(leads ? [{ id: 'church', label: '⛪ Church' }] : []),
+    ...(givingRoom ? [{ id: 'giving', label: '💛 Giving' }] : []),
     { id: 'help', label: '❓ Help' },
   ];
 
@@ -233,6 +241,7 @@ export function LiveSettingsPage() {
     faq: 'help',
     password: 'account',
     reports: 'reports',
+    giving: 'giving',
   });
 
   if (!profile) return <BeaconSpinner inline label="Loading your account" />;
@@ -313,6 +322,8 @@ export function LiveSettingsPage() {
       )}
 
       {room === 'church' && leads && <ChurchNameCard />}
+
+      {room === 'giving' && giving && givingRoom && <LiveGivingRoom card={giving} />}
 
       {room === 'help' && (
         <>

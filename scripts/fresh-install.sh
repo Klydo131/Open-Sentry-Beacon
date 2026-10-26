@@ -194,6 +194,13 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/the-court-room-door-by-email.sql"
 
+# A HUB IS KEPT RUNNING BY GIFTS: every member sees the month's goal and total
+# and how to give, never a gift or a giver; only Directors set it up and name
+# treasurers; only treasurers record and see each gift. Invented people,
+# rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-hub-is-kept-running-by-gifts.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

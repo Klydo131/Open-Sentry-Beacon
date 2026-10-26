@@ -485,6 +485,14 @@ Notices, your **Blog**, **Announcements**, the prayer wall, and the numbers.
 
 Without that rhythm the numbers are decoration.
 
+### Giving toward the app
+
+Members can help pay for the app the way they give toward anything else in the
+church. In **Settings, 💛 Giving**, set the monthly goal (about ₱1,710 on the
+standard plan) and the church's own GCash and bank details, then name the
+treasurer. Members then see the month's goal and total on Home, with how to
+give. Only the treasurer records each gift and sees it; nobody sees who gave.
+
 ### Admin Reports
 
 Cases are heard in **Admin Reports**, in your Menu. Its door asks for the

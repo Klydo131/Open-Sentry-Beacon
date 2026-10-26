@@ -72,6 +72,14 @@ export function useRoom(
   // page they point at — no unmount, no re-render, and a link that did nothing.
   const url = useUrlKey();
   const restored = useRef(false);
+  // A FOLDER CAN ARRIVE LATE. Settings offers Giving only once the database
+  // has said who may see it, so `/settings#giving` used to land before the
+  // folder existed, open General, and never look again (26 October 2026).
+  // The ids are a dependency so a link is honoured when its folder appears;
+  // `honoured` stops the same link dragging somebody back after they have
+  // chosen another folder by hand.
+  const ids = rooms.map((r) => r.id).join(' ');
+  const honoured = useRef('');
 
   // Read after mount, never during render: the server has no localStorage, and
   // reading it while rendering makes the first paint disagree with the second.
@@ -87,12 +95,16 @@ export function useRoom(
     try { hash = window.location.hash.replace('#', ''); } catch { /* no window */ }
     const viaHash = hashAliases[hash];
     if (!asked && viaHash && rooms.some((r) => r.id === viaHash)) {
+      if (honoured.current === `${url}#${viaHash}`) return;
+      honoured.current = `${url}#${viaHash}`;
       setRoom(viaHash);
       try { localStorage.setItem(storageKey, viaHash); } catch {}
       return;
     }
 
     if (asked && rooms.some((r) => r.id === asked)) {
+      if (honoured.current === `${url}?${asked}`) return;
+      honoured.current = `${url}?${asked}`;
       setRoom(asked);
       // Remember it too, so pressing the link and then coming back later lands
       // where the person was rather than where they were three visits ago.
@@ -104,16 +116,24 @@ export function useRoom(
     // on every address change would drag somebody back out of the tab they just
     // picked by hand the moment anything else touched the URL.
     if (restored.current) return;
-    restored.current = true;
 
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved && rooms.some((r) => r.id === saved)) setRoom(saved);
-    } catch { /* a private window is not a reason to lose the page */ }
-    // rooms is rebuilt every render; comparing ids would be the only honest
-    // dependency and it does not change after mount.
+      if (saved && rooms.some((r) => r.id === saved)) {
+        setRoom(saved);
+        restored.current = true;
+      } else if (!saved) {
+        restored.current = true;
+      }
+      // A remembered folder that has not appeared yet is tried again when
+      // the folders change, rather than given up on.
+    } catch {
+      /* a private window is not a reason to lose the page */
+      restored.current = true;
+    }
+    // rooms is rebuilt every render; its ids are the honest dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey, url]);
+  }, [storageKey, url, ids]);
 
   const choose = (id: string) => {
     setRoom(id);

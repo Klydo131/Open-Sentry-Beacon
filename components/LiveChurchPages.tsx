@@ -26,6 +26,7 @@ import { LiveWriteNotice } from '@/components/LiveWriteNotice';
 import { useLiveSession } from '@/lib/live/session';
 import { LiveChurchOverview, LiveBoardReport } from '@/components/LiveExecutive';
 import { LiveBillboard } from '@/components/LiveBillboard';
+import { LiveHubGivingCard } from '@/components/live/HubGiving';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { humanError } from '@/lib/live/errors';
@@ -112,6 +113,12 @@ function ChurchRooms({ profile, churchName, leads, explorer }: {
           folder, and a folder that also appears inside another folder is a
           thing nobody can find twice. */}
       {room === 'notices' && <LiveBillboard churchName={churchName} />}
+
+      {/* KEEPING THE HUB RUNNING (26 October 2026). The month's goal, what has
+          been given and how to give, under the church's own notices: the
+          church asking, not the app. Drawn only once a Director has set it
+          up; see components/live/HubGiving.tsx. */}
+      {room === 'notices' && <LiveHubGivingCard />}
 
       {/* WRITE, THEN WHAT PEOPLE WROTE, which is the reason to come back. */}
       {room === 'blogs' && (
