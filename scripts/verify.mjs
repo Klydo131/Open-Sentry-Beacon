@@ -323,6 +323,8 @@ const staticChecks = [
   ['the court room fits every screen', 'tests/the-court-room-fits-every-screen.mjs'],
   ['the court room\'s door can take an emailed code', 'tests/the-court-room-door-by-email.mjs'],
   ['a hub is kept running by gifts', 'tests/a-hub-is-kept-running-by-gifts.mjs'],
+  ['every table says who may reach it', 'tests/every-table-says-who-may-reach-it.mjs'],
+  ['the October 2026 patches hold', 'tests/the-october-2026-patches-hold.mjs'],
   ['dev server', 'tests/dev-server.mjs'],
 ];
 // The emergency lane names its checks by file; one that is not registered here fails it.

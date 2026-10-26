@@ -370,6 +370,15 @@ could not help, because the install died inside the earlier file. The guard
 function exists. Anything that would make a database end up DIFFERENT is not
 this exception.
 
+**Open every new table by name.** From 30 October 2026 Supabase creates
+tables closed to the data API, so a table that signed-in people reach must be
+granted in its migration (`grant select, insert ... on public.x to
+authenticated`), or explicitly revoked when only checked functions reach it.
+Never `grant all`, and never TRUNCATE: `20261026180000` took TRUNCATE, TRIGGER,
+REFERENCES and MAINTAIN from everybody signed in, and
+`tests/every-table-says-who-may-reach-it.mjs` fails on a table left to a
+default.
+
 **A fresh install is proven, not assumed.** `scripts/fresh-install.sh` applies
 every migration in order to an empty `supabase/postgres` database, checks the
 protections in `supabase/tests/fresh-install-holds.sql`, and prints

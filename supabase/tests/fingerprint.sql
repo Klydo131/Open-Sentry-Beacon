@@ -45,7 +45,7 @@ with cat(kind, key, detail) as (
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace
    where n.nspname in ('public','private') and p.prokind in ('f','p')
   union all
-  select 'function_acl', n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')', coalesce(p.proacl::text,'default')
+  select 'function_acl', n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')', coalesce((select array_to_string(array(select x::text from unnest(p.proacl) x order by x::text collate "C"), ',')),'default')
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace
    where n.nspname in ('public','private') and p.prokind in ('f','p')
   union all
@@ -57,7 +57,7 @@ with cat(kind, key, detail) as (
     from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace
    where not t.tgisinternal and n.nspname in ('public','private','auth','storage')
   union all
-  select 'table_acl', n.nspname||'.'||c.relname, coalesce(c.relacl::text,'default')
+  select 'table_acl', n.nspname||'.'||c.relname, coalesce((select array_to_string(array(select x::text from unnest(c.relacl) x order by x::text collate "C"), ',')),'default')
     from pg_class c join pg_namespace n on n.oid=c.relnamespace
    where n.nspname in ('public','private') and c.relkind in ('r','v','m','p','S')
   union all
@@ -80,7 +80,7 @@ with cat(kind, key, detail) as (
   select 'role_config', rolname, coalesce(array_to_string(rolconfig,' | '),'')
     from pg_roles where rolname in ('authenticator','anon','authenticated','service_role')
   union all
-  select 'schema_acl', nspname, coalesce(nspacl::text,'default') from pg_namespace where nspname in ('public','private')
+  select 'schema_acl', nspname, coalesce((select array_to_string(array(select x::text from unnest(nspacl) x order by x::text collate "C"), ',')),'default') from pg_namespace where nspname in ('public','private')
   union all
   select 'sequence', schemaname||'.'||sequencename, data_type::text||' start='||start_value from pg_sequences where schemaname in ('public','private')
 )

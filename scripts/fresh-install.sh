@@ -83,6 +83,15 @@ done
 if [ "$via" != "plain" ]; then
   psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q \
     -f "$here/supabase/tests/platform-stand-in.sql" >/dev/null
+  # NEW TABLES START CLOSED, as Supabase makes them on every project from 30
+  # October 2026 ("Tables not exposed to Data and GraphQL API automatically").
+  # Built this way, the install proves the app opens every table it needs BY
+  # NAME (20261026180000_every_table_says_who_may_reach_it), so a church that
+  # creates its project today gets a working app, not "permission denied".
+  psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q <<'SQL'
+alter default privileges for role postgres in schema public revoke all on tables from anon, authenticated;
+alter default privileges for role supabase_admin in schema public revoke all on tables from anon, authenticated;
+SQL
 fi
 
 if [ "$via" = "plain" ]; then

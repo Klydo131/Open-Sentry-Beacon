@@ -417,6 +417,63 @@ They sign in with their password and can set it up again.
 - **Review.** Protect `main` and require review from code owners for database
   rules, workflows and server routes.
 
+- **A supply-chain attack is a new version, not an old one.** The worms of
+  2025 and 2026 (Shai-Hulud, CHAINDROP) spread through freshly published
+  releases of well-known packages, some carrying valid provenance. Before
+  taking an update, check who published it and when (`npm view <pkg>@<version>
+  time maintainers`), prefer a release that has been out a few days, and
+  install with `--ignore-scripts` while you look at what changed in
+  `package-lock.json`. An update that adds packages you did not ask for is a
+  question to answer before you commit it.
+
+### October 2026: what was patched, and what was not
+
+In the week of 14 to 21 October 2026 Node.js, Next.js, React and PHP all
+shipped emergency security releases. Hope Beacon was brought up to date on 26
+October 2026; `tests/the-october-2026-patches-hold.mjs` keeps it there.
+
+| Component | Was | Now | Why |
+|---|---|---|---|
+| Next.js | 15.5.28 | 15.5.28 (already) | Remote code execution in the image optimiser (SVG via sharp), Server Actions denial of service |
+| sharp | 0.35.5 | 0.35.5 (already) | The SVG flaw Next.js's fix relies on |
+| React, React DOM | 19.0.0 | 19.0.9 | Server-components fixes of 14 October and the earlier 2026 denial-of-service fixes |
+| DOMPurify | 3.4.16 | 3.4.17 | Sanitiser bypasses (critical) |
+| fast-uri, postcss-selector-parser, vite | older | 3.1.9, 6.1.5, 7.3.7 | Build-time and development fixes |
+| nodemailer (Postgres edition) | 10.0.13 | 10.1.7 | Address parsing could send to a recipient the header did not name |
+| Node.js in the edition's images | 22.x before 21 October | 22.23.4 | Brotli decoder overflow (remote code execution) and nine more |
+| Node.js in CI | the runner's cached 22.x | newest 22.x (`check-latest`) | The same |
+| Table access on Supabase | opened by Supabase's default | opened by name; TRUNCATE, TRIGGER, REFERENCES, MAINTAIN taken from signed-in people | Supabase creates tables closed from 30 October 2026; see below |
+
+**Not affected:** PHP's "PHP2Shell" flaws of 21 October (Hope Beacon has no
+PHP anywhere), and the keyv, cacheable, @subql/common and tensorlake package
+compromises (none is in this project's dependency tree).
+
+**Known and accepted, until the Study Room's editor is updated:**
+`@blocksuite/*` 0.22.4 depends on zod 3.25.76 and KaTeX 0.16.47. The zod
+advisory (memory exhaustion while validating very large collections, fixed only
+in zod 4.6.6) and the KaTeX one (an existing prototype pollution can bypass its
+trust setting) both run in the reader's own browser, inside the editor, and
+`npm audit` reports them as 70 high and 6 low findings from those two causes.
+Their only fix is an older editor (0.20.0) without features the Study Room
+uses, so they are recorded here instead. Revisit when `@blocksuite/affine`
+publishes a release on zod 4.
+
+**Tables closed by default.** From 30 October 2026 Supabase stops opening new
+tables to the data API. Every table Hope Beacon's signed-in people reach is now
+granted by name in `20261026180000_every_table_says_who_may_reach_it.sql`, the
+default for a new table is closed on every project, and the fresh install
+builds with Supabase's new default so CI proves a new church's install works.
+A migration that adds a table must grant it to `authenticated` by name, or
+revoke it; `tests/every-table-says-who-may-reach-it.mjs` fails otherwise.
+
+**For the owner of each project** (settings no code can change):
+
+- In Supabase, Authentication, set the email code and link lifetime to one
+  hour or less (the security advisor's `auth_otp_long_expiry`).
+- Vercel runs the app on its managed Node 24; its October patch (24.22.1) is
+  Vercel's to apply. A new deployment after 21 October picks up what Vercel
+  has rolled out.
+
 ### 12. Working with AI tools
 
 - Give an AI tool a development database, never your live one's keys.

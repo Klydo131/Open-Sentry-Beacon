@@ -47,8 +47,8 @@
     "next": "^15.5.28",
     "pdfjs-dist": "6.4.299",
     "pitchy": "4.1.0",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "19.0.9",
+    "react-dom": "19.0.9",
     "yjs": "^13.6.32"
   },
   "devDependencies": {
@@ -74,6 +74,14 @@
     "@excalidraw/mermaid-to-excalidraw": {
       "nanoid": "^5.1.16",
       "@mermaid-js/parser": "^1.2.1"
+    },
+    "dompurify": "^3.4.17",
+    "fast-uri": "^3.1.9",
+    "postcss-selector-parser": "^6.1.5",
+    "vite": "^7.3.7",
+    "@blocksuite/icons": {
+      "react": "$react",
+      "@types/react": "$@types/react"
     }
   }
 }

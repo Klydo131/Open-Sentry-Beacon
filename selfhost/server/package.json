@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.3",
-    "nodemailer": "10.0.13",
+    "nodemailer": "10.1.7",
     "pg": "8.23.1",
     "qrcode": "1.5.4",
     "web-push": "3.6.7",
