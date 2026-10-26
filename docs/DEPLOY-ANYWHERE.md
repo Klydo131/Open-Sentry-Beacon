@@ -23,7 +23,8 @@ gives the shape of each scenario and the things that bite.
 
 Read this once; every section below assumes it.
 
-- **Node.js 22 or newer** (`engines` in `package.json`). On a host this is a
+- **Node.js 22 or newer** (`engines` in `package.json`), and on 22 at least
+  22.23.4, the October 2026 security release. On a host this is a
   setting, not something you install.
 - **Two settings decide everything.** With `NEXT_PUBLIC_SUPABASE_URL` and
   `NEXT_PUBLIC_SUPABASE_ANON_KEY` set, the app is the live app on your

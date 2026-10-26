@@ -25,7 +25,8 @@ and it needs credentials nobody outside a running church has. Everything under
 changing it, read [AGENTS.md](./AGENTS.md) first: it is the working brief for
 the app's two halves, its product rules and how its authorisation is arranged.
 
-Requires **Node 22 or newer** and nothing else. Some tests import TypeScript
+Requires **Node 22** (22.23.4 or newer, the October 2026 security release) or
+**Node 24**, and nothing else. Some tests import TypeScript
 directly and rely on Node's native type stripping, so there is no build step
 between the code that ships and the code that is checked.
 
@@ -74,6 +75,10 @@ the class of bug where the code is right and the button is under a banner.
 If you touched sign-in, input, uploads, headers, secrets or a workflow, run the
 security reviewer (`.claude/agents/security-reviewer.md`) or `/audit` on your
 change before you open the pull request.
+
+If your change adds a migration, read [CHANGELOG.md](./CHANGELOG.md) first. It
+says what changed recently for anybody running a copy, and it is where your
+change's own "if you run a copy, do this" goes.
 
 If a check fails and you believe the check is wrong, say so in the pull request.
 Several of these tests exist because a previous version of them was wrong; that
@@ -150,6 +155,23 @@ This app ships React and Next and almost nothing else, on purpose. It has to
 stay installable on a cheap phone and auditable by one person in an afternoon.
 A pull request adding a dependency should say what it replaces and why the
 fifteen lines it saves are worth it.
+
+The same care applies to an update. The npm worms of 2025 and 2026 arrived as
+fresh releases of well-known packages, so before you take one, check who
+published it and when (`npm view <pkg>@<version> time maintainers`), prefer a
+release that has been out a few days, install with `npm install
+--ignore-scripts`, and read the `package-lock.json` diff. Packages you did not
+ask for are a question to answer before you commit.
+
+### Every new table is opened by name
+
+From 30 October 2026 Supabase creates new tables closed to the data API. A
+migration that creates a table in `public` grants it to `authenticated` by
+name, with only the privileges the app uses, or revokes everything from
+`authenticated` and `anon` so it is reached only through functions. Never
+`grant all`, and never `truncate`, `trigger`, `references` or `maintain`.
+`tests/every-table-says-who-may-reach-it.mjs` fails the build for a table left
+to a default; [CHANGELOG.md](./CHANGELOG.md) has an example.
 
 ### Three product rules that outrank convenience
 

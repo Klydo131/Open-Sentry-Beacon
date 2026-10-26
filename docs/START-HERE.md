@@ -218,7 +218,8 @@ Three accounts, in this order. Each step ends with something you can check.
 
 ### Before you start
 
-Install [Node.js](https://nodejs.org) version 22 or newer. It is a normal
+Install [Node.js](https://nodejs.org) version 22 (22.23.4 or newer, which has
+October 2026's security fixes) or 24. It is a normal
 installer — download, next, next, done.
 
 Check it worked. Open a terminal (**Terminal** on Mac, **PowerShell** on
@@ -729,6 +730,14 @@ approved. **Do not "fix" this by turning off row level security** — that makes
 every private conversation in your church readable by anyone with your
 publishable key, which is in every visitor's browser.
 
+**If it says "permission denied for table" on every screen, for everybody,**
+including you as a Director, it is a different thing. Supabase creates the
+tables of a project made on or after 30 October 2026 closed, and a copy of the
+app from before 26 October 2026 did not open them by name. Update the app and
+run the Step 3 command again: it adds
+`20261026180000_every_table_says_who_may_reach_it.sql`, and the screens work.
+Never grant tables to everybody by hand to get round it.
+
 ### "Migration failed"
 
 Read the error; Postgres is unusually specific. The two common causes are
@@ -1004,7 +1013,8 @@ and your app's address.
 
 **To update later:** in GitHub, open your fork, click **Sync fork**. Vercel
 rebuilds automatically. If an update adds a migration, run it the way you did in
-Step 7.
+Step 7. [CHANGELOG.md](../CHANGELOG.md) says, newest first, what each update
+asks of you: a migration, a setting, or nothing at all.
 
 ---
 

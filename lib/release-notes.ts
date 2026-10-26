@@ -18,6 +18,29 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-26-giving-and-safety-updates',
+    date: '2026-10-26',
+    title: 'You can help keep the app running, and it has the October safety updates',
+    items: [
+      'On Home, under Notices, everybody can see this month\'s goal for keeping the app running, how much has come in so far, and how to give: the church\'s own GCash, bank account or QR code. Nobody can see who gave or how much.',
+      'Directors set it up in Settings, under Giving, and name the treasurers.',
+      'Treasurers record each gift when it reaches the church\'s account, and only they see the list. The app never takes or holds any money.',
+      'The app is built on the newest versions of the pieces it is made from, with the safety fixes released in the week of 14 to 21 October.',
+      'Ready as soon as your church\'s database has its update.',
+    ],
+  },
+  {
+    id: '2026-10-21-the-door-by-email',
+    date: '2026-10-21',
+    title: 'Leaders can open the court room with a code sent by email',
+    items: [
+      'A church can choose to let its leaders into the court room with a code sent to their email, for when an authenticator app will not work for them.',
+      'Press Email me a code, and type the code from the email. It works for ten minutes, once, and only on the phone or computer that asked for it.',
+      'A refused authenticator code now says why it was refused.',
+      'Ready as soon as your church switches it on.',
+    ],
+  },
+  {
     id: '2026-10-21-admin-reports-on-every-screen',
     date: '2026-10-21',
     title: 'Admin Reports is simpler, on a phone, a tablet and a computer',

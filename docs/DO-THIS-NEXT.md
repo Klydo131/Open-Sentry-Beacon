@@ -10,6 +10,29 @@ since this was written, the thing to look for is described rather than quoted.
 
 ---
 
+## New in October 2026: three more, ten minutes
+
+These came with the October security update and the giving room.
+[CHANGELOG.md](../CHANGELOG.md) has the reasons.
+
+1. **Shorten how long an email code lasts.** In Supabase, open
+   **Authentication**, find the setting for how long an email sign-in code or
+   link stays valid, and set it to **3600** seconds (one hour) or less. A code
+   that lasts longer is longer to steal.
+2. **Say yes to the two database updates** when you are asked: the giving room,
+   and every table opened by name. Nothing is applied to the live database until
+   you say so, and until then Home simply has no giving card.
+   After it, a Director opens **Settings → Giving**, types the month's goal and
+   the church's GCash or bank details, and names the treasurers. Members see
+   nothing about giving until that is done.
+3. **If a leader presses "Email me a code" at the court room and is told it
+   cannot be sent,** the email key is missing where the court room's door
+   looks for it. In Supabase, **Edge Functions → Secrets**, check that
+   `BREVO_API_KEY` and `BREVO_SENDER` are there, the same two the invitations
+   use ([EMAIL.md](EMAIL.md)).
+
+---
+
 ## 1. Find out what is actually deployed · 2 minutes
 
 Every push for the last three weeks has ended with "pushed, build not observed",

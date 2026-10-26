@@ -87,7 +87,8 @@ npm run dev
 Open http://localhost:3000 and pick who you are. There is a guided walk for each
 role that shows you your own job in about ten minutes.
 
-Needs [Node 22 or newer](https://nodejs.org). Nothing else.
+Needs [Node 22](https://nodejs.org), 22.23.4 or newer (the October 2026
+security release), or Node 24. Nothing else.
 
 ## Then make it real, in four steps
 
@@ -107,6 +108,23 @@ Start the app and open **[/setup](http://localhost:3000/setup)**: it checks the
 connection, tells you which step you are on, and names what is missing instead
 of leaving you to guess. The written version is
 **[docs/SETUP.md](docs/SETUP.md)**.
+
+---
+
+## What's new
+
+**26 October 2026.** The October security releases are in: React 19.0.9,
+DOMPurify 3.4.17, Node 22.23.4 in the self-hosted images, and the newest Node 22
+in CI. Every table is now opened to the app **by name**, which a Supabase
+project created from 30 October 2026 needs, because Supabase starts closing new
+tables by default that day. And members can give toward keeping their hub
+running. **If you run a copy, run the two new migrations.**
+
+**21 October 2026.** A church can let its leaders into the court room with a
+code sent by email instead of an authenticator app.
+
+**[CHANGELOG.md](CHANGELOG.md)** has the steps for each, and the new rule for
+anybody adding a table.
 
 ---
 
@@ -177,6 +195,12 @@ shelf and stays on theirs, with a way to put it back. Whoever added a thing, and
 whoever leads the church, can still change or delete it for real; that is the
 moderation, and it is the database that decides which of the two happens, not
 the button.
+
+**Giving toward the app, without the app touching money.** A hub on a paid
+database plan costs the church every month. Members see the month's goal, how
+much has come in and the church's own GCash, bank or QR code to give to, and
+never who gave what. Treasurers the Directors name record each gift as it
+reaches the church's account, and only they see the list.
 
 It runs on Windows, macOS, Linux, Android and iPhone, and CI proves the first
 three on every push. `docs/PLATFORMS.md` says exactly what is tested and what is
@@ -347,6 +371,7 @@ shows how to do both properly, with samples.
 
 | | |
 |---|---|
+| **[CHANGELOG.md](CHANGELOG.md)** | What changed for developers and for whoever runs a copy: the migrations to run, the settings to set, the rules that changed. Newest first. |
 | **[docs/BUILD-YOUR-OWN.md](docs/BUILD-YOUR-OWN.md)** | Build your own Beacon with a real backend, end to end: tables, accounts, permission rules, wiring, deploying, and the checklist before real people. No backend experience assumed. |
 | **[docs/IN-ANY-LANGUAGE.md](docs/IN-ANY-LANGUAGE.md)** | Hope Beacon in your own language and tools, with working [examples](examples/) in nine programming languages, and the app's screens in other spoken languages. |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | How it is built, and where everything lives. Start here if you are about to change something. |

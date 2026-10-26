@@ -2,6 +2,16 @@
 
 Measured against the live systems on 1 September 2026, not estimated.
 
+> **Update, 26 October 2026.** The bill below left out tax. The latest
+> invoice was **$38.47**: the Pro plan ($25), compute for the second project
+> ($9.35), and tax of $4.12 (12% of the two). At about ₱61 to the dollar
+> that is about **₱2,350 a month**.
+> The plan is per organisation, and each church runs its own project, because
+> one shared project would make the hubs one company's service, not each
+> church's own. To meet the monthly cost, a church can now ask its members:
+> the giving room shows the month's goal and how to give, and never who gave
+> ([HANDBOOK.md](HANDBOOK.md), "Keep our Hope Hub running").
+
 **Two things turned up while costing this, and both change the answer.**
 
 ---

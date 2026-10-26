@@ -19,7 +19,7 @@ rather than making you guess.
 
 ## Before you start
 
-You need [Node 22 or newer](https://nodejs.org) and a free account with a
+You need [Node 22](https://nodejs.org) (22.23.4 or newer) or Node 24, and a free account with a
 Postgres host that also provides authentication. The migrations in
 `supabase/migrations/` are written for Supabase; [BACKENDS.md](BACKENDS.md)
 covers what changes on other hosts.

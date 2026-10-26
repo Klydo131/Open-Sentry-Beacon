@@ -20,6 +20,9 @@ phone".
 - [ ] A new test fails when the fix is reverted
 - [ ] Screenshots at a phone, a pad and a desktop size are attached, if this changes anything somebody sees
 - [ ] No real people's details anywhere in the diff
+- [ ] A new table is granted to `authenticated` by name, or closed by name (`tests/every-table-says-who-may-reach-it.mjs`)
+- [ ] A new or updated dependency: publisher and date checked, lockfile diff read, nothing added that was not asked for
+- [ ] Anything a church running a copy has to do (a migration, a setting, a secret) is in `CHANGELOG.md`
 - [ ] If an AI tool wrote any of this: it worked on a branch, and "What I could not check" is filled in
 
 ## Licence

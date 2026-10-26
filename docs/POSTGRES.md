@@ -222,7 +222,8 @@ hosting provider:
    most providers allow only to their administrative user.
 2. **PostgREST 16.5** from its own releases, with the settings in
    `selfhost/docker-compose.yml` under `rest`.
-3. **The Beacon server**, with Node.js 22.18 or newer:
+3. **The Beacon server**, with Node.js 22.23.4 or newer (the October 2026
+   security release; the Docker images are built on it):
    ```bash
    cd selfhost/server
    npm ci --omit=dev

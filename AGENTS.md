@@ -397,6 +397,11 @@ before the file that creates its table.
 `begin; … rollback;` against the real database. It costs one call and catches
 the ambiguous column reference that a fresh pair of eyes will not.
 
+**Tell the churches running a copy.** A migration, a function to deploy, a
+secret or a dashboard setting that a church has to act on gets an entry at the
+top of `CHANGELOG.md`, under "If you run a copy, do this". What members see goes
+in `lib/release-notes.ts` instead, in their words.
+
 ---
 
 ## 5. `npm run verify` is the gate

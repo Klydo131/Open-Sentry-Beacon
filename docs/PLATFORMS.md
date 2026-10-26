@@ -28,7 +28,7 @@ worse than no document.
 | Windows | **Tested** | CI, since it caught a real failure — see below. |
 | macOS | **Tested** | CI. |
 
-Everything you need is Node 22 and npm. Every script in `package.json` is
+Everything you need is Node 22 (22.23.4 or newer) and npm. Every script in `package.json` is
 `node scripts/<something>.mjs` — no shell built-ins, no `rm`, no environment
 variables set inline — so the same command works in PowerShell, cmd, bash and
 zsh without a compatibility layer.

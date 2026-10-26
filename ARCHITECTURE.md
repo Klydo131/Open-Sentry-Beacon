@@ -62,7 +62,8 @@ npm run test:all     # the above, plus the end-to-end suites in a real browser
 npm run build        # production build
 ```
 
-Requires **Node 22 or newer**. Some tests import TypeScript directly and rely on
+Requires **Node 22** (22.23.4 or newer, the October 2026 security release) or
+**Node 24**. Some tests import TypeScript directly and rely on
 Node's native type stripping, so there is no build step between the code that
 ships and the code that is checked.
 
@@ -86,6 +87,7 @@ ships and the code that is checked.
 | `lib/court/` | The court room's forensic tools, with no screen attached: fingerprints (SHA-256 by WebCrypto), what a file really is from its first bytes, what a photo says about itself (EXIF), the record's hash chain recomputed on the device (`forensics.ts`), and the record as a plain text file (`record-text.ts`). `docs/COURT-ROOM.md` explains each. |
 | `lib/live/court.ts` | The court room's database calls, through `data.ts`'s connection, and whether this church's database has the court room yet. `court-door.ts` gets fresh proof made at its door. |
 | `components/court/` | The court room's screens: the door, the docket, the hearing, the clerk's table of exhibits and the furniture that makes it look like a court. |
+| `lib/live/giving.ts` | The giving room's database calls: the card every member sees (the month's goal and total, never a gift), the Directors' setup and treasurers, and the treasurers' book. Drawn by `components/live/HubGiving.tsx`. |
 | `lib/quest.ts` | The guided tutorial: one walk per role. |
 | `lib/talk/` | The conversation's own rules, shared by both halves: days and runs (`thread.ts`), the six reactions (`reactions.ts`, the same six the database allows), and recording a voice message (`voice.ts`). Drawn by `components/talk/ChatView.tsx`, which the sample chat (`components/Chat.tsx`) and the live one (`components/live/shared.tsx`) both feed. |
 | `lib/music/` | The Music room's engine, all on the phone and none of it talking to a server: notes and cents (`notes.ts`), the tuner (`tuner.ts`, and its ear `pitch-tracker.ts`, which reads McLeod's curve from pitchy's autocorrelation), Sing the note's judge (`sing-the-note.ts`), the beat and the baton (`beat.ts`, `metronome.ts`, `audio.ts`), the MusicXML and .mxl readers (`musicxml.ts`, `zip.ts`, `score-file.ts`), the page scanner (`page-scan.ts`), the score player and the kept pieces. Drawn by `components/music/`; `docs/MUSIC-RESEARCH.md` says why each part is ours. |
@@ -173,6 +175,20 @@ alone. Who hid what is readable only by the person who hid it.
 The difference between them is only that a study has something to copy and a
 link does not. Reach for whichever fits the thing you are adding, rather than a
 third answer.
+
+### Every table says who may reach it
+
+From 30 October 2026 Supabase creates new tables closed to the data API, so a
+table works for signed-in people only if a migration grants it to
+`authenticated` **by name**, with the privileges the app uses and no more
+(`20261026180000_every_table_says_who_may_reach_it`). A table nobody should
+query directly is closed by name instead (`revoke all ... from authenticated,
+anon`) and reached only through functions that decide who may do what: the
+giving room's gifts are kept that way, so the list of gifts cannot be read by
+anybody who is not a treasurer, whatever request they send
+(`20261026120000_a_hub_is_kept_running_by_gifts`).
+`tests/every-table-says-who-may-reach-it.mjs` fails the build for a table left
+to a default, and CI's fresh install builds with Supabase's new default.
 
 ### The invitation is server-side on purpose
 
