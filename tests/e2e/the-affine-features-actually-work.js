@@ -138,7 +138,9 @@ const onTheSurface = (page) => page.evaluate(() => {
     await page.keyboard.type('Grace upon grace');
     await page.waitForTimeout(800);
     const typed = await page.locator('affine-paragraph').first().innerText();
-    await page.keyboard.press('Control+z');
+    // The platform's own undo: Ctrl+Z, and ⌘Z on a Mac, where AFFiNE binds
+    // Mod-z to ⌘ and Ctrl+Z is not undo at all. The Safari walk runs on a Mac.
+    await page.keyboard.press('ControlOrMeta+z');
     await page.waitForTimeout(800);
     const undone = await page.locator('affine-paragraph').first().innerText();
     ok(/Grace upon grace/.test(typed) && !/Grace upon grace/.test(undone),
@@ -219,8 +221,8 @@ const onTheSurface = (page) => page.evaluate(() => {
         ok(after > n, `${human} can be drawn on the board (surface held ${n}, now ${after})`);
         n = after;
       }
-      // And Ctrl+Z on the board takes the last one back (see 1b).
-      await page.keyboard.press('Control+z');
+      // And Ctrl+Z (⌘Z on a Mac) on the board takes the last one back (see 1b).
+      await page.keyboard.press('ControlOrMeta+z');
       await page.waitForTimeout(900);
       const undone = await onTheSurface(page);
       ok(undone < n, `Ctrl+Z on the board takes the last thing back (surface held ${n}, now ${undone})`);

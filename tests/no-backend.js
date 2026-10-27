@@ -331,6 +331,12 @@ const GUARDRAILS = new Set([
   // credential-shape scan above still applies, so naming the variable is
   // permitted and committing an actual key is still caught.
   'supabase/functions/notify/index.ts',
+  // The photo checker, for the same reason as notify: it runs on a server, its
+  // one caller (the database) is identified by that key, and it reads and
+  // writes the file store with it. Naming the variable is permitted; carrying
+  // a key is still caught by the credential-shape scan. Added with the owner's
+  // approval, 27 October 2026.
+  'supabase/functions/photo-check/index.ts',
   // The handbook generators are documentation that happens to be JavaScript.
   // They teach an IT reader which variables to set and which key must never be
   // public, so they have to name both — the same reason DEMO-SETUP.md is here.

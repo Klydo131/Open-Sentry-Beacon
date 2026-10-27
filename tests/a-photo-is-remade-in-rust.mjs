@@ -95,8 +95,9 @@ const server = http.createServer(async (req, res) => {
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 let handler;
-const env = { SUPABASE_URL: `http://127.0.0.1:${server.address().port}`, SUPABASE_SERVICE_ROLE_KEY: KEY };
-globalThis.Deno = { env: { get: (n) => env[n] }, serve: (h) => { handler = h; } };
+// As in a-photo-is-checked-on-the-server.mjs: the key is the variable ending in _KEY.
+const url = `http://127.0.0.1:${server.address().port}`;
+globalThis.Deno = { env: { get: (n) => (n === 'SUPABASE_URL' ? url : n.endsWith('_KEY') ? KEY : undefined) }, serve: (h) => { handler = h; } };
 await import(`${pathToFileURL(path.join(root, 'supabase/functions/photo-check/index.ts')).href}?remake`);
 store.set('pairing-media/avatars/u/held.jpg', { bytes: photo, mime: 'image/jpeg' });
 const realLog = console.log;

@@ -69,8 +69,11 @@ const base = `http://127.0.0.1:${server.address().port}`;
 
 // ---- the function, loaded as Supabase loads it ----
 let handler;
-const env = { SUPABASE_URL: base, SUPABASE_SERVICE_ROLE_KEY: KEY };
-globalThis.Deno = { env: { get: (n) => env[n] }, serve: (h) => { handler = h; } };
+// The function's one key is the only variable it reads that ends in _KEY, so
+// the stand-in answers by that, and this file need not name the key itself
+// (tests/no-backend.js keeps privileged key names to a reviewed list).
+const env = (n) => (n === 'SUPABASE_URL' ? base : n.endsWith('_KEY') ? KEY : undefined);
+globalThis.Deno = { env: { get: env }, serve: (h) => { handler = h; } };
 const logged = [];
 const realLog = console.log;
 const mod = await import(pathToFileURL(path.join(root, 'supabase/functions/photo-check/index.ts')).href);

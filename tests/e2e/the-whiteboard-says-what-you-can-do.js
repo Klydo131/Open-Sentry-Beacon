@@ -15,7 +15,7 @@
 //
 //   node tests/e2e/the-whiteboard-says-what-you-can-do.js [port]
 
-const { browser: engine, launchOptions, pageErrors } = require('./_playwright');
+const { browser: engine, engineName, launchOptions, pageErrors } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, newPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
@@ -170,13 +170,30 @@ async function drawShape(page, box) {
     const bar = await p.locator('.sr-board-bar .sr-board-row').first().boundingBox();
     ok(bar && bar.x >= pbox.x - 1 && bar.x + bar.width <= pbox.x + pbox.width + 1,
        `on a phone the bar wraps inside the board, every tool whole (${Math.round(bar?.width ?? 0)}px of ${Math.round(pbox.width)}px)`);
-    const cdp = await p.context().newCDPSession(p);
     const tx = Math.round(pbox.x + pbox.width / 2), ty = Math.round(pbox.y + pbox.height - 220);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: tx, y: ty }] });
-    await p.waitForTimeout(900);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    if (engineName === 'chromium') {
+      // A real finger, through the engine's own touch input.
+      const cdp = await p.context().newCDPSession(p);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: tx, y: ty }] });
+      await p.waitForTimeout(900);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    } else {
+      // Playwright can hold a finger down only in Chromium (its touch driver is
+      // Chromium's DevTools protocol). Elsewhere the same press and hold is sent
+      // as the pointer events a finger makes, to whatever is under that point,
+      // so the board's own long-press code still decides. Weaker than a real
+      // finger, and said so in the line below.
+      const fire = (type) => p.evaluate(([t, x, y]) => {
+        const target = document.elementFromPoint(x, y);
+        target?.dispatchEvent(new PointerEvent(t, { bubbles: true, composed: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y }));
+      }, [type, tx, ty]);
+      await fire('pointerdown');
+      await p.waitForTimeout(900);
+      await fire('pointerup');
+    }
     await p.waitForTimeout(400);
-    ok(await p.locator('[data-board-menu]').isVisible(), 'a long press with a finger opens the same menu');
+    ok(await p.locator('[data-board-menu]').isVisible(),
+       `a long press with a finger opens the same menu${engineName === 'chromium' ? '' : ` (${engineName}: as pointer events, not a real finger)`}`);
     await phone.close();
   } finally {
     await browser.close();

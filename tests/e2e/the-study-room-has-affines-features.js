@@ -64,22 +64,39 @@ const textIn = (host) => {
   // claim being tested is that opening the ROOM no longer downloads the whole
   // editor, so the two numbers have to be taken at two different moments.
   let bytes = 0;
+  let phase = 'sign-in';
+  const files = []; // what was counted, and when, so a failure says which file
   page.on('response', async (res) => {
     if (!res.url().endsWith('.js')) return;
-    try { bytes += (await res.body()).length; } catch { /* aborted */ }
+    const at = phase;
+    try {
+      const n = (await res.body()).length;
+      bytes += n;
+      files.push({ at, n, name: res.url().split('/').pop() });
+    } catch { /* aborted */ }
   });
 
   await signInAsExplorer(page, BASE);
   bytes = 0;
+  phase = 'room';
   await openStudyRoom(page, BASE);
   const toOpenTheRoom = bytes;
 
+  phase = 'page';
   await openPage(page, 0);
   const toOpenAPage = bytes - toOpenTheRoom;
 
   ok(toOpenTheRoom < toOpenAPage,
      `the list of pages costs less than the editor (${Math.round(toOpenTheRoom / 1024)} kB `
      + `for the room, then ${Math.round(toOpenAPage / 1024)} kB for the first page)`);
+  if (toOpenTheRoom >= toOpenAPage) {
+    // WebKit has counted the editor with the room since at least 20 October
+    // and Chromium never has. The largest files of each step say why.
+    for (const at of ['room', 'page']) {
+      const top = files.filter((f) => f.at === at).sort((x, y) => y.n - x.n).slice(0, 8);
+      console.log(`  ${at}: ${top.map((f) => `${f.name} ${Math.round(f.n / 1024)} kB`).join(', ') || 'nothing'}`);
+    }
+  }
 
   // -------------------------------------------------------------------------
   // 1. AFFiNE'S OWN BLOCKS, BY NAME, out of the slash menu.
