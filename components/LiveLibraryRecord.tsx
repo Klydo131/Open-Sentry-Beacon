@@ -108,7 +108,7 @@ export function LiveLibraryRecord({ audience }: { audience: 'admin' | 'executive
       setCaseNote('');
       setOpened(activityId);
     } catch (cause) {
-      setError(humanError(cause, 'That case could not be opened.'));
+      setError(humanError(cause, 'That report could not be raised.'));
     } finally {
       setBusy('');
     }
@@ -137,7 +137,7 @@ export function LiveLibraryRecord({ audience }: { audience: 'admin' | 'executive
       <p className="mt-2 rounded-xl bg-sky-50 p-3 text-sm text-slate-700 ring-1 ring-sky-100">
         <strong>Kept for 30 days, then deleted.</strong> This is a record for answering
         what happened recently, not an archive. If something here needs to last longer than
-        a month, open a case about it, because those are never deleted.
+        a month, raise a report about it, because reports are never deleted.
       </p>
 
       {error && <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">{error}</p>}
@@ -199,16 +199,16 @@ export function LiveLibraryRecord({ audience }: { audience: 'admin' | 'executive
                   answered by the same people and kept for as long. */}
               {r.actor_id && (opened === r.id ? (
                 <p className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900 ring-1 ring-emerald-200">
-                  <strong>Case opened.</strong> It is in Settings under Admin Reports, with
-                  the label on it. Claim it there so two people are not working on it at once.
+                  <strong>Report raised.</strong> It is in Admin Reports, with the label on
+                  it. Pick it up there so two people are not working on it at once.
                 </p>
               ) : casing === r.id ? (
                 <div className="mt-3 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200">
                   <p className="text-sm font-semibold text-amber-900">
-                    Open a case about {r.actor_name}?
+                    Raise a report about {r.actor_name}?
                   </p>
                   <p className="mt-1 text-sm text-amber-900/80">
-                    The case will say what they did and how it was labelled. It cannot say
+                    The report will say what they did and how it was labelled. It cannot say
                     which address it was, because you have not been shown it.
                   </p>
                   <input
@@ -220,7 +220,7 @@ export function LiveLibraryRecord({ audience }: { audience: 'admin' | 'executive
                   />
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button disabled={busy === r.id} onClick={() => void openCase(r.id)}>
-                      Open the case
+                      Raise the report
                     </Button>
                     <Button variant="ghost" onClick={() => { setCasing(''); setCaseNote(''); }}>
                       Not now
@@ -233,7 +233,7 @@ export function LiveLibraryRecord({ audience }: { audience: 'admin' | 'executive
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {opened !== r.id && casing !== r.id && (
                     <Button variant="ghost" onClick={() => { setCasing(r.id); setCaseNote(''); }}>
-                      Open a case
+                      Raise a report
                     </Button>
                   )}
                   {r.blocked ? (

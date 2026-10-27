@@ -120,8 +120,9 @@ ok(/not the permission/i.test(panel) || /outside this app/i.test(panel),
 // ---- A GUIDE OPENS THE SAME PANEL AND SEES LESS ----
 // The Guide is the person actually sitting with this Explorer and had less on
 // screen than a Director did: a name, a stage and a badge. What they may see is
-// decided by the database — profiles_read_paired serves the profile of somebody
-// you are walking with, and nothing else.
+// decided by the database — the paired arm of profiles_read (until 27 October
+// 2026 its own rule, profiles_read_paired) serves the profile of somebody you
+// are walking with, and nothing else.
 const guide = read('components/live/GuidePages.tsx');
 ok(/<MemberProfile/.test(guide), 'a Guide can open their Explorer');
 ok(/setOpenProfile/.test(guide), 'by tapping their name');

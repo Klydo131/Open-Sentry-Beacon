@@ -484,8 +484,8 @@ export function LiveConversationPage() {
                       sitting with this Explorer and had less about them on
                       screen than a Director did — a name, a stage and a badge.
                       What they can see is decided by the database:
-                      profiles_read_paired serves the profile of somebody you
-                      are paired with, and nothing else. The address they were
+                      the paired arm of profiles_read serves the profile of
+                      somebody you are paired with, and nothing else. The address they were
                       invited at and the day they arrived stay with leadership. */}
                   <button
                     type="button"

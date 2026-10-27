@@ -56,12 +56,17 @@ const explorer = strip(readFileSync('components/live/ExplorerPage.tsx', 'utf8'))
   // SEVEN OTHER TABLES ALSO INSERT AND ASK FOR THE ROW BACK, so every one of
   // their read rules was checked against the live database rather than guessed
   // at. Only two rules in the whole schema resolve a row by its own id:
-  // `materials_read`, fixed above, and `profiles_read_paired` — and that one is
-  // safe because `profiles_read_self` sits beside it and answers `id =
-  // auth.uid()` directly. Every other rule reads the row in front of it.
+  // `materials_read`, fixed above, and what was `profiles_read_paired` — and
+  // that one was safe because `profiles_read_self` sat beside it and answered
+  // `id = auth.uid()` directly. Every other rule reads the row in front of it.
+  // On 27 October 2026 the three profile read rules became one
+  // (20261027150000_one_rule_per_action), and the self answer is its first arm.
   //
   // What is checked here is the property that made them safe, because it is the
   // one a future policy can quietly drop.
+  const oneRule = readFileSync('supabase/migrations/20261027150000_one_rule_per_action.sql', 'utf8');
+  ok(/create policy profiles_read on public\.profiles\s+for select to authenticated\s+using \(\s+id = \(select auth\.uid\(\)\)\s+or/.test(oneRule),
+     'the one profile read rule answers the person themselves first, before any lookup');
   const readBack = [...data.matchAll(/\.from\('([a-z_]+)'\)[\s\S]{0,900}?\.insert\([\s\S]{0,900}?\.select\(/g)]
     .map((m) => m[1]);
   ok(readBack.length > 0, `tables the app inserts into and reads back (${[...new Set(readBack)].join(', ')})`);
@@ -124,8 +129,9 @@ const explorer = strip(readFileSync('components/live/ExplorerPage.tsx', 'utf8'))
   // month when the screen had no control of its own. It has one now -- a case
   // can be opened from the row it is about -- so the assertion is on the thing
   // a Director can actually do rather than on the sentence that used to
-  // describe it.
-  ok(/open a case|safeguarding report/i.test(record),
+  // describe it. On 27 October 2026 the court room closed and the words
+  // followed: the row raises a report, which is what it always did.
+  ok(/raise a report about it, because reports are never deleted/i.test(record),
      'and says what to do when something needs to outlast the month');
   ok(/openCaseFromActivity/.test(record),
      'and the way to do it is on the row, not in another room');

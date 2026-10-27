@@ -10,6 +10,40 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 27 October 2026: one rule per action, and the links the screens use indexed
+
+### If you run a copy, do this
+
+1. **Run the new migration**, `20261027150000_one_rule_per_action.sql`
+   (`npx supabase db push`, or the edition's installer). The site needs no
+   rebuild first: nothing the app calls changes.
+
+### What changed
+
+- **One rule per action.** Supabase's advisor warned that `profiles` had three
+  read rules and two change rules for signed-in people, and `profile_changes`
+  three read rules. Postgres runs every one of them for every row. Each set is
+  now one rule whose condition is the old ones joined by OR, which is exactly
+  how Postgres combined them, so nobody can see or change anything they could
+  not before. That was checked person by person on the Postgres edition: 67
+  invented people, the same profiles and changes visible and the same profiles
+  changeable before and after, and a deliberately broken version showed 16
+  people seeing differently. The person's own row is the first arm of the
+  profile read rule, which keeps "insert and read it back" working.
+- **New rule:** `supabase/tests/fresh-install-holds.sql` (check 9) refuses a
+  second permissive rule for the same table, role and action in `public` or
+  `private`. Write a new condition as another OR arm. Storage is left out on
+  purpose: each file rule names its own bucket.
+- **Nine indexes** on the links Admin Reports' three lists use (who raised a
+  report, who it is about, who holds it), on a reply's link to the message it
+  answers, and on the columns Postgres scans when an account is deleted.
+- **"Open a case" is now "Raise a report"** on the leaders' library record. It
+  always raised an ordinary report. The function keeps its name
+  (`open_case_from_activity`) so older copies of the app keep working; two of
+  its messages now say "report".
+
+---
+
 ## 27 October 2026: Admin Reports is reports and a conversation; the court room is closed
 
 ### If you run a copy, do this

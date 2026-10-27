@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-157 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+158 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1353,3 +1353,11 @@ ASKED FOR, 27 October 2026: "Admin reports will just be admin reports by now, no
 A report is one conversation: the person who raised it, the Admins, and, once an Admin brings them in, the person it is about.
 
 ASKED FOR, 27 October 2026, with the court room closed (20261027120000): "It will be just faster if Admins can see reports, see the problems and reports and be transparent to both Guide and Explorer users by chatting them as Admins." Asked how: one shared chat per report, in which everyone sees every message, and nobody is the Admin on a report about themselves.
+
+#### `20261027150000_one_rule_per_action.sql`
+
+*2026-10-27*
+
+One rule per action, the links the screens use indexed, and "a report" in place of "a case".
+
+ASKED FOR, 27 October 2026, from the costed plan "Rust and Python for Hope Beacon": "fast, secure, affordable, and optimized for more productivity use". The plan's first finding was that nothing here waits on a slow language, and that the speed Supabase's own advisor found missing needs no new one. The owner chose this work first. It changes no rule.

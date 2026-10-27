@@ -104,6 +104,20 @@ begin
     raise exception 'something of the court room is still in the database';
   end if;
 
+  -- 9. One permissive rule per table, role and action in the app's own schemas
+  --    (20261027150000_one_rule_per_action). Postgres runs every permissive
+  --    rule for every row, so a second one is a second check on each row.
+  --    Write the new condition as another OR arm of the existing rule. The file
+  --    store is left out on purpose: each of its rules names its own bucket.
+  select string_agg(format('%s.%s %s for %s', schemaname, tablename, cmd, role), ', ') into missing
+    from (select p.schemaname, p.tablename, p.cmd, r.role
+            from pg_policies p, unnest(p.roles) as r(role)
+           where p.permissive = 'PERMISSIVE' and p.schemaname in ('public', 'private')
+           group by 1, 2, 3, 4 having count(*) > 1) as twice;
+  if missing is not null then
+    raise exception 'these tables have more than one permissive rule for the same action: %', missing;
+  end if;
+
   raise notice 'a fresh install holds every checked protection';
 end
 $holds$;
