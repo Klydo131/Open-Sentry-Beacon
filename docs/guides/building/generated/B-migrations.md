@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-159 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+160 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1369,3 +1369,11 @@ ASKED FOR, 27 October 2026, from the costed plan "Rust and Python for Hope Beaco
 Trends in counts only: one view of weekly numbers per church, with any number under 5 hidden, and one role that can read that view and nothing else.
 
 ASKED FOR, 27 October 2026: "We can use Rust for Data security and Python for data analysis." The costed plan put Python on the owner's own computer, reading counts that cannot name anyone, and the owner chose it. Python cannot run inside the hosted database (PL/pgSQL is its only language) or in Supabase's functions (TypeScript and WebAssembly), so the analysis is a program on a computer, and this is what it may read. tools/trends/ is the program.
+
+#### `20261027170000_a_photo_is_checked_on_the_server.sql`
+
+*2026-10-27*
+
+A photo is checked on the server: one the browser did not clean is cleaned here.
+
+ASKED FOR, 27 October 2026, from the costed plan "Rust and Python for Hope Beacon". The privacy page promises that a photo's location is removed before it is stored, and until today only the browser kept that promise (lib/live/shrink-image.ts, lib/live/photo-location.ts). A modified copy of the app, or somebody calling the file store directly, could store a photo that still says where it was taken. The owner chose to close that.

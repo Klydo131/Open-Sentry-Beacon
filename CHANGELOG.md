@@ -10,6 +10,63 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 27 October 2026: a photo is checked on the server too, and remade in Rust
+
+### If you run a copy, do this
+
+1. **Run the new migration**, `20261027170000_a_photo_is_checked_on_the_server.sql`.
+   On its own it changes nothing.
+2. **To switch the check on**: deploy the function
+   (`npx supabase functions deploy photo-check`) and give the database its
+   address (`docs/START-HERE.md`, Step 6b). The Postgres edition does both by
+   itself when it starts.
+
+### What changed
+
+- **Why:** the app takes a photo's location out in the browser, and a modified
+  app or a direct call to the file store skipped that. The privacy page's
+  promise now holds for those too.
+- **How:** a trigger on `storage.objects` queues one request to `photo-check`
+  when a JPEG, PNG or WebP arrives in `pairing-media` or `post-media`, or is
+  replaced with new bytes. Report evidence (`reports/`) is left as raised. The
+  function reads the file with the browser's own reader
+  (`supabase/functions/_shared/photo-location.ts`, a byte-for-byte copy of
+  `lib/live/photo-location.ts` that a test keeps the same).
+  - A JPEG that says where it was taken is **remade from its pixels in
+    Rust**: `tools/photo-remake`, compiled to WebAssembly and carried as text
+    in `supabase/functions/_shared/photo-remake-wasm.ts` with its SHA-256.
+    The photo is shrunk to the browser's 1600 pixels, turned the way the camera
+    was held and encoded again at quality 82. No metadata survives, and no
+    bytes hidden after the end of the picture. If the remaker cannot read it,
+    the EXIF, XMP and IPTC blocks are cut out instead, the picture untouched.
+  - **Measured** in Node 22 on a 2.1 GHz Xeon (Deno runs WebAssembly on the
+    same engine): a 12-megapixel photo takes 0.5 s of CPU time and 63 MB of
+    WebAssembly memory, against a Supabase function's 2 s and 256 MB.
+  - A PNG or WebP loses its metadata chunks.
+  - A located JPEG it cannot read is removed.
+  - The cleaned file is checked once more and comes back clean, so the
+    check does not loop.
+- **Limits, said plainly:**
+  - the check runs a moment after the file arrives;
+  - HEIC is not covered;
+  - nothing happens until the address is set.
+- **Proved:**
+  - `supabase/tests/a-photo-is-checked-on-the-server.sql`: 8 checks on both
+    editions of when the database asks. It was seen red when evidence was not
+    skipped.
+  - `tests/a-photo-is-checked-on-the-server.mjs`: 27 checks running the
+    function itself against a stand-in file store, with photos built byte by
+    byte. It was seen red when JPEGs were not cleaned.
+  - End to end on the Postgres edition: an invented member uploaded a located
+    profile picture straight to the file store, and within seconds the stored
+    file and what they read back were clean.
+  - `tests/a-photo-is-remade-in-rust.mjs`: 13 checks on the committed
+    WebAssembly. A real photo comes back upright and clean. Hidden trailing
+    bytes do not survive. It imports nothing. Its checksum holds: one changed
+    character fails it. The Rust's own tests: `cargo test` in
+    `tools/photo-remake`, 5 checks.
+  - Not yet run on a hosted Supabase project.
+
 ## 27 October 2026: trends, in counts that name nobody
 
 ### If you run a copy, do this

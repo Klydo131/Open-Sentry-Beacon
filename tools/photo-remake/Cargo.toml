@@ -1,0 +1,20 @@
+[package]
+name = "photo-remake"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Remakes a photo from its pixels alone, for Hope Beacon's photo-check function"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

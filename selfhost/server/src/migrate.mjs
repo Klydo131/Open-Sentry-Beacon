@@ -86,12 +86,17 @@ export async function migrate({ databaseUrl, check = false, log = console.log, a
       // network and a placeholder, never the real key: the server puts the
       // real key on the request itself (src/jobs.mjs). The push address is
       // there only while push keys are set, so a church that has not set push
-      // up queues nothing, as the migration that sends pushes intends.
+      // up queues nothing, as the migration that sends pushes intends. The
+      // photo check is always on: it needs no key of its own, and a photo that
+      // still says where it was taken is cleaned here as on Supabase
+      // (20261027170000_a_photo_is_checked_on_the_server).
       await client.query(`
         insert into vault.secrets (name, secret, description) values
           ('erase_function_url', $1, 'This server''s own erase function (selfhost edition)'),
+          ('photo_check_function_url', $2, 'This server''s own photo-check function (selfhost edition)'),
           ('notify_service_key', 'beacon-internal', 'Placeholder; the server adds the real key')
-        on conflict (name) do update set secret = excluded.secret, updated_at = now()`, [`${INTERNAL_FUNCTIONS}/erase`]);
+        on conflict (name) do update set secret = excluded.secret, updated_at = now()`,
+        [`${INTERNAL_FUNCTIONS}/erase`, `${INTERNAL_FUNCTIONS}/photo-check`]);
       if (pushConfigured) {
         await client.query(`
           insert into vault.secrets (name, secret, description)

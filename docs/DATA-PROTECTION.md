@@ -207,6 +207,15 @@ These are properties of the running system, not intentions:
   evidence attached to a safeguarding report is kept exactly as it was sent,
   because re-encoding evidence changes it; only leadership handling the report
   can open it, and the notice says so. See `lib/live/photo-location.ts`.
+  **And on the server, since 27 October 2026**
+  (`20261027170000_a_photo_is_checked_on_the_server`): a photo that reaches the
+  file store some other way, from a modified app or a direct call, is cleaned
+  there by `supabase/functions/photo-check` with the same reader. A located
+  JPEG is remade from its pixels by the Rust remaker (`tools/photo-remake`), so
+  nothing else it carried survives either. One that cannot be read is removed. This happens a moment after the file
+  arrives, not before, and only once the church has set the function's
+  address (`docs/START-HERE.md`, Step 6b); the Postgres edition does it by
+  itself.
 - **What one person can upload is bounded.** Each file is at most 10 MB, and
   each person can keep up to 300 files or 200 MB of resources and study
   handouts (`private.room_to_upload`, 20260925120000). Conversation photos and

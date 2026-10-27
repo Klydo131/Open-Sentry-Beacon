@@ -318,6 +318,8 @@ const staticChecks = [
   ['a study room keeps its promises', 'tests/a-study-room-keeps-its-promises.mjs'],
   ['a hub is kept running by gifts', 'tests/a-hub-is-kept-running-by-gifts.mjs'],
   ['trends are counts only', 'tests/trends-are-counts-only.mjs'],
+  ['a photo is checked on the server', 'tests/a-photo-is-checked-on-the-server.mjs'],
+  ['a photo is remade in Rust', 'tests/a-photo-is-remade-in-rust.mjs'],
   ['every table says who may reach it', 'tests/every-table-says-who-may-reach-it.mjs'],
   ['the October 2026 patches hold', 'tests/the-october-2026-patches-hold.mjs'],
   ['a new password has its own page', 'tests/a-new-password-has-its-own-page.mjs'],

@@ -199,6 +199,13 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/trends-are-counts-only.sql"
 
+# A PHOTO IS CHECKED ON THE SERVER: with no address set nothing is asked; with
+# one, a photo in a conversation or on a post queues one request, report
+# evidence and other files none, and a replaced photo is checked again.
+# Rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-photo-is-checked-on-the-server.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

@@ -78,6 +78,27 @@ Its theme package, `@toeverything/theme`, is under the Mozilla Public License
 
 ---
 
+## The photo remaker — Rust libraries compiled to WebAssembly
+
+`tools/photo-remake` is compiled, with the libraries below, into
+`supabase/functions/_shared/photo-remake-wasm.ts`, which runs on the server
+only (the photo-check function). All are permissive. Where a library offers a
+choice, it is used under MIT if offered, else the first licence named. Each
+library's own licence files are in `tools/photo-remake/THIRD-PARTY-LICENCES.txt`.
+
+| Library | Version | Used under |
+|---|---|---|
+| image | 0.25.10 | MIT |
+| zune-jpeg, zune-core | 0.5.15, 0.5.3 | MIT |
+| png | 0.18.1 | MIT |
+| image-webp | 0.2.4 | MIT |
+| moxcms, pxfm | 0.8.1, 0.1.30 | BSD-3-Clause |
+| flate2, fdeflate, crc32fast | 1.1.10, 0.3.7, 1.5.3 | MIT |
+| miniz_oxide | 0.8.9, 0.9.1 | MIT |
+| zlib-rs | 0.6.8 | Zlib |
+| adler2, simd-adler32 | 2.0.1, 0.3.10 | MIT |
+| bytemuck, byteorder-lite, bitflags, cfg-if, num-traits, quick-error | 1.25.2, 0.1.0, 2.13.2, 1.0.5, 0.2.19, 2.0.1 | MIT |
+
 ## Everything else
 
 The remaining dependencies are listed in `package.json`. Almost all are

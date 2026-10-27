@@ -443,6 +443,27 @@ app added to the Home Screen, on iOS 16.4 or later -- Apple's rule, not ours.
 Until step 5 is done nothing is sent and nothing breaks: notifications are saved
 exactly as before.
 
+### Step 6b — Photos checked on the server too *(3 minutes, recommended)*
+
+The app takes the location out of every photo in the browser, before it is
+sent. This makes the server do it as well, for a photo sent some other way: a
+modified copy of the app, or somebody calling the file store directly.
+
+1. Deploy the checker:
+   `npx supabase functions deploy photo-check --project-ref YOUR_PROJECT_REF`
+2. Tell the database where it is. In the Supabase **SQL editor**:
+
+   ```sql
+   select vault.create_secret('https://YOUR_PROJECT_REF.supabase.co/functions/v1/photo-check',
+                              'photo_check_function_url');
+   ```
+
+   It uses the `notify_service_key` from Step 6. If you skipped Step 6, add
+   that key first with the first line of Step 6's step 5.
+
+Until this is done, photos are cleaned in the browser exactly as before. The
+Postgres edition does this by itself.
+
 ### Step 7 — Lock the invitation sender to your site *(2 minutes)*
 
 In **Edge Functions → Secrets**, add `BEACON_ALLOWED_ORIGINS` with your site's

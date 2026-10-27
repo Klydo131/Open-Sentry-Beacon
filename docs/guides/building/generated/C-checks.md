@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 187 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 189 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -1853,6 +1853,26 @@ Trends are counts only.
 ASKED FOR on 27 October 2026: "We can use Rust for Data security and Python for data analysis." The costed plan put the analysis on the owner's own computer, reading weekly counts that cannot name anyone, and the owner chose it. supabase/migrations/20261027160000_trends_in_counts_only.sql is what it may read; tools/trends/ is the program.
 
 WHAT HOLDS, each checked below and each broken on purpose once to watch the check go red. What the role can and cannot read is proved by running it, as invented people, in supabase/tests/trends-are-counts-only.sql, which this checks is run; this file holds the shape that test cannot see from inside a database: no password in a file, nothing written where git would keep it.
+
+#### a photo is checked on the server
+
+`tests/a-photo-is-checked-on-the-server.mjs`
+
+A photo is checked on the server.
+
+ASKED FOR on 27 October 2026, from the costed plan "Rust and Python for Hope Beacon": the browser takes a photo's location out before it is sent, and a modified app could skip the browser, so the server does it too (supabase/migrations/20261027170000_a_photo_is_checked_on_the_server.sql, supabase/functions/photo-check). When the database asks is proved by supabase/tests/a-photo-is-checked-on-the-server.sql on every fresh install, which this checks is run.
+
+THIS RUNS THE FUNCTION ITSELF, the same file Supabase deploys, against a stand-in for the file store that keeps files in memory, with photos built byte by byte: one that says where it was taken, one that does not, one that says so and cannot be read, a PNG with an EXIF chunk. It checks what the function wrote back, not what it said it did.
+
+#### a photo is remade in Rust
+
+`tests/a-photo-is-remade-in-rust.mjs`
+
+A photo is remade in Rust.
+
+ASKED FOR on 27 October 2026: "We can use Rust for Data security." The costed plan found one place where Rust earns its keep here: remaking a photo from its pixels on the server, so that nothing a file carried survives but the picture. tools/photo-remake is the Rust; it is built to WebAssembly and carried as text in supabase/functions/_shared/photo-remake-wasm.ts, which the photo-check function uses for a JPEG that says where it was taken.
+
+THIS RUNS THE COMMITTED WEBASSEMBLY, through the function, on a real photo (tests/fixtures/located-upright.jpg: invented, 240 by 120, an invented GPS block, and a tag saying the camera was turned a quarter). It also holds the parts nobody would see by reading: that the base64 is the WebAssembly whose checksum is written beside it, and that it can reach nothing outside itself. Rebuilding it from the Rust and comparing is `node tools/photo-remake/build.mjs --check`, which needs Rust 1.97.0 and so is not part of this gate.
 
 #### every table says who may reach it
 

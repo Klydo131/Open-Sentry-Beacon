@@ -98,3 +98,7 @@ supabase/.temp/
 # a church's own and never belong in a public repository.
 __pycache__/
 trends-out/
+
+# tools/photo-remake: Rust's build folder. What ships is the module it writes
+# into supabase/functions/_shared/, checked by its SHA-256.
+/tools/photo-remake/target/
