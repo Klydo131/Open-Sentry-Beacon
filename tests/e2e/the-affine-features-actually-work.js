@@ -48,12 +48,19 @@ const flavours = (page) => page.evaluate(() => {
   return out;
 });
 
-/** How many things are drawn on the whiteboard surface. */
+/**
+ * How many things are on the whiteboard: what is drawn on its surface (shapes,
+ * pen strokes) and its frames, which are blocks of their own. Counting only
+ * the surface let "a frame can be drawn" pass on a stray pen dot until
+ * 27 October 2026; the frame itself was never counted.
+ */
 const onTheSurface = (page) => page.evaluate(() => {
   const host = document.querySelector('editor-host');
   const store = host?.std?.store ?? host?.std?.doc;
-  const surface = (store?.getAllModels?.() ?? []).find((b) => b.flavour === 'affine:surface');
-  return surface?.elementModels?.length ?? -1;
+  const models = store?.getAllModels?.() ?? [];
+  const surface = models.find((b) => b.flavour === 'affine:surface');
+  if (!surface) return -1;
+  return (surface.elementModels?.length ?? 0) + models.filter((b) => b.flavour === 'affine:frame').length;
 });
 
 (async () => {
@@ -115,6 +122,30 @@ const onTheSurface = (page) => page.evaluate(() => {
   }
 
   // -------------------------------------------------------------------------
+  // 1b. CTRL+Z TAKES BACK WHAT WAS TYPED
+  // -------------------------------------------------------------------------
+  //
+  // Until 27 October 2026 it did nothing, on every page and every board: the
+  // room loaded the doc but never the store, so the undo history never
+  // listened to itself and AFFiNE runs Ctrl+Z only when it says it can
+  // (components/study/StudyRoomEditor.tsx, `store.load()`). No walk had pressed
+  // it, so nothing noticed.
+  {
+    await backToShelf(page);
+    await newPage(page);
+    await page.waitForTimeout(900);
+    await page.locator('affine-paragraph').first().click();
+    await page.keyboard.type('Grace upon grace');
+    await page.waitForTimeout(800);
+    const typed = await page.locator('affine-paragraph').first().innerText();
+    await page.keyboard.press('Control+z');
+    await page.waitForTimeout(800);
+    const undone = await page.locator('affine-paragraph').first().innerText();
+    ok(/Grace upon grace/.test(typed) && !/Grace upon grace/.test(undone),
+       `Ctrl+Z takes back what was typed (${JSON.stringify(typed.trim())} -> ${JSON.stringify(undone.trim())})`);
+  }
+
+  // -------------------------------------------------------------------------
   // 2. A PICTURE CAN BE PASTED IN
   // -------------------------------------------------------------------------
   //
@@ -158,8 +189,19 @@ const onTheSurface = (page) => page.evaluate(() => {
     const box = await page.locator('.affine-edgeless-viewport').first().boundingBox();
     ok(!!box, 'the board has a size to draw on');
 
+    // Empty board to click before each key, below the room's own bar
+    // (components/study/StudyBoardTools.tsx), which sits over the canvas's
+    // top-left corner and would otherwise take the click.
+    const bar = await page.locator('.sr-board-bar .sr-board-row').first().boundingBox();
+    const clearY = bar ? bar.y + bar.height + 40 : box.y + 60;
+
     const drag = async (key, x1, y1, x2, y2) => {
-      await page.mouse.click(box.x + 60, box.y + 60);
+      // Back to Select first: the pen stays chosen after a stroke, and a click
+      // with it draws a dot, which the frame's count once took for a frame.
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('v');
+      await page.waitForTimeout(300);
+      await page.mouse.click(box.x + 60, clearY);
       await page.keyboard.press(key);
       await page.waitForTimeout(700);
       await page.mouse.move(box.x + x1, box.y + y1);
@@ -177,6 +219,11 @@ const onTheSurface = (page) => page.evaluate(() => {
         ok(after > n, `${human} can be drawn on the board (surface held ${n}, now ${after})`);
         n = after;
       }
+      // And Ctrl+Z on the board takes the last one back (see 1b).
+      await page.keyboard.press('Control+z');
+      await page.waitForTimeout(900);
+      const undone = await onTheSurface(page);
+      ok(undone < n, `Ctrl+Z on the board takes the last thing back (surface held ${n}, now ${undone})`);
     }
   }
 

@@ -102,7 +102,10 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     //    of the room -- comparing to the window called that a failure and was
     //    wrong about it.
     const fit = await page.locator('affine-note').first().evaluate((note) => {
-      const card = note.closest('.affine-page-viewport')?.parentElement;
+      // The card is the first ancestor with a box of its own: a `display:
+      // contents` wrapper (the whiteboard's frame, in page mode) has none.
+      let card = note.closest('.affine-page-viewport')?.parentElement;
+      while (card && getComputedStyle(card).display === 'contents') card = card.parentElement;
       return {
         note: note.getBoundingClientRect().width,
         card: card ? card.getBoundingClientRect().width : 0,

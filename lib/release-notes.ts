@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-27-a-simpler-study-room',
+    date: '2026-10-27',
+    title: 'The Study Room is simpler, and the whiteboard says what you can do',
+    items: [
+      'On a page, the bar above your writing has four things, each a picture and a word: Heading, List, To-do and Quote. More shows everything else as cards that show what each one makes, including a picture from your phone and today\u2019s date.',
+      'Folders and tags are behind one button, File this page, which says what each is for. The two empty boxes under the title are gone.',
+      'Every page can be a whiteboard, in Simple too. The bar at the top of the board has its tools in words: Select, Pen, Shape, Sticky note, Words, Arrow and Eraser. In Simple it is the only bar; Advanced adds AFFiNE\u2019s full set along the bottom.',
+      'Tap anything on the whiteboard to see what you can do to it: write on it, colour it, copy it, bring it to the front or send it to the back, or delete it, with Undo straight after. Right-click it, or press and hold with a finger, for the same.',
+      'Undo works now, on pages and on whiteboards: Ctrl+Z on a keyboard, or Undo on the whiteboard\u2019s bar. Before this it did nothing in the Study Room.',
+    ],
+  },
+  {
     id: '2026-10-27-a-forgotten-password-has-its-own-page',
     date: '2026-10-27',
     title: 'A forgotten password has a page of its own',

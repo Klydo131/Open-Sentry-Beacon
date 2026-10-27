@@ -52,11 +52,19 @@ const ratio = (a, b) => {
     ok(await shelfRows(page).count() > 0, 'and the pages are all there');
 
     await openPage(page, 0);
-    const tools = await page.getByRole('toolbar', { name: 'Add to this page' }).getByRole('button').allInnerTexts();
-    ok(tools.length === 4, `a page in Simple has the four basics to add (${tools.join(', ')})`);
-    ok(await page.getByRole('group', { name: 'How to look at this page' }).count() === 0
+    // FOUR AND MORE (27 October 2026): the same four basics on the bar, and
+    // More for every other thing as a card. The whiteboard is for everybody
+    // now ("a 5 year old, a professional, and a 75 year old"); filing is
+    // still Advanced only.
+    const tools = (await page.getByRole('toolbar', { name: 'Add to this page' }).getByRole('button').allInnerTexts())
+      .map((t) => t.trim());
+    const basics = tools.filter((t) => !/More/.test(t));
+    ok(basics.length === 4 && tools.some((t) => /More/.test(t)),
+       `a page in Simple has the four basics to add, and More (${tools.join(', ')})`);
+    ok(await page.getByRole('group', { name: 'How to look at this page' }).isVisible()
+         && await page.locator('[data-filing]').count() === 0
          && await page.getByLabel('Which folder this page is filed in').count() === 0,
-       'and no whiteboard switch, no folder box');
+       'Write and Whiteboard for everybody, and no filing in Simple');
     await backToShelf(page);
 
     // ADVANCED BRINGS IT ALL BACK, AND IS REMEMBERED.
@@ -68,9 +76,10 @@ const ratio = (a, b) => {
     await page.getByLabel('Search your pages').waitFor({ timeout: 60_000 });
     ok(await page.locator('[data-study-mode="advanced"]').isVisible(), 'and stays Advanced after the page is opened again');
     await openPage(page, 0);
-    ok((await page.getByRole('toolbar', { name: 'Add to this page' }).getByRole('button').count()) > 4
-         && await page.getByRole('group', { name: 'How to look at this page' }).isVisible(),
-       'a page in Advanced has the whole insert bar and the whiteboard');
+    ok((await page.getByRole('toolbar', { name: 'Add to this page' }).getByRole('button').count()) === 5
+         && await page.getByRole('group', { name: 'How to look at this page' }).isVisible()
+         && await page.locator('[data-filing]').isVisible(),
+       'a page in Advanced has the same bar, the whiteboard, and File this page');
     await backToShelf(page);
     await page.locator('[data-study-mode] [data-mode="simple"]').click();
 

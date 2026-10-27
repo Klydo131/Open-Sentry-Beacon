@@ -89,7 +89,18 @@ async function writtenOnPage(page) {
   return (await page.locator('editor-host').innerText()).replace(/\u200B/g, '');
 }
 
+/**
+ * Opens "File this page" (components/study/StudyFiling.tsx), where a page's
+ * folder and tag boxes have been since 27 October 2026. Leaves it open if it is.
+ */
+async function openFiling(page) {
+  const button = page.locator('[data-filing]');
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
+  await page.getByLabel('Which folder this page is filed in').waitFor({ timeout: 10_000 });
+}
+
 module.exports = {
+  openFiling,
   signInAsExplorer,
   openStudyRoom,
   shelfRows,

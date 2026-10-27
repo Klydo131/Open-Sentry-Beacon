@@ -57,9 +57,20 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   const plain = await page.locator('affine-paragraph').first()
     .evaluate((el) => parseFloat(getComputedStyle(el.querySelector('rich-text') || el).fontSize));
 
-  // 2. A HEADING. Pressed, not typed.
+  // 2. A HEADING. Pressed, not typed. The big one is under More since 27
+  //    October 2026 (four basics on the bar, every other thing as a card).
   await page.locator('affine-paragraph').first().click();
   await page.waitForTimeout(300);
+  await page.locator('[data-insert-more]').click();
+  ok(await page.locator('[data-insert-panel]').isVisible(), 'More opens every other thing to add, as cards');
+  // EVERY CARD SAYS ALL OF WHAT IT MAKES. They used to be cut to one line, so
+  // a phone read "Somethin..." and "Rows and c...", which looks broken to
+  // somebody who has never seen the app before.
+  const cut = await page.locator('.sr-insert-card-example').evaluateAll(
+    (els) => els.filter((el) => el.scrollHeight - el.clientHeight > 1 || el.scrollWidth - el.clientWidth > 1)
+      .map((el) => el.textContent),
+  );
+  ok(cut.length === 0, `and each card says all of what it makes, nothing cut off (${cut.join(' | ') || 'none'})`);
   await page.getByRole('button', { name: /^Big heading$/i }).click();
   await page.waitForTimeout(700);
   await page.keyboard.type('Romans 8');
@@ -85,6 +96,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.waitForTimeout(600);
   ok(await page.locator('affine-list').count() >= 2, 'and a to-do');
 
+  await page.locator('[data-insert-more]').click();
   await page.getByRole('button', { name: /^A line across the page$/i }).click();
   await page.waitForTimeout(600);
   ok(await page.locator('affine-divider').count() >= 1, 'and a line across the page');

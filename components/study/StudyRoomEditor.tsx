@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BlockStdScope, TextSelection } from '@blocksuite/affine/std';
 import { render } from 'lit';
-import type { DocMeta, Store } from '@blocksuite/store';
+import { Text, type DocMeta, type Store } from '@blocksuite/store';
 import type { BlobSource, DocSource } from '@blocksuite/sync';
 
 import { StudyWorkspace, type SaveState } from '@/lib/study/workspace';
@@ -30,7 +30,7 @@ import {
 import { STUDY_ROOM, type SupabaseDocSource } from '@/lib/study/doc-source';
 import { forgetWhatWasMissed, rememberToForget } from '@/lib/study/local-source';
 import { BeaconSpinner } from '@/components/BeaconLoader';
-import { BoardGlyph, DocGlyph, FolderGlyph } from '@/components/Glyph';
+import { BoardGlyph, DocGlyph } from '@/components/Glyph';
 import { humanError } from '@/lib/live/errors';
 import {
   toVaultFile, parseVaultFile, vaultFilenames, zipVault, unzipVault,
@@ -41,7 +41,9 @@ import {
 import { markdownFromPage, markdownIntoPage, type PageAsset } from '@/lib/study/vault-io';
 import { StudyShelf, type ShelfView } from '@/components/study/StudyShelf';
 import { StudyInsertBar, type InsertKind } from '@/components/study/StudyInsertBar';
-import { StudyTags } from '@/components/study/StudyTags';
+import { StudyFiling } from '@/components/study/StudyFiling';
+import { StudyBoardTools } from '@/components/study/StudyBoardTools';
+import type { BoardApi } from '@/lib/study/board-actions';
 import { StudyWorkspaceShell } from '@/components/study/StudyWorkspaceShell';
 import { useStudyMode } from '@/components/WritingMode';
 import { Ribbon } from '@/components/study/StudyFurniture';
@@ -126,7 +128,6 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     setFolder('');
     setCollection('');
     setView((v) => (v === 'favourites' || v === 'journal' ? 'all' : v));
-    setMode('page');
   }, [simple]);
   // True while the editor chunk is loading, so the page says it is coming.
   const [drawing, setDrawing] = useState(false);
@@ -144,7 +145,10 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
   });
-  const [folderDraft, setFolderDraft] = useState('');
+  // THE WHITEBOARD'S OWN BAR AND MENU (components/study/StudyBoardTools.tsx),
+  // given the board's actions once a page is turned into a whiteboard.
+  const [boardApi, setBoardApi] = useState<BoardApi | null>(null);
+  const boardFrame = useRef<HTMLDivElement | null>(null);
   // THE NAME IS KEPT AS IT IS TYPED, not only when the box loses focus: a name
   // typed and then the room closed straight away used to be lost.
   const titleFor = useRef('');
@@ -295,6 +299,20 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       // This page jumps the queue; the others follow behind it.
       room.putFirst(openPage);
       const store = doc.getStore();
+      // THE UNDO HISTORY IS STARTED. BlockSuite starts a store's extensions in
+      // `store.load()`, which the room never calls (it loads the doc), so the
+      // history never listened to itself, `canUndo` stayed false for good, and
+      // Ctrl+Z (which AFFiNE runs only when `canUndo`) did nothing on any page
+      // or board. Found 27 October 2026 by the whiteboard's own Undo
+      // (tests/e2e/the-whiteboard-says-what-you-can-do.js).
+      //
+      // ONLY THE HISTORY, NOT `store.load()`. That was tried first, and it also
+      // announces "root added", on which AFFiNE's page block copies its own
+      // title into the page's record. The room keeps the name only in the
+      // record, so that copied an empty title over it, and a page could lose its
+      // name by being opened (tests/e2e/the-room-goes-in-and-out-of-obsidian.js
+      // caught it). Starting the history twice is safe: its listeners are a set.
+      store.history.loaded();
 
       // A PAGE THAT HAS NOT ARRIVED YET IS NOT A BLANK PAGE, AND NOT A ROOM
       // THAT FAILED. On a device that has never held the room, pages come from
@@ -342,6 +360,13 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       render(std.render(), host.current);
       setDrawing(false);
 
+      // The whiteboard's actions reach into AFFiNE's canvas packages, which a
+      // page never needs: loaded only when the page is a whiteboard.
+      if (mode === 'edgeless') {
+        const { boardApi: makeBoard } = await import('@/lib/study/board-actions');
+        if (!cancelled) setBoardApi(makeBoard(std));
+      }
+
       // Each page writes its own summary for the page list, so the list never has to
       // fetch every page.
       const summarise = () => {
@@ -378,6 +403,7 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       });
 
       letGo = () => {
+        setBoardApi(null);
         doc.spaceDoc.off('update', onEdit);
         // Leaving a page updates the list at once.
         summarise();
@@ -420,6 +446,16 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       divider: { flavour: 'affine:divider', props: {} },
       table: { flavour: 'affine:table', props: {} },
       callout: { flavour: 'affine:callout', props: {} },
+      // Today's date, written out, as its own line: a journal's first line.
+      date: {
+        flavour: 'affine:paragraph',
+        props: {
+          type: 'text',
+          text: new Text(new Date().toLocaleDateString(undefined, {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          })),
+        },
+      },
     };
 
     try {
@@ -451,6 +487,27 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       }
     } catch (cause) {
       setHiccup(humanError(cause, 'That could not be added to the page.'));
+    }
+  }, []);
+
+  /**
+   * Pictures chosen from the insert bar, put on the page after the line with
+   * the caret: AFFiNE's own image blocks, kept with the page's other files.
+   */
+  const addPictures = useCallback(async (files: File[]) => {
+    const current = editing.current;
+    if (!current || !files.length) return;
+    const { std, store } = current;
+    try {
+      const selected = std.selection.find(TextSelection);
+      const target = (selected ? store.getBlock(selected.from.blockId)?.model : null)
+        ?? store.getBlocksByFlavour('affine:note')[0]?.model.children.at(-1)
+        ?? null;
+      if (!target) return;
+      const { addSiblingImageBlocks } = await import('@blocksuite/affine/blocks/image');
+      await addSiblingImageBlocks(std, files, target, 'after');
+    } catch (cause) {
+      setHiccup(humanError(cause, 'That picture could not be added to the page.'));
     }
   }, []);
 
@@ -614,7 +671,6 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       titleFor.current = made.id;
       setTitleDraft('');
       // A new page goes into the folder being viewed.
-      setFolderDraft(folder);
       if (folder) setMeta(made.id, { folder });
       setOpenPage(made.id);
     } catch (cause) {
@@ -627,7 +683,6 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     const meta = workspace.current?.meta.getDocMeta(id) as ShelfMeta | undefined;
     titleFor.current = id;
     setTitleDraft((meta?.title ?? '').trim());
-    setFolderDraft((meta?.folder ?? '').trim());
     // Every page opens as a page, never the whiteboard.
     setMode('page');
     setOpenPage(id);
@@ -649,7 +704,6 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       refresh();
       titleFor.current = made.id;
       setTitleDraft(dayInWords(key));
-      setFolderDraft('');
       setOpenPage(made.id);
     } catch (cause) {
       setHiccup(humanError(cause, "Today's page could not be started."));
@@ -818,10 +872,12 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
         />
         <SaveLine state={saveState} demo={demo} onDevice={onDevice.current} />
 
-        {/* Page or whiteboard: one page, two views. */}
-        {!simple && <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        {/* WRITE OR WHITEBOARD: one page, two views, for everybody. It was
+            Advanced only until 27 October 2026, when drawing was asked to be
+            something a five-year-old can find. */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
           <div role="group" aria-label="How to look at this page" className="sr-seg sr-seg--inline">
-            {([['page', 'Page', DocGlyph], ['edgeless', 'Whiteboard', BoardGlyph]] as const).map(([id, label, Icon]) => (
+            {([['page', 'Write', DocGlyph], ['edgeless', 'Whiteboard', BoardGlyph]] as const).map(([id, label, Icon]) => (
               <button
                 key={id}
                 type="button"
@@ -834,41 +890,25 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
               </button>
             ))}
           </div>
-        </div>}
+        </div>
 
-        {/* Folder and topic as one line of pills; the folder is free text. */}
+        {/* Filing, behind one button that says what it is for
+            (components/study/StudyFiling.tsx). Advanced only, as before. */}
         {!board && !simple && (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <label className="sr-field">
-              <FolderGlyph size={16} />
-              <input
-                value={folderDraft}
-                onChange={(e) => setFolderDraft(e.target.value)}
-                onBlur={() => setMeta(openPage, { folder: cleanFolder(folderDraft) || undefined })}
-                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                list="study-folders"
-                maxLength={40}
-                placeholder="No folder"
-                aria-label="Which folder this page is filed in"
-                // Wide enough for a typical folder name; longer names scroll inside the field.
-                className="w-36"
-              />
-              <datalist id="study-folders">
-                {knownFolders.map((f) => <option key={f} value={f} />)}
-              </datalist>
-            </label>
-            <StudyTags
-              tags={current?.tags ?? []}
-              known={knownTags}
-              onChange={(next) => setMeta(openPage, { tags: next })}
-            />
-          </div>
+          <StudyFiling
+            folder={current?.folder ?? ''}
+            knownFolders={knownFolders}
+            onFolder={(next) => setMeta(openPage, { folder: cleanFolder(next) || undefined })}
+            tags={current?.tags ?? []}
+            knownTags={knownTags}
+            onTags={(next) => setMeta(openPage, { tags: next })}
+          />
         )}
 
         {/* The insert bar sits above the writing and sticks under the navigation bar
            (see .sr-formatbar). */}
         {/* A direct child of the column: a sticky element only sticks within its parent. */}
-        {!board && <StudyInsertBar onInsert={insert} simple={simple} />}
+        {!board && <StudyInsertBar onInsert={insert} onPicture={addPictures} simple={simple} />}
 
         {drawing && (
           <div className="grid place-items-center py-12">
@@ -891,14 +931,25 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
             </button>
           </div>
         )}
+        {/* The board's frame holds the canvas and the room's own bar and menu
+            over it (components/study/StudyBoardTools.tsx); for a page it is
+            `contents`, so the page lays out exactly as before. */}
         <div
-          ref={host}
-          // The canvas needs a definite height (an auto height renders 0px), at least
-          // 360px; `relative` anchors its absolutely positioned toolbar to the board.
-          className={board
-            ? 'affine-edgeless-viewport sr-board-frame relative mt-3 min-h-[360px] flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_0_0_0.5px_rgba(26,34,51,0.12),0_1px_3px_rgba(16,24,40,0.06)]'
-            : 'affine-page-viewport min-h-[40vh] [min-height:40dvh] pb-6'}
-        />
+          ref={boardFrame}
+          className={board ? 'relative mt-3 flex min-h-[360px] flex-1 flex-col' : 'contents'}
+          data-board-frame={board ? '' : undefined}
+          data-board-simple={board && simple ? '' : undefined}
+        >
+          <div
+            ref={host}
+            // The canvas needs a definite height (an auto height renders 0px), at least
+            // 360px; `relative` anchors its absolutely positioned toolbar to the board.
+            className={board
+              ? 'affine-edgeless-viewport sr-board-frame relative min-h-[360px] flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_0_0_0.5px_rgba(26,34,51,0.12),0_1px_3px_rgba(16,24,40,0.06)]'
+              : 'affine-page-viewport min-h-[40vh] [min-height:40dvh] pb-6'}
+          />
+          {board && <StudyBoardTools api={boardApi} frame={boardFrame} />}
+        </div>
         </div>
 
       </div>

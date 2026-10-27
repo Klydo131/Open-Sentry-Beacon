@@ -15,7 +15,7 @@
 //   node tests/e2e/the-room-has-folders-and-collections.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions, pageErrors } = require('./_playwright');
-const { signInAsExplorer, openStudyRoom, newPage, backToShelf, shelfRows } = require('./_study');
+const { signInAsExplorer, openStudyRoom, newPage, backToShelf, shelfRows, openFiling } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -26,6 +26,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
 async function nameIt(page, title, folder, tag) {
   await page.getByLabel('Name this page').fill(title);
+  if (folder !== undefined || tag) await openFiling(page);
   if (folder !== undefined) {
     await page.getByLabel('Which folder this page is filed in').fill(folder);
     await page.getByLabel('Name this page').click();
@@ -56,6 +57,7 @@ async function nameIt(page, title, folder, tag) {
 
   // 1. A PAGE CAN BE FILED SOMEWHERE.
   await newPage(page);
+  await openFiling(page);
   ok(await page.getByLabel('Which folder this page is filed in').count() > 0,
      'a page can be filed in a folder');
   await nameIt(page, 'Romans 8', 'Romans study', 'Romans');

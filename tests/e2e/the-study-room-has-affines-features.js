@@ -120,6 +120,9 @@ const textIn = (host) => {
   // -------------------------------------------------------------------------
   // 3. TAGS. Typed on an open page, and then used to narrow the shelf.
   // -------------------------------------------------------------------------
+  // Behind "File this page" since 27 October 2026, with a sentence on what a
+  // tag is for (components/study/StudyFiling.tsx).
+  await page.locator('[data-filing]').click();
   const tagBox = page.getByLabel('Add a tag to this page');
   ok(await tagBox.count() > 0, 'a page can be tagged');
   await tagBox.fill('Romans');

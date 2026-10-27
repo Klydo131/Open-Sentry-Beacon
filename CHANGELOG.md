@@ -10,6 +10,80 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 27 October 2026: a simpler Study Room, and a whiteboard that says what you can do
+
+### If you run a copy, do this
+
+1. **Let the site rebuild.** Nothing in the database changes for this entry.
+
+### What was reported
+
+With two photographs: "if I right click on it there are no option for me to
+delete objects, options to modify, or edit it", and, of a page, "I will get
+bombarded with so many options ... the 'no folder' and 'add tag' boxes is not
+helping the user to understand it's uses." The room has to work for "a 5 year
+old, a professional, and a 75 year old" without them discovering anything.
+
+AFFiNE's own bar for a selected thing (`affine-toolbar-widget`) is in the room
+but draws nothing here, and its canvas has no right-click menu, so the only
+ways to delete were the Delete key and the eraser, and nothing said either.
+
+### The whiteboard
+
+- **One bar at the top of the board, in words.** Nothing selected: Select, Pen,
+  Shape, Sticky note, Words, Arrow, Eraser, then Undo, Redo and Show all.
+  Something selected: what it is ("This shape:") and what can be done to it:
+  Write on it, Colour, Copy, To front, To back, Delete, Done.
+- **The same choices on a right-click, and on a long press with a finger.** A
+  right-click on empty board offers Undo, Redo, Select everything and Show
+  everything.
+- **A delete says so, with Undo beside it**, for six seconds.
+- **The page's own writing cannot be deleted from the board.** It is the same
+  writing as the page (one AFFiNE note shown in both), so deleting it on the
+  board would take the writing off the page too. The Delete key and the eraser
+  are AFFiNE's own and are not changed.
+- **Every page can be a whiteboard, in Simple too**, with one bar: AFFiNE's own
+  bar of pictures along the bottom is shown only in Advanced, so Simple never
+  offers the same tools twice. On a narrow board in Advanced, AFFiNE's zoom
+  control steps aside (it ran into that bar on a phone); two fingers zoom.
+- **The More cards say all of what they make**, on as many lines as it takes,
+  instead of "Somethin..." cut off after one line.
+- The bar's buttons do not take the keyboard from the canvas, so AFFiNE's own
+  keys (S, P, Delete, Ctrl+Z) still answer after a click on the bar.
+- Code: `components/study/StudyBoardTools.tsx` draws; every action is AFFiNE's
+  own, named in `lib/study/board-actions.ts`, which loads only with the
+  whiteboard. Proof: `tests/e2e/the-whiteboard-says-what-you-can-do.js`.
+
+### Undo did nothing in the Study Room, and now works
+
+Found while testing the whiteboard's own Undo. The room loaded each page's doc
+but never its store (`store.load()`), and that call is where BlockSuite tells
+the store's extensions they are live. So the undo history never listened to
+itself, `canUndo` stayed false, and AFFiNE runs Ctrl+Z only when `canUndo` is
+true. Ctrl+Z did nothing on any page or board, since the room was built. No
+walk pressed it. `components/study/StudyRoomEditor.tsx` now starts the store's
+undo history itself (`store.history.loaded()`), and
+`tests/e2e/the-affine-features-actually-work.js` presses Ctrl+Z on a page and
+on a board (both checks failed on the old build first).
+
+Not `store.load()`, which was tried first: it also announces "root added", and
+AFFiNE's page block answers that by copying its own (empty) title over the
+page's name, so a page could lose its name just by being opened.
+`tests/e2e/the-room-goes-in-and-out-of-obsidian.js` caught it.
+
+### The page
+
+- **The insert bar has four things**, each a picture and a word: Heading, List,
+  To-do, Quote. **More** opens everything else as cards that show what each one
+  makes, including a picture from the phone and today's date.
+- **Folder and tags are behind one button, File this page**, which says where
+  the page is filed ("Not filed yet", "In Romans study · 2 tags") and, when
+  pressed, what a folder and a tag are for, with an example each.
+- Code: `components/study/StudyInsertBar.tsx`, `components/study/StudyFiling.tsx`.
+  Guide: `docs/STUDY-ROOM.md`.
+
+---
+
 ## 27 October 2026: a forgotten password has its own pages, and security in layers
 
 ### If you run a copy, do this

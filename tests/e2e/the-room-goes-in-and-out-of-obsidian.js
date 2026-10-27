@@ -15,7 +15,7 @@
 //   node tests/e2e/the-room-goes-in-and-out-of-obsidian.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions, pageErrors } = require('./_playwright');
-const { signInAsExplorer, openStudyRoom, newPage, backToShelf, shelfRows } = require('./_study');
+const { signInAsExplorer, openStudyRoom, newPage, backToShelf, shelfRows, openFiling } = require('./_study');
 const { execFileSync } = require('node:child_process');
 const os = require('node:os'), fs = require('node:fs'), path = require('node:path');
 
@@ -80,12 +80,13 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.waitForTimeout(4000);
   ok(await page.locator('affine-image').count() > 0, 'a picture is on the page before the copy is taken');
 
+  // Behind "File this page" since 27 October 2026; opened rather than skipped,
+  // so the tag the copy is checked for below is really there.
+  await openFiling(page);
   const tagBox = page.getByLabel('Add a tag to this page');
-  if (await tagBox.count()) {
-    await tagBox.fill('Romans');
-    await page.getByRole('button', { name: /^Add the tag/i }).click();
-    await page.waitForTimeout(700);
-  }
+  await tagBox.fill('Romans');
+  await page.getByRole('button', { name: /^Add the tag/i }).click();
+  await page.waitForTimeout(700);
   await backToShelf(page);
   await page.waitForTimeout(800);
 

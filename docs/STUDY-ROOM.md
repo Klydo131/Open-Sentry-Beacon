@@ -28,14 +28,15 @@ anywhere in this room and there does not need to be.
 ## Simple and Advanced
 
 The room starts **Simple**: your pages, **+ New page**, search, and the **Bin**.
-On a page you get its name, the writing, and four things to add: a heading, a
-list, a to-do and a quote. That is all most people need, and it is all a new
-room shows. On a narrow phone the four sit on two lines, so each one is whole.
+On a page you get its name, **Write** and **Whiteboard**, and the bar for adding
+things: four basics, a heading, a list, a to-do and a quote, each with a
+picture and a word, and **More** for everything else. That is the same in
+Simple and Advanced, so nothing has to be found twice.
 
-Tap **Advanced**, under the room's name, for everything else: **Starred** and
-the **Journal**, folders, tags and saved views, the star on each page, the
-**whiteboard**, the rest of the things you can add to a page, and taking your
-pages to and from Obsidian. Tap **Simple** to put them away again.
+Tap **Advanced**, under the room's name, for the rest of the room: **Starred**
+and the **Journal**, folders, tags and saved views, the star on each page,
+**File this page**, and taking your pages to and from Obsidian. Tap **Simple**
+to put them away again.
 
 The choice is remembered on that phone or computer. Switching never hides or
 changes anything you have written: a page you filed in a folder or tagged in
@@ -82,6 +83,21 @@ what you will see on the shelf and in search. You can leave it blank and name it
 later.
 
 Below that is the page itself. Start typing.
+
+### The bar: four basics, and More
+
+Above the writing is a bar with four buttons, each a picture and a word:
+**Heading**, **List**, **To-do** and **Quote**. Tap one and it appears on the
+next line, with the cursor in it.
+
+**More** opens everything else as a set of cards, each showing what it makes
+before you choose it: **Big heading**, **Small heading**, **Numbered list**
+("1. 2. 3. In order"), **Note** (a box to set something apart), **Line** (across
+the page), **Table** ("Rows and columns"), **Today's date**, and **Picture**,
+which opens the photos on your phone or the files on your computer.
+
+This is how it works on a phone, where there is no `/` key. On a computer you can
+also:
 
 ### Type `/` for anything that is not a plain sentence
 
@@ -192,8 +208,10 @@ enforced by the database rather than by a setting anybody can change.
 ## Tags, and finding things later
 
 A page can carry tags: **Romans**, **Sabbath**, **Prayer meeting**, whatever you
-would look for it by. Add them under the page's name, one at a time, pressing
-Enter or the comma key after each.
+would look for it by. Tap **File this page** under the page's name (Advanced),
+then add them one at a time, pressing Enter or the comma key after each. The
+button says how the page is filed, for example *In Romans study · 2 tags*, so
+you can see it without opening it.
 
 - The box **offers the tags you already use**, so you end up with one *Romans*
   rather than *Romans*, *romans* and *Romans 8*.
@@ -215,8 +233,8 @@ Three ways to find a page, and they are not the same thing.
 **A tag** is what a page is *about*. A page can have as many as you like.
 
 **A folder** is where you *put* it. One folder per page, and you never create
-one: type a name in the Folder box on a page and the folder exists because
-something is in it. When the last page leaves, it is gone.
+one: tap **File this page**, type a name under **Folder**, and the folder exists
+because something is in it. When the last page leaves, it is gone.
 
 - Folders appear as a row above the list. Tap one to see only what is in it.
 - Start a new page while a folder is showing and it is filed there already.
@@ -253,14 +271,44 @@ things nobody names and everybody wants to find again.
 ## The whiteboard
 
 Every page can be looked at two ways, and the switch above the page says
-which: **Page** is the document, **Whiteboard** is the same page on an infinite
-canvas. It is one page, not two: there is nothing to copy across.
+which: **Write** is the document, **Whiteboard** is the same page on an infinite
+canvas. It is one page, not two: there is nothing to copy across. The
+whiteboard is there in Simple too.
 
-On the whiteboard you have shapes, arrows that stay attached to what they join,
-a pen, text anywhere you like, mindmaps and frames. It is for the things a
-column of text is bad at: how a passage is built, who is related to whom, a plan
-for a study on a wall. On a phone or tablet a finger on the board draws; it no
-longer scrolls the room behind it.
+**The bar at the top of the board** has the tools, each a picture and a word:
+**Select**, **Pen**, **Shape**, **Sticky note**, **Words**, **Arrow** and
+**Eraser**, then **Undo**, **Redo** and **Show all** (fit everything into view).
+
+**Tap something on the board** and the same bar changes to say what it is
+("This shape:") and what you can do to it:
+
+| | |
+|---|---|
+| **Write on it** | Put words in a shape, a sticky note or a line of words |
+| **Colour** | Six colours: yellow, orange, red, green, blue, purple |
+| **Copy** | A copy next to it, selected, ready to drag |
+| **To front**, **To back** | Which one is on top when they overlap |
+| **Delete** | Takes it off the board; **Undo** appears for a few seconds |
+| **Done** | Back to the tools |
+
+**Right-click** (or **press and hold** with a finger) on anything for the same
+choices, or on an empty part of the board for **Undo**, **Redo**, **Select
+everything** and **Show everything**.
+
+The card with your page's writing is on the board too. It cannot be deleted
+from here, so nothing written on the Write side is lost by tidying the board.
+
+**Undo** works everywhere in the room: Ctrl+Z (Cmd+Z on a Mac) on a page or a
+board, or **Undo** on the board's bar. Until 27 October 2026 it did nothing in
+the Study Room; see `CHANGELOG.md`.
+
+**In Advanced**, AFFiNE's full set of tools is also in a bar at the bottom of
+the board: shape styles, pen colours, mind maps, frames and templates. Simple
+shows only the room's own bar, so the same tools are never offered twice, once
+with words and once without. Both are for the
+things a column of text is bad at: how a passage is built, who is related to
+whom, a plan for a study on a wall. On a phone or tablet a finger on the board
+draws; it no longer scrolls the room behind it.
 
 ---
 

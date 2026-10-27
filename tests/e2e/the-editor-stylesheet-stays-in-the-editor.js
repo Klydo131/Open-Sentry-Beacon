@@ -27,7 +27,7 @@
 //   node tests/e2e/the-editor-stylesheet-stays-in-the-editor.js [port]
 // ---------------------------------------------------------------------------
 const { chromium, launchOptions, pageErrors } = require('./_playwright');
-const { signInAsExplorer, openStudyRoom, newPage } = require('./_study');
+const { signInAsExplorer, openStudyRoom, newPage, openFiling } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '3100'}`;
 const OUT = process.env.E2E_OUT ||
@@ -49,6 +49,8 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await openStudyRoom(page, BASE);
   await newPage(page);
   await page.waitForTimeout(800);
+  // The tag box is behind "File this page" since 27 October 2026.
+  await openFiling(page);
 
   // -------------------------------------------------------------------------
   // 1. AN INPUT IS THE SIZE ITS CLASS ASKS FOR

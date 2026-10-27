@@ -1,28 +1,32 @@
 'use client';
 
-// The way to insert something when there is no `/` key to press.
+// The way to add something to a page, without a `/` key and without hunting.
 //
 // ---------------------------------------------------------------------------
 // REPORTED, WITH A PHOTOGRAPH OF AN ANDROID PHONE: the `/` typed into the page
-// and sat there as a character. No menu, nothing.
+// and sat there as a character. A phone's on-screen keyboard sends composition
+// events, not the keydown BlockSuite's slash menu waits for, so this bar is
+// the way in on a phone and sits beside `/` on a computer. A bar this app draws
+// itself is one a browser walk can open, press and assert on.
 //
-// WHY, AND IT IS NOT A BUG IN BLOCKSUITE. Their slash menu opens on a `keydown`
-// for the `/` key. A phone's on-screen keyboard does not send those: GBoard and
-// its cousins send composition and `beforeinput` events, and the character
-// arrives without any keydown the menu could recognise. AFFiNE knows this --
-// their own slash menu declines to register on a mobile scope at all, and their
-// answer is a bar above the keyboard instead.
+// THEN, ON 27 OCTOBER 2026, the other half: "If I go to page, I will get
+// bombarded with so many options and it's not UI friendly for beginners ...
+// Can we make it simplified but has more tools ... that at least a 5 year old,
+// a professional, and a 75 year old can understand." The ten buttons in a row
+// that scrolled sideways (with arrows to find the rest) became:
 //
-// SO WHY NOT USE THEIRS. Because it only exists while a virtual keyboard is
-// open, and there is no virtual keyboard in a headless browser: it cannot be
-// tested here, at all, by anybody. This project has shipped four things that
-// could not be tested here and the owner found every one of them. A bar this
-// app draws itself is one that a browser walk can open, press and assert on.
+//   * FOUR, ALWAYS THE SAME, each a picture and a word: Heading, List, To-do,
+//     Quote. What a first page of notes is made of, on one line on any phone;
+//   * and MORE, which opens every other thing as a card that shows what it
+//     makes ("1. 2. 3. in order", "Rows and columns"), so nothing has to be
+//     guessed from its name. Two new ones came with it: Today's date, and a
+//     Picture from the phone or computer.
 //
-// IT IS ON EVERY SCREEN, not only small ones. On a desktop `/` still works and
-// this sits alongside it; on a phone it is the only way in. A control that
-// appears on some devices and not others is a second thing to get wrong.
+// Simple and Advanced show the same bar: the difference between them is the
+// room's places and the filing, not how a page is written.
 // ---------------------------------------------------------------------------
+
+import { useRef, useState } from 'react';
 
 import {
   CalloutGlyph, CheckboxGlyph, DividerGlyph, ListGlyph, NumberedListGlyph, QuoteGlyph, TableGlyph,
@@ -31,64 +35,136 @@ import {
 export type InsertKind =
   | 'h1' | 'h2' | 'h3'
   | 'bulleted' | 'numbered' | 'todo'
-  | 'quote' | 'divider' | 'table' | 'callout';
+  | 'quote' | 'divider' | 'table' | 'callout'
+  | 'date';
 
-// WORDS, NOT `H1`. The first three were `H1 H2 H3`, which is a typesetter's
-// shorthand, in an app whose base font is 18px because many of the people
-// using it are older. And each visible word is INSIDE the button's spoken name
-// ("List" in "Bulleted list", "Line" in "A line across the page"), so somebody
-// using voice control can say what they see and have it work.
-const BUTTONS: Array<{ kind: InsertKind; label: string; hint: string; Icon?: typeof ListGlyph }> = [
-  { kind: 'h1', label: 'Big heading', hint: 'Big heading' },
-  { kind: 'h2', label: 'Heading', hint: 'Heading' },
-  { kind: 'h3', label: 'Small heading', hint: 'Small heading' },
-  { kind: 'bulleted', label: 'List', hint: 'Bulleted list', Icon: ListGlyph },
-  { kind: 'numbered', label: 'Numbered', hint: 'Numbered list', Icon: NumberedListGlyph },
-  { kind: 'todo', label: 'To-do', hint: 'To-do with a box to tick', Icon: CheckboxGlyph },
-  { kind: 'quote', label: 'Quote', hint: 'Quote a verse or a line', Icon: QuoteGlyph },
-  { kind: 'divider', label: 'Line', hint: 'A line across the page', Icon: DividerGlyph },
-  { kind: 'table', label: 'Table', hint: 'Table', Icon: TableGlyph },
-  { kind: 'callout', label: 'Note', hint: 'Note, to set something apart', Icon: CalloutGlyph },
+type Card = { kind: InsertKind | 'picture'; label: string; hint: string; example: string; Icon?: typeof ListGlyph; picture?: string };
+
+// WORDS, NOT `H1`, and each visible word is INSIDE the button's spoken name, so
+// somebody using voice control can say what they see and have it work.
+const FOUR: Card[] = [
+  { kind: 'h2', label: 'Heading', hint: 'Heading', example: 'A title for a part', picture: 'H' },
+  { kind: 'bulleted', label: 'List', hint: 'Bulleted list', example: '• One thing on each line', Icon: ListGlyph },
+  { kind: 'todo', label: 'To-do', hint: 'To-do with a box to tick', example: '☐ Something to do', Icon: CheckboxGlyph },
+  { kind: 'quote', label: 'Quote', hint: 'Quote a verse or a line', example: '“A verse or a line”', Icon: QuoteGlyph },
 ];
 
-/** What Simple keeps: the four a first page of notes is made of. The rest is Advanced. */
-const SIMPLE: InsertKind[] = ['h2', 'bulleted', 'todo', 'quote'];
+const MORE: Card[] = [
+  { kind: 'h1', label: 'Big heading', hint: 'Big heading', example: 'The title of the whole page', picture: 'H' },
+  { kind: 'h2', label: 'Heading', hint: 'Heading', example: 'A title for a part', picture: 'H' },
+  { kind: 'h3', label: 'Small heading', hint: 'Small heading', example: 'A smaller title', picture: 'h' },
+  { kind: 'bulleted', label: 'List', hint: 'Bulleted list', example: '• One thing on each line', Icon: ListGlyph },
+  { kind: 'numbered', label: 'Numbered list', hint: 'Numbered list', example: '1. 2. 3. In order', Icon: NumberedListGlyph },
+  { kind: 'todo', label: 'To-do', hint: 'To-do with a box to tick', example: '☐ Something to do', Icon: CheckboxGlyph },
+  { kind: 'quote', label: 'Quote', hint: 'Quote a verse or a line', example: '“A verse or a line”', Icon: QuoteGlyph },
+  { kind: 'callout', label: 'Note', hint: 'Note, to set something apart', example: 'Set something apart in a box', Icon: CalloutGlyph },
+  { kind: 'divider', label: 'Line', hint: 'A line across the page', example: 'Between one day and the next', Icon: DividerGlyph },
+  { kind: 'table', label: 'Table', hint: 'Table', example: 'Rows and columns', Icon: TableGlyph },
+  { kind: 'date', label: 'Today’s date', hint: 'Today’s date', example: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }), picture: '📅' },
+  { kind: 'picture', label: 'Picture', hint: 'A picture from this phone or computer', example: 'A photo, a drawing, a page', picture: '🖼️' },
+];
 
-export function StudyInsertBar({ onInsert, simple = false }: {
+export function StudyInsertBar({ onInsert, onPicture, simple = false }: {
   onInsert: (kind: InsertKind) => void;
+  /** Pictures chosen with the Picture card, for the editor to put on the page. */
+  onPicture?: (files: File[]) => void;
   /** Simple or Advanced, from components/study/StudyModeSwitch.tsx. */
   simple?: boolean;
 }) {
+  const [more, setMore] = useState(false);
+  const pictures = useRef<HTMLInputElement>(null);
+
+  const press = (card: Card) => (e: React.PointerEvent) => {
+    // NOT onClick. A click on a phone lands after the editor has lost focus,
+    // which loses the caret and with it the place the new block belongs.
+    // Pointer-down fires first and keeps the selection.
+    e.preventDefault();
+    setMore(false);
+    if (card.kind === 'picture') pictures.current?.click();
+    else onInsert(card.kind);
+  };
+
   return (
     <div className="sr-formatbar mt-4" data-simple={simple ? 'true' : 'false'}>
-      <div
-        role="toolbar"
-        aria-label="Add to this page"
-        className="thin-scroll flex items-center gap-2 overflow-x-auto"
-      >
-        {BUTTONS.filter((b) => !simple || SIMPLE.includes(b.kind)).map((button) => (
+      <div role="toolbar" aria-label="Add to this page" className="sr-insert-row">
+        {FOUR.map((card) => (
           <button
-            key={button.kind}
+            key={card.kind}
             type="button"
-            // NOT onClick. A click on a phone lands after the editor has lost
-            // focus, which loses the caret and with it the place the new block
-            // belongs. Pointer-down fires first and keeps the selection.
-            onPointerDown={(e) => { e.preventDefault(); onInsert(button.kind); }}
-            title={button.hint}
-            aria-label={button.hint}
-            className={`sr-tool tap-sm ${button.kind === 'h1' ? 'text-[16px]' : ''}`}
+            onPointerDown={press(card)}
+            // A keyboard has no pointer: Enter and Space press it too.
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onInsert(card.kind as InsertKind); } }}
+            title={card.hint}
+            aria-label={card.hint}
+            className="sr-tool tap-sm"
           >
-            {button.Icon ? <button.Icon size={17} /> : null}
-            {button.label}
+            {card.Icon ? <card.Icon size={17} /> : <span aria-hidden className="sr-tool-letter">{card.picture}</span>}
+            {card.label}
           </button>
         ))}
-        {/* The keyboard way in, said once, where a computer can use it. A
-            phone has no key that opens the menu, so a phone is not told about
-            one. */}
+        <button
+          type="button"
+          onPointerDown={(e) => { e.preventDefault(); setMore((v) => !v); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMore((v) => !v); } }}
+          aria-expanded={more}
+          aria-controls="sr-insert-more"
+          aria-label="More things to add"
+          title="More things to add"
+          className="sr-tool sr-tool--more tap-sm"
+          data-insert-more
+        >
+          <span aria-hidden className="sr-tool-letter">＋</span>
+          More
+        </button>
+        {/* The keyboard way in, said once, where a computer can use it. */}
         <span className="ml-1 hidden shrink-0 items-center gap-1.5 whitespace-nowrap pr-1 text-[14px] text-[color:var(--sr-ink-2)] lg:inline-flex">
           or press <span className="sr-kbd">/</span> while writing
         </span>
       </div>
+
+      {more && (
+        <div id="sr-insert-more" role="group" aria-label="Everything you can add" className="sr-insert-more" data-insert-panel>
+          {MORE.map((card) => (
+            <button
+              key={card.label}
+              type="button"
+              onPointerDown={press(card)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                setMore(false);
+                if (card.kind === 'picture') pictures.current?.click();
+                else onInsert(card.kind);
+              }}
+              aria-label={card.hint}
+              className="sr-insert-card"
+            >
+              <span aria-hidden className="sr-insert-card-pic">
+                {card.Icon ? <card.Icon size={20} /> : card.picture}
+              </span>
+              <span className="sr-insert-card-name">{card.label}</span>
+              <span aria-hidden className="sr-insert-card-example">{card.example}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <input
+        ref={pictures}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        multiple
+        hidden
+        aria-hidden
+        tabIndex={-1}
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          // Cleared after reading, never before: WebKit empties the list when
+          // the input's value is reset.
+          if (files.length) onPicture?.(files);
+          e.target.value = '';
+        }}
+      />
     </div>
   );
 }
