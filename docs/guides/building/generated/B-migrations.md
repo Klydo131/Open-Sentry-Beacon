@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-158 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+159 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1361,3 +1361,11 @@ ASKED FOR, 27 October 2026, with the court room closed (20261027120000): "It wil
 One rule per action, the links the screens use indexed, and "a report" in place of "a case".
 
 ASKED FOR, 27 October 2026, from the costed plan "Rust and Python for Hope Beacon": "fast, secure, affordable, and optimized for more productivity use". The plan's first finding was that nothing here waits on a slow language, and that the speed Supabase's own advisor found missing needs no new one. The owner chose this work first. It changes no rule.
+
+#### `20261027160000_trends_in_counts_only.sql`
+
+*2026-10-27*
+
+Trends in counts only: one view of weekly numbers per church, with any number under 5 hidden, and one role that can read that view and nothing else.
+
+ASKED FOR, 27 October 2026: "We can use Rust for Data security and Python for data analysis." The costed plan put Python on the owner's own computer, reading counts that cannot name anyone, and the owner chose it. Python cannot run inside the hosted database (PL/pgSQL is its only language) or in Supabase's functions (TypeScript and WebAssembly), so the analysis is a program on a computer, and this is what it may read. tools/trends/ is the program.

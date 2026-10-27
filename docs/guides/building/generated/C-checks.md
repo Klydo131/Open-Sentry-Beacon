@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 186 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 187 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -1843,6 +1843,16 @@ A hub is kept running by its members' gifts.
 ASKED FOR on 26 October 2026: "There must be some kind of donation system to maintain the standard maintenance of the app ... Can we make a plan and system of it?" The owner's choices: gifts go to each church's own treasury; members give through the church's own GCash or bank, with nothing paid in the app; members see the month's goal and total, and no names.
 
 THEN, THE SAME DAY: "Donation features are only optional if developers want to put it on their own home brewed Hope Beacon." So giving is off until a project sets HUB_GIVING = 'on' (20261026200000_giving_is_a_choice), and the sample church, which is the app as it comes, has no giving card.
+
+#### trends are counts only
+
+`tests/trends-are-counts-only.mjs`
+
+Trends are counts only.
+
+ASKED FOR on 27 October 2026: "We can use Rust for Data security and Python for data analysis." The costed plan put the analysis on the owner's own computer, reading weekly counts that cannot name anyone, and the owner chose it. supabase/migrations/20261027160000_trends_in_counts_only.sql is what it may read; tools/trends/ is the program.
+
+WHAT HOLDS, each checked below and each broken on purpose once to watch the check go red. What the role can and cannot read is proved by running it, as invented people, in supabase/tests/trends-are-counts-only.sql, which this checks is run; this file holds the shape that test cannot see from inside a database: no password in a file, nothing written where git would keep it.
 
 #### every table says who may reach it
 

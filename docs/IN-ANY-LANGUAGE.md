@@ -22,6 +22,7 @@ rule, read [BUILD-YOUR-OWN.md](BUILD-YOUR-OWN.md) alongside this page.
 | Keep the app and change how it looks or what it says | [START-HERE.md](START-HERE.md), [Translating the screens](#translating-the-screens) | none needed |
 | Write a phone app, a desktop tool or a script that talks to Hope Beacon | [Way B](#b-keep-the-database-write-your-own-app-or-server), [The calls, in order](#the-calls-in-order) | [`examples/`](../examples/) in curl, JavaScript, Python, PHP, Rust, C++, Go, Java, Dart |
 | Write your own server in your own language | [Your own server: the pattern](#your-own-server-the-pattern) | [`examples/server-python`](../examples/server-python/), [`server-php`](../examples/server-php/), [`server-rust`](../examples/server-rust/), [`server-laravel`](../examples/server-laravel/) |
+| See your church's weekly trends, in counts that name nobody | [`tools/trends/README.md`](../tools/trends/README.md) | [`tools/trends`](../tools/trends/) in Python |
 | Rebuild everything on another database | [Way C](#c-rebuild-on-another-database) | none: you are writing it |
 
 ---

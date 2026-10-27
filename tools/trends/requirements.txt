@@ -1,0 +1,2 @@
+psycopg[binary]==3.3.6
+matplotlib==3.11.2

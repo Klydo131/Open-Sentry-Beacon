@@ -10,6 +10,41 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 27 October 2026: trends, in counts that name nobody
+
+### If you run a copy, do this
+
+1. **Run the new migration**, `20261027160000_trends_in_counts_only.sql`. It
+   adds a `trends` schema, the view `trends.weekly` and a role,
+   `beacon_trends`, that can read only that view and cannot sign in.
+2. **Only if you want the trends:** give the role a password and run
+   `tools/trends/trends.py` on your own computer (`tools/trends/README.md`).
+   Nothing else changes until you do.
+
+### What changed
+
+- **`trends.weekly`**: for each church and each week (Monday, UTC), the people
+  who joined, pairs started, pairs who talked, messages, lessons finished and
+  read, prayer requests, meetings, and reports raised and closed. Every week is
+  listed, so a quiet week reads 0. **Any number from 1 to 4 is null** and shows
+  as "fewer than 5", because in a small church a small number can name
+  somebody. The view carries no name, message or person's id. It is a security
+  barrier, so a reader's own conditions cannot run before the counting.
+- **`beacon_trends`** reads the view and nothing else. It is not one of the
+  roles the data API switches to, and `trends` is not a schema the API
+  publishes. It is made without a login.
+- **`tools/trends/`**: a Python program (psycopg 3.3.6, matplotlib 3.11.2) that
+  writes a CSV, a summary (ranges where a week is hidden; a trend that
+  describes the past and is not a forecast) and charts. It runs on your
+  computer because Supabase cannot run Python in the database or its
+  functions. `--demo` tries it with invented numbers.
+- **Proved** by `supabase/tests/trends-are-counts-only.sql` on every fresh
+  install: 17 checks with invented people. Two breaks were each seen to fail
+  it: giving the role a table, and letting 3 and 4 show.
+  `tests/trends-are-counts-only.mjs` (17 checks) holds the parts a database
+  cannot see: no password in any file, nothing the program writes kept in
+  git.
+
 ## 27 October 2026: one rule per action, and the links the screens use indexed
 
 ### If you run a copy, do this

@@ -93,3 +93,8 @@ supabase/.temp/
 # database files and uploaded files of whoever runs it (selfhost/README.md).
 /selfhost/server/node_modules/
 /selfhost/data/
+
+# tools/trends: Python caches and the charts and numbers it writes, which are
+# a church's own and never belong in a public repository.
+__pycache__/
+trends-out/

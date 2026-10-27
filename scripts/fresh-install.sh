@@ -192,6 +192,13 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-hub-is-kept-running-by-gifts.sql"
 
+# TRENDS ARE COUNTS ONLY: the trends role reads weekly numbers per church and
+# nothing else; a number from 1 to 4 is hidden; nobody signed in to the app
+# reads the trends; the role cannot sign in until the owner gives it a
+# password. Invented people, rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/trends-are-counts-only.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"
