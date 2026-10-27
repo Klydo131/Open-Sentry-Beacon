@@ -349,7 +349,6 @@ export function LiveChurchPulse() {
               <Stat label="Suspended now" value={r.suspended_now} warn={r.suspended_now > 0} />
               <Stat label="Removed over time" value={r.removed_ever} />
               <Stat label="Reports to answer" value={r.open_reports} warn={r.open_reports > 0} />
-              <Stat label="Cases open" value={r.open_trials} warn={r.open_trials > 0} />
             </dl>
           </div>
         ))

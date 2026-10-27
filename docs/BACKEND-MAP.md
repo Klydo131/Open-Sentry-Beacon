@@ -115,7 +115,7 @@ these nine and you can read any policy in the codebase.
 | `leads_church(c)` | leadership of `c`, for the discipline record |
 | `in_pairing(p)` | you are one of the two people in pairing `p`, and still approved |
 | `is_paired_with(x)` | you walk with `x`, either direction |
-| `in_trial(t)` | you are a party to hearing `t` |
+| `in_report(r)` | you raised report `r`, may handle it, or were brought into its conversation |
 
 They are all `SECURITY DEFINER`, which is deliberate: a policy on `pairings`
 that read `pairings` directly would re-enter its own policy and Postgres would
@@ -187,8 +187,8 @@ verify gate fails if a new one arrives without it.
 
 | Table | Who may read | Live |
 |---|---|---|
-| `reports` · `report_files` | an approved **admin or executive of that church** | ● |
-| `trials` · `trial_statements` · `trial_parties` | `in_trial` — a party to that hearing, nobody else | ● |
+| `reports` · `report_files` | whoever **may handle** that report (`may_handle_report`: a leader of its church, never the person it is about, and only an Executive Director when it is about a leader); a report also by whoever raised it. Nobody writes to `reports` directly | ● |
+| `report_messages` | `in_report`: who raised it, who may handle it, and the person it is about once brought in | ● |
 | `discipline_log` | `leads_church` | ● |
 | `feedback` | `manages_church`, or its author | ● |
 | `activity_record` | `manages_church` | |
@@ -263,7 +263,7 @@ scripts/verify.mjs       the gate: typecheck, build, and every test above
 
 2. **A definer function must authorise its own caller.** It runs as its owner,
    so RLS does not protect it. Every one that *acts* — `suspend_member`,
-   `close_trial`, `remove_member_by_leader` — checks the caller first. That
+   `bring_subject_into_report`, `remove_member_by_leader` — checks the caller first. That
    check is the only thing standing there.
 
 3. **A policy decides WHICH ROWS. A grant decides WHICH COLUMNS.** RLS cannot

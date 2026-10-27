@@ -1,9 +1,9 @@
 // The two things pg_cron and pg_net do on a Supabase project, done here.
 //
-// THE SCHEDULE. The migrations put four jobs in cron.job (invitation
+// THE SCHEDULE. The migrations put three jobs in cron.job (invitation
 // passwords running out every hour, deleted files erased and the library's
-// link record pruned every night, and leave to answer a case ended every
-// minute once it runs out). Every minute this runs whatever is due, as
+// link record pruned every night; the court room's every-minute leave sweep
+// went with it, 20261027120000). Every minute this runs whatever is due, as
 // the database owner, one job at a time, and writes each run to
 // cron.job_run_details, as pg_cron does. Times are UTC, as pg_cron's are.
 // Two servers sharing a database do not both run a job: each minute goes to

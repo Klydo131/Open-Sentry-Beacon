@@ -41,8 +41,9 @@ function routeFor(type: string, role: Role): string {
   const leads = role === 'admin' || role === 'executive';
   switch (type) {
     case 'trial':
-      // Leadership judges these; anybody else was CALLED to one.
-      return leads ? '/admin?room=safeguarding' : '/cases';
+      // The court room closed on 27 October 2026; a notification it sent before
+      // then opens Admin Reports, where reports are now.
+      return '/settings#reports';
     case 'report':
       // EVERYBODY GOES TO THE SAME PLACE, and it is not /admin. A report is now
       // a conversation between the person who raised it and the one who picked

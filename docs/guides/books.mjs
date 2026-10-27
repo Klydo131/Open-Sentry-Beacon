@@ -27,7 +27,7 @@ const ROOMS = {
   Music: 'For the choir and anybody who loves music. Everything in it happens on the phone or computer itself; nothing is sent anywhere.',
   'My Files': 'A person’s own music, video and documents, saved on their own device. Nothing in it is shared and nothing comes from anybody else.',
   Mail: 'In the sample church, a mailbox showing what the app sends, without sending real email. In a church’s own app, Mail is for church leaders, and lists the invitations still open, to resend or cancel.',
-  'Admin Reports': 'Reports, trials and the record, heard in the court room: the part of the app nobody wants to need. It is always in a leader’s Menu, keeps cases on two shelves, Now and Earlier, and says plainly when nothing is open.',
+  'Admin Reports': 'Reports and one conversation about each: the part of the app nobody wants to need. It is always in a leader’s Menu, groups what is waiting, what you hold and what you raised, and says plainly when nothing is open.',
   Settings: 'Everything about this device and this account: text size, the look, installing, alerts, language, the guided walk, what is new, and help. A church’s own app adds a Password folder and an Admin Reports folder.',
 };
 
@@ -130,8 +130,8 @@ export const USING = {
       chapters: [
         { src: { file: H, from: /^Inviting somebody/, until: /^The conversation$/ }, title: 'People: inviting, pairing and looking after accounts' },
         { src: { file: H, from: /^The conversation$/, until: /^Rooms and subrooms/ }, title: 'Conversations, meetings, the library, prayer and writing' },
-        { src: { file: H, from: /^Rooms and subrooms/, until: /^Admin Reports: the court room$/ }, title: 'Rooms, folders and the Office' },
-        { src: { file: H, from: /^Admin Reports: the court room$/, until: /^5\. Getting it onto a phone/ }, title: 'Admin Reports, safeguarding, the audit and the numbers' },
+        { src: { file: H, from: /^Rooms and subrooms/, until: /^Admin Reports$/ }, title: 'Rooms, folders and the Office' },
+        { src: { file: H, from: /^Admin Reports$/, until: /^5\. Getting it onto a phone/ }, title: 'Admin Reports, safeguarding, the audit and the numbers' },
         { src: { file: 'docs/guides/using/03-music-room.md' } },
         { src: { file: 'docs/JUSTICE.md' } },
       ],

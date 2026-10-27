@@ -57,7 +57,7 @@ export function railGroupsFor(
   // Cases (Admin Reports): a room for leadership. Guides and Explorers reach
   // their own cases through Settings. No longer marked beta (owner, 20 October
   // 2026: "we already polished it").
-  const cases = { href: '/cases', label: 'Admin Reports', icon: '⚖️' };
+  const cases = { href: '/cases', label: 'Admin Reports', icon: '🛡️' };
 
   // The Office, for everyone but Explorers.
   const office = { href: '/office', label: 'Office', icon: '🗂️' };

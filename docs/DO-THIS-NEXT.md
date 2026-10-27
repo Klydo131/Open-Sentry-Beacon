@@ -27,11 +27,12 @@ These came with the October security update and the giving room.
    Giving**, types the month's goal and
    the church's GCash or bank details, and names the treasurers. Members see
    nothing about giving until that is done.
-3. **If a leader presses "Email me a code" at the court room and is told it
-   cannot be sent,** the email key is missing where the court room's door
-   looks for it. In Supabase, **Edge Functions → Secrets**, check that
-   `BREVO_API_KEY` and `BREVO_SENDER` are there, the same two the invitations
-   use ([EMAIL.md](EMAIL.md)).
+3. **Delete the court room's e-mail function, if it was ever deployed.** The
+   court room closed on 27 October 2026. In Supabase, **Edge Functions**, if a
+   function called `door-code` is listed, delete it (or run
+   `npx supabase functions delete door-code`). Keep the `BREVO_API_KEY` and
+   `BREVO_SENDER` secrets: the invitations use them ([EMAIL.md](EMAIL.md)).
+   Then, in **Storage**, delete the empty bucket called `court-exhibits`.
 
 ---
 

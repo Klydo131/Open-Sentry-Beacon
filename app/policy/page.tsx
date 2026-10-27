@@ -40,9 +40,11 @@ export default function PolicyPage() {
           </p>
           <ul className="mt-3 space-y-2 text-gray-700">
             <li>
-              <strong>The other person is never told.</strong> No notice, no
-              read receipt, nothing they could notice. You do not have to worry
-              about what they will say to you afterwards.
+              <strong>The other person is not told when you report.</strong> No
+              notice, no read receipt, nothing they could notice. A Director reads
+              it first, and may then bring them into the conversation about it so
+              it can be talked through; you are told if they do, and they never see
+              the pictures or files you add.
             </li>
             <li>
               <strong>Guides and Explorers can both report.</strong> This is not
@@ -146,8 +148,8 @@ export default function PolicyPage() {
           <p className="mt-3 text-sm text-gray-600">
             Your name is visible to the Directors. They need it so they can ask
             you what happened, support you, and tell a genuine concern from a
-            grudge. The person you
-            reported is the one who is never told.
+            grudge. The person you reported is not told, unless a Director brings
+            them into the conversation about it.
           </p>
         </Card>
 

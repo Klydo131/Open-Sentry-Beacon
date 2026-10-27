@@ -193,38 +193,30 @@ export function faqSections(): FaqSection[] {
           id: 'report',
           q: 'What happens when I report a message?',
           a: [
-            'The message is sent to your church’s leadership so they can keep everyone safe, and the app tells you this before you confirm. Reporting is the only way a leader ever reads a message, and the person you reported is not told who reported it.',
+            'The message is sent to your church’s leadership so they can keep everyone safe, and the app tells you this before you confirm. Reporting is the only way a leader ever reads a message.',
+            'The person you reported is not told when you send it. A Director reads it first, and may then bring them into the conversation about it so it can be talked through; you are told if they do. They never see the pictures or files you attached.',
           ],
         },
         {
-          id: 'court-room',
-          q: 'What if I am called to a trial?',
+          id: 'report-conversation',
+          q: 'Who can read the conversation about a report?',
           a: [
-            'You are told, and the trial is in Admin Reports, under Settings. Its door asks for your password again before it opens, so the case stays private if somebody else picks up your phone. Inside you can read what has been said, say what happened in your own words, and put photos, recordings or files before it as exhibits.',
-            'Everything said and every exhibit is kept on the trial’s record exactly as given, with a fingerprint that shows nothing was changed afterwards. Nothing you say there can be edited or deleted, by you or anybody else. If you cannot sign in, tell the judge what you want to say and they will write it down as yours.',
+            'It is in Admin Reports, under Settings. The person who raised the report and the Director holding it write in it, and the church’s other leaders who may handle it can read it, so nothing is said there between two people only. It says at the top who is in it.',
+            'Nobody handles a report about themselves, and a report about a Director is for Executive Directors only. Nothing written there can be changed or taken back.',
           ],
         },
         {
-          id: 'who-decides',
-          q: 'Who judges a trial, and who decides it?',
+          id: 'brought-in',
+          q: 'A Director asked me into a conversation about a report. What does that mean?',
           a: [
-            'The judge is drawn at random from the church’s leaders who are free to hear it: never the person it is about, nobody called to it, and not the leader who brought it unless nobody else is free. The draw is on the trial’s record, so nobody can choose the judge.',
-            'The judge does not decide the case. When everybody has been heard, the judge ends the hearing with what they recommend, and nothing happens to anybody’s account. The Church Board gives the final ruling, outside the court room, and it is written into the trial when it has.',
-          ],
-        },
-        {
-          id: 'leave-to-answer',
-          q: 'My account is suspended. Can I still answer a trial?',
-          a: [
-            'Yes. Tell the judge what you want to say and they write it down as yours, or the judge can give you leave to answer: for an hour, a day, three days or a week, you can sign in and use the court room for that one trial, and nothing else in the app opens. The door still asks for your password.',
-            'Leave to answer ends when the judge ends it, when its time runs out, or when the hearing ends, and your account is switched off again on every phone. It does not lift your suspension; only a Director can do that. Giving it is written on the trial’s record.',
+            'Somebody reported something that involves you, and the Director holding it would like to talk it through with you and the person who raised it, together. Nothing has been decided. You can read the report and everything said so far, and answer in your own words.',
           ],
         },
         {
           id: 'deleted-record',
           q: 'What stays if my account is deleted?',
           a: [
-            'Everything in your account goes. Safeguarding reports and trials stay, because a church has to be able to show what it did: a report you raised or that was about you, and a trial you were in, with what was said in it. Your name stays in them as it was, shown with “(account deleted)”, and nothing else about you is kept.',
+            'Everything in your account goes. Safeguarding reports stay, because a church has to be able to show what it did: a report you raised or that was about you, with the conversation about it. Your name stays in them as it was, shown with “(account deleted)”, and nothing else about you is kept.',
           ],
         },
         {
@@ -322,7 +314,7 @@ export function faqSections(): FaqSection[] {
           q: 'Can a photo I add show where I live?',
           a: [
             'No. Every photo you add, whether in a conversation, on a post or as your profile picture, is resized and has its location data removed before it is stored.',
-            'The only exceptions are evidence attached to a safeguarding report and exhibits put before a trial, which are kept exactly as given so that their integrity is preserved. Only the leaders handling a report can open its evidence, and where an exhibit was taken is shown only to the trial’s judge and gallery.',
+            'The only exception is evidence attached to a safeguarding report, which is kept exactly as given so that its integrity is preserved. Only the leaders who may handle the report can open it.',
           ],
         },
         {

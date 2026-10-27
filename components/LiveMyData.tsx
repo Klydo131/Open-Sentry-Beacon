@@ -79,7 +79,9 @@ export function LiveMyData() {
         <p className="mt-3 font-semibold text-navy">What is not, and why</p>
         <p className="mt-1">
           A safeguarding report about you is left out, because a report names whoever
-          raised it and they were promised you would never be told. A Guide&rsquo;s private
+          raised it and they were promised you would not be told unless a Director
+          brings you into its conversation; if one has, you can read it in Admin
+          Reports. A Guide&rsquo;s private
           notes and the record of approvals and removals are left out for related reasons.
           The file itself explains each one and says who to write to if you want them
           considered: your church&rsquo;s Data Protection Officer, who can weigh it case by

@@ -70,8 +70,8 @@ written in `0001_core_schema.sql` and has been replaced since; the current text
 is always the last migration that defines it. It holds three conditions: the
 sender is the person signed in, that person is in this pairing
 (`public.in_pairing`), and they are not suspended. A request that skipped the
-screens entirely would meet exactly the same sentence. As the trial room's
-migration puts it: *a screen is not a security boundary; this is.*
+screens entirely would meet exactly the same sentence. As the old trial room's
+migration (`0023`) put it: *a screen is not a security boundary; this is.*
 
 **Back to the other phone.** The Guide's open conversation is told of the new
 row through Supabase realtime and draws it; the walk `tests/e2e/

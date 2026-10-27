@@ -8,10 +8,6 @@ Generated from the comment at the top of each file. Where a file has no such com
 
 *No header comment.*
 
-#### `app/answer/page.tsx`
-
-Leave to answer (components/court/AnswerRoom.tsx): where a suspended member whom the judge let in lands after signing in, and the only screen that account can use. Deliberately outside the app's shell, which asks the database for things the account is not allowed to read.
-
 #### `app/api/app-icon/route.ts`
 
 The real logo of a web app somebody put in their pocket.
@@ -34,13 +30,11 @@ THE ROUTE STAYS, for the same reason the Guild Room's does: links already point 
 
 #### `app/cases/page.tsx`
 
-Cases, in a room of their own.
+Admin Reports, in a room of its own.
 
-WHY IT IS NOT A CARD ON A DASHBOARD ANY MORE. A case is a formal proceeding about a person, sometimes about the person reading it, and it sat as one more panel among a Guide's Explorers and an Explorer's lessons. Two things go wrong with that. It is easy to scroll past on the one day it matters, and it puts a hearing in the same visual rank as a study plan.
+Until 27 October 2026 this address was the court room. Asked for that day: "Admin reports will just be admin reports by now, not a court room." So it is the list of reports and one conversation about each (components/LiveAdminReports.tsx), the same list Settings shows under Admin Reports, at an address that can be linked to and come back to.
 
-A room also means it can be linked to. "Open the case" in a notification, a Director saying "look at the Cases screen", a person coming back tomorrow to add something: all of those need an address, and a card halfway down another page does not have one.
-
-EVERY ROLE HAS IT, including an Explorer, and that is the point. An Explorer called into a case is the person in it with the least standing, and their answer must be reachable without anybody having to tell them where to look. Suspending somebody pending a hearing must not take away their side of it, but a suspended account cannot sign in at all (0026, 20260923164500). So their answer reaches the record through the judge, who writes down what they said, recorded as theirs (court_record_for, 20261020160000_the_court_room).
+EVERY ROLE HAS IT. A Guide or an Explorer who raised a report, or who has been brought into the conversation about one, reaches it here as much as a Director does; narrowing the route to leadership would turn their link into a refusal.
 
 #### `app/church/page.tsx`
 
@@ -65,6 +59,12 @@ Questions people ask, for anybody: no sign-in needed.
 Linked from the front door and both sign-in screens, so somebody holding an invitation can find out what they are joining before they join, and from the privacy notice. The same answers are in Settings, Help, for people already inside (components/Faq.tsx draws them; lib/faq.ts holds them).
 
 A server component, so the page has a title of its own in a tab or a shared link; only the search box and the answers are drawn in the browser.
+
+#### `app/forgot-password/page.tsx`
+
+/forgot-password -- ask for a link to choose a new password.
+
+Its own page, not a button on the sign-in page: reported on 26 October 2026, people were confused to find a password being reset from the place they sign in. The tutorial half of the app has no passwords, so a visitor there is sent back to sign-in, which lets them pick a sample person.
 
 #### `app/global-error.tsx`
 
@@ -119,6 +119,12 @@ Both halves draw the same list from the same function, railGroupsFor(), so a roo
 #### `app/music/page.tsx`
 
 The Music room (4 October 2026), for every role on both halves of the app. The room itself is components/music/MusicRoom.tsx; this page only puts it in the right shell. Nothing in the room reads or writes the church's database, so the two halves draw exactly the same thing.
+
+#### `app/new-password/page.tsx`
+
+/new-password -- where the link in a password e-mail opens.
+
+It redeems the link, asks for the new password (and, for an account with an authenticator app, its code), and says it is done. The invitation page forwards any reset link here, so an older e-mail still lands in the right place. The tutorial half of the app has no passwords, so a visitor there is sent back to sign-in.
 
 #### `app/office/page.tsx`
 
@@ -506,13 +512,11 @@ SO THE QUIET COLUMN IS THE POINT OF THE SCREEN. Everything else here is context 
 
 #### `components/LiveAdminReports.tsx`
 
-Admin Reports: a queue for leadership, and a private conversation for two.
+Admin Reports: every report, and one conversation about each.
 
-THE SHAPE, as asked for: "if a report comes from Guide and Explorer, Directors are the Front line and we'll see it as a report, any Directors can pick up a Guide and Explorer's report ... Guides and Explorers can chat a live Director on it privately 1 on 1 ... only one can chat such case, it wont be a group chat but a one on one chat."
+ASKED FOR, 27 October 2026, when the court room closed: "Admins can see reports, see the problems and reports and be transparent to both Guide and Explorer users by chatting them as Admins, no more trial online." One shared conversation per report, in which everyone sees every message; and, asked when the person a report is about should join, "Admin brings them in": the Director holding the report reads it first, then brings them in with one button, and from then on they read all of it and can answer.
 
-WHAT THIS FILE IS NOT ALLOWED TO DECIDE. Every rule that matters is in migration 20260915120000: nobody handles a report they are the subject of, a report about a Director or an Executive Director goes to Executive Directors only, and only the member who raised it and the one person who picked it up can read or write the conversation. This screen renders what the database already decided. A bug here can hide a control; it cannot widen a rule.
-
-WHY THE CASE IS VISIBLE TO LEADERSHIP BUT THE CONVERSATION IS NOT. Directors have to see a queue or nobody could pick anything up, and an Executive who cannot see that a case exists cannot oversee anything. "Only one can chat" is about the talking. So the row is leadership's and the thread is the two people's, and `messages` is a count rather than a preview.
+WHAT THIS FILE IS NOT ALLOWED TO DECIDE. Who is in a conversation, who writes in it, who may bring somebody in and which reports may never be opened to the person they are about are all decided by the database (20261027130000_a_report_is_one_conversation). This screen draws what the database already decided; a bug here can hide a button, never widen a rule.
 
 #### `components/LiveAnalytics.tsx`
 
@@ -654,14 +658,6 @@ WHAT THE BADGES MEAN, spelled out on the screen rather than left to colour. A le
 
 thriving somebody wrote in the last 14 days, every Explorer has a Guide, nobody is suspended steady written to in the last 45 days, nobody suspended watch somebody is suspended, OR an Explorer here has no Guide stagnant nothing written in 45 days, or the guild is empty
 
-#### `components/LiveHallOfJustice.tsx`
-
-The Hall of Justice: what is being heard, and who is in the room.
-
-ASKED FOR: "Any Director, ED, and Head can join the trial room (the court room should look like a UI game where it is looks like a virtual Hall of Justice Room)", and then, corrected twice: "yes do that, except trials about themselves or fellow Directors", and then "what I mean ED, Director and Head Director can join is they are on the sidelines and can monitor the hearing. That's all. The only one who accepted the case will be main Judge Director."
-
-WHAT THIS FILE IS NOT ALLOWED TO DECIDE. Every rule lives in migration 20260916120000. `trials_i_may_sit_on` already excludes a case about the person asking and, unless they are an Executive Director, a case about a Director. So a list that is empty is a list of cases they may not watch, and this screen cannot widen that by drawing a button.
-
 #### `components/LiveLibrary.tsx`
 
 The church library, against a real database. A resource is a link or a file kept in the church's own storage, never a file in one browser. The database decides who sees which rows; nothing here filters for access.
@@ -724,15 +720,15 @@ The rules live in the database (migration 0021), not here. A Director reads repo
 
 Lesson studies: Guides and leaders write series of studies with handouts and publish them; anybody in the church reads them. A draft is visible only to its author.
 
-#### `components/LiveTrialRoom.tsx`
+#### `components/LiveSuspendOrRemove.tsx`
 
-The trial room.
+Suspend or remove: what a Director does when something has to stop.
 
-WHY A CHURCH NEEDS THIS AT ALL. Hope Beacon puts two people in a private conversation. Reports (migration 0021) tell the leadership when that goes wrong; without this they can read the report and do nothing about it. A safeguarding system that ends at "we have been informed" is not one.
+Until 27 October 2026 this was "the trial room", beside a court room that heard a case first. The court room closed that day ("no more trial online"); the conversation about a report is Admin Reports (components/LiveAdminReports.tsx), and this is what is left, unchanged: the two acts that change somebody's account.
 
 TWO ACTS, KEPT SEPARATE ON PURPOSE:
 
-SUSPEND ("jail") The account is switched OFF (0026). They stay in the church and keep their history, and cannot sign in at all; live sessions are dropped so somebody already signed in is out at once. Reversible — releasing them switches it back on. This is both "we are looking into it" and "you are out until you have spoken to us", and most real situations are one of those, not expulsion. REMOVE ("kick") They are gone.
+SUSPEND The account is switched OFF (0026). They stay in the church and keep their history, and cannot sign in at all; live sessions are dropped so somebody already signed in is out at once. Reversible: lifting it switches it back on. This is both "we are looking into it" and "you are out until you have spoken to us", and most real situations are one of those, not expulsion. REMOVE They are gone.
 
 #### `components/LiveWriteNotice.tsx`
 
@@ -884,7 +880,7 @@ Reporting somebody, in the moment you decide to.
 
 The hard part of this is not the form. It is that a person about to use it is upset, unsure whether it "counts", and afraid of what happens next. Every choice here is aimed at that:
 
-* WHAT HAPPENS IS STATED BEFORE THEY TYPE, not after they submit. The one fact that decides whether somebody reports at all is that the other person is never told, so it is the first thing on screen. * THE DETAIL BOX IS OPTIONAL. Requiring an explanation asks the person to write down the thing they are upset about before they are ready, and some will close the dialog instead. * NO "ARE YOU SURE?". A confirmation step reads as the app doubting them. Reporting is reversible in the sense that matters — a Director can close it as nothing to answer — so there is nothing to guard against. * IT CANNOT BE FIRED BY A MIS-TAP. The control that opens it is a plain text link, not a button sitting next to Send.
+* WHAT HAPPENS IS STATED BEFORE THEY TYPE, not after they submit. The facts that decide whether somebody reports at all are who is told and when, so they are the first thing on screen: the other person is not told when it is sent, a Director reads it first and may then bring them into the conversation about it, and the person reporting is told if so (20261027130000_a_report_is_one_conversation; until 27 October 2026 the other person was never told at all, and reports made then stay that way). * THE DETAIL BOX IS OPTIONAL. Requiring an explanation asks the person to write down the thing they are upset about before they are ready, and some will close the dialog instead. * NO "ARE YOU SURE?". A confirmation step reads as the app doubting them. Reporting is reversible in the sense that matters — a Director can close it as nothing to answer — so there is nothing to guard against. * IT CANNOT BE FIRED BY A MIS-TAP. The control that opens it is a plain text link, not a button sitting next to Send.
 
 #### `components/Rich.tsx`
 
@@ -1044,66 +1040,6 @@ SIMPLE IS WHERE EVERYBODY STARTS, and it is the whole job: a name, the studies, 
 
 ONE SETTING FOR THE WHOLE DEVICE, not one per form. Somebody who chose Advanced chose it for themselves, and being put back to Simple on the next study would be the app forgetting what they said. It lives in this browser only: it is a preference about the screen, not something the church needs to know. It never hides anything already written -- a topic typed in Advanced is still saved after switching back.
 
-#### `components/court/AnswerRoom.tsx`
-
-Leave to answer: the court room for a suspended member whom the judge has let in to answer one case, and nothing else.
-
-ASKED FOR on 20 October 2026: "Suspended person can be summoned if an ED or Director allowed them ... suspended accounts will have temporary lift of using the account on a permission to use to be summoned on the digital court."
-
-WHAT THE ACCOUNT CAN REACH is the database's decision (20261020180000_leave_to_answer_and_a_record_that_outlives_the_account): the court room's own calls, for the one case, while the leave lasts. Every other table refuses it, its own profile included, and so does the live connection. So this page: * asks only the court room's door who is asking and which case it is; * never reads the profile and never opens the app's shell, which would only collect refusals; * reads the case again every half minute instead of listening for changes; * looks at the door every minute, and says plainly when the leave has ended, rather than leaving the person in front of a screen that has stopped answering.
-
-#### `components/court/CourtDoorPanel.tsx`
-
-The court room's door.
-
-What it asks for is the database's decision (public.court_door): a code from the authenticator app for anybody who has one, a password for somebody called to a case who has none, and for a Director or an Executive Director without one, the way to set it up. This screen only asks for the right one in plain words and hands it to lib/live/court-door.ts.
-
-#### `components/court/CourtFurniture.tsx`
-
-The things that make the court room look like a court room.
-
-ASKED FOR on 20 October 2026: "it should really look like a court room if you are in the court room." So: the judge's bench in dark wood with the seal of the scales above it, a gavel on it, the gallery's chairs in a row, and an exhibit tag on every piece of evidence.
-
-DRAWN INLINE, AS THE STUDY ROOM'S FURNITURE IS. Nothing is downloaded, nothing moves (a page about somebody's conduct is not the place for an animation), nothing can be tapped, and each piece is aria-hidden: the words beside them say everything they show.
-
-#### `components/court/CourtOrCases.tsx`
-
-Where the screens that used to hold a case now point.
-
-The Admin room's Safeguarding folder and a member's Settings, Admin Reports folder each drew the cases inline. Once a church's database has the court room (20261020160000_the_court_room), a case is read only through its door, so these screens point at the room instead of opening a second, doorless way in. Before the update they draw what they always drew.
-
-#### `components/court/CourtRoom.tsx`
-
-The court room: the door, the docket, and the hearing that is open.
-
-ASKED FOR on 20 October 2026: a court room for Directors and Executive Directors that is functional and simple, with simple advanced settings, one of the highest securities in the app at its door, digital forensic and exhibit tools, and that looks like a court room when you are in it.
-
-THE ORDER THINGS HAPPEN IN: 1. Ask the database for the door (lib/live/court.ts). A database without the court room's update answers "no such function", and the page keeps the room it had before: the Hall of Justice and the cases, working. 2. A shut door draws the door, and nothing behind it is fetched. 3. An open door draws the docket (every case this person may see) and the hearing that is selected. ?case=<id> opens one; ?open=<member id> opens the form to start a case about that person, from the trial room. 4. When the pass runs out, whatever is open answers "locked" and the door is drawn again. Nothing is kept on the device: closing the tab is leaving the room.
-
-#### `components/court/CourtStage.tsx`
-
-The live session: the court room drawn as a scene, with everybody in it as a game-like avatar in their place.
-
-ASKED FOR on 20 October 2026: "I want the UI to be some kind of a game avatar for live session court."
-
-WHAT IT SHOWS, all of it from what court_case already returned, so it never shows anybody more than the database let them read: * the judge at the bench, the person the case is about and the one who raised it at their stands, the one who brought it at their table, the witnesses in the box, and (for the bench only, as everywhere else) the gallery; * who is in the room now: lit, with a green light, when their screen has said so in the last minute and a bit (court_here); dimmed, "away", when not; * a speech bubble over whoever spoke in the last three minutes, with the start of what they said. The whole of it is in the record below. Nothing here is written anywhere. The avatars are worked out from account ids (lib/court/avatar.ts); a deleted account is a plain grey figure. Movement (a gentle idle bob, a bounce while speaking) stops for anybody who asked their device for less motion (court.css).
-
-#### `components/court/Exhibits.tsx`
-
-The clerk's table: exhibits, how they are entered, and how they are examined.
-
-ENTERING. A file's fingerprint (SHA-256) is taken on this device first and written on the case's record by the database before the file is uploaded, so the record holds the fingerprint of what was chosen, not of whatever arrived. Its first bytes are read to see what it really is; something that would run (a program, a web page, an SVG) is refused and described instead.
-
-EXAMINING. Opening an exhibit downloads it through the same rules as everything else, takes its fingerprint again here, and compares. The answer goes on the record either way ("matches" or "DOES NOT MATCH"), and a mismatch is told to the judge at once. Pictures show what they say about themselves (when, which camera, which program); where a picture was taken is shown to the bench only.
-
-#### `components/court/Hearing.tsx`
-
-One case, as a hearing.
-
-SIMPLE, BY DEFAULT: the bench (who it is about, who judges it), the live session (everybody in the room as an avatar, components/court/CourtStage), how it ended, once it has, and then four tabs: the record (what was said, numbered like a transcript, and the witness stand to say your piece), the clerk's table (exhibits), the desk (the judge's, or the Church Board's ruling, for whoever writes it down) and tools (check the record, keep a copy). Where the case is wide, the tabs go and it is two columns.
-
-ON EVERY SCREEN (asked for on 21 October 2026). The tabs are the default and the two columns are the container query (court.css), so a phone, a pad and a computer whose rails leave the case 620px all get tabs, and a browser without container queries still gets tabs that work. What an act did is said in a message pinned above the bottom bar, where the person is looking.
-
 #### `components/draw/Draw.tsx`
 
 The light half of the drawing board: the button, the picture, and the door the heavy half comes in through.
@@ -1162,6 +1098,12 @@ Asked for on 30 September 2026: "I still can't see anyway to see the Explorers p
 
 *No header comment.*
 
+#### `components/live/HubGiving.tsx`
+
+Keeping the hub running: the card every member sees on Home, and the Settings folder where Directors set giving up and treasurers record gifts. What each person may see and do is the database's decision (lib/live/giving.ts); these screens only ask.
+
+OPTIONAL. Nothing here is drawn until the project switches giving on (HUB_GIVING = 'on', 20261026200000_giving_is_a_choice): givingCard() answers null, and every component below starts from it.
+
 #### `components/live/JourneyBar.tsx`
 
 The Explorer's own journey, drawn as movement rather than as a category.
@@ -1191,6 +1133,14 @@ WHY THIS EXISTS. Twenty-one studies are published in this church and two have be
 BY NAME, NOT BY COUNT. "You have 13 studies left" is a chore. "A king who could not sleep" is a thing somebody might want to read. The title is the whole point of the card, so it is the largest thing on it.
 
 AND A NUMBER THE EXPLORER MOVES THEMSELVES. The journey bar above this shows what the GUIDE has decided about somebody, and it does not move when they read. This one does, and the two sit together on purpose: what somebody else thinks of your progress, and what you actually did.
+
+#### `components/live/PasswordPages.tsx`
+
+The two pages for a forgotten password, each with one job:
+
+/forgot-password type your address and we e-mail you a link /new-password the link opens here; choose a new password
+
+The sign-in page only links to the first. Reported on 26 October 2026: "for making new password, it should be a separate web page, not in the log in page so that users will not be confused why it was used in the log in page." The rules and the calls are in lib/live/password.ts.
 
 #### `components/live/ReadingProgress.tsx`
 
@@ -1324,6 +1274,22 @@ The microphone is opened by lib/music/tuner.ts only after the round button is ta
 
 LET THE DESIGN SPEAK (15 October 2026). The owner: "The basic settings are just complicated with so many words on it. Let the design speaks for itself please." So the folder is a dial with the note in it and one round button, and every setting is a line of its own: the starting note, and the concert pitch, which opens when tapped. Nothing was taken away. And the same day, "make it more convenient to ALL devices": on a tablet or a computer the dial sits beside its settings, or beside Sing the note, so nothing is scrolled to. Concert pitch still plays the new A at every change (the owner, 4 October 2026: "I just put the Hertz and nothing much is happening"), and can still take its A from the organ or piano in the room.
 
+#### `components/study/StudyBoardTools.tsx`
+
+The whiteboard's own bar and menu, in words.
+
+REPORTED on 27 October 2026: "if I right click on it there are no option for me to delete objects, options to modify, or edit it", and the room has to work for "a 5 year old, a professional, and a 75 year old" without them having to discover anything. AFFiNE's canvas has neither a menu nor (here) a bar for a selected thing; its tools at the bottom are pictures with no words.
+
+SO ONE BAR, ALWAYS IN THE SAME PLACE, at the top of the board: * nothing selected: the tools, each with a word under its picture, and Undo, Redo and Show everything; * something selected: what it is, and what can be done to it, spelled out: Write on it, Colour, Copy, To front, To back, Delete, Done. The same choices open on a right-click, and on a long press for a finger. A delete says so and offers Undo, for six seconds.
+
+#### `components/study/StudyFiling.tsx`
+
+Filing a page: its folder and its tags, behind one button that says what they are for.
+
+REPORTED on 27 October 2026, with the two boxes circled: "the 'no folder' and 'add tag' boxes is not helping the user to understand it's uses." Two empty pill-shaped boxes between the title and the writing read as part of the page, said nothing about what they were for, and pushed the writing down.
+
+So filing is one quiet button under the title that says where the page is filed ("Not filed yet", or "In Romans study · 2 tags"). Pressing it opens both fields with a sentence and an example each: a folder is a drawer that keeps pages together; a tag is a word to find a page by later. Nothing about how they work changed, and the shelf still filters by both.
+
 #### `components/study/StudyFurniture.tsx`
 
 The things that make the study room look like a study.
@@ -1334,13 +1300,13 @@ DRAWN HERE, INLINE, AND NOTHING ELSE. No image is downloaded (the room must open
 
 #### `components/study/StudyInsertBar.tsx`
 
-The way to insert something when there is no `/` key to press.
+The way to add something to a page, without a `/` key and without hunting.
 
-REPORTED, WITH A PHOTOGRAPH OF AN ANDROID PHONE: the `/` typed into the page and sat there as a character. No menu, nothing.
+REPORTED, WITH A PHOTOGRAPH OF AN ANDROID PHONE: the `/` typed into the page and sat there as a character. A phone's on-screen keyboard sends composition events, not the keydown BlockSuite's slash menu waits for, so this bar is the way in on a phone and sits beside `/` on a computer. A bar this app draws itself is one a browser walk can open, press and assert on.
 
-WHY, AND IT IS NOT A BUG IN BLOCKSUITE. Their slash menu opens on a `keydown` for the `/` key. A phone's on-screen keyboard does not send those: GBoard and its cousins send composition and `beforeinput` events, and the character arrives without any keydown the menu could recognise. AFFiNE knows this -- their own slash menu declines to register on a mobile scope at all, and their answer is a bar above the keyboard instead.
+THEN, ON 27 OCTOBER 2026, the other half: "If I go to page, I will get bombarded with so many options and it's not UI friendly for beginners ... Can we make it simplified but has more tools ... that at least a 5 year old, a professional, and a 75 year old can understand." The ten buttons in a row that scrolled sideways (with arrows to find the rest) became:
 
-SO WHY NOT USE THEIRS. Because it only exists while a virtual keyboard is open, and there is no virtual keyboard in a headless browser: it cannot be tested here, at all, by anybody. This project has shipped four things that could not be tested here and the owner found every one of them. A bar this app draws itself is one that a browser walk can open, press and assert on.
+* FOUR, ALWAYS THE SAME, each a picture and a word: Heading, List, To-do, Quote. What a first page of notes is made of, on one line on any phone; * and MORE, which opens every other thing as a card that shows what it makes ("1. 2. 3. in order", "Rows and columns"), so nothing has to be guessed from its name. Two new ones came with it: Today's date, and a Picture from the phone or computer.
 
 #### `components/study/StudyModeSwitch.tsx`
 
@@ -1538,30 +1504,6 @@ What this is not: a calendar that updates itself when the program changes. That 
 
 *No header comment.*
 
-#### `lib/court/avatar.ts`
-
-The court room's avatars: a game-like figure for each person in a hearing.
-
-ASKED FOR on 20 October 2026: "I want the UI to be some kind of a game avatar for live session court."
-
-WHAT AN AVATAR IS MADE FROM. Only the person's account id, worked through a small hash into a skin tone, a hair style and colour, a shirt colour and whether they wear glasses. Nothing is stored, no photo is used, and the same person looks the same on every device and in every case. What they wear on top of that is their part in the case: the judge's robe, the presenter's jacket. An account that has been deleted is a plain grey figure.
-
-#### `lib/court/forensics.ts`
-
-The court room's forensic tools, as plain functions with no screen attached.
-
-WHAT THIS FILE IS FOR. Evidence handled carelessly stops being evidence. The three questions a court asks of any file are: is this the same file that was entered, is it what it says it is, and what does it say about itself? This file answers each on the device of the person asking, with nothing uploaded and nothing sent anywhere:
-
-* THE FINGERPRINT. The SHA-256 of a file's bytes, taken with the browser's own WebCrypto. Taken once when an exhibit is entered and recorded by the database before the file is even uploaded, then taken again by every device that opens it. Two files with the same fingerprint are the same file; one byte different and the fingerprint is unrecognisably different.
-
-* WHAT IT REALLY IS. A file's name and the type a phone reports are labels anybody can change. The first bytes of a file say what it actually is (a JPEG starts FF D8 FF, a PDF "%PDF-"). A ".jpg" that is really a web page, or a "document" that is really a program, is a finding.
-
-#### `lib/court/record-text.ts`
-
-A case's record as a plain text file, for printing or keeping.
-
-PLAIN TEXT ON PURPOSE. A record that needs this app to read it is not a record anybody can check. Every statement and exhibit carries its SHA-256, and the chain carries every hash, so the file can be checked years from now with nothing but a SHA-256 tool and the instructions at its end (docs/COURT-ROOM.md says the same in more words).
-
 #### `lib/demo/drawings.ts`
 
 The sample app's drawings, kept in this tab and nowhere else.
@@ -1700,22 +1642,6 @@ ASKED FOR (7 October 2026): "when I call off online meeting I dont have the opti
 
 Kept on this device, not in the database. Deleting the row would take the record away from the other person too, who may not have seen it yet; a list per person in the database would be a database change, not made here.
 
-#### `lib/live/court-door.ts`
-
-Opening the court room's door: proving, again, who is holding the phone.
-
-WHY AGAIN. Signing in happened hours or days ago; a phone left on a table is still signed in. The court room holds the most sensitive things a church writes down, so it asks for fresh proof at the door, the way a bank asks again before a payment. The database decides whether the proof is fresh enough (private.court_pass_until), from the time the sign-in service wrote into the token; this file only gets that proof made.
-
-TWO WAYS, ONE RULE. * A code from an authenticator app, for anybody who has set one up. It is proved against the session the person already has, and the sign-in service answers with a token whose code time is now. * The password, for somebody called to a case who has no authenticator app. A password proves nothing to an existing session, so it makes a new one; the old one is ended at once, so the phone holds one session, not two. Leadership has only the first way. The database refuses the second for a Director or an Executive Director however it is asked.
-
-#### `lib/live/court.ts`
-
-The court room's calls to the church's database.
-
-Every rule lives in supabase/migrations/20261020160000_the_court_room.sql, 20261020180000_leave_to_answer_and_a_record_that_outlives_the_account.sql and 20261020200000_a_judge_is_drawn_and_the_church_board_rules.sql. This file only asks: who may enter, read, speak, present or decide is the database's answer, and a refusal comes back as a sentence to show as it is.
-
-TWO DATABASES, ONE SCREEN. A church's database gets the court room's update when whoever looks after it applies that migration, which may be after this screen is deployed. courtEdition() asks for the door: a database that has never heard of it answers "no such function", and the page keeps the room it had before, working, until the update is applied.
-
 #### `lib/live/data.ts`
 
 Data access for a church's real database.
@@ -1749,6 +1675,14 @@ THE BUG THIS EXISTS FOR: "Feedback is not working, I am pretty sure some feedbac
 Nothing was stuck. `setFeedbackSink` was never called, anywhere, so every message went to the DEFAULT sink in lib/backend/feedback.ts -- which saves to the sender's own browser and says so honestly on screen. There was no feedback table to be stuck in. Each message is still sitting in `hope-beacon.feedback.local` on the phone of whoever wrote it and has never crossed the network.
 
 The default is right for the open-source build: a church cloning this has no server on the first run, and a demo that silently drops feedback teaches everybody that feedback is pointless. What was missing is this half -- the sink for a church that HAS a database.
+
+#### `lib/live/giving.ts`
+
+Members' gifts that keep a hub running.
+
+WHAT IT IS. Each church pays its own Supabase bill (the owner's standard: Pro, $25 a month plus 12% GST) from members' gifts to its own treasury. The app shows how to give and how close the month is; it never moves money. Gifts go to the church's GCash or bank account, and a treasurer named by a Director records each one here. Every rule is the database's (supabase/migrations/20261026120000_a_hub_is_kept_running_by_gifts.sql): members see the goal and the month's total and never a gift or a giver; only treasurers see each gift.
+
+OPTIONAL, AND OFF UNTIL A PROJECT SWITCHES IT ON (HUB_GIVING = 'on' in app_settings, 20261026200000_giving_is_a_choice). Switched off, or on a database without the update, there is simply no giving: the card is not drawn and the Settings folder not offered (lib/live/not-yet.ts).
 
 #### `lib/live/keep-up.ts`
 
@@ -1811,6 +1745,16 @@ So a read that fails because a table or column is not there is told apart from o
 The account's copy of a person's Sabbath programs and evangelistic meetings, in a church's own app (supabase/migrations/ 20261002150000_office_plans_follow_you.sql). Private to the owner by the table's own rules.
 
 A DATABASE WITHOUT THE TABLE IS NOT AN ERROR. Until the migration runs, the tools work exactly as they did, on the device alone: load answers null and nothing is saved.
+
+#### `lib/live/password.ts`
+
+Choosing a password, and getting back in without one.
+
+WHY THIS FILE. Until 26 October 2026 the reset link landed on the invitation page (/join?recovery=1), which said "This is the address your invitation was sent to" to somebody who had only forgotten a password, and "Forgot your password?" sent the e-mail straight from the sign-in page. The owner: "for making new password, it should be a separate web page, not in the log in page so that users will not be confused why it was used in the log in page." So there are now two pages of their own:
+
+/forgot-password type your address, get a link (sign-in only links here) /new-password the link lands here; choose the new password
+
+and /join forwards any reset link it is handed to /new-password, so a reset e-mail already in somebody's inbox, or a project whose e-mail template still points at /join, keeps working.
 
 #### `lib/live/photo-location.ts`
 
@@ -2106,6 +2050,10 @@ The owner, 7 October 2026: "Make sure when a user is invited, the email invitati
 
 ONE SOURCE FOR THREE PLACES. The invitation e-mail (supabase/functions/invite/email.ts, which is deployed on its own and so carries its own copy), the sign-up page's permission box (components/live/DoorPages.tsx), and the sample church's welcome (components/ConsentNotice.tsx). tests/the-app-says-who-looks-after-it.mjs keeps the e-mail's copy saying the same thing.
 
+#### `lib/password-rules.ts`
+
+The rules a new password is held to, the same on every screen that sets one: the invitation (/join), the reset link (/new-password) and Settings (/password). Pure: no browser and no database, so tests/a-new-password-has- its-own-page.mjs runs it as it ships. The sign-in service checks again and has the last word (lib/live/errors.ts says its refusals in words).
+
 #### `lib/pdf.ts`
 
 A tiny, dependency-free PDF writer — just enough for the church report: text (Helvetica / Helvetica-Bold) and filled rectangles on one A4 page. PDF is a plain-text format; we build the objects and byte-accurate xref by hand and hand back a Blob. Keeping this in-house avoids adding a PDF library to a project that runs on free tiers.
@@ -2297,6 +2245,14 @@ ASKED FOR: "I want the whole feature please." Images and attachments are part of
 SAME SHAPE AS THE DOCUMENT SOURCE, deliberately. Rows in the church's own database, owner-only, capped, gone when the account goes. A study room is one person's room and its pictures are one person's pictures.
 
 THE KEY IS THE CONTENT'S OWN CHECKSUM -- BlockSuite hashes the bytes before it ever asks this to store them. Two copies of the same picture are one row, and a row never changes: a different picture is a different key. That is why there is no update path here and no update policy in the migration.
+
+#### `lib/study/board-actions.ts`
+
+What a person can do to the things on a whiteboard, in words.
+
+REPORTED on 27 October 2026, with a photograph of a selected triangle and nothing around it: "if I right click on it there are no option for me to delete objects, options to modify, or edit it." AFFiNE's own bar for a selected thing (`affine-toolbar-widget`) is in the room but never draws anything here, and its canvas has no right-click menu at all, so the only ways to delete were the Delete key and the eraser, and nothing said either.
+
+So the room draws its own, from this file (components/study/StudyBoardTools.tsx): a bar along the top of the board that says what is selected and what can be done to it, and the same choices on a right-click or a long press. Every action here is AFFiNE's own (its delete, its duplicate, its ordering, its palette, its text editors); this file only gives them names a person can read.
 
 #### `lib/study/doc-source.ts`
 
@@ -2545,6 +2501,16 @@ Keyed by the exact English in those two files; anything missing is shown in Engl
 Setting two-step sign-in up, in Settings, is not translated yet and shows in English.
 
 ## A.4 Scripts
+
+#### `scripts/audit-gate.mjs`
+
+Known security advisories against this app's packages, and the ones this project has decided to live with, for now and for a stated reason.
+
+node scripts/audit-gate.mjs
+
+WHY. In October 2026 `npm audit` reported 76 findings, all from two causes inside the Study Room's editor that had no fix yet. A number like that stops being read: the 77th, from something new and fixable, would sit in the same pile. So each accepted advisory is written down by its id in security/accepted-advisories.json, with why and a date to look at it again, and this gate fails on anything of moderate severity or worse that is not there, and on any acceptance whose date has passed. Asked for on 26 October 2026: "update our security system with better layer system". Layer 1 in docs/SECURITY-LAYERS.md.
+
+It reads the lockfiles only: nothing is installed and no package's install script runs. It needs the npm registry, so it runs in CI (.github/workflows/audit.yml, every week and on every change to a lockfile) rather than in `npm run verify`, which works with no network.
 
 #### `scripts/blocksuite-aliases.mjs`
 

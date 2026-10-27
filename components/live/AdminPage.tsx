@@ -21,8 +21,8 @@ function onDay(iso: string | null | undefined): string {
   });
 }
 import { LiveReportsForDirector } from '@/components/LiveSafeguarding';
-import { LiveTrialRoom } from '@/components/LiveTrialRoom';
-import { CourtOrCases } from '@/components/court/CourtOrCases';
+import { LiveSuspendOrRemove } from '@/components/LiveSuspendOrRemove';
+import { LiveAdminReports } from '@/components/LiveAdminReports';
 import { LiveGuilds, LiveChurchPulse } from '@/components/LiveGuilds';
 import { LiveSecurityAudit } from '@/components/LiveSecurityAudit';
 import { LiveFeedbackInbox } from '@/components/LiveFeedbackInbox';
@@ -572,20 +572,11 @@ export function LiveAdminPage() {
           />
         )}
 
-        {/* Safeguarding in order: reports, then cases, then the trial room. */}
-        {/* The cases this Director is judging, beside the reports they come from. */}
-        {/* The court room, once the church's database has it; until then the
-            Hall of Justice and the cases, as before (components/court/CourtOrCases). */}
-        {room === 'safeguarding' && profile && <CourtOrCases me={profile} hall />}
-        {room === 'safeguarding' && profile && (
-          <LiveTrialRoom
-            me={profile}
-            onCaseOpened={() => {
-              // Reload after a case, so the lists reflect any suspension.
-              void load();
-            }}
-          />
-        )}
+        {/* Safeguarding in order: the reports and the conversation about each
+            (Admin Reports, the same list as Settings), then suspend or remove.
+            The court room that sat between them closed on 27 October 2026. */}
+        {room === 'safeguarding' && profile && <LiveAdminReports me={profile.id} />}
+        {room === 'safeguarding' && profile && <LiveSuspendOrRemove me={profile} />}
 
         {/* Security: the account audit and the library record. Who appears in each is
            decided by the database; no record shows an address. */}

@@ -396,27 +396,25 @@ WHY THIS EXISTS. Asked plainly: "can we add the pocket app features in pads and 
 
 The pocket was put in the right rail, which is where it was asked for, with the gap between the desk and the player circled in red on a desktop browser. That rail is `hidden ... xl:block`. `xl` is 1280px. An iPad mini is 744px across, an iPad Pro 1024px, a phone about 400px. So the feature shipped invisible to every tablet, every phone, and any laptop in a split window -- which is most of the congregation this app is for.
 
-#### a case is reachable by whoever is in it
+#### a report is reachable by whoever is in it
 
-`tests/a-case-is-reachable-by-whoever-is-in-it.mjs`
+`tests/a-report-is-reachable-by-whoever-is-in-it.mjs`
 
-Taking the door away must not take the room away.
+Taking the door away must not take the room away: a report is reachable by whoever is in it.
 
 WHY THIS EXISTS. "Take out the cases in both Guide and Explorer, rebrand it and put it on settings and make a sub room called 'Admin Reports'."
 
 The door was the problem: a Guide or an Explorer had a scales-of-justice link in their sidebar at all times, on every screen, when almost none of them will ever be party to a proceeding. It reads as an accusation waiting to happen.
 
-THE HALF THAT IS EASY TO LOSE WITH IT, and which app/cases/page.tsx has said in a comment since the day it was written: an Explorer called into a case is the person in it with the LEAST standing. Their answer has to be reachable without anybody having to tell them where to look, and they can post even while suspended, because suspending somebody pending a hearing must not take away their side of it.
+#### a report is one conversation
 
-#### a report is answered by one person
+`tests/a-report-is-one-conversation.mjs`
 
-`tests/a-report-is-answered-by-one-person.mjs`
+A report is one conversation, and nobody answers a report about themselves.
 
-Nobody answers a report about themselves, and nobody joins somebody else's.
+WHY THIS EXISTS. Asked for on 27 October 2026, when the court room closed: "Admins can see reports, see the problems and reports and be transparent to both Guide and Explorer users by chatting them as Admins." One shared conversation per report, and, asked when the person a report is about should join it: "Admin brings them in", after reading it.
 
-WHY THIS EXISTS. "any Directors can pick up a Guide and Explorer's report, but if a Director misbehave it will be put on trial with EDs and Head ED ... only one can chat such case, it wont be a group chat but a one on one chat."
-
-THE HAZARD THIS GUARDS, WHICH PREDATED THE REQUEST. `reports_read` in migration 0021 admitted every approved admin and executive of the church with no exclusion for the person the report was ABOUT, and `report_person` notified all of them. So a Director could already read a report filed against them. Add "any Director can pick up a report" on top and it becomes a trap: the reported Director claims the case about themselves and is the only other person in a private thread with the member who spoke up.
+It replaces a-report-is-answered-by-one-person.mjs, whose two rules it keeps word for word because they did not change: nobody handles a report about themselves, and a report about a Director or an Executive Director is for Executive Directors. What changed is who is in the conversation, and three older gaps closed at the same time (evidence, and a report rewritten through the data API).
 
 #### an animation that loops does not repaint
 
@@ -427,16 +425,6 @@ A loop that runs for ever may only move things the GPU can move.
 WHY THIS EXISTS. Reported from a phone: "The animation is not that smooth, I can still and feel it's lagging loop. Can you make it smooth please."
 
 The journey bar's sheen animated `background-position`. A background position is a PAINT property: every frame, for ever, the browser re-drew the gradient across the whole bar. Sixty times a second of repainting on a mid-range phone is what "lagging" was. Nothing was wrong with the timing or the design.
-
-#### who may take a seat
-
-`tests/who-may-take-a-seat.mjs`
-
-Nobody hears their own case, and no Director hears a Director's.
-
-WHY THIS EXISTS. "Any Director, ED, and Head can join the trial room" -- and then, asked back and answered in the owner's own words: "yes do that, except trials about themselves or fellow Directors".
-
-HALF OF IT WAS ALREADY TRUE, WHICH IS WHY IT NEEDED A CHECK RATHER THAN A FEATURE. `in_trial` has always had a branch admitting any approved Director or Executive of the church, so leadership could already read every trial. What it never had was either exclusion:
 
 #### an explorer is told what to do next
 
@@ -1846,45 +1834,51 @@ REPORTED ON 19 OCTOBER 2026 (the Study room bug report), and fixed on the 20th, 
 
 * "Delete forever" left the page's row in the database, and every room's first page had the same id, so emptying a room and starting again brought the deleted writing back. * Nothing was kept on the device: writing done without a signal was lost when the tab closed, and the room could not open offline. * Pages came from the database all at once with an eight-second wait, so opening page thirty of forty said the whole room "did not answer". * Pictures stayed in the database after the last page showing them went.
 
-#### the court room keeps its promises
+#### a hub is kept running by gifts
 
-`tests/the-court-room-keeps-its-promises.mjs`
+`tests/a-hub-is-kept-running-by-gifts.mjs`
 
-The court room keeps its promises: the door, the room, the record, the exhibits, and the screens that draw them.
+A hub is kept running by its members' gifts.
 
-ASKED FOR on 20 October 2026: a court room for Directors and Executive Directors with one of the highest securities in the app at its door, digital forensic and exhibit tools, simple with simple advanced settings, and that looks like a court room.
+ASKED FOR on 26 October 2026: "There must be some kind of donation system to maintain the standard maintenance of the app ... Can we make a plan and system of it?" The owner's choices: gifts go to each church's own treasury; members give through the church's own GCash or bank, with nothing paid in the app; members see the month's goal and total, and no names.
 
-TWO HALVES, BECAUSE EACH CAN FAIL WITHOUT THE OTHER NOTICING. * The database's rules are proven as invented people, against a database built from nothing, by supabase/tests/the-court-room-holds.sql (run by scripts/fresh-install.sh in CI). This file checks that proof is wired in and that the migration still says what it proved. * The forensic code runs here for real (tests/fixtures/the-court-room- keeps-its-promises.ts): fingerprints, file types, picture details from hostile files, the chain recomputed and broken on purpose. And the screens: a database without the update still gets the room it had.
+THEN, THE SAME DAY: "Donation features are only optional if developers want to put it on their own home brewed Hope Beacon." So giving is off until a project sets HUB_GIVING = 'on' (20261026200000_giving_is_a_choice), and the sample church, which is the app as it comes, has no giving card.
 
-#### leave to answer keeps its word
+#### every table says who may reach it
 
-`tests/leave-to-answer-keeps-its-word.mjs`
+`tests/every-table-says-who-may-reach-it.mjs`
 
-Leave to answer keeps its word, and the record outlives the account.
+Every table says who may reach it, and nobody may empty one.
 
-ASKED FOR on 20 October 2026: a suspended member may be called to the court room when a Director or an Executive Director allows it, with a temporary lift of their account for that alone; a deleted person is recorded as deleted, and only the court room's and Admin Reports' records remain of them; the system's own rules made to hold everywhere.
+WHY. From 30 October 2026 Supabase creates new tables closed to the data API on every project. Hope Beacon's tables had been opened to signed-in people by the old default and never by name, so a church creating its project after that date would have installed an app that answered "permission denied" everywhere. Found on 26 October 2026, in the security review asked for after that week's Node.js, Next.js and PHP emergencies; proved by installing every migration on a fresh Supabase database with the new default, which failed before 20261026180000 and passes after it.
 
-TWO HALVES, as for the court room itself. * The rules are proven as invented people, from nothing, on the Supabase image and on plain Postgres, by supabase/tests/leave-to-answer-holds.sql (scripts/fresh-install.sh, in CI); and through real PostgREST by selfhost/server/test/the-edition-holds.mjs. This file checks both are wired in, and that the newest definition of each rule still says what was proven, so a later migration cannot quietly undo it. * The screens: the page a suspended member lands on asks nothing the database will refuse it, and the sign-in path takes them there.
+#### the October 2026 patches hold
 
-#### a judge is drawn and the Church Board rules
+`tests/the-october-2026-patches-hold.mjs`
 
-`tests/a-judge-is-drawn-and-the-board-rules.mjs`
+The October 2026 security releases stay applied.
 
-A judge is drawn, the hearing ends with a recommendation, the Church Board rules, and the room shows who is in it.
+WHY. In the week of 14 to 21 October 2026, Next.js shipped an out-of-band fix for two critical remote-code-execution flaws (15.5.28: the image optimiser's SVG path, through sharp), React fixed its server-components packages (19.0.9), DOMPurify fixed sanitiser bypasses (3.4.17), Node.js fixed ten flaws including a Brotli decoder overflow (22.23.4 / 24.22.1), and nodemailer fixed address-parsing bugs (10.1.4). Asked for on 26 October 2026: "deep research and update our security". Every one was applied that day; this holds them, so a revert, a rebase or an old lockfile cannot quietly bring one back.
 
-ASKED FOR on 20 October 2026: "The judge will be random picked by the Church Directors base on the case, the final ruling will be outside of the Court and will be presented by the Church Board, they will be the people who will have the final words to say." "I want the UI to be some kind of a game avatar for live session court." And Admin Reports is no longer beta.
+#### a new password has its own page
 
-TWO HALVES, as for the court room itself. * The rules are proven as invented people, from nothing, on the Supabase image and on plain Postgres, by supabase/tests/a-judge-is-drawn-and-the- board-rules.sql (scripts/fresh-install.sh, in CI). This file checks it is wired in, and that the newest definition of each rule still says what was proven. * The draw is worked out here, in Node, independently, and the browser's own check (lib/court/forensics.ts, checkDraw) must agree with it, and must find a draw that was changed.
+`tests/a-new-password-has-its-own-page.mjs`
 
-#### the court room fits every screen
+A new password has its own page, and every page that sets one explains itself when it cannot.
 
-`tests/the-court-room-fits-every-screen.mjs`
+REPORTED on 26 October 2026: "for making new password, it should be a separate web page, not in the log in page so that users will not be confused why it was used in the log in page." Until then "Forgot your password?" sent the e-mail straight from the sign-in page, and the link landed on the invitation page, which told somebody who had only forgotten a password "This is the address your invitation was sent to."
 
-Admin Reports is clean and simple, and fits a phone, a pad and a computer.
+FOUND IN THE SAME READING, each a real way to be stuck: * a member with an authenticator app who reset a forgotten password was refused with "AAL2 session is required to update password" and nothing to do about it: the code is now asked for on the page, then the password is saved; * a password longer than 72 bytes is refused by the sign-in service (it is stored with bcrypt), and no screen said so first; * a second reset request within the minute was answered with the service's own "For security purposes, you can only request this after 37 seconds", and the invitation page's "send me a new link" swallowed that refusal and promised an e-mail that was not coming.
 
-ASKED FOR on 21 October 2026: "I want the UI to be clean and simple with the best available tools for all users in the Admin reports room. Make sure everything is well adapted to all devices, desktop, tab, mobile, etc."
+#### the security layers hold
 
-WHAT WAS WRONG, measured in a browser at 360, 390, 768, 1024, 1280 and 1440px before the change: * a case opened UNDER the list of cases, which was one big card per case, so on a phone with twenty earlier cases it began about 4,000px down; * every closed case in the church was offered under "Hearings you may watch", where nobody could watch it; * a case on a phone was one column 5,900px long (7,900px for the judge), and so was a case on a computer, where the rails leave it about 620px; * what an act did ("It is on the record.") was said at the foot of the case, out of sight of the button that did it.
+`tests/the-security-layers-hold.mjs`
+
+The security layers hold, and the map of them stays true.
+
+ASKED FOR on 26 October 2026: "Update our security system with better layer system please, update also the developers how to update and make their own security systems better in the most professional." docs/SECURITY-LAYERS.md is that map: eight layers, each with what it stops, where it lives and the check that proves it. A map is only worth reading while it matches the ground, so this reads it:
+
+* every file it names exists; * every check it names as proof is one the build or CI actually runs; * the checks the app's security rests on are each placed in a layer;
 
 #### dev server
 

@@ -10,6 +10,90 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 27 October 2026: Admin Reports is reports and a conversation; the court room is closed
+
+### If you run a copy, do this
+
+1. **Let the site rebuild first, then run the two new migrations**
+   (`npx supabase db push`, or the edition's installer):
+   `20261027120000_the_court_room_is_closed.sql` and
+   `20261027130000_a_report_is_one_conversation.sql`. In that order of steps
+   nothing breaks: the new site works on the old database (without the new
+   conversation rules until they arrive), while the old site's court screens
+   would fail on the new database.
+2. **If your copy held court cases, they are kept.** The first migration drops
+   the court room's tables only when they are empty. Otherwise it moves them,
+   data and all, into a schema called `court_archive` that no app role can
+   reach, and leaves exhibit files in their bucket with no rule that opens
+   them. What to keep is your church's decision.
+3. **Delete the `door-code` function** if you deployed it
+   (`npx supabase functions delete door-code`). Keep `BREVO_API_KEY` and
+   `BREVO_SENDER`; the invitations use them.
+4. **Delete the empty `court-exhibits` bucket** in the dashboard (**Storage**).
+   Supabase refuses a bucket delete made in SQL, so the migration leaves it, empty
+   and with no rule that lets anybody in, and says so in a notice.
+5. **Postgres edition:** rebuild the images; the migrations run on start.
+6. Run `supabase/tests/ready-for-real-members.sql`: line 5 now reads READY
+   when nothing of the court room is left running.
+
+### Why
+
+Asked for: "Admin reports will just be admin reports by now, not a court room.
+I think it will complicate more things if we do online court rooms in this
+application. It will be just faster if Admins can see reports, see the problems
+and reports and be transparent to both Guide and Explorer users by chatting them
+as Admins, no more trial online." Asked how, the owner chose one shared
+conversation per report, and that the person a report is about joins only when
+the Director holding it brings them in, having read it.
+
+### What changed
+
+- **The court room is gone**: trials, the door and its e-mail codes, exhibits,
+  leave to answer and its every-minute sweep, the judge draw, the live room and
+  the Church Board's ruling. Its code is in git history, last at `82cf18f`.
+- **What leaned on it was rewritten, not left broken**: the check before every
+  request refuses a suspended account everything again; library sharing no
+  longer pauses for an open case (a Director can still switch it off for a
+  pair); the church overview drops "Cases open".
+- **One conversation per report** (`components/LiveAdminReports.tsx`, at
+  Settings, Admin Reports and at `/cases`): the person who raised it and the
+  Director holding it write; every leader who may handle it reads; the person
+  it is about reads and answers only once brought in, and then reads all of it.
+  Both sides are told, with no name in the notification.
+- **The report form's promise changed** to match: the person is not told when
+  it is sent; a Director reads it first and may bring them in; the person
+  reporting is told if so; evidence is never shown to them. **A report filed
+  before this migration can never be opened to the person it is about**: it was
+  filed under "they are not told", and `subject_may_join` is false on every
+  existing row.
+- **Suspend or remove** (`components/LiveSuspendOrRemove.tsx`) is what is left
+  of the trial room, under Admin, Safeguarding.
+
+### Two older gaps, closed on the way
+
+- **Evidence opened to every leader of the church**, including the Director a
+  report was about, and every Director on a report meant for Executive
+  Directors only. `report_files_read` and the stored-file rule now follow the
+  report's own two rules.
+- **Any leader who could handle a report could rewrite it** through the data
+  API, every column, including what the person reporting wrote. Nothing in the
+  app wrote to the table; the update rule is dropped and insert, update and
+  delete are revoked. Every change goes through a checked function.
+
+### Proof
+
+- `supabase/tests/a-report-is-one-conversation.sql`: 88 checks as invented
+  people, including every report check that lived in the court room's
+  `leave-to-answer-holds.sql`; each new protection was broken on purpose and
+  went red.
+- `tests/a-report-is-one-conversation.mjs` (replacing
+  `a-report-is-answered-by-one-person.mjs`) and
+  `tests/a-report-is-reachable-by-whoever-is-in-it.mjs`.
+- `supabase/tests/fresh-install-holds.sql` now checks nothing of the court room
+  is left.
+
+---
+
 ## 27 October 2026: a simpler Study Room, and a whiteboard that says what you can do
 
 ### If you run a copy, do this

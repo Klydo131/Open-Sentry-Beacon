@@ -83,8 +83,11 @@ const account = strip(readFileSync('components/LiveAccountPages.tsx', 'utf8'));
   ok(/not_included/.test(collector), 'the file carries a list of what is not in it');
   ok(/Safeguarding reports about you/.test(collector),
      'and names safeguarding reports first');
-  ok(/promises them that\s*\n?\s*.{0,40}the person they reported is never told|never told/.test(collector),
-     'with the reason: the person who reported was promised the subject is never told');
+  // The promise changed on 27 October 2026 (20261027130000): the person reported
+  // is not told unless a Director, having read it, brings them into its
+  // conversation. The reason still has to be given, in its current words.
+  ok(/promises them that[\s\S]{0,80}the person they reported is not told unless a Director/.test(collector),
+     'with the reason: the person who reported was promised the subject is not told unless a Director brings them in');
   ok(/how_to_ask/.test(collector) && /Data Protection Officer/.test(collector),
      'and says who to write to, so a refusal is a route rather than a wall');
 

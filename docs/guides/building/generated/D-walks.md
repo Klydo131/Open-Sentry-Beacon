@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-85 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+86 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -551,6 +551,12 @@ The study room starts Simple, Advanced brings the rest back, and the writing on 
 Asked for on 7 October 2026: "the study room for Explorers have some UI bugs specially for dark themes, the text are dark too. Also the study room is way complicated for a new user of the app, it must have simple UI and advance UI."
 
 WHAT WAS WRONG, MEASURED. Under Focus and Aero dark the writing on an open page was near-black on a near-black page: 1.01:1, every line of it. The editor's colours are AFFiNE's own and no look reached them. And a new Explorer met, before writing a word, four places, three rows of filters, a star on every page, Markdown in and out, a whiteboard switch, a folder box, tags and ten insert buttons.
+
+#### `the-whiteboard-says-what-you-can-do.js`
+
+The whiteboard says what you can do, and right-click and a long press do it.
+
+Reported on 27 October 2026, with a photograph of a selected triangle and nothing around it: "if I right click on it there are no option for me to delete objects, options to modify, or edit it", and it must work for "a 5 year old, a professional, and a 75 year old" without discovering anything. AFFiNE's own bar for a selected thing never drew here and its canvas has no menu; the room's own bar and menu (components/study/StudyBoardTools.tsx) do the work, with AFFiNE's own actions (lib/study/board-actions.ts).
 
 #### `the-words-can-be-read-in-every-look.js`
 

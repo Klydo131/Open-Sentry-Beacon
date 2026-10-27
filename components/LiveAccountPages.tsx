@@ -27,7 +27,6 @@ import { passwordProblem } from '@/lib/live/password';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
 import { ReadingSettings } from '@/components/ReadingSettings';
-import { CourtOrCases } from '@/components/court/CourtOrCases';
 import { LiveAdminReports } from '@/components/LiveAdminReports';
 import { TwoStepCard } from '@/components/live/TwoStep';
 import { LiveGivingRoom, useGivingAccess } from '@/components/live/HubGiving';
@@ -229,7 +228,7 @@ export function LiveSettingsPage() {
     { id: 'general', label: `⚙️ General` },
     // First for someone arriving with an emailed password.
     { id: 'account', label: '🔑 Password' },
-    { id: 'reports', label: '⚖️ Admin Reports' },
+    { id: 'reports', label: '🛡️ Admin Reports' },
     ...(leads ? [{ id: 'church', label: '⛪ Church' }] : []),
     ...(givingRoom ? [{ id: 'giving', label: '💛 Giving' }] : []),
     { id: 'help', label: '❓ Help' },
@@ -298,27 +297,14 @@ export function LiveSettingsPage() {
       {room === 'reports' && (
         <>
           <Card className="p-5">
-            <h2 className="mb-1 text-xl font-bold text-navy">⚖️ Admin Reports</h2>
+            <h2 className="mb-1 text-xl font-bold text-navy">Admin Reports</h2>
             <p className="text-sm text-gray-500">
-              Anything you have been called to answer. Say what happened in your
-              own words. Only the people in a case can read it.
+              Anything you have reported, and a conversation about each one with
+              the Director who picks it up. A Director may also ask you into a
+              conversation about a report, and you will be told if they do.
             </p>
           </Card>
-          {/* Reports first, then the trial room. */}
           <LiveAdminReports me={profile.id} />
-
-          <CourtOrCases
-            me={profile}
-            emptyState={
-              <Card className="p-6 text-center">
-                <p className="text-lg font-bold text-navy">Nothing open</p>
-                <p className="mt-1 text-sm text-gray-500">
-                  You have not been called to anything. If you are, it appears
-                  here and you will be told.
-                </p>
-              </Card>
-            }
-          />
         </>
       )}
 

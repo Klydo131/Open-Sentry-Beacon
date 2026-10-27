@@ -1,6 +1,54 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 52 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 57 releases, as members read them in Settings, What's new.
+
+### Admin Reports is reports and a conversation, not a court room
+
+*2026-10-27*
+
+- The online court room is gone. Admin Reports lists reports, and each one has a conversation about it.
+- When a Director picks up a report, the person who raised it is told and can talk with them there. The church\u2019s other leaders who may handle it can read the conversation too, so nothing is said there between two people only.
+- Once a Director has read a report, they may bring the person it is about into the conversation so it can be talked through together. The person who raised it is told when they do, and that person never sees pictures or files attached to the report.
+- A report made before today stays private from the person it is about, as it was promised.
+- Directors find Suspend or remove in the Admin room, under Safeguarding.
+
+### The Study Room is simpler, and the whiteboard says what you can do
+
+*2026-10-27*
+
+- On a page, the bar above your writing has four things, each a picture and a word: Heading, List, To-do and Quote. More shows everything else as cards that show what each one makes, including a picture from your phone and today\u2019s date.
+- Folders and tags are behind one button, File this page, which says what each is for. The two empty boxes under the title are gone.
+- Every page can be a whiteboard, in Simple too. The bar at the top of the board has its tools in words: Select, Pen, Shape, Sticky note, Words, Arrow and Eraser. In Simple it is the only bar; Advanced adds AFFiNE\u2019s full set along the bottom.
+- Tap anything on the whiteboard to see what you can do to it: write on it, colour it, copy it, bring it to the front or send it to the back, or delete it, with Undo straight after. Right-click it, or press and hold with a finger, for the same.
+- Undo works now, on pages and on whiteboards: Ctrl+Z on a keyboard, or Undo on the whiteboard\u2019s bar. Before this it did nothing in the Study Room.
+
+### A forgotten password has a page of its own
+
+*2026-10-27*
+
+- Tap Forgot your password? on the sign-in screen and it opens its own page: type your e-mail address, and we send you a link.
+- The link opens a page for choosing your new password, with your account named at the top. If your account uses an authenticator app, it asks for the code there too.
+- When something cannot be done, the app now says why in plain words: a link that has run out, a password you already have, or asking for a second e-mail too soon.
+- Once your new password is saved, every other phone or computer signed in to your account is signed out.
+
+### You can help keep the app running, and it has the October safety updates
+
+*2026-10-26*
+
+- On Home, under Notices, everybody can see this month's goal for keeping the app running, how much has come in so far, and how to give: the church's own GCash, bank account or QR code. Nobody can see who gave or how much.
+- Directors set it up in Settings, under Giving, and name the treasurers.
+- Treasurers record each gift when it reaches the church's account, and only they see the list. The app never takes or holds any money.
+- The app is built on the newest versions of the pieces it is made from, with the safety fixes released in the week of 14 to 21 October.
+- Giving is optional. It appears only if your church chooses to switch it on.
+
+### Leaders can open the court room with a code sent by email
+
+*2026-10-21*
+
+- A church can choose to let its leaders into the court room with a code sent to their email, for when an authenticator app will not work for them.
+- Press Email me a code, and type the code from the email. It works for ten minutes, once, and only on the phone or computer that asked for it.
+- A refused authenticator code now says why it was refused.
+- Ready as soon as your church switches it on.
 
 ### Admin Reports is simpler, on a phone, a tablet and a computer
 

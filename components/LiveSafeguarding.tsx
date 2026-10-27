@@ -20,7 +20,8 @@ import { Button, Card } from '@/components/ui';
 import { BeaconSpinner } from '@/components/BeaconLoader';
 import { humanError } from '@/lib/live/errors';
 
-const REASON_LABEL: Record<string, string> = {
+/** The reasons in the words the person reporting chose them in (components/ReportDialog.tsx). */
+export const REASON_LABEL: Record<string, string> = {
   inappropriate: 'Something inappropriate was sent',
   harassment: 'Abuse, threats or pressure',
   unsafe: 'Worried someone is unsafe',
@@ -205,8 +206,9 @@ export function LiveReportsForDirector({ onRemove }: { onRemove?: (id: string, n
           🛡️ Safeguarding {open.length > 0 && <span className="text-red-600">· {open.length}</span>}
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Raised by Guides and Explorers. The person reported has not been told
-          and will not be.{' '}
+          Raised by Guides and Explorers. The person reported has not been told.
+          Once you have read one, you may bring them into its conversation in
+          Admin Reports.{' '}
           <Link href="/policy" className="underline underline-offset-2">
             how we treat each other
           </Link>

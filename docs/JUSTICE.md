@@ -1,4 +1,4 @@
-# Reports, trials and the record
+# Reports and the record
 
 **For everybody in the church, whatever your role.**
 
@@ -24,8 +24,9 @@ would agree with.
    words.
 2. The report goes to the people whose job it is to handle it. It does **not**
    go to the person you are reporting, and it does not appear anywhere public.
-3. Somebody claims it, so two people are not working on the same thing without
-   knowing.
+3. A Director picks it up, so two people are not working on the same thing
+   without knowing. You are told when they do, and you can talk with them about
+   it in **Admin Reports** (Settings, or the menu for leaders). See Part 4.
 4. They decide, and the decision is recorded with their name on it.
 
 ### What you can see afterwards
@@ -39,9 +40,21 @@ see yours.
 
 ### What the person you reported can see
 
-Not the report. Not your name in it. If the matter goes further and becomes a
-trial, they are told about the trial, because somebody answering a complaint has
-to know what it is.
+**Nothing, when you send it.** Not the report, not your name, no message and no
+notification.
+
+**After a Director has read it**, the Director holding it may bring them into the
+conversation about it, so it can be talked through with everybody there. You are
+told when that happens, and so are they. From then on they can read the report,
+everything said in the conversation from its first message, and who raised it,
+and they can answer. They never see the pictures or files you attached.
+
+A Director decides when, or whether, to do this. For somebody who may be unsafe
+they can wait, or not do it at all.
+
+A report made **before 27 October 2026** was made under the promise that the
+person would never be told, and that promise is kept: it can never be opened to
+them.
 
 ---
 
@@ -53,16 +66,16 @@ query anybody can make.
 
 | | Who can read it |
 |---|---|
-| **A report** | The person who wrote it, and the leadership handling it. Nobody else. |
-| **Messages on a report** | Only the people on that report. |
-| **A trial** | Only the people in that trial, and leadership who may watch it. |
-| **What is said in a trial** | Only the people in that trial, and anybody watching from its gallery, whose seat is on the record. |
-| **An exhibit kept for the bench** | The judge and the gallery. Not the other people called. |
+| **A report** | The person who wrote it, and the leadership who may handle it. The person it is about only once a Director has brought them into its conversation. |
+| **The conversation about a report** | The same people. One Director, the one holding it, writes for the church; the others who may handle it can read it. |
+| **Evidence attached to a report** | The leadership who may handle it. Never the person it is about. |
 | **The discipline log** | Only those leading the church. |
 | **The activity record** | Leadership, for the ranks below them. It holds no addresses. See Part 3. |
 
-"Nobody else" includes Directors who are not on the case, Guides, and the person
-who set the app up.
+"May handle" leaves out two people on purpose: **nobody handles a report about
+themselves**, and **a report about a Director or an Executive Director is for
+Executive Directors only.** It also leaves out Guides, and the person who set the
+app up.
 
 ---
 
@@ -144,14 +157,15 @@ have notifications on. The alert names the person, what they did and the label.
 It does not name the address, because nobody in leadership has been shown it.
 
 The person it is about is **not told they are being looked at**, for the same
-reason a report is not shown to the person reported.
+reason a report is not shown to the person it is about unless a Director, having
+read it, brings them into its conversation.
 
 ### Opening a case from it
 
-Any church leader can turn one line of the record into a case,
-from the row itself. It becomes an ordinary report — the same object anybody
-could have raised, answered by the same people, kept for as long — carrying what
-was done and how it was labelled.
+Any church leader can turn one line of the record into a report, from the row
+itself. It becomes an ordinary report, the same as anybody could have raised,
+answered by the same people and kept for as long, carrying what was done and
+how it was labelled.
 
 **It cannot carry the address**, because leadership never had it. If the address
 matters to the case, it has to come from the person, in their own words. That is
@@ -161,188 +175,57 @@ The record itself is kept for **30 days** and then deleted. A case is not.
 
 ---
 
-## Part 4 — A trial
+## Part 4: The conversation about a report
 
-Most reports never become one. A trial is for the serious end: when a decision
-needs more than one person and needs a record.
+Until 27 October 2026 a serious report could become a trial in an online court
+room. That is gone. A report is now a report and **one conversation** about it,
+so the people involved and the church's leadership can talk it through in the
+open, where it is recorded.
 
 ### Who is in it
 
-- **A judge**, who runs it. The judge is **drawn at random** from the church's
-  leaders who are free to hear it: never the person it is about, never anybody
-  called to it, never the leader who brought it unless nobody else is free, and
-  for a case about a leader, only from more senior leadership. The draw is
-  written on the trial's record in a way anybody on the bench can work out
-  again, so nobody can choose the judge. A judge who cannot hear a case fairly
-  can step down, with their reason on the record, and another is drawn.
-- **The leader who brought it**, who presents it: they can speak and put
-  exhibits before it.
-- **The subject**, the person the matter is about.
-- **The person who reported it**, put in automatically when the trial comes out
-  of a report.
-- **Other parties**, summoned because they have something to say.
+- **The person who raised it.** From the moment a Director picks it up.
+- **The Director holding it.** One Director speaks for the church at a time.
+  They can hand it back so somebody else can pick it up.
+- **Every other leader who may handle it** can read it, so nothing said there
+  is between two people only. To write in it, they pick it up.
+- **The person it is about**, only once the Director holding it brings them in.
+  The Director reads the report first, presses **Bring them into the
+  conversation**, and is told exactly what that does before it happens. It
+  cannot be undone.
 
-Everybody called to a trial can read what is said in it, and nobody outside it
-can read any of it. Leadership may watch a hearing from the **gallery**: a seat
-that is written on the record, with no voice. The judge can close the gallery,
-and then nobody new may watch.
+Every conversation says at the top who is in it.
 
-**Read that third line twice before you file a report about something serious.**
-If your report becomes a trial you are in the room: you will be able to read
-what the person you reported says in their answer, and they will know somebody
-reported them, because a trial has to tell its subject what it is about. They
-are not shown your report and they are not told your name by the app. Being a
-party to the trial is a different thing from the report staying private, and
-both are true at the same time.
+### What it holds
 
-This was checked against the live database rather than remembered: a Guide who
-is in neither the report nor the trial reads nothing of either, an Explorer with
-no part in it reads nothing, and the person the trial is about can read it and
-answer in it.
+What everybody writes, with their name and the time, in order. Nothing in it can
+be edited or taken back afterwards. When the person it is about joined, the
+conversation shows where.
 
-### The door
+### Ending it
 
-Trials are held in the **court room**, and its door asks again who you are
-before it opens, even though you are signed in: a code from your authenticator
-app for leadership, your password for anybody else called to a case. It stays
-open for 30 minutes. This is so a case stays private if somebody else picks up
-your phone.
-
-**Leaders turn on two-step sign-in first** (Settings, Password, Two-step
-sign-in). Without it the door shows how to set it up, and a leader without it is
-never drawn as a judge, so a church needs at least two leaders with it before a
-case can be heard.
-
-**Or, if your church's project uses email codes**, there is nothing to set up.
-The door has an **Email me a code** button; the code arrives at the address you
-sign in with, lasts ten minutes and works once, on the phone or computer that
-asked for it. Every leader can then be drawn as a judge.
-
-### Speaking in one
-
-Anyone summoned can add a statement while the hearing is in session. Once the
-judge has ended the hearing, nobody can add anything, including the judge. That is deliberate:
-a record that can be added to afterwards is not a record.
-
-Statements carry the name of whoever wrote them and the time the server
-received them; nobody can choose a different time. If you cannot sign in (for
-example while your account is suspended), you still have your say, in one of
-two ways: tell the judge, in person or by phone, and they write it down on the
-record as yours; or the judge gives you **leave to answer**.
-
-### Leave to answer
-
-A suspended account cannot sign in. When somebody called to a trial is
-suspended, the judge, who is always one of the church's leaders, can let them
-sign in to answer that trial, and nothing else:
-
-- **Only the court room opens**, and in it only that one trial. Everything else
-  in the app (messages, the library, your profile, other trials) stays closed
-  exactly as a suspension closes it. The door still asks for your password.
-- **It is for a time the judge chooses**: an hour, a day, three days or a week.
-  It ends sooner if the judge ends it, and always when the hearing ends.
-- **When it ends, the account is switched off again** at once, on every phone it
-  was signed in on.
-- **It is on the record**, with who gave it and until when, and the church's
-  other leaders are told. Nobody is let in quietly.
-
-Leave to answer does not lift the suspension. Only a Director lifting it from
-the member's page does that.
-
-### Exhibits
-
-Anybody called to a trial, and the judge, can put **exhibits** before it: a
-photo, a screenshot, a recording, a video, a PDF, or something written out word
-for word. Each is lettered (Exhibit A, B, C) and kept exactly as it was given,
-nothing changed, up to 25 MB.
-
-Each exhibit has a **fingerprint**, a long code worked out from its contents
-the moment it is chosen. Every time anybody opens it, their phone works out the
-fingerprint again and compares. If even one dot of a photo had been changed,
-the two would not match, the screen would say so, and the judge would be told.
-
-The judge can keep an exhibit **for the bench only**, meaning the judge and the
-gallery, when showing it to everybody would put somebody at risk. If a photo
-records where it was taken, that place is shown only to the bench.
-
-### The record
-
-Everything that happens in a trial is written in order on its record: who was
-called, who spoke, each exhibit, who opened it, who watched, the decision.
-Each line is chained to the one before it, so a line that was changed or
-removed afterwards would show. Anybody in the trial can ask the app to check
-the record, and save a copy of it to keep.
-
-### Finding your way
-
-Admin Reports keeps your cases on two shelves. **Now** has what is still going
-on, and anything the Church Board ruled this week; **Earlier** has the rest,
-with a search once there are more than a few. Tap a case to open it, and
-**All cases** to go back to the list.
-
-A case has four tabs on a phone, a tablet, or a computer where the case has
-little room: **Record** (what was said, and where you say your piece),
-**Exhibits**, the judge's **Desk** (or, once the hearing has ended, the Church
-Board's **Ruling**, for whoever writes it down), and **Tools** (check the
-record, keep a copy). The judge's desk is **Simple** or **Advanced**: Simple
-is what every hearing needs, and Advanced adds the rest of the judge's tools. On a wide screen they sit side by side. When you do
-something, the app says what happened just above the bar at the bottom of the
-screen.
-
-### The room
-
-A trial in session is drawn as a court room with everybody in it as a figure in
-their place: the judge at the bench, the person it is about and the person who
-raised it at their stands, the leader who brought it at their table, witnesses
-in the box. Whoever has the trial open right now is lit up; whoever does not is
-shown as away. When somebody speaks, the start of what they said appears over
-their figure for a few minutes; all of it is in the record. The figures
-are made from nothing but each account's number: no photo is used and nothing
-about them is stored. If your phone or computer is set to reduce motion, they
-stand still.
-
-### Escalation
-
-A trial can be escalated when it is beyond the people currently in it. That is a
-step upward to more senior leadership, not a punishment, and it is recorded with
-the time it happened.
-
-### The end of it
-
-**The judge does not decide the case. The Church Board does.**
-
-When everybody has been heard, the judge **ends the hearing** with what they
-recommend: dismissing the case, counsel, suspension or removal, and why. That
-**seals** the record (its last line's fingerprint is kept), nothing more can be
-said or put before it, and **nothing happens to anybody's account**.
-
-The **Church Board** then gives the final ruling, outside the court room. When
-it has, the judge, or a leader of the church who sat on the case, writes the
-ruling down in the trial as it was given: the outcome, the Board's own words,
-who presented it and when. That goes on the record after the seal, everybody
-called to the trial is told, and only then is a suspension or a removal carried
-out, if the Board ruled one. Nobody called to a trial can write its ruling down.
-
-What was said in a trial stays on its record even if the account of somebody who
-spoke is later removed.
+The Director decides the report and writes the outcome, as before. If something
+has to stop, **Suspend or remove** is in the Admin room under Safeguarding:
+suspend switches an account off at once and can be lifted; remove is permanent.
 
 ### If an account is deleted
 
 Deleting an account removes the person from the app: their messages, notes,
-photos and everything else in it. Two things stay, because a church has to be
-able to show what it did: **its safeguarding reports and its trials.**
+photos and everything else in it. One thing stays, because a church has to be
+able to show what it did: **its safeguarding reports.**
 
 - A report stays, with its conversation and its evidence, whether it was the
   account of the person who raised it or of the person it was about that went.
-- A trial stays, with everything said and entered in it. The deletion itself is
-  written on its record.
-- Wherever the person's name appears in either, it is shown followed by
+- Wherever the person's name appears, it is shown followed by
   **(account deleted)**, so nobody mistakes them for somebody still here.
 
 Nothing else about them is kept: not an address, not a phone number, not a
 photo. Only the name as it was, and what the record already held. Who can read
-a report or a trial does not change when somebody's account goes; a report
-about a leader stays with the leaders it was always for.
+a report does not change when somebody's account goes; a report about a leader
+stays with the leaders it was always for.
+
+A copy of the app that held trials before the court room closed keeps their
+record, untouched, where no screen reaches it (`court_archive` in the database).
 
 ---
 
@@ -382,14 +265,11 @@ that is modest.
 
 For Directors and the church's senior leadership.
 
-- **To start a trial**, open **Admin Reports** and press **Open a case**. You
-  present it; the judge is drawn for you.
-- **If you are drawn as the judge**, your **Desk** tab is Simple or Advanced.
-  Simple is what every hearing needs: call a witness, end the hearing, step
-  down. Advanced adds writing down what somebody said, hearing it in private and
-  asking for another judge.
-- **Claim it before you work on it.** That is what stops two people deciding the
-  same report in two different ways.
+- **Pick it up before you work on it.** That is what stops two people deciding
+  the same report in two different ways, and it opens the conversation.
+- **Read it before you bring anybody in.** Bringing in the person a report is
+  about shows them everything already said, and cannot be undone. For somebody
+  who may be unsafe, wait, or do not do it at all, and talk to them another way.
 - **Decide in the app, not in a conversation.** The outcome field is what
   somebody will read in a year. A decision made in a chat and never recorded is
   a decision the church cannot show it made.

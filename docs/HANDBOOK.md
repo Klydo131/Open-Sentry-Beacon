@@ -730,42 +730,27 @@ A place for Guides and their Directors to talk to each other. Explorers cannot s
 >
 > Everybody in the room reads everything in it, and that is what makes it safe to have rather than a limitation. Guide-to-Guide direct messages would be a second private channel with no oversight, in an app whose whole design is that private conversation happens in one place and can be reported. Anyone can delete their own message; Directors can delete any.
 
-### Admin Reports: the court room
+### Admin Reports
 
-**Cases have a room of their own: Admin Reports.** It is in every leader's Menu. A Guide or an Explorer who is part of a case reaches it from Settings, Admin Reports, or straight from the notification that tells them about it. A case is a formal proceeding about a person, sometimes about the person reading it. It used to be a card partway down a dashboard, easy to scroll past on the one day it mattered. The room is always there, whether or not anything is open, and says so when nothing is.
+**Reports have a room of their own: Admin Reports.** It is in every leader's Menu, and in **Settings, Admin Reports** for everybody. Until 27 October 2026 it was an online court room; that is gone, and it is now the list of reports and one conversation about each.
 
-**The door.** Admin Reports opens onto a court room, and its door asks again who you are, even though you are signed in. A leader types the six-digit code from their authenticator app, or, where the church's project uses email codes, presses **Email me a code** and types the code from that email; anybody else called to a case types their password. The door stays open for 30 minutes, and everything read or added inside is written on the case's record, so a case stays private if somebody else picks up the phone.
+**The list** groups what is yours to see: **About you** (a conversation a Director has asked you into), **Waiting for a Director**, **You are helping with these**, **Reports you raised**, and **Everything else**. Each card says what the report is about, who raised it, when, and whether it is waiting, with a Director, or closed.
 
-> **IMPORTANT** · Leaders turn on two-step sign-in first
+**Picking one up.** A Director presses **Pick this up**. The person who raised it is told, and the conversation opens. One Director speaks for the church at a time; **Hand it back** lets somebody else pick it up. Nobody can pick up a report about themselves, and a report about a Director or an Executive Director is for Executive Directors only.
+
+**The conversation.** It says at the top who is in it. The person who raised the report and the Director holding it write in it; every other leader who may handle the report can read it, so nothing is said there between two people only. Nothing written can be changed or taken back.
+
+**Bringing in the person it is about.** Once the Director holding it has read the report, they can press **Bring them into the conversation**. The app says first what that does: the person will read the report and everything already said, and can answer; the person who raised it is told. It cannot be undone. Wait, or do not do it, when somebody may be unsafe. They never see evidence attached to the report. A report made before 27 October 2026 cannot be opened to the person it is about at all: it was made under the promise that they would never be told.
+
+> **IMPORTANT** · What the person reporting is told
 >
-> A Director, or anybody in senior leadership, needs two-step sign-in before the court room opens for them: **Settings, Password, Two-step sign-in**. It takes about two minutes, once. A leader without it is never drawn as a judge either, so a church needs at least two leaders with it before a case can be heard.
->
-> **If your church's project uses email codes** (whoever looks after it chooses), there is nothing to set up: the door emails the code to the address you sign in with, and every leader can be drawn as a judge.
+> The report form says, before anything is sent: the person is not told when it is sent; a Director reads it first and may then bring them into the conversation, and you will be told if so; they never see the pictures or files you add.
 
-**Your cases, on two shelves.** **Now** has what is still going on, and anything the Church Board ruled this week. **Earlier** has the rest, with a search once there are more than a few. Tap anywhere on a case to open it, and **All cases** to go back to the list. Leaders also see the hearings they may watch from the gallery, and **Open a case**.
+**When something has to stop**, **Suspend or remove** is in the Admin room under **Safeguarding**, below the reports. Suspend switches an account off at once and can be lifted; remove is permanent and asks twice.
 
-**Inside a case.** At the top: who it is about, what it is about, and who judges it. Below that, the **live room**: everybody in the case drawn as a figure in their place, with the judge at the bench. Whoever has the case open now is lit, whoever does not is shown as away, and whoever spoke in the last few minutes has a speech bubble. The figures stand still if your phone or computer is set to reduce motion. Then four tabs, which sit side by side on a wide screen:
+**Nothing in a report is lost when an account goes.** If somebody's account is deleted, the reports they were part of stay, with the conversation and the evidence, and their name shown as *(account deleted)*.
 
-| Tab | What is in it |
-| --- | --- |
-| **Record** | Everything said, numbered like a transcript, and the box to say your piece |
-| **Exhibits** | Photos, files and writing put before the case, lettered A, B, C and kept exactly as they were given |
-| **Desk** or **Ruling** | The judge's desk while the hearing is in session; afterwards, the place to write the Church Board's ruling down |
-| **Tools** | Check that the record holds, and keep a copy of it |
-
-When you do something, the app says what happened just above the bar at the bottom of the screen.
-
-**Who judges.** The judge is drawn at random from the leaders free to hear the case: never the person it is about, nobody called to it, and not the leader who brought it unless nobody else is free. For a case about a leader, the judge is drawn from senior leadership. The draw is written on the record, and anybody on the bench can check it under Advanced settings. A judge who cannot hear a case fairly steps down, with the reason on the record, and another is drawn.
-
-**The judge's desk is Simple or Advanced.** Simple is what every hearing needs: call a witness, end the hearing, step down, and give leave to answer when somebody called is suspended. Advanced adds writing down what somebody said in person or by phone, hearing the case in private, and asking for another judge.
-
-**How a case ends.** The judge does not decide it. When everybody has been heard, the judge ends the hearing with what they recommend: dismiss, counsel, suspend or remove. The record is sealed, and nothing happens to anybody's account. The **Church Board** gives the final ruling, outside the court room, and the judge or a leader who sat on the case writes it into the case: the outcome, the Board's own words, who presented it and when. Only then is a suspension or a removal carried out, if the Board ruled one.
-
-**A suspended person still has their say.** They cannot sign in, so the judge either writes down what they say, recorded as theirs, or gives them **leave to answer**: an hour, a day, three days or a week to sign in and answer that one case, with the rest of the app still closed to them.
-
-**Nothing in a case is lost when an account goes.** If somebody's account is deleted, the reports and cases they were part of stay, with their name shown as *(account deleted)*. Who had a case open, and when, is kept only while the hearing is in session.
-
-The full rules, in plain words, are in *Reports, trials and the record*.
+The full rules, in plain words, are in *Reports and the record*.
 
 On a Guide's **Care** tab for one Explorer, prayer requests are always shown, even when there are none. The card used to disappear when empty, so the tab held only private notes and read as though a Guide could not see prayer requests at all.
 

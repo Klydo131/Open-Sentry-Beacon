@@ -126,6 +126,12 @@ export default function PrivacyPage() {
             <li><strong>Your Directors</strong> see the church&rsquo;s members and its
               numbers, safeguarding reports, and a 30-day record of which links people
               shared. They do not see conversations.</li>
+            <li><strong>A report, and the conversation about it,</strong> are read by the
+              person who made it and the Directors who handle it. Once a Director has read
+              it, they may bring the person it is about into that conversation, and both
+              of you are told when they do; that person then reads the report and what was
+              said, but never the evidence attached to it. A report made before
+              27&nbsp;October 2026 is never opened to the person it is about.</li>
             <li><strong>Nobody who is not signed in sees anything at all.</strong> There
               is no public page with a member on it, and nothing here is indexed by a
               search engine.</li>
@@ -205,13 +211,13 @@ export default function PrivacyPage() {
               period. Every stored file that belonged to it, or to a conversation that
               went with it, goes too: your pictures straight away, and the rest at the
               nightly clean-up, which removes each file whose record is gone.</li>
-            <li><strong>Safeguarding reports, trials in the court room and the record of
-              a removal are kept permanently</strong>, including after an account is
+            <li><strong>Safeguarding reports, the conversation about each, and the record
+              of a removal are kept permanently</strong>, including after an account is
               deleted. A church has to be able to show that it acted, and a record the
               person it describes can erase would not show anything. This is the one
               thing that survives a deletion request. What stays is the name as it was,
-              shown with &ldquo;(account deleted)&rdquo;, and what the report or the
-              trial already held: nothing else about the person, and it is read only by
+              shown with &ldquo;(account deleted)&rdquo;, and what the report already
+              held: nothing else about the person, and it is read only by
               those who could read it before.</li>
           </ul>
         </Card>

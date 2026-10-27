@@ -160,7 +160,8 @@ function Reports() {
         </h2>
         <p className="mt-1 text-sm text-gray-500">
           Someone in your church raised these. The person reported has not been
-          told, and will not be, so anyone can raise a concern safely.
+          told. Once you have read one, you may bring them into its conversation
+          in Admin Reports, and the person who raised it is told if you do.
         </p>
 
         {open.length === 0 ? (

@@ -200,28 +200,23 @@ anything in **Admin Reports**.
 
 ### Somebody reported a message. What do I do?
 
-Open **Admin**, then **Safeguarding**. *Reports, trials and the record* explains
-the whole process, and why the person reported is never told who reported them.
-If it needs a hearing, open a case in **Admin Reports**.
+Open **Admin Reports** in your Menu and press **Pick this up**. The person who
+raised it is told, and you can talk it through with them in the report's
+conversation, which your church's other leaders who may handle it can read.
+*Reports and the record* explains the whole process.
 
-### Admin Reports asks for a code. Which one?
+### Should I bring the person it is about into the conversation?
 
-The six-digit code from your authenticator app. Leaders need **two-step
-sign-in** turned on before the court room opens for them: Settings, Password,
-Two-step sign-in. Anybody else called to a case types their password instead.
-The door stays open for 30 minutes.
+Only once you have read the report, and only when it is safe. They will read
+the report and everything already said, and can answer; the person who raised it
+is told. It cannot be undone, and for somebody who may be unsafe it can wait, or
+not happen at all. A report made before 27 October 2026 cannot be opened to them.
 
-### Who decides a case?
+### What happened to the court room?
 
-Not the judge. A judge is drawn at random from the leaders free to hear it, and
-ends the hearing with what they recommend. The **Church Board** gives the final
-ruling, outside the court room, and a leader who sat on the case writes it in.
-Only then is anything done to anybody's account.
-
-### A case I was in has gone from Now.
-
-It is under **Earlier**. A case stays on **Now** while it is going on, and for a
-week after the Church Board rules.
+It closed on 27 October 2026. A report is now a report and one conversation
+about it. If something has to stop, **Suspend or remove** is in the Admin room
+under Safeguarding.
 
 ## About the app itself
 

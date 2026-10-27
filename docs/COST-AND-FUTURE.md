@@ -159,8 +159,8 @@ knows both numbers and shows them. Somebody has to look.
    that, is the signal you genuinely need to spend money or recruit.
 3. **Any guild flagged "Needs a look"?** It outranks "Thriving" on purpose:
    twenty happy members and one person nobody walks with is not a healthy group.
-4. **Anything in the trial room?** Safeguarding does not wait for a convenient
-   week.
+4. **Any report waiting in Admin Reports?** Safeguarding does not wait for a
+   convenient week.
 
 Without this rhythm the analytics are decoration.
 

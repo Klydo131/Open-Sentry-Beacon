@@ -100,16 +100,15 @@ export const KEEP_UP_GUILDS = ['guilds', 'guild_members', 'profiles', 'pairings'
 /** Safeguarding reports, for the church's leaders only. */
 export const KEEP_UP_REPORTS = ['reports', 'report_files', 'profiles'] as const;
 
-/** Admin reports: the queue and the conversation inside a case. */
 /** The pocket, so a tile saved on one device appears on the person's others. */
 export const KEEP_UP_POCKET = ['pocket_apps'] as const;
 
+/** Admin reports: the list, and the conversation about each report. */
 export const KEEP_UP_ADMIN_REPORTS =
   ['reports', 'report_messages', 'profiles'] as const;
 
-/** The Cases room, where several people are in one hearing at once. */
-export const KEEP_UP_CASES =
-  ['trials', 'trial_statements', 'trial_parties', 'discipline_log', 'profiles'] as const;
+/** Suspend or remove: who is suspended, as other leaders change it. */
+export const KEEP_UP_DISCIPLINE = ['discipline_log', 'profiles'] as const;
 
 /**
  * The security audit, by watching the tables whose triggers write it (the

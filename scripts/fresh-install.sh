@@ -175,33 +175,15 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-post-carries-its-own-photos.sql"
 
-# THE COURT ROOM HOLDS: a fresh code or password at the door, a recorded seat
-# to read a case, a record that finds what changed, exhibits that stay as they
-# were entered. Invented people, rolled back.
+# A REPORT IS ONE CONVERSATION, AND KEEPS EVERY RULE A REPORT HAD: the person a
+# report is about is told nothing until the Director holding it brings them
+# in, and then reads all of it; every Admin who may handle it reads it; a
+# report filed under the old promise never opens to them; evidence follows the
+# report; nobody rewrites one through the data API; a report outlives a deleted
+# account. The court room's own proofs went with it (20261027120000); the
+# report checks they carried live here. Invented people, rolled back.
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
-  -f "$here/supabase/tests/the-court-room-holds.sql"
-
-# LEAVE TO ANSWER HOLDS, AND THE RECORD OUTLIVES THE ACCOUNT: a suspended
-# member let in by the judge reaches one case and nothing else, and is shut out
-# again when the leave ends; a report or a case stays when an account is
-# deleted, showing it as deleted. Invented people, rolled back.
-psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
-  -f "$here/supabase/tests/leave-to-answer-holds.sql"
-
-# A JUDGE IS DRAWN AND THE CHURCH BOARD RULES: the judge is drawn from the
-# leaders free to hear the case and the draw can be worked out again; the
-# hearing ends with a recommendation that touches nobody's account; the Board's
-# ruling is written down once, by somebody entitled to, and carried out only
-# when asked. Invented people, rolled back.
-psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
-  -f "$here/supabase/tests/a-judge-is-drawn-and-the-board-rules.sql"
-
-# THE COURT ROOM'S DOOR BY EMAIL, where a project chooses it: only the service
-# role makes a code, only for a leader's own live session; it is proved once,
-# for that session, within ten minutes and five tries; the pass ends with the
-# session. Without the setting nothing changes. Invented people, rolled back.
-psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
-  -f "$here/supabase/tests/the-court-room-door-by-email.sql"
+  -f "$here/supabase/tests/a-report-is-one-conversation.sql"
 
 # A HUB IS KEPT RUNNING BY GIFTS, where a project switches it on: off as the
 # app comes; then every member sees the month's goal and total and how to

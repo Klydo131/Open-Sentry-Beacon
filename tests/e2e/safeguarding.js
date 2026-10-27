@@ -38,7 +38,10 @@ async function signInAs(page, who) {
   await page.waitForTimeout(700);
   const policy = await page.locator('body').innerText();
   ok(/How we treat each other/i.test(policy), 'the conduct policy page loads');
-  ok(/never told/i.test(policy), 'the policy states the reported person is never told');
+  // The rule since 27 October 2026 (20261027130000): not told when it is sent;
+  // a Director may bring them into the conversation, and the reporter is told.
+  ok(/not told when you report/i.test(policy) && /bring them into the conversation/i.test(policy) && !/never told/i.test(policy),
+     'the policy states the reported person is not told when it is sent, and when they may be brought in');
   ok(/emergency services/i.test(policy), 'the policy points at emergency services first');
   ok(/No sexual content/i.test(policy), 'the policy names the thing it exists for');
 

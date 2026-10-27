@@ -161,7 +161,9 @@ export async function collectMyData(): Promise<MyDataFile> {
       {
         what: 'Safeguarding reports about you',
         why: 'A report names the person who raised it, and this app promises them that '
-          + 'the person they reported is never told. Handing it over would break that '
+          + 'the person they reported is not told unless a Director, having read it, '
+          + 'brings that person into its conversation (a report you have been brought '
+          + 'into is in Admin Reports). Handing the rest over would break that '
           + 'promise and could put somebody at risk. Both the Data Privacy Act and the '
           + 'GDPR allow an access request to be limited where answering it would '
           + 'identify another person who has not agreed.',

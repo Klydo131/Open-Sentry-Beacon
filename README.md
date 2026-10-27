@@ -127,8 +127,11 @@ tables by default that day. And members can give toward keeping their hub
 running, if a church switches that on: it is optional and starts off. **If
 you run a copy, run the new migrations.**
 
-**21 October 2026.** A church can let its leaders into the court room with a
-code sent by email instead of an authenticator app.
+**27 October 2026.** Admin Reports is reports again, not a court room: each
+report has one conversation, which the church's leaders can read, and a Director
+can bring the person it is about into it once they have read it. The Study Room
+is simpler, its whiteboard says what you can do, and Undo works. **If you run a
+copy, run the new migrations.**
 
 **[CHANGELOG.md](CHANGELOG.md)** has the steps for each, and the new rule for
 anybody adding a table.
@@ -359,7 +362,6 @@ screens at all. Put the permission rules with the data, not in the interface.
 | [docs/POSTGRES.md](docs/POSTGRES.md) | No Supabase account: the same app on any Postgres, on a server your church rents or owns, with one `docker compose up`. |
 | [docs/EMAIL.md](docs/EMAIL.md) | Sending invitations by mail. Any provider, or none. |
 | [docs/SECURITY.md](docs/SECURITY.md) | Securing your own copy, with samples you can adapt, and who is responsible for what. |
-| [docs/COURT-ROOM.md](docs/COURT-ROOM.md) | Building a court room: a door that asks again, a record that shows any change, evidence handled the way forensics handles it, and where AI tools help and where they must not go. With samples. |
 
 ---
 

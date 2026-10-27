@@ -506,19 +506,14 @@ give. Only the treasurer records each gift and sees it; nobody sees who gave.
 
 ### Admin Reports
 
-Cases are heard in **Admin Reports**, in your Menu. Its door asks for the
-six-digit code from your authenticator app, so **turn on two-step sign-in
-first**: Settings, Password, Two-step sign-in. It takes about two minutes, once.
-A leader without it is never drawn as a judge, so your church needs at least two
-leaders with it before a case can be heard. If your church's project uses email
-codes instead, there is nothing to set up: press **Email me a code** at the door
-and type the code from the email.
-
-Your cases are on two shelves, **Now** and **Earlier**; tap one to open it. To
-start one, press **Open a case**. A judge is drawn at random, the hearing ends
-with the judge's recommendation, and the **Church Board** gives the final
-ruling, which a leader who sat on the case then writes in. *Reports, trials and
-the record* says the rest.
+Reports are in **Admin Reports**, in your Menu. Press **Pick this up** on one
+that is waiting: the person who raised it is told, and you can talk to them in
+its conversation, which every leader who may handle the report can read. Once
+you have read it, **Bring them into the conversation** lets the person it is
+about read it and answer; the app says what that does first, and it cannot be
+undone. Close a report with its outcome when it is decided. If something has
+to stop, **Suspend or remove** is under Safeguarding. *Reports and the record*
+says the rest.
 
 ### The progress report
 

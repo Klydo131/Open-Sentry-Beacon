@@ -186,12 +186,13 @@ try {
   const { data: cProfile } = await as(sc3.access_token).from('profiles').select('id').eq('id', people.c.id).single();
   check(later.ok && cProfile?.id === people.c.id, 'with the next code, the same person reads their profile');
   // Typing a code again in the same session moves the code's time forward, as
-  // Supabase's sign-in service does. The court room's door reads that time.
+  // Supabase's sign-in service does; a check that asks how fresh a code is
+  // reads that time.
   const totpAt = (token) => (claimsOf(token).amr ?? []).find((a) => a.method === 'totp')?.timestamp ?? 0;
   await sleep(31_000 - (Date.now() % 30_000));
   const sc4 = await (await prove(sc3.access_token, enrolled.id, codeFor(enrolled.totp.secret, stepAt()))).json();
   check(totpAt(sc4.access_token) > totpAt(sc3.access_token),
-    'a second code in the same session moves its time forward, which the court room\'s door reads');
+    'a second code in the same session moves its time forward, as Supabase\'s does');
   sc = sc4;
 
   // ------------------------------------------------------------- recovery ----
@@ -241,8 +242,8 @@ try {
   const { rows: objRows } = await owner.query('select id from storage.objects where bucket_id = $1 and name = $2', ['post-media', name]);
   check(fs.existsSync(path.join(dataDir, 'files', 'post-media', objRows[0]?.id ?? 'none')), 'the file is on disk under its row id, not its name');
   const sb2 = await signIn(people.b.email);
-  // Some uploads may be written and not read back: a member's report evidence,
-  // a court exhibit before it is entered. An upload must need INSERT alone.
+  // Some uploads may be written and not read back: a member's report evidence.
+  // An upload must need INSERT alone.
   const evidence = `reports/${people.b.id}/${crypto.randomUUID()}.jpg`;
   const ev = await as(sb2.access_token).storage.from('pairing-media')
     .upload(evidence, new Blob([bytes], { type: 'image/jpeg' }), { contentType: 'image/jpeg', upsert: false });
@@ -276,33 +277,19 @@ try {
   const sup = await as(ss.access_token).storage.from('post-media').upload(`${C1}/${post}/${crypto.randomUUID()}.jpg`, new Blob([bytes], { type: 'image/jpeg' }));
   check(Boolean(sup.error), 'a suspended account uploads nothing');
 
-  // ------------------------------------------------------ leave to answer ----
-  // The data API's check before every request lets a suspended account make
-  // the court room's own calls while a judge's leave lasts, and nothing else.
-  // Which call it is comes from the address PostgREST was asked, so this is
-  // proved through PostgREST itself, not only in SQL.
-  const asC = as(sc.access_token);
+  // ----------------------------------------------------- suspended is out ----
+  // Until 27 October 2026 a judge could let a suspended account in to answer
+  // one case in the court room. The court room is closed (20261027120000), so
+  // the data API's check before every request refuses a suspended account
+  // every table and every call again. Proved through PostgREST itself, where
+  // that check runs, not only in SQL.
   const asS = as(ss.access_token);
-  const { data: trial, error: openErr } = await asC.rpc('open_trial', { p_subject: people.s.id, p_summary: 'Invented case', p_report: null, p_other: null });
-  check(Boolean(trial) && !openErr, 'a Director with a fresh code opens a case about a suspended Explorer', openErr?.message);
-  const noLeave = await asS.rpc('court_door');
-  check(noLeave.error?.code === '42501', 'without leave, the suspended account is refused even the court room\'s door', noLeave.error?.message);
-  const { data: granted } = await asC.rpc('court_grant_leave', { p_trial: trial, p_person: people.s.id, p_hours: 1 });
-  check(granted === 'ok', 'the judge gives them an hour\'s leave to answer', String(granted));
-  const onLeave = await asS.rpc('court_door');
-  check(onLeave.data?.open === true && onLeave.data?.leave?.case === trial,
-    'on leave, the same account opens the court room\'s door, for that case', onLeave.error?.message);
-  const { data: theirCase } = await asS.rpc('court_case', { p_trial: trial });
-  check(theirCase?.case?.my_place === 'accused', 'and reads the case it is about');
   const { error: profileShut } = await asS.from('profiles').select('id').limit(1);
-  const { error: callShut } = await asS.rpc('court_summon', { p_trial: trial, p_person: people.b.id });
+  const { error: callShut } = await asS.rpc('my_reports');
   check(profileShut?.code === '42501' && callShut?.code === '42501',
-    'but every other table and call is still refused');
-  const { data: ended } = await asC.rpc('court_end_leave', { p_trial: trial, p_person: people.s.id });
-  const afterLeave = await asS.rpc('court_door');
-  check(ended === 'ok' && Boolean(afterLeave.error), 'when the judge ends it, the court room shuts again at once', afterLeave.error?.message);
-  const { data: bannedNow } = await anon().auth.signInWithPassword({ email: people.s.email, password: PASSWORD });
-  check(!bannedNow?.session, 'and the account cannot sign in again');
+    'a suspended account is refused every table and every call', profileShut?.message ?? callShut?.message);
+  const { error: doorGone } = await asS.rpc('court_door');
+  check(Boolean(doorGone), 'and there is no court room door left to open', doorGone?.message);
 
   // ------------------------------------------------------------ live data ----
   const heard = { b: 0, d: 0, bMsg: 0, dMsg: 0 };
@@ -365,8 +352,8 @@ try {
 
   // -------------------------------------------------------------- schedule ----
   const { rows: jobs } = await owner.query('select jobname from cron.job order by jobname');
-  check(jobs.map((j) => j.jobname).join(',') === 'court-leave-runs-out,erase-deleted-files,invitation-passwords-run-out,link-record-runs-out',
-    'the four jobs the migrations schedule are on the schedule');
+  check(jobs.map((j) => j.jobname).join(',') === 'erase-deleted-files,invitation-passwords-run-out,link-record-runs-out',
+    'the three jobs the migrations schedule are on the schedule, and the court room\'s is gone');
   await running.jobs.runDue(new Date(Date.UTC(2026, 0, 1, 5, 17)));
   const { rows: ran } = await owner.query(`select status from cron.job_run_details d join cron.job j using (jobid)
                                            where j.jobname = 'invitation-passwords-run-out' order by runid desc limit 1`);

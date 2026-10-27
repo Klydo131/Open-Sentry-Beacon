@@ -231,10 +231,15 @@ select pg_temp.as_person(:'G', $q$update public.announcements set title = 'Bible
   'ok', 'its writer still edits it');
 select pg_temp.as_person(:'G', $q$update public.blog_posts set author_id = '00000000-0000-0000-0000-0000000000c2' where id = '00000000-0000-0000-0000-000000000b51'$q$,
   '42501', 'a post cannot be put in somebody else''s name');
+-- 42501 either way: since 20261027130000 nobody signed in writes to reports at
+-- all, and the column guard below it answers with the same code.
 select pg_temp.as_person(:'D', $q$update public.reports set reporter_id = '00000000-0000-0000-0000-0000000000e2' where id = '00000000-0000-0000-0000-000000000e51'$q$,
-  'cannot be changed', 'whoever handles a report cannot change who made it');
+  '42501', 'whoever handles a report cannot change who made it');
 select pg_temp.as_person(:'D', $q$update public.reports set subject_id = '00000000-0000-0000-0000-0000000000e2' where id = '00000000-0000-0000-0000-000000000e51'$q$,
-  'cannot be changed', 'nor whom it is about');
+  '42501', 'nor whom it is about');
+insert into results values (
+  exists (select 1 from pg_trigger where tgrelid = 'public.reports'::regclass and tgname = 'aa_keep_columns' and not tgisinternal),
+  'and the column guard is still on reports, in case the table is ever opened to writes again');
 
 -- THE VERDICT ------------------------------------------------------------------
 \o

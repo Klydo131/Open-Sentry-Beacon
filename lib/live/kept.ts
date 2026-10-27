@@ -54,11 +54,9 @@ export const READ_FUNCTIONS = new Set([
   'my_study_progress',
   'my_temporary_password_ends',
   'my_threads',
-  'my_trials',
   'prayer_wall',
   'report_thread',
   'suggest_pairings',
-  'trials_i_may_sit_on',
   'unpaired_explorers',
   'why_library_sharing_is_paused',
 ]);

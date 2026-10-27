@@ -6,9 +6,13 @@
 // upset, unsure whether it "counts", and afraid of what happens next. Every
 // choice here is aimed at that:
 //
-//   * WHAT HAPPENS IS STATED BEFORE THEY TYPE, not after they submit. The one
-//     fact that decides whether somebody reports at all is that the other
-//     person is never told, so it is the first thing on screen.
+//   * WHAT HAPPENS IS STATED BEFORE THEY TYPE, not after they submit. The
+//     facts that decide whether somebody reports at all are who is told and
+//     when, so they are the first thing on screen: the other person is not told
+//     when it is sent, a Director reads it first and may then bring them into
+//     the conversation about it, and the person reporting is told if so
+//     (20261027130000_a_report_is_one_conversation; until 27 October 2026 the
+//     other person was never told at all, and reports made then stay that way).
 //   * THE DETAIL BOX IS OPTIONAL. Requiring an explanation asks the person to
 //     write down the thing they are upset about before they are ready, and
 //     some will close the dialog instead.
@@ -82,8 +86,9 @@ export function ReportDialog({
         <h3 className="text-lg font-bold text-navy">Reported. Thank you.</h3>
         <p className="mt-2 text-gray-700">
           Your church&rsquo;s Directors have been told.{' '}
-          {hiddenSubject ? 'Whoever wrote it has not been' : `${subjectName} has not`},
-          and will not be.
+          {hiddenSubject ? 'Whoever wrote it has not been' : `${subjectName} has not`}.
+          A Director reads it first. If they bring them into the conversation
+          about it, you will be told.
         </p>
         <p className="mt-2 text-sm text-gray-600">
           {hiddenSubject
@@ -107,7 +112,9 @@ export function ReportDialog({
         This goes to your church&rsquo;s Directors.{' '}
         <strong>
           {hiddenSubject ? 'Whoever wrote it is not told' : `${subjectName} is not told`}
-        </strong>. No message, no notification, nothing they could notice.
+        </strong>{' '}when you send it. A Director reads it first, and may then bring
+        them into the conversation about it so it can be talked through; you will
+        be told if they do. They never see the pictures or files you add.
       </p>
 
       <fieldset className="mt-4">

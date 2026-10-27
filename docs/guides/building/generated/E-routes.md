@@ -5,7 +5,6 @@ Each page under `app/`, the address it answers, and who may open it. `allow` is 
 | Address | File | Who may open it |
 |---|---|---|
 | `/admin` | `app/admin/page.tsx` | Director, Executive Director |
-| `/answer` | `app/answer/page.tsx` | Anyone (no shell gate on this page) |
 | `/apps` | `app/apps/page.tsx` | Executive Director, Director, Guide, Explorer |
 | `/cases` | `app/cases/page.tsx` | Executive Director, Director, Guide, Explorer |
 | `/church` | `app/church/page.tsx` | Executive Director, Director, Guide, Explorer; Executive Director, Director, Guide, Explorer |
@@ -13,6 +12,7 @@ Each page under `app/`, the address it answers, and who may open it. `allow` is 
 | `/dm` | `app/dm/page.tsx` | Guide |
 | `/ds` | `app/ds/page.tsx` | Explorer |
 | `/faq` | `app/faq/page.tsx` | Anyone (no shell gate on this page) |
+| `/forgot-password` | `app/forgot-password/page.tsx` | Anyone (no shell gate on this page) |
 | `/guilds` | `app/guilds/page.tsx` | Guide, Explorer |
 | `/join` | `app/join/page.tsx` | Anyone (no shell gate on this page) |
 | `/library` | `app/library/page.tsx` | Anyone (no shell gate on this page) |
@@ -20,6 +20,7 @@ Each page under `app/`, the address it answers, and who may open it. `allow` is 
 | `/mail` | `app/mail/page.tsx` | Executive Director, Director, Guide, Explorer |
 | `/menu` | `app/menu/page.tsx` | Executive Director, Director, Guide, Explorer |
 | `/music` | `app/music/page.tsx` | Executive Director, Director, Guide, Explorer |
+| `/new-password` | `app/new-password/page.tsx` | Anyone (no shell gate on this page) |
 | `/office` | `app/office/page.tsx` | Executive Director, Director, Guide |
 | `/` | `app/page.tsx` | Anyone (no shell gate on this page) |
 | `/password` | `app/password/page.tsx` | Executive Director, Director, Guide, Explorer |

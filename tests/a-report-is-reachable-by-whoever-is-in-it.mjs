@@ -1,4 +1,5 @@
-// Taking the door away must not take the room away.
+// Taking the door away must not take the room away: a report is reachable by
+// whoever is in it.
 //
 // ---------------------------------------------------------------------------
 // WHY THIS EXISTS. "Take out the cases in both Guide and Explorer, rebrand it
@@ -19,7 +20,7 @@
 // leaving the people a case is about with no way in is the same one line. The
 // two are indistinguishable in a diff, which is exactly why this exists.
 //
-//   node tests/a-case-is-reachable-by-whoever-is-in-it.mjs
+//   node tests/a-report-is-reachable-by-whoever-is-in-it.mjs
 // ---------------------------------------------------------------------------
 import fs from 'node:fs';
 import path from 'node:path';
@@ -72,7 +73,7 @@ const page = strip(read('app/cases/page.tsx'));
 }
 
 // ---------------------------------------------------------------------------
-// 2. THE ROOM IS STILL REACHABLE BY THE PEOPLE A CASE IS ABOUT
+// 2. THE ROOM IS STILL REACHABLE BY THE PEOPLE A REPORT IS ABOUT
 // ---------------------------------------------------------------------------
 //
 // THE ONE THAT MATTERS.
@@ -81,13 +82,16 @@ const page = strip(read('app/cases/page.tsx'));
   ok(/id: 'reports'/.test(line) && !/\?|&&|leads|role/.test(line),
      'Settings offers an Admin Reports folder with no role test on it');
 
-  // Since the court room (20261020160000), the folder draws CourtOrCases: the
-  // cases as before on a database without the update, and the way into the
-  // court room's door on one with it. Either way it is never a placeholder.
-  const pointer = read('components/court/CourtOrCases.tsx');
-  ok(/room === 'reports'/.test(settings) && /<CourtOrCases/.test(settings)
-     && /<LiveCourt me=\{me\}/.test(pointer) && /href="\/cases"/.test(pointer),
-     'and that folder actually draws the courtroom, or the way into it, not a placeholder');
+  // Since the court room closed (20261027120000), the folder and /cases both
+  // draw the reports and their conversations, for every role: the person who
+  // raised one, and the person a Director has brought into one.
+  const list = read('components/LiveAdminReports.tsx');
+  ok(/room === 'reports'/.test(settings) && /<LiveAdminReports me=\{profile\.id\} \/>/.test(settings),
+     'and that folder actually draws the reports, not a placeholder');
+  ok(/<LiveAdminReports me=\{profile\.id\} \/>/.test(page),
+     'and so does /cases');
+  ok(/\['About you', aboutMe\]/.test(list) && /\['Reports you raised', raised\]/.test(list),
+     'the list has a place for a report about you and for one you raised, not only for leaders');
 
   // The route must still admit everybody: a notification about a case links
   // straight to /cases, and narrowing the page would refuse the person it is

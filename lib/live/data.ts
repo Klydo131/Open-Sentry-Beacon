@@ -66,16 +66,7 @@ export interface SecondStepNext {
   second_step: true;
 }
 
-/**
- * The account is suspended, and a judge has let it in to answer one case:
- * the court room is all it can open (app/answer).
- */
-export interface CourtLeaveNext {
-  court_leave: true;
-  second_step?: false;
-}
-
-export async function signIn(email: string, password: string): Promise<SignInResult | SecondStepNext | CourtLeaveNext> {
+export async function signIn(email: string, password: string): Promise<SignInResult | SecondStepNext> {
   let response: Response;
   try {
     response = await fetch('/api/auth/sign-in', {
@@ -104,21 +95,6 @@ export async function signIn(email: string, password: string): Promise<SignInRes
       throw new Error('Your account signed in, but the app could not save the session.');
     }
     return { second_step: true };
-  }
-
-  // Suspended, and answering a case on leave: the court room is all it opens.
-  if (
-    response.ok &&
-    payload?.court_leave === true &&
-    typeof payload?.session?.access_token === 'string' &&
-    typeof payload?.session?.refresh_token === 'string'
-  ) {
-    try {
-      saveBrowserSession(payload.session as Session);
-    } catch {
-      throw new Error('Your account signed in, but the app could not save the session.');
-    }
-    return { court_leave: true };
   }
 
   if (
@@ -2978,110 +2954,6 @@ export async function disciplineCheck(userId: string): Promise<string> {
   return String(data ?? 'unavailable');
 }
 
-// --- Trials ---
-// Both sides answer in their own words before a decision. The Director who
-// opens a case is head judge until an Executive Director takes the seat.
-
-export interface Trial {
-  id: string;
-  summary: string;
-  subject_id: string;
-  subject_name: string;
-  opened_by: string;
-  opener_name: string;
-  head_judge_id: string;
-  judge_name: string;
-  escalation: 'none' | 'requested' | 'accepted';
-  status: 'open' | 'closed';
-  verdict: 'dismissed' | 'suspended' | 'removed' | null;
-  verdict_note: string | null;
-  opened_at: string;
-  closed_at: string | null;
-  my_part: 'accused' | 'reporter' | 'witness' | null;
-  am_judge: boolean;
-}
-
-export interface TrialStatement {
-  id: string;
-  trial_id: string;
-  author_id: string;
-  body: string;
-  created_at: string;
-}
-
-/** Every case this person is party to or, as a leader, responsible for. */
-export async function listTrials(): Promise<Trial[]> {
-  const { data, error } = await db().rpc('my_trials');
-  if (error) throw new Error(error.message);
-  return (data ?? []) as Trial[];
-}
-
-/** Open a case and summon the other side (named directly or taken from a report). */
-export async function openTrial(args: {
-  subjectId: string;
-  summary: string;
-  reportId?: string;
-  otherId?: string;
-}): Promise<string> {
-  const { data, error } = await db().rpc('open_trial', {
-    p_subject: args.subjectId,
-    p_summary: args.summary,
-    p_report: args.reportId ?? null,
-    p_other: args.otherId ?? null,
-  });
-  if (error) throw new Error(error.message);
-  return String(data);
-}
-
-/** Ask an Executive Director to take the seat. The Director keeps it until one does. */
-export async function callHeadJudge(trialId: string): Promise<string> {
-  const { data, error } = await db().rpc('call_head_judge', { p_trial: trialId });
-  if (error) throw new Error(error.message);
-  return String(data ?? 'Something went wrong.');
-}
-
-/** An Executive Director answers the call. */
-export async function takeHeadJudge(trialId: string): Promise<string> {
-  const { data, error } = await db().rpc('take_head_judge', { p_trial: trialId });
-  if (error) throw new Error(error.message);
-  return String(data ?? 'Something went wrong.');
-}
-
-/** Decide the case. Only the head judge; the verdict uses the member-list functions. */
-export async function closeTrial(
-  trialId: string,
-  verdict: 'dismissed' | 'suspended' | 'removed',
-  note?: string,
-): Promise<string> {
-  const { data, error } = await db().rpc('close_trial', {
-    p_trial: trialId,
-    p_verdict: verdict,
-    p_note: note ?? null,
-  });
-  if (error) throw new Error(error.message);
-  return String(data ?? 'Something went wrong.');
-}
-
-/** What has been said in a case, oldest first. */
-export async function listStatements(trialId: string): Promise<TrialStatement[]> {
-  const { data, error } = await db()
-    .from('trial_statements')
-    .select('*')
-    .eq('trial_id', trialId)
-    .order('created_at', { ascending: true });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as TrialStatement[];
-}
-
-/** Say something in a case. A suspended person still may, so they can answer. */
-export async function speakInTrial(trialId: string, body: string): Promise<void> {
-  const me = await uid();
-  const { error } = await db()
-    .from('trial_statements')
-    .insert({ trial_id: trialId, author_id: me, body });
-  if (error) throw new Error(error.message);
-}
-
 // --- Guilds ---
 // An Explorer sees their guild and its size, never the list of names.
 
@@ -3264,7 +3136,6 @@ export interface ChurchPulse {
   suspended_now: number;
   removed_ever: number;
   open_reports: number;
-  open_trials: number;
   messages_7d: number;
   messages_30d: number;
 }
@@ -3331,11 +3202,22 @@ export type AdminReport = {
   created_at: string;
   /** I am the person who raised this. */
   mine: boolean;
+  /**
+   * It is about me, and the Director holding it has brought me into the
+   * conversation (20261027130000). Absent on a database without that update.
+   */
+  about_me?: boolean;
   claimed_by: string | null;
   claimed_name: string | null;
+  /** Who raised it: for leaders, and for the person it is about once brought in. */
+  reporter_name?: string | null;
   subject_name: string | null;
   /** I am entitled to pick this up and answer it. */
   can_handle: boolean;
+  /** False for a report filed before conversations were shared: it stays private. */
+  subject_may_join?: boolean;
+  /** When the person it is about was brought into the conversation, if they were. */
+  subject_joined_at?: string | null;
   messages: number;
 };
 
@@ -3359,7 +3241,7 @@ export async function reportThread(reportId: string): Promise<ReportMessage[]> {
   return (data ?? []) as ReportMessage[];
 }
 
-/** Pick up a report. First one there holds it; nobody else can speak in it. */
+/** Pick up a report. First one there holds it, and speaks for the church in it. */
 export async function claimReport(reportId: string): Promise<void> {
   const { error } = await db().rpc('claim_report', { p_report: reportId });
   if (error) throw new Error(error.message);
@@ -3368,6 +3250,16 @@ export async function claimReport(reportId: string): Promise<void> {
 /** Hand it back, so a case is never stuck with somebody who should not hold it. */
 export async function releaseReport(reportId: string): Promise<void> {
   const { error } = await db().rpc('release_report', { p_report: reportId });
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Bring the person a report is about into its conversation. Only the Director
+ * holding it, once, and never for a report filed before conversations were
+ * shared; the database refuses anything else (20261027130000).
+ */
+export async function bringSubjectIntoReport(reportId: string): Promise<void> {
+  const { error } = await db().rpc('bring_subject_into_report', { p_report: reportId });
   if (error) throw new Error(error.message);
 }
 
@@ -3397,35 +3289,6 @@ export async function addPocketApp(url: string, label: string): Promise<void> {
 
 export async function removePocketApp(id: string): Promise<void> {
   const { error } = await db().from('pocket_apps').delete().eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-// --- The Hall of Justice: who may take a seat is decided by the database ---
-
-export type SeatableTrial = {
-  id: string;
-  summary: string;
-  status: string;
-  verdict: string | null;
-  opened_at: string;
-  accused_name: string | null;
-  accused_role: string;
-  /** How many of leadership are watching. Watching carries no voice. */
-  watching: number;
-  i_am_watching: boolean;
-  /** The one who accepted the case, and the only one who runs or ends it. */
-  i_am_judge: boolean;
-};
-
-export async function trialsIMaySitOn(): Promise<SeatableTrial[]> {
-  const { data, error } = await db().rpc('trials_i_may_sit_on');
-  if (error) throw new Error(error.message);
-  return (data ?? []) as SeatableTrial[];
-}
-
-/** Watch a hearing. Observers can read but never write. */
-export async function joinTrial(trialId: string): Promise<void> {
-  const { error } = await db().rpc('join_trial', { p_trial: trialId });
   if (error) throw new Error(error.message);
 }
 

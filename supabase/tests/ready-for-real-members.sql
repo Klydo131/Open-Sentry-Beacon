@@ -35,8 +35,9 @@ begin
   what_to_do := case when v = 0 then '' else 'Build the database only from the repository (npx supabase db push). Never add a table by hand.' end;
   return next;
 
-  -- 2 to 5. The scheduled jobs that keep the privacy notice's promises, and
-  -- the one that switches a suspended account off again when leave to answer ends.
+  -- 2 to 4. The scheduled jobs that keep the privacy notice's promises. 5: none
+  -- is left over from the court room, closed on 27 October 2026, whose leave
+  -- sweep ran every minute (20261027120000_the_court_room_is_closed).
   if to_regclass('cron.job') is null then
     n := 2; item := 'Scheduled jobs'; seen := 'pg_cron is not switched on';
     status := 'NOT YET'; what_to_do := 'Run every database change: they switch it on and schedule each job.';
@@ -45,8 +46,7 @@ begin
     for n, item, t in values
       (2, 'Job: invitation passwords run out (hourly)', 'invitation-passwords-run-out'),
       (3, 'Job: shared-link record kept 30 days (daily)', 'link-record-runs-out'),
-      (4, 'Job: files of deleted records removed (daily)', 'erase-deleted-files'),
-      (5, 'Job: leave to answer ends on time (every minute)', 'court-leave-runs-out')
+      (4, 'Job: files of deleted records removed (daily)', 'erase-deleted-files')
     loop
       -- pg_cron marks a paused job inactive; a stand-in without the column has none.
       execute 'select count(*) from cron.job where jobname = $1'
@@ -59,6 +59,12 @@ begin
       what_to_do := case when v > 0 then '' else 'Apply the newest database changes (npx supabase db push).' end;
       return next;
     end loop;
+    n := 5; item := 'Job: nothing left running for the court room';
+    select count(*) into v from cron.job where jobname = 'court-leave-runs-out';
+    seen := case when v = 0 then 'none' else 'still scheduled' end;
+    status := case when v = 0 then 'READY' else 'NOT YET' end;
+    what_to_do := case when v = 0 then '' else 'Apply the newest database changes (npx supabase db push); 20261027120000 closes the court room.' end;
+    return next;
   end if;
 
   -- 6 and 7. The Vault entries the nightly file removal needs. Names only.

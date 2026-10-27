@@ -483,18 +483,12 @@ const GUARDRAILS = new Set([
   // to prove exactly that, so naming the role is the property being tested.
   // It holds no key. The credential-shape scan above still applies.
   'supabase/tests/a-second-step-is-required.sql',
-  'supabase/tests/the-court-room-holds.sql',
-  // The court room's door by email (21 October 2026). A code must be made by
-  // the server alone, so the migration grants court_email_code_issue to that
-  // role by name and revokes it from every browser role; the proof calls it as
-  // that role and the gate check reads that grant. The door-code function runs
-  // on a server, like invite above, reads the key from its own environment and
-  // reads SITE_URL for the link in the email. Naming them is the property; the
-  // credential-shape scan above still applies, so none of them carries a key.
+  // The court room's door by email (21 October 2026): its migration granted
+  // court_email_code_issue to the server's role by name. The court room closed
+  // on 27 October 2026 and its function, proofs and checks were removed (they
+  // are in git history, last at 82cf18f); an applied migration is never
+  // edited, so this one stays, and so does its entry.
   'supabase/migrations/20261021100000_the_court_room_door_by_email.sql',
-  'supabase/functions/door-code/index.ts',
-  'supabase/tests/the-court-room-door-by-email.sql',
-  'tests/the-court-room-door-by-email.mjs',
   // The examples guard reads every program in examples/ for the server key's
   // name, which no program has a reason to mention, so it has to spell the
   // name to look for it.

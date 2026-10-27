@@ -31,7 +31,7 @@ of date.
 | 4 | **What they may do** | A signed-in person reaching past their own place | `tests/every-table-says-who-may-reach-it.mjs`, `tests/nobody-promotes-themselves.mjs`, `supabase/tests/fresh-install-holds.sql` |
 | 5 | **What is kept, and how** | A secret in the browser, a file anybody can open, data kept longer than needed | `tests/no-secrets.js`, `tests/photos-lose-their-location.mjs`, `supabase/tests/what-is-deleted-leaves-no-file-behind.sql` |
 | 6 | **What a person sees** | Somebody's words run as code; a database error read out to a member | `tests/linkify.mjs`, `tests/errors-are-human.mjs`, `tests/translations-say-only-what-english-says.mjs` |
-| 7 | **Knowing, and acting** | A problem nobody notices, and a problem nobody knows how to handle | `tests/a-record-that-outlives-the-people-in-it.mjs`, `tests/the-court-room-keeps-its-promises.mjs` |
+| 7 | **Knowing, and acting** | A problem nobody notices, and a problem nobody knows how to handle | `tests/a-record-that-outlives-the-people-in-it.mjs`, `tests/a-report-is-one-conversation.mjs` |
 | 8 | **The people who run it** | A setting no code can change left at its default; a tool given more than it needs | `tests/the-research-agents-only-read.mjs`, `tests/data-protection.mjs` |
 
 ---
@@ -167,8 +167,9 @@ role above their own, a giving record when they are not the treasurer.
   are revoked from visitors.
 - Nobody raises their own role: `tests/nobody-promotes-themselves.mjs`.
 - Optional features are off until a project switches them on, in one
-  `app_settings` row only the server can read: giving (`HUB_GIVING`) and the
-  court room's email door (`COURT_DOOR_METHOD`).
+  `app_settings` row only the server can read: giving (`HUB_GIVING`). (The
+  court room's email door, `COURT_DOOR_METHOD`, went with the court room on
+  27 October 2026.)
 
 **What proves it**: `tests/every-table-says-who-may-reach-it.mjs`,
 `tests/nobody-promotes-themselves.mjs`, `supabase/tests/fresh-install-holds.sql`,
@@ -246,10 +247,13 @@ address of its own, and a database error being read out to a member.
 handled badly because nobody knew what to do.
 
 **Where it lives**
-- Records that outlive the people in them: safeguarding reports and court
-  cases stay when an account is deleted
-  (`tests/a-record-that-outlives-the-people-in-it.mjs`), and the court room's
-  record is hash-chained so a change shows (`tests/the-court-room-keeps-its-promises.mjs`).
+- Records that outlive the people in them: a safeguarding report and the
+  conversation about it stay when an account is deleted
+  (`tests/a-record-that-outlives-the-people-in-it.mjs`), and nobody rewrites a
+  report through the data API: every change is a checked function, and its
+  evidence opens only to whoever may handle it
+  (`tests/a-report-is-one-conversation.mjs`,
+  `supabase/tests/a-report-is-one-conversation.sql`).
 - The weekly audit (layer 1) and Supabase's Security Advisor.
 - Backups, and a restore actually tried ([DO-THIS-NEXT.md](DO-THIS-NEXT.md)).
 - [EMERGENCY-DEPLOY.md](EMERGENCY-DEPLOY.md): rolling back, and a short checked fix.
@@ -261,7 +265,7 @@ handled badly because nobody knew what to do.
    once), rotate any key that may have been seen, and roll back the deploy
    if the code is the cause ([EMERGENCY-DEPLOY.md](EMERGENCY-DEPLOY.md)).
 2. **Establish what was reached, and about whom**: Supabase's Auth and
-   database logs, the court record's own check, the safeguarding record.
+   database logs, the security audit record, the safeguarding record.
 3. **Fix** with a test that fails without the fix, through the ordinary gate.
 4. **Tell.** Under the Data Privacy Act, the National Privacy Commission and
    the people affected are told within 72 hours where there is a real risk of

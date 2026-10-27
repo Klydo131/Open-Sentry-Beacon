@@ -43,7 +43,23 @@ const stripSql = (src) =>
 const dir = path.join(root, 'supabase/migrations');
 const file = fs.readdirSync(dir).find((f) => f.includes('why_sharing_is_paused'));
 ok(!!file, 'the migration is present');
-const sql = file ? stripSql(read(`supabase/migrations/${file}`)) : '';
+
+// WHERE EACH FUNCTION NOW LIVES. Each is read from the last migration that
+// defines it: why_library_sharing_is_paused was written again when the court
+// room closed (20261027120000), and a check reading the first file would go on
+// passing on a rule that no longer runs.
+const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql'))
+  .sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
+const latest = (name) => {
+  for (let i = files.length - 1; i >= 0; i--) {
+    const text = stripSql(read(`supabase/migrations/${files[i]}`));
+    const at = text.indexOf(`function public.${name}(`);
+    if (at >= 0) return text.slice(text.lastIndexOf('create', at));
+  }
+  return '';
+};
+const sql = latest('pairing_can_share_library');
+const whySql = latest('why_library_sharing_is_paused');
 
 // ---------------------------------------------------------------------------
 // 1. THE ONE THAT MATTERS: one rule, not two that agree today
@@ -77,7 +93,7 @@ const sql = file ? stripSql(read(`supabase/migrations/${file}`)) : '';
 // shape of the in_trial mistake: a predicate changed for a reading reason that
 // turned out to govern a writing one too.
 {
-  const why = (sql.match(
+  const why = (whySql.match(
     /create or replace function public\.why_library_sharing_is_paused[\s\S]*?\$\$([\s\S]*?)\$\$/,
   ) ?? [])[1] ?? '';
 
@@ -89,7 +105,6 @@ const sql = file ? stripSql(read(`supabase/migrations/${file}`)) : '';
     [/church_id\s+is\s+distinct\s+from/,              'both must be in one church'],
     [/library_blocked/,                               'neither may be blocked from the library'],
     [/pairing_library_permissions/,                   'sharing may be switched off for the pair'],
-    [/trials[\s\S]{0,120}status\s*=\s*'open'/,        'an open case pauses sharing'],
   ];
   for (const [re, name] of CONDITIONS) {
     ok(re.test(why), `the explanation still checks: ${name}`);
@@ -107,14 +122,17 @@ const sql = file ? stripSql(read(`supabase/migrations/${file}`)) : '';
 // 3. THE REASON DOES NOT LEAK WHAT A REFUSAL IS NOT ALLOWED TO CONFIRM
 // ---------------------------------------------------------------------------
 //
-// join_trial gives one message for every refusal on purpose, because naming
-// whose case it is confirms the shape of a case to somebody outside it. This
-// function must not become the way around that.
+// AN OPEN CASE USED TO PAUSE SHARING, with a sentence that named nobody so it
+// could not reveal whose case it was. The court room closed on 27 October 2026
+// (20261027120000) and the pause went with it; a Director can still switch
+// sharing off for a pair by hand, which the list above checks. What must not
+// happen is a branch that still reaches for the court's tables and fails.
 {
-  const trialBranch = (sql.match(/trials[\s\S]{0,400}?return\s+('[\s\S]*?');/) ?? [])[1] ?? '';
-  ok(trialBranch.length > 0, 'the open-case branch returns a sentence');
-  ok(!/\b(guide|explorer|subject|about you|about them|your Explorer)\b/i.test(trialBranch),
-     'and it names nobody, so it cannot be used to discover whose case it is');
+  const why = (whySql.match(
+    /create or replace function public\.why_library_sharing_is_paused[\s\S]*?\$\$([\s\S]*?)\$\$/,
+  ) ?? [])[1] ?? '';
+  ok(why.length > 0 && !/\btrials\b|in_trial|court_/.test(why),
+     'no case pauses sharing any more, and nothing in the rule reaches for the court room');
 
   // A pairing that does not exist and one that is not yours must be
   // indistinguishable, or the question becomes a way to enumerate pairings.
@@ -127,7 +145,7 @@ const sql = file ? stripSql(read(`supabase/migrations/${file}`)) : '';
   // makes the two indistinguishable is that ONE condition covers both, so that
   // is what gets measured: everything between the null test and the first
   // return has to include the ownership test, joined by `or`.
-  const firstGuard = (sql.match(/pair\.id is null([\s\S]*?)return\s+'[^']*';/) ?? [])[1] ?? '';
+  const firstGuard = (why.match(/pair\.id is null([\s\S]*?)return\s+'[^']*';/) ?? [])[1] ?? '';
   ok(/\bor\b/.test(firstGuard) && /auth\.uid\(\)/.test(firstGuard),
      'a pairing that does not exist answers the same as one that is not yours');
 }

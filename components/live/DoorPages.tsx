@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from 'react';
 import { NAVY, roleNoun, APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
 import { homeFor, useLiveSession } from '@/lib/live/session';
 import * as live from '@/lib/live/data';
-import { courtLeaveHeld } from '@/lib/live/court';
 import { clearBrowserSession, saveBrowserSession, supabaseAuth } from '@/lib/supabase/client';
 import type { Role } from '@/lib/types';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
@@ -225,10 +224,6 @@ export function LiveLoginPage() {
           setCodeStep(true);
           return;
         }
-        if ('court_leave' in mine) {
-          window.location.replace('/answer');
-          return;
-        }
         if (!mine.is_approved) {
           setNotice('');
           setError('Your password is correct, but your account is waiting for a Director to approve it. Ask your church to approve you, then sign in again.');
@@ -257,11 +252,6 @@ export function LiveLoginPage() {
       const mine = await live.signIn(email, password);
       if (mine.second_step) {
         setCodeStep(true);
-        return;
-      }
-      // Suspended, and let in by a judge to answer one case: that is all it opens.
-      if ('court_leave' in mine) {
-        window.location.replace('/answer');
         return;
       }
       if (!mine.is_approved) {
@@ -295,18 +285,7 @@ export function LiveLoginPage() {
         <div className="mx-auto max-w-md space-y-5 px-4 py-8">
           <TwoStepSignInCard
             onCode={async (code) => {
-              let mine: live.SignInResult;
-              try {
-                mine = await live.finishSignInWithCode(code);
-              } catch (cause) {
-                // Suspended, and let in by a judge to answer one case: its
-                // profile is closed to it, the court room is not.
-                if (await courtLeaveHeld()) {
-                  window.location.replace('/answer');
-                  return;
-                }
-                throw cause;
-              }
+              const mine = await live.finishSignInWithCode(code);
               if (mine.is_approved) {
                 window.location.replace(homeFor(mine.role));
                 return;

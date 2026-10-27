@@ -89,16 +89,19 @@ begin
     raise exception 'nothing deletes the record of shared links after 30 days unless somebody shares another link';
   end if;
 
-  -- 8. Leave to answer a case ends on time: a suspended account let in to
-  --    answer is switched off again within a minute of its leave running out
-  --    (20261020180000_leave_to_answer_and_a_record_that_outlives_the_account).
-  if not exists (
-    select 1 from cron.job
-     where jobname = 'court-leave-runs-out'
-       and schedule = '* * * * *'
-       and command like '%private.court_leave_sweep()%'
-  ) then
-    raise exception 'nothing switches a suspended account off again when its leave to answer runs out';
+  -- 8. The court room is closed (20261027120000_the_court_room_is_closed): no
+  --    job runs for it, and none of its tables or functions is left behind
+  --    for a screen that no longer exists to reach.
+  if exists (select 1 from cron.job where jobname = 'court-leave-runs-out') then
+    raise exception 'the court room''s leave sweep is still scheduled';
+  end if;
+  if exists (select 1 from pg_tables where schemaname = 'public'
+              and tablename in ('trials', 'trial_parties', 'trial_statements', 'court_record',
+                                'court_exhibits', 'court_leave', 'court_departed', 'court_presence'))
+     or exists (select 1 from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
+                 where ns.nspname in ('public', 'private')
+                   and (p.proname like 'court\_%' or p.proname in ('open_trial', 'in_trial', 'my_trials', 'join_trial'))) then
+    raise exception 'something of the court room is still in the database';
   end if;
 
   raise notice 'a fresh install holds every checked protection';

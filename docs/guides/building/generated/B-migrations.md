@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-151 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+157 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1305,3 +1305,51 @@ ASKED FOR (20 October 2026), in the owner's words: "The judge will be random pic
 Who is in the court room is kept only while the hearing is in session.
 
 WHY. 20261020200000 gave the hearing a live room: each open screen says "I am here" (court_here), and the case shows who was seen in the last minute and a bit. Each of those is one row per person per case: when they last had it open. A case is kept for good, so without this those rows would be kept for good too, long after the room they described had closed, and they are not evidence (reading the case is already on its record). The owner asked for the rules of data privacy to be respected: keep no more about a person than the purpose needs, for no longer than it needs.
+
+#### `20261021100000_the_court_room_door_by_email.sql`
+
+*2026-10-21*
+
+The court room's door can take a code sent by email, when a project chooses.
+
+WHY. 20261020160000 opened the court room to leadership only with a code from an authenticator app. On 21 October 2026 the owner could not get an authenticator app to work on their live project after three tries, so no Director could enter the court room and no judge could be drawn. They asked for email verification instead, and for a project built from this code to choose its own.
+
+#### `20261026120000_a_hub_is_kept_running_by_gifts.sql`
+
+*2026-10-26*
+
+A hub is kept running by its members' gifts.
+
+WHY. Each church runs its own copy of Hope Beacon, and the owner chose Supabase Pro as the standard: $25 a month plus 12% GST, about 1,710 pesos. Asked for on 26 October 2026: "There must be some kind of donation system to maintain the standard maintenance of the app ... Can we make a plan and system of it?" The owner's choices, asked before anything was built:
+
+#### `20261026180000_every_table_says_who_may_reach_it.sql`
+
+*2026-10-26*
+
+Every table says who may reach it, and nobody may empty one.
+
+WHY. On 30 October 2026 Supabase stops opening new tables to the data API by default (changelog: "Tables not exposed to Data and GraphQL API automatically"). Hope Beacon's tables were opened to signed-in people by that default and never by name, so on a project created after that date a fresh install would build every table closed, and the app would answer "permission denied" everywhere. Each church now runs its own project, so every new church would have met it. Asked for on 26 October 2026, after the week's security releases: "deep research and update our security".
+
+#### `20261026200000_giving_is_a_choice.sql`
+
+*2026-10-26*
+
+Giving is a choice each church makes, and it starts switched off.
+
+WHY. 20261026120000_a_hub_is_kept_running_by_gifts gave every copy of Hope Beacon a giving card the moment a Director set it up. The owner, the same day: "Donation features are only optional if developers want to put it on their own home brewed Hope Beacon." A church that pays for its hub another way, or that would rather not ask its members for money inside the app, should never see a Giving folder offered to it.
+
+#### `20261027120000_the_court_room_is_closed.sql`
+
+*2026-10-27*
+
+The court room is closed. Admin Reports is reports, and a conversation.
+
+ASKED FOR, 27 October 2026: "Admin reports will just be admin reports by now, not a court room. I think it will complicate more things if we do online court rooms in this application. It will be just faster if Admins can see reports, see the problems and reports and be transparent to both Guide and Explorer users by chatting them as Admins, no more trial online." And, asked which way: remove the court room from the app. "All legacy features will be archived in the foundation and Library for museum purposes only."
+
+#### `20261027130000_a_report_is_one_conversation.sql`
+
+*2026-10-27*
+
+A report is one conversation: the person who raised it, the Admins, and, once an Admin brings them in, the person it is about.
+
+ASKED FOR, 27 October 2026, with the court room closed (20261027120000): "It will be just faster if Admins can see reports, see the problems and reports and be transparent to both Guide and Explorer users by chatting them as Admins." Asked how: one shared chat per report, in which everyone sees every message, and nobody is the Admin on a report about themselves.

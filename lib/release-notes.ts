@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-27-admin-reports-is-a-conversation',
+    date: '2026-10-27',
+    title: 'Admin Reports is reports and a conversation, not a court room',
+    items: [
+      'The online court room is gone. Admin Reports lists reports, and each one has a conversation about it.',
+      'When a Director picks up a report, the person who raised it is told and can talk with them there. The church\u2019s other leaders who may handle it can read the conversation too, so nothing is said there between two people only.',
+      'Once a Director has read a report, they may bring the person it is about into the conversation so it can be talked through together. The person who raised it is told when they do, and that person never sees pictures or files attached to the report.',
+      'A report made before today stays private from the person it is about, as it was promised.',
+      'Directors find Suspend or remove in the Admin room, under Safeguarding.',
+    ],
+  },
+  {
     id: '2026-10-27-a-simpler-study-room',
     date: '2026-10-27',
     title: 'The Study Room is simpler, and the whiteboard says what you can do',
