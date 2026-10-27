@@ -18,6 +18,7 @@ import { LiveAppShell } from '@/components/LiveAppShell';
 import { LiveAdminReports } from '@/components/LiveAdminReports';
 import { useLiveSession } from '@/lib/live/session';
 import { useIsLive } from '@/lib/tutorial';
+import { useDemo } from '@/lib/demo/store';
 import { Card } from '@/components/ui';
 import type { Role } from '@/lib/types';
 
@@ -50,18 +51,23 @@ function Live() {
 
 /**
  * The tutorial has no reports of its own: a report is about a real person, and
- * the sample people have none. It says plainly what the room is for instead.
+ * the sample people have none. It says plainly what the room is for instead,
+ * in the words for whoever the sample person is: a Director picks reports up,
+ * a Guide or an Explorer raises them.
  */
 function Demo() {
+  const { currentUser } = useDemo();
+  const role = currentUser?.role;
+  const leads = role === 'admin' || role === 'executive';
   return (
     <div className="space-y-5">
-      <Heading />
+      <Heading role={role} />
       <Card className="p-6 text-center">
         <p className="text-lg font-bold text-navy">Nothing to show in the tutorial</p>
         <p className="mt-1 text-sm text-gray-500">
-          A report is about a real person, so there is none among the sample
-          people. On the live app, anything you report appears here, and you
-          can talk about it with the Director who picks it up.
+          {leads
+            ? 'A report is about a real person, so there is none among the sample people. On the live app, reports from your church appear here. You pick one up and talk it through with the person who raised it, and, once you have read it, you may bring in the person it is about.'
+            : 'A report is about a real person, so there is none among the sample people. On the live app, anything you report appears here, and you can talk about it with the Director who picks it up.'}
         </p>
       </Card>
     </div>
