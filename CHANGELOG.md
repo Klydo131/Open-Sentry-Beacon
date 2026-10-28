@@ -10,6 +10,66 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 28 October 2026: Simple has the whole Study Room, and Advanced has templates
+
+### If you run a copy, do this
+
+Nothing: no migration and no setting. Rebuild the site.
+
+### What changed
+
+- **Why:** the owner: "The advance should be same with the simple feature,
+  what I mean for advance feature is the little details where users can
+  customize in their liking like what other apps can do." Asked what that
+  should be, they chose office tools for teaching, the office, church and
+  staff, and named ten templates.
+- **Simple has every feature.** Until today Simple hid Starred, the Journal,
+  folders, tags, saved views, the star, File this page and Obsidian. They
+  are in both modes now. `placesFor()` is gone from
+  `components/study/StudyWorkspaceShell.tsx` (both modes use `PLACES`), and
+  the insert bar's unused `simple` prop is gone with it.
+- **Advanced adds Templates** (`components/study/StudyTemplates.tsx`): a
+  button on the shelf that opens ten cards in four groups, each with a line
+  on what the page is for. A card makes a new page with the template's name,
+  in the folder being viewed, and opens it.
+  - The templates are data, in `lib/study/templates.ts`: Lesson plan,
+    Attendance, Weekly plan; Meeting notes, Task board; Sermon notes, Bible
+    study, Prayer list; Volunteer schedule, Event plan.
+  - They are made of blocks the room already had: headings, lists, to-dos,
+    dividers and AFFiNE tables (`affine:table`, five of them across four
+    templates).
+  - `writeTemplate()` lays a template out outside the undo history.
+  - Nothing in any template identifies anybody.
+- **Proved:** `tests/e2e/the-study-room-has-templates.js`, new, 32
+  checks on a computer and a phone. It covers:
+  - no Templates in Simple;
+  - four groups and ten cards;
+  - every template opening with its name, a heading of its own and the right
+    number of tables;
+  - typing into a table cell;
+  - Undo leaving the template whole;
+  - the page not moving sideways on a phone (the table scrolls inside
+    itself);
+  - every page on the shelf afterwards, and no page errors.
+
+  `tests/e2e/the-study-room-starts-simple.js` now checks the new rule, 16
+  checks. With Templates shown in Simple on purpose, both walks went red. With
+  `withoutTransact` taken out of `writeTemplate()`, the Undo check stayed
+  green: the page's history only starts once the page is open, after the
+  template is written, so the check guards the outcome and not that line. All
+  16 walks that use the Study Room helper (`tests/e2e/_study.js`) pass.
+- **CI was red on `main` at `2caaf91`**, in one walk shard:
+  `the-bar-over-a-selection-is-on-top` read the bar over a selection on the
+  computer run while it held only Create Linked Doc and ⋮. The phone run on
+  the same runner had the full bar, and every local run has had it. AFFiNE
+  fills that bar in steps, and the walk read it after a fixed 800 ms. It now
+  waits up to 6 s for Bold. The check itself is unchanged: a bar that never
+  gets Bold still fails. Whether people on slow devices see the bar arrive in
+  two steps is unverified.
+- **Docs:** `docs/STUDY-ROOM.md` (Simple and Advanced, the places, and a new
+  Templates section), the FAQ, the Getting started page given to new rooms,
+  What's new.
+
 ## 28 October 2026: the whiteboard works like the ones people know, and a page's selection bar is seen
 
 ### If you run a copy, do this

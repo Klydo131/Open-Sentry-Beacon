@@ -1,5 +1,5 @@
-// The study room starts Simple, Advanced brings the rest back, and the writing
-// on a page can be read in every dark look.
+// The study room starts Simple, Simple has every feature, Advanced adds the
+// templates, and the writing on a page can be read in every dark look.
 //
 // Asked for on 7 October 2026: "the study room for Explorers have some UI bugs
 // specially for dark themes, the text are dark too. Also the study room is way
@@ -11,6 +11,14 @@
 // Explorer met, before writing a word, four places, three rows of filters, a
 // star on every page, Markdown in and out, a whiteboard switch, a folder box,
 // tags and ten insert buttons.
+//
+// THE RULE CHANGED on 28 October 2026: "The advance should be same with the
+// simple feature, what I mean for advance feature is the little details where
+// users can customize in their liking." Simple stopped hiding places, stars,
+// filing and Markdown, which were what people came to the room for; the extra
+// in Advanced is the Templates gallery (components/study/StudyTemplates.tsx).
+// The insert bar's four basics and More, which made a new page approachable,
+// are the same in both.
 //
 //   node tests/e2e/the-study-room-starts-simple.js [port]
 
@@ -45,33 +53,34 @@ const ratio = (a, b) => {
     await page.waitForTimeout(800);
     const places = page.getByRole('navigation', { name: 'Places in your study room' }).getByRole('button');
     ok(await page.locator('[data-study-mode="simple"]').isVisible(), 'a new Explorer finds the room Simple, and the switch to say so');
-    ok(JSON.stringify(await places.allInnerTexts()) === JSON.stringify(['All pages', 'Bin']),
-       `Simple shows the pages and the bin, nothing else (${(await places.allInnerTexts()).join(', ')})`);
-    ok(await page.getByRole('button', { name: /^Star / }).count() === 0, 'no star on every page');
-    ok(await page.getByText('Your pages, anywhere').count() === 0, 'no Markdown in and out');
+    ok(JSON.stringify(await places.allInnerTexts()) === JSON.stringify(['All pages', 'Starred', 'Journal', 'Bin']),
+       `Simple has all four places (${(await places.allInnerTexts()).join(', ')})`);
+    ok(await page.getByRole('button', { name: /^Star / }).count() > 0, 'a star on every page');
+    ok(await page.getByText('Your pages, anywhere').count() === 1, 'Markdown in and out');
+    ok(await page.locator('[data-templates]').count() === 0, 'and no Templates, which are Advanced');
     ok(await shelfRows(page).count() > 0, 'and the pages are all there');
 
     await openPage(page, 0);
     // FOUR AND MORE (27 October 2026): the same four basics on the bar, and
     // More for every other thing as a card. The whiteboard is for everybody
-    // now ("a 5 year old, a professional, and a 75 year old"); filing is
-    // still Advanced only.
+    // now ("a 5 year old, a professional, and a 75 year old"), and so is
+    // filing (28 October 2026).
     const tools = (await page.getByRole('toolbar', { name: 'Add to this page' }).getByRole('button').allInnerTexts())
       .map((t) => t.trim());
     const basics = tools.filter((t) => !/More/.test(t));
     ok(basics.length === 4 && tools.some((t) => /More/.test(t)),
        `a page in Simple has the four basics to add, and More (${tools.join(', ')})`);
     ok(await page.getByRole('group', { name: 'How to look at this page' }).isVisible()
-         && await page.locator('[data-filing]').count() === 0
-         && await page.getByLabel('Which folder this page is filed in').count() === 0,
-       'Write and Whiteboard for everybody, and no filing in Simple');
+         && await page.locator('[data-filing]').isVisible(),
+       'Write and Whiteboard, and File this page, in Simple too');
     await backToShelf(page);
 
-    // ADVANCED BRINGS IT ALL BACK, AND IS REMEMBERED.
+    // ADVANCED IS THE SAME ROOM WITH TEMPLATES, AND IS REMEMBERED.
     await page.locator('[data-study-mode] [data-mode="advanced"]').click();
     await page.waitForTimeout(400);
-    ok((await places.allInnerTexts()).length === 4, `Advanced has all four places (${(await places.allInnerTexts()).join(', ')})`);
+    ok((await places.allInnerTexts()).length === 4, `Advanced has the same four places (${(await places.allInnerTexts()).join(', ')})`);
     ok(await page.getByRole('button', { name: /^Star / }).count() > 0, 'and a star on every page');
+    ok(await page.locator('[data-templates]').isVisible(), 'and Templates');
     await page.reload({ waitUntil: 'networkidle' });
     await page.getByLabel('Search your pages').waitFor({ timeout: 60_000 });
     ok(await page.locator('[data-study-mode="advanced"]').isVisible(), 'and stays Advanced after the page is opened again');

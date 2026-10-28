@@ -30,7 +30,6 @@ import '@/components/study/study-shell.css';
 
 import { APP_NAME } from '@/lib/brand';
 import { Bookshelf, DeskLamp } from '@/components/study/StudyFurniture';
-import { useStudyMode } from '@/components/WritingMode';
 import type { ShelfView } from '@/components/study/StudyShelf';
 import {
   CalendarGlyph, ChevronLeftGlyph, DocGlyph, GridGlyph, PlusGlyph, StarGlyph, TrashGlyph,
@@ -50,15 +49,6 @@ export const PLACES: Array<{ id: ShelfView; label: string; Icon: typeof DocGlyph
   { id: 'journal', label: 'Journal', Icon: CalendarGlyph },
   { id: 'trash', label: 'Bin', Icon: TrashGlyph },
 ];
-
-/**
- * The places a Simple room shows (components/study/StudyModeSwitch.tsx): the
- * pages, and the bin, so a page moved there by mistake can always be put
- * back. Starred and the Journal are Advanced.
- */
-export function placesFor(simple: boolean) {
-  return simple ? PLACES.filter((p) => p.id === 'all' || p.id === 'trash') : PLACES;
-}
 
 export function StudyWorkspaceShell({
   view,
@@ -104,7 +94,6 @@ export function StudyWorkspaceShell({
   // the room turns it on whenever the look says it is dark, which every
   // look's file does with color-scheme, so a dark look added later is dark
   // here too without anybody remembering this file.
-  const places = placesFor(useStudyMode() === 'simple');
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const read = () => setDark(getComputedStyle(document.documentElement).colorScheme.includes('dark'));
@@ -191,7 +180,7 @@ export function StudyWorkspaceShell({
             <Bookshelf className="sr-shelf-art" />
             <p className="sr-side-title px-2 pb-3 text-[22px] font-bold tracking-tight">Study Room</p>
             <ul className="space-y-0.5">
-              {places.map(({ id, label, Icon }) => (
+              {PLACES.map(({ id, label, Icon }) => (
                 <li key={id}>
                   <button
                     type="button"

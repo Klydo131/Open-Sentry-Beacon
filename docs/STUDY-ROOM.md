@@ -27,11 +27,13 @@ anywhere in this room and there does not need to be.
 
 ## Simple and Advanced
 
-The room starts **Simple**: your pages, **+ New page**, search, and the **Bin**.
-On a page you get its name, **Write** and **Whiteboard**, and the bar for adding
-things: four basics, a heading, a list, a to-do and a quote, each with a
-picture and a word, and **More** for everything else. That is the same in
-Simple and Advanced, so nothing has to be found twice.
+The room starts **Simple**, and Simple has the whole room: all four places
+(**All pages**, **Starred**, the **Journal** and the **Bin**), folders, tags and
+saved views, the star on each page, **File this page**, and taking your pages to
+and from Obsidian. On a page you get its name, **Write** and **Whiteboard**, and
+the bar for adding things: four basics, a heading, a list, a to-do and a quote,
+each with a picture and a word, and **More** for everything else. That is the
+same in Simple and Advanced, so nothing has to be found twice.
 
 **Select some words** and a bar appears over them, as in Notion or Apple
 Notes: the kind of line (text, heading, list...), **Bold**, **Code**,
@@ -40,15 +42,15 @@ linked doc**, and **⋮** with **Copy**, **Duplicate** and **Delete**. Until 28
 October 2026 that bar opened underneath the insert bar on a page's first
 lines, where nobody could see it; see `CHANGELOG.md`.
 
-Tap **Advanced**, under the room's name, for the rest of the room: **Starred**
-and the **Journal**, folders, tags and saved views, the star on each page,
-**File this page**, and taking your pages to and from Obsidian. Tap **Simple**
-to put them away again.
+Tap **Advanced**, under the room's name, for the same room with
+**Templates**: a page already laid out, ready to fill in (see *Templates*,
+below). Tap **Simple** to put the gallery away again.
 
 The choice is remembered on that phone or computer. Switching never hides or
-changes anything you have written: a page you filed in a folder or tagged in
-Advanced keeps its folder and tags, they are only out of sight in Simple. The
-rest of this guide describes Advanced where it mentions those.
+changes anything you have written, and a page made from a template is an
+ordinary page in either mode. Until 28 October 2026 Simple hid Starred, the
+Journal, folders, tags, the star and Obsidian; they were what people came to
+the room for, so they are in both now (`CHANGELOG.md`).
 
 In **Focus** and **Dark Aero**, the looks with a dark page, the writing on a
 page is light. Until 7 October 2026 it stayed almost black, on almost black.
@@ -64,13 +66,13 @@ opens on books.
 written on it, and when you last wrote in it. Tap a row to open it.
 
 **The places** are along the top on a phone and down the side on a bigger
-screen. Simple shows the first and the last; Advanced shows all four:
+screen. There are four, in Simple and Advanced alike:
 
 | | |
 |---|---|
 | **All pages** | Everything you have, newest writing first |
-| **Starred** | The ones you tap the star on (Advanced) |
-| **Journal** | A page for each day (Advanced) |
+| **Starred** | The ones you tap the star on |
+| **Journal** | A page for each day |
 | **Bin** | Pages you have put away |
 
 **Search** looks at both the name and the words on the page, so you can find a
@@ -215,7 +217,7 @@ enforced by the database rather than by a setting anybody can change.
 ## Tags, and finding things later
 
 A page can carry tags: **Romans**, **Sabbath**, **Prayer meeting**, whatever you
-would look for it by. Tap **File this page** under the page's name (Advanced),
+would look for it by. Tap **File this page** under the page's name,
 then add them one at a time, pressing Enter or the comma key after each. The
 button says how the page is filed, for example *In Romans study · 2 tags*, so
 you can see it without opening it.
@@ -272,6 +274,32 @@ page of its own. Press **Today's page** and you are writing in today.
 
 It is meant for morning devotion, a sermon, a prayer that was answered: the
 things nobody names and everybody wants to find again.
+
+---
+
+## Templates
+
+In **Advanced**, the shelf has a **Templates** button under Simple and
+Advanced. It opens ten pages already laid out, in four groups:
+
+| Group | Templates |
+|---|---|
+| **Education** | Lesson plan, Attendance, Weekly plan |
+| **Office** | Meeting notes, Task board |
+| **Church** | Sermon notes, Bible study, Prayer list |
+| **Staff** | Volunteer schedule, Event plan |
+
+Tap one and a new page opens with its name and its headings, lists, boxes to
+tick and tables already in place, in the folder you are looking at. From then
+on it is an ordinary page: every line can be changed, moved or deleted, and
+Undo takes back what you write on it, never the template itself.
+
+On a phone, a table wider than the screen scrolls sideways inside itself; the
+page does not move.
+
+Nothing in a template is about anybody: the blanks are for you. The words are in
+`lib/study/templates.ts`, one list a person can read without reading code, and
+`tests/e2e/the-study-room-has-templates.js` opens every one of them.
 
 ---
 

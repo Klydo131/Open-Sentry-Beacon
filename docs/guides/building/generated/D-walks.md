@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-87 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+88 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -534,6 +534,14 @@ REPORTED, WITH FOUR SCREENSHOTS AND A LINK TO AFFiNE'S REPOSITORY: "Did you even
 
 The honest answer was no. The room registered nine of AFFiNE's blocks and left out roughly thirty, and every previous walk asserted that the nine worked -- so the suite was green and the room was a quarter of what had been asked for three times. A test that checks only what was built cannot tell anybody that something was not built.
 
+#### `the-study-room-has-templates.js`
+
+Advanced has templates: a new page already laid out, for school, office, church and staff.
+
+28 October 2026. Simple and Advanced became the same room ("The advance should be same with the simple feature"), and Advanced was given office tools "applicable for education sections and office and staff tools". The owner chose ten pages in four groups (lib/study/templates.ts), shown by components/study/StudyTemplates.tsx.
+
+Walked as a person would, on a computer and on a phone: Templates is not in Simple; in Advanced it opens on the four groups and ten cards; every card makes a page with the template's name, a heading of its own and the right number of tables; a table cell takes typing and Undo takes it back without taking the template apart; on a phone the page does not move sideways; and the shelf has every page afterwards.
+
 #### `the-study-room-on-every-size.js`
 
 The study room opens and can be written in, at every size somebody has.
@@ -552,7 +560,7 @@ It failed that way three times while being built -- once on a decorator, once on
 
 #### `the-study-room-starts-simple.js`
 
-The study room starts Simple, Advanced brings the rest back, and the writing on a page can be read in every dark look.
+The study room starts Simple, Simple has every feature, Advanced adds the templates, and the writing on a page can be read in every dark look.
 
 Asked for on 7 October 2026: "the study room for Explorers have some UI bugs specially for dark themes, the text are dark too. Also the study room is way complicated for a new user of the app, it must have simple UI and advance UI."
 

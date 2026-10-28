@@ -1316,7 +1316,7 @@ Simple or Advanced, in the Explorer's study room.
 
 ASKED FOR (7 October 2026): "the study room is way complicated for a new user of the app, it must have simple UI and advance UI."
 
-SIMPLE IS WHERE EVERYBODY STARTS: a list of pages, New page, search, and on a page its name, the writing and a short row of the basics. ADVANCED is the room as it was: Starred and the Journal, folders, tags, saved views, the whiteboard, the whole insert bar and Markdown in and out. Switching back to Simple hides those controls; it never hides or changes anything written.
+SIMPLE IS WHERE EVERYBODY STARTS. Until 28 October 2026 it hid Starred, the Journal, folders, tags, saved views, the star and Markdown in and out. Then: "The advance should be same with the simple feature, what I mean for advance feature is the little details where users can customize in their liking." So both modes have every feature, and ADVANCED adds the Templates gallery (components/study/StudyTemplates.tsx). Switching never hides or changes anything written.
 
 The room's own segmented control, so it looks like the rest of the room, and remembered on this device as the study-writing switch is (WritingMode.tsx).
 
@@ -1357,6 +1357,16 @@ ASKED FOR, IN THE SCREENSHOT OF AFFiNE'S "All docs": a tag on each row and a lis
 THE INPUT OFFERS WHAT THE ROOM ALREADY USES, which is the whole difference between a tag list and a pile of near-misses. Left to type it fresh, somebody writes "Romans", "romans" and "Romans 8" over three weeks and ends up with three tags that mean one thing. The datalist puts the room's own tags under the cursor, and `withTag` folds a difference in capitals into whichever spelling got there first.
 
 IT IS UNDER THE TITLE, NOT BEHIND A MENU. A tag added later is a tag never added: the moment somebody knows what a page is about is the moment they name it, and that is the moment the title is being typed.
+
+#### `components/study/StudyTemplates.tsx`
+
+Templates: a new page already laid out, chosen from a gallery on the shelf.
+
+ASKED FOR on 28 October 2026. Simple and Advanced became the same room, and Advanced was given "office tools that [are] applicable for education sections and office and staff tools". The pages themselves are data in lib/study/templates.ts; this is only the gallery that shows them.
+
+BEHIND ONE BUTTON, as filing is (StudyFiling.tsx). Ten cards above the list of pages would push somebody's own writing below the fold on a phone, so the gallery stays shut until asked for and shuts again once a template is used.
+
+A CARD SAYS WHAT THE PAGE IS FOR, not only its name: "Attendance" is clear to a teacher, and the line under it says what is on the page before anybody commits to making one.
 
 #### `components/study/StudyWorkspaceShell.tsx`
 
@@ -2331,6 +2341,14 @@ a tag -> `tags:` in YAML front matter, which Obsidian reads natively a folder ->
 #### `lib/study/shelf.ts`
 
 What the study room knows about each page beyond its writing: BlockSuite's DocMeta (title, tags, dates, favourite) plus a stored preview line and a trash date. They live in the workspace document, so they sync with it.
+
+#### `lib/study/templates.ts`
+
+Templates: a new page already laid out, for school, office, church and staff.
+
+ASKED FOR on 28 October 2026. Simple and Advanced were made the same room ("The advance should be same with the simple feature"), and Advanced was given what other apps offer people who plan and run things: "office tools that [are] applicable for education sections and office and staff tools". The owner chose all four groups below.
+
+WHY TEMPLATES. In every app teachers and offices actually use, the office tools are ready-made pages: Notion's teaching templates (lesson plans, attendance trackers, weekly agendas), meeting notes with attendees, agenda, decisions and action items as tasks, and, in church apps, sermon notes, prayer lists, Bible studies and volunteer rotas. The room already has the blocks they are made of (headings, to-dos, lists, quotes, tables), so a template is only those blocks, put in place: nothing new to learn, and every line can be changed or deleted like any other.
 
 #### `lib/study/vault-io.ts`
 

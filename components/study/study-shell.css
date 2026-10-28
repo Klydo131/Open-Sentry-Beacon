@@ -821,3 +821,35 @@
   color: #fff;
   font-weight: 700;
 }
+
+/* TEMPLATES (28 October 2026, components/study/StudyTemplates.tsx): the same
+ * quiet button and panel as filing, with a card for each page. One column on
+ * a phone, so a card's sentence is never squeezed to three words a line. */
+.sr-template-group + .sr-template-group { margin-top: 16px; }
+.sr-template-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+@media (min-width: 641px) {
+  .sr-template-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .sr-template-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.sr-template-card {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-align: left;
+  background: var(--sr-fill);
+  color: var(--sr-ink);
+}
+.sr-template-card:hover { background: var(--sr-fill-2); }
+.sr-template-card:focus-visible { outline: 2px solid var(--sr-tint); outline-offset: 2px; }
+.sr-template-title { display: block; font-size: 16px; font-weight: 700; }
+.sr-template-about { display: block; margin-top: 2px; font-size: 14px; line-height: 1.4; color: var(--sr-ink-2); }

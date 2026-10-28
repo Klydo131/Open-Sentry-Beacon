@@ -54,8 +54,17 @@ async function walk(browser, label, options) {
   await first.click();
   await page.keyboard.press('Home');
   for (let i = 0; i < 8; i++) await page.keyboard.press('Shift+ArrowRight');
-  await page.waitForTimeout(800);
-  const bar = await theBar(page);
+  // AFFiNE FILLS THE BAR IN STEPS. On CI's computer run at 2caaf91 it was read
+  // 800 ms after the selection holding only Create Linked Doc and ⋮, while the
+  // phone run on the same runner, and every local run, had the whole set. So
+  // the walk waits, up to 6 s, for Bold to arrive; a bar that never gets it
+  // still fails.
+  let bar = null;
+  for (let waited = 0; waited < 6000; waited += 250) {
+    await page.waitForTimeout(250);
+    bar = await theBar(page);
+    if (bar?.labels.includes('Bold')) break;
+  }
   ok(!!bar, `${label}: selecting a word opens AFFiNE’s bar over it`);
   ok(bar?.onTop, `${label}: and it is on top, not under the insert bar (on top at its middle: ${bar?.covering})`);
   ok(['Bold', 'Italic', 'Link', 'More menu'].every((l) => bar?.labels.includes(l)),

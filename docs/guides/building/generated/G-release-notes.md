@@ -1,6 +1,15 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 58 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 59 releases, as members read them in Settings, What's new.
+
+### Simple has the whole Study Room, and Advanced has templates
+
+*2026-10-28*
+
+- Simple now has everything the Study Room does: Starred, the Journal, folders, tags, saved views, the star on each page, File this page, and taking your pages to and from Obsidian.
+- Advanced adds Templates: ten pages already laid out, ready to fill in. For teaching, a lesson plan, attendance and a weekly plan. For the office, meeting notes and a task board. For church, sermon notes, a Bible study and a prayer list. For staff, a volunteer schedule and an event plan.
+- A page made from a template is an ordinary page: change, move or delete any line of it. Undo takes back what you write, never the template.
+- On a phone, a table wider than the screen scrolls sideways inside itself, and the page stays where it is.
 
 ### The whiteboard works like the ones you know
 

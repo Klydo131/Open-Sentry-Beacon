@@ -5,11 +5,13 @@
 // ASKED FOR (7 October 2026): "the study room is way complicated for a new user
 // of the app, it must have simple UI and advance UI."
 //
-// SIMPLE IS WHERE EVERYBODY STARTS: a list of pages, New page, search, and on a
-// page its name, the writing and a short row of the basics. ADVANCED is the
-// room as it was: Starred and the Journal, folders, tags, saved views, the
-// whiteboard, the whole insert bar and Markdown in and out. Switching back to
-// Simple hides those controls; it never hides or changes anything written.
+// SIMPLE IS WHERE EVERYBODY STARTS. Until 28 October 2026 it hid Starred, the
+// Journal, folders, tags, saved views, the star and Markdown in and out. Then:
+// "The advance should be same with the simple feature, what I mean for advance
+// feature is the little details where users can customize in their liking."
+// So both modes have every feature, and ADVANCED adds the Templates gallery
+// (components/study/StudyTemplates.tsx). Switching never hides or changes
+// anything written.
 //
 // The room's own segmented control, so it looks like the rest of the room, and
 // remembered on this device as the study-writing switch is (WritingMode.tsx).

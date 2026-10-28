@@ -432,7 +432,7 @@ export function faqSections(): FaqSection[] {
           id: 'study-room',
           q: 'What is the Study Room?',
           a: [
-            'A private space for everybody in the app to write and keep notes on what they are reading. Nobody else can read it. It opens in Simple mode, with pages, search and the Bin. Every page can be written on or turned into a whiteboard to draw on. Advanced mode adds the journal, folders and tags, and your writing is unchanged when you switch. It keeps a copy on your device, so it works with no signal, and signing out deletes that copy.',
+            'A private space for everybody in the app to write and keep notes on what they are reading. Nobody else can read it. It opens in Simple mode, which already has everything: your pages, Starred, the journal, the Bin, folders, tags and search. Every page can be written on or turned into a whiteboard to draw on. Advanced mode adds Templates, pages already laid out for a lesson plan, attendance, meeting notes, sermon notes, a prayer list, a volunteer schedule and more, and your writing is unchanged when you switch. It keeps a copy on your device, so it works with no signal, and signing out deletes that copy.',
             'On a page, the bar above the writing has Heading, List, To-do and Quote, and More for everything else, including a picture and today\u2019s date. On the whiteboard, the tools are along the bottom. Tap anything and a small bar appears over it: its colour, Lock, and three dots for the rest (bring to front, send to back, copy, duplicate, delete). Right-click it, or press and hold with a finger, for the same. Undo and Redo are in the board\u2019s top corner.',
           ],
         },

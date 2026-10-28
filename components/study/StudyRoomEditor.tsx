@@ -21,6 +21,7 @@ import type { BlobSource, DocSource } from '@blocksuite/sync';
 
 import { StudyWorkspace, type SaveState } from '@/lib/study/workspace';
 import { giveTheGuideOnce } from '@/lib/study/getting-started';
+import { TEMPLATES, writeTemplate } from '@/lib/study/templates';
 import { studyStoreManager } from '@/lib/study/extensions';
 import {
   cleanFolder, dayInWords, dayKey, foldersAcross, journalFor, nameForView,
@@ -45,7 +46,6 @@ import { StudyFiling } from '@/components/study/StudyFiling';
 import { StudyBoardTools } from '@/components/study/StudyBoardTools';
 import type { BoardApi } from '@/lib/study/board-actions';
 import { StudyWorkspaceShell } from '@/components/study/StudyWorkspaceShell';
-import { useStudyMode } from '@/components/WritingMode';
 import { Ribbon } from '@/components/study/StudyFurniture';
 
 /** How long after somebody stops typing the shelf is brought up to date. */
@@ -112,23 +112,12 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
   const [entries, setEntries] = useState<ShelfEntry[]>([]);
   const [openPage, setOpenPage] = useState('');
   const [view, setView] = useState<ShelfView>('all');
-  // SIMPLE OR ADVANCED (components/study/StudyModeSwitch.tsx).
-  const simple = useStudyMode() === 'simple';
   const [tag, setTag] = useState('');
   const [folder, setFolder] = useState('');
   const [collection, setCollection] = useState('');
   const [collections, setCollections] = useState<Collection[]>([]);
   // Page or whiteboard: two views of the same page.
   const [mode, setMode] = useState<'page' | 'edgeless'>('page');
-  // Back to Simple clears Advanced-only filters and views, so nothing stays
-  // hidden with no control to undo it.
-  useEffect(() => {
-    if (!simple) return;
-    setTag('');
-    setFolder('');
-    setCollection('');
-    setView((v) => (v === 'favourites' || v === 'journal' ? 'all' : v));
-  }, [simple]);
   // True while the editor chunk is loading, so the page says it is coming.
   const [drawing, setDrawing] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
@@ -711,6 +700,32 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     setOpenPage(id);
   }, []);
 
+  /**
+   * A new page from a template (lib/study/templates.ts), named after it and
+   * opened, in the folder being viewed, as New page does.
+   */
+  const addFromTemplate = useCallback((id: string) => {
+    const room = workspace.current;
+    const template = TEMPLATES.find((t) => t.id === id);
+    if (!room || !template) return;
+    try {
+      const made = room.createDoc();
+      made.load();
+      writeTemplate(made.getStore(), template);
+      room.meta.setDocMeta(made.id, {
+        title: template.title,
+        ...(folder ? { folder } : {}),
+      } as Partial<DocMeta>);
+      refresh();
+      titleFor.current = made.id;
+      setTitleDraft(template.title);
+      setMode('page');
+      setOpenPage(made.id);
+    } catch (cause) {
+      setHiccup(humanError(cause, 'That template could not be used.'));
+    }
+  }, [refresh, folder]);
+
   /** Today's journal page: found by its date if it exists, made if not. */
   const openToday = useCallback(() => {
     const room = workspace.current;
@@ -828,6 +843,7 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
             }}
             onOpen={open}
             onAdd={addPage}
+            onTemplate={addFromTemplate}
             onToday={openToday}
             onExportVault={exportVault}
             onImportVault={importVault}
@@ -916,8 +932,9 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
         </div>
 
         {/* Filing, behind one button that says what it is for
-            (components/study/StudyFiling.tsx). Advanced only, as before. */}
-        {!board && !simple && (
+            (components/study/StudyFiling.tsx). In Simple too since 28 October
+            2026: both modes have every feature. */}
+        {!board && (
           <StudyFiling
             folder={current?.folder ?? ''}
             knownFolders={knownFolders}
@@ -931,7 +948,7 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
         {/* The insert bar sits above the writing and sticks under the navigation bar
            (see .sr-formatbar). */}
         {/* A direct child of the column: a sticky element only sticks within its parent. */}
-        {!board && <StudyInsertBar onInsert={insert} onPicture={addPictures} simple={simple} />}
+        {!board && <StudyInsertBar onInsert={insert} onPicture={addPictures} />}
 
         {drawing && (
           <div className="grid place-items-center py-12">

@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-28-the-study-room-has-templates',
+    date: '2026-10-28',
+    title: 'Simple has the whole Study Room, and Advanced has templates',
+    items: [
+      'Simple now has everything the Study Room does: Starred, the Journal, folders, tags, saved views, the star on each page, File this page, and taking your pages to and from Obsidian.',
+      'Advanced adds Templates: ten pages already laid out, ready to fill in. For teaching, a lesson plan, attendance and a weekly plan. For the office, meeting notes and a task board. For church, sermon notes, a Bible study and a prayer list. For staff, a volunteer schedule and an event plan.',
+      'A page made from a template is an ordinary page: change, move or delete any line of it. Undo takes back what you write, never the template.',
+      'On a phone, a table wider than the screen scrolls sideways inside itself, and the page stays where it is.',
+    ],
+  },
+  {
     id: '2026-10-28-the-whiteboard-works-like-the-ones-you-know',
     date: '2026-10-28',
     title: 'The whiteboard works like the ones you know',

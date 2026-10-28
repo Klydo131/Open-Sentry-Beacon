@@ -64,12 +64,10 @@ const MORE: Card[] = [
   { kind: 'picture', label: 'Picture', hint: 'A picture from this phone or computer', example: 'A photo, a drawing, a page', picture: '🖼️' },
 ];
 
-export function StudyInsertBar({ onInsert, onPicture, simple = false }: {
+export function StudyInsertBar({ onInsert, onPicture }: {
   onInsert: (kind: InsertKind) => void;
   /** Pictures chosen with the Picture card, for the editor to put on the page. */
   onPicture?: (files: File[]) => void;
-  /** Simple or Advanced, from components/study/StudyModeSwitch.tsx. */
-  simple?: boolean;
 }) {
   const [more, setMore] = useState(false);
   const pictures = useRef<HTMLInputElement>(null);
@@ -85,7 +83,7 @@ export function StudyInsertBar({ onInsert, onPicture, simple = false }: {
   };
 
   return (
-    <div className="sr-formatbar mt-4" data-simple={simple ? 'true' : 'false'}>
+    <div className="sr-formatbar mt-4">
       <div role="toolbar" aria-label="Add to this page" className="sr-insert-row">
         {FOUR.map((card) => (
           <button

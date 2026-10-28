@@ -56,14 +56,14 @@ export const GUIDE_LINES: Line[] = [
   { kind: 'todo', words: 'Press / on a computer to open the menu of everything you can add' },
   { kind: 'todo', words: 'On a phone, use the row of buttons above the page instead' },
   { kind: 'todo', words: 'Select some words, and use the bar that appears to make them bold' },
-  // The three below are Advanced (components/study/StudyModeSwitch.tsx), and
-  // the room opens Simple, so the way to them comes first (7 October 2026).
-  { kind: 'todo', words: 'Tap Advanced, under Study Room on the list of pages, for the three below' },
-  { kind: 'todo', words: 'Add a tag under the page name, so you can find this again' },
+  // Simple has all of these since 28 October 2026; Advanced adds Templates
+  // (components/study/StudyModeSwitch.tsx).
+  { kind: 'todo', words: 'Tap File this page, under the page name, and add a tag so you can find this again' },
   { kind: 'todo', words: 'Open Journal, then Today’s page, and write one line about today' },
   { kind: 'todo', words: 'Press Whiteboard at the top of a page, to draw instead of type' },
   { kind: 'todo', words: 'Make a new page from All pages, and name it after what you are reading' },
-  { kind: 'todo', words: 'Put a page in a folder, by typing a name in the Folder box' },
+  { kind: 'todo', words: 'Put a page in a folder: File this page, then type a name under Folder' },
+  { kind: 'todo', words: 'Tap Advanced, then Templates, for a page already laid out, like a lesson plan or meeting notes' },
   { kind: 'todo', words: 'Narrow the shelf by a tag, then press Save this view to keep the question' },
   { kind: 'rule' },
 

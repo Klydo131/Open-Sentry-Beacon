@@ -25,7 +25,8 @@ import {
   CloseGlyph, DownloadGlyph, FolderGlyph, PlusGlyph, RestoreGlyph, SearchGlyph, StarGlyph,
   TagGlyph, TrashGlyph, UploadGlyph, CalendarGlyph, DocGlyph,
 } from '@/components/Glyph';
-import { PLACES, placesFor } from '@/components/study/StudyWorkspaceShell';
+import { PLACES } from '@/components/study/StudyWorkspaceShell';
+import { StudyTemplates } from '@/components/study/StudyTemplates';
 import { StudyModeSwitch } from '@/components/study/StudyModeSwitch';
 import { useStudyMode } from '@/components/WritingMode';
 import {
@@ -57,6 +58,7 @@ export function StudyShelf({
   onRestore,
   onDeleteForever,
   onAdd,
+  onTemplate,
   onToday,
   onExportVault,
   onImportVault,
@@ -87,6 +89,8 @@ export function StudyShelf({
   onRestore: (id: string) => void;
   onDeleteForever: (id: string) => void;
   onAdd: () => void;
+  /** A new page from a template (lib/study/templates.ts), by the template's id. */
+  onTemplate: (id: string) => void;
   /** Open today's journal page, making it if today has not been written in. */
   onToday: () => void;
   /** Hand the whole room over as an Obsidian vault. */
@@ -96,8 +100,9 @@ export function StudyShelf({
   /** What the vault is doing right now, said out loud, or empty when idle. */
   vaultBusy?: string;
 }) {
-  // SIMPLE OR ADVANCED (StudyModeSwitch). Simple shows the pages and the bin;
-  // the filters, the star and Markdown in and out are Advanced.
+  // SIMPLE OR ADVANCED (StudyModeSwitch). Since 28 October 2026 both have every
+  // feature: folders, tags, saved views, Starred, the Journal, the star and
+  // Markdown in and out. Advanced adds the templates (StudyTemplates).
   const simple = useStudyMode() === 'simple';
   const [query, setQuery] = useState('');
   const [confirming, setConfirming] = useState('');
@@ -192,6 +197,7 @@ export function StudyShelf({
       </div>
 
       <StudyModeSwitch className="mt-4" />
+      {!simple && view !== 'trash' && <StudyTemplates onUse={onTemplate} />}
 
       {walkthrough && (
         <p className="sr-note mt-4">
@@ -207,7 +213,7 @@ export function StudyShelf({
           the place and never a star or a bin on somebody's page. */}
       <nav aria-label="Places in your study room" className="mt-5 md:hidden">
         <div className="sr-seg">
-          {placesFor(simple).map(({ id, label }) => (
+          {PLACES.map(({ id, label }) => (
             <button
               key={id}
               type="button"
@@ -240,7 +246,7 @@ export function StudyShelf({
           All three are rows of capsules for the same reason, which is that a
           sidebar is somewhere a phone does not have. Each row scrolls sideways
           inside itself, out to the edge of a phone as Apple's do. */}
-      {!simple && view !== 'trash' && folders.length > 0 && (
+      {view !== 'trash' && folders.length > 0 && (
         <div
           role="group"
           aria-label="Folders in this room"
@@ -278,7 +284,7 @@ export function StudyShelf({
       {/* SAVED VIEWS. A collection is not a place and holds nothing: it is the
           question "everything tagged Romans that mentions grace", kept so
           nobody retypes it. Write a page tomorrow that matches and it is in. */}
-      {!simple && view !== 'trash' && (collections.length > 0 || tag || query.trim()) && (
+      {view !== 'trash' && (collections.length > 0 || tag || query.trim()) && (
         <div className="mt-2">
           <div
             role="group"
@@ -363,7 +369,7 @@ export function StudyShelf({
           down the side, which works on a laptop and is where the sidebar
           already is on a phone: nowhere. A row reads the same at 360px as at
           1440px, and there is only one of it to keep right. */}
-      {!simple && view !== 'trash' && tags.length > 0 && (
+      {view !== 'trash' && tags.length > 0 && (
         <div
           role="group"
           aria-label="Narrow these pages to one tag"
@@ -467,7 +473,7 @@ export function StudyShelf({
                         Outside the row's own button, because a button inside
                         a button is not a thing a browser will render, and a tag
                         nobody can press is decoration. */}
-                    {!simple && !entry.trashed && (entry.folder || entry.tags.length > 0) && (
+                    {!entry.trashed && (entry.folder || entry.tags.length > 0) && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {entry.folder && (
                           <button
@@ -547,20 +553,18 @@ export function StudyShelf({
                       irreversible step lives in the bin, behind a question. */}
                   {!entry.trashed && (
                     <div className="flex shrink-0 items-center">
-                      {!simple && (
-                        <button
-                          type="button"
-                          onClick={() => onToggleFavourite(entry.id)}
-                          aria-pressed={entry.favorite}
-                          aria-label={entry.favorite
-                            ? `Remove ${entry.title} from starred pages`
-                            : `Star ${entry.title}`}
-                          title={entry.favorite ? 'Starred' : 'Star this page'}
-                          className="sr-icon-btn tap-sm"
-                        >
-                          <StarGlyph size={21} filled={entry.favorite} />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => onToggleFavourite(entry.id)}
+                        aria-pressed={entry.favorite}
+                        aria-label={entry.favorite
+                          ? `Remove ${entry.title} from starred pages`
+                          : `Star ${entry.title}`}
+                        title={entry.favorite ? 'Starred' : 'Star this page'}
+                        className="sr-icon-btn tap-sm"
+                      >
+                        <StarGlyph size={21} filled={entry.favorite} />
+                      </button>
                       <button
                         type="button"
                         onClick={() => onTrash(entry.id)}
@@ -589,7 +593,7 @@ export function StudyShelf({
           and the moment to notice you can take a copy is while you are looking
           at the pages, not three menus away. Quiet, though: at the foot of the
           list as its own small group, not two more buttons beside New page. */}
-      {!simple && view !== 'trash' && (
+      {view !== 'trash' && (
         <section className="mt-9">
           <h2 className="sr-group-head">Your pages, anywhere</h2>
           <ul className="sr-group">

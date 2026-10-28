@@ -36,11 +36,11 @@ async function signInAsExplorer(page, BASE) {
  */
 /*
  * AND IN ADVANCED, UNLESS ASKED OTHERWISE. The room opens Simple for a new
- * Explorer (components/study/StudyModeSwitch.tsx, 7 October 2026), and the
- * walks that use this helper are about the full room: folders, the journal,
- * the whiteboard, the whole insert bar. They choose Advanced the way a person
- * would have it remembered, before the room loads; the-study-room-starts-
- * simple.js walks Simple itself.
+ * Explorer (components/study/StudyModeSwitch.tsx, 7 October 2026). Since 28
+ * October 2026 Simple has every feature and Advanced adds the templates, so
+ * Advanced is still the whole room; walks choose it the way a person would
+ * have it remembered, before the room loads. the-study-room-starts-simple.js
+ * walks Simple itself.
  */
 async function openStudyRoom(page, BASE, mode = 'advanced') {
   await page.evaluate((m) => { try { localStorage.setItem('beacon.study-mode', m); } catch { /* about:blank */ } }, mode).catch(() => {});
