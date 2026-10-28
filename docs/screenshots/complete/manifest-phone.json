@@ -540,7 +540,16 @@
   "group": "rooms"
  },
  {
-  "file": "screenshots/complete/phone-director-admin-6-analytics.jpg",
+  "file": "screenshots/complete/phone-director-admin-6-feedback.jpg",
+  "device": "phone",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "Feedback",
+  "caption": "Director · Admin · Feedback",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/phone-director-admin-7-analytics.jpg",
   "device": "phone",
   "role": "Director",
   "room": "Admin",
@@ -846,7 +855,16 @@
   "group": "rooms"
  },
  {
-  "file": "screenshots/complete/phone-executive-admin-6-analytics.jpg",
+  "file": "screenshots/complete/phone-executive-admin-6-feedback.jpg",
+  "device": "phone",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "Feedback",
+  "caption": "Executive Director · Admin · Feedback",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/phone-executive-admin-7-analytics.jpg",
   "device": "phone",
   "role": "Executive Director",
   "room": "Admin",

@@ -522,6 +522,35 @@ Guide, for a month or a quarter, with who needs somebody to look. Bible
 studies, lessons and follow-ups stay between each Guide and Explorer, so they
 are in each Guide's own report, not yours. Ask a Guide for theirs.
 
+### Feedback
+
+Everything members send with **Send feedback** arrives in **Admin, Feedback**,
+with what is waiting on you at the top.
+
+1. Press **Review and hand on**. The write-up starts as their own words: take
+   out names, phone numbers and anything private, and say what "done" looks
+   like if you can.
+2. Choose who takes it: **I'll fix it**, **A developer**, or **An AI tool**, and
+   press **Save**.
+3. Hand it on: **Copy the brief** to paste into an AI tool or a message, **Open
+   as a GitHub issue**, or **Download for AI tools** for everything still open.
+   Only your write-up leaves the church, never what they wrote, their name or
+   how to reach them.
+4. When it is fixed, **Mark done** with the version, or **Won't do** with a word
+   saying why.
+
+The person who sent it sees **Received**, **Being looked at**, **Done** or **Not
+this time** under their own feedback button, never your write-up. The whole
+journey is in `docs/FEEDBACK.md`.
+
+### Your church's legal details
+
+The Terms of Use and the Privacy Notice name your church and the person who
+answers privacy questions. Fill them in once, in **Settings, Church, Legal
+details**: the church's legal name, its registered address, and its Data
+Protection Officer's name and email. Until all four are there, both documents
+say plainly that the church has not filled them in yet.
+
 ---
 
 ## Part 5 — The guided walk

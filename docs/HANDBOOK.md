@@ -1570,6 +1570,20 @@ That raises the standard in four ways: consent has to be **express** rather than
 - **Sabbath programs and evangelistic meetings now have an account copy**, in `office_plans`, on a database that has had migration `20261002150000`. Each row is one program or series and is readable and writable only by the account that made it: four owner-only rules, nothing for a signed-out visitor, and nothing for leadership. It holds what the device holds, including **Team only** blocks and platform notes, because it is the owner's own copy. A deletion keeps a row with its content emptied, so another device does not bring the program back. Limits keep the database from being anybody's free storage: each plan up to 200 KB, and per account up to 200 plans, 1000 rows and 10 MB in all (migration `20261003120000`, which also lets only an approved member keep one). A real 31-night series is about 55 KB. The app keeps a plan over 150 KB on the device rather than sending it. Deleting the account deletes them.
 - **A calendar file holds what is shared only**, never a Team only block or a platform note, and is made on the device. **Google Calendar** is the one button here that sends anything to another company: tapping it opens Google Calendar with the night's name, time, place and what is shared filled in, which reaches Google as it would if typed there. The privacy notice says so.
 
+### Terms of Use, and what was agreed, 28 October 2026
+
+- **There are Terms of Use** at **/terms**, beside the Privacy Notice, in plain words for a church in the Philippines. Both are drafts for somebody qualified to check, not legal advice.
+- **Joining asks two separate things.** One box agrees to the Terms of Use and the Privacy Notice, each a tap away; the other is the permission to keep sensitive information, which the Data Privacy Act wants asked on its own. Both start unticked, and joining waits for both.
+- **What was agreed is recorded**: the version of each document and when, by the database's clock. Only the person can record their own agreement.
+- **A changed document is asked about again.** Raise a version in `lib/legal.ts` and every member is told what changed and asked once before the app opens. Members already in are asked once after migration `20261028120000` is applied.
+- **The church is named by its Director**, in **Settings, Church, Legal details**: its legal name, registered address and Data Protection Officer. Anybody can read those before joining; nothing else about the church.
+
+### Feedback leaves the church only as a write-up, 28 October 2026
+
+- What members send is read only by the church's Directors and Executive Director, as before.
+- Anything handed on to a developer, a GitHub issue or an AI tool is a reviewer's write-up, built without the member's words, name or contact, and scrubbed of email addresses and phone numbers. Nothing is handed on before somebody has written it up.
+- The member sees the status of what they sent, never the write-up. `docs/FEEDBACK.md` has the whole journey.
+
 ### Asking for a copy of your own information
 
 Anybody signed in can download everything the app holds about them, from **Profile → A copy of your information**. No reason is needed and nobody has to approve it. The file is JSON, which is the form both laws ask for so it can be carried somewhere else.

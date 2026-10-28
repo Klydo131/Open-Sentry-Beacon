@@ -116,6 +116,22 @@ church, and when the church prays for it **your name is never shown**.
 No. My Files and the Music room are kept on the device you are holding and are
 never uploaded. A new phone starts with them empty.
 
+### What am I agreeing to when I join?
+
+Two things, each with its own box. The **Terms of Use** and the **Privacy
+Notice** say what you and your church can expect of each other and what is kept
+about you; both are a tap away from the box. The second box is your permission
+for the church to keep information the law counts as sensitive. Both start
+empty, and if either document changes the app tells you what changed and asks
+you again.
+
+### What happens to my feedback?
+
+Your church's Directors read it. If it needs fixing, one of them writes it up in
+their own words, without your name or how to reach you, and hands that to
+whoever fixes it: themselves, a developer, or an AI tool. Under **Send
+feedback** you can see what became of it: Received, Being looked at, or Done.
+
 ### Who can read my Study Room?
 
 Nobody but you: not your Guide, not a Director, not the person who set up the

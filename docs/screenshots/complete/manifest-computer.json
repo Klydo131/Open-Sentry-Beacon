@@ -513,7 +513,16 @@
   "group": "rooms"
  },
  {
-  "file": "screenshots/complete/computer-director-admin-6-analytics.jpg",
+  "file": "screenshots/complete/computer-director-admin-6-feedback.jpg",
+  "device": "computer",
+  "role": "Director",
+  "room": "Admin",
+  "folder": "Feedback",
+  "caption": "Director · Admin · Feedback",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-director-admin-7-analytics.jpg",
   "device": "computer",
   "role": "Director",
   "room": "Admin",
@@ -810,7 +819,16 @@
   "group": "rooms"
  },
  {
-  "file": "screenshots/complete/computer-executive-admin-6-analytics.jpg",
+  "file": "screenshots/complete/computer-executive-admin-6-feedback.jpg",
+  "device": "computer",
+  "role": "Executive Director",
+  "room": "Admin",
+  "folder": "Feedback",
+  "caption": "Executive Director · Admin · Feedback",
+  "group": "rooms"
+ },
+ {
+  "file": "screenshots/complete/computer-executive-admin-7-analytics.jpg",
   "device": "computer",
   "role": "Executive Director",
   "room": "Admin",
