@@ -713,65 +713,36 @@
 .sr-shelf-art--phone { width: 132px; height: auto; margin: 2px 0 10px -2px; }
 @media (min-width: 768px) { .sr-shelf-art--phone { display: none; } }
 
-/* THE WHITEBOARD'S OWN BAR AND MENU (components/study/StudyBoardTools.tsx).
+/* THE WHITEBOARD (components/study/StudyBoardTools.tsx), since 28 October 2026.
  *
- * A picture with a word under it, 44px and up, in one place at the top of the
- * board: the tools when nothing is selected, what can be done to the selected
- * thing when something is. Asked for on 27 October 2026 so "a 5 year old, a
- * professional, and a 75 year old" can find delete, colour and the rest
- * without discovering a right-click. On a phone the row wraps instead of
- * scrolling sideways, so nothing hides off the edge. */
-.sr-board-bar {
+ * Its tools are AFFiNE's own bar along the bottom, and a selected thing gets
+ * AFFiNE's own bar floating over it, with ⋯ for the rest: the way Miro, FigJam,
+ * Freeform and Obsidian Canvas work. The room adds Undo and Redo in the
+ * corner, for phones with no Ctrl+Z, and a short menu on empty board. */
+.sr-board-history {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
+  top: 10px;
+  left: 10px;
   z-index: 20;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  pointer-events: none;
-}
-.sr-board-row,
-.sr-board-colours {
-  pointer-events: auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   gap: 2px;
-  max-width: 100%;
-  padding: 4px;
-  border-radius: 14px;
+  padding: 3px;
+  border-radius: 12px;
   background: var(--sr-surface);
-  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 4px 14px rgba(16, 24, 40, 0.12);
+  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 2px 8px rgba(16, 24, 40, 0.1);
 }
-.sr-board-btn {
+.sr-board-icon {
   display: inline-flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 56px;
-  min-height: 52px;
-  padding: 4px 6px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 9px;
   color: var(--sr-ink);
   background: transparent;
 }
-.sr-board-btn:hover:not(:disabled) { background: var(--sr-fill-2); }
-.sr-board-btn[aria-pressed='true'] { background: var(--sr-tint-soft); box-shadow: inset 0 0 0 1.5px var(--sr-tint); }
-.sr-board-btn:disabled { opacity: 0.45; }
-.sr-board-btn--danger { color: var(--sr-danger); }
-.sr-board-pic { font-size: 20px; line-height: 1.1; }
-.sr-board-word { font-size: 13px; font-weight: 600; line-height: 1.2; white-space: nowrap; }
-.sr-board-what { padding-inline: 8px 4px; font-size: 15px; font-weight: 700; color: var(--sr-ink); }
-.sr-board-gap { flex: 0 0 10px; }
-.sr-board-swatch {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 2px rgba(16, 24, 40, 0.18);
-}
+.sr-board-icon:hover:not(:disabled) { background: var(--sr-fill-2); }
+.sr-board-icon:disabled { opacity: 0.35; }
 .sr-board-menu {
   position: absolute;
   z-index: 30;
@@ -779,55 +750,27 @@
   flex-direction: column;
   width: 228px;
   padding: 6px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--sr-surface);
   box-shadow: 0 0 0 0.5px var(--sr-sep), 0 10px 30px rgba(16, 24, 40, 0.22);
 }
-.sr-board-menu .sr-board-colours { box-shadow: none; padding: 2px 4px 6px; }
-.sr-board-menu-title { padding: 6px 10px 4px; font-size: 13px; font-weight: 700; color: var(--sr-ink-2); }
 .sr-board-item {
   display: flex;
   align-items: center;
-  gap: 10px;
   min-height: 44px;
-  padding-inline: 10px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
+  padding-inline: 12px;
+  border-radius: 8px;
+  font-size: 15px;
   text-align: start;
   color: var(--sr-ink);
 }
 .sr-board-item:hover:not(:disabled) { background: var(--sr-fill-2); }
 .sr-board-item:disabled { opacity: 0.45; }
-.sr-board-said {
-  position: absolute;
-  left: 50%;
-  bottom: 96px;
-  z-index: 30;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: calc(100% - 24px);
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: #1a2233;
-  color: #fff;
-  font-size: 15px;
-  box-shadow: 0 6px 20px rgba(16, 24, 40, 0.25);
-}
-/* ONE BAR ON THE BOARD IN SIMPLE. AFFiNE's own bar along the bottom repeats
-   most of the room's tools as pictures with no words, and on a phone it runs
-   into the zoom control; two bars for the same tools is the "bombarded with so
-   many options" that was reported. Advanced keeps it, for frames, mind maps
-   and the rest. On a narrow board in Advanced the zoom control steps aside
-   instead: two fingers zoom, and Show all fits everything. */
-[data-board-simple] edgeless-toolbar-widget { display: none !important; }
+/* On a phone AFFiNE's zoom control runs into its tool bar, so it steps aside:
+   two fingers zoom, and Show everything is on a long press of empty board. */
 @media (max-width: 640px) {
-  [data-board-frame]:not([data-board-simple]) affine-edgeless-zoom-toolbar-widget { display: none !important; }
+  [data-board-frame] affine-edgeless-zoom-toolbar-widget { display: none !important; }
 }
-
-.sr-board-undo { padding-inline: 12px; border-radius: 999px; background: #fff; color: #1a2233; font-weight: 700; }
 
 /* FILING, BEHIND ONE BUTTON THAT SAYS WHAT IT IS FOR (27 October 2026,
  * components/study/StudyFiling.tsx). The two unexplained boxes under the title

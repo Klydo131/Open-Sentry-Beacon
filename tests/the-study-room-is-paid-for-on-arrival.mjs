@@ -245,8 +245,14 @@ const ROOM = 'components/study/StudyRoom.tsx';
 
   // BOTH WAYS OF LOOKING AT A PAGE. The whiteboard is a scope, not a second
   // editor, and the room now asks for whichever one somebody chose.
-  ok(/\.get\(mode\)/.test(editor) && /'page' \| 'edgeless'/.test(editor),
+  // Since 28 October 2026 the view is asked for through studyViewExtensions,
+  // which also tells AFFiNE which mode it is in: without that, its bar for a
+  // selected thing on the whiteboard (the one with ⋯) never opened.
+  ok(/studyViewExtensions\(mode\)/.test(editor) && /'page' \| 'edgeless'/.test(editor)
+     && /\.get\(mode\)/.test(views),
      'a page can be looked at as a page or as a whiteboard');
+  ok(/DocModeExtension\(fixedMode\(mode\)\)/.test(views) && /getEditorMode: \(\) => mode/.test(views),
+     'and AFFiNE is told which of the two it is showing');
 }
 
 // ---------------------------------------------------------------------------

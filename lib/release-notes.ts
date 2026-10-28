@@ -18,6 +18,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-28-the-whiteboard-works-like-the-ones-you-know',
+    date: '2026-10-28',
+    title: 'The whiteboard works like the ones you know',
+    items: [
+      'Tap a shape, a sticky note or a drawing and a small bar appears right over it, with its colour, Lock and three dots. The three dots open everything else: bring to front or send to back, copy, duplicate, put it in a frame or a group, and delete.',
+      'Right-click anything, or press and hold it with a finger, to open the same menu straight away.',
+      'The tools are along the bottom of the board, as on other whiteboard apps. The big bar of pictures and words at the top is gone.',
+      'Undo and Redo are two buttons in the board\u2019s top corner, for phones and tablets with no keyboard.',
+      'The card with your page\u2019s writing is locked on the board, so it cannot be moved or deleted by accident. Change the writing on Write.',
+      'Pressing Undo many times on a new page no longer takes the page itself apart.',
+    ],
+  },
+  {
     id: '2026-10-27-admin-reports-is-a-conversation',
     date: '2026-10-27',
     title: 'Admin Reports is reports and a conversation, not a court room',

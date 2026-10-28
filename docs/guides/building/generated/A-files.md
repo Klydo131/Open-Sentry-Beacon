@@ -1276,11 +1276,13 @@ LET THE DESIGN SPEAK (15 October 2026). The owner: "The basic settings are just 
 
 #### `components/study/StudyBoardTools.tsx`
 
-The whiteboard's own bar and menu, in words.
+What the room adds to a whiteboard: Undo and Redo, and a menu on a right-click or a long press.
 
-REPORTED on 27 October 2026: "if I right click on it there are no option for me to delete objects, options to modify, or edit it", and the room has to work for "a 5 year old, a professional, and a 75 year old" without them having to discover anything. AFFiNE's canvas has neither a menu nor (here) a bar for a selected thing; its tools at the bottom are pictures with no words.
+28 OCTOBER 2026, from a photograph of the bar this file used to draw across the top of the board, circled: "This is not the solution for replacing the '3 dots'... I want the 3 dots to be back once I click an object." And: "I really want the study room to be familiar with note taking pad like Notion, Obsidian, Notes."
 
-SO ONE BAR, ALWAYS IN THE SAME PLACE, at the top of the board: * nothing selected: the tools, each with a word under its picture, and Undo, Redo and Show everything; * something selected: what it is, and what can be done to it, spelled out: Write on it, Colour, Copy, To front, To back, Delete, Done. The same choices open on a right-click, and on a long press for a finger. A delete says so and offers Undo, for six seconds.
+So the board works the way those apps and every whiteboard people know do (Miro, FigJam, Apple Freeform, Obsidian Canvas): the tools along the bottom, and a small bar floating over whatever is selected, with ⋯ for everything else. Both are AFFiNE's own (lib/study/board-actions.ts says why they were missing before). What is left for the room is in this file:
+
+* UNDO AND REDO, two buttons in the board's corner, as Freeform and tldraw have them, because a phone or a tablet has no Ctrl+Z; * A RIGHT-CLICK, OR A LONG PRESS WITH A FINGER, on a thing selects it and opens AFFiNE's own ⋯ menu for it: one set of choices, wherever you ask; * on EMPTY BOARD, a short menu for the board: Undo, Redo, Select everything, Show everything.
 
 #### `components/study/StudyFiling.tsx`
 
@@ -2248,11 +2250,11 @@ THE KEY IS THE CONTENT'S OWN CHECKSUM -- BlockSuite hashes the bytes before it e
 
 #### `lib/study/board-actions.ts`
 
-What a person can do to the things on a whiteboard, in words.
+The few things the room itself does on a whiteboard; AFFiNE does the rest.
 
-REPORTED on 27 October 2026, with a photograph of a selected triangle and nothing around it: "if I right click on it there are no option for me to delete objects, options to modify, or edit it." AFFiNE's own bar for a selected thing (`affine-toolbar-widget`) is in the room but never draws anything here, and its canvas has no right-click menu at all, so the only ways to delete were the Delete key and the eraser, and nothing said either.
+WHAT AFFiNE DOES. Tap or click something on the board and AFFiNE's own bar for it floats above it: colour, style, Lock, and ⋯ More, with Frame and Group, Bring to Front / Forward, Send Backward / to Back, Copy, Duplicate and Delete. Its tools are the bar along the bottom. That is the pattern of every whiteboard people already know (Miro, FigJam, Apple Freeform, Obsidian Canvas), and since 28 October 2026 it draws here; before that the room never told AFFiNE it was a whiteboard (lib/study/view-extensions.ts), so the bar stayed shut and the room drew a bar of its own in words.
 
-So the room draws its own, from this file (components/study/StudyBoardTools.tsx): a bar along the top of the board that says what is selected and what can be done to it, and the same choices on a right-click or a long press. Every action here is AFFiNE's own (its delete, its duplicate, its ordering, its palette, its text editors); this file only gives them names a person can read.
+WHAT THE ROOM DOES, from this file and components/study/StudyBoardTools.tsx: * Undo and Redo as two buttons, because a phone has no Ctrl+Z; * a right-click, or a long press with a finger, on a thing opens that same ⋯ menu; on empty board, a short menu for the board itself; * the card with the page's own writing is LOCKED on the board. AFFiNE's Delete would take the page's writing with it (tried on 28 October 2026: the page came back empty), and a locked thing is what every one of those whiteboards offers for "this must not move or go": it cannot be moved or deleted until somebody chooses Unlock. The writing is changed on Write.
 
 #### `lib/study/doc-source.ts`
 

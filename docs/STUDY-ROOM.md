@@ -275,37 +275,41 @@ which: **Write** is the document, **Whiteboard** is the same page on an infinite
 canvas. It is one page, not two: there is nothing to copy across. The
 whiteboard is there in Simple too.
 
-**The bar at the top of the board** has the tools, each a picture and a word:
-**Select**, **Pen**, **Shape**, **Sticky note**, **Words**, **Arrow** and
-**Eraser**, then **Undo**, **Redo** and **Show all** (fit everything into view).
+**The board works the way Miro, FigJam, Apple Freeform and Obsidian Canvas do**
+(since 28 October 2026):
 
-**Tap something on the board** and the same bar changes to say what it is
-("This shape:") and what you can do to it:
+- **The tools are along the bottom**: select, frame, arrow, link, notes, pen,
+  eraser, shapes, mind maps and templates. On a phone the bar scrolls with
+  **‹** and **›**.
+- **Tap or click anything** and a small bar floats over it: its colour or
+  style, **Lock**, and **⋮** for everything else:
 
-| | |
-|---|---|
-| **Write on it** | Put words in a shape, a sticky note or a line of words |
-| **Colour** | Six colours: yellow, orange, red, green, blue, purple |
-| **Copy** | A copy next to it, selected, ready to drag |
-| **To front**, **To back** | Which one is on top when they overlap |
-| **Delete** | Takes it off the board; **Undo** appears for a few seconds |
-| **Done** | Back to the tools |
+  | In ⋮ | |
+  |---|---|
+  | **Frame section**, **Group section** | Put it, or what is selected, in a frame or a group |
+  | **Bring to Front**, **Bring Forward**, **Send Backward**, **Send to Back** | Which one is on top when they overlap |
+  | **Copy**, **Duplicate** | Copy it to paste elsewhere, or make a copy beside it |
+  | **Create linked doc** | Turn it into a page of its own, linked from the board |
+  | **Delete** | Take it off the board; **Undo** brings it back |
 
-**Right-click** (or **press and hold** with a finger) on anything for the same
-choices, or on an empty part of the board for **Undo**, **Redo**, **Select
-everything** and **Show everything**.
+- **Right-click** anything (or **press and hold** with a finger, then lift) to
+  open the same ⋮ menu at once. On an empty part of the board the same gesture
+  gives **Undo**, **Redo**, **Select everything** and **Show everything**.
+- **Undo** and **Redo** are two buttons in the board's top-left corner, for
+  phones and tablets; on a keyboard, Ctrl+Z and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on a
+  Mac) work on pages and boards alike.
+- **Lock** keeps a thing from being moved or deleted until somebody chooses
+  **Click to unlock** on it.
 
-The card with your page's writing is on the board too. It cannot be deleted
-from here, so nothing written on the Write side is lost by tidying the board.
+The card with your page's writing is on the board too, and the room **locks**
+it there, so tidying the board never takes the writing with it. Change the
+writing on **Write**. (AFFiNE's own Delete would remove the page's writing with
+the card; tried on 28 October 2026.)
 
-**Undo** works everywhere in the room: Ctrl+Z (Cmd+Z on a Mac) on a page or a
-board, or **Undo** on the board's bar. Until 27 October 2026 it did nothing in
-the Study Room; see `CHANGELOG.md`.
-
-**In Advanced**, AFFiNE's full set of tools is also in a bar at the bottom of
-the board: shape styles, pen colours, mind maps, frames and templates. Simple
-shows only the room's own bar, so the same tools are never offered twice, once
-with words and once without. Both are for the
+Simple and Advanced show the same board. From 27 to 28 October 2026 the room
+drew a bar of its own across the top of the board, in pictures and words, in
+place of AFFiNE's bar for a selected thing, which never opened here; the room
+had not told AFFiNE it was a whiteboard. See `CHANGELOG.md`. The board is for
 things a column of text is bad at: how a passage is built, who is related to
 whom, a plan for a study on a wall. On a phone or tablet a finger on the board
 draws; it no longer scrolls the room behind it.

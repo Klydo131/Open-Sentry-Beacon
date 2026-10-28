@@ -10,6 +10,65 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 28 October 2026: the whiteboard works like the ones people know
+
+### If you run a copy, do this
+
+Nothing: no migration and no setting. Rebuild the site.
+
+### What changed
+
+- **Why:** the owner circled the room's own bar across the top of the board
+  ("This is not the solution for replacing the '3 dots'") and asked for the
+  ⋯ back on a selected thing, as in every whiteboard, and for the Study Room
+  to feel like Notion, Obsidian and Notes.
+- **The cause of the missing ⋯:** AFFiNE's bar for a selected thing
+  (`affine-toolbar-widget`) asks the doc mode service whether the editor is a
+  page or a whiteboard. AFFiNE's default answers "no mode", which it reads as
+  "page", so on every selection the bar reset itself and stayed shut. The
+  room drew its own bar instead of finding that.
+  `lib/study/view-extensions.ts` now gives each editor a doc mode service that
+  says its real mode (`studyViewExtensions(mode)`), as AFFiNE's app does.
+- **The board now:**
+  - AFFiNE's tools along the bottom, in Simple too;
+  - AFFiNE's bar over a selected thing, with colour, Lock and ⋮: Frame,
+    Group, Bring to Front / Forward, Send Backward / to Back, Copy,
+    Duplicate, Create linked doc, Delete;
+  - from the room (`components/study/StudyBoardTools.tsx`): Undo and Redo
+    in the top-left corner, for touch screens; a right-click or a long press
+    on a thing opens AFFiNE's ⋮ menu; on empty board, Undo, Redo, Select
+    everything and Show everything.
+  - The room's own bar of pictures and words is gone, and with it the room's
+    colour, copy, ordering and delete code in `lib/study/board-actions.ts`.
+- **The page's writing is locked on the board.** AFFiNE's Delete removes the
+  page's writing with its card (tried: the page came back empty). The room
+  locks that card when the board opens, outside the undo history, so it
+  cannot be moved or deleted until somebody chooses Unlock.
+- **Fixed on the way: Undo could take a new page apart.** The undo history
+  (started 27 October) was running when a new page's skeleton was made, so
+  pressing Undo enough times removed the page's writing, its canvas and its
+  root ("Cannot read properties of undefined (reading 'children')"). The
+  skeleton, and the canvas added to older pages, are now made outside the
+  history.
+- **A long press opens its menu when the finger lifts**, not at 600 ms:
+  opened while the finger was down, the lift reached AFFiNE as a tap and shut
+  the menu.
+- **Proved:** `tests/e2e/the-whiteboard-says-what-you-can-do.js`, rewritten,
+  24 checks. It covers, at desktop and phone size:
+  - the bar floating at the shape and the ⋮ choices;
+  - Duplicate, Delete and Undo;
+  - right-click and long press;
+  - Lock;
+  - the locked page writing, and Undo all the way back.
+
+  Each of the three fixes was undone on purpose and its check went red:
+  - without the doc mode service, no bar;
+  - without the lock, an unlocked card;
+  - without the history-free skeleton, the page's writing gone and the
+    'children' error.
+
+  Every other Study Room walk passes (12).
+
 ## 27 October 2026: a photo is checked on the server too, and remade in Rust
 
 ### If you run a copy, do this

@@ -554,9 +554,11 @@ WHAT WAS WRONG, MEASURED. Under Focus and Aero dark the writing on an open page 
 
 #### `the-whiteboard-says-what-you-can-do.js`
 
-The whiteboard says what you can do, and right-click and a long press do it.
+The whiteboard works like every whiteboard: tools along the bottom, and a selected thing gets a bar with ⋯ for everything else.
 
-Reported on 27 October 2026, with a photograph of a selected triangle and nothing around it: "if I right click on it there are no option for me to delete objects, options to modify, or edit it", and it must work for "a 5 year old, a professional, and a 75 year old" without discovering anything. AFFiNE's own bar for a selected thing never drew here and its canvas has no menu; the room's own bar and menu (components/study/StudyBoardTools.tsx) do the work, with AFFiNE's own actions (lib/study/board-actions.ts).
+27 October 2026: "if I right click on it there are no option for me to delete objects, options to modify, or edit it." The room answered with a bar of its own across the top of the board, in pictures and words.
+
+28 October 2026, with a photograph of that bar circled: "This is not the solution for replacing the '3 dots'... I want the 3 dots to be back once I click an object", and the room should feel like Notion, Obsidian and Notes. AFFiNE has that bar (affine-toolbar-widget); it never opened here because the room never told AFFiNE it was a whiteboard (lib/study/view-extensions.ts). Now it does, and the room's own bar is gone. What the room still adds is components/study/StudyBoardTools.tsx: Undo and Redo, the right-click and long-press menu, and the lock on the card with the page's own writing.
 
 #### `the-words-can-be-read-in-every-look.js`
 

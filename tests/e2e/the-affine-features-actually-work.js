@@ -191,10 +191,10 @@ const onTheSurface = (page) => page.evaluate(() => {
     const box = await page.locator('.affine-edgeless-viewport').first().boundingBox();
     ok(!!box, 'the board has a size to draw on');
 
-    // Empty board to click before each key, below the room's own bar
-    // (components/study/StudyBoardTools.tsx), which sits over the canvas's
+    // Empty board to click before each key, below the room's Undo and Redo
+    // (components/study/StudyBoardTools.tsx), which sit over the canvas's
     // top-left corner and would otherwise take the click.
-    const bar = await page.locator('.sr-board-bar .sr-board-row').first().boundingBox();
+    const bar = await page.getByRole('toolbar', { name: 'Undo and redo' }).boundingBox().catch(() => null);
     const clearY = bar ? bar.y + bar.height + 40 : box.y + 60;
 
     const drag = async (key, x1, y1, x2, y2) => {

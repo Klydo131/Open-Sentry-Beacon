@@ -23,6 +23,9 @@
 
 import { ViewExtensionManager } from '@blocksuite/affine/ext-loader';
 import { getInternalViewExtensions } from '@blocksuite/affine/extensions/view';
+import type { DocMode } from '@blocksuite/affine/model';
+import { DocModeExtension, type DocModeProvider } from '@blocksuite/affine/shared/services';
+import type { ExtensionType } from '@blocksuite/affine/store';
 import { ParagraphViewExtension } from '@blocksuite/affine-block-paragraph/view';
 
 /**
@@ -52,4 +55,34 @@ export function studyViewManager() {
   });
 
   return manager;
+}
+
+/**
+ * WHICH MODE THE EDITOR IS IN, said to AFFiNE. Its own bar for a selected
+ * thing on the whiteboard (`affine-toolbar-widget`: the colours, the text
+ * style and the ⋯ menu with Duplicate, Lock, Arrange and Delete) asks the doc
+ * mode service whether the editor is a page or a whiteboard, and AFFiNE's
+ * default service answers "no mode", which it reads as "page". So, from the
+ * first whiteboard here until 28 October 2026, selecting a shape made the bar
+ * reset itself and stay closed, and the room drew a bar of its own in its
+ * place. Saying the real mode is all AFFiNE's app does to make it open.
+ */
+function fixedMode(mode: DocMode): DocModeProvider {
+  return {
+    getEditorMode: () => mode,
+    setEditorMode: () => {},
+    // A page's PRIMARY mode is about other pages (how a linked page's card is
+    // drawn); every page here opens as writing, as AFFiNE's default says.
+    getPrimaryMode: () => 'page',
+    setPrimaryMode: () => {},
+    togglePrimaryMode: () => 'page',
+    // Nothing here ever changes mode while the editor is open: a page and a
+    // whiteboard are separate editors (StudyRoomEditor builds a new one).
+    onPrimaryModeChange: () => ({ unsubscribe() {} }) as unknown as ReturnType<DocModeProvider['onPrimaryModeChange']>,
+  };
+}
+
+/** Everything a page or a whiteboard is drawn with, for that mode. */
+export function studyViewExtensions(mode: DocMode): ExtensionType[] {
+  return [...studyViewManager().get(mode), DocModeExtension(fixedMode(mode))];
 }

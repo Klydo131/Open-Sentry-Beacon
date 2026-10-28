@@ -145,8 +145,10 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
   });
-  // THE WHITEBOARD'S OWN BAR AND MENU (components/study/StudyBoardTools.tsx),
-  // given the board's actions once a page is turned into a whiteboard.
+  // WHAT THE ROOM ADDS TO A WHITEBOARD (components/study/StudyBoardTools.tsx):
+  // Undo, Redo and the right-click menu, given the board's actions once a page
+  // is turned into a whiteboard. Its tools and the bar over a selected thing
+  // are AFFiNE's own.
   const [boardApi, setBoardApi] = useState<BoardApi | null>(null);
   const boardFrame = useRef<HTMLDivElement | null>(null);
   // THE NAME IS KEPT AS IT IS TYPED, not only when the box loses focus: a name
@@ -288,7 +290,7 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     (async () => {
     try {
       // The editor is fetched here, when somebody opens a page.
-      const [, { studyViewManager }] = await Promise.all([
+      const [, { studyViewExtensions }] = await Promise.all([
         import('@/lib/study/effects'),
         import('@/lib/study/view-extensions'),
       ]);
@@ -335,11 +337,19 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
           ]);
           if (cancelled) return;
         }
+        // A NEW PAGE'S SKELETON IS NOT SOMETHING ANYBODY DID, so it is made
+        // outside the undo history. Made inside it (as from 27 October 2026,
+        // when the history was started above), enough presses of Undo on a new
+        // page took the page itself apart: its writing, its canvas and its
+        // root, and the board threw "reading 'children'". Found 28 October
+        // 2026 by tests/e2e/the-whiteboard-says-what-you-can-do.js.
         if (!store.root && answered()) {
-          const rootId = store.addBlock('affine:page', {});
-          store.addBlock('affine:surface', {}, rootId);
-          const noteId = store.addBlock('affine:note', {}, rootId);
-          store.addBlock('affine:paragraph', {}, noteId);
+          store.withoutTransact(() => {
+            const rootId = store.addBlock('affine:page', {});
+            store.addBlock('affine:surface', {}, rootId);
+            const noteId = store.addBlock('affine:note', {}, rootId);
+            store.addBlock('affine:paragraph', {}, noteId);
+          });
         }
       }
 
@@ -350,12 +360,13 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       }
       setPageMissing(false);
 
-      // Older pages have no canvas; add one so the whiteboard view works.
+      // Older pages have no canvas; add one so the whiteboard view works, and,
+      // like a new page's skeleton, not as a step Undo would take back.
       if (store.getBlocksByFlavour('affine:surface').length === 0) {
-        try { store.addBlock('affine:surface', {}, store.root.id); } catch { /* read-only */ }
+        try { store.withoutTransact(() => { store.addBlock('affine:surface', {}, store.root!.id); }); } catch { /* read-only */ }
       }
 
-      const std = new BlockStdScope({ store, extensions: studyViewManager().get(mode) });
+      const std = new BlockStdScope({ store, extensions: studyViewExtensions(mode) });
       editing.current = { std, store };
       render(std.render(), host.current);
       setDrawing(false);
@@ -931,14 +942,13 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
             </button>
           </div>
         )}
-        {/* The board's frame holds the canvas and the room's own bar and menu
-            over it (components/study/StudyBoardTools.tsx); for a page it is
-            `contents`, so the page lays out exactly as before. */}
+        {/* The board's frame holds the canvas and the room's Undo, Redo and
+            menu over it (components/study/StudyBoardTools.tsx); for a page it
+            is `contents`, so the page lays out exactly as before. */}
         <div
           ref={boardFrame}
           className={board ? 'relative mt-3 flex min-h-[360px] flex-1 flex-col' : 'contents'}
           data-board-frame={board ? '' : undefined}
-          data-board-simple={board && simple ? '' : undefined}
         >
           <div
             ref={host}
