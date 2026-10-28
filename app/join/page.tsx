@@ -9,7 +9,7 @@ import { Button, Card } from '@/components/ui';
 import type { Invite, Role } from '@/lib/types';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { IS_LIVE } from '@/lib/mode';
-import { LiveJoinPage } from '@/components/LiveCorePages';
+import { LiveJoinPage } from '@/components/live/DoorPages';
 
 // Where each role lands after completing the demo sign-up.
 const DEMO_HOME: Record<Role, string> = {

@@ -17,7 +17,7 @@ import { prayerAuthor, type MaterialType } from '@/lib/types';
 import { ReportDialog } from '@/components/ReportDialog';
 import { seekerPriorities, meetingWhen } from '@/lib/engagement';
 import { useIsLive } from '@/lib/tutorial';
-import { LiveExplorerPage } from '@/components/LiveCorePages';
+import { LiveExplorerPage } from '@/components/live/ExplorerPage';
 import { BlogFeed } from '@/components/Blog';
 
 const MATERIAL_ICON: Record<string, string> = {

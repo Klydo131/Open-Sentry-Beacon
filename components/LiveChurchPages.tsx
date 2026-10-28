@@ -375,7 +375,7 @@ export function LiveMailPage() {
         <div className={`rounded-2xl p-4 ring-1 ${
           handLink.wait ? 'bg-blue-50 ring-blue-300' : 'bg-amber-50 ring-amber-300'
         }`}>
-          {/* A cooldown is not a fault. See LiveCorePages for the reasoning. */}
+          {/* A cooldown is not a fault. See components/live/AdminPage.tsx for the reasoning. */}
           <p className={`font-bold ${handLink.wait ? 'text-blue-900' : 'text-amber-900'}`}>
             {handLink.wait
               ? `Nearly there. Wait ${handLink.wait} seconds, then press Re-send once`

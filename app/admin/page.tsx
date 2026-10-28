@@ -15,7 +15,7 @@ import { roleLabel, STAGES, stageInfo, canKick } from '@/lib/brand';
 import type { MaterialType, Role, Track } from '@/lib/types';
 import { relTime } from '@/lib/activity';
 import { useIsLive } from '@/lib/tutorial';
-import { LiveAdminPage } from '@/components/LiveCorePages';
+import { LiveAdminPage } from '@/components/live/AdminPage';
 
 export default function Admin() {
   if (useIsLive()) return <LiveAdminPage />;

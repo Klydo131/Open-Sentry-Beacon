@@ -13,7 +13,7 @@ import type { Role } from '@/lib/types';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { useIsLive } from '@/lib/tutorial';
 import { scrollMotion } from '@/lib/motion';
-import { LiveHomePage } from '@/components/LiveCorePages';
+import { LiveHomePage } from '@/components/live/DoorPages';
 
 // The front door, in the order a person actually needs it.
 //

@@ -1650,7 +1650,7 @@ Written down because a church that cannot hand this to somebody else owns a liab
 | Everything that talks to the database | `lib/live/data.ts` |
 | The rules that keep the promises | `supabase/migrations/` |
 
-All of those live screens were one file of three thousand lines called `LiveCorePages.tsx` until they were split by screen. That file still exists and re-exports them, so nothing that imported it had to change; new code should import from the file that holds the screen.
+All of those live screens were one file of three thousand lines called `LiveCorePages.tsx` until they were split by screen. For a while that file re-exported them; it was removed on 28 October 2026, because importing the sign-in form through it made the sign-in page download every signed-in screen with it. Import a screen from the file that holds it.
 
 > **NOTE** · Two checks went quiet during that split, and that is the lesson
 >

@@ -22,7 +22,7 @@ import { Meetings } from '@/components/Meetings';
 import { useIsLive } from '@/lib/tutorial';
 import { ReportDialog } from '@/components/ReportDialog';
 import { prayerAuthor } from '@/lib/types';
-import { LiveConversationPage } from '@/components/LiveCorePages';
+import { LiveConversationPage } from '@/components/live/GuidePages';
 
 type TabKey = 'appointments' | 'journey' | 'care' | 'resources';
 

@@ -16,7 +16,7 @@ import {
 } from '@/lib/engagement';
 import { useIsLive } from '@/lib/tutorial';
 import { prayerAuthor } from '@/lib/types';
-import { LiveGuidePage } from '@/components/LiveCorePages';
+import { LiveGuidePage } from '@/components/live/GuidePages';
 
 // A missionary's dashboard: what needs doing today, how the flock is spread
 // across the journey, and then the seekers themselves — ordered by who needs

@@ -7,7 +7,7 @@ import { NAVY, APP_SHORT_NAME } from '@/lib/brand';
 import { Button, Card } from '@/components/ui';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { useIsLive } from '@/lib/tutorial';
-import { LiveSignupPage } from '@/components/LiveCorePages';
+import { LiveSignupPage } from '@/components/live/DoorPages';
 
 // Sign-up — for people who have an invitation but not a working email link.
 //

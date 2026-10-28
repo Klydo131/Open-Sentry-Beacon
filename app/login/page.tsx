@@ -9,7 +9,7 @@ import { Avatar, Button, Card } from '@/components/ui';
 import type { Role } from '@/lib/types';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { useIsLive } from '@/lib/tutorial';
-import { LiveLoginPage } from '@/components/LiveCorePages';
+import { LiveLoginPage } from '@/components/live/DoorPages';
 
 // Typed against Role on purpose: when a role is added or retired, TypeScript
 // points here instead of the app silently calling router.replace(undefined),
