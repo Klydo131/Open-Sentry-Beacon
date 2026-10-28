@@ -1,5 +1,6 @@
 'use client';
 
+import { PRIVACY_VERSION, TERMS_VERSION, type ChurchLegalInput } from '@/lib/legal';
 import {
   createContext,
   useCallback,
@@ -209,6 +210,10 @@ export interface Ctx {
   startSeries: (pairingId: string, seriesId: string) => void;
 
   setChurchName: (name: string) => void;
+  /** The church's legal name and Data Protection Officer, as the documents name them. */
+  setChurchLegal: (legal: ChurchLegalInput) => void;
+  /** The signed-in person agrees to the Terms of Use and Privacy Notice now in force (lib/legal.ts). */
+  agreeToCurrentTerms: () => void;
   scheduleMeeting: (
     pairingId: string,
     m: { title: string; when: string; mode: Meeting['mode']; location?: string },
@@ -1582,6 +1587,33 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const setChurchLegal = useCallback((legal: ChurchLegalInput) => {
+    persistUpdate((prev) => ({
+      ...prev,
+      church_legal: {
+        legal_name: legal.legal_name.trim(),
+        legal_address: legal.legal_address.trim(),
+        dpo_name: legal.dpo_name.trim(),
+        dpo_email: legal.dpo_email.trim(),
+      },
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The same record the live database keeps: the versions, and when.
+  const agreeToCurrentTerms = useCallback(() => {
+    if (!userId) return;
+    persistUpdate((prev) => ({
+      ...prev,
+      profiles: prev.profiles.map((p) =>
+        p.id === userId
+          ? { ...p, terms_version: TERMS_VERSION, privacy_version: PRIVACY_VERSION, terms_agreed_at: nowIso() }
+          : p,
+      ),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
   // An Explorer's prayer request goes to their Guide, and if shared, to the wall without a name.
   const addPrayerRequest = useCallback(
     (body: string, shareWithBoard: boolean) => {
@@ -2150,6 +2182,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         city_of_residence?: string;
         work_industry?: string;
         consent_at?: string;
+        terms_version?: string;
+        privacy_version?: string;
       },
     ): string | null => {
       const invite = db.invites.find((i) => i.token === token);
@@ -2173,6 +2207,10 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             preferred_language: 'en',
             // The moment consent was given is recorded.
             consent_at: profile.consent_at,
+            // And what was agreed to, and when (lib/legal.ts).
+            terms_version: profile.terms_version,
+            privacy_version: profile.privacy_version,
+            terms_agreed_at: profile.terms_version ? nowIso() : undefined,
             is_approved: true,
             created_at: nowIso(),
           },
@@ -2287,6 +2325,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     assignLesson,
     completeLesson,
     setChurchName,
+    setChurchLegal,
+    agreeToCurrentTerms,
     scheduleMeeting,
     cancelMeeting,
     markMessagesRead,

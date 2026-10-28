@@ -42,6 +42,7 @@ export const READ_FUNCTIONS = new Set([
   'church_activity',
   'church_invitations',
   'church_meeting_summary',
+  'church_privacy_contact',
   'church_pulse',
   'discipline_check',
   'discipline_history',

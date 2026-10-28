@@ -197,6 +197,18 @@ These are properties of the running system, not intentions:
   sign in.
 - **Consent is recorded** with a timestamp, and separately for a minor's
   guardian.
+- **Agreement to the Terms of Use and the Privacy Notice is recorded apart from
+  that consent** (28 October 2026,
+  `20261028120000_what_was_agreed_is_recorded`): the version of each document
+  a person agreed to, and when, by the database's clock. Only the person can
+  record their own agreement. The box starts unticked, both documents are a
+  tap away from it, and a changed document is asked about again before the app
+  opens (`lib/legal.ts`; `supabase/tests/what-was-agreed-is-recorded.sql`).
+- **The notice names who is responsible.** The church's legal name, registered
+  address and Data Protection Officer are its own record, filled in by its
+  Director, and readable before sign-in so a person can see them before
+  joining. Until they are filled in, the notice says so rather than leaving a
+  blank.
 - **Photographs are stripped of location** before they are stored: in a
   conversation, a profile picture, a resource and a study handout. A phone
   writes GPS coordinates into a picture; re-encoding drops them. Every JPEG is
@@ -251,7 +263,7 @@ Ordered by how much it matters, not by how hard it is. "Your church" means whoev
 
 | # | Gap | What it needs | Who |
 |---|---|---|---|
-| 1 | **A privacy notice.** Until it is published, nothing tells a member what is collected, why, who sees it, how long it is kept, or how to complain. RA 10173 §16(a) and GDPR Art. 13 both require it before collection. | `/privacy` now exists as a draft in the app. Fill in its blanks: who the controller is, the DPO's name and contact, the retention periods, the hosting region. | Your church, then a lawyer |
+| 1 | **A privacy notice.** Until it is published, nothing tells a member what is collected, why, who sees it, how long it is kept, or how to complain. RA 10173 §16(a) and GDPR Art. 13 both require it before collection. | `/privacy` exists as a draft in the app, beside Terms of Use at `/terms`; members agree to both, and the version and time are recorded. Who the controller is (legal name and registered address) and the DPO's name and email are a church setting its Director fills in (Settings → Church → Legal details); the hosting region and the 30-day periods are written in. | Your church, then a lawyer |
 | 2 | **A member's copy of their own data.** Built in: *A copy of your information* on the Profile screen produces a JSON file with the profile, the conversation, prayer requests, meetings, posts, library shares, notifications and every change to their own details. | Nothing. See below for what it deliberately leaves out. | Built in |
 | 3 | **A named Data Protection Officer.** Expected where sensitive personal information is processed. | A person, an email address, and the NPC filing if the church passes 1,000 members. | Your church |
 | 4 | **A rehearsed breach procedure.** RA 10173 and Circular 16-03 require notification to the NPC and to affected people **within 72 hours** of knowing. Section VII of [`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md) is the procedure; the team's names are the church's to fill in. | Fill in the team; rehearse once. | Your church |

@@ -115,7 +115,15 @@ const readDb = (page) => page.evaluate(() => {
   // failed to notice". This suite kept filling only the name and then waited
   // for a button that could never become enabled, which Playwright reports as a
   // 30-second timeout rather than as the missing step it is.
-  const consent = page.locator('input[type="checkbox"]').first();
+  //
+  // And since 28 October 2026 a second box beside it, agreeing to the Terms of
+  // Use and the Privacy Notice (components/AgreementBox.tsx), which comes
+  // first; "the first checkbox" then ticked that one and left the permission
+  // empty. Each is ticked by name now.
+  const terms = page.locator('[data-agreement-box]').first();
+  ok(await terms.count() > 0, 'the join page asks for agreement to the Terms of Use and Privacy Notice');
+  await terms.check();
+  const consent = page.locator('input[type="checkbox"]:not([data-agreement-box])').first();
   if (await consent.count()) { await consent.check().catch(() => {}); await page.waitForTimeout(300); }
 
   const finish = page.getByRole('button', { name: /join|finish|create|continue|sign up/i }).last();

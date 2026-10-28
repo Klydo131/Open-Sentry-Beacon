@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 189 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 191 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -167,6 +167,24 @@ It worked on a desktop, which is exactly how it survived review, and the demo se
 Beacon's own notification sound, and every alert making a sound. Runs the real code: the sound, page/worker tag parity, notification options, when it plays, and the service worker's push handler in a sandbox. Browser half: tests/e2e/beacon-has-its-own-sound.js.
 
 node tests/beacon-has-its-own-sound.mjs
+
+#### the door is light
+
+`tests/the-door-is-light.mjs`
+
+The pages somebody sees before signing in download only what they need.
+
+FOUND 28 OCTOBER 2026, asked to "check if there are any bloated systems and codes". The sign-in page cost 432 kB of JavaScript (compressed, Next's own "First Load JS") for a form with two boxes: it carried the Director's whole Admin screen, both Guide screens and the Explorer's screen. They came in through components/LiveCorePages.tsx, a file kept to re-export every live screen after they were split up. It began with 'use client', and the build does not trim the exports of such a file, so importing the sign-in form from it imported everything it named. Each page now imports its screen from the file that holds it, the re-exporting file is gone, and the sign-in page is 305 kB.
+
+#### the terms are agreed and recorded
+
+`tests/terms-are-agreed-and-recorded.mjs`
+
+The Terms of Use and the Privacy Notice are agreed to properly, and recorded.
+
+28 October 2026, asked for: "update our UI for agreeing on 'Terms' and 'Privacy Policy'. I want all of those to be handled professionally so that we won't face any legalities in the future." lib/legal.ts says what "professionally" means here, point by point; this keeps each point true in the source:
+
+* the rules in lib/legal.ts answer as they say they do; * the box starts unticked, links both documents, and every form's button waits for it; * it is a box of its own, beside the permission to keep sensitive information, never folded into it; * what is recorded is the versions, and the browser never writes when; * a raised version stops everybody at the door, on both halves of the app; * the documents say their version, promise nothing the app does not do, and name no real person.
 
 #### a study can be corrected
 

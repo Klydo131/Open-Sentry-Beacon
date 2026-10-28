@@ -36,7 +36,16 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   ok(await email.count() > 0, 'the email is read-only');
   ok((await email.inputValue()).includes('ruth.bautista'), 'it shows the invited address');
 
-  const box = page.locator('input[type=checkbox]').first();
+  // TWO BOXES SINCE 28 OCTOBER 2026: the Terms of Use and Privacy Notice, and,
+  // separately, the permission to keep sensitive information (lib/legal.ts).
+  const terms = page.locator('[data-agreement-box]').first();
+  const box = page.locator('input[type=checkbox]:not([data-agreement-box])').first();
+  ok(await terms.count() > 0 && (await terms.isChecked()) === false,
+    'there is a box agreeing to the Terms of Use and Privacy Notice, NOT ticked by default');
+  ok(await page.locator('[data-agreement-terms]').getAttribute('href') === '/terms'
+     && await page.locator('[data-agreement-privacy]').getAttribute('href') === '/privacy'
+     && await page.locator('[data-agreement-terms]').getAttribute('target') === '_blank',
+    'both documents are links beside it, opening in a new tab so the form keeps what was typed');
   ok(await box.count() > 0, 'there is a permission checkbox');
   ok((await box.isChecked()) === false, 'it is NOT ticked by default');
   ok(await page.getByText(/Grace SDA Church/).count() > 0, 'the consent names the church');
@@ -62,7 +71,10 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   ok(await join.isDisabled(), 'cannot join without ticking permission');
   await box.check();
   await page.waitForTimeout(400);
-  ok(!(await join.isDisabled()), 'ticking permission enables joining');
+  ok(await join.isDisabled(), 'nor with the permission alone, without agreeing to the terms');
+  await terms.check();
+  await page.waitForTimeout(400);
+  ok(!(await join.isDisabled()), 'ticking both enables joining');
 
   // Eight boxes is what a form looks like when nobody decided which matter.
   ok(await page.getByText(/Birthday/).count() === 0, 'optional questions are hidden by default');

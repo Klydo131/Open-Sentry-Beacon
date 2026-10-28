@@ -23,6 +23,7 @@ import { useUrlKey } from '@/lib/url-signal';
 import { TabBar } from '@/components/TabBar';
 import { BackButton } from '@/components/BackButton';
 import { ConsentStep } from '@/components/live/ConsentStep';
+import { agreedToEarlier, canRecordAgreement, hasAgreedToCurrent } from '@/lib/legal';
 import { TwoStepGate } from '@/components/live/TwoStep';
 import { usePhrases } from '@/lib/i18n';
 import { FRAME_WORDS } from '@/lib/words/frame';
@@ -150,7 +151,13 @@ export function LiveAppShell({
   // place consent was asked for; on the live church 42 of 43 accounts had none
   // on record. Before the approval screen too, because waiting to be approved
   // is already being kept in the app. See components/live/ConsentStep.tsx.
-  if (!profile.consent_at) return <ConsentStep />;
+  // AND AGREEMENT TO THE TERMS OF USE AND PRIVACY NOTICE NOW IN FORCE (28
+  // October 2026, lib/legal.ts): asked of everybody once, and again whenever
+  // either changes; only once the database can record the answer.
+  const needsTerms = canRecordAgreement(profile) && !hasAgreedToCurrent(profile);
+  if (!profile.consent_at || needsTerms) {
+    return <ConsentStep needsConsent={!profile.consent_at} needsTerms={needsTerms} agreedBefore={agreedToEarlier(profile)} />;
+  }
 
   if (!profile.is_approved) {
     return (

@@ -50,6 +50,19 @@ const profile = {
   created_at: new Date().toISOString(),
 };
 
+// What the profile says about the Terms of Use and the Privacy Notice
+// (lib/legal.ts), so the agreement step can be seen:
+//   FAKE_AGREED unset   the database has no such columns yet, as before
+//                       20261028120000_what_was_agreed_is_recorded: nobody
+//                       is asked, because the answer could not be saved
+//   FAKE_AGREED=none    the columns exist and nothing is agreed yet
+//   FAKE_AGREED=older   an agreement to an earlier version: asked again
+if (process.env.FAKE_AGREED === 'none') {
+  Object.assign(profile, { terms_version: null, privacy_version: null, terms_agreed_at: null });
+} else if (process.env.FAKE_AGREED === 'older') {
+  Object.assign(profile, { terms_version: '2026-01-01', privacy_version: '2026-01-01', terms_agreed_at: '2026-01-01T00:00:00Z' });
+}
+
 // One row-set per table the live screens read. Keyed by the first path segment
 // after /rest/v1/, which is all PostgREST needs here.
 const TABLES = {
@@ -120,6 +133,22 @@ const handler = (req, res) => {
       return send(res, 200, [{ id: ME, email: 'director@example.test', joined_at: profile.created_at }]);
     }
     return send(res, 200, []);
+  }
+
+  // Your own profile, updated: kept, so a screen that saves and reads back
+  // sees what it saved. The time of an agreement is stamped here, as the
+  // database's trigger does.
+  if (req.method === 'PATCH' && path === '/rest/v1/profiles') {
+    let body = '';
+    req.on('data', (chunk) => (body += chunk));
+    req.on('end', () => {
+      let patch = {};
+      try { patch = JSON.parse(body || '{}'); } catch { /* not JSON: change nothing */ }
+      Object.assign(profile, patch);
+      if ('terms_version' in patch || 'privacy_version' in patch) profile.terms_agreed_at = new Date().toISOString();
+      send(res, 204, {});
+    });
+    return;
   }
 
   if (path.startsWith('/rest/v1/')) {

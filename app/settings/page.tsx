@@ -1,5 +1,6 @@
 'use client';
 
+import { ChurchLegalForm } from '@/components/ChurchLegal';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
@@ -95,6 +96,22 @@ function ChurchNameCard() {
         </Button>
       </div>
       {saved && <p className="mt-2 font-semibold text-green-600">✓ Saved</p>}
+    </Card>
+  );
+}
+
+// What the Terms of Use and Privacy Notice name (components/ChurchLegal.tsx).
+function ChurchLegalCard() {
+  const { db, setChurchLegal } = useDemo();
+  return (
+    <Card className="p-5">
+      <h2 className="mb-1 text-xl font-bold text-navy">⚖️ Legal details</h2>
+      <p className="mb-4 text-sm text-gray-500">
+        The Terms of Use and the Privacy Notice name your church and its Data Protection
+        Officer, as the Data Privacy Act expects. Anybody invited can read them before
+        joining.
+      </p>
+      <ChurchLegalForm initial={db.church_legal ?? {}} onSave={setChurchLegal} />
     </Card>
   );
 }
@@ -587,6 +604,7 @@ function Body() {
       {room === 'church' && (
         <>
           {canRename && <ChurchNameCard />}
+          {canRename && <ChurchLegalCard />}
           {canManageData && <DataManager />}
         </>
       )}

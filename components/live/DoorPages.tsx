@@ -15,6 +15,8 @@ import { InstallHomeButton } from '@/components/InstallHomeButton';
 import { Button, Card } from '@/components/ui';
 import { Notice, emailLooksValid, errorText } from '@/components/live/shared';
 import { ConsentWording } from '@/components/live/ConsentWording';
+import { AgreementBox } from '@/components/AgreementBox';
+import { PRIVACY_VERSION, TERMS_VERSION, canRecordAgreement, legalHref } from '@/lib/legal';
 import { TwoStepSignInCard } from '@/components/live/TwoStep';
 import { LanguagePick } from '@/components/LanguagePick';
 import { usePhrases } from '@/lib/i18n';
@@ -501,6 +503,11 @@ export function LiveJoinPage() {
 
   // The optional half of the form: it starts collapsed and never blocks the button.
   const [consent, setConsent] = useState(false);
+  // The Terms of Use and Privacy Notice: their own box, unticked (lib/legal.ts).
+  const [agreed, setAgreed] = useState(false);
+  const [churchId, setChurchId] = useState('');
+  // Whether the database can record it yet (lib/legal.ts, canRecordAgreement).
+  const [recordsTerms, setRecordsTerms] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [extra, setExtra] = useState({
     preferred_contact: '',
@@ -633,6 +640,7 @@ export function LiveJoinPage() {
         await live.claimMyPendingInvitation();
         const mine = await live.getMyProfile();
         if (!alive) return;
+        setRecordsTerms(canRecordAgreement(mine));
         setEmail(data.session.user.email ?? '');
         setName(mine?.full_name || String(data.session.user.user_metadata.full_name ?? ''));
         if (mine?.role) setRole(mine.role);
@@ -640,6 +648,7 @@ export function LiveJoinPage() {
         try {
           const church = await live.myChurch();
           if (alive && church?.name) setChurchName(church.name);
+          if (alive && church?.id) setChurchId(church.id);
         } catch {
           /* The name is a courtesy. Not having it must not block joining. */
         }
@@ -688,6 +697,7 @@ export function LiveJoinPage() {
       const { chosen, confirmation } = readPasswordFields();
       if (chosen.length < 10) { setError('Use at least 10 characters.'); return; }
       if (chosen !== confirmation) { setError('The passwords do not match.'); return; }
+      if (!agreed) { setError('Tick the box agreeing to the Terms of Use and Privacy Notice to continue.'); return; }
       if (!consent) { setError('Tick the permission box to continue.'); return; }
       setError('This is a preview. Nothing was created and no account exists.');
       return;
@@ -697,6 +707,10 @@ export function LiveJoinPage() {
     const problem = passwordProblem(chosenPassword, confirmation, email);
     if (problem) {
       setError(problem);
+      return;
+    }
+    if (!agreed) {
+      setError('Tick the box agreeing to the Terms of Use and Privacy Notice to continue.');
       return;
     }
     if (!consent) {
@@ -741,6 +755,8 @@ export function LiveJoinPage() {
             ? extra.topics.split(',').map((t) => t.trim()).filter(Boolean)
             : undefined,
           consent_at: new Date().toISOString(),
+          // What was agreed; the database stamps when (lib/legal.ts).
+          ...(recordsTerms ? { terms_version: TERMS_VERSION, privacy_version: PRIVACY_VERSION } : {}),
         });
       }
 
@@ -1001,10 +1017,11 @@ export function LiveJoinPage() {
                         <span>{point.text}</span>
                       </p>
                     ))}
-                    <Link href="/privacy" className="inline-block text-sm font-semibold text-navy underline">
+                    <Link href={legalHref('privacy', churchId)} className="inline-block text-sm font-semibold text-navy underline">
                       Read the full privacy notice
                     </Link>
                   </div>
+                  <AgreementBox checked={agreed} onChange={setAgreed} churchId={churchId} />
                   <label className="flex items-start gap-3 rounded-xl bg-navy/5 p-4">
                     <input
                       type="checkbox"
@@ -1084,12 +1101,12 @@ export function LiveJoinPage() {
                 type="submit"
                 variant="gold"
                 className="w-full"
-                disabled={busy || !consent}
+                disabled={busy || !consent || !agreed}
               >
                 {busy ? 'Saving…' : `Join ${APP_SHORT_NAME} →`}
               </Button>
-              {!consent && (
-                <p className="text-xs text-gray-500">Tick the permission box above to continue.</p>
+              {(!consent || !agreed) && (
+                <p className="text-xs text-gray-500">Tick both boxes above to continue.</p>
               )}
             </form>
           )}

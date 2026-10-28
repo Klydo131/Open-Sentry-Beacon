@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-88 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+89 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -565,6 +565,14 @@ The study room starts Simple, Simple has every feature, Advanced adds the templa
 Asked for on 7 October 2026: "the study room for Explorers have some UI bugs specially for dark themes, the text are dark too. Also the study room is way complicated for a new user of the app, it must have simple UI and advance UI."
 
 WHAT WAS WRONG, MEASURED. Under Focus and Aero dark the writing on an open page was near-black on a near-black page: 1.01:1, every line of it. The editor's colours are AFFiNE's own and no look reached them. And a new Explorer met, before writing a word, four places, three rows of filters, a star on every page, Markdown in and out, a whiteboard switch, a folder box, tags and ten insert buttons.
+
+#### `the-terms-are-agreed.js`
+
+The Terms of Use and Privacy Notice: readable, agreed in a box of their own, recorded with their versions, and asked about again when they change.
+
+28 October 2026: "update our UI for agreeing on 'Terms' and 'Privacy Policy'. I want all of those to be handled professionally so that we won't face any legalities in the future." The owner chose this app, and that the church's legal name and Data Protection Officer are a setting its Director fills in. lib/legal.ts says why each rule is there.
+
+Walked on the sample side, as a person would, on a phone: the Terms page and the Privacy Notice, each with its version and the church named; a Director changing the church's Data Protection Officer and the notice following; and an Explorer whose agreement predates the current documents, stopped before the app until they agree, then let in with the agreement recorded. tests/e2e/join-consent.js walks the join form's two boxes.
 
 #### `the-whiteboard-says-what-you-can-do.js`
 

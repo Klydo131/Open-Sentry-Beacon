@@ -158,25 +158,34 @@ After that it runs every Sunday at 8pm UTC on its own.
 
 ---
 
-## 6. Fill in the privacy notice · 30 minutes, then a lawyer
+## 6. Name the church in the Terms and the Privacy Notice · 10 minutes, then a lawyer
 
-The app now has a notice at **/privacy**, reachable from Settings. It is a
-draft, and the parts that must be filled in are highlighted in amber on the page
-itself so they cannot be missed.
+The app has **Terms of Use** at **/terms** and a **Privacy Notice** at
+**/privacy**, both reachable from Settings. Members agree to both when they join,
+and everybody already in is asked once after migration
+`20261028120000_what_was_agreed_is_recorded` is applied.
 
-Open `app/privacy/page.tsx` and replace each `<Blank what="…" />`:
+Both documents name your church, and that part is a setting, not code. As a
+Director, open **Settings → Church → Legal details** and fill in:
 
-| Blank | What it needs |
+| Field | What it needs |
 |---|---|
-| `[church name and address]` | The legal name and address of whoever is responsible |
-| `[name and email]` | Your Data Protection Officer, from step 7 |
-| `[retention period]` | Your answer to step 8 |
-| `[number]` | How many days you promise to answer a request in. 15 is a common choice |
+| Legal name | The church as it is registered, for example with the SEC |
+| Registered address | Where it is registered, as on its papers |
+| Data Protection Officer | The person from step 7 |
+| Their email | Where privacy questions and requests go |
 
-The hosting region is already filled in: **Seoul, South Korea**.
+Until all four are filled in, both documents say in amber that the church has
+not filled them in yet.
 
-Then have somebody qualified read it. `docs/DATA-PROTECTION.md` is the map they
-will want, and it is written for exactly that purpose.
+Already decided in the notice: the hosting region (**Seoul, South Korea**), the
+30 days the record of shared links is kept, and the 30 days within which a
+request is answered.
+
+Then have somebody qualified read both documents. `docs/DATA-PROTECTION.md` is
+the map they will want, and it is written for exactly that purpose. If they
+change either document, raise its version in `lib/legal.ts` and say what changed
+there: everybody is asked to agree again.
 
 ---
 
@@ -189,7 +198,7 @@ this app records both. That expects a named officer.
 1. Pick a person. It does not have to be a lawyer, and in a small church it is
    usually whoever runs it.
 2. Give them an email address that is not a personal one.
-3. Put both into the notice in step 6.
+3. Put both into **Settings → Church → Legal details** (step 6).
 
 **If the church passes about a thousand members**, registration with the
 National Privacy Commission at **privacy.gov.ph** is expected as well. You are

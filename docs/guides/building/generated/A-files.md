@@ -162,9 +162,7 @@ What we do with what you tell us.
 
 WRITTEN TO BE READ, like the safeguarding policy beside it. Almost nobody finishes a privacy notice, which is why almost every one of them is written as though nobody will. This one is short sentences and no clause numbers, because the audience is a church member who has just been invited by somebody they trust and is deciding whether to sign up.
 
-TWO THINGS EVERY CHURCH RUNNING THIS MUST FILL IN before publishing it: who the controller is, and who the Data Protection Officer is. They are marked in the text and there is no way to guess them from here. The blanks are visible on purpose: a notice with a plausible-looking wrong name on it is worse than one that admits it is unfinished.
-
-WHY IT MATTERS MORE THAN IT LOOKS. Under the Philippine Data Privacy Act a person's age, marital status and religious affiliation are SENSITIVE personal information, and this app records all three by existing. That raises the standard from "tell people" to "get express consent, appoint a Data Protection Officer, and register if you pass a thousand members". docs/DATA-PROTECTION.md has the full map and the list of what is still missing.
+TWO THINGS EVERY CHURCH RUNNING THIS MUST FILL IN: who the controller is, and who the Data Protection Officer is. Since 28 October 2026 they are a setting the church's Director fills in (Settings, Church), read here by components/ChurchLegal.tsx, so no person's name is written into this public source. Until they are filled in the notice says so, visibly: a notice with a plausible-looking wrong name on it is worse than one that admits it is unfinished.
 
 #### `app/profile/page.tsx`
 
@@ -230,11 +228,35 @@ A REAL ROUTE RATHER THAN ONLY A PANEL. The chat had to be somewhere you can go, 
 
 EXIT GOES BACK, not to a fixed page. Somebody who opened the chat from the library should land back in the library. `router.back()` when there is somewhere to go back to, and home when the chat is where they arrived.
 
+#### `app/terms/page.tsx`
+
+Terms of Use: what you and your church can expect of each other here.
+
+ASKED FOR on 28 October 2026: "update our UI for agreeing on 'Terms' and 'Privacy Policy'. I want all of those to be handled professionally so that we won't face any legalities in the future." The app had a privacy notice and a safeguarding policy, and no terms at all.
+
+WRITTEN TO BE READ, like the two pages beside it: short sentences, no clause numbers, the parts people need (how to report, how to leave) near the top. The audience is somebody invited by a person they trust, deciding whether to join, and often a parent reading on a child's behalf.
+
+OUR OWN WORDS, for a church in the Philippines, not adapted from any other service's terms. The church named is the one in the link or the reader's own (components/ChurchLegal.tsx), never a name written into this public source.
+
 #### `app/version.json/route.ts`
 
 *No header comment.*
 
 ## A.2 Components
+
+#### `components/AgreementBox.tsx`
+
+The box that agrees to the Terms of Use and the Privacy Notice.
+
+ONE BOX, EVERY PLACE THAT ASKS: the invitation form on both halves of the app, and the agreement step a signed-in member meets when they have not agreed to the documents now in force (lib/legal.ts says why each rule below is there).
+
+* BOTH DOCUMENTS ARE LINKS, opening in a new tab so the form keeps what was typed. A link inside a label does not tick the box when tapped. * UNTICKED UNTIL THE PERSON TICKS IT; the form's button waits for it. * THE VERSION AND DATE ARE SAID under the box, so what was agreed to can be pointed at later. * IT IS NOT THE PERMISSION TO KEEP SENSITIVE INFORMATION. That is its own box with its own words (components/live/ConsentWording.tsx), beside this one, as the Data Privacy Act asks.
+
+#### `components/AgreementNotice.tsx`
+
+The sample app's agreement step: the Terms of Use and Privacy Notice now in force, agreed to before the app opens (lib/legal.ts).
+
+The live app asks the same question in components/live/ConsentStep.tsx. In the sample, everybody seeded has agreed already, and somebody who joins agrees on the join form; this meets a person whose saved sample predates the current documents, or anybody when a version is raised, so the walkthrough shows what members will see.
 
 #### `components/AnchoredPanel.tsx`
 
@@ -297,6 +319,14 @@ A THREAD IS A SEQUENCE OF EVENTS, NOT TWO LISTS. Messages and attachments go in 
 #### `components/ChurchBillboard.tsx`
 
 *No header comment.*
+
+#### `components/ChurchLegal.tsx`
+
+The church named in the Terms of Use and the Privacy Notice.
+
+The Data Privacy Act expects a privacy notice to say who holds the information and who its Data Protection Officer is. Those are the church's, not this project's, and they are a person's name and address, so they are not written into the public source: the church's Director fills them in (Settings, Church), and this reads them.
+
+WHERE FROM, in order: the sample church on the sample side; on the live side the church named in the link (`?church=`, which the invitation form and the agreement step add, so a person reads their own church's details before they have an account), else the signed-in person's own church. Nothing found, and the documents say plainly that the church has not filled them in.
 
 #### `components/ConsentHost.tsx`
 
@@ -583,16 +613,6 @@ The last two screens that still fell through to the placeholder.
 /church and /mail were written against the in-browser store, so on a live deployment both showed AppShell's grey "This live screen is being connected" card. That card was the single most-reported thing in this app, and every report was the same underlying fault: a page with no live version.
 
 /mail needed more than a port. In the tutorial it is a SIMULATED mailbox — "what Beacon would send you" — which is a teaching device and means nothing on a real deployment, where mail goes to real inboxes. Its honest live counterpart is the outbox: who has been invited, who has not arrived, and the link to hand over when the email did not make it.
-
-#### `components/LiveCorePages.tsx`
-
-KEPT AS A RE-EXPORT, DELIBERATELY.
-
-This file held three thousand lines and nineteen components: the signed-out door, the Director's entire admin screen, both Guide screens, the Explorer's screen, and every small shared piece. It was split by SCREEN, because that is how somebody looks for code: they are fixing the login form, or the roster, or the conversation, and they should not have to know those three live together.
-
-Every screen that imported from here still can. Deleting this file would mean touching a dozen call sites in the same change as moving three thousand lines, and a refactor that big should be provable by "nothing else changed".
-
-NEW CODE SHOULD IMPORT FROM THE FILE THAT HOLDS THE SCREEN:
 
 #### `components/LiveDesk.tsx`
 
@@ -1075,6 +1095,8 @@ ASKED OF EVERYBODY, NOT ONLY OF THOSE WHO SIGNED UP (13 October 2026).
 Consent was asked for on the sign-up page and nowhere else, and a member who signed in with the password from their invitation never saw that page. On the live church that left 42 of 43 accounts with no consent on record, for information the Act counts as sensitive. This step stands in front of the whole signed-in app for anybody without a record (components/LiveAppShell.tsx) and asks in the same words as the sign-up (components/live/ConsentWording.tsx), after the same account of who looks after the app (lib/oversight.ts).
 
 THE BOX STARTS UNTICKED and the button waits for it: a box that arrives ticked is not consent (NPC Circular 2023-04). Saying no is a real choice with a real button, and it signs the person out without recording anything more.
+
+AND THE TERMS OF USE AND PRIVACY NOTICE (28 October 2026, lib/legal.ts). Everybody agrees to the versions now in force, in their own box beside the permission; somebody who agreed to an earlier version is told what changed and asked again, and is not asked for the permission a second time.
 
 #### `components/live/ConsentWording.tsx`
 
@@ -1599,6 +1621,14 @@ Folders for the Office's own documents, as plain functions: a folder is a name o
 #### `lib/i18n.tsx`
 
 *No header comment.*
+
+#### `lib/legal.ts`
+
+The Terms of Use and the Privacy Notice: which version is current, and whether somebody has agreed to it.
+
+ASKED FOR on 28 October 2026: "update our UI for agreeing on 'Terms' and 'Privacy Policy'. I want all of those to be handled professionally so that we won't face any legalities in the future."
+
+WHAT "PROFESSIONALLY" MEANS HERE, point by point: * BOTH DOCUMENTS ARE ONE TAP AWAY FROM THE BOX, as links that open beside the form, so nobody agrees to something they could not read. * THE BOX STARTS UNTICKED and the button waits for it. A box that arrives ticked is not agreement. * AGREEING TO THE TERMS IS SEPARATE FROM THE PERMISSION TO KEEP SENSITIVE INFORMATION (components/live/ConsentWording.tsx). The Data Privacy Act wants that consent specific and on its own, not folded into terms. * WHAT WAS AGREED IS RECORDED: the version of each document, and when, stamped by the database's own clock (20261028120000_what_was_agreed_is_recorded). * A CHANGED DOCUMENT IS ASKED ABOUT AGAIN. Raise a version below and everybody meets the agreement step once more, with what changed, before the app opens (components/live/ConsentStep.tsx, the sample's components/ConsentHost.tsx).
 
 #### `lib/lessons.ts`
 

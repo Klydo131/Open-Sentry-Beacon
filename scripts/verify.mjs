@@ -155,6 +155,7 @@ const staticChecks = [
   ['Beacon has its own sound', 'tests/beacon-has-its-own-sound.mjs'],
   ['no export nothing uses', 'scripts/unused-exports.mjs'],
   ['the door is light', 'tests/the-door-is-light.mjs'],
+  ['the terms are agreed and recorded', 'tests/terms-are-agreed-and-recorded.mjs'],
   ['a study can be corrected', 'tests/a-study-can-be-corrected.mjs'],
   ['the screen keeps up', 'tests/the-screen-keeps-up.mjs'],
   ['a resource can be taken off the shelf', 'tests/a-resource-can-be-taken-off-the-shelf.mjs'],

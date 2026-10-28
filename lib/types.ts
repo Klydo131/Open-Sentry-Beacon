@@ -2,6 +2,7 @@
 // exactly, so the screens do not care where the data comes from.
 
 import type { Reaction } from '@/lib/talk/reactions';
+import type { ChurchLegalInput } from '@/lib/legal';
 
 // The Church Board has no account, so it is not a role.
 export type Role = 'executive' | 'admin' | 'dm' | 'ds';
@@ -66,6 +67,10 @@ export interface Profile {
   recommended_by?: string;
   recommended_at?: string;
   consent_at?: string; // when the seeker accepted the privacy notice
+  /** The Terms of Use and Privacy Notice versions this person agreed to, and when (lib/legal.ts). */
+  terms_version?: string | null;
+  privacy_version?: string | null;
+  terms_agreed_at?: string | null;
   /** When they chose a password and actually arrived (created_at is when they were invited). */
   signup_completed_at?: string | null;
   /** Still using the invitation's password. A reminder, not a permission. */
@@ -459,4 +464,6 @@ export interface DB {
   blog_views: BlogView[];
   reports: Report[];
   church_name: string;
+  /** What the Terms of Use and Privacy Notice name. Optional: an older saved sample predates it. */
+  church_legal?: ChurchLegalInput;
 }

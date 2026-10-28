@@ -38,9 +38,17 @@ const strip = (src) => src
   const notice = strip(readFileSync('app/privacy/page.tsx', 'utf8'));
   ok(/not legal advice/i.test(notice),
      'and it says plainly that it is not legal advice');
-  ok(/<Blank what="\[church name and address\]"/.test(notice)
-     && /<Blank what="\[name and email\]"/.test(notice),
-     'the controller and the Data Protection Officer are marked as blanks rather than invented');
+  // Since 28 October 2026 the controller and the officer are the church's own
+  // record, filled in by its Director (components/ChurchLegal.tsx), where they
+  // were blanks in the source. Still never invented: no name or address is
+  // written here, and a church that has not filled them in is said to have not.
+  const legal = strip(readFileSync('components/ChurchLegal.tsx', 'utf8'));
+  ok(/<ChurchLegalLine church=\{church\} loading=\{loading\} \/>/.test(notice)
+     && /useChurchLegal\(\)/.test(notice)
+     && /data-church-legal="missing"/.test(legal) && /has not yet filled in its legal name, its\s+address and its Data Protection Officer/.test(legal)
+     && /data-legal-missing/.test(notice)
+     && !/@[\w-]+\.[\w.]+/.test(notice),
+     'the controller and the Data Protection Officer come from the church\'s own record, and are said to be missing rather than invented');
 }
 
 // ---------------------------------------------------------------------------
@@ -193,7 +201,8 @@ const door = read('components/live/DoorPages.tsx');
 const told = door.indexOf('{oversightPoints(churchName).map');
 const asked = door.indexOf('checked={consent}');
 ok(told > 0 && asked > told, 'the sign-up says who looks after the app before the permission box');
-ok(/href="\/privacy"/.test(door.slice(told, asked)), 'and links the full privacy notice there');
+// The link carries the church since 28 October 2026, so the notice can name it.
+ok(/href=\{legalHref\('privacy', churchId\)\}/.test(door.slice(told, asked)), 'and links the full privacy notice there');
 // The words live in components/live/ConsentWording.tsx since 13 October 2026,
 // so the consent step for members who never signed up asks the same thing.
 const permission = door.slice(asked, door.indexOf('</label>', asked));
@@ -320,7 +329,10 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
   const door = strip(src('components/live/DoorPages.tsx'));
   const wording = src('components/live/ConsentWording.tsx');
 
-  const gate = shell.indexOf('if (!profile.consent_at) return <ConsentStep />;');
+  // The same step asks about the Terms of Use and Privacy Notice now in force
+  // (28 October 2026); a missing permission still stops the person, and is
+  // still what the step asks for.
+  const gate = shell.search(/if \(!profile\.consent_at \|\| needsTerms\) \{\s*return <ConsentStep needsConsent=\{!profile\.consent_at\}/);
   ok(gate > 0, 'the signed-in app stops anybody with no consent on record at the consent step');
   ok(gate > 0 && gate < shell.indexOf('if (!profile.is_approved)'),
     'before anything else, the waiting-for-approval screen included');
@@ -334,12 +346,17 @@ ok(!/counts only/i.test(sample) && !/Never your name/i.test(sample),
 
   ok(/const \[agreed, setAgreed\] = useState\(false\);/.test(step) && /checked=\{agreed\}/.test(step),
     'the box starts unticked (Circular 2023-04: a ticked box is not consent)');
-  ok(/disabled=\{busy \|\| !agreed\}/.test(step), 'and the agree button waits for it');
-  ok(/updateMyProfile\(\{ consent_at: new Date\(\)\.toISOString\(\) \}\)/.test(step),
+  ok(/const ready = \(!needsConsent \|\| agreed\) && /.test(step) && /disabled=\{busy \|\| !ready\}/.test(step)
+    && /if \(needsConsent && !agreed\) \{ setError/.test(step),
+    'and the agree button waits for it, and agreeing checks it again');
+  ok(/\.\.\.\(needsConsent \? \{ consent_at: new Date\(\)\.toISOString\(\) \} : \{\}\)/.test(step)
+    && /live\.updateMyProfile\(\{/.test(step),
     'agreeing records when, on the account, in the column the sign-up writes');
   ok(/I do not agree, sign me out/.test(step) && /signOut\(\)/.test(step),
     'saying no is a real button, and it signs the person out');
-  ok(/oversightPoints\(churchName\)/.test(step) && /href="\/privacy"/.test(step),
+  const told = step.indexOf('oversightPoints(churchName)');
+  ok(told > 0 && told < step.indexOf('checked={agreed}')
+    && /href=\{legalHref\('privacy', churchId\)\}/.test(step.slice(told, step.indexOf('checked={agreed}'))),
     'the step says who looks after the app, and links the full notice, before asking');
 }
 

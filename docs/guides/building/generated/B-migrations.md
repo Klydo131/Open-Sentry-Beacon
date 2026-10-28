@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-160 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+161 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1377,3 +1377,11 @@ ASKED FOR, 27 October 2026: "We can use Rust for Data security and Python for da
 A photo is checked on the server: one the browser did not clean is cleaned here.
 
 ASKED FOR, 27 October 2026, from the costed plan "Rust and Python for Hope Beacon". The privacy page promises that a photo's location is removed before it is stored, and until today only the browser kept that promise (lib/live/shrink-image.ts, lib/live/photo-location.ts). A modified copy of the app, or somebody calling the file store directly, could store a photo that still says where it was taken. The owner chose to close that.
+
+#### `20261028120000_what_was_agreed_is_recorded.sql`
+
+*2026-10-28*
+
+What somebody agreed to is recorded, and the church is named in the notice.
+
+ASKED FOR, 28 October 2026: "update our UI for agreeing on 'Terms' and 'Privacy Policy'. I want all of those to be handled professionally so that we won't face any legalities in the future." The owner chose to do it in this app, and that a church's legal name and Data Protection Officer are a setting its Director fills in, so no person's name goes into the public source.

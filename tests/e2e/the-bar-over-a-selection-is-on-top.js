@@ -9,7 +9,8 @@
 // (lib/study/view-extensions.ts, whenAffineBarShows; study-shell.css).
 //
 // Checked by what the browser itself says is on top at the middle of the bar,
-// on a computer and on a phone, and that the insert bar goes back to its place
+// on a computer and on two phones, one narrow enough that the first line
+// wraps, and that the insert bar goes back to its place
 // over the writing when the bar closes.
 //
 //   node tests/e2e/the-bar-over-a-selection-is-on-top.js [port]
@@ -51,13 +52,26 @@ async function walk(browser, label, options) {
 
   // Words on the FIRST line, right under the insert bar, selected the way a
   // person does: the caret put before the first word with a click, then the
-  // keyboard. ON CI'S CHROME 151 HOME DID NOT TAKE THE CARET THERE: the
-  // selection ran on from the end of the line into the next paragraph, which
-  // is why AFFiNE's bar there showed "Create Table" on the phone and had no
-  // Bold on the computer (2caaf91 and 22c6c35; AFFiNE shows those by what is
-  // selected). The walk now checks it selected what it meant to.
-  const line = await first.locator('.inline-editor').first().boundingBox();
-  await page.mouse.click(line.x + 2, line.y + line.height / 2);
+  // keyboard. The walk checks it selected what it meant to, because twice it
+  // did not, and AFFiNE's bar shows its buttons by what is selected (a
+  // selection across two lines offers "Create Table" and no Bold):
+  //   * at 2caaf91 and 22c6c35 the caret went in with Home alone;
+  //   * at 5e70b44 and c57527b the click was at the paragraph's middle. On
+  //     CI's phone the first sentence wraps after "not", so the middle is the
+  //     second visual line, and Home went to ITS start: "want. He" was
+  //     selected. Locally the sentence fits on one line, which is why it
+  //     passed here, so the walk now also runs on a narrow phone, where it
+  //     wraps on every machine.
+  // So the click is on the first letter itself, found from the text.
+  const letter = await first.evaluate((el) => {
+    const text = document.createTreeWalker(el.querySelector('.inline-editor'), NodeFilter.SHOW_TEXT).nextNode();
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, 1);
+    const box = range.getBoundingClientRect();
+    return { x: box.left + 1, y: box.top + box.height / 2 };
+  });
+  await page.mouse.click(letter.x, letter.y);
   await page.keyboard.press('Home');
   for (let i = 0; i < 8; i++) await page.keyboard.press('Shift+ArrowRight');
   const chosen = await page.evaluate(() => String(window.getSelection() || ''));
@@ -95,6 +109,8 @@ async function walk(browser, label, options) {
   try {
     await walk(browser, 'computer', { viewport: { width: 1280, height: 860 } });
     await walk(browser, 'phone', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    // The first sentence wraps here everywhere, as it does on CI's phone.
+    await walk(browser, 'narrow phone', { viewport: { width: 330, height: 844 }, isMobile: true, hasTouch: true });
   } finally {
     await browser.close();
   }

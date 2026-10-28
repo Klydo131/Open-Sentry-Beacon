@@ -1,5 +1,7 @@
 'use client';
 
+import { AgreementBox } from '@/components/AgreementBox';
+import { PRIVACY_VERSION, TERMS_VERSION } from '@/lib/legal';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -73,6 +75,8 @@ function Join() {
   // continue — a box that arrives already ticked is not consent, it is a
   // default somebody failed to notice.
   const [consent, setConsent] = useState(false);
+  // The Terms of Use and Privacy Notice: their own box, unticked (lib/legal.ts).
+  const [agreed, setAgreed] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
   // Prefill the name from the invite once it's known (works for both paths).
@@ -104,7 +108,7 @@ function Join() {
   }
 
   const submit = () => {
-    if (!f.full_name.trim() || !consent) return;
+    if (!f.full_name.trim() || !consent || !agreed) return;
     setError('');
 
     // Staff don't fill the seeker-only fields.
@@ -120,6 +124,8 @@ function Join() {
       city_of_residence: isSeeker ? f.city_of_residence || undefined : undefined,
       work_industry: isSeeker ? f.work_industry || undefined : undefined,
       consent_at: new Date().toISOString(),
+      terms_version: TERMS_VERSION,
+      privacy_version: PRIVACY_VERSION,
     };
 
     const id = acceptInvite(token, fields);
@@ -192,10 +198,14 @@ function Join() {
             </label>
           </div>
 
+          {/* THE TERMS OF USE AND THE PRIVACY NOTICE, agreed in their own box,
+              both one tap away (components/AgreementBox.tsx). */}
+          <AgreementBox className="mt-5" checked={agreed} onChange={setAgreed} />
+
           {/* PERMISSION. Named church, plain words, and the right to withdraw
               stated in the same breath as the request — a permission you
               cannot see how to take back is not much of a permission. */}
-          <label className="mt-5 flex items-start gap-3 rounded-xl bg-navy/5 p-4">
+          <label className="mt-3 flex items-start gap-3 rounded-xl bg-navy/5 p-4">
             <input
               type="checkbox"
               checked={consent}
@@ -260,15 +270,15 @@ function Join() {
           <div className="mt-6">
             <Button
               variant="gold"
-              disabled={!f.full_name.trim() || !consent}
+              disabled={!f.full_name.trim() || !consent || !agreed}
               onClick={submit}
             >
               Join {APP_SHORT_NAME} →
             </Button>
           </div>
-          {!consent && (
+          {(!consent || !agreed) && (
             <p className="mt-3 text-xs text-gray-500">
-              Tick the permission box above to continue.
+              Tick both boxes above to continue.
             </p>
           )}
         </Card>

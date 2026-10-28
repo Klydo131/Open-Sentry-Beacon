@@ -38,6 +38,9 @@ export default function FaqPage() {
           <Link href="/privacy" className="font-semibold text-navy underline underline-offset-4">
             The full privacy notice
           </Link>
+          <Link href="/terms" className="font-semibold text-navy underline underline-offset-4">
+            Terms of Use
+          </Link>
           <Link href="/" className="font-semibold text-navy underline underline-offset-4">
             ← Back to {APP_SHORT_NAME}
           </Link>

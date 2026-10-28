@@ -21,6 +21,7 @@ import { NotOnThisDatabaseYet, isMissingFromDatabase } from '@/lib/live/not-yet'
 import type { PlaceSuggestion } from '@/lib/live/place-pin';
 import { SecondStepNeeded, enterCode, isSecondStepRefusal } from '@/lib/live/two-step';
 import type { Session } from '@supabase/supabase-js';
+import type { ChurchLegal, ChurchLegalInput } from '@/lib/legal';
 import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode, PostMedia } from '@/lib/types';
 import { forgetPostFile, readPostFile } from '@/lib/post-media';
 import type { Reaction, ReactionTarget } from '@/lib/talk/reactions';
@@ -264,6 +265,9 @@ export async function updateMyProfile(patch: Partial<Profile>): Promise<void> {
     city_of_residence: patch.city_of_residence,
     work_industry: patch.work_industry,
     consent_at: patch.consent_at,
+    // The versions agreed to; the database stamps when (lib/legal.ts).
+    terms_version: patch.terms_version,
+    privacy_version: patch.privacy_version,
     avatar: patch.avatar,
     photo_path: patch.photo_path,
   };
@@ -409,13 +413,49 @@ export interface Church {
   name: string;
   /** How many Explorers one Guide of this church may carry; enforced by the database. */
   guide_cap: number;
+  /** What the Terms of Use and Privacy Notice name (lib/legal.ts). */
+  legal_name: string | null;
+  legal_address: string | null;
+  dpo_name: string | null;
+  dpo_email: string | null;
 }
 
 export async function myChurch(): Promise<Church | null> {
   const { data, error } = await db()
-    .from('churches').select('id, name, guide_cap').limit(1).maybeSingle();
+    .from('churches').select('id, name, guide_cap, legal_name, legal_address, dpo_name, dpo_email').limit(1).maybeSingle();
+  // A DATABASE FROM BEFORE 20261028120000 has no legal columns. Every screen
+  // that names the church reads it here, so ask again without them rather
+  // than fail them all while the migration waits to be applied.
+  if (error && /legal_name|dpo_|does not exist|42703/.test(`${error.code ?? ''} ${error.message}`)) {
+    const basic = await db().from('churches').select('id, name, guide_cap').limit(1).maybeSingle();
+    if (basic.error) throw new Error(basic.error.message);
+    return basic.data ? { ...(basic.data as Church), legal_name: null, legal_address: null, dpo_name: null, dpo_email: null } : null;
+  }
   if (error) throw new Error(error.message);
   return (data as Church) ?? null;
+}
+
+/** The church's legal name, address and Data Protection Officer. Its Director's to write. */
+export async function updateChurchLegal(id: string, legal: ChurchLegalInput): Promise<void> {
+  const clean = (v: string) => v.trim() || null;
+  const { error } = await db().from('churches').update({
+    legal_name: clean(legal.legal_name),
+    legal_address: clean(legal.legal_address),
+    dpo_name: clean(legal.dpo_name),
+    dpo_email: clean(legal.dpo_email),
+  }).eq('id', id);
+  if (error) throw new Error(/dpo_email|legal_identity/.test(error.message) ? 'Check the email address.' : error.message);
+}
+
+/**
+ * What a privacy notice must say about a church, readable before sign-in
+ * (20261028120000_what_was_agreed_is_recorded). Null if there is no such church.
+ */
+export async function churchPrivacyContact(id: string): Promise<ChurchLegal | null> {
+  const { data, error } = await db().rpc('church_privacy_contact', { p_church: id });
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : data) as ChurchLegal | undefined;
+  return row ?? null;
 }
 
 export async function renameChurch(id: string, name: string): Promise<void> {

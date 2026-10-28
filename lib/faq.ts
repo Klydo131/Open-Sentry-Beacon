@@ -285,6 +285,15 @@ export function faqSections(): FaqSection[] {
           ],
         },
         {
+          id: 'terms-of-use',
+          q: 'What are the Terms of Use, and why are there two boxes?',
+          a: [
+            'The Terms of Use say what you and your church can expect of each other in the app: keeping your account to yourself, how people treat each other, what happens to what you write, and how to leave. One box agrees to them and to the privacy notice; the other, separately, gives your church permission to keep information the law counts as sensitive. Neither box starts ticked.',
+            'Your agreement is recorded with the version of each document and the time. If either changes, the app tells you what changed and asks you again before you carry on.',
+          ],
+          links: [{ label: 'The Terms of Use', href: '/terms' }, { label: 'The privacy notice', href: '/privacy' }],
+        },
+        {
           id: 'where-kept',
           q: 'Where is my information kept?',
           a: [

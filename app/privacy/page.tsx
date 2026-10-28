@@ -8,11 +8,13 @@
 // because the audience is a church member who has just been invited by
 // somebody they trust and is deciding whether to sign up.
 //
-// TWO THINGS EVERY CHURCH RUNNING THIS MUST FILL IN before publishing it: who
-// the controller is, and who the Data Protection Officer is. They are marked in
-// the text and there is no way to guess them from here. The blanks are visible
-// on purpose: a notice with a plausible-looking wrong name on it is worse than
-// one that admits it is unfinished.
+// TWO THINGS EVERY CHURCH RUNNING THIS MUST FILL IN: who the controller is,
+// and who the Data Protection Officer is. Since 28 October 2026 they are a
+// setting the church's Director fills in (Settings, Church), read here by
+// components/ChurchLegal.tsx, so no person's name is written into this public
+// source. Until they are filled in the notice says so, visibly: a notice with
+// a plausible-looking wrong name on it is worse than one that admits it is
+// unfinished.
 //
 // WHY IT MATTERS MORE THAN IT LOOKS. Under the Philippine Data Privacy Act a
 // person's age, marital status and religious affiliation are SENSITIVE personal
@@ -29,16 +31,11 @@ import { NAVY, APP_NAME, APP_SHORT_NAME } from '@/lib/brand';
 import { SentryBeaconMark } from '@/components/SentryBeaconMark';
 import { Card } from '@/components/ui';
 import { oversightPoints } from '@/lib/oversight';
-
-function Blank({ what }: { what: string }) {
-  return (
-    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-sm font-bold text-amber-900 ring-1 ring-amber-300">
-      {what}
-    </span>
-  );
-}
+import { ChurchLegalLine, useChurchLegal } from '@/components/ChurchLegal';
+import { LEGAL_EFFECTIVE, PRIVACY_VERSION, legalComplete } from '@/lib/legal';
 
 export default function PrivacyPage() {
+  const { church, loading } = useChurchLegal();
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="px-4 py-8 text-center text-white" style={{ backgroundColor: NAVY }}>
@@ -49,19 +46,26 @@ export default function PrivacyPage() {
             The short version: it stays inside your church, and you can ask for it back
             or ask for it to be deleted.
           </p>
+          <p className="mt-2 text-sm text-white/60" data-legal-version>
+            In force from <span className="whitespace-nowrap">{LEGAL_EFFECTIVE}</span> ·{' '}
+            <span className="whitespace-nowrap">version {PRIVACY_VERSION}</span>
+          </p>
         </div>
       </div>
 
       <div className="mx-auto max-w-2xl space-y-5 px-4 py-8">
-        <Card className="p-5 ring-2 ring-amber-300">
-          <h2 className="text-xl font-bold text-navy">Two lines are still missing</h2>
-          <p className="mt-2 text-gray-700">
-            The highlighted parts are the church&rsquo;s own legal identity and the name of
-            its Data Protection Officer. Nobody but the church can supply them, and a
-            notice carrying a plausible wrong name would be worse than one that says it
-            is unfinished. Everything else below is decided and applies as written.
-          </p>
-        </Card>
+        {!loading && !legalComplete(church) && (
+          <Card className="p-5 ring-2 ring-amber-300" data-legal-missing>
+            <h2 className="text-xl font-bold text-navy">Two lines are still missing</h2>
+            <p className="mt-2 text-gray-700">
+              Your church&rsquo;s legal name and the name of its Data Protection Officer.
+              Nobody but the church can supply them, and its Director adds them under
+              Settings, Church. A notice carrying a plausible wrong name would be worse
+              than one that says it is unfinished. Everything else below is decided and
+              applies as written.
+            </p>
+          </Card>
+        )}
 
         {/* WHAT THIS APP IS, AND WHO LOOKS AFTER IT: the same words as the
             invitation e-mail and the sign-up (lib/oversight.ts). */}
@@ -80,9 +84,8 @@ export default function PrivacyPage() {
         <Card className="p-5">
           <h2 className="text-xl font-bold text-navy">Who holds your information</h2>
           <p className="mt-2 text-gray-700">
-            <Blank what="[church name and address]" /> decides what is collected here and
-            is responsible for it. Questions, and any request below, go to the Data
-            Protection Officer at <Blank what="[name and email]" />.
+            <ChurchLegalLine church={church} loading={loading} /> Questions, and any request
+            below, go to the Data Protection Officer.
           </p>
           <p className="mt-2 text-gray-700">
             If you are not satisfied with the answer, you can complain to the National
@@ -298,8 +301,9 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-navy">This is a starting point</h2>
           <p className="mt-2 text-gray-700">
             {APP_NAME} is free software, and this notice ships with it as a draft.
-            Any church running it should read it, fill in the blanks, and have somebody
-            qualified check it against the law where they are. It is
+            Any church running it should read it, fill in its legal name and Data Protection
+            Officer under Settings, and have somebody qualified check it against the law where
+            they are. It is
             <code className="mx-1 rounded bg-gray-100 px-1.5 py-0.5 text-sm">app/privacy/page.tsx</code>
             in the source, and <code className="rounded bg-gray-100 px-1.5 py-0.5 text-sm">docs/DATA-PROTECTION.md</code>
             {' '}lists what is still missing.
@@ -310,6 +314,9 @@ export default function PrivacyPage() {
         </Card>
 
         <div className="flex flex-col items-center gap-3 pb-10 text-center">
+          <Link href="/terms" className="font-semibold text-navy underline underline-offset-4" data-terms-link>
+            Terms of Use
+          </Link>
           <Link href="/faq" className="font-semibold text-navy underline underline-offset-4" data-faq-link>
             Questions people ask
           </Link>

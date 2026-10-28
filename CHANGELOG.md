@@ -10,6 +10,90 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 28 October 2026: Terms of Use, and an agreement that is recorded
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261028120000_what_was_agreed_is_recorded.sql`**,
+   then rebuild the site. The code works before the migration, so the order
+   does not matter: until the columns exist, nobody is asked to agree.
+2. **Once it is applied, every member is asked once** to agree to the Terms of
+   Use and the Privacy Notice the next time they open the app. That is the
+   point. Tell your church before you apply it.
+3. **Your church's Director fills in Settings → Church → Legal details**: the
+   church's legal name, its registered address, and its Data Protection
+   Officer's name and email. Until they do, both documents say plainly that
+   the church has not filled them in. These used to be blanks in
+   `app/privacy/page.tsx` that only a developer could fill.
+4. **Have somebody qualified read both documents** (`/terms` and `/privacy`).
+   They are drafts written for a church in the Philippines, not legal advice.
+
+### What changed
+
+- **Why:** the owner: "update our UI for agreeing on 'Terms' and 'Privacy
+  Policy'. I want all of those to be handled professionally so that we won't
+  face any legalities in the future." The app had a privacy notice and a
+  safeguarding policy, and no terms at all.
+- **Terms of Use** at `/terms` (`app/terms/page.tsx`): who the agreement is
+  with, who may use the app, the account, conduct (the safeguarding policy is
+  part of them), what you write, privacy, limits, leaving, changes, and
+  Philippine law. Written to be read, in our own words. Each section is a link
+  target (`/terms#leaving`). It promises nothing the app does not do: in
+  particular no withdrawal of permission, which migration 0035 removed; the
+  first draft said "you can take that permission back" and was corrected.
+- **One box for both documents** (`components/AgreementBox.tsx`): unticked,
+  each document a link that opens beside the form, and the version agreed to
+  said under it. It is a box of its own, beside the permission to keep
+  sensitive information, never folded into it (the Data Privacy Act wants that
+  consent specific). Both invitation forms, the live agreement step and the
+  sample's agreement step use it, and every button waits for it.
+- **What was agreed is recorded.** `profiles` gains `terms_version`,
+  `privacy_version` and `terms_agreed_at`. The person writes the versions; a
+  trigger stamps the time from the database's clock; nobody records an
+  agreement for somebody else, a Director included.
+  - The profile's column grant (20261007130000) names each column a member may
+    update. The first draft of this migration did not add the two new ones,
+    and every join would then have failed with "permission denied for table
+    profiles". The database test caught it before anything was committed.
+- **A raised version asks everybody again.** `lib/legal.ts` holds
+  `TERMS_VERSION` and `PRIVACY_VERSION`. Change a document, raise its version
+  and write `WHAT_CHANGED`: on their next visit every member meets "We have
+  updated our terms", with what changed, before the app opens
+  (`components/live/ConsentStep.tsx`, the sample's
+  `components/AgreementNotice.tsx`).
+- **The church is named from its own record.** `churches` gains `legal_name`,
+  `legal_address`, `dpo_name` and `dpo_email`, written by the church's
+  Director. `church_privacy_contact(church)` answers exactly those and the
+  church's name to anybody holding the church's id, because a notice must be
+  readable before sign-in. The invitation form and the agreement step pass the
+  church in the link (`/privacy?church=…`).
+- **Checks.**
+  - `supabase/tests/what-was-agreed-is-recorded.sql`: 26 checks, run by
+    `scripts/fresh-install.sh`.
+  - `tests/terms-are-agreed-and-recorded.mjs`: the rules, the box and each
+    form's wait, in the gate.
+  - `tests/e2e/the-terms-are-agreed.js`: the documents, a Director naming the
+    officer, and an Explorer asked again.
+  - `tests/data-protection.mjs`: seven of its patterns read the consent
+    step's old source. Each was rewritten to the new code, protecting the same
+    thing, and broken on purpose to watch it go red.
+- **The stand-in backend** (`scripts/fake-supabase.mjs`) takes
+  `FAKE_AGREED=none|older`, so the live agreement step can be seen without a
+  real database, and keeps a profile update.
+- **The documents keep up.** A Terms of Use or Privacy Notice left open names
+  what a Director saved a moment later (`useKeepUp` on `churches`), as
+  `tests/every-room-keeps-up.mjs` requires of every screen that reads.
+- **CI was still red on `main` at `5e70b44` and `c57527b`**, on
+  `the-bar-over-a-selection-is-on-top`, and the cause given in the entry below
+  was half right. The computer half passed after that fix; the phone half
+  selected "want. He". On CI's phone the first sentence wraps after "not", the
+  walk clicked at the paragraph's middle, which is the second visual line, and
+  Home went to the start of that line. Locally the sentence fits on one line,
+  so it passed here. The walk now clicks on the first letter, found from the
+  text itself, and runs a third time on a phone narrow enough that the line
+  wraps everywhere: the old click selects "not want" there, the new one
+  "The Lord".
+
 ## 28 October 2026: a clean whiteboard, and our own words
 
 ### If you run a copy, do this

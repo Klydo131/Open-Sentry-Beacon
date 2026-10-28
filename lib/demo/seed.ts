@@ -1,5 +1,6 @@
 import { STARTER_KIT } from '../starter-kit';
 import type { DB } from '../types';
+import { PRIVACY_VERSION, TERMS_VERSION } from '../legal';
 
 // Seed data for the demo. Fictional people, realistic story:
 //  - 1 admin (Pastor Ramos)
@@ -75,7 +76,10 @@ function backfill(): DB['analytics'] {
 
 export function makeSeed(): DB {
   return {
-    profiles: [
+    // EVERYBODY IN THE SAMPLE HAS AGREED to the documents now in force, as
+    // members of a real church would have; somebody who joins through an
+    // invitation agrees on the join form (lib/legal.ts).
+    profiles: ([
       // The Executive Admin.
       //
       // This persona did not exist, which meant the client's executive
@@ -195,7 +199,9 @@ export function makeSeed(): DB {
         is_approved: false, // waiting at the admin's approval gate
         created_at: iso(45),
       },
-    ],
+    ] as DB['profiles']).map((p) => ({
+      ...p, terms_version: TERMS_VERSION, privacy_version: PRIVACY_VERSION, terms_agreed_at: p.created_at,
+    })),
     pairings: [
       {
         id: 'pair-john',
@@ -670,6 +676,15 @@ export function makeSeed(): DB {
     // first run teaches a church to scroll past that queue.
     reports: [],
     church_name: 'Grace SDA Church',
+    // A sample church's legal details, plainly invented.
+    // Invented, like everybody here: what a church's Director fills in under
+    // Settings, Church, for the Terms of Use and Privacy Notice to name.
+    church_legal: {
+      legal_name: 'Grace SDA Sample Church, Inc.',
+      legal_address: '12 Sample Street, Barangay Example, Quezon City',
+      dpo_name: 'Ruth Santos, church clerk',
+      dpo_email: 'privacy@example.org',
+    },
   };
 }
 

@@ -2,6 +2,7 @@
 
 // The live profile, settings and password pages.
 
+import { ChurchLegalForm } from '@/components/ChurchLegal';
 import { useCallback, useEffect, useState } from 'react';
 import { useKeepUp, KEEP_UP_ACCOUNT } from '@/lib/live/keep-up';
 import Link from 'next/link';
@@ -309,6 +310,7 @@ export function LiveSettingsPage() {
       )}
 
       {room === 'church' && leads && <ChurchNameCard />}
+      {room === 'church' && leads && <ChurchLegalCard />}
 
       {room === 'giving' && giving && givingRoom && <LiveGivingRoom card={giving} />}
 
@@ -709,6 +711,32 @@ function ChurchNameCard() {
       </div>
       {saved && <p className="mt-2 font-semibold text-green-600">✓ Saved</p>}
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+    </Card>
+  );
+}
+
+// What the Terms of Use and Privacy Notice name (components/ChurchLegal.tsx).
+function ChurchLegalCard() {
+  const [church, setChurch] = useState<live.Church | null>(null);
+  const load = useCallback(async () => {
+    try { setChurch(await live.myChurch()); } catch { /* the name card says why */ }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  useKeepUp(KEEP_UP_ACCOUNT, load);
+  if (!church) return null;
+  return (
+    <Card className="p-5">
+      <h2 className="mb-1 text-xl font-bold text-navy">⚖️ Legal details</h2>
+      <p className="mb-4 text-sm text-gray-500">
+        The Terms of Use and the Privacy Notice name your church and its Data Protection
+        Officer, as the Data Privacy Act expects. Anybody invited can read them before
+        joining.
+      </p>
+      <ChurchLegalForm
+        key={church.id}
+        initial={church}
+        onSave={async (next) => { await live.updateChurchLegal(church.id, next); await load(); }}
+      />
     </Card>
   );
 }

@@ -52,6 +52,12 @@ export function SourceCard() {
           What is collected, who can see it, how long it is kept, and how to ask
           for a copy or ask for it to be deleted.
         </p>
+        <Link href="/terms" className="mt-2 inline-block font-semibold text-navy underline underline-offset-4">
+          Terms of Use →
+        </Link>
+        <p className="mt-1 text-sm text-gray-600">
+          What you and your church can expect of each other here.
+        </p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">

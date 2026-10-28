@@ -34,3 +34,4 @@ Each page under `app/`, the address it answers, and who may open it. `allow` is 
 | `/signup` | `app/signup/page.tsx` | Anyone (no shell gate on this page) |
 | `/study` | `app/study/page.tsx` | Explorer, Guide, Director, Executive Director |
 | `/talk` | `app/talk/page.tsx` | Explorer, Guide |
+| `/terms` | `app/terms/page.tsx` | Anyone (no shell gate on this page) |

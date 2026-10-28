@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-28-terms-of-use',
+    date: '2026-10-28',
+    title: 'Terms of Use, and what you agree to',
+    items: [
+      'There are now Terms of Use: what you and your church can expect of each other here. Read them from Settings, or at the bottom of the help page.',
+      'When you join, you tick a box agreeing to the Terms of Use and the Privacy Notice. Each is one tap away from the box, and the box starts empty. The permission to keep your information is still its own box beside it.',
+      'If either document changes, the app tells you what changed and asks you once before you carry on. Members already here are asked once too.',
+      'Both documents name your church and the person who answers privacy questions, once your church has filled them in. Directors do that under Settings, Church, Legal details.',
+    ],
+  },
+  {
     id: '2026-10-28-a-clean-whiteboard',
     date: '2026-10-28',
     title: 'A clean whiteboard, with its tools when you ask',

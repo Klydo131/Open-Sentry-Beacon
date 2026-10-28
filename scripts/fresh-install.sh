@@ -206,6 +206,14 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-photo-is-checked-on-the-server.sql"
 
+# WHAT WAS AGREED IS RECORDED: a person records the versions of the Terms of
+# Use and Privacy Notice they agreed to, the database dates it, nobody agrees
+# for somebody else; a Director names the church and its Data Protection
+# Officer, and a signed-out visitor reads exactly those. Invented people,
+# rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/what-was-agreed-is-recorded.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"
