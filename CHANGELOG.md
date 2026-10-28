@@ -10,6 +10,94 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 28 October 2026: a clean whiteboard, and our own words
+
+### If you run a copy, do this
+
+Nothing: no migration and no setting. Rebuild the site.
+
+### What changed
+
+- **Why:** the owner: "we want the board to have less tools setup, tools will
+  only appear when you double tap an object or the board (or right click in
+  desktop). I want the board to be clean as possible", and "You can just copy
+  the Affine ... when it comes to tools". Also: "dont copy the branded notes
+  like the brands I mention, I want ours to be original as possible."
+- **The board opens clean** (`components/study/StudyBoardTools.tsx`).
+  - AFFiNE's dock, zoom control and bar over a selection are hidden until
+    asked for. The room says what is wanted on the frame (`data-board-dock`,
+    `data-board-bar`), and `study-shell.css` hides the rest.
+  - The dock is made invisible and untouchable, not taken out of the page. In
+    the first version it was taken out (`display: none`), and AFFiNE's keys
+    went with it: S drew no shape.
+    `tests/e2e/the-affine-features-actually-work.js` caught that, after this
+    entry had already claimed the keys still worked. Now the claim is a check
+    in the whiteboard walk.
+  - Double-tap or double-click empty board brings the dock, with the room's
+    Undo, Redo and Hide tools. Doing it again, Escape with nothing selected,
+    or Hide tools puts them away.
+  - Double-tap a thing for AFFiNE's bar with ⋮. A single tap only selects it.
+  - Right-click or long press works as before, and on empty board it also
+    brings the dock.
+  - One line ("Double-tap the board for tools") shows until the tools have
+    been opened once on that device.
+- **The room takes the double-click from AFFiNE.** On empty board AFFiNE makes
+  a text box on a double-click; on a thing it starts typing, which closes the
+  bar that was asked for. The room swallows the second press and its lift
+  before AFFiNE sees them. AFFiNE's own ways to write remain: tap a selected
+  sticky note again, or Add text on a shape's bar.
+- **Escape is read before AFFiNE answers it** (the capture phase). Read
+  afterwards, the Escape that lets go of a shape found a board with nothing
+  selected and put the dock away with it.
+- **`lib/study/board-actions.ts`** gains `hitAt`, `selectedIds` and
+  `selecting`, the last reading AFFiNE's current tool, so a double-tap with
+  the pen still draws. Its first version read the tool's name from the
+  options object, which has none, so every tool looked like Select; it reads
+  `currentTool$` now, and the walk double-clicks with the pen to check.
+- **Our own words.**
+  - Member-facing text no longer compares the room to other companies' apps.
+  - "Take a copy for Obsidian" is now "Take a copy of every page" (Markdown
+    files for any notes app), and "zipped vault" is now "zipped folder". The
+    format is unchanged.
+  - The design notes (`docs/VISUAL-LANGUAGE.md`, the head of
+    `study-shell.css`) and the templates' rationale now state our own
+    principles.
+  - The Church templates group said "For Sunday"; it says "For Sabbath".
+- **CI was still red on `main` at `22c6c35`**, on the same walk, and the cause
+  given in the entry below was wrong. AFFiNE was not filling the bar in steps.
+  `the-bar-over-a-selection-is-on-top` put the caret on the first line with a
+  click and **Home**. On CI's Chrome 151, Home did not move it to the start,
+  so eight Shift+Right presses ran from the end of the line into the next
+  paragraph:
+  - on the phone, AFFiNE's bar showed "Create Table", which it offers only for
+    a selection across blocks;
+  - on the computer, it found no text box behind the selection and showed no
+    Bold.
+
+  The walk now clicks at the start of the line and checks that it selected
+  "The Lord" before judging the bar. Chrome 151 could not be run here: the
+  sandbox's proxy refuses Playwright's download server. So this is reasoned
+  from AFFiNE's source and CI's output, not reproduced. Whether Home misbehaves
+  for people using Chrome 151 is unverified.
+- **Safari on `22c6c35` passed everything**, the first clean WebKit run in
+  several days. On `2caaf91` it failed 1 of 278, `tutorial-repeat`, which
+  already failed some runs and not others.
+- **Proved:** `tests/e2e/the-whiteboard-says-what-you-can-do.js`, rewritten,
+  42 checks with a mouse and a finger. Five breakages were made on
+  purpose and each turned it red:
+  - the dock left showing;
+  - the double-click passed to AFFiNE, which made a text box;
+  - Escape read after AFFiNE;
+  - the dock taken out of the page (`display: none`): the S-key check;
+  - the tool read from its options again: both Escape checks. The walk
+    then stops, so the pen check itself was not seen to go red.
+
+  The first run of the breakages found two blind checks, both fixed. The
+  board count left out AFFiNE's text boxes, and Escape just after drawing
+  could not tell the two versions apart; Escape on a selected shape can. Two
+  walks that measured the dock now reveal it first, as a person would. All
+  16 walks that use the Study Room helper pass (321 checks).
+
 ## 28 October 2026: Simple has the whole Study Room, and Advanced has templates
 
 ### If you run a copy, do this
@@ -61,11 +149,10 @@ Nothing: no migration and no setting. Rebuild the site.
 - **CI was red on `main` at `2caaf91`**, in one walk shard:
   `the-bar-over-a-selection-is-on-top` read the bar over a selection on the
   computer run while it held only Create Linked Doc and ⋮. The phone run on
-  the same runner had the full bar, and every local run has had it. AFFiNE
-  fills that bar in steps, and the walk read it after a fixed 800 ms. It now
-  waits up to 6 s for Bold. The check itself is unchanged: a bar that never
-  gets Bold still fails. Whether people on slow devices see the bar arrive in
-  two steps is unverified.
+  the same runner had the full bar, and every local run has had it. The walk
+  was changed to wait up to 6 s for Bold, on the guess that AFFiNE fills the
+  bar in steps. **That guess was wrong**: CI failed the same way at
+  `22c6c35`. See the entry above for the real cause.
 - **Docs:** `docs/STUDY-ROOM.md` (Simple and Advanced, the places, and a new
   Templates section), the FAQ, the Getting started page given to new rooms,
   What's new.

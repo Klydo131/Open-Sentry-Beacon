@@ -7,14 +7,16 @@
 // that [are] applicable for education sections and office and staff tools".
 // The owner chose all four groups below.
 //
-// WHY TEMPLATES. In every app teachers and offices actually use, the office
-// tools are ready-made pages: Notion's teaching templates (lesson plans,
-// attendance trackers, weekly agendas), meeting notes with attendees, agenda,
-// decisions and action items as tasks, and, in church apps, sermon notes,
-// prayer lists, Bible studies and volunteer rotas. The room already has the
-// blocks they are made of (headings, to-dos, lists, quotes, tables), so a
+// WHY TEMPLATES. A teacher, a secretary or a ministry leader writes the same
+// few pages again and again: who came, what was decided, who serves on which
+// Sabbath. A template saves them laying it out each time. The room already has
+// the blocks those pages are made of (headings, to-dos, lists, tables), so a
 // template is only those blocks, put in place: nothing new to learn, and every
 // line can be changed or deleted like any other.
+//
+// OUR OWN WORDS. Every heading and line below was written for this church
+// app, not copied from another product's gallery (28 October 2026: "dont copy
+// the branded notes ... I want ours to be original as possible").
 //
 // NOTHING PERSONAL IN ANY OF THEM. Every word below is the same for every
 // church; the blanks are for the person filling them in.
@@ -287,7 +289,7 @@ export const TEMPLATES: StudyTemplate[] = [
 export const TEMPLATE_GROUPS: Array<{ group: TemplateGroup; about: string }> = [
   { group: 'Education', about: 'For teaching a class or a group' },
   { group: 'Office', about: 'For meetings and the work that comes out of them' },
-  { group: 'Church', about: 'For Sunday, study and prayer' },
+  { group: 'Church', about: 'For Sabbath, study and prayer' },
   { group: 'Staff', about: 'For people and events' },
 ];
 

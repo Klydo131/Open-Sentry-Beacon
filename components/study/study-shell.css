@@ -11,14 +11,15 @@
  */
 
 /* ===========================================================================
- * THE ROOM'S LOOK: calm, light, and built from Apple's own vocabulary.
+ * THE ROOM'S LOOK: calm, light, and Hope Beacon's own.
  *
  * ASKED FOR: "as nice, sleek, and Apple looking as possible", in a room that
- * already had to wear Hope Beacon's navy and gold. Those are not in tension.
- * Apple's apps are neutral surfaces with ONE tint colour doing all the talking,
- * and navy is a perfectly good tint -- it is what Notes does with yellow and
- * Freeform with blue. So: warm-neutral grounds, white grouped lists, hairlines
- * instead of boxes, and navy only where something can be pressed.
+ * already had to wear Hope Beacon's navy and gold; then, on 28 October 2026,
+ * "I want ours to be original as possible". Both are met by principles, not by
+ * copying anybody's screens: neutral surfaces with ONE tint colour doing all
+ * the talking, and that colour is our navy. So: warm-neutral grounds, white
+ * grouped lists, hairlines instead of boxes, and navy only where something can
+ * be pressed.
  *
  * WHAT IT REPLACED, measured on a 390px phone: a navy slab for a header, every
  * chip and toggle forced to 56px tall by the app-wide button rule, emoji for
@@ -26,9 +27,9 @@
  * screen of an open page almost entirely controls -- the writing started about
  * 800px down.
  *
- * THE TYPE IS THE SYSTEM'S, which is the single most Apple thing available to
- * a web page: `system-ui` IS SF Pro on an iPhone or a Mac, and Segoe or Roboto
- * elsewhere. No web font, nothing to download, nothing the CSP has to allow.
+ * THE TYPE IS THE SYSTEM'S: `system-ui` is whatever the phone or computer
+ * already uses for its own words (SF Pro on an iPhone or a Mac, Segoe or Roboto
+ * elsewhere), so the room reads as native everywhere. No web font, nothing to download, nothing the CSP has to allow.
  * The sizes stay generous on purpose. This app's base is 18px for older eyes,
  * and "Apple-looking" was never a reason to shrink anybody's reading.
  *
@@ -720,10 +721,47 @@
 
 /* THE WHITEBOARD (components/study/StudyBoardTools.tsx), since 28 October 2026.
  *
- * Its tools are AFFiNE's own bar along the bottom, and a selected thing gets
- * AFFiNE's own bar floating over it, with ⋯ for the rest: the way Miro, FigJam,
- * Freeform and Obsidian Canvas work. The room adds Undo and Redo in the
- * corner, for phones with no Ctrl+Z, and a short menu on empty board. */
+ * A CLEAN BOARD: nothing over it until somebody asks. Its tools are AFFiNE's
+ * own dock along the bottom and AFFiNE's own bar over a selected thing, with ⋯
+ * for the rest; the room says on the frame which of them is wanted
+ * (data-board-dock, data-board-bar) and this hides the others.
+ *
+ * THE DOCK IS MADE INVISIBLE, NOT TAKEN OUT OF THE PAGE. Taken out
+ * (display: none), AFFiNE's keys stopped working with it: S chose no shape
+ * and nothing was drawn (found 28 October 2026 by
+ * tests/e2e/the-affine-features-actually-work.js). Invisible and untouchable,
+ * it is still there for S, P, T and V. */
+[data-board-frame]:not([data-board-dock='open']) edgeless-toolbar-widget,
+[data-board-frame]:not([data-board-dock='open']) affine-edgeless-zoom-toolbar-widget {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+[data-board-frame]:not([data-board-bar='open']) affine-toolbar-widget {
+  display: none !important;
+}
+/* Once, until the tools have been opened on this device: how to find them. */
+.sr-board-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 20;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--sr-ink-2);
+  background: var(--sr-surface);
+  box-shadow: 0 0 0 0.5px var(--sr-sep);
+  pointer-events: none;
+}
+.sr-board-hint--mouse { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .sr-board-hint--touch { display: none; }
+  .sr-board-hint--mouse { display: inline; }
+}
 .sr-board-history {
   position: absolute;
   top: 10px;

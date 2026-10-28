@@ -568,11 +568,11 @@ WHAT WAS WRONG, MEASURED. Under Focus and Aero dark the writing on an open page 
 
 #### `the-whiteboard-says-what-you-can-do.js`
 
-The whiteboard works like every whiteboard: tools along the bottom, and a selected thing gets a bar with ⋯ for everything else.
+The whiteboard is clean until asked, and then its tools are AFFiNE's own.
 
-27 October 2026: "if I right click on it there are no option for me to delete objects, options to modify, or edit it." The room answered with a bar of its own across the top of the board, in pictures and words.
+27 October 2026: "if I right click on it there are no option for me to delete objects, options to modify, or edit it." 28 October 2026: "I want the 3 dots to be back once I click an object". AFFiNE has that bar (affine-toolbar-widget); it never opened here because the room never told AFFiNE it was a whiteboard (lib/study/view-extensions.ts).
 
-28 October 2026, with a photograph of that bar circled: "This is not the solution for replacing the '3 dots'... I want the 3 dots to be back once I click an object", and the room should feel like Notion, Obsidian and Notes. AFFiNE has that bar (affine-toolbar-widget); it never opened here because the room never told AFFiNE it was a whiteboard (lib/study/view-extensions.ts). Now it does, and the room's own bar is gone. What the room still adds is components/study/StudyBoardTools.tsx: Undo and Redo, the right-click and long-press menu, and the lock on the card with the page's own writing.
+Then, the same day: "tools will only appear when you double tap an object or the board (or right click in desktop). I want the board to be clean as possible." So the board opens with nothing over it but one line saying how to find the tools, and components/study/StudyBoardTools.tsx decides when AFFiNE's dock and AFFiNE's bar show.
 
 #### `the-words-can-be-read-in-every-look.js`
 

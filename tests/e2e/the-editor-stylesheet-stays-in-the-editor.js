@@ -146,6 +146,11 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   {
     await page.getByRole('button', { name: /^Whiteboard$/ }).click();
     await page.waitForTimeout(3000);
+    // The board opens clean; its tools come with a double-click on empty board
+    // (components/study/StudyBoardTools.tsx, 28 October 2026).
+    const frame = await page.locator('.sr-board-frame').boundingBox();
+    if (frame) await page.mouse.dblclick(frame.x + frame.width * 0.15, frame.y + frame.height * 0.78);
+    await page.waitForTimeout(700);
 
     const board = await page.evaluate(() => {
       const canvas = document.querySelector('.affine-edgeless-viewport');

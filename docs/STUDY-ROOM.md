@@ -29,14 +29,13 @@ anywhere in this room and there does not need to be.
 
 The room starts **Simple**, and Simple has the whole room: all four places
 (**All pages**, **Starred**, the **Journal** and the **Bin**), folders, tags and
-saved views, the star on each page, **File this page**, and taking your pages to
-and from Obsidian. On a page you get its name, **Write** and **Whiteboard**, and
+saved views, the star on each page, **File this page**, and taking a copy of
+your pages as Markdown, or bringing Markdown in. On a page you get its name, **Write** and **Whiteboard**, and
 the bar for adding things: four basics, a heading, a list, a to-do and a quote,
 each with a picture and a word, and **More** for everything else. That is the
 same in Simple and Advanced, so nothing has to be found twice.
 
-**Select some words** and a bar appears over them, as in Notion or Apple
-Notes: the kind of line (text, heading, list...), **Bold**, **Code**,
+**Select some words** and a bar appears over them: the kind of line (text, heading, list...), **Bold**, **Code**,
 **Italic**, **Link**, **Strikethrough**, **Underline**, a highlighter, **Create
 linked doc**, and **⋮** with **Copy**, **Duplicate** and **Delete**. Until 28
 October 2026 that bar opened underneath the insert bar on a page's first
@@ -49,7 +48,7 @@ below). Tap **Simple** to put the gallery away again.
 The choice is remembered on that phone or computer. Switching never hides or
 changes anything you have written, and a page made from a template is an
 ordinary page in either mode. Until 28 October 2026 Simple hid Starred, the
-Journal, folders, tags, the star and Obsidian; they were what people came to
+Journal, folders, tags, the star and Markdown in and out; they were what people came to
 the room for, so they are in both now (`CHANGELOG.md`).
 
 In **Focus** and **Dark Aero**, the looks with a dark page, the writing on a
@@ -197,7 +196,7 @@ opened your room before, with no connection. Nothing has been lost; your pages
 are in the database. Tap **Try again** when there is a signal.
 
 **A red line at the top of the room** means one thing did not work (adding a
-block, a copy for Obsidian). It goes away on its own or with **OK**, and the
+block, a copy of your pages). It goes away on its own or with **OK**, and the
 room stays as it was. It used to replace the whole room until it was reopened.
 
 ---
@@ -310,14 +309,21 @@ which: **Write** is the document, **Whiteboard** is the same page on an infinite
 canvas. It is one page, not two: there is nothing to copy across. The
 whiteboard is there in Simple too.
 
-**The board works the way Miro, FigJam, Apple Freeform and Obsidian Canvas do**
-(since 28 October 2026):
+**The board starts clean** (since 28 October 2026): nothing over it but your
+work, and one quiet line, until you have opened the tools once, saying how to
+find them. The tools are AFFiNE's own, so what you learn here is what AFFiNE
+itself does.
 
-- **The tools are along the bottom**: select, frame, arrow, link, notes, pen,
-  eraser, shapes, mind maps and templates. On a phone the bar scrolls with
-  **‹** and **›**.
-- **Tap or click anything** and a small bar floats over it: its colour or
-  style, **Lock**, and **⋮** for everything else:
+- **Double-tap empty board** (double-click on a computer, or right-click) for
+  the tools along the bottom: select, frame, arrow, link, notes, pen, eraser,
+  shapes, mind maps and templates, with **Undo**, **Redo** and **Hide tools**
+  beside them. On a phone the bar scrolls with **‹** and **›**. To put them
+  away: **Hide tools**, **Escape** with nothing selected, or double-tap empty
+  board again.
+- **Tap a thing once** to select it: handles to move and resize it, and nothing
+  else.
+- **Double-tap a thing** (or double-click) and a small bar floats over it: its
+  colour or style, **Lock**, and **⋮** for everything else:
 
   | In ⋮ | |
   |---|---|
@@ -327,12 +333,15 @@ whiteboard is there in Simple too.
   | **Create linked doc** | Turn it into a page of its own, linked from the board |
   | **Delete** | Take it off the board; **Undo** brings it back |
 
-- **Right-click** anything (or **press and hold** with a finger, then lift) to
-  open the same ⋮ menu at once. On an empty part of the board the same gesture
-  gives **Undo**, **Redo**, **Select everything** and **Show everything**.
-- **Undo** and **Redo** are two buttons in the board's top-left corner, for
-  phones and tablets; on a keyboard, Ctrl+Z and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on a
-  Mac) work on pages and boards alike.
+- **To write in it:** tap a selected sticky note or text again, or press
+  **Add text** on a shape's bar.
+- **Right-click** a thing (or **press and hold** with a finger, then lift) to
+  open its ⋮ menu at once. On an empty part of the board the same gesture
+  brings the tools and a short menu: **Undo**, **Redo**, **Select everything**
+  and **Show everything**.
+- On a keyboard, AFFiNE's keys work with the tools put away: **S** a shape,
+  **P** the pen, **T** text, **V** select, and Ctrl+Z and Ctrl+Shift+Z (Cmd+Z and
+  Shift+Cmd+Z on a Mac) to undo and redo.
 - **Lock** keeps a thing from being moved or deleted until somebody chooses
   **Click to unlock** on it.
 
@@ -344,7 +353,8 @@ the card; tried on 28 October 2026.)
 Simple and Advanced show the same board. From 27 to 28 October 2026 the room
 drew a bar of its own across the top of the board, in pictures and words, in
 place of AFFiNE's bar for a selected thing, which never opened here; the room
-had not told AFFiNE it was a whiteboard. See `CHANGELOG.md`. The board is for
+had not told AFFiNE it was a whiteboard. Later on 28 October the tools were
+put away until asked for. See `CHANGELOG.md`. The board is for
 things a column of text is bad at: how a passage is built, who is related to
 whom, a plan for a study on a wall. On a phone or tablet a finger on the board
 draws; it no longer scrolls the room behind it.

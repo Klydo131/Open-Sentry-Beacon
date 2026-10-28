@@ -1276,13 +1276,13 @@ LET THE DESIGN SPEAK (15 October 2026). The owner: "The basic settings are just 
 
 #### `components/study/StudyBoardTools.tsx`
 
-What the room adds to a whiteboard: Undo and Redo, and a menu on a right-click or a long press.
+When a whiteboard's tools show, and what the room adds to them.
 
-28 OCTOBER 2026, from a photograph of the bar this file used to draw across the top of the board, circled: "This is not the solution for replacing the '3 dots'... I want the 3 dots to be back once I click an object." And: "I really want the study room to be familiar with note taking pad like Notion, Obsidian, Notes."
+A CLEAN BOARD (28 October 2026): "we want the board to have less tools setup, tools will only appear when you double tap an object or the board (or right click in desktop). I want the board to be clean as possible." And the tools themselves are AFFiNE's own, so nothing here has to be learned twice ("You can just copy the Affine ... when it comes to tools").
 
-So the board works the way those apps and every whiteboard people know do (Miro, FigJam, Apple Freeform, Obsidian Canvas): the tools along the bottom, and a small bar floating over whatever is selected, with ⋯ for everything else. Both are AFFiNE's own (lib/study/board-actions.ts says why they were missing before). What is left for the room is in this file:
+So the board opens with nothing over it, and:
 
-* UNDO AND REDO, two buttons in the board's corner, as Freeform and tldraw have them, because a phone or a tablet has no Ctrl+Z; * A RIGHT-CLICK, OR A LONG PRESS WITH A FINGER, on a thing selects it and opens AFFiNE's own ⋯ menu for it: one set of choices, wherever you ask; * on EMPTY BOARD, a short menu for the board: Undo, Redo, Select everything, Show everything.
+* DOUBLE-TAP OR DOUBLE-CLICK EMPTY BOARD: AFFiNE's dock of tools along the bottom, with the room's Undo, Redo and Hide tools beside it (a phone has no Ctrl+Z). The same again, Escape, or Hide tools puts them away. AFFiNE itself makes a text box on a double-click there; the room takes that gesture for the tools instead, and text is the T in the dock. * DOUBLE-TAP OR DOUBLE-CLICK A THING: AFFiNE's bar over it (colour, Lock, and ⋮ for the rest). A single tap only selects: handles to move and resize it, and no bar. AFFiNE would start typing on a double-click, and that closes its bar, so the room keeps that gesture for the bar; writing is still AFFiNE's own way in: tap a selected sticky note or text again, or Add text on a shape's bar. * RIGHT-CLICK, OR A LONG PRESS WITH A FINGER, on a thing: its bar with ⋮ already open. On empty board: the dock, and a short menu for the board (Undo, Redo, Select everything, Show everything).
 
 #### `components/study/StudyFiling.tsx`
 
@@ -2262,9 +2262,9 @@ THE KEY IS THE CONTENT'S OWN CHECKSUM -- BlockSuite hashes the bytes before it e
 
 The few things the room itself does on a whiteboard; AFFiNE does the rest.
 
-WHAT AFFiNE DOES. Tap or click something on the board and AFFiNE's own bar for it floats above it: colour, style, Lock, and ⋯ More, with Frame and Group, Bring to Front / Forward, Send Backward / to Back, Copy, Duplicate and Delete. Its tools are the bar along the bottom. That is the pattern of every whiteboard people already know (Miro, FigJam, Apple Freeform, Obsidian Canvas), and since 28 October 2026 it draws here; before that the room never told AFFiNE it was a whiteboard (lib/study/view-extensions.ts), so the bar stayed shut and the room drew a bar of its own in words.
+WHAT AFFiNE DOES. Its tools are a dock along the bottom of the board, and a selected thing gets a bar floating over it: colour, style, Lock, and ⋯ More, with Frame and Group, Bring to Front / Forward, Send Backward / to Back, Copy, Duplicate and Delete. The room uses AFFiNE's own tools rather than drawing its own, so what somebody learns here is what AFFiNE itself does (28 October 2026: "You can just copy the Affine ... when it comes to tools").
 
-WHAT THE ROOM DOES, from this file and components/study/StudyBoardTools.tsx: * Undo and Redo as two buttons, because a phone has no Ctrl+Z; * a right-click, or a long press with a finger, on a thing opens that same ⋯ menu; on empty board, a short menu for the board itself; * the card with the page's own writing is LOCKED on the board. AFFiNE's Delete would take the page's writing with it (tried on 28 October 2026: the page came back empty), and a locked thing is what every one of those whiteboards offers for "this must not move or go": it cannot be moved or deleted until somebody chooses Unlock. The writing is changed on Write.
+WHEN THEY SHOW. Since 28 October 2026 the board starts clean: "tools will only appear when you double tap an object or the board (or right click in desktop). I want the board to be clean as possible." components/study/StudyBoardTools.tsx decides when; this file answers the questions it has to ask: is anything under this point, what is selected, and is the Select tool the one in use (a double-tap with a pen is drawing).
 
 #### `lib/study/doc-source.ts`
 
@@ -2348,7 +2348,9 @@ Templates: a new page already laid out, for school, office, church and staff.
 
 ASKED FOR on 28 October 2026. Simple and Advanced were made the same room ("The advance should be same with the simple feature"), and Advanced was given what other apps offer people who plan and run things: "office tools that [are] applicable for education sections and office and staff tools". The owner chose all four groups below.
 
-WHY TEMPLATES. In every app teachers and offices actually use, the office tools are ready-made pages: Notion's teaching templates (lesson plans, attendance trackers, weekly agendas), meeting notes with attendees, agenda, decisions and action items as tasks, and, in church apps, sermon notes, prayer lists, Bible studies and volunteer rotas. The room already has the blocks they are made of (headings, to-dos, lists, quotes, tables), so a template is only those blocks, put in place: nothing new to learn, and every line can be changed or deleted like any other.
+WHY TEMPLATES. A teacher, a secretary or a ministry leader writes the same few pages again and again: who came, what was decided, who serves on which Sabbath. A template saves them laying it out each time. The room already has the blocks those pages are made of (headings, to-dos, lists, tables), so a template is only those blocks, put in place: nothing new to learn, and every line can be changed or deleted like any other.
+
+OUR OWN WORDS. Every heading and line below was written for this church app, not copied from another product's gallery (28 October 2026: "dont copy the branded notes ... I want ours to be original as possible").
 
 #### `lib/study/vault-io.ts`
 

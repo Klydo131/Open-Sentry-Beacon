@@ -93,7 +93,7 @@ export function StudyShelf({
   onTemplate: (id: string) => void;
   /** Open today's journal page, making it if today has not been written in. */
   onToday: () => void;
-  /** Hand the whole room over as an Obsidian vault. */
+  /** Hand the whole room over as a folder of Markdown files. */
   onExportVault: () => void;
   /** Take Markdown -- one file, several, or a zipped vault -- back in. */
   onImportVault: (files: FileList) => void;
@@ -586,7 +586,10 @@ export function StudyShelf({
         </section>
       ))}
 
-      {/* OBSIDIAN, AND WHY IT IS ON THIS SCREEN RATHER THAN IN A SETTINGS ONE.
+      {/* MARKDOWN IN AND OUT, AND WHY IT IS ON THIS SCREEN RATHER THAN IN A
+          SETTINGS ONE. Named for what it makes, not for another company's app
+          (28 October 2026: "I want ours to be original as possible"); the
+          files still open in any notes app that reads Markdown.
           What somebody writes in this room is theirs -- the same argument
           components/LiveExport.tsx makes about the church's own roster. A room
           you can only read inside one website is a room somebody is renting,
@@ -606,8 +609,8 @@ export function StudyShelf({
               >
                 <span className="sr-action-icon"><DownloadGlyph size={17} /></span>
                 <span className="min-w-0 flex-1 py-2">
-                  <span className="block">Take a copy for Obsidian</span>
-                  <span className="sr-row-meta block">Every page as Markdown, pictures and all</span>
+                  <span className="block">Take a copy of every page</span>
+                  <span className="sr-row-meta block">As Markdown files, pictures and all, for any notes app</span>
                 </span>
               </button>
             </li>
@@ -616,14 +619,14 @@ export function StudyShelf({
                 <span className="sr-action-icon"><UploadGlyph size={17} /></span>
                 <span className="min-w-0 flex-1 py-2">
                   <span className="block">Bring in Markdown</span>
-                  <span className="sr-row-meta block">One file, several, or a zipped vault</span>
+                  <span className="sr-row-meta block">One file, several, or a zipped folder</span>
                 </span>
                 <input
                   type="file"
                   multiple
                   accept=".md,.markdown,.zip,text/markdown,application/zip"
                   className="sr-only"
-                  aria-label="Bring in Markdown or a zipped vault"
+                  aria-label="Bring in Markdown or a zipped folder"
                   onChange={(e) => {
                     if (e.target.files?.length) onImportVault(e.target.files);
                     // Cleared so choosing the same file twice still counts as a

@@ -91,7 +91,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
   await page.waitForTimeout(800);
 
   // ---- 1. TAKE A COPY -----------------------------------------------------
-  const take = page.getByRole('button', { name: /Take a copy for Obsidian/i });
+  const take = page.getByRole('button', { name: /Take a copy of every page/i });
   ok(await take.count() > 0, 'the room offers to hand itself over');
 
   const [download] = await Promise.all([
@@ -140,7 +140,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
 
     // ---- THE WHOLE CIRCLE: the vault we just made, brought back in --------
     const beforeCircle = await shelfRows(page).count();
-    await page.setInputFiles('input[aria-label="Bring in Markdown or a zipped vault"]', zipPath);
+    await page.setInputFiles('input[aria-label="Bring in Markdown or a zipped folder"]', zipPath);
     await page.waitForTimeout(12000);
     ok(await shelfRows(page).count() > beforeCircle,
        `the vault can be brought back in (${beforeCircle} -> ${await shelfRows(page).count()})`);
@@ -189,7 +189,7 @@ const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); 
     + '# Ang Biyaya\n\nAng biyaya ng Diyos ay sapat.\n\n- una\n- pangalawa\n');
 
   const before = await shelfRows(page).count();
-  await page.setInputFiles('input[aria-label="Bring in Markdown or a zipped vault"]', mdPath);
+  await page.setInputFiles('input[aria-label="Bring in Markdown or a zipped folder"]', mdPath);
   await page.waitForTimeout(6000);
   const after = await shelfRows(page).count();
   ok(after > before, `a Markdown file becomes a page on the shelf (${before} -> ${after})`);

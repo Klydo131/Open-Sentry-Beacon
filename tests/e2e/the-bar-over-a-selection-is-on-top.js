@@ -50,15 +50,23 @@ async function walk(browser, label, options) {
   await page.waitForTimeout(400);
 
   // Words on the FIRST line, right under the insert bar, selected the way a
-  // person does with a keyboard.
-  await first.click();
+  // person does: the caret put before the first word with a click, then the
+  // keyboard. ON CI'S CHROME 151 HOME DID NOT TAKE THE CARET THERE: the
+  // selection ran on from the end of the line into the next paragraph, which
+  // is why AFFiNE's bar there showed "Create Table" on the phone and had no
+  // Bold on the computer (2caaf91 and 22c6c35; AFFiNE shows those by what is
+  // selected). The walk now checks it selected what it meant to.
+  const line = await first.locator('.inline-editor').first().boundingBox();
+  await page.mouse.click(line.x + 2, line.y + line.height / 2);
   await page.keyboard.press('Home');
   for (let i = 0; i < 8; i++) await page.keyboard.press('Shift+ArrowRight');
-  // AFFiNE FILLS THE BAR IN STEPS. On CI's computer run at 2caaf91 it was read
-  // 800 ms after the selection holding only Create Linked Doc and ⋮, while the
-  // phone run on the same runner, and every local run, had the whole set. So
-  // the walk waits, up to 6 s, for Bold to arrive; a bar that never gets it
-  // still fails.
+  const chosen = await page.evaluate(() => String(window.getSelection() || ''));
+  ok(chosen === 'The Lord', `${label}: the walk selected the first two words ("${chosen}")`);
+  // UP TO 6 S FOR BOLD, rather than one look after a fixed wait: a slow
+  // runner is not a missing button. (This was first added on the guess that a
+  // slow runner explained CI's bar without Bold at 2caaf91. It did not; the
+  // selection did, above. The wait stays because it costs nothing when the
+  // bar is right, and a bar that never gets Bold still fails.)
   let bar = null;
   for (let waited = 0; waited < 6000; waited += 250) {
     await page.waitForTimeout(250);

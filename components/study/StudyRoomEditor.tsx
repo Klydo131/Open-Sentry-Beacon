@@ -637,7 +637,7 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       if (!incoming.length) {
         setVaultBusy('');
         setHiccup(unreadable.length
-          ? 'That vault is compressed in a way this cannot read yet. Zipping the folder without compression will work.'
+          ? 'That zip is compressed in a way this cannot read yet. Zipping the folder without compression will work.'
           : 'There was no Markdown in what you chose.');
         return;
       }

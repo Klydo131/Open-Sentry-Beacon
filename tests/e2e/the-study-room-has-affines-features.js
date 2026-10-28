@@ -199,8 +199,13 @@ const textIn = (host) => {
   await page.waitForTimeout(2500);
   ok(await page.locator('affine-edgeless-root').count() >= 1,
      'and the canvas is really there');
-  const toolbar = await page.locator('edgeless-toolbar-widget, affine-toolbar-widget').count();
-  ok(toolbar >= 1, `with the tools to draw on it (${toolbar})`);
+  // THE TOOLS COME WHEN ASKED (28 October 2026): the board opens clean, and
+  // a double-click on empty board brings AFFiNE's dock.
+  const canvas = await page.locator('.sr-board-frame').boundingBox();
+  if (canvas) await page.mouse.dblclick(canvas.x + canvas.width * 0.15, canvas.y + canvas.height * 0.78);
+  await page.waitForTimeout(700);
+  const toolbar = await page.locator('edgeless-toolbar-widget').isVisible().catch(() => false);
+  ok(toolbar, 'with the tools to draw on it, a double-click away');
 
   const errors = caught.list();
   ok(errors.length === 0, `no page errors (${errors.slice(0, 2).join(' | ') || 'none'})`);

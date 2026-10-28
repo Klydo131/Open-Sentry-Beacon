@@ -1,12 +1,22 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 59 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 60 releases, as members read them in Settings, What's new.
+
+### A clean whiteboard, with its tools when you ask
+
+*2026-10-28*
+
+- The whiteboard opens with nothing over it but your work. Double-tap an empty part of it (double-click or right-click on a computer) and its tools appear along the bottom, with Undo, Redo and Hide tools beside them.
+- Tap a shape, a sticky note or a drawing once to select it and move it. Double-tap it for its small bar: its colour, Lock, and three dots for the rest.
+- To write in a sticky note, tap it again once it is selected. On a shape, press Add text on its bar.
+- Press and hold with a finger, or right-click, to open the three dots straight away.
+- Taking a copy of your pages is now called Take a copy of every page: Markdown files, pictures and all, that open in any notes app.
 
 ### Simple has the whole Study Room, and Advanced has templates
 
 *2026-10-28*
 
-- Simple now has everything the Study Room does: Starred, the Journal, folders, tags, saved views, the star on each page, File this page, and taking your pages to and from Obsidian.
+- Simple now has everything the Study Room does: Starred, the Journal, folders, tags, saved views, the star on each page, File this page, and taking a copy of your pages as Markdown files, or bringing Markdown in.
 - Advanced adds Templates: ten pages already laid out, ready to fill in. For teaching, a lesson plan, attendance and a weekly plan. For the office, meeting notes and a task board. For church, sermon notes, a Bible study and a prayer list. For staff, a volunteer schedule and an event plan.
 - A page made from a template is an ordinary page: change, move or delete any line of it. Undo takes back what you write, never the template.
 - On a phone, a table wider than the screen scrolls sideways inside itself, and the page stays where it is.
@@ -20,7 +30,7 @@ The app's own release notes (`lib/release-notes.ts`), newest first: 59 releases,
 - The tools are along the bottom of the board, as on other whiteboard apps. The big bar of pictures and words at the top is gone.
 - Undo and Redo are two buttons in the board\u2019s top corner, for phones and tablets with no keyboard.
 - The card with your page\u2019s writing is locked on the board, so it cannot be moved or deleted by accident. Change the writing on Write.
-- On a page, select some words and a bar appears over them, as in Notion or Apple Notes: Bold, Italic, Link and the rest, and three dots for Copy, Duplicate and Delete. On the first lines of a page it used to open hidden behind the bar of Heading, List and To-do.
+- On a page, select some words and a bar appears over them: Bold, Italic, Link and the rest, and three dots for Copy, Duplicate and Delete. On the first lines of a page it used to open hidden behind the bar of Heading, List and To-do.
 - Pressing Undo many times on a new page no longer takes the page itself apart.
 
 ### Admin Reports is reports and a conversation, not a court room

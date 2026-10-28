@@ -12,8 +12,10 @@ the app. When a room is redone, read `components/study/study-shell.css` first.
 
 ## The idea in one paragraph
 
-Apple's apps are neutral surfaces with **one tint colour doing all the talking**
-— Notes is yellow, Freeform is blue. Ours is **navy**. Everything else is warm
+Neutral surfaces with **one tint colour doing all the talking**, and ours is
+Hope Beacon's **navy**. The look is our own: it borrows principles, never
+another company's screens (the owner, 28 October 2026: "I want ours to be
+original as possible"). Everything else is warm
 neutral: a ground, white grouped lists, hairlines instead of boxes, and the
 system's own typeface. Navy appears only where something can be pressed or is
 selected; gold appears only on a star and a tag. Nothing is bigger than it
