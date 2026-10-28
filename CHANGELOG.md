@@ -10,6 +10,63 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 28 October 2026: feedback is written up and handed on
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261028130000_feedback_is_reviewed_and_handed_on.sql`**,
+   then rebuild. The code works before the migration: the inbox shows
+   everything, and saving a write-up says the database needs the update.
+2. Nothing else. Directors and the Executive Director already read the
+   Feedback inbox; nobody new can.
+
+### What changed
+
+- **Why:** the owner: "a feedback system where AI tools can receive it, human
+  checks it the feedback, then human can either fix it manually through code
+  or give the feedback to other developers or the one who reviewed and
+  recieved the feedback can use AI tools to help develop for solutions". The
+  owner chose who reviews (Directors and the Executive Director), all three
+  ways out, and that the sender sees a status. `docs/FEEDBACK.md` is the guide.
+- **A person writes it up first.** Under Admin → Feedback a reviewer turns the
+  member's words into a write-up without names, says what done looks like, and
+  chooses who takes it: themselves, a developer, or an AI tool.
+- **Three ways to hand it on**, all built by `lib/feedback/hand-on.ts` from the
+  write-up alone, never the member's words, name or contact:
+  - a brief to copy, in Markdown;
+  - a GitHub issue, opened filled in for the reviewer to submit;
+  - one file for AI tools (`hope-beacon/feedback-for-ai@1`) holding everything
+    written up and still open.
+  - Email addresses, phone numbers and links carrying a token are scrubbed on
+    the way out as a second guard; dates and versions are kept.
+- **The sender sees what happened**, under the feedback button in Settings:
+  Received, Being looked at, Done in a version, or Not this time.
+- **The database** (`20261028130000`): `feedback` gains `status`, `reply`,
+  `fixed_in` and `status_at`; the write-up is its own table, `feedback_review`,
+  readable only by reviewers, because the sender reads their own feedback row
+  and row security cannot hide columns. A trigger refuses any change to what
+  was sent; new feedback always starts as Received; `handled_at` follows the
+  status, so older copies of the app keep working. `feedback_review` is on the
+  live connection, with the rule that shuts a suspended account out, which
+  `fresh-install-holds.sql` refused to install without.
+- **The walkthrough has the same inbox**, reading the feedback sent from that
+  device (`lib/feedback/on-this-device.ts`), so a Director practises on the
+  real screen.
+- **The inbox keeps an item as it moves.** A write-up moves feedback from
+  "Waiting on you" to "Being looked at". In three separate lists React built
+  the item afresh and lost its "Saved."; it is one list now. Keying the items
+  by section again made the walk stall at that step.
+- **Checks.**
+  - `tests/feedback-can-be-handed-on.mjs` (25), in the gate.
+  - `supabase/tests/feedback-is-reviewed-and-handed-on.sql` (20), run by
+    `scripts/fresh-install.sh`. Dropping the guard on what was sent, or opening
+    the write-ups to anybody, each turned it red.
+  - `tests/e2e/feedback-is-handed-on.js` (21): a Guide sends, a Director
+    writes it up and hands it on three ways, the Guide sees it done.
+- **Also:** saving a church's legal details before
+  `20261028120000_what_was_agreed_is_recorded` is applied now says the
+  database needs that update, instead of the database's own words.
+
 ## 28 October 2026: Terms of Use, and an agreement that is recorded
 
 ### If you run a copy, do this

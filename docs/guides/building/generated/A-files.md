@@ -404,6 +404,16 @@ A LINK TO ONE ANSWER WORKS. /faq#faq-sign-out opens that answer and brings it in
 
 *No header comment.*
 
+#### `components/FeedbackReviewInbox.tsx`
+
+The Feedback inbox: read it, write it up, hand it on, close it.
+
+ASKED FOR on 28 October 2026: feedback that "AI tools can receive", that a person checks first, and that the person checking can "fix manually", "give ... to other developers", or hand to "AI tools to help develop for solutions". The owner chose Directors and the Executive Director as the people who check (they already had this inbox), all three ways out, and a status the sender can see.
+
+ONE SCREEN FOR BOTH HALVES OF THE APP. The live inbox (components/LiveFeedbackInbox.tsx) reads the church's database; the sample one (components/SampleFeedbackInbox.tsx) reads feedback kept on this device. Both hand this the same items and the same two actions, so what somebody learns on the walkthrough is what they will use, and the walks can test it.
+
+THE WRITE-UP IS WHAT LEAVES. The member's own words, name and contact stay on this screen. Everything handed on (the brief, the GitHub issue, the file for AI tools) is built by lib/feedback/hand-on.ts from the reviewer's write-up alone, and scrubbed of email addresses and phone numbers on the way.
+
 #### `components/FileDrop.tsx`
 
 Drag files in, or choose them. One box for every place a person adds a file.
@@ -931,6 +941,10 @@ The Sabbath program: plan the order of service for a Sabbath, then take it away 
 Asked for on 2 October 2026 for Guides "and all higher up accounts", and the same day: "simple to use (with Advance settings of course)", shareable with Explorers, ready for Canva without cost or legal risk, and usable on every device with or without a signal. docs/SABBATH-PROGRAM-RESEARCH.md records the open-source tools this was modelled on and what was taken from each.
 
 ONE COMPONENT, THREE PLACES. The Office's Sabbath program folder, and the This Sabbath page (app/sabbath/page.tsx), in a church's own app and in the sample church. Nothing here reads the database: programs live on the device (lib/sabbath-program.ts says why), and sharing goes through the one function the page hands in, which uses the rules posts already have.
+
+#### `components/SampleFeedbackInbox.tsx`
+
+The sample's Feedback inbox: the live inbox's screen, reading the feedback sent from this device (lib/feedback/on-this-device.ts), so the walkthrough shows a Director exactly what they will do with real feedback.
 
 #### `components/SeekerNotes.tsx`
 
@@ -1613,6 +1627,22 @@ ASKED FOR on 2 October 2026: "Make sure Evangelistic Meetings are super customiz
 #### `lib/faq.ts`
 
 The FAQ, written once. The public page (app/faq/page.tsx) and Settings, Help both render it through components/Faq.tsx. Every answer must stay true to the code: limits are read from the modules that enforce them, and the oversight answers reuse lib/oversight.ts word for word, as the invitation does. Deployment-specific facts (hosting country, the DPO) belong in the church's privacy notice, so answers point there.
+
+#### `lib/feedback/hand-on.ts`
+
+Feedback, reviewed by a person and handed on: to the reviewer, to a developer, or to an AI tool.
+
+ASKED FOR on 28 October 2026: "a feedback system where AI tools can receive it, human checks it the feedback, then human can either fix it manually through code or give the feedback to other developers or the one who reviewed and recieved the feedback can use AI tools to help develop for solutions". The owner chose who reviews (Directors and the Executive Director, who already have the Feedback inbox), all three ways out (a brief to copy, a GitHub issue, a file for AI tools), and that the sender sees what happened to what they sent.
+
+A PERSON CHECKS IT FIRST, AND THAT CHECK IS ALSO A PRIVACY STEP. Feedback is written by members and can name people. Nothing in this file reads the member's own words, their name or their contact: everything handed on is built from the reviewer's SUMMARY, which the reviewer writes (starting from the message) and is told to keep free of names. As a second guard the summary is scrubbed of anything shaped like an email address or a phone number before it leaves.
+
+#### `lib/feedback/on-this-device.ts`
+
+Feedback on the sample side of the app: what was sent from this device, and what a reviewer here has done with it.
+
+The sample has no database. Feedback sent from it is kept on the device (lib/backend/feedback.ts, localFeedbackSink), so the sample's inbox reads it from there, and keeps each write-up and status beside it under a key of its own. That way somebody trying the walkthrough can send feedback as an Explorer, review it as a Director and see the result as the sender, with the same screen the live inbox uses (components/FeedbackReviewInbox.tsx).
+
+The same rules as the live table hold here because the same code builds what is handed on (lib/feedback/hand-on.ts): nothing leaves before a write-up, and the write-up never carries the sender's own words.
 
 #### `lib/folders.ts`
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SubroomMenu } from '@/components/SubroomMenu';
 import { useDemo } from '@/lib/demo/store';
 import { Analytics } from '@/components/DemoAnalytics';
@@ -16,6 +16,8 @@ import type { MaterialType, Role, Track } from '@/lib/types';
 import { relTime } from '@/lib/activity';
 import { useIsLive } from '@/lib/tutorial';
 import { LiveAdminPage } from '@/components/live/AdminPage';
+import { SampleFeedbackInbox } from '@/components/SampleFeedbackInbox';
+import { readDeviceFeedback } from '@/lib/feedback/on-this-device';
 
 export default function Admin() {
   if (useIsLive()) return <LiveAdminPage />;
@@ -34,7 +36,7 @@ export default function Admin() {
   );
 }
 
-type Tab = 'approvals' | 'pairing' | 'materials' | 'outbox' | 'reports' | 'analytics';
+type Tab = 'approvals' | 'pairing' | 'materials' | 'outbox' | 'reports' | 'feedback' | 'analytics';
 
 function AdminBody() {
   const { db } = useDemo();
@@ -46,6 +48,10 @@ function AdminBody() {
     (e) => !e.opened_at && e.to_user_id === undefined,
   ).length;
   const openReports = db.reports.filter((r) => r.status === 'open').length;
+  // Feedback sent from this device that nobody has looked at yet. Read after
+  // mount: the server has no device to read it from.
+  const [newFeedback, setNewFeedback] = useState(0);
+  useEffect(() => { setNewFeedback(readDeviceFeedback().filter((f) => f.status === 'new').length); }, [tab]);
 
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: 'approvals', label: t('approvals'), badge: pending + recs },
@@ -55,6 +61,7 @@ function AdminBody() {
     // Its own tab rather than a card inside Approvals. A safeguarding report
     // that shares a screen with routine admin gets treated as routine admin.
     { key: 'reports', label: 'Safeguarding', badge: openReports },
+    { key: 'feedback', label: 'Feedback', badge: newFeedback },
     { key: 'analytics', label: t('analytics') },
   ];
 
@@ -100,6 +107,7 @@ function AdminBody() {
       {tab === 'materials' && <Materials />}
       {tab === 'outbox' && <Mailbox />}
       {tab === 'reports' && <Reports />}
+      {tab === 'feedback' && <SampleFeedbackInbox />}
       {tab === 'analytics' && <Analytics />}
     </div>
   );

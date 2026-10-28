@@ -22,6 +22,7 @@ import type { PlaceSuggestion } from '@/lib/live/place-pin';
 import { SecondStepNeeded, enterCode, isSecondStepRefusal } from '@/lib/live/two-step';
 import type { Session } from '@supabase/supabase-js';
 import type { ChurchLegal, ChurchLegalInput } from '@/lib/legal';
+import { EMPTY_REVIEW, type FeedbackReview, type FeedbackRoute, type FeedbackStatus } from '@/lib/feedback/hand-on';
 import type { Profile, Pairing, Message, Stage, Track, Role, JourneyEvent, MeetingMode, PostMedia } from '@/lib/types';
 import { forgetPostFile, readPostFile } from '@/lib/post-media';
 import type { Reaction, ReactionTarget } from '@/lib/talk/reactions';
@@ -426,7 +427,7 @@ export async function myChurch(): Promise<Church | null> {
   // A DATABASE FROM BEFORE 20261028120000 has no legal columns. Every screen
   // that names the church reads it here, so ask again without them rather
   // than fail them all while the migration waits to be applied.
-  if (error && /legal_name|dpo_|does not exist|42703/.test(`${error.code ?? ''} ${error.message}`)) {
+  if (error && isMissingFromDatabase(error)) {
     const basic = await db().from('churches').select('id, name, guide_cap').limit(1).maybeSingle();
     if (basic.error) throw new Error(basic.error.message);
     return basic.data ? { ...(basic.data as Church), legal_name: null, legal_address: null, dpo_name: null, dpo_email: null } : null;
@@ -444,6 +445,10 @@ export async function updateChurchLegal(id: string, legal: ChurchLegalInput): Pr
     dpo_name: clean(legal.dpo_name),
     dpo_email: clean(legal.dpo_email),
   }).eq('id', id);
+  if (error && isMissingFromDatabase(error)) {
+    // The app reached the church before 20261028120000 did.
+    throw new NotOnThisDatabaseYet('Your church\u2019s database needs its 28 October 2026 update before these can be saved. Ask whoever looks after it to apply it.');
+  }
   if (error) throw new Error(/dpo_email|legal_identity/.test(error.message) ? 'Check the email address.' : error.message);
 }
 
@@ -2461,9 +2466,15 @@ export async function deleteLessonSeries(id: string): Promise<void> {
 }
 
 // --- Feedback ---
+//
+// Reviewed by a church's Directors and handed on (lib/feedback/hand-on.ts,
+// 20261028130000_feedback_is_reviewed_and_handed_on). The sender sees the
+// status on their own feedback; the write-up lives in feedback_review, which
+// only reviewers read.
 
 export interface Feedback {
   id: string;
+  church_id: string | null;
   category: string;
   message: string;
   contact: string | null;
@@ -2473,37 +2484,115 @@ export interface Feedback {
   handled_at: string | null;
   author_id: string | null;
   author_name?: string | null;
+  /** What the sender sees. On a database from before the migration, read from handled_at. */
+  status: FeedbackStatus;
+  reply: string | null;
+  fixed_in: string | null;
+  /** The reviewers' write-up: empty until somebody writes one, or for anybody who may not read it. */
+  review: FeedbackReview;
 }
 
-/** What people have sent, newest first: everything for leaders, your own for anyone else. */
-export async function listFeedback(): Promise<Feedback[]> {
-  const { data, error } = await db()
-    .from('feedback')
-    .select('id, category, message, contact, page, build, created_at, handled_at, author_id, profiles!feedback_author_id_fkey(full_name)')
-    .order('created_at', { ascending: false })
-    .limit(200);
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+const FEEDBACK_COLUMNS = 'id, church_id, category, message, contact, page, build, created_at, handled_at, author_id';
+
+function feedbackFrom(r: Record<string, unknown>, review?: FeedbackReview): Feedback {
+  const handled = (r.handled_at as string) ?? null;
+  return {
     id: String(r.id),
+    church_id: (r.church_id as string) ?? null,
     category: String(r.category),
     message: String(r.message),
     contact: (r.contact as string) ?? null,
     page: (r.page as string) ?? null,
     build: (r.build as string) ?? null,
     created_at: String(r.created_at),
-    handled_at: (r.handled_at as string) ?? null,
+    handled_at: handled,
     author_id: (r.author_id as string) ?? null,
     author_name: (r.profiles as { full_name?: string } | null)?.full_name ?? null,
-  }));
+    status: (r.status as FeedbackStatus) ?? (handled ? 'done' : 'new'),
+    reply: (r.reply as string) ?? null,
+    fixed_in: (r.fixed_in as string) ?? null,
+    review: review ?? EMPTY_REVIEW,
+  };
 }
 
-/** Mark one as dealt with. There is deliberately no delete. */
-export async function markFeedbackHandled(id: string, handled: boolean): Promise<void> {
-  const me_id = await uid();
-  const { error } = await db().from('feedback').update({
-    handled_at: handled ? new Date().toISOString() : null,
-    handled_by: handled ? me_id : null,
-  }).eq('id', id);
+/** Feedback rows, with the status columns when this database has them. */
+async function feedbackRows(mine: string | null): Promise<Record<string, unknown>[]> {
+  const ask = (columns: string) => {
+    let q = db().from('feedback').select(columns);
+    if (mine) q = q.eq('author_id', mine);
+    return q.order('created_at', { ascending: false }).limit(200);
+  };
+  const withAuthor = mine ? '' : ', profiles!feedback_author_id_fkey(full_name)';
+  const full = await ask(`${FEEDBACK_COLUMNS}, status, reply, fixed_in${withAuthor}`);
+  if (!full.error) return (full.data ?? []) as unknown as Record<string, unknown>[];
+  // A database from before 20261028130000: everything but the status.
+  if (!isMissingFromDatabase(full.error)) throw new Error(full.error.message);
+  const basic = await ask(`${FEEDBACK_COLUMNS}${withAuthor}`);
+  if (basic.error) throw new Error(basic.error.message);
+  return (basic.data ?? []) as unknown as Record<string, unknown>[];
+}
+
+/** What people have sent, newest first, with each write-up: everything for leaders, your own for anyone else. */
+export async function listFeedback(): Promise<Feedback[]> {
+  const rows = await feedbackRows(null);
+  const reviews = new Map<string, FeedbackReview>();
+  if (rows.length) {
+    // Every write-up this person may read: the rules already keep it to their
+    // own churches, and naming two hundred ids would make an address some
+    // proxies refuse.
+    const { data, error } = await db().from('feedback_review')
+      .select('feedback_id, summary, done_when, route, given_to, note')
+      .order('updated_at', { ascending: false })
+      .limit(1000);
+    // No review table yet, or none this person may read: the feedback still shows.
+    if (error && !isMissingFromDatabase(error)) throw new Error(error.message);
+    for (const r of (data ?? []) as Record<string, unknown>[]) {
+      reviews.set(String(r.feedback_id), {
+        summary: String(r.summary ?? ''),
+        doneWhen: String(r.done_when ?? ''),
+        route: (r.route as FeedbackRoute) ?? null,
+        givenTo: String(r.given_to ?? ''),
+        note: String(r.note ?? ''),
+      });
+    }
+  }
+  return rows.map((r) => feedbackFrom(r, reviews.get(String(r.id))));
+}
+
+/** What I have sent, and what became of each. The sender's own rows only. */
+export async function listMyFeedback(): Promise<Feedback[]> {
+  return (await feedbackRows(await uid())).map((r) => feedbackFrom(r));
+}
+
+const FEEDBACK_UPDATE_NEEDED = 'Your church\u2019s database needs its 28 October 2026 update before feedback can be written up. Ask whoever looks after it to apply it.';
+
+/** Save a reviewer's write-up. The database stamps who and when. */
+export async function saveFeedbackReview(item: Pick<Feedback, 'id' | 'church_id'>, review: FeedbackReview): Promise<void> {
+  if (!item.church_id) throw new Error('This feedback is not filed under a church, so it cannot be written up.');
+  const { error } = await db().from('feedback_review').upsert({
+    feedback_id: item.id,
+    church_id: item.church_id,
+    summary: review.summary,
+    done_when: review.doneWhen,
+    route: review.route,
+    given_to: review.givenTo,
+    note: review.note,
+  }, { onConflict: 'feedback_id' });
+  if (error && isMissingFromDatabase(error)) throw new NotOnThisDatabaseYet(FEEDBACK_UPDATE_NEEDED);
+  if (error) throw new Error(error.message);
+}
+
+/** Move feedback along. What the sender sees is the status, the version and the reply. */
+export async function setFeedbackStatus(
+  id: string,
+  status: FeedbackStatus,
+  extra: { reply?: string | null; fixedIn?: string | null } = {},
+): Promise<void> {
+  const patch: Record<string, unknown> = { status };
+  if (extra.reply !== undefined) patch.reply = extra.reply;
+  if (extra.fixedIn !== undefined) patch.fixed_in = extra.fixedIn;
+  const { error } = await db().from('feedback').update(patch).eq('id', id);
+  if (error && isMissingFromDatabase(error)) throw new NotOnThisDatabaseYet(FEEDBACK_UPDATE_NEEDED);
   if (error) throw new Error(error.message);
 }
 

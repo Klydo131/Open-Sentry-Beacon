@@ -214,6 +214,13 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/what-was-agreed-is-recorded.sql"
 
+# FEEDBACK IS REVIEWED AND HANDED ON: new feedback starts as Received; the
+# sender reads its status and never the review; a Director of the same church
+# writes the review and moves the status; nobody else reads either; what was
+# sent cannot be rewritten. Invented people, rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/feedback-is-reviewed-and-handed-on.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

@@ -4,7 +4,8 @@
 
 import { ChurchLegalForm } from '@/components/ChurchLegal';
 import { useCallback, useEffect, useState } from 'react';
-import { useKeepUp, KEEP_UP_ACCOUNT } from '@/lib/live/keep-up';
+import { useKeepUp, KEEP_UP_ACCOUNT, KEEP_UP_FEEDBACK } from '@/lib/live/keep-up';
+import { MyFeedbackList } from '@/components/FeedbackReviewInbox';
 import Link from 'next/link';
 import { Avatar, Button, Card } from '@/components/ui';
 import { InstallCard } from '@/components/InstallCard';
@@ -554,8 +555,16 @@ function PasswordCard() {
   );
 }
 
-/** What's New and Feedback, opening panels over the page. */
+/** What's New and Feedback, opening panels over the page, and what became of what you sent. */
 function HelpCard() {
+  const [mine, setMine] = useState<live.Feedback[]>([]);
+  const loadMine = useCallback(async () => {
+    // A courtesy under the button: if it cannot be read, the button still works.
+    try { setMine(await live.listMyFeedback()); } catch { /* nothing to show */ }
+  }, []);
+  useEffect(() => { void loadMine(); }, [loadMine]);
+  // The sender sees a reviewer's change of status as it happens.
+  useKeepUp(KEEP_UP_FEEDBACK, loadMine);
   return (
     <Card className="p-5">
       <div id="whats-new" />
@@ -569,6 +578,12 @@ function HelpCard() {
         <WhatsNewButton className="tap" />
         <FeedbackButton className="tap" />
       </div>
+      <MyFeedbackList
+        items={mine.map((f) => ({
+          id: f.id, category: f.category, message: f.message, createdAt: f.created_at,
+          status: f.status, reply: f.reply, fixedIn: f.fixed_in,
+        }))}
+      />
     </Card>
   );
 }

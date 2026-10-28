@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-89 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+90 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -133,6 +133,12 @@ Evangelistic meetings: a Guide shapes a series their own way, and what is shared
 Asked for on 2 October 2026: "super customizable, unlike Sabbath program it has a template that can put input, but for EMs users can have much more freedom to customise their meeting". The owner chose blocks, a list's own columns, many nights and the meeting's own look; kept on the device and shared as posts; for Guides and above.
 
 Walked in the sample church, at phone width unless it says otherwise:
+
+#### `feedback-is-handed-on.js`
+
+Feedback is checked by a person, handed on without anybody's name, and the person who sent it sees what became of it.
+
+28 October 2026, asked for: "a feedback system where AI tools can receive it, human checks it the feedback, then human can either fix it manually through code or give the feedback to other developers or ... use AI tools". The owner chose Directors and the Executive Director as reviewers, three ways to hand it on (a brief to copy, a GitHub issue, a file for AI tools), and a status the sender sees. lib/feedback/hand-on.ts builds what leaves; tests/feedback-can-be-handed-on.mjs checks it word by word, and supabase/tests/feedback-is-reviewed-and-handed-on.sql the database.
 
 #### `fresh-looks.js`
 

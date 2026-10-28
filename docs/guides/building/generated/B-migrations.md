@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-161 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+162 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1385,3 +1385,11 @@ ASKED FOR, 27 October 2026, from the costed plan "Rust and Python for Hope Beaco
 What somebody agreed to is recorded, and the church is named in the notice.
 
 ASKED FOR, 28 October 2026: "update our UI for agreeing on 'Terms' and 'Privacy Policy'. I want all of those to be handled professionally so that we won't face any legalities in the future." The owner chose to do it in this app, and that a church's legal name and Data Protection Officer are a setting its Director fills in, so no person's name goes into the public source.
+
+#### `20261028130000_feedback_is_reviewed_and_handed_on.sql`
+
+*2026-10-28*
+
+Feedback is reviewed by a person, then handed on: fixed by the reviewer, given to a developer, or given to an AI tool. The sender sees what happened.
+
+ASKED FOR, 28 October 2026: "Make a feedback system where AI tools can receive it, human checks it the feedback, then human can either fix it manually through code or give the feedback to other developers or the one who reviewed and recieved the feedback can use AI tools". The owner chose: * who reviews: Directors and the Executive Director, who already read the Feedback inbox (manages_church). Nobody new can see feedback. * three ways out, all built in the app from the reviewer's write-up, never from the member's own words (lib/feedback/hand-on.ts); * the sender sees a status on their own feedback.

@@ -26,6 +26,8 @@ import { OnlineRow } from '@/components/OnlineStatus';
 import { WhatsNewButton } from '@/components/WhatsNew';
 import { WhichApp } from '@/components/WhichApp';
 import { FeedbackButton } from '@/components/Feedback';
+import { MyFeedbackList } from '@/components/FeedbackReviewInbox';
+import { readDeviceFeedback, type DeviceFeedback } from '@/lib/feedback/on-this-device';
 import { DataManager } from '@/components/DataManager';
 import { FaqCard } from '@/components/Faq';
 import { KeptForNoSignal } from '@/components/KeptForNoSignal';
@@ -112,6 +114,19 @@ function ChurchLegalCard() {
         joining.
       </p>
       <ChurchLegalForm initial={db.church_legal ?? {}} onSave={setChurchLegal} />
+    </Card>
+  );
+}
+
+// What was sent from this device and what became of it, as a member sees it
+// in the live app (lib/feedback/on-this-device.ts). Nothing sent, nothing shown.
+function SentFeedbackCard() {
+  const [items, setItems] = useState<DeviceFeedback[]>([]);
+  useEffect(() => { setItems(readDeviceFeedback()); }, []);
+  if (!items.length) return null;
+  return (
+    <Card className="p-5">
+      <MyFeedbackList items={items} />
     </Card>
   );
 }
@@ -596,6 +611,7 @@ function Body() {
           </div>
           <SourceCard />
           <VersionCard />
+          <SentFeedbackCard />
         </>
       )}
 

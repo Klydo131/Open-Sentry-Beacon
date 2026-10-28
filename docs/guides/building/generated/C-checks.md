@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 191 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 192 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -185,6 +185,16 @@ The Terms of Use and the Privacy Notice are agreed to properly, and recorded.
 28 October 2026, asked for: "update our UI for agreeing on 'Terms' and 'Privacy Policy'. I want all of those to be handled professionally so that we won't face any legalities in the future." lib/legal.ts says what "professionally" means here, point by point; this keeps each point true in the source:
 
 * the rules in lib/legal.ts answer as they say they do; * the box starts unticked, links both documents, and every form's button waits for it; * it is a box of its own, beside the permission to keep sensitive information, never folded into it; * what is recorded is the versions, and the browser never writes when; * a raised version stops everybody at the door, on both halves of the app; * the documents say their version, promise nothing the app does not do, and name no real person.
+
+#### feedback can be handed on
+
+`tests/feedback-can-be-handed-on.mjs`
+
+Feedback is checked by a person, then handed on without anybody's name.
+
+28 October 2026, asked for: "a feedback system where AI tools can receive it, human checks it the feedback, then human can either fix it manually through code or give the feedback to other developers or ... use AI tools". The owner chose: Directors and the Executive Director review; three ways out (a brief to copy, a GitHub issue, a file for AI tools); the sender sees what happened.
+
+This checks the part every screen shares, lib/feedback/hand-on.ts: that nothing is handed on before a person has written it up, that what is handed on never carries the member's own words, name or contact, and that the sender is told what happened in plain words without the reviewer's notes.
 
 #### a study can be corrected
 

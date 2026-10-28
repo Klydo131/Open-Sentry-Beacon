@@ -1,6 +1,14 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 61 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 62 releases, as members read them in Settings, What's new.
+
+### Feedback you can follow
+
+*2026-10-28*
+
+- After you send feedback, Settings shows what became of it: Received, Being looked at, or Done and in which version.
+- Directors and the Executive Director write each piece up in their own words, without names, and choose who takes it: themselves, a developer, or an AI tool.
+- What leaves your church is the write-up, never what you wrote, your name or how to reach you.
 
 ### Terms of Use, and what you agree to
 

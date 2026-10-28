@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-28-feedback-is-handed-on',
+    date: '2026-10-28',
+    title: 'Feedback you can follow',
+    items: [
+      'After you send feedback, Settings shows what became of it: Received, Being looked at, or Done and in which version.',
+      'Directors and the Executive Director write each piece up in their own words, without names, and choose who takes it: themselves, a developer, or an AI tool.',
+      'What leaves your church is the write-up, never what you wrote, your name or how to reach you.',
+    ],
+  },
+  {
     id: '2026-10-28-terms-of-use',
     date: '2026-10-28',
     title: 'Terms of Use, and what you agree to',

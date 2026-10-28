@@ -95,9 +95,17 @@ const admin = read('components/live/AdminPage.tsx');
 ok(/room === 'feedback'/.test(admin) && /LiveFeedbackInbox/.test(admin),
    'it has a room of its own on the Admin screen');
 ok(/id: 'feedback'/.test(admin), 'and a way to reach that room');
-ok(/waiting/.test(inbox) && /handled_at/.test(inbox),
+// Since 28 October 2026 the inbox is the shared review screen
+// (components/FeedbackReviewInbox.tsx): written up, handed on, then closed
+// (docs/FEEDBACK.md). The same two promises, read from where they now live.
+const screen = read('components/FeedbackReviewInbox.tsx');
+const order = ['Waiting on you', 'Being looked at', 'Done'].map((title) => screen.indexOf(`['${title}', `));
+ok(/const waiting = items\.filter\(\(i\) => i\.status === 'new'\);/.test(screen)
+   && order.every((at, i) => at > 0 && (i === 0 || at > order[i - 1])),
    'unanswered feedback is listed before what has been dealt with');
-ok(/markFeedbackHandled/.test(inbox), 'and can be marked dealt with');
+ok(/<FeedbackReviewInbox/.test(inbox) && /live\.setFeedbackStatus\(id, status, extra\)/.test(inbox)
+   && /actions\.setStatus\(item\.id, 'done'/.test(screen),
+   'and can be marked dealt with');
 
 // ---- 5. The open-source default is untouched -----------------------------
 //

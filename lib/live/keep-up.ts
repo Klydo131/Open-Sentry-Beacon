@@ -121,7 +121,7 @@ export const KEEP_UP_GUIDE_ROOM =
   ['guide_room_messages', 'pairing_requests', 'profiles', 'pairings'] as const;
 
 /** The feedback inbox a Director works from. */
-export const KEEP_UP_FEEDBACK = ['feedback'] as const;
+export const KEEP_UP_FEEDBACK = ['feedback', 'feedback_review'] as const;
 
 /**
  * The library record, by watching the tables whose triggers write it.

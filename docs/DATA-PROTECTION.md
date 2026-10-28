@@ -204,6 +204,13 @@ These are properties of the running system, not intentions:
   record their own agreement. The box starts unticked, both documents are a
   tap away from it, and a changed document is asked about again before the app
   opens (`lib/legal.ts`; `supabase/tests/what-was-agreed-is-recorded.sql`).
+- **Feedback leaves the church only as a write-up** (28 October 2026,
+  `20261028130000_feedback_is_reviewed_and_handed_on`). What a member sends is
+  read only by the church's Directors and Executive Director. Anything handed
+  to a developer, a GitHub issue or an AI tool is a reviewer's write-up, built
+  without the member's words, name or contact, and scrubbed of email addresses
+  and phone numbers (`lib/feedback/hand-on.ts`; `docs/FEEDBACK.md`). The member
+  sees its status, never the write-up.
 - **The notice names who is responsible.** The church's legal name, registered
   address and Data Protection Officer are its own record, filled in by its
   Director, and readable before sign-in so a person can see them before
