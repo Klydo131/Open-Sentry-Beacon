@@ -450,6 +450,11 @@
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .sr-formatbar { background: var(--sr-bg); }
 }
+/* While AFFiNE's bar over a selection is open (Bold, Italic, Link, ⋮), the
+   insert bar steps back a layer, so that bar is drawn over it, not under it.
+   AFFiNE keeps its editor in a layer of its own; lib/study/view-extensions.ts
+   (whenAffineBarShows) says why this is the way round it. */
+.sr[data-affine-bar='open'] .sr-formatbar { z-index: auto; }
 @media (min-width: 768px) {
   .sr-formatbar { margin-inline: -32px; padding-inline: 32px; }
 }

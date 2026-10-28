@@ -24,7 +24,8 @@
 import { ViewExtensionManager } from '@blocksuite/affine/ext-loader';
 import { getInternalViewExtensions } from '@blocksuite/affine/extensions/view';
 import type { DocMode } from '@blocksuite/affine/model';
-import { DocModeExtension, type DocModeProvider } from '@blocksuite/affine/shared/services';
+import { DocModeExtension, type DocModeProvider, ToolbarFlag, ToolbarRegistryIdentifier } from '@blocksuite/affine/shared/services';
+import type { BlockStdScope } from '@blocksuite/affine/std';
 import type { ExtensionType } from '@blocksuite/affine/store';
 import { ParagraphViewExtension } from '@blocksuite/affine-block-paragraph/view';
 
@@ -85,4 +86,24 @@ function fixedMode(mode: DocMode): DocModeProvider {
 /** Everything a page or a whiteboard is drawn with, for that mode. */
 export function studyViewExtensions(mode: DocMode): ExtensionType[] {
   return [...studyViewManager().get(mode), DocModeExtension(fixedMode(mode))];
+}
+
+/**
+ * Tells `run` whenever AFFiNE's bar for a selection opens or closes: the bar
+ * over selected words on a page (Bold, Italic, Link, ⋮) and over a selected
+ * thing on a whiteboard. Returns a way to stop.
+ *
+ * WHY THE ROOM NEEDS TO KNOW. AFFiNE keeps its editor in a layer of its own
+ * (`isolation: isolate` on editor-host), so its bar, however high its
+ * z-index, can never rise above something outside that layer, and the room's
+ * insert bar is outside it, stuck to the top while the writing scrolls under
+ * it. Selecting a word on the first lines opened the bar underneath the
+ * insert bar, where nobody could see it (found 28 October 2026). While the bar
+ * is open, the insert bar steps back (study-shell.css, `data-affine-bar`).
+ */
+export function whenAffineBarShows(std: BlockStdScope, run: (open: boolean) => void): () => void {
+  const flags = std.get(ToolbarRegistryIdentifier).flags;
+  return flags.value$.subscribe((value) => {
+    run(value !== ToolbarFlag.None && (value & ToolbarFlag.Hiding) === 0);
+  });
 }

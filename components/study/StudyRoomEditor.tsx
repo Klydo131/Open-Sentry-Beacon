@@ -290,7 +290,7 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     (async () => {
     try {
       // The editor is fetched here, when somebody opens a page.
-      const [, { studyViewExtensions }] = await Promise.all([
+      const [, { studyViewExtensions, whenAffineBarShows }] = await Promise.all([
         import('@/lib/study/effects'),
         import('@/lib/study/view-extensions'),
       ]);
@@ -371,6 +371,16 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       render(std.render(), host.current);
       setDrawing(false);
 
+      // While AFFiNE's bar over a selection is open, the room's insert bar
+      // steps back so the bar is never drawn underneath it
+      // (lib/study/view-extensions.ts, whenAffineBarShows, says why).
+      const screen = host.current.closest<HTMLElement>('.sr');
+      const stopBar = whenAffineBarShows(std, (open) => {
+        if (!screen) return;
+        if (open) screen.dataset.affineBar = 'open';
+        else delete screen.dataset.affineBar;
+      });
+
       // The whiteboard's actions reach into AFFiNE's canvas packages, which a
       // page never needs: loaded only when the page is a whiteboard.
       if (mode === 'edgeless') {
@@ -414,6 +424,8 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       });
 
       letGo = () => {
+        stopBar();
+        if (screen) delete screen.dataset.affineBar;
         setBoardApi(null);
         doc.spaceDoc.off('update', onEdit);
         // Leaving a page updates the list at once.

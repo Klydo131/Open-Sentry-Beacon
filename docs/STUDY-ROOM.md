@@ -33,6 +33,13 @@ things: four basics, a heading, a list, a to-do and a quote, each with a
 picture and a word, and **More** for everything else. That is the same in
 Simple and Advanced, so nothing has to be found twice.
 
+**Select some words** and a bar appears over them, as in Notion or Apple
+Notes: the kind of line (text, heading, list...), **Bold**, **Code**,
+**Italic**, **Link**, **Strikethrough**, **Underline**, a highlighter, **Create
+linked doc**, and **⋮** with **Copy**, **Duplicate** and **Delete**. Until 28
+October 2026 that bar opened underneath the insert bar on a page's first
+lines, where nobody could see it; see `CHANGELOG.md`.
+
 Tap **Advanced**, under the room's name, for the rest of the room: **Starred**
 and the **Journal**, folders, tags and saved views, the star on each page,
 **File this page**, and taking your pages to and from Obsidian. Tap **Simple**

@@ -10,7 +10,7 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
-## 28 October 2026: the whiteboard works like the ones people know
+## 28 October 2026: the whiteboard works like the ones people know, and a page's selection bar is seen
 
 ### If you run a copy, do this
 
@@ -50,6 +50,17 @@ Nothing: no migration and no setting. Rebuild the site.
   root ("Cannot read properties of undefined (reading 'children')"). The
   skeleton, and the canvas added to older pages, are now made outside the
   history.
+- **On a page, the bar over selected words is on top.** Selecting words opens
+  AFFiNE's bar (kind of line, Bold, Code, Italic, Link, Strikethrough,
+  Underline, highlight, Create linked doc, ⋮), and on a page's first lines it
+  opened underneath the room's sticky insert bar: AFFiNE keeps its editor in
+  a layer of its own (`isolation: isolate` on editor-host), so no z-index can
+  lift its bar out. While that bar is open the insert bar now steps back
+  (`whenAffineBarShows` in `lib/study/view-extensions.ts`, and
+  `[data-affine-bar='open']` in `study-shell.css`). New walk:
+  `tests/e2e/the-bar-over-a-selection-is-on-top.js`, 10 checks on a computer
+  and a phone, by what the browser says is on top at the bar's middle. It is
+  red with the insert bar held at its old layer.
 - **A long press opens its menu when the finger lifts**, not at 600 ms:
   opened while the finger was down, the lift reached AFFiNE as a tap and shut
   the menu.

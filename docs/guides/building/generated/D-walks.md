@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-86 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+87 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -397,6 +397,12 @@ This repository has spent a week on checks that stayed green while something was
 The app works with no signal: opened once with a signal, then cut off, and every screen and every tool still opens.
 
 The owner, 16 October 2026: "How is it still and "offline" first local web app if all of the features are not usable offline? Can we fix that today and make an update?" Measured that day with the server stopped, after opening Home and the Church online: 10 of 27 screens opened, three showed "Beacon needs a fresh copy", and the Tuner, the Conductor, Pieces and Play all failed.
+
+#### `the-bar-over-a-selection-is-on-top.js`
+
+The bar over selected words is on top of the page, never under it.
+
+28 October 2026. Selecting a word on a page opens AFFiNE's own bar over it (Bold, Italic, Link, and ⋮ for the rest), the way Notion and Apple Notes do. On the first lines of a page that bar opened underneath the room's insert bar, which is stuck to the top of the page, so it was there and nobody could see it: AFFiNE keeps its editor in a layer of its own, and the insert bar is outside that layer. While the bar is open the insert bar now steps back (lib/study/view-extensions.ts, whenAffineBarShows; study-shell.css).
 
 #### `the-bubble-has-one-scroll.js`
 

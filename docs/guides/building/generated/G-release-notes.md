@@ -11,6 +11,7 @@ The app's own release notes (`lib/release-notes.ts`), newest first: 58 releases,
 - The tools are along the bottom of the board, as on other whiteboard apps. The big bar of pictures and words at the top is gone.
 - Undo and Redo are two buttons in the board\u2019s top corner, for phones and tablets with no keyboard.
 - The card with your page\u2019s writing is locked on the board, so it cannot be moved or deleted by accident. Change the writing on Write.
+- On a page, select some words and a bar appears over them, as in Notion or Apple Notes: Bold, Italic, Link and the rest, and three dots for Copy, Duplicate and Delete. On the first lines of a page it used to open hidden behind the bar of Heading, List and To-do.
 - Pressing Undo many times on a new page no longer takes the page itself apart.
 
 ### Admin Reports is reports and a conversation, not a court room
