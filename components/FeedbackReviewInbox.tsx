@@ -30,7 +30,7 @@ import { copyText } from '@/lib/share';
 import { humanError } from '@/lib/live/errors';
 import { APP_NAME } from '@/lib/brand';
 import {
-  EMPTY_REVIEW, KIND_WORDS, feedbackBrief, feedbackForAi, feedbackIssueUrl, feedbackRef, isReviewed,
+  EMPTY_REVIEW, KIND_WORDS, cautions, feedbackBrief, feedbackForAi, feedbackIssueUrl, feedbackRef, isReviewed,
   statusForSender, type FeedbackForHandOn, type FeedbackReview, type FeedbackRoute, type FeedbackStatus,
 } from '@/lib/feedback/hand-on';
 
@@ -214,6 +214,7 @@ function Review({ item, actions, sourceUrl, version, app }: {
   const ready = isReviewed({ review: saved });
   const changed = JSON.stringify(draft) !== JSON.stringify(saved);
   const handOn = forHandOn(item, saved);
+  const warn = cautions([draft.summary, draft.doneWhen].join('\n'));
   const id = `fb-${item.id}`;
 
   const run = async (label: string, work: () => Promise<void>, done: string) => {
@@ -251,6 +252,14 @@ function Review({ item, actions, sourceUrl, version, app }: {
           data-feedback-summary
         />
       </label>
+      {/* WHAT A TOOL MIGHT ACT ON (the audit of 29 October 2026). The write-up
+          starts as the member's words and may go to an AI tool or a public
+          issue; these say what to look at again before it does. */}
+      {warn.length > 0 && (
+        <ul className="list-disc space-y-1 rounded-lg bg-amber-50 p-3 pl-7 text-xs text-amber-900 ring-1 ring-amber-200" data-feedback-cautions>
+          {warn.map((line) => <li key={line}>{line}</li>)}
+        </ul>
+      )}
       <label className="block">
         <span className="block text-sm font-bold text-navy">Done when <span className="font-normal text-gray-500">(optional)</span></span>
         <input

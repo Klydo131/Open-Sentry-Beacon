@@ -104,6 +104,13 @@ select pg_temp.check((select terms_agreed_at = now() and terms_version = '2026-1
 select pg_temp.as_user('00000000-0000-0000-0000-0000000003b1', 'authenticated',
   format($q$update public.profiles set terms_version = %L where id = '00000000-0000-0000-0000-0000000003b1'$q$, repeat('9', 41)), '23514',
   'a version longer than any the app writes is refused');
+-- Checked by the audit of 29 October 2026: profiles has an insert grant, so a
+-- row a browser could write itself would carry a time of its own choosing.
+-- No rule lets anybody signed in insert one.
+select pg_temp.as_user('00000000-0000-0000-0000-0000000003b1', 'authenticated',
+  $q$insert into public.profiles (id, full_name, terms_version, privacy_version, terms_agreed_at)
+     values ('00000000-0000-0000-0000-0000000003b9', 'Forged', '2026-10-28', '2026-10-28', '2020-01-01')$q$, '42501',
+  'nobody signed in can write a profile row, with an agreement time of their own, into the table');
 
 -- NOBODY AGREES FOR SOMEBODY ELSE ----------------------------------------------
 select pg_temp.as_user('00000000-0000-0000-0000-0000000003a1', 'authenticated',
@@ -176,7 +183,7 @@ begin
     if r.ok then raise notice 'OK    %', r.label;
     else failed := failed + 1; raise notice 'FAIL  %', r.label; end if;
   end loop;
-  if total < 26 then raise exception 'only % checks ran; expected at least 26', total; end if;
+  if total < 27 then raise exception 'only % checks ran; expected at least 27', total; end if;
   if failed > 0 then raise exception '% of % agreement checks failed', failed, total; end if;
   raise notice 'what was agreed is recorded: % checks hold', total;
 end $$;

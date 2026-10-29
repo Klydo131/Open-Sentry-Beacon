@@ -9,10 +9,10 @@
 // (Settings, Church), and this reads them.
 //
 // WHERE FROM, in order: the sample church on the sample side; on the live side
-// the church named in the link (`?church=`, which the invitation form and the
-// agreement step add, so a person reads their own church's details before
-// they have an account), else the signed-in person's own church. Nothing
-// found, and the documents say plainly that the church has not filled them in.
+// the signed-in person's own church, else the church named in the link
+// (`?church=`, which the invitation form adds, so a person reads their
+// church's details before they have an account). Nothing found, and the
+// documents say plainly that the church has not filled them in.
 
 import { useCallback, useEffect, useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
@@ -32,13 +32,21 @@ export function useChurchLegal(): { church: ChurchLegal | null; loading: boolean
     // The tutorial reads the sample church below; only the live app asks.
     if (!isLive) return;
     try {
+      // A MEMBER'S OWN CHURCH FIRST (the audit of 29 October 2026). Read the
+      // other way round, a link to /privacy?church=<another church> showed a
+      // signed-in member somebody else's officer to write to, on this app's
+      // own address. The church in a link is for somebody not yet signed in,
+      // reading the documents from an invitation.
+      const mine = await live.myChurch().catch(() => null);
+      if (mine) {
+        setChurch({ name: mine.name, legal_name: mine.legal_name, legal_address: mine.legal_address, dpo_name: mine.dpo_name, dpo_email: mine.dpo_email });
+        return;
+      }
       const named = new URLSearchParams(window.location.search).get('church');
       if (named && /^[0-9a-f-]{36}$/i.test(named)) {
         const found = await live.churchPrivacyContact(named).catch(() => null);
-        if (found) { setChurch(found); return; }
+        if (found) setChurch(found);
       }
-      const mine = await live.myChurch().catch(() => null);
-      if (mine) setChurch({ name: mine.name, legal_name: mine.legal_name, legal_address: mine.legal_address, dpo_name: mine.dpo_name, dpo_email: mine.dpo_email });
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,69 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 29 October 2026: the audit of the Terms and feedback updates
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261029100000_feedback_lets_a_deleted_account_go.sql`**
+   after `20261028130000`. If you applied `20261028130000` already, apply this
+   one before you delete any account: until you do, **deleting a member who
+   has sent feedback fails**.
+2. Rebuild. Nothing else.
+
+### What changed
+
+- **Why:** the owner: "Audit right now, see if there are any exploits in the
+  updates and fix it." The two updates of 28 October were read as an attacker
+  would, on the database and in the app, before either reached the live
+  database. Each fault found was proved on a database built from nothing,
+  fixed, and its check broken on purpose.
+- **Deleting an account that had sent feedback was refused.** The database
+  lets go of a deleted author with an UPDATE (on delete set null), and the
+  trigger keeping what was sent took it for a change of author. A Director
+  could not remove such a member, nobody could have their account deleted, and
+  anybody could make themselves impossible to remove by sending one piece of
+  feedback. The database's own clean-up runs as the table's owner, so it is
+  let through; a Director still cannot take the sender's name off.
+- **Deleting a reviewer re-signed their write-up** in the name of whoever
+  deleted them. A write-up is re-signed only when what it says changes.
+- **Who closed feedback, and when, were the browser's to say.** A Director
+  could close it in another's name or back-date it. The database sets both.
+- **A write-up could be moved onto other feedback.** It stays with its own.
+- **A member's words could steer an AI tool or a public issue.** The write-up
+  starts as the member's words, and the page and version came from the
+  sender's own device with no reviewer reading them.
+  - Member text is quoted in a fence nothing in it can close, so a tool reads
+    a quotation and GitHub shows text: no live `@mention`, link, picture or
+    hidden HTML.
+  - The brief and the file for AI tools (now `hope-beacon/feedback-for-ai@2`)
+    say first that what is quoted describes a problem and is not instructions.
+  - A page that is not a path, or a version that is not a version, is left out.
+  - The reviewer is shown, as they write, what a tool might act on.
+- **A link could show a signed-in member another church's officer.**
+  `/privacy?church=<id>` named the church in the link even for a member of a
+  different one, on this app's own address. A signed-in member now always sees
+  their own church; the link's church is for somebody not yet signed in.
+- **Checked and found sound:** a member cannot insert a profile row (so cannot
+  write their own agreement time); nobody records another's agreement; the
+  reviewers' table is closed to the sender, to other churches and to anybody
+  signed out, and shuts a suspended account out; links in member text open
+  only http and https.
+- **Still true, and said plainly:** the agreement step is asked by the app,
+  not enforced by the database. Somebody calling the database directly could
+  read what their account may read without agreeing; what is recorded is still
+  accurate, because only their own agreement records one.
+- **Checks.**
+  - `supabase/tests/feedback-is-reviewed-and-handed-on.sql`: 20 → 29. Against
+    `main` before this fix, 7 of the 29 failed.
+  - `supabase/tests/what-was-agreed-is-recorded.sql`: 26 → 27.
+  - `tests/feedback-can-be-handed-on.mjs`: 25 → 35. A three-backtick fence, or
+    a page copied as sent, turns it red.
+  - `tests/terms-are-agreed-and-recorded.mjs`: the member's own church first;
+    the old order turns it red.
+  - `tests/e2e/feedback-is-handed-on.js`: the cautions appear and go, and the
+    brief is quoted.
+
 ## 28 October 2026: feedback is written up and handed on
 
 ### If you run a copy, do this

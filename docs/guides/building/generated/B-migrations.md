@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-162 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+163 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1393,3 +1393,13 @@ ASKED FOR, 28 October 2026: "update our UI for agreeing on 'Terms' and 'Privacy 
 Feedback is reviewed by a person, then handed on: fixed by the reviewer, given to a developer, or given to an AI tool. The sender sees what happened.
 
 ASKED FOR, 28 October 2026: "Make a feedback system where AI tools can receive it, human checks it the feedback, then human can either fix it manually through code or give the feedback to other developers or the one who reviewed and recieved the feedback can use AI tools". The owner chose: * who reviews: Directors and the Executive Director, who already read the Feedback inbox (manages_church). Nobody new can see feedback. * three ways out, all built in the app from the reviewer's write-up, never from the member's own words (lib/feedback/hand-on.ts); * the sender sees a status on their own feedback.
+
+#### `20261029100000_feedback_lets_a_deleted_account_go.sql`
+
+*2026-10-29*
+
+Feedback lets a deleted account go, and says itself who handled it, when.
+
+FOUND BY THE AUDIT OF 29 OCTOBER 2026, asked for by the owner: "Audit right now, see if there are any exploits in the updates and fix it." Four faults in 20261028130000_feedback_is_reviewed_and_handed_on, fixed here rather than there because that file has been public since 28 October and a church may have run it already.
+
+1. DELETING A MEMBER WHO HAD SENT FEEDBACK FAILED. `feedback.author_id` lets go of a deleted account (on delete set null), which the database does as an UPDATE. The trigger that keeps what was sent refused it, as a change of author, so the whole deletion was refused: a Director removing somebody, an account deleting itself, a church honouring a request to be forgotten. Anybody who wanted to be impossible to remove had only to send one piece of feedback. Proved against a database built from nothing before this fix; supabase/tests/feedback-is-reviewed-and-handed-on.sql now deletes such a member.

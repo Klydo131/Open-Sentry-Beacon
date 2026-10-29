@@ -143,6 +143,13 @@ for (const [f, text] of Object.entries(texts)) {
 }
 ok(real.length === 0, `no document, and not the sample, carries a real address${real.length ? ` (${real.join(', ')})` : ''}`);
 ok(/'\/terms'/.test(read('app/sw.js/route.ts')), 'the Terms open without a signal, like the Privacy Notice');
+// The audit of 29 October 2026: a link naming another church must not put
+// another church's officer in front of a signed-in member.
+const legalSrc = read('components/ChurchLegal.tsx');
+const mineAt = legalSrc.indexOf('live.myChurch()');
+const namedAt = legalSrc.indexOf('live.churchPrivacyContact(named)');
+ok(mineAt > 0 && namedAt > mineAt && /if \(mine\) \{[\s\S]{0,240}return;\s*\}/.test(legalSrc),
+  'a signed-in member reads their own church\u2019s details, whatever church a link names');
 
 console.log(bad ? `\n${bad} check(s) failed` : '\nRESULT: ALL OK');
 process.exit(bad ? 1 : 0);

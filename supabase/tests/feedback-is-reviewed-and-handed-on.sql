@@ -15,6 +15,10 @@
 --   THE WORDS    what was sent cannot be rewritten, by anybody.
 --   HANDLED_AT   follows the status, and an older app that writes handled_at
 --                moves the status with it.
+--   WHO AND WHEN are the database's: nobody closes feedback in another's name
+--                or back-dates it, and a write-up stays with its feedback.
+--   DELETION     a member who sent feedback, and a Director who reviewed it,
+--                can be deleted; what they wrote stays, without them.
 --
 -- EVERYTHING IS ROLLED BACK. Any FAIL raises at the end, which stops the
 -- install script and CI.
@@ -50,6 +54,15 @@ begin
   end;
   reset role;
   return v_out;
+end $$;
+
+-- Delete an account as the operator would, and say whether it went.
+create or replace function pg_temp.try_delete(p_user uuid) returns text language plpgsql as $$
+begin
+  delete from auth.users where id = p_user;
+  return 'deleted';
+exception when others then
+  return 'ERR:' || sqlstate || ' ' || sqlerrm;
 end $$;
 
 -- FIXTURES ------------------------------------------------------------------- All fictional.
@@ -166,6 +179,54 @@ select pg_temp.as_user('c0', $q$delete from public.feedback_review returning 'go
 select pg_temp.check((select count(*) from public.feedback_review where feedback_id = '00000000-0000-0000-0000-0000000000f1') = 1,
   'a review cannot be deleted, even by the Director who wrote it');
 
+-- WHO AND WHEN ARE THE DATABASE'S (the audit of 29 October 2026,
+-- 20261029100000_feedback_lets_a_deleted_account_go) ---------------------------
+select pg_temp.as_user('c0', $q$update public.feedback set status = 'in_hand' where id = '00000000-0000-0000-0000-0000000000f1' returning 1$q$);
+select pg_temp.check(pg_temp.as_user('c0', $q$
+  update public.feedback set status = 'done', handled_by = '00000000-0000-0000-0000-0000000000c2'
+  where id = '00000000-0000-0000-0000-0000000000f1' returning handled_by::text$q$) = '00000000-0000-0000-0000-0000000000c0',
+  'a Director cannot close feedback in somebody else''s name');
+select pg_temp.check(pg_temp.as_user('c0', $q$
+  update public.feedback set status_at = '2000-01-01', handled_at = '2000-01-01'
+  where id = '00000000-0000-0000-0000-0000000000f1'
+  returning (status_at > '2001-01-01' and handled_at > '2001-01-01')::text$q$) = 'true',
+  'nor back-date when it moved or was handled');
+select pg_temp.check(pg_temp.as_user('c0', $q$
+  update public.feedback set handled_by = null where id = '00000000-0000-0000-0000-0000000000f1'
+  returning handled_by::text$q$) = '00000000-0000-0000-0000-0000000000c0',
+  'nor take off who handled it');
+
+-- A WRITE-UP STAYS WITH ITS FEEDBACK ------------------------------------------------
+select pg_temp.as_user('c2', $q$
+  insert into public.feedback (id, church_id, author_id, category, message, client_id)
+  values ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000ee',
+          '00000000-0000-0000-0000-0000000000c2', 'idea', 'Another, invented.', 'client-f2') returning 1$q$);
+select pg_temp.check(pg_temp.as_user('c0', $q$
+  update public.feedback_review set feedback_id = '00000000-0000-0000-0000-0000000000f2'
+  where feedback_id = '00000000-0000-0000-0000-0000000000f1' returning 'moved'$q$) = 'ERR:42501',
+  'a write-up cannot be moved onto other feedback');
+
+-- A DELETED ACCOUNT IS LET GO --------------------------------------------------------
+-- Before 20261029100000, deleting anybody who had sent feedback was refused:
+-- the database clears author_id as an UPDATE, and the trigger keeping what was
+-- sent took it for a change of author. Deleted here with somebody else signed
+-- in, as when a Director removes a member.
+create temp table before_delete on commit drop as
+  select updated_at from public.feedback_review where feedback_id = '00000000-0000-0000-0000-0000000000f1';
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d0","role":"authenticated"}', true);
+select pg_temp.check(pg_temp.try_delete('00000000-0000-0000-0000-0000000000c1') = 'deleted',
+  'a member who sent feedback can be deleted');
+select pg_temp.check((select author_id is null from public.feedback where id = '00000000-0000-0000-0000-0000000000f1'),
+  'and their feedback stays, without their name');
+select pg_temp.check(pg_temp.try_delete('00000000-0000-0000-0000-0000000000c0') = 'deleted',
+  'a Director who reviewed and closed feedback can be deleted');
+select pg_temp.check((select reviewed_by is null and updated_at = (select updated_at from before_delete)
+                        from public.feedback_review where feedback_id = '00000000-0000-0000-0000-0000000000f1'),
+  'and their write-up is kept, unsigned, not signed by whoever deleted them');
+select pg_temp.check((select handled_by is null and status = 'done' from public.feedback where id = '00000000-0000-0000-0000-0000000000f1'),
+  'and the feedback stays done');
+select set_config('request.jwt.claims', '', true);
+
 -- THE VERDICT ------------------------------------------------------------------
 \o
 do $$
@@ -176,7 +237,7 @@ begin
     if r.ok then raise notice 'OK    %', r.label;
     else failed := failed + 1; raise notice 'FAIL  %', r.label; end if;
   end loop;
-  if total < 20 then raise exception 'only % checks ran; expected at least 20', total; end if;
+  if total < 29 then raise exception 'only % checks ran; expected at least 29', total; end if;
   if failed > 0 then raise exception '% of % feedback checks failed', failed, total; end if;
   raise notice 'feedback is reviewed and handed on: % checks hold', total;
 end $$;

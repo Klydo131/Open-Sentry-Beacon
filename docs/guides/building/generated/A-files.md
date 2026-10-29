@@ -326,7 +326,7 @@ The church named in the Terms of Use and the Privacy Notice.
 
 The Data Privacy Act expects a privacy notice to say who holds the information and who its Data Protection Officer is. Those are the church's, not this project's, and they are a person's name and address, so they are not written into the public source: the church's Director fills them in (Settings, Church), and this reads them.
 
-WHERE FROM, in order: the sample church on the sample side; on the live side the church named in the link (`?church=`, which the invitation form and the agreement step add, so a person reads their own church's details before they have an account), else the signed-in person's own church. Nothing found, and the documents say plainly that the church has not filled them in.
+WHERE FROM, in order: the sample church on the sample side; on the live side the signed-in person's own church, else the church named in the link (`?church=`, which the invitation form adds, so a person reads their church's details before they have an account). Nothing found, and the documents say plainly that the church has not filled them in.
 
 #### `components/ConsentHost.tsx`
 
