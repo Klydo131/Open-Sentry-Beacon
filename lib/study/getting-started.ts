@@ -60,7 +60,7 @@ export const GUIDE_LINES: Line[] = [
   // (components/study/StudyModeSwitch.tsx).
   { kind: 'todo', words: 'Tap File this page, under the page name, and add a tag so you can find this again' },
   { kind: 'todo', words: 'Open Journal, then Today’s page, and write one line about today' },
-  { kind: 'todo', words: 'Press Whiteboard at the top of a page, then double-tap the board for its tools' },
+  { kind: 'todo', words: 'Press Whiteboard at the top of a page, then Tools in its corner (on a computer, double-click the board)' },
   { kind: 'todo', words: 'Make a new page from All pages, and name it after what you are reading' },
   { kind: 'todo', words: 'Put a page in a folder: File this page, then type a name under Folder' },
   { kind: 'todo', words: 'Tap Advanced, then Templates, for a page already laid out, like a lesson plan or meeting notes' },

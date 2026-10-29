@@ -314,16 +314,32 @@ work, and one quiet line, until you have opened the tools once, saying how to
 find them. The tools are AFFiNE's own, so what you learn here is what AFFiNE
 itself does.
 
-- **Double-tap empty board** (double-click on a computer, or right-click) for
-  the tools along the bottom: select, frame, arrow, link, notes, pen, eraser,
-  shapes, mind maps and templates, with **Undo**, **Redo** and **Hide tools**
-  beside them. On a phone the bar scrolls with **‹** and **›**. To put them
-  away: **Hide tools**, **Escape** with nothing selected, or double-tap empty
-  board again.
-- **Tap a thing once** to select it: handles to move and resize it, and nothing
-  else.
-- **Double-tap a thing** (or double-click) and a small bar floats over it: its
-  colour or style, **Lock**, and **⋮** for everything else:
+**With a finger** (phones and tablets, since 29 October 2026, after "it's
+pretty bad and clunky for mobile and pad"):
+
+- **Tools**, a button in the board's corner, brings the tools, with **Undo**,
+  **Redo** and **Hide tools** beside them. On a phone they are one row, each
+  with its name under it: **Select**, **Pen**, **Eraser**, **Shape**, **Note**,
+  **Text**, and **More** for AFFiNE's own dock with everything else. A tablet
+  has room for AFFiNE's dock itself. Two fingers zoom.
+- **Tap a thing once** and its bar opens straight away, with every button in
+  it, and every choice under **⋮**, a finger wide.
+- **A double-tap** still brings the tools on empty board, and forgives a finger
+  that lands a little way from where it first did.
+
+**With a mouse:**
+
+- **Double-click empty board** (or right-click) for the tools along the bottom:
+  select, frame, arrow, link, notes, pen, eraser, shapes, mind maps and
+  templates, with **Undo**, **Redo** and **Hide tools** beside them. To put
+  them away: **Hide tools**, **Escape** with nothing selected, or double-click
+  empty board again.
+- **Click a thing once** to select it: handles to move and resize it, and
+  nothing else.
+- **Double-click a thing** for its bar.
+
+**The bar over a thing**, either way: its colour or style, **Lock**, a **bin**
+that deletes it at once, and **⋮** for everything else:
 
   | In ⋮ | |
   |---|---|
@@ -332,6 +348,9 @@ itself does.
   | **Copy**, **Duplicate** | Copy it to paste elsewhere, or make a copy beside it |
   | **Create linked doc** | Turn it into a page of its own, linked from the board |
   | **Delete** | Take it off the board; **Undo** brings it back |
+
+  The bin is AFFiNE's own Delete, moved onto the bar: on a phone it was the
+  last of ten choices under ⋮.
 
 - **To write in it:** tap a selected sticky note or text again, or press
   **Add text** on a shape's bar.
@@ -354,7 +373,8 @@ Simple and Advanced show the same board. From 27 to 28 October 2026 the room
 drew a bar of its own across the top of the board, in pictures and words, in
 place of AFFiNE's bar for a selected thing, which never opened here; the room
 had not told AFFiNE it was a whiteboard. Later on 28 October the tools were
-put away until asked for. See `CHANGELOG.md`. The board is for
+put away until asked for, and on 29 October a finger got its own way in. See
+`CHANGELOG.md`. The board is for
 things a column of text is bad at: how a passage is built, who is related to
 whom, a plan for a study on a wall. On a phone or tablet a finger on the board
 draws; it no longer scrolls the room behind it.

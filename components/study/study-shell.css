@@ -809,11 +809,74 @@
 }
 .sr-board-item:hover:not(:disabled) { background: var(--sr-fill-2); }
 .sr-board-item:disabled { opacity: 0.45; }
-/* On a phone AFFiNE's zoom control runs into its tool bar, so it steps aside:
-   two fingers zoom, and Show everything is on a long press of empty board. */
-@media (max-width: 640px) {
+/* On a phone AFFiNE's zoom control runs into its tool bar, and on a touched
+   tablet it sits on the dock's left end, so it steps aside: two fingers zoom,
+   and Show everything is on a long press of empty board. */
+@media (max-width: 640px), (pointer: coarse) {
   [data-board-frame] affine-edgeless-zoom-toolbar-widget { display: none !important; }
 }
+
+/* A FINGER (29 October 2026, components/study/StudyBoardTools.tsx).
+ *
+ * THE TOOLS BUTTON, while the tools are put away, on a touched screen only: a
+ * mouse has right-click and double-click, which a finger cannot see. */
+.sr-board-open {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 16px 0 13px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sr-ink);
+  background: var(--sr-surface);
+  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 4px 14px rgba(16, 24, 40, 0.16);
+}
+@media (hover: none) and (pointer: coarse) {
+  .sr-board-open { display: inline-flex; }
+  /* The line about the tools sits clear of the button. */
+  .sr-board-hint { bottom: 72px; }
+}
+/* THE ROW OF TOOLS on a narrow board, in place of AFFiNE's dock, which there
+ * shows one tool at a time: AFFiNE's tools, each a finger wide, named. */
+.sr-board-tray {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 20;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  max-width: calc(100% - 16px);
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--sr-surface);
+  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 6px 20px rgba(16, 24, 40, 0.16);
+}
+.sr-board-tool {
+  display: inline-flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 56px;
+  padding: 4px 2px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--sr-ink-2);
+  background: transparent;
+}
+.sr-board-tool[aria-pressed='true'] { color: var(--sr-tint); background: var(--sr-tint-soft); }
+.sr-board-tool:hover:not([aria-pressed='true']) { background: var(--sr-fill-2); }
 
 /* FILING, BEHIND ONE BUTTON THAT SAYS WHAT IT IS FOR (27 October 2026,
  * components/study/StudyFiling.tsx). The two unexplained boxes under the title

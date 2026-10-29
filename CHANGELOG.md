@@ -10,6 +10,71 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 29 October 2026: the whiteboard by finger, and who is waiting is named
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261029110000_a_waiting_member_is_named.sql`**
+   after `20261029100000`. It replaces `handle_new_user` (only the notice's
+   wording changes) and renames the "Somebody is waiting to be approved"
+   notices already sent. Until it is applied, the notice still says
+   "Somebody".
+2. Rebuild. Nothing else.
+
+### What changed
+
+- **The whiteboard on a phone or tablet.** The owner: "it's pretty bad and
+  clunky for mobile and pad. It's so hard to delete objects, customize, and use
+  the tools when we are trying to tap or double tap." Tried with real touches
+  on a 390px phone and an 820px tablet first. Everything waited on a
+  double-tap, and two taps 28px apart were not one. The bar's buttons were 24px
+  wide. Delete was the last of ten choices under ⋮. A phone's dock showed one
+  tool at a time behind 20px arrows, because AFFiNE's dock needs about 460px
+  and a phone's board has about 340. A mouse keeps everything it had. A finger
+  now gets:
+  - **one tap on a thing opens its bar** (`components/study/StudyBoardTools.tsx`);
+  - **a bin on the bar**, AFFiNE's own Delete run as it is, for a mouse too, and
+    never on a locked thing or the page's own writing
+    (`lib/study/view-extensions.ts`, a `custom:affine:surface:*` toolbar module);
+  - **every button on the bar, and every choice under ⋮, at least 44px**, on a
+    touched screen only: a stylesheet handed to the bar's shadow root, which
+    also drops AFFiNE's dividers so seven buttons fit a 360px phone, and lets ⋮
+    scroll on a short one (`lib/study/board-actions.ts`, `fitForFingers`);
+  - **a Tools button** in the board's corner while the tools are put away, on
+    a touched screen only;
+  - **on a board narrower than 600px, AFFiNE's tools as one named row**:
+    Select, Pen, Eraser, Shape, Note, Text, and More for AFFiNE's own dock
+    (`useTool` switches AFFiNE's tools by their own classes);
+  - **a double-tap that forgives a finger**: 40px and 450ms, not 24px and 400ms;
+  - **AFFiNE's zoom control steps aside on any touched screen**, not only below
+    640px, because on a tablet it sat on the left end of the dock.
+- **The approval notice names the person.** The owner, with a picture of the
+  bell: "Why is it called somebody, it should be the name being approved
+  please." The title is now "<name> is waiting to be approved": the name they
+  signed up with, else the name on the invitation, else "A new member". It is
+  cut at 80 characters, since it is theirs to type. The line under it no longer
+  repeats it. Notices already sent are renamed from the line under them, which
+  this function always began with the name; nothing else in a bell is touched.
+
+### Checks
+
+- `tests/e2e/the-whiteboard-says-what-you-can-do.js` walks a phone and a tablet
+  with a finger. It checks: one tap opens the bar, inside the screen, every
+  button at least 44px; ⋮ at least 44px a choice; the bin deletes and Undo
+  restores; Tools gives the row on a phone and AFFiNE's dock on a tablet; a
+  Shape from the row lands where tapped, then Select; More gives the dock; a
+  double-tap 28px apart counts. With a mouse it checks: the bin works, no Tools
+  button, and no bin on a locked thing or the page's writing. Each new check
+  was seen to fail with its piece taken out.
+- `supabase/tests/a-waiting-member-is-named.sql` (8 checks, run by
+  `scripts/fresh-install.sh`): the three sources of the name, the 80-character
+  cut, no "Somebody", and who is and is not told. Six of the eight fail
+  without the migration. The renaming of old notices was proved by hand on a
+  database built without it: two old notices renamed, an unrelated one left
+  alone, and a second run of the migration harmless.
+
+---
+
 ## 29 October 2026: the audit of the Terms and feedback updates
 
 ### If you run a copy, do this

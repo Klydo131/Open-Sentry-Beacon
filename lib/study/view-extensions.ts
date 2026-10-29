@@ -24,10 +24,21 @@
 import { ViewExtensionManager } from '@blocksuite/affine/ext-loader';
 import { getInternalViewExtensions } from '@blocksuite/affine/extensions/view';
 import type { DocMode } from '@blocksuite/affine/model';
-import { DocModeExtension, type DocModeProvider, ToolbarFlag, ToolbarRegistryIdentifier } from '@blocksuite/affine/shared/services';
-import type { BlockStdScope } from '@blocksuite/affine/std';
+import {
+  ActionPlacement,
+  DocModeExtension,
+  type DocModeProvider,
+  type ToolbarAction,
+  type ToolbarActions,
+  type ToolbarContext,
+  ToolbarFlag,
+  ToolbarModuleExtension,
+  ToolbarRegistryIdentifier,
+} from '@blocksuite/affine/shared/services';
+import { BlockFlavourIdentifier, type BlockStdScope } from '@blocksuite/affine/std';
 import type { ExtensionType } from '@blocksuite/affine/store';
 import { ParagraphViewExtension } from '@blocksuite/affine-block-paragraph/view';
+import { html } from 'lit';
 
 /**
  * WHAT AN EMPTY ROOM SAYS. BlockSuite's own placeholder is `Type '/' for
@@ -83,9 +94,59 @@ function fixedMode(mode: DocMode): DocModeProvider {
   };
 }
 
+/**
+ * DELETE ON THE BAR ITSELF (29 October 2026: on a phone or a tablet "it's so
+ * hard to delete objects"). AFFiNE keeps Delete at the foot of ⋯, ten choices
+ * down: three exact taps for the commonest thing anybody does to a mistake. So
+ * the bar over a selected thing gains a bin, after Lock, the way the bars on
+ * phone whiteboards have one. It is AFFiNE's own Delete, found in AFFiNE's own
+ * list and run as it is, so a line attached to a shape still goes with it and
+ * Undo still brings both back. A locked thing has no bin, as it has no ⋯; the
+ * card with the page's writing is locked (lib/study/board-actions.ts).
+ */
+const BIN = html`<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" /><path d="M9 7V4h6v3" /></svg>`;
+
+/** AFFiNE's own Delete for things on a whiteboard, wherever in its ⋯ it is kept. */
+function affinesDelete(ctx: ToolbarContext): ToolbarAction | null {
+  const find = (actions: ToolbarActions): ToolbarAction | null => {
+    for (const action of actions) {
+      if ('actions' in action && Array.isArray(action.actions)) {
+        const inner = find(action.actions as ToolbarActions);
+        if (inner) return inner;
+      } else if (action.id === 'e.delete' && 'run' in action) {
+        return action as ToolbarAction;
+      }
+    }
+    return null;
+  };
+  return find(ctx.toolbarRegistry.getModuleBy('affine:surface:*')?.actions ?? []);
+}
+
+const DeleteOnTheBar = ToolbarModuleExtension({
+  id: BlockFlavourIdentifier('custom:affine:surface:*'),
+  config: {
+    actions: [{
+      placement: ActionPlacement.End,
+      id: 'c.delete',
+      label: 'Delete',
+      tooltip: 'Delete',
+      icon: BIN,
+      run: (ctx) => affinesDelete(ctx)?.run?.(ctx),
+    }],
+    when(ctx) {
+      const models = ctx.getSurfaceModels();
+      return models.length > 0 && !models.some((model) => model.isLocked());
+    },
+  },
+});
+
 /** Everything a page or a whiteboard is drawn with, for that mode. */
 export function studyViewExtensions(mode: DocMode): ExtensionType[] {
-  return [...studyViewManager().get(mode), DocModeExtension(fixedMode(mode))];
+  return [
+    ...studyViewManager().get(mode),
+    DocModeExtension(fixedMode(mode)),
+    ...(mode === 'edgeless' ? [DeleteOnTheBar] : []),
+  ];
 }
 
 /**

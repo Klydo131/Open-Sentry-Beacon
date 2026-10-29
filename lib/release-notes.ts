@@ -18,6 +18,25 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-29-who-is-waiting-is-named',
+    date: '2026-10-29',
+    title: 'You can see who is waiting to be approved',
+    items: [
+      'When somebody you invited finishes signing up and is waiting for a Director, the notice now starts with their name instead of “Somebody”. Notices already in your bell say who, too.',
+    ],
+  },
+  {
+    id: '2026-10-29-the-whiteboard-by-finger',
+    date: '2026-10-29',
+    title: 'The whiteboard on a phone or tablet',
+    items: [
+      'Tap a shape, a note or a drawing once to change it. Its bar opens straight away, and every button on it is big enough for a finger.',
+      'The bar has a bin: one tap deletes the thing, and Undo brings it back. A computer has the bin too.',
+      'A Tools button sits in the corner of the board. On a phone it opens a row of the tools, each with its name under it: Select, Pen, Eraser, Shape, Note and Text, with More for the rest.',
+      'A double-tap no longer has to land on exactly the same spot.',
+    ],
+  },
+  {
     id: '2026-10-28-feedback-is-handed-on',
     date: '2026-10-28',
     title: 'Feedback you can follow',

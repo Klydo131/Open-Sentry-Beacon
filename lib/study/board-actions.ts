@@ -25,16 +25,81 @@
 //     the page came back empty), so it cannot be moved or deleted until
 //     somebody chooses Unlock. The writing is changed on Write.
 //
+// A FINGER (29 October 2026: "pretty bad and clunky for mobile and pad ... so
+// hard to delete objects, customize, and use the tools when we are trying to
+// tap or double tap"). AFFiNE's bar and its ⋯ were drawn for a mouse: buttons
+// 24px wide, choices 30px high. `fitForFingers` makes every one of them 44px
+// where the screen is touched, and nowhere else. And AFFiNE's dock needs about
+// 460px for its four big tools; a phone's board has 340, so a phone saw one
+// tool at a time behind 20px arrows. On a narrow board the room lays out the
+// same AFFiNE tools as one row of buttons (`useTool`), and AFFiNE's own dock
+// is a button away for the rest.
+//
 // LOADED WITH THE WHITEBOARD, NOT WITH THE ROOM. StudyRoomEditor imports it
 // with `await import(...)` when a page is turned into a whiteboard
 // (tests/the-study-room-is-paid-for-on-arrival.mjs).
 // ---------------------------------------------------------------------------
 
+import { DefaultTool } from '@blocksuite/affine/blocks/surface';
+import { BrushTool, EraserTool } from '@blocksuite/affine/gfx/brush';
+import { NoteTool } from '@blocksuite/affine/gfx/note';
+import { PanTool } from '@blocksuite/affine/gfx/pointer';
+import { ShapeTool } from '@blocksuite/affine/gfx/shape';
+import { TextTool } from '@blocksuite/affine/gfx/text';
+import { ShapeType } from '@blocksuite/affine/model';
 import type { BlockStdScope } from '@blocksuite/affine/std';
 import { GfxBlockElementModel, GfxControllerIdentifier, type GfxController, type GfxModel } from '@blocksuite/affine/std/gfx';
 
+/** AFFiNE's tools, by what a person calls them. */
+export type BoardTool = 'select' | 'hand' | 'pen' | 'eraser' | 'shape' | 'note' | 'text';
+
+/** The name AFFiNE gives each of them. */
+const AFFINE_NAME: Record<BoardTool, string> = {
+  select: 'default',
+  hand: 'pan',
+  pen: 'brush',
+  eraser: 'eraser',
+  shape: 'shape',
+  note: 'affine:note',
+  text: 'text',
+};
+
+/**
+ * A finger's size for AFFiNE's bar over a selection and the ⋯ list under it,
+ * on a screen that is touched. Both live inside the bar's own shadow root
+ * (affine-toolbar-widget), where no stylesheet of the room's can reach, so
+ * this one is handed to it. Seven buttons a finger wide only fit a phone
+ * without AFFiNE's dividers and the 8px between them, so those go too.
+ */
+const FINGERS = `
+@media (pointer: coarse) {
+  editor-toolbar { height: 44px; gap: 0 !important; padding-inline: 4px !important; }
+  editor-toolbar > editor-toolbar-separator { display: none !important; }
+  editor-toolbar > *,
+  editor-toolbar editor-icon-button,
+  editor-toolbar editor-menu-button {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  editor-toolbar editor-menu-action {
+    min-height: 44px;
+    font-size: 15px;
+  }
+  /* Ten choices a finger high are taller than a small phone has room for
+     under the bar: the list scrolls rather than running off the screen. */
+  editor-toolbar editor-menu-button > div[data-orientation='vertical'] {
+    max-height: calc(100dvh - 220px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+}`;
+
 export interface BoardApi {
-  /** Called whenever the selection or the history changes. Returns a way to stop. */
+  /** Called whenever the selection, the history or the tool changes. Returns a way to stop. */
   watch(run: () => void): () => void;
   /**
    * Select whatever is under this point of the screen. False if nothing is,
@@ -48,6 +113,15 @@ export interface BoardApi {
   selectedIds(): string[];
   /** Whether Select is the tool in use, rather than a pen, a shape or the hand. */
   selecting(): boolean;
+  /** The tool in use, by its everyday name; null for one the room does not name. */
+  tool(): BoardTool | null;
+  /** Takes up one of AFFiNE's tools, as its own dock would. */
+  useTool(tool: BoardTool): void;
+  /**
+   * Gives AFFiNE's bar and ⋯ list a finger's size on a touched screen. Safe to
+   * call often: returns false until the bar exists, true once it is done.
+   */
+  fitForFingers(): boolean;
   selectAll(): void;
   showEverything(): void;
   undo(): void;
@@ -80,9 +154,12 @@ export function boardApi(std: BlockStdScope): BoardApi | null {
     watch(run) {
       const selection = gfx.selection.slots.updated.subscribe(() => run());
       const history = store.history.onUpdated.subscribe(() => run());
+      // A signal: its subscribe hands back the way to stop, not a subscription.
+      const stopTool = gfx.tool.currentToolName$.subscribe(() => run());
       return () => {
         selection.unsubscribe();
         history.unsubscribe();
+        stopTool();
       };
     },
 
@@ -110,6 +187,36 @@ export function boardApi(std: BlockStdScope): BoardApi | null {
       const tool = (gfx as unknown as { tool?: { currentTool$?: { peek(): { toolName?: string } | undefined } } }).tool;
       const name = tool?.currentTool$?.peek()?.toolName;
       return !name || name === 'default';
+    },
+
+    tool() {
+      const name = gfx.tool.currentToolName$.peek();
+      const found = (Object.keys(AFFINE_NAME) as BoardTool[]).find((t) => AFFINE_NAME[t] === name);
+      return found ?? (name ? null : 'select');
+    },
+
+    useTool(tool) {
+      switch (tool) {
+        case 'select': gfx.tool.setTool(DefaultTool); break;
+        case 'hand': gfx.tool.setTool(PanTool); break;
+        case 'pen': gfx.tool.setTool(BrushTool); break;
+        case 'eraser': gfx.tool.setTool(EraserTool); break;
+        // AFFiNE's own defaults for these, as its dock starts them.
+        case 'shape': gfx.tool.setTool(ShapeTool, { shapeName: ShapeType.Rect }); break;
+        case 'note': gfx.tool.setTool(NoteTool, { childFlavour: 'affine:paragraph', childType: 'text', tip: 'Text' }); break;
+        case 'text': gfx.tool.setTool(TextTool); break;
+      }
+    },
+
+    fitForFingers() {
+      const root = std.host.querySelector('affine-toolbar-widget')?.shadowRoot;
+      if (!root) return false;
+      if (root.querySelector('style[data-fingers]')) return true;
+      const style = document.createElement('style');
+      style.dataset.fingers = '';
+      style.textContent = FINGERS;
+      root.append(style);
+      return true;
     },
 
     selectAll() {

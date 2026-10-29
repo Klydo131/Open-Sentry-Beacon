@@ -29,11 +29,30 @@
 // What shows is said on the board's frame (data-board-dock, data-board-bar)
 // and study-shell.css hides the rest. Until somebody has opened the tools once
 // on this device, one quiet line says how.
+//
+// A FINGER (29 October 2026): "it's pretty bad and clunky for mobile and pad.
+// It's so hard to delete objects, customize, and use the tools when we are
+// trying to tap or double tap." Tried with real touches on a phone and an
+// iPad-sized screen: everything waited on a double-tap, and two taps a finger
+// width apart (28px) were not one; the bar's buttons were 24px wide; Delete was
+// the last of ten choices under ⋯; and a phone's dock showed one tool at a
+// time behind 20px arrows. A mouse keeps everything above. A finger gets:
+//
+//   * ONE TAP ON A THING: selected, and its bar open, as phone whiteboards do.
+//     The bar has a bin for Delete (lib/study/view-extensions.ts) and every
+//     button in it, and in ⋯, is a finger wide (lib/study/board-actions.ts).
+//   * A DOUBLE-TAP that forgives a finger: 40px and 450ms, not 24px and 400ms.
+//   * A TOOLS BUTTON in the corner while the tools are put away, so they are
+//     never only behind a gesture nobody can see. The board is otherwise as
+//     clean as before.
+//   * ON A NARROW BOARD (a phone), AFFiNE's tools as one row of buttons with
+//     their names under them (Select, Pen, Eraser, Shape, Note, Text), and More
+//     for AFFiNE's own dock with everything else.
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { BoardApi } from '@/lib/study/board-actions';
+import type { BoardApi, BoardTool } from '@/lib/study/board-actions';
 
 /** AFFiNE's own ⋯ button for what is selected, if its bar is showing one. */
 function moreButton(frame: HTMLElement): (HTMLElement & { show?: (force?: boolean) => void }) | null {
@@ -41,9 +60,23 @@ function moreButton(frame: HTMLElement): (HTMLElement & { show?: (force?: boolea
   return (bar?.querySelector('editor-menu-button[aria-label="More menu"]') as HTMLElement | null) ?? null;
 }
 
-/** Two taps this close in time and place are a double-tap. */
-const DOUBLE_MS = 400;
-const DOUBLE_PX = 24;
+/** Two taps this close in time and place are a double-tap: a finger is given more room. */
+const DOUBLE = {
+  mouse: { ms: 400, px: 24 },
+  finger: { ms: 450, px: 40 },
+};
+/** Narrower than this, AFFiNE's dock shows a tool at a time; the room's row shows them all. */
+const NARROW_PX = 600;
+
+/** The row of tools on a narrow board: AFFiNE's own, by their everyday names. */
+const TRAY: { tool: BoardTool; word: string; icon: React.ReactNode }[] = [
+  { tool: 'select', word: 'Select', icon: <path d="M6 3l12 9-5.5 1.2L10 19z" /> },
+  { tool: 'pen', word: 'Pen', icon: <><path d="M4 20l1-4L16 5l3 3L8 19z" /><path d="M14 7l3 3" /></> },
+  { tool: 'eraser', word: 'Eraser', icon: <><path d="M8 20l-5-5 10-10 7 7-8 8z" /><path d="M8 20h12" /></> },
+  { tool: 'shape', word: 'Shape', icon: <><rect x="3" y="11" width="9" height="9" rx="1" /><circle cx="16.5" cy="7.5" r="4.5" /></> },
+  { tool: 'note', word: 'Note', icon: <><path d="M5 4h14v10l-6 6H5z" /><path d="M13 20v-6h6" /></> },
+  { tool: 'text', word: 'Text', icon: <><path d="M5 7V4h14v3" /><path d="M12 4v16" /><path d="M9 20h6" /></> },
+];
 /** Remembered on this device once the tools have been opened. */
 const SEEN_KEY = 'beacon.board-tools-seen';
 
@@ -55,6 +88,9 @@ export function StudyBoardTools({ api, frame }: {
   const [, setTick] = useState(0);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [dock, setDock] = useState(false);
+  // On a narrow board: AFFiNE's own dock instead of the room's row (More).
+  const [full, setFull] = useState(false);
+  const [narrow, setNarrow] = useState(false);
   // The ids the bar was opened for. Another selection puts the bar away.
   const [barFor, setBarFor] = useState<string[] | null>(null);
   const [seen, setSeen] = useState(true);
@@ -68,8 +104,31 @@ export function StudyBoardTools({ api, frame }: {
   }, []);
   const showDock = useCallback((on: boolean) => {
     setDock(on);
-    if (on) opened();
+    if (on) opened(); else setFull(false);
   }, [opened]);
+
+  // How wide the board is, for the row of tools on a phone.
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    const fit = () => setNarrow(el.getBoundingClientRect().width < NARROW_PX);
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, [frame]);
+
+  // A finger's size for AFFiNE's bar and ⋯, once the bar exists.
+  useEffect(() => {
+    if (!api) return;
+    let tries = 0;
+    let frameId = 0;
+    const fit = () => {
+      if (!api.fitForFingers() && tries++ < 120) frameId = requestAnimationFrame(fit);
+    };
+    fit();
+    return () => cancelAnimationFrame(frameId);
+  }, [api, barFor]);
 
   // Redraw when the history or the selection changes: Undo and Redo say
   // whether they can, and a bar opened for one thing closes when another, or
@@ -97,9 +156,9 @@ export function StudyBoardTools({ api, frame }: {
   useEffect(() => {
     const el = frame.current;
     if (!el) return;
-    if (dock) el.dataset.boardDock = 'open'; else delete el.dataset.boardDock;
+    if (dock) el.dataset.boardDock = narrow && !full ? 'tray' : 'open'; else delete el.dataset.boardDock;
     if (barFor) el.dataset.boardBar = 'open'; else delete el.dataset.boardBar;
-  }, [dock, barFor, frame]);
+  }, [dock, narrow, full, barFor, frame]);
   useEffect(() => () => {
     const el = frame.current;
     if (el) { delete el.dataset.boardDock; delete el.dataset.boardBar; }
@@ -159,9 +218,11 @@ export function StudyBoardTools({ api, frame }: {
     let hold: { timer: ReturnType<typeof setTimeout>; held: boolean } | null = null;
     const cancelHold = () => { if (hold) clearTimeout(hold.timer); hold = null; };
 
-    const isSecond = (e: PointerEvent) => !!last
-      && e.timeStamp - last.t < DOUBLE_MS
-      && Math.hypot(e.clientX - last.x, e.clientY - last.y) < DOUBLE_PX;
+    const isSecond = (e: PointerEvent) => {
+      if (!last) return false;
+      const room = e.pointerType === 'mouse' ? DOUBLE.mouse : DOUBLE.finger;
+      return e.timeStamp - last.t < room.ms && Math.hypot(e.clientX - last.x, e.clientY - last.y) < room.px;
+    };
 
     const onDown = (e: PointerEvent) => {
       if (ours(e.target)) return;
@@ -180,7 +241,7 @@ export function StudyBoardTools({ api, frame }: {
           const ids = api.selectedIds();
           if (ids.length) { setBarFor(ids); opened(); }
         } else {
-          setDock((on) => { if (!on) opened(); return !on; });
+          setDock((on) => { if (!on) opened(); else setFull(false); return !on; });
         }
         return;
       }
@@ -215,6 +276,18 @@ export function StudyBoardTools({ api, frame }: {
         return;
       }
       last = { t: e.timeStamp, x: e.clientX, y: e.clientY };
+      // ONE TAP WITH A FINGER on a thing opens its bar. AFFiNE selects it on
+      // this same tap, after this listener, and a tool that has just put a
+      // shape or a note down goes back to Select and selects what it made:
+      // look once AFFiNE has done both.
+      if (e.pointerType !== 'mouse') {
+        const { clientX: x, clientY: y } = e;
+        setTimeout(() => requestAnimationFrame(() => {
+          if (!api.selecting() || !api.hitAt(x, y)) return;
+          const ids = api.selectedIds();
+          if (ids.length) { setBarFor(ids); opened(); }
+        }), 60);
+      }
     };
     // The browser's own click and dblclick for a swallowed double-tap.
     const onClick = (e: MouseEvent) => {
@@ -254,11 +327,11 @@ export function StudyBoardTools({ api, frame }: {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (menu) { setMenu(null); return; }
-      if (dock && api.selecting() && api.selectedIds().length === 0) setDock(false);
+      if (dock && api.selecting() && api.selectedIds().length === 0) showDock(false);
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [api, menu, dock]);
+  }, [api, menu, dock, showDock]);
 
   // The menu closes on a press anywhere else.
   useEffect(() => {
@@ -284,15 +357,48 @@ export function StudyBoardTools({ api, frame }: {
           <IconButton label="Redo" keys="Ctrl+Shift+Z, or Cmd+Shift+Z on a Mac" onClick={() => api.redo()} disabled={!api.canRedo()}>
             <path d="m15 14 5-5-5-5" /><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
           </IconButton>
-          <IconButton label="Hide tools" keys="Escape, or double-tap the board" onClick={() => { setDock(false); setMenu(null); }}>
+          <IconButton label="Hide tools" keys="Escape, or double-tap the board" onClick={() => { showDock(false); setMenu(null); }}>
             <path d="M6 6l12 12" /><path d="M18 6 6 18" />
           </IconButton>
         </div>
       )}
 
+      {dock && narrow && !full && (
+        <div role="toolbar" aria-label="Tools" className="sr-board-tray" data-board-own data-board-tray>
+          {TRAY.map(({ tool, word, icon }) => (
+            <TrayButton key={tool} word={word} pressed={api.tool() === tool} onClick={() => api.useTool(tool)}>
+              {icon}
+            </TrayButton>
+          ))}
+          <TrayButton word="More" onClick={() => setFull(true)}>
+            <circle cx="5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="19" cy="12" r="1.3" />
+          </TrayButton>
+        </div>
+      )}
+
+      {/* Put away, the tools are still one tap from a finger: a screen that is
+          touched has no right-click and nobody can see a double-tap. Shown by
+          study-shell.css on a touch screen only. */}
+      {!dock && (
+        <button
+          type="button"
+          onClick={() => { showDock(true); setMenu(null); }}
+          onMouseDown={keepFocus}
+          aria-label="Show tools"
+          className="sr-board-open"
+          data-board-own
+          data-board-open
+        >
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M4 20l1-4L16 5l3 3L8 19z" /><path d="M14 7l3 3" />
+          </svg>
+          <span>Tools</span>
+        </button>
+      )}
+
       {!seen && !dock && !barFor && (
         <p className="sr-board-hint" data-board-own data-board-hint aria-live="polite">
-          <span className="sr-board-hint--touch">Double-tap the board for tools</span>
+          <span className="sr-board-hint--touch">Tap a thing to change it</span>
           <span className="sr-board-hint--mouse">Double-click or right-click the board for tools</span>
         </p>
       )}
@@ -341,6 +447,26 @@ function IconButton({ label, keys, onClick, disabled, children }: {
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         {children}
       </svg>
+    </button>
+  );
+}
+
+/** One of AFFiNE's tools in the row on a narrow board: a picture with its name under it. */
+function TrayButton({ word, pressed, onClick, children }: {
+  word: string; pressed?: boolean; onClick: () => void; children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseDown={keepFocus}
+      aria-pressed={pressed}
+      className="sr-board-tool"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {children}
+      </svg>
+      <span>{word}</span>
     </button>
   );
 }

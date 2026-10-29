@@ -19,6 +19,12 @@
 // cannot be deleted by accident; Escape, a second double-click and Hide tools
 // to put the dock away; and on a phone a double-tap and a long press.
 //
+// 29 October 2026, on phones and tablets: "so hard to delete objects,
+// customize, and use the tools when we are trying to tap or double tap." So a
+// finger is walked on its own: one tap opens a thing's bar, which has a bin and
+// buttons a finger wide; a Tools button; a phone's row of AFFiNE's tools; a
+// double-tap that forgives a finger; and the same on an iPad-sized screen.
+//
 //   node tests/e2e/the-whiteboard-says-what-you-can-do.js [port]
 const { browser: engine, engineName, launchOptions, pageErrors } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, newPage } = require('./_study');
@@ -55,10 +61,16 @@ const selectionBar = (page) => page.evaluate(() => {
   if (!bar || !bar.dataset.open || getComputedStyle(widget).display === 'none') return null;
   const r = bar.getBoundingClientRect();
   const labels = [...bar.querySelectorAll('editor-icon-button, editor-menu-button')].map((b) => b.getAttribute('aria-label') || '');
-  return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, labels };
+  // The bar's own buttons, as big as a person can press them: the ones in it,
+  // not the ones folded inside its menus (those are 0px until opened).
+  const buttons = [...bar.children]
+    .filter((b) => b.tagName !== 'EDITOR-TOOLBAR-SEPARATOR')
+    .map((b) => { const q = b.getBoundingClientRect(); return { label: b.getAttribute('aria-label') || b.tagName.toLowerCase(), w: Math.round(q.width), h: Math.round(q.height) }; })
+    .filter((b) => b.w > 0);
+  return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, labels, buttons };
 });
 
-/** What a person sees over the board: the dock, the zoom, Undo and Redo, the hint. */
+/** What a person sees over the board: the dock, the zoom, Undo and Redo, the hint, the Tools button, the row of tools. */
 const chrome = (page) => page.evaluate(() => {
   const shown = (sel) => {
     const el = document.querySelector(sel);
@@ -72,6 +84,9 @@ const chrome = (page) => page.evaluate(() => {
     zoom: shown('affine-edgeless-zoom-toolbar-widget'),
     undo: shown('.sr-board-history'),
     hint: shown('[data-board-hint]'),
+    // A touched screen's own: the Tools button, and the row of tools on a phone.
+    open: shown('[data-board-open]'),
+    tray: shown('[data-board-tray]'),
   };
 });
 
@@ -140,6 +155,7 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
        'and one quiet line says how to find the tools');
     ok(await page.locator('[data-board-tools], .sr-board-bar').count() === 0,
        'the room’s old bar of pictures and words is still gone');
+    ok(!clean.open && !clean.tray, 'a mouse gets no Tools button: double-click and right-click are its way in');
 
     const writing = await pageWriting(page);
     ok(writing.count === 1 && writing.locked, `the card with the page’s writing is locked on the board (${JSON.stringify(writing)})`);
@@ -215,8 +231,8 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     ok(bar && bar.right > shape.left && bar.left < shape.right && (bar.bottom <= shape.top + 4 || bar.top >= shape.bottom - 4)
        && Math.min(Math.abs(shape.top - bar.bottom), Math.abs(bar.top - shape.bottom)) < 80,
        `and the bar floats next to the shape (${bar ? Math.round(bar.top) : '-'}px, shape at ${Math.round(shape.top)}px)`);
-    ok(bar && bar.labels.includes('More menu') && bar.labels.includes('Lock') && bar.labels.includes('Add text'),
-       `with Lock, Add text and ⋮ in it (${bar?.labels.filter(Boolean).join(', ')})`);
+    ok(bar && bar.labels.includes('More menu') && bar.labels.includes('Lock') && bar.labels.includes('Add text') && bar.labels.includes('Delete'),
+       `with Lock, Add text, a bin and ⋮ in it (${bar?.labels.filter(Boolean).join(', ')})`);
     ok(await page.locator('edgeless-shape-text-editor').count() === 0,
        'and the double-click did not start typing in the shape instead (Add text does that)');
 
@@ -247,6 +263,18 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     await page.waitForTimeout(600);
     ok(await onTheBoard(page) === n2, 'and the Undo button beside the dock brings it back');
 
+    // THE BIN ON THE BAR: the same Delete, without opening ⋮.
+    await page.mouse.click(empty.x, empty.y);
+    await page.waitForTimeout(500);
+    await page.mouse.dblclick(shape.cx, shape.cy);
+    await page.waitForTimeout(700);
+    await page.locator('affine-toolbar-widget editor-icon-button[aria-label="Delete"]').click({ timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(600);
+    ok(await onTheBoard(page) === n2 - 1, 'the bin on the bar takes it off the board too');
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await page.waitForTimeout(600);
+    ok(await onTheBoard(page) === n2, 'and Undo brings it back again');
+
     // A CLICK ON EMPTY BOARD PUTS THE BAR AWAY.
     await page.mouse.click(empty.x, empty.y);
     await page.waitForTimeout(500);
@@ -272,8 +300,8 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     await page.waitForTimeout(500);
     ok(await onTheBoard(page) === n3, 'a locked shape stays when Delete is pressed');
     const lockedBar = await selectionBar(page);
-    ok(lockedBar && lockedBar.labels.some((l) => /unlock/i.test(l)) && !lockedBar.labels.includes('More menu'),
-       `and its bar offers Unlock instead of ⋮ (${lockedBar?.labels.filter(Boolean).join(', ')})`);
+    ok(lockedBar && lockedBar.labels.some((l) => /unlock/i.test(l)) && !lockedBar.labels.includes('More menu') && !lockedBar.labels.includes('Delete'),
+       `and its bar offers Unlock instead of ⋮ or a bin (${lockedBar?.labels.filter(Boolean).join(', ')})`);
 
     // THE PAGE'S OWN WRITING: locked, so neither Delete nor ⋮ can take it.
     await page.mouse.click(empty.x, empty.y);
@@ -283,7 +311,8 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
       await page.mouse.dblclick(note.x + 8, note.y + 8);
       await page.waitForTimeout(600);
       const noteBar = await selectionBar(page);
-      ok(noteBar && !noteBar.labels.includes('More menu'), `the page’s writing has no ⋮ with Delete in it (${noteBar?.labels.filter(Boolean).join(', ')})`);
+      ok(noteBar && !noteBar.labels.includes('More menu') && !noteBar.labels.includes('Delete'),
+         `the page’s writing has no ⋮ with Delete in it, and no bin (${noteBar?.labels.filter(Boolean).join(', ')})`);
       await page.keyboard.press('Delete');
       await page.waitForTimeout(500);
       ok((await pageWriting(page)).count === 1, 'and the Delete key leaves it where it is');
@@ -340,18 +369,28 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     await context.close();
 
     // ---------------------------------------------------------------- finger
+    // 29 October 2026: "it's pretty bad and clunky for mobile and pad. It's so
+    // hard to delete objects, customize, and use the tools when we are trying
+    // to tap or double tap." Walked again with a finger on a phone and on an
+    // iPad-sized screen (components/study/StudyBoardTools.tsx, A FINGER).
     const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     await phone.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
     const p = await phone.newPage();
+    const pcaught = pageErrors(p);
     const pbox = await openBoard(p);
     const pclean = await chrome(p);
-    ok(!pclean.dock && !pclean.undo && pclean.hint && /Double-tap the board/.test(await p.locator('[data-board-hint]').innerText()),
-       `on a phone the board opens clean too, and the line says double-tap (${JSON.stringify(pclean)})`);
+    ok(!pclean.dock && !pclean.undo && !pclean.tray && pclean.hint && /Tap a thing/.test(await p.locator('[data-board-hint]').innerText()),
+       `on a phone the board opens clean too, and the line says to tap a thing (${JSON.stringify(pclean)})`);
+    const toolsButton = p.locator('[data-board-open]');
+    const openBox = await toolsButton.boundingBox();
+    ok(pclean.open && openBox && openBox.height >= 44 && openBox.x + openBox.width <= pbox.x + pbox.width,
+       'with one Tools button in the corner, a finger high, inside the board');
 
     // A FINGER. Chromium takes real touches through its DevTools protocol;
     // elsewhere the same taps are sent as the pointer events a finger makes,
     // to whatever is under that point, so the board's own code still decides.
-    // Weaker than a real finger, and said so in the lines below.
+    // Weaker than a real finger, and said so in the lines below. Buttons are
+    // pressed with Playwright's own tap, a touch in every engine.
     const cdp = engineName === 'chromium' ? await p.context().newCDPSession(p) : null;
     const how = engineName === 'chromium' ? '' : ` (${engineName}: as pointer events, not a real finger)`;
     const touch = async (x, y, holdMs) => {
@@ -371,44 +410,158 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     };
     const doubleTap = async (x, y) => { await touch(x, y, 40); await p.waitForTimeout(90); await touch(x, y, 40); };
 
-    const pe = emptyAt(pbox);
-    await doubleTap(Math.round(pe.x), Math.round(pe.y));
-    await p.waitForTimeout(700);
-    const ptools = await chrome(p);
-    const dockBox = await p.locator('edgeless-toolbar-widget').boundingBox();
-    ok(ptools.dock && dockBox && dockBox.x >= pbox.x - 1 && dockBox.x + dockBox.width <= pbox.x + pbox.width + 1,
-       `a double-tap on empty board brings the dock, inside the board${how} (${Math.round(dockBox?.width ?? 0)}px of ${Math.round(pbox.width)}px)`);
-    const undo = await p.getByRole('button', { name: 'Undo', exact: true }).boundingBox().catch(() => null);
-    ok(undo && undo.x >= pbox.x && undo.y >= pbox.y && undo.width >= 44, 'and Undo is on the board, big enough for a thumb');
-    ok(!ptools.zoom, 'the zoom control stays away on a phone; two fingers zoom');
-
     // A shape put straight onto the canvas: a mouse drag does not draw in a
     // touch browser, and drawing is not what this part is about.
-    const tx = Math.round(pbox.x + pbox.width * 0.75), ty = Math.round(pbox.y + pbox.height * 0.25);
-    const placed = await p.evaluate(([cx, cy]) => {
+    const put = (page, cx, cy) => page.evaluate(([x0, y0]) => {
       const root = document.querySelector('affine-edgeless-root');
       const gfx = root?.gfx;
       const surface = root?.std?.store?.getAllModels?.().find((b) => b.flavour === 'affine:surface');
       if (!gfx || !surface) return false;
-      const [x, y] = gfx.viewport.toModelCoordFromClientCoord([cx, cy]);
+      const [x, y] = gfx.viewport.toModelCoordFromClientCoord([x0, y0]);
       surface.addElement({ type: 'shape', shapeType: 'rect', xywh: `[${x - 40},${y - 30},80,60]` });
       return true;
-    }, [tx, ty]);
+    }, [cx, cy]);
+    const tx = Math.round(pbox.x + pbox.width * 0.75), ty = Math.round(pbox.y + pbox.height * 0.25);
+    const pe = emptyAt(pbox);
+    const ex = Math.round(pe.x), ey = Math.round(pe.y);
+    ok(await put(p, tx, ty), 'a shape is put on the phone’s board');
     await p.waitForTimeout(500);
-    ok(placed, 'a shape is put on the phone’s board');
 
-    await doubleTap(tx, ty);
+    // ONE TAP ON A THING: selected, with its bar, and a bin on the bar.
+    const pn0 = await onTheBoard(p);
+    await touch(tx, ty, 40);
     await p.waitForTimeout(800);
     const pbar = await selectionBar(p);
-    ok(pbar && pbar.labels.includes('More menu'), `a double-tap on the shape opens its bar with ⋮${how} (${pbar?.labels.filter(Boolean).join(', ')})`);
+    ok(pbar && pbar.labels.includes('Delete') && pbar.labels.includes('More menu'),
+       `one tap on the shape opens its bar, with a bin and ⋮${how} (${pbar?.labels.filter(Boolean).join(', ')})`);
+    ok(pbar && pbar.left >= 0 && pbar.right <= 390, `and the whole bar is on the screen (${pbar ? `${Math.round(pbar.left)}–${Math.round(pbar.right)}px` : '-'} of 390)`);
+    const small = (pbar?.buttons ?? []).filter((b) => b.w < 44 || b.h < 44);
+    ok(pbar && pbar.buttons.length >= 5 && small.length === 0,
+       `every button on it is a finger wide, 44px or more (${small.map((b) => `${b.label} ${b.w}x${b.h}`).join(', ') || `${pbar?.buttons.length} buttons`})`);
 
-    await touch(Math.round(pe.x), Math.round(pe.y), 40);
+    // ⋮ BY FINGER: its choices a finger high.
+    await p.locator('affine-toolbar-widget editor-menu-button[aria-label="More menu"]').tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(700);
+    const heights = await p.locator('affine-toolbar-widget editor-menu-action').evaluateAll((els) => els
+      .map((e) => ({ t: e.innerText.trim(), h: Math.round(e.getBoundingClientRect().height) })).filter((x) => x.h > 0));
+    ok(heights.length >= 8 && heights.every((x) => x.h >= 44),
+       `⋮ opens with a finger, and each choice in it is 44px high or more (${heights.map((x) => `${x.t} ${x.h}`).slice(0, 3).join(', ')}…)`);
+    await touch(ex, ey, 40);
+    await p.waitForTimeout(600);
+    ok(!(await selectionBar(p)), 'a tap on empty board puts the bar away');
+
+    // THE BIN.
+    await touch(tx, ty, 40);
+    await p.waitForTimeout(800);
+    await p.locator('affine-toolbar-widget editor-icon-button[aria-label="Delete"]').tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(700);
+    ok(await onTheBoard(p) === pn0 - 1, `the bin on the bar takes it off the board in one tap${how}`);
+
+    // THE TOOLS BUTTON: on a phone, AFFiNE's tools as one row, named.
+    // Tolerant, so a missing button fails the lines below rather than ending
+    // the walk: then the row of tools is opened the other way, a double-tap.
+    if (!(await toolsButton.tap({ timeout: 5000 }).then(() => true).catch(() => false))) await doubleTap(ex, ey);
+    await p.waitForTimeout(800);
+    const ptools = await chrome(p);
+    ok(ptools.tray && !ptools.dock && ptools.undo && !ptools.open,
+       `Tools brings a row of tools, with Undo, and the button steps aside (${JSON.stringify(ptools)})`);
+    const tray = await p.locator('[data-board-tray] button').evaluateAll((els) => els.map((e) => {
+      const r = e.getBoundingClientRect();
+      return { word: e.innerText.trim(), w: Math.round(r.width), h: Math.round(r.height), left: r.left, right: r.right };
+    }));
+    ok(['Select', 'Pen', 'Eraser', 'Shape', 'Note', 'Text', 'More'].every((w) => tray.some((t) => t.word === w)),
+       `the row has Select, Pen, Eraser, Shape, Note, Text and More (${tray.map((t) => t.word).join(', ')})`);
+    ok(tray.every((t) => t.w >= 44 && t.h >= 44 && t.left >= pbox.x && t.right <= pbox.x + pbox.width),
+       `every one a finger wide and inside the board (${tray.map((t) => `${t.w}x${t.h}`).join(' ')})`);
+    await p.getByRole('button', { name: 'Undo', exact: true }).tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(600);
+    ok(await onTheBoard(p) === pn0, 'and Undo brings back what the bin took');
+
+    // A TOOL FROM THE ROW: Shape, then a tap on the board puts one there.
+    const pn1 = await onTheBoard(p);
+    await p.locator('[data-board-tray] button', { hasText: 'Shape' }).tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(400);
+    ok(await p.locator('[data-board-tray] button', { hasText: 'Shape' }).getAttribute('aria-pressed') === 'true',
+       'Shape in the row shows it is the tool in use');
+    await touch(Math.round(pbox.x + pbox.width * 0.3), Math.round(pbox.y + pbox.height * 0.55), 40);
+    await p.waitForTimeout(900);
+    ok(await onTheBoard(p) === pn1 + 1, `a tap on the board with it puts a shape there${how}`);
+    ok(await p.locator('[data-board-tray] button', { hasText: 'Select' }).getAttribute('aria-pressed') === 'true' && !!(await selectionBar(p)),
+       `and AFFiNE goes back to Select, with the new shape's bar open to change it${how}`);
+
+    // MORE: AFFiNE's own dock, with everything else.
+    await touch(ex, ey, 40);
+    await p.waitForTimeout(500);
+    await p.locator('[data-board-tray] button', { hasText: 'More' }).tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(800);
+    const pfull = await chrome(p);
+    ok(pfull.dock && !pfull.tray, `More in the row brings AFFiNE's own dock in its place (${JSON.stringify(pfull)})`);
+    ok(!pfull.zoom, 'the zoom control stays away on a phone; two fingers zoom');
+    await p.getByRole('button', { name: 'Hide tools' }).tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(500);
+    const phidden = await chrome(p);
+    ok(!phidden.dock && !phidden.tray && phidden.open, `Hide tools puts them away, and the Tools button is back (${JSON.stringify(phidden)})`);
+
+    // A DOUBLE-TAP THAT FORGIVES A FINGER: 28px apart, 200ms apart.
+    await touch(ex, ey, 40);
+    await p.waitForTimeout(200);
+    await touch(ex + 26, ey - 10, 40);
+    await p.waitForTimeout(800);
+    ok((await chrome(p)).tray, `two taps a finger's width apart still count as a double-tap${how}`);
+    await p.getByRole('button', { name: 'Hide tools' }).tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(400);
+
+    // A DOUBLE-TAP AND A LONG PRESS on a thing, as before.
+    await doubleTap(tx, ty);
+    await p.waitForTimeout(800);
+    const pbar2 = await selectionBar(p);
+    ok(pbar2 && pbar2.labels.includes('More menu'), `a double-tap on the shape opens its bar with ⋮ too${how} (${pbar2?.labels.filter(Boolean).join(', ')})`);
+    await touch(ex, ey, 40);
     await p.waitForTimeout(600);
     await touch(tx, ty, 900);
     await p.waitForTimeout(700);
     const held = await moreItems(p);
     ok(held.includes('Delete'), `a long press with a finger on the shape opens its ⋮ menu${how} (${held.join(', ')})`);
+    const perrors = pcaught.list();
+    ok(perrors.length === 0, `no page errors on the phone${perrors.length ? `: ${perrors.slice(0, 2).join(' | ')}` : ''}`);
     await phone.close();
+
+    // ---------------------------------------------------------------- tablet
+    // An iPad-sized screen, touched: the same one tap and bin, and AFFiNE's own
+    // dock, which fits there, with the zoom control off its left end.
+    const pad = await browser.newContext({ viewport: { width: 820, height: 1180 }, isMobile: true, hasTouch: true });
+    await pad.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
+    const t = await pad.newPage();
+    const tbox = await openBoard(t);
+    const tcdp = engineName === 'chromium' ? await t.context().newCDPSession(t) : null;
+    const ttap = async (x, y) => {
+      if (tcdp) {
+        await tcdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+        await t.waitForTimeout(40);
+        await tcdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+        return;
+      }
+      for (const type of ['pointerdown', 'pointerup']) {
+        await t.evaluate(([ty2, px, py]) => {
+          document.elementFromPoint(px, py)?.dispatchEvent(new PointerEvent(ty2, { bubbles: true, composed: true, cancelable: true, pointerId: 8, pointerType: 'touch', isPrimary: true, clientX: px, clientY: py }));
+        }, [type, x, y]);
+        await t.waitForTimeout(40);
+      }
+    };
+    const sx = Math.round(tbox.x + tbox.width * 0.75), sy = Math.round(tbox.y + tbox.height * 0.25);
+    await put(t, sx, sy);
+    await t.waitForTimeout(500);
+    await ttap(sx, sy);
+    await t.waitForTimeout(800);
+    const tbar = await selectionBar(t);
+    ok(tbar && tbar.labels.includes('Delete') && tbar.left >= 0 && tbar.right <= 820 && (tbar.buttons ?? []).every((b) => b.w >= 44 && b.h >= 44),
+       `on a tablet one tap opens the bar too, a finger's size, with the bin${how} (${tbar?.labels.filter(Boolean).join(', ')})`);
+    await t.locator('[data-board-open]').tap({ timeout: 5000 }).catch(() => {});
+    await t.waitForTimeout(800);
+    const ttools = await chrome(t);
+    ok(ttools.dock && !ttools.tray && !ttools.zoom,
+       `and Tools brings AFFiNE's own dock, which fits a tablet, without the zoom control on it (${JSON.stringify(ttools)})`);
+    await pad.close();
   } finally {
     await browser.close();
   }
