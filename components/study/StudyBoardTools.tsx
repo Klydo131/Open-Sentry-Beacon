@@ -330,6 +330,59 @@ export function StudyBoardTools({ api, frame }: {
     };
   }, [api, frame, opened, showDock]);
 
+  // A FINGER'S TAP ON AFFiNE'S BAR IS A PRESS, in every browser. The bar
+  // cancels the pointerdown of every press on it, to keep hold of the
+  // selection it is about, and WebKit -- Safari, and so every browser on an
+  // iPhone or an iPad -- then sends no click: tapped, the three dots, the
+  // colours and the bin did nothing (tests/e2e/the-whiteboard-says-what-you-
+  // can-do.js under WebKit in CI, 29 October 2026; Chromium sends the click
+  // anyway). So a finger's tap on one of the bar's buttons is pressed here,
+  // once, as it lifts, and the browser's own click for that tap, where it sends
+  // one, is set aside so nothing happens twice. A mouse is left alone.
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    const PRESSABLE = new Set(['editor-icon-button', 'editor-menu-action', 'edgeless-color-button', 'edgeless-color-custom-button', 'button']);
+    /** The bar's button under this event, if it is on AFFiNE's bar. */
+    const pressable = (e: Event): HTMLElement | null => {
+      const path = e.composedPath();
+      if (!path.some((n) => n instanceof Element && n.localName === 'affine-toolbar-widget')) return null;
+      return (path.find((n) => n instanceof HTMLElement && PRESSABLE.has(n.localName)) as HTMLElement | undefined) ?? null;
+    };
+    let down: { node: HTMLElement; x: number; y: number; t: number } | null = null;
+    let pressed: { node: HTMLElement; until: number } | null = null;
+
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      const node = pressable(e);
+      down = node ? { node, x: e.clientX, y: e.clientY, t: e.timeStamp } : null;
+    };
+    const onUp = (e: PointerEvent) => {
+      const was = down;
+      down = null;
+      if (!was || e.pointerType === 'mouse' || pressable(e) !== was.node) return;
+      if (Math.hypot(e.clientX - was.x, e.clientY - was.y) > 10 || e.timeStamp - was.t > 800) return;
+      pressed = { node: was.node, until: e.timeStamp + 800 };
+      was.node.click();
+    };
+    const onClick = (e: MouseEvent) => {
+      if (!e.isTrusted || !pressed) return;
+      if (e.timeStamp > pressed.until) { pressed = null; return; }
+      if (!e.composedPath().includes(pressed.node)) return;
+      pressed = null;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    el.addEventListener('pointerdown', onDown, true);
+    el.addEventListener('pointerup', onUp, true);
+    el.addEventListener('click', onClick, true);
+    return () => {
+      el.removeEventListener('pointerdown', onDown, true);
+      el.removeEventListener('pointerup', onUp, true);
+      el.removeEventListener('click', onClick, true);
+    };
+  }, [frame]);
+
   // ESCAPE puts the menu away first, then the tools, once nothing is being
   // drawn or selected: before that, Escape is AFFiNE's, to finish a tool or
   // let go of a selection. Read before AFFiNE answers the key (the capture

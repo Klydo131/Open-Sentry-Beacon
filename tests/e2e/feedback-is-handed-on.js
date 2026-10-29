@@ -43,7 +43,10 @@ async function signIn(page, name) {
   try {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, acceptDownloads: true });
     await context.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
+    // WebKit has no clipboard permissions to grant, and refuses the request
+    // (CI on 29 October 2026: "Unknown permission: clipboard-write"). There
+    // the brief is read from the screen instead, as below.
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE }).catch(() => {});
     const page = await context.newPage();
     const caught = pageErrors(page);
 

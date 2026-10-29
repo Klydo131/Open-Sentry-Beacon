@@ -13,6 +13,9 @@
 //   scrollMotion   'smooth' or 'auto' for scrollIntoView and scrollBy. A
 //                  stylesheet's reduced-motion rule never reaches a scroll
 //                  started from JavaScript, so it has to ask.
+//   settleIn       bring a screen into place that has just replaced another
+//                  without being remounted: the study room's shelf, a page,
+//                  a whiteboard.
 //
 // EVERY ONE OF THEM ASKS prefersLessMotion() FIRST. Somebody who has asked
 // their device for less movement gets the same screens with nothing moving:
@@ -98,4 +101,34 @@ export function fadeInAfter(from: HTMLElement | null): void {
     if (!(next instanceof HTMLElement) || typeof next.animate !== 'function') continue;
     next.animate([{ opacity: 0 }, { opacity: 1 }], { duration: MOTION.quick, easing: 'ease-out' });
   }
+}
+
+/**
+ * Bring into place a screen that has just replaced another in the same box.
+ *
+ * ASKED FOR ON 29 OCTOBER 2026 in the study room: "Make the transition to have
+ * subtle animations". Going in (a page from the shelf) it comes from a little
+ * to the right; coming back, from a little to the left, the way a phone pushes
+ * and pops a screen; anything else rises a few pixels. 14px at most, over
+ * --motion-base, so it reads as a direction and never as a ride.
+ *
+ * `fade` is opacity alone, for a screen that measures where it is the moment
+ * it is drawn: AFFiNE's whiteboard works out which point of the board is under
+ * a finger from where its canvas sat when it opened, and a canvas still moving
+ * then would put every tap a few pixels off.
+ *
+ * The box is animated where it is, never remounted: remounting the study
+ * room's editor host would throw away the editor. So it is a box that stays
+ * while what is inside it changes.
+ */
+export function settleIn(el: HTMLElement | null, way: 'forward' | 'back' | 'here' | 'fade'): void {
+  if (!el || prefersLessMotion() || typeof el.animate !== 'function') return;
+  const from = way === 'forward' ? 'translateX(14px)'
+    : way === 'back' ? 'translateX(-14px)'
+      : way === 'here' ? 'translateY(6px)'
+        : 'none';
+  el.animate(
+    [{ opacity: 0, transform: from }, { opacity: 1, transform: 'none' }],
+    { id: 'settle-in', duration: MOTION.base, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+  );
 }

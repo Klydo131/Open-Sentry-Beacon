@@ -24,11 +24,12 @@
 // of Hope Beacon is written in, so walking in does not feel like leaving.
 // ---------------------------------------------------------------------------
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import '@/components/study/study-shell.css';
 
 import { APP_NAME } from '@/lib/brand';
+import { settleIn } from '@/lib/motion';
 import { Bookshelf, DeskLamp } from '@/components/study/StudyFurniture';
 import type { ShelfView } from '@/components/study/StudyShelf';
 import {
@@ -58,6 +59,7 @@ export function StudyWorkspaceShell({
   onHome,
   showingPage,
   pageTitle,
+  scene,
   action,
   children,
 }: {
@@ -70,6 +72,12 @@ export function StudyWorkspaceShell({
   onHome: () => void;
   showingPage: boolean;
   pageTitle: string;
+  /**
+   * What is on the screen, in a word the room can compare: which place on the
+   * shelf, or which page and whether as writing or as a whiteboard. When it
+   * changes, the new screen settles in (lib/motion.ts, settleIn).
+   */
+  scene: string;
   /**
    * The shelf's one main thing to do -- New page, or Today's page in the
    * journal -- drawn in the bar on a phone, where there is no room for it
@@ -103,6 +111,25 @@ export function StudyWorkspaceShell({
     return () => watch.disconnect();
   }, []);
 
+  // A NEW SCREEN SETTLES IN (29 October 2026: "subtle animations to
+  // transition"). Into a page from the right, back to the shelf from the
+  // left, and anything else, a new place on the shelf or the room itself,
+  // rises into place. A whiteboard only fades in: it measures where its canvas
+  // is as it opens. Nothing moves for somebody who asked their device for less.
+  const stage = useRef<HTMLDivElement>(null);
+  const last = useRef<{ scene: string; page: boolean } | null>(null);
+  useEffect(() => {
+    const before = last.current;
+    last.current = { scene, page: showingPage };
+    if (before?.scene === scene) return;
+    const way = scene.endsWith(':board') ? 'fade'
+      : !before ? 'here'
+        : showingPage && !before.page ? 'forward'
+          : !showingPage && before.page ? 'back'
+            : 'here';
+    settleIn(stage.current, way);
+  }, [scene, showingPage]);
+
   const countOf = (id: ShelfView) => (
     id === 'all' ? counts.all
       : id === 'favourites' ? counts.favourites
@@ -120,17 +147,23 @@ export function StudyWorkspaceShell({
       className="sr fixed inset-0 z-[100]"
       data-theme={dark ? 'dark' : 'light'}
     >
-      {/* THE WAY OUT IS THE FIRST THING ON THE SCREEN, and it says where it
+      {/* THE WAY BACK IS THE FIRST THING ON THE SCREEN, and it says where it
           goes. "Close" would leave somebody guessing what closing means when
           the room is the whole window. Drawn as Apple draws a back button --
           a chevron and the name of the place it returns to, in the tint
-          colour, with no box around it. */}
+          colour, with no box around it.
+
+          ONE STEP AT A TIME (29 October 2026: "when click back or tap back in
+          the study room it all goes back to the menu, it seems to disorient
+          me when I just want to go back to the study room"). On a page it
+          goes back to the Study Room, as the phone's own Back does
+          (StudyRoomEditor); on the shelf, out to the app. */}
       <header className="sr-bar">
         <div className="sr-bar-row">
           <div className="flex min-w-0 shrink-0 justify-start">
-            <button type="button" onClick={onExit} className="sr-bar-btn tap-sm">
+            <button type="button" onClick={showingPage ? onHome : onExit} className="sr-bar-btn tap-sm" data-study-back>
               <ChevronLeftGlyph size={22} />
-              <span className="truncate">{APP_NAME}</span>
+              <span className="truncate">{showingPage ? 'Study Room' : APP_NAME}</span>
             </button>
           </div>
 
@@ -210,7 +243,11 @@ export function StudyWorkspaceShell({
               engines have disagreed on. With no padding there is nothing to
               disagree about, and the insert bar's offset can simply be the
               bar's height. */}
-          <div data-study-scroll className="absolute inset-0 overflow-y-auto overscroll-contain">
+          {/* THE BOX THAT SETTLES IN is this one, which stays through every
+              change of screen: a page draws a loading line first and then its
+              editor in its place, and an animation on the first would end the
+              moment it was replaced. The bar above it never moves. */}
+          <div ref={stage} data-study-scroll data-study-stage className="absolute inset-0 overflow-y-auto overscroll-contain">
             <div aria-hidden style={{ height: 'var(--sr-bar-h)' }} />
             {children}
           </div>

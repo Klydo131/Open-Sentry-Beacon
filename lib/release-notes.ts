@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-10-29-back-stays-in-the-study-room',
+    date: '2026-10-29',
+    title: 'Back stays in the Study Room',
+    items: [
+      'On a page in the Study Room, Back goes back to the room, where you opened the page from, not out to the menu. That is the button at the top left, which now says Study Room, and the phone’s own Back or back swipe.',
+      'From the room’s list of pages, the same button still says Hope Beacon and takes you out.',
+      'Pages, the list and the whiteboard now come in with a short, gentle movement instead of jumping. If your phone is set to reduce motion, nothing moves.',
+    ],
+  },
+  {
     id: '2026-10-29-who-is-waiting-is-named',
     date: '2026-10-29',
     title: 'You can see who is waiting to be approved',

@@ -10,6 +10,70 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 29 October 2026: Back stays in the study room, and screens settle in
+
+### If you run a copy, do this
+
+1. Rebuild. Nothing else: no database change.
+
+### What changed
+
+- **Back goes back inside the room.** The owner: "when click back or tap back
+  in the study room it all goes back to the menu, it seems to disorient me
+  when I just want to go back to the study room." An open page was only the
+  room's own state, so the phone's Back, a back swipe and the browser's button
+  skipped past it and out of the room, and the top-left button always left the
+  room. Now opening a page takes one step in the history, on the same address,
+  and Back takes it off: the page closes and the shelf is where it was, in the
+  same place (`components/study/StudyRoomEditor.tsx`). A page closed by the
+  room's own buttons takes its step off too, so no press of Back ever does
+  nothing. On a page the top-left button says **‹ Study Room**; on the shelf it
+  still says **‹ Hope Beacon** and leaves.
+- **Screens settle in.** The owner: "Make the transition to have subtle
+  animations to transition." `settleIn` in `lib/motion.ts`, where the app keeps
+  every animation started from code: a page comes in 14px from the right, the
+  shelf 14px from the left, a new place rises 6px, over 220ms
+  (`--motion-base`). A whiteboard only fades, because AFFiNE works out where a
+  finger is from where its canvas was when it opened. The box that moves is the
+  room's scroll box, which stays while a page swaps its loading line for its
+  editor; an animation on the loading line ended when it was replaced. Nothing
+  moves under reduce-motion.
+- **A finger's tap on AFFiNE's bar is a press, in WebKit too.** Safari's CI
+  run on `7137b83` was the first to tap the bar's buttons. The dots, the
+  colours and the bin did nothing there: AFFiNE's bar cancels the pointerdown
+  of every press, to keep the selection, and WebKit then sends no click.
+  Safari is WebKit, and every browser on an iPhone or iPad is too, so this
+  may be the "so hard to delete ... customize" the owner met. Not tried on a
+  real device. `StudyBoardTools.tsx` now presses the button itself as a
+  finger lifts, and sets aside the browser's own click for that tap where one
+  comes, so nothing happens twice; a mouse is left alone. The whiteboard walk
+  now also picks a colour by finger and checks the shape took it.
+- **Two walks that WebKit could not run.** `feedback-is-handed-on` asked
+  WebKit for a clipboard permission it does not have and stopped before its
+  first check; it now reads the brief from the screen there.
+  (`the-music-room` also failed under WebKit on `7137b83` and passed on
+  `438832a`. It is not touched here and is not understood.)
+
+### Checks
+
+- `tests/e2e/back-stays-in-the-study-room.js` (17 checks, a computer and a
+  phone). It checks that:
+  - the browser's Back from a page stays in the room, and from a Journal page
+    returns to the Journal;
+  - the button reads Study Room on a page and Hope Beacon on the shelf;
+  - after the button closes a page, the next Back leaves the room;
+  - Back from a whiteboard goes to the shelf;
+  - each transition starts, sliding or only fading as it should, and none
+    starts under reduce-motion.
+
+  Transitions are recorded as they start: opening a page keeps the browser busy
+  loading the editor for most of a second, and a look afterwards found them
+  already finished. The history step, the button's words, the whiteboard's
+  fade-only and the transitions themselves were each taken out once, and their
+  checks failed.
+
+---
+
 ## 29 October 2026: the whiteboard by finger, and who is waiting is named
 
 ### If you run a copy, do this

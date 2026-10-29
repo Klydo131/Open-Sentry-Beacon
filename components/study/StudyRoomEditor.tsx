@@ -748,6 +748,39 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
     }
   }, [open, refresh]);
 
+  // BACK GOES BACK INSIDE THE ROOM (29 October 2026: "when click back or tap
+  // back in the study room it all goes back to the menu, it seems to disorient
+  // me when I just want to go back to the study room"). An open page was only
+  // ever the room's own state, so the phone's Back, a swipe, or the browser's
+  // button skipped straight past it and out of the room. Opening a page now
+  // takes one step in the history, on the same address, and Back takes it
+  // off: the page closes and the shelf is where it was. From the shelf, Back
+  // leaves the room as before. A page closed by the room's own buttons takes
+  // its step off too, so the next Back is never one that does nothing.
+  const pageStep = useRef(false);
+  const closedByBack = useRef(false);
+  useEffect(() => {
+    if (openPage) {
+      if (!pageStep.current) {
+        window.history.pushState(window.history.state, '');
+        pageStep.current = true;
+      }
+    } else if (pageStep.current) {
+      pageStep.current = false;
+      if (!closedByBack.current) window.history.back();
+    }
+    closedByBack.current = false;
+  }, [openPage]);
+  useEffect(() => {
+    const onBack = () => {
+      if (!pageStep.current) return;
+      closedByBack.current = true;
+      setOpenPage('');
+    };
+    window.addEventListener('popstate', onBack);
+    return () => window.removeEventListener('popstate', onBack);
+  }, []);
+
   const current = entries.find((e) => e.id === openPage);
   const knownTags = tagsAcross(entries).map((t) => t.tag);
   const knownFolders = foldersAcross(entries).map((f) => f.folder);
@@ -1004,6 +1037,7 @@ export function StudyRoomEditor({ makeSources, ownerId, demo = false, onExit }: 
       onHome={() => setOpenPage('')}
       showingPage={Boolean(openPage)}
       pageTitle={current?.title ?? 'Study Room'}
+      scene={openPage ? `page:${openPage}:${mode === 'edgeless' ? 'board' : 'write'}` : `shelf:${view}`}
       action={!ready || view === 'trash' ? undefined
         : view === 'journal' ? { label: "Today's page", onClick: openToday }
           : { label: 'New page', onClick: addPage }}

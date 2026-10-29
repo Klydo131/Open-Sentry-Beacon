@@ -25,6 +25,27 @@ anywhere in this room and there does not need to be.
 
 ---
 
+## Getting around
+
+The button at the top left says where it goes, and goes one step at a time
+(since 29 October 2026, after "when click back or tap back in the study room it
+all goes back to the menu, it seems to disorient me"):
+
+- **On a page**, it says **‹ Study Room** and goes back to the shelf, to the
+  place you opened the page from (**All pages**, **Starred**, the **Journal**
+  or the **Bin**). The phone's own Back, a back swipe and the browser's Back
+  button do the same. **All pages**, at the top right, goes to the shelf too.
+- **On the shelf**, it says **‹ Hope Beacon** and takes you out of the room,
+  to your own home in the app. Back does that from the shelf as well.
+
+A new screen settles in rather than appearing all at once: a page comes in
+from a little to the right, the shelf from a little to the left, a new place
+on the shelf rises a few pixels, and a whiteboard fades in. It takes about a
+fifth of a second. If your phone or computer is set to reduce motion, nothing
+moves and the screens simply change (`lib/motion.ts`, `settleIn`).
+
+---
+
 ## Simple and Advanced
 
 The room starts **Simple**, and Simple has the whole room: all four places

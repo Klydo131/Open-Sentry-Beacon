@@ -472,6 +472,18 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     ok(pickers && pickers.bottom <= 844 && pickers.scrolls,
        `and the colours that do not fit under the bar scroll, ending on the screen (${JSON.stringify(pickers)})`);
     ok(!(await chrome(p)).open, 'with a thing\'s bar open, the Tools button stands aside so nothing opens under it');
+    // A COLOUR, PICKED BY FINGER, paints it. In WebKit a tap on AFFiNE's bar
+    // sent no click until the room pressed it itself (StudyBoardTools.tsx).
+    const fillOf = () => p.evaluate(() => {
+      const gfx = document.querySelector('affine-edgeless-root')?.gfx;
+      const id = [...(gfx?.selection?.selectedIds ?? [])][0];
+      return JSON.stringify(id ? gfx.getElementById(id)?.fillColor ?? null : null);
+    });
+    const fillBefore = await fillOf();
+    await p.locator('affine-toolbar-widget edgeless-color-panel edgeless-color-button').nth(3).tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(600);
+    const fillAfter = await fillOf();
+    ok(fillBefore !== 'null' && fillAfter !== fillBefore, `a finger's tap on a colour paints the shape with it (${fillBefore} to ${fillAfter})`);
     await touch(ex, ey, 40);
     await p.waitForTimeout(600);
 
