@@ -48,6 +48,21 @@ the part that goes wrong when nobody reads past the headline.
   finger lifts, and sets aside the browser's own click for that tap where one
   comes, so nothing happens twice; a mouse is left alone. The whiteboard walk
   now also picks a colour by finger and checks the shape took it.
+- **What Safari found next (`4ca34ce`, read at 09:14 UTC).** The bar fix holds
+  under WebKit: every finger check in the whiteboard walk passed, and so did
+  all 17 checks of `back-stays-in-the-study-room`. Three things did not:
+  - The whiteboard walk's phone raised "ResizeObserver loop completed with
+    undelivered notifications" as a page error. The observer that watches the
+    board's width for the phone's row of tools set state inside its own
+    report; it now does so in the next frame, as `lib/published-height.ts`
+    already does for the same error. It does not happen in Chromium, so this
+    is unconfirmed until Safari runs again.
+  - `feedback-is-handed-on` still stopped: WebKit refuses the next page, not
+    the permission request. The permissions are now asked for in Chromium
+    only.
+  - The job was cut off at its 30-minute limit with a third of the suites
+    unrun. GitHub calls that "cancelled", which reads like a newer push. It
+    now has 45 minutes (`.github/workflows/safari.yml`).
 - **Two walks that WebKit could not run.** `feedback-is-handed-on` asked
   WebKit for a clipboard permission it does not have and stopped before its
   first check; it now reads the brief from the screen there.

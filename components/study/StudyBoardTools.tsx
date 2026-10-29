@@ -108,15 +108,27 @@ export function StudyBoardTools({ api, frame }: {
     if (on) opened(); else setFull(false);
   }, [opened]);
 
-  // How wide the board is, for the row of tools on a phone.
+  // How wide the board is, for the row of tools on a phone. A change the
+  // browser reports is acted on in the next frame, never inside its report:
+  // changing the page there, while size reports were still being delivered,
+  // is what makes Safari raise "ResizeObserver loop completed with undelivered
+  // notifications" as a page error (lib/published-height.ts met it first; the
+  // whiteboard walk's phone, under WebKit, on 4ca34ce).
   useEffect(() => {
     const el = frame.current;
     if (!el) return;
     const fit = () => setNarrow(el.getBoundingClientRect().width < NARROW_PX);
     fit();
-    const watch = new ResizeObserver(fit);
+    let next = 0;
+    const watch = new ResizeObserver(() => {
+      cancelAnimationFrame(next);
+      next = requestAnimationFrame(fit);
+    });
     watch.observe(el);
-    return () => watch.disconnect();
+    return () => {
+      cancelAnimationFrame(next);
+      watch.disconnect();
+    };
   }, [frame]);
 
   // A finger's size for AFFiNE's bar and ⋯, once the bar exists, and for a

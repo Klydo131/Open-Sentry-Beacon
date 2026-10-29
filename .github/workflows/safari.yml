@@ -51,7 +51,13 @@ jobs:
     # An emergency pull request skips Safari; the merge to main runs it.
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'emergency') }}
     runs-on: macos-latest
-    timeout-minutes: 30
+    # 45, not 30, since 29 October 2026. Every suite in WebKit took about 27
+    # minutes on 7137b83; that day's walks (back-stays-in-the-study-room, and a
+    # finger and a tablet in the whiteboard walk) took it past 30, and the run on
+    # 4ca34ce was cut off at 30 with a third of the suites unrun: no summary,
+    # reported only as "cancelled", which reads like a newer push. A run that is
+    # cut off proves nothing about the suites it never reached.
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

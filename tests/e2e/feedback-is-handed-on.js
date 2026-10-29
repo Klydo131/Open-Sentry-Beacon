@@ -21,7 +21,7 @@
 //
 //   node tests/e2e/feedback-is-handed-on.js [port]
 const fs = require('node:fs');
-const { browser: engine, launchOptions, pageErrors, openByQuest } = require('./_playwright');
+const { browser: engine, engineName, launchOptions, pageErrors, openByQuest } = require('./_playwright');
 
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
 let bad = 0;
@@ -43,10 +43,12 @@ async function signIn(page, name) {
   try {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, acceptDownloads: true });
     await context.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
-    // WebKit has no clipboard permissions to grant, and refuses the request
-    // (CI on 29 October 2026: "Unknown permission: clipboard-write"). There
-    // the brief is read from the screen instead, as below.
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE }).catch(() => {});
+    // WebKit has no clipboard permissions to grant. It does not refuse the
+    // request itself, it refuses the next page instead (CI on 29 October 2026:
+    // "browserContext.newPage: Unknown permission: clipboard-write"), so they
+    // are asked for in Chromium only. Elsewhere the brief is read from the
+    // screen, as below.
+    if (engineName === 'chromium') await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
     const page = await context.newPage();
     const caught = pageErrors(page);
 
