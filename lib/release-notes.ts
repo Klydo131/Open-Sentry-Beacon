@@ -30,7 +30,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-10-29',
     title: 'The whiteboard on a phone or tablet',
     items: [
-      'Tap a shape, a note or a drawing once to change it. Its bar opens straight away, and every button on it is big enough for a finger.',
+      'Tap a shape, a note or a drawing once to change it. Its bar opens straight away, and every button on it, every choice under its three dots and every colour is big enough for a finger.',
       'The bar has a bin: one tap deletes the thing, and Undo brings it back. A computer has the bin too.',
       'A Tools button sits in the corner of the board. On a phone it opens a row of the tools, each with its name under it: Select, Pen, Eraser, Shape, Note and Text, with More for the rest.',
       'A double-tap no longer has to land on exactly the same spot.',

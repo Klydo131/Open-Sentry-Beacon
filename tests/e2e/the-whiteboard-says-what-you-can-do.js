@@ -446,9 +446,34 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
       .map((e) => ({ t: e.innerText.trim(), h: Math.round(e.getBoundingClientRect().height) })).filter((x) => x.h > 0));
     ok(heights.length >= 8 && heights.every((x) => x.h >= 44),
        `⋮ opens with a finger, and each choice in it is 44px high or more (${heights.map((x) => `${x.t} ${x.h}`).slice(0, 3).join(', ')}…)`);
+    const moreList = await p.locator('affine-toolbar-widget editor-menu-button[aria-label="More menu"] > div[data-orientation="vertical"]')
+      .evaluate((el) => Math.round(el.getBoundingClientRect().bottom)).catch(() => null);
+    ok(moreList !== null && moreList <= 844, `and the list ends on the screen, scrolling for the rest (bottom at ${moreList}px of 844)`);
     await touch(ex, ey, 40);
     await p.waitForTimeout(600);
     ok(!(await selectionBar(p)), 'a tap on empty board puts the bar away');
+
+    // ITS COLOURS BY FINGER: the palette AFFiNE opens from the bar.
+    await touch(tx, ty, 40);
+    await p.waitForTimeout(800);
+    await p.locator('affine-toolbar-widget edgeless-shape-color-picker').tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(800);
+    const swatches = await p.locator('affine-toolbar-widget edgeless-color-panel edgeless-color-button').evaluateAll((els) => els
+      .map((e) => { const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), right: r.right }; })
+      .filter((x) => x.w > 0));
+    ok(swatches.length >= 12 && swatches.every((x) => x.w >= 44 && x.h >= 44 && x.right <= 390),
+       `the colours open with a finger, each 44px or more and on the screen (${swatches.length} colours, ${swatches.slice(0, 2).map((x) => `${x.w}x${x.h}`).join(', ')}…)`);
+    const pickers = await p.locator('affine-toolbar-widget edgeless-shape-color-picker').evaluate((el) => {
+      const list = el.shadowRoot?.querySelector('[data-orientation="vertical"]');
+      if (!list) return null;
+      const r = list.getBoundingClientRect();
+      return { bottom: Math.round(r.bottom), scrolls: list.scrollHeight > list.clientHeight && getComputedStyle(list).overflowY === 'auto' };
+    }).catch(() => null);
+    ok(pickers && pickers.bottom <= 844 && pickers.scrolls,
+       `and the colours that do not fit under the bar scroll, ending on the screen (${JSON.stringify(pickers)})`);
+    ok(!(await chrome(p)).open, 'with a thing\'s bar open, the Tools button stands aside so nothing opens under it');
+    await touch(ex, ey, 40);
+    await p.waitForTimeout(600);
 
     // THE BIN.
     await touch(tx, ty, 40);
@@ -556,6 +581,10 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     const tbar = await selectionBar(t);
     ok(tbar && tbar.labels.includes('Delete') && tbar.left >= 0 && tbar.right <= 820 && (tbar.buttons ?? []).every((b) => b.w >= 44 && b.h >= 44),
        `on a tablet one tap opens the bar too, a finger's size, with the bin${how} (${tbar?.labels.filter(Boolean).join(', ')})`);
+    // Empty board first: with a thing's bar open, the Tools button stands aside.
+    const te = emptyAt(tbox);
+    await ttap(Math.round(te.x), Math.round(te.y));
+    await t.waitForTimeout(600);
     await t.locator('[data-board-open]').tap({ timeout: 5000 }).catch(() => {});
     await t.waitForTimeout(800);
     const ttools = await chrome(t);

@@ -40,7 +40,8 @@
 //
 //   * ONE TAP ON A THING: selected, and its bar open, as phone whiteboards do.
 //     The bar has a bin for Delete (lib/study/view-extensions.ts) and every
-//     button in it, and in ⋯, is a finger wide (lib/study/board-actions.ts).
+//     button in it, every choice in ⋯ and every colour in its palette is a
+//     finger wide (lib/study/board-actions.ts).
 //   * A DOUBLE-TAP that forgives a finger: 40px and 450ms, not 24px and 400ms.
 //   * A TOOLS BUTTON in the corner while the tools are put away, so they are
 //     never only behind a gesture nobody can see. The board is otherwise as
@@ -118,7 +119,8 @@ export function StudyBoardTools({ api, frame }: {
     return () => watch.disconnect();
   }, [frame]);
 
-  // A finger's size for AFFiNE's bar and ⋯, once the bar exists.
+  // A finger's size for AFFiNE's bar and ⋯, once the bar exists, and for a
+  // palette of colours once a press on the bar has opened one.
   useEffect(() => {
     if (!api) return;
     let tries = 0;
@@ -127,8 +129,19 @@ export function StudyBoardTools({ api, frame }: {
       if (!api.fitForFingers() && tries++ < 120) frameId = requestAnimationFrame(fit);
     };
     fit();
-    return () => cancelAnimationFrame(frameId);
-  }, [api, barFor]);
+    const el = frame.current;
+    // Twice: once AFFiNE has drawn what the press opened, and again once it
+    // has placed it, which it does a moment later.
+    const afterPress = () => {
+      requestAnimationFrame(() => requestAnimationFrame(() => api.fitForFingers()));
+      setTimeout(() => api.fitForFingers(), 250);
+    };
+    el?.addEventListener('click', afterPress, true);
+    return () => {
+      cancelAnimationFrame(frameId);
+      el?.removeEventListener('click', afterPress, true);
+    };
+  }, [api, barFor, frame]);
 
   // Redraw when the history or the selection changes: Undo and Redo say
   // whether they can, and a bar opened for one thing closes when another, or
@@ -378,8 +391,9 @@ export function StudyBoardTools({ api, frame }: {
 
       {/* Put away, the tools are still one tap from a finger: a screen that is
           touched has no right-click and nobody can see a double-tap. Shown by
-          study-shell.css on a touch screen only. */}
-      {!dock && (
+          study-shell.css on a touch screen only, and not while a thing's bar
+          is open, whose colours would open underneath it. */}
+      {!dock && !barFor && (
         <button
           type="button"
           onClick={() => { showDock(true); setMenu(null); }}

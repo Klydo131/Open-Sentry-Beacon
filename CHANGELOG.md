@@ -36,12 +36,16 @@ the part that goes wrong when nobody reads past the headline.
   - **a bin on the bar**, AFFiNE's own Delete run as it is, for a mouse too, and
     never on a locked thing or the page's own writing
     (`lib/study/view-extensions.ts`, a `custom:affine:surface:*` toolbar module);
-  - **every button on the bar, and every choice under ⋮, at least 44px**, on a
-    touched screen only: a stylesheet handed to the bar's shadow root, which
-    also drops AFFiNE's dividers so seven buttons fit a 360px phone, and lets ⋮
-    scroll on a short one (`lib/study/board-actions.ts`, `fitForFingers`);
+  - **every button on the bar, every choice under ⋮ and every colour at least
+    44px**, on a touched screen only. Stylesheets are handed to the bar's
+    shadow root and to the palettes' own roots, two levels further in, where
+    the colours were 24px circles 4px apart. AFFiNE's dividers go, so seven
+    buttons fit a 360px phone. Each list that opens is sized to the room under
+    it, and scrolls for the rest; AFFiNE's `min-height: fit-content` on menu
+    lists had to go for any cap to hold (`lib/study/board-actions.ts`,
+    `fitForFingers`);
   - **a Tools button** in the board's corner while the tools are put away, on
-    a touched screen only;
+    a touched screen only, and out of the way while a thing's bar is open;
   - **on a board narrower than 600px, AFFiNE's tools as one named row**:
     Select, Pen, Eraser, Shape, Note, Text, and More for AFFiNE's own dock
     (`useTool` switches AFFiNE's tools by their own classes);
@@ -61,9 +65,10 @@ the part that goes wrong when nobody reads past the headline.
 - `tests/e2e/the-whiteboard-says-what-you-can-do.js` walks a phone and a tablet
   with a finger. It checks: one tap opens the bar, inside the screen, every
   button at least 44px; ⋮ at least 44px a choice; the bin deletes and Undo
-  restores; Tools gives the row on a phone and AFFiNE's dock on a tablet; a
-  Shape from the row lands where tapped, then Select; More gives the dock; a
-  double-tap 28px apart counts. With a mouse it checks: the bin works, no Tools
+  restores; the colours open 44px and their list ends on the screen; Tools
+  steps aside under an open bar, gives the row on a phone and AFFiNE's dock on
+  a tablet; a Shape from the row lands where tapped, then Select; More gives
+  the dock; a double-tap 28px apart counts. With a mouse it checks: the bin works, no Tools
   button, and no bin on a locked thing or the page's writing. Each new check
   was seen to fail with its piece taken out.
 - `supabase/tests/a-waiting-member-is-named.sql` (8 checks, run by

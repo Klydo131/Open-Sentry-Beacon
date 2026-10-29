@@ -323,7 +323,8 @@ pretty bad and clunky for mobile and pad"):
   **Text**, and **More** for AFFiNE's own dock with everything else. A tablet
   has room for AFFiNE's dock itself. Two fingers zoom.
 - **Tap a thing once** and its bar opens straight away, with every button in
-  it, and every choice under **⋮**, a finger wide.
+  it, every choice under **⋮** and every colour in its palette a finger wide.
+  A list too long for the room under the bar scrolls.
 - **A double-tap** still brings the tools on empty board, and forgives a finger
   that lands a little way from where it first did.
 

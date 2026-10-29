@@ -28,8 +28,8 @@
 // A FINGER (29 October 2026: "pretty bad and clunky for mobile and pad ... so
 // hard to delete objects, customize, and use the tools when we are trying to
 // tap or double tap"). AFFiNE's bar and its ⋯ were drawn for a mouse: buttons
-// 24px wide, choices 30px high. `fitForFingers` makes every one of them 44px
-// where the screen is touched, and nowhere else. And AFFiNE's dock needs about
+// 24px wide, choices 30px high, colours 24px circles 4px apart. `fitForFingers`
+// makes every one of them 44px where the screen is touched, and nowhere else. And AFFiNE's dock needs about
 // 460px for its four big tools; a phone's board has 340, so a phone saw one
 // tool at a time behind 20px arrows. On a narrow board the room lays out the
 // same AFFiNE tools as one row of buttons (`useTool`), and AFFiNE's own dock
@@ -89,14 +89,54 @@ const FINGERS = `
     font-size: 15px;
   }
   /* Ten choices a finger high are taller than a small phone has room for
-     under the bar: the list scrolls rather than running off the screen. */
+     under the bar: the list scrolls rather than running off the screen.
+     AFFiNE gives every menu list min-height: fit-content, which outranks any
+     max-height, so that goes. */
   editor-toolbar editor-menu-button > div[data-orientation='vertical'] {
+    min-height: 0;
     max-height: calc(100dvh - 220px);
     overflow-y: auto;
     overscroll-behavior: contain;
     touch-action: pan-y;
   }
 }`;
+
+/**
+ * The colours, the commonest way to change a thing, open a palette that AFFiNE
+ * draws two shadow roots further in, where the bar's stylesheet cannot reach:
+ * 24px circles, 4px apart, nine to a row (measured on a 390px phone, 29
+ * October 2026). Each palette, and each colour in it, is handed one of these
+ * when it appears. `--columns` is AFFiNE's own setting for how many to a row.
+ */
+const PALETTE = `
+@media (pointer: coarse) {
+  :host { --columns: 6; gap: 4px !important; }
+  edgeless-color-button { width: 44px !important; height: 44px !important; }
+}`;
+const COLOUR = `
+@media (pointer: coarse) {
+  .color-unit { width: 30px !important; height: 30px !important; }
+}`;
+/** The menu that holds the palettes: a finger's colours are taller, so it scrolls (fitForFingers sets how far). */
+const PICKER = `
+@media (pointer: coarse) {
+  [data-orientation='vertical'] {
+    min-height: 0;
+    max-height: calc(100dvh - 220px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+}`;
+
+/** Hands a stylesheet to a shadow root once; a second call finds it there. */
+function handTo(root: ShadowRoot, css: string) {
+  if (root.querySelector('style[data-fingers]')) return;
+  const style = document.createElement('style');
+  style.dataset.fingers = '';
+  style.textContent = css;
+  root.append(style);
+}
 
 export interface BoardApi {
   /** Called whenever the selection, the history or the tool changes. Returns a way to stop. */
@@ -118,8 +158,8 @@ export interface BoardApi {
   /** Takes up one of AFFiNE's tools, as its own dock would. */
   useTool(tool: BoardTool): void;
   /**
-   * Gives AFFiNE's bar and ⋯ list a finger's size on a touched screen. Safe to
-   * call often: returns false until the bar exists, true once it is done.
+   * Gives AFFiNE's bar, its ⋯ list and its colours a finger's size on a
+   * touched screen. Safe to call often: returns false until the bar exists.
    */
   fitForFingers(): boolean;
   selectAll(): void;
@@ -211,11 +251,36 @@ export function boardApi(std: BlockStdScope): BoardApi | null {
     fitForFingers() {
       const root = std.host.querySelector('affine-toolbar-widget')?.shadowRoot;
       if (!root) return false;
-      if (root.querySelector('style[data-fingers]')) return true;
-      const style = document.createElement('style');
-      style.dataset.fingers = '';
-      style.textContent = FINGERS;
-      root.append(style);
+      handTo(root, FINGERS);
+      // The lists that open under the bar: ⋯, and the one holding the palettes.
+      const lists: HTMLElement[] = [...root.querySelectorAll<HTMLElement>("editor-menu-button > div[data-orientation='vertical']")];
+      // Every palette open in the bar now, and every colour in it.
+      const inward = (from: ParentNode) => {
+        for (const el of from.querySelectorAll('*')) {
+          const inner = el.shadowRoot;
+          if (!inner) continue;
+          if (el.localName === 'edgeless-color-panel') handTo(inner, PALETTE);
+          else if (el.localName === 'edgeless-color-button') handTo(inner, COLOUR);
+          else if (/color-picker/.test(el.localName)) {
+            handTo(inner, PICKER);
+            lists.push(...inner.querySelectorAll<HTMLElement>("[data-orientation='vertical']"));
+          }
+          inward(inner);
+        }
+      };
+      inward(root);
+      // AN OPEN LIST ENDS ON THE SCREEN. A finger's choices are taller than a
+      // mouse's, and a list opens wherever the bar is, so a fixed height cannot
+      // know how much room is left under it: it is measured once the list is
+      // open, and the rest scrolls (FINGERS and PICKER above set the most).
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        const view = window.visualViewport;
+        const bottom = view ? view.offsetTop + view.height : window.innerHeight;
+        for (const list of lists) {
+          const box = list.getBoundingClientRect();
+          if (box.height > 0 && box.top < bottom) list.style.maxHeight = `${Math.max(160, Math.floor(bottom - box.top - 12))}px`;
+        }
+      }
       return true;
     },
 
