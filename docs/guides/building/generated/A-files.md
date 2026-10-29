@@ -1950,9 +1950,7 @@ Motion that needs JavaScript, in one place.
 
 MOST MOTION IS CSS, and belongs there: a class in app/globals.css, switched off under prefers-reduced-motion further down the same file. This file is for the three things CSS cannot do on its own:
 
-usePresence keep a panel on the screen long enough to be seen leaving. Closing is an unmount; without this a panel simply vanishes. fadeInAfter fade in whatever a sub-room menu just swapped in below it. The menu cannot know what each page draws under it, so it fades the elements that follow it, whatever they are. scrollMotion 'smooth' or 'auto' for scrollIntoView and scrollBy. A stylesheet's reduced-motion rule never reaches a scroll started from JavaScript, so it has to ask.
-
-EVERY ONE OF THEM ASKS prefersLessMotion() FIRST. Somebody who has asked their device for less movement gets the same screens with nothing moving: panels appear and go, rooms swap, scrolls jump.
+usePresence keep a panel on the screen long enough to be seen leaving. Closing is an unmount; without this a panel simply vanishes. fadeInAfter fade in whatever a sub-room menu just swapped in below it. The menu cannot know what each page draws under it, so it fades the elements that follow it, whatever they are. scrollMotion 'smooth' or 'auto' for scrollIntoView and scrollBy. A stylesheet's reduced-motion rule never reaches a scroll started from JavaScript, so it has to ask. settleIn bring a screen into place that has just replaced another without being remounted: the study room's shelf, a page, a whiteboard.
 
 #### `lib/music/audio.ts`
 

@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-90 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+91 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -77,6 +77,14 @@ Two things now answer it, and this suite checks both, because only one of them w
 THE BUG. Safari has never fired `beforeinstallprompt`, on iOS or on macOS. So on every Apple device the header's Install chip has no prompt to hand the browser and falls back to a link. That link pointed at `/settings`, and the install card lives near the bottom of a long page.
 
 From the user's side: they press a button that says Install, Settings opens, and nothing that mentions installing is on screen. There is no error and nothing looks broken, so the reasonable conclusion is that the button does not work. Android users never saw this, because Chrome gives them a real one-tap prompt and they never take this branch.
+
+#### `back-stays-in-the-study-room.js`
+
+Back goes back inside the study room, and a new screen settles in gently.
+
+29 October 2026: "when click back or tap back in the study room it all goes back to the menu, it seems to disorient me when I just want to go back to the study room." And: "Make the transition to have subtle animations to transition."
+
+WHAT WAS WRONG. An open page was only the room's own state, so the browser's Back, a phone's back swipe and the top-left button all skipped past it and out of the room, to the menu. Now (components/study/StudyRoomEditor.tsx, BACK GOES BACK INSIDE THE ROOM) opening a page takes one step in the history, Back takes it off, and the button on a page says "Study Room". A new screen settles in (lib/motion.ts, settleIn): a page from the right, the shelf from the left, a whiteboard by fading only, and nothing at all for somebody whose device asks for less movement.
 
 #### `beacon-has-its-own-sound.js`
 

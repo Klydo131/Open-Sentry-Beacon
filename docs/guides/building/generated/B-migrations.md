@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-163 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+164 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1403,3 +1403,11 @@ Feedback lets a deleted account go, and says itself who handled it, when.
 FOUND BY THE AUDIT OF 29 OCTOBER 2026, asked for by the owner: "Audit right now, see if there are any exploits in the updates and fix it." Four faults in 20261028130000_feedback_is_reviewed_and_handed_on, fixed here rather than there because that file has been public since 28 October and a church may have run it already.
 
 1. DELETING A MEMBER WHO HAD SENT FEEDBACK FAILED. `feedback.author_id` lets go of a deleted account (on delete set null), which the database does as an UPDATE. The trigger that keeps what was sent refused it, as a change of author, so the whole deletion was refused: a Director removing somebody, an account deleting itself, a church honouring a request to be forgotten. Anybody who wanted to be impossible to remove had only to send one piece of feedback. Proved against a database built from nothing before this fix; supabase/tests/feedback-is-reviewed-and-handed-on.sql now deletes such a member.
+
+#### `20261029110000_a_waiting_member_is_named.sql`
+
+*2026-10-29*
+
+The member waiting to be approved is named in the notice, not "Somebody".
+
+ASKED FOR ON 29 OCTOBER 2026, with a picture of the bell: "Why is it called somebody, it should be the name being approved please." The notice a Director gets when an invited member finishes signing up was titled "Somebody is waiting to be approved", and the name came only in the line under it. A bell lists titles, and a phone's notification shows the title first, so the one word a Director needs was the one word left out.

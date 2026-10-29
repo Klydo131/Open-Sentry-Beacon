@@ -1,6 +1,29 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 62 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 65 releases, as members read them in Settings, What's new.
+
+### Back stays in the Study Room
+
+*2026-10-29*
+
+- On a page in the Study Room, Back goes back to the room, where you opened the page from, not out to the menu. That is the button at the top left, which now says Study Room, and the phone’s own Back or back swipe.
+- From the room’s list of pages, the same button still says Hope Beacon and takes you out.
+- Pages, the list and the whiteboard now come in with a short, gentle movement instead of jumping. If your phone is set to reduce motion, nothing moves.
+
+### You can see who is waiting to be approved
+
+*2026-10-29*
+
+- When somebody you invited finishes signing up and is waiting for a Director, the notice now starts with their name instead of “Somebody”. Notices already in your bell say who, too.
+
+### The whiteboard on a phone or tablet
+
+*2026-10-29*
+
+- Tap a shape, a note or a drawing once to change it. Its bar opens straight away, and every button on it, every choice under its three dots and every colour is big enough for a finger.
+- The bar has a bin: one tap deletes the thing, and Undo brings it back. A computer has the bin too.
+- A Tools button sits in the corner of the board. On a phone it opens a row of the tools, each with its name under it: Select, Pen, Eraser, Shape, Note and Text, with More for the rest.
+- A double-tap no longer has to land on exactly the same spot.
 
 ### Feedback you can follow
 
