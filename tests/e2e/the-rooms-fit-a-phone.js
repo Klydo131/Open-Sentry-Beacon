@@ -383,7 +383,15 @@ async function go(page, locator, url) {
     } else {
       ok(tabShown && !deskShown, `desk (${label}): a tab on the edge, and the desk out of the way until asked for`);
       await page.locator('[data-desk-tab]').click();
-      await page.waitForTimeout(500);
+      // The drawer slides in and out over --motion-slow (280ms). A fixed wait
+      // raced it: on a busy WebKit runner Safari CI measured it mid-slide
+      // (407..750 on a 390px phone) and still showing after ›››, in three of
+      // the four runs from 29 October to 2 November 2026. Wait for it to
+      // arrive, and below for it to leave; one that never does still fails.
+      await page.waitForFunction(() => {
+        const d = document.querySelector('[data-desk-drawer]');
+        return !!d && Math.abs(d.getBoundingClientRect().right - innerWidth) <= 1;
+      }, null, { timeout: 5000 }).catch(() => {});
       const open = await page.evaluate(async () => {
         const d = document.querySelector('[data-desk-drawer]');
         d.scrollTop = d.scrollHeight;
@@ -397,8 +405,12 @@ async function go(page, locator, url) {
       ok(open.left >= 0 && open.right <= open.vw + 1, `desk (${label}): opened, it is inside the screen (${open.left}..${open.right})`);
       ok(open.lowest <= open.vh, `desk (${label}): and its last line can be scrolled to (${open.lowest} <= ${open.vh})`);
       await page.locator('[data-desk-close]').click();
-      await page.waitForTimeout(500);
-      ok(!(await page.locator('[data-desk-drawer] aside').first().isVisible()), `desk (${label}): ››› puts it away`);
+      const away = await page.locator('[data-desk-drawer] aside').first()
+        .waitFor({ state: 'hidden', timeout: 5000 }).then(() => true, () => false);
+      // Whether the press was taken at all, so a slow slide and a missed tap
+      // read differently.
+      const pressed = (await page.locator('[data-desk-drawer]').getAttribute('data-open')) === 'false';
+      ok(away, `desk (${label}): ››› puts it away${away ? '' : pressed ? ' (pressed, but still showing after 5s)' : ' (the press was not taken)'}`);
     }
     await ctx.close();
   }

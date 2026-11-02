@@ -26,12 +26,27 @@
 // double-tap that forgives a finger; and the same on an iPad-sized screen.
 //
 //   node tests/e2e/the-whiteboard-says-what-you-can-do.js [port]
-const { browser: engine, engineName, launchOptions, pageErrors } = require('./_playwright');
+const { browser: engine, engineName, launchOptions, pageErrors, isCancelledPrefetch } = require('./_playwright');
 const { signInAsExplorer, openStudyRoom, newPage } = require('./_study');
 
 const BASE = `http://localhost:${process.argv[2] || '4415'}`;
 let bad = 0;
-const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
+// The last check made, so a page error can say which step it followed. Under
+// WebKit the phone raises "ResizeObserver loop completed with undelivered
+// notifications" about ten seconds into its board (Safari CI, 29 October to
+// 2 November 2026), and neither its own log nor the checks said at which step.
+let lastCheck = 'before the first check';
+const ok = (c, m) => { if (!c) bad++; lastCheck = m; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
+/** Every page error with the step it followed, for the report only: what counts is pageErrors. */
+const errorsAfterSteps = (page) => {
+  const seen = [];
+  page.on('pageerror', (err) => {
+    // The same rule as pageErrors, so the report names what is counted.
+    if (isCancelledPrefetch(String(err))) return;
+    seen.push(`${String(err).split('\n')[0]} (after "${lastCheck.slice(0, 90)}")`);
+  });
+  return seen;
+};
 
 /** How many things are on the board: the surface's elements and its blocks. */
 const onTheBoard = (page) => page.evaluate(() => {
@@ -377,6 +392,7 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     await phone.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
     const p = await phone.newPage();
     const pcaught = pageErrors(p);
+    const pwhen = errorsAfterSteps(p);
     const pbox = await openBoard(p);
     const pclean = await chrome(p);
     ok(!pclean.dock && !pclean.undo && !pclean.tray && pclean.hint && /Tap a thing/.test(await p.locator('[data-board-hint]').innerText()),
@@ -560,7 +576,7 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     const held = await moreItems(p);
     ok(held.includes('Delete'), `a long press with a finger on the shape opens its ⋮ menu${how} (${held.join(', ')})`);
     const perrors = pcaught.list();
-    ok(perrors.length === 0, `no page errors on the phone${perrors.length ? `: ${perrors.slice(0, 2).join(' | ')}` : ''}`);
+    ok(perrors.length === 0, `no page errors on the phone${perrors.length ? `: ${pwhen.slice(0, 3).join(' | ') || perrors.slice(0, 2).join(' | ')}` : ''}`);
     await phone.close();
 
     // ---------------------------------------------------------------- tablet
