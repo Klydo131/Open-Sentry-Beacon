@@ -58,7 +58,7 @@ was wrong and what changed, never how to do it again.
 | --- | --- | --- |
 | Every screenshot vanished from the first PDF guides: the link pattern matched `![alt](src)` before the picture pattern could. | Pictures before links. | `docs/handbook/build-pdf.js`, and the builder for these guides |
 | Every cross-reference in a PDF was dead once the file left its folder. | Links to documents are rewritten to GitHub, or kept inside the book when the chapter is in it. | Both PDF builders |
-| Every document said the app was on a free plan. It was not, and the wrong figure was informing decisions. | Numbers about cost or usage are measured on the day, and dated. | `docs/WHAT-IT-COSTS.md` |
+| The documents said the app ran on a free plan when it did not, and the wrong figure was informing decisions. | A price is read from the service's own pricing page, and dated; usage is measured on the day. | `docs/WHAT-IT-COSTS.md`, which dates its prices |
 | A stale local copy of the repository produced a commit count four times too large, and it reached a decision. | Fetch before quoting any number about a remote. | The AI chapter |
 
 ## Two agents, one repository

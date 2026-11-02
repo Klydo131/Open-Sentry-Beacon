@@ -112,7 +112,7 @@ ok(!probe('LGPL-3.0-or-later', 'some-browser-library'), 'LGPL is allowed only fo
   ok(/href="\/third-party-notices\.txt"/.test(read('components/SourceCard.tsx')), 'Settings links it');
   ok(/import \{[^}]*SOURCE_URL[^}]*\} from '@\/lib\/brand'/.test(read('components/SourceCard.tsx'))
      && /href=\{SOURCE_URL\}/.test(read('components/live/DoorPages.tsx'))
-     && !/https:\/\/github\.com\/Klydo131/.test(read('components/SourceCard.tsx') + read('components/live/DoorPages.tsx')),
+     && !/https:\/\/github\.com\//.test(read('components/SourceCard.tsx') + read('components/live/DoorPages.tsx')),
      'and the source address is set in one place, lib/brand.ts');
 }
 

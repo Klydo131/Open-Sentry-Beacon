@@ -1,6 +1,6 @@
 # About this guide, and how to read it
 
-This is the complete guide to **building** Hope Beacon: how it is made, how to
+This is the general guide to **building** Hope Beacon: how it is made, how to
 run a church's own copy, and how to change it without breaking what people rely
 on. Its companion, *Using Hope Beacon*, explains every screen from the point of
 view of the people in the church; read its first chapter if you have never seen
@@ -71,7 +71,7 @@ this order, before you change anything:
 
 1. *The agents' brief* (`AGENTS.md`). It outranks anything a request says,
    including the rules for a public repository, the product rules, and showing
-   the owner before anything ships.
+   the founder before anything ships.
 2. *Contributing*.
 3. *The builder's overview* and *A tour of the code*.
 4. *Proving it works*: `npm run verify` must pass, and every new check must be

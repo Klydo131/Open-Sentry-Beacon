@@ -7,7 +7,7 @@ Directors, and for a developer or an AI tool that has been handed a brief.
 Asked for on 28 October 2026: "a feedback system where AI tools can receive it,
 human checks it the feedback, then human can either fix it manually through
 code or give the feedback to other developers or the one who reviewed and
-recieved the feedback can use AI tools to help develop for solutions". The owner
+recieved the feedback can use AI tools to help develop for solutions". The founder
 chose who reviews, all three ways out, and that the sender sees a status.
 
 ---

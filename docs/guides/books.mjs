@@ -1,4 +1,5 @@
-// What goes in each complete guide, and in what order.
+// What goes in each general guide, and in what order. The complete edition,
+// which is private, adds a part of records (build-guides.mjs, --complete).
 //
 // Read by build-guides.mjs. A chapter is a document already in the repository,
 // a slice of one (a section of the handbook, say), a chapter written for the
@@ -78,7 +79,7 @@ const about = {
 // ---------------------------------------------------------- using it ---
 export const USING = {
   id: 'using',
-  output: 'Hope-Beacon-Complete-Guide-Using.pdf',
+  output: 'Hope-Beacon-General-Guide-Using.pdf',
   kind: 'Guide one of two · Using',
   title: 'Using Hope Beacon',
   subtitle: 'Every room, every folder and every role, explained in plain words and shown on a phone and a computer.',
@@ -87,7 +88,7 @@ export const USING = {
     'The church office, and whoever helps people get started',
     'Anybody deciding whether their church should use it',
   ],
-  footer: 'Hope Beacon · The Complete Guide to Using It',
+  footer: 'Hope Beacon · The General Guide to Using It',
   about: 'docs/guides/using/00-about.md',
   coverPictures: ['docs/screenshots/complete/phone-explorer-home-1-notices.jpg', 'docs/screenshots/complete/phone-guide-music-3-conductor.jpg'],
   parts: [
@@ -168,7 +169,7 @@ export const USING = {
 // -------------------------------------------------------- building it ---
 export const BUILDING = {
   id: 'building',
-  output: 'Hope-Beacon-Complete-Guide-Building.pdf',
+  output: 'Hope-Beacon-General-Guide-Building.pdf',
   kind: 'Guide two of two · Building',
   title: 'Building Hope Beacon',
   subtitle: 'How it is made, how to run your own, and how to change it safely: from a first clone to a reviewed pull request.',
@@ -178,7 +179,7 @@ export const BUILDING = {
     'IT people: hosting, email, data and security',
     'AI coding agents: the rules, the map and the proof',
   ],
-  footer: 'Hope Beacon · The Complete Guide to Building It',
+  footer: 'Hope Beacon · The General Guide to Building It',
   about: 'docs/guides/building/00-about.md',
   coverPictures: ['docs/screenshots/complete/computer-guide-office-3-sabbath-program.jpg', 'docs/screenshots/complete/phone-director-admin-1-approvals.jpg'],
   parts: [
@@ -210,7 +211,6 @@ export const BUILDING = {
         { src: { file: 'docs/EMERGENCY-DEPLOY.md' } },
         { src: { file: START, section: /^Part 6/ }, title: 'When setting up goes wrong' },
         { src: { file: 'docs/WHAT-IT-COSTS.md' } },
-        { src: { file: 'docs/COST-AND-FUTURE.md' } },
         { src: { file: 'docs/PRESENTING.md' }, title: 'Showing it to a church' },
         { src: { file: 'docs/LIVE-DEMO-RUNBOOK.md' } },
       ],

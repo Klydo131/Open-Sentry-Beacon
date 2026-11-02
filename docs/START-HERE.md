@@ -159,7 +159,8 @@ no telemetry, no "phone home".
 
 ### The repository
 
-`https://github.com/klydo131/open-sentry-beacon`
+**Open-Sentry-Beacon** on GitHub. Fork it into your own account before anything
+else; every command below uses your fork, written `<your-account>`.
 
 ```
 app/          the screens people see
@@ -235,8 +236,8 @@ Node is not installed — go back and run the installer.
 ### Step 1 — Get the code
 
 ```bash
-git clone https://github.com/klydo131/open-sentry-beacon.git
-cd open-sentry-beacon
+git clone https://github.com/<your-account>/Open-Sentry-Beacon.git
+cd Open-Sentry-Beacon
 npm install
 npm run dev
 ```
@@ -589,7 +590,7 @@ one of those if you can. If you are using a chat window, paste the real file.
 
 **Setting up:**
 
-> I am setting up Open Sentry Beacon from `github.com/klydo131/open-sentry-beacon`.
+> I am setting up Open Sentry Beacon from my fork, `github.com/<your-account>/Open-Sentry-Beacon`.
 > Read `docs/START-HERE.md` and `docs/SETUP.md`. I am on Part 3 Step 3 and the
 > SQL editor returned this error: `<paste the exact error>`. What went wrong and
 > what do I run instead?
@@ -788,8 +789,8 @@ terminal, git, and SQL.
 
 ```bash
 # 1. Code
-git clone https://github.com/klydo131/open-sentry-beacon.git
-cd open-sentry-beacon && npm install
+git clone https://github.com/<your-account>/Open-Sentry-Beacon.git
+cd Open-Sentry-Beacon && npm install
 
 # 2. Runs with no backend at all — this is the design, not a fallback
 npm run dev            # localhost:3000, sample data, in-browser only
@@ -898,10 +899,10 @@ node --version
 Type these one at a time, pressing Enter after each and waiting for it to finish:
 
 ```
-git clone https://github.com/klydo131/open-sentry-beacon.git
+git clone https://github.com/<your-account>/Open-Sentry-Beacon.git
 ```
 ```
-cd open-sentry-beacon
+cd Open-Sentry-Beacon
 ```
 ```
 npm install
@@ -936,7 +937,7 @@ Leave this window running. To stop it later, press `Ctrl+C`.
 Open a **second** terminal window (leave the first running). Then:
 
 ```
-cd open-sentry-beacon
+cd Open-Sentry-Beacon
 ```
 ```
 npm run setup
@@ -955,7 +956,7 @@ This is the longest step. It is repetitive, not hard.
 
 In Supabase, click **SQL Editor** in the left sidebar.
 
-On your computer, open the `open-sentry-beacon` folder, then `supabase`, then
+On your computer, open the `Open-Sentry-Beacon` folder, then `supabase`, then
 `migrations`. You will see files numbered `0001`, `0001a`, `0002`, and so on.
 
 **For each file, in order, top to bottom:**
@@ -997,7 +998,7 @@ Sign out of the app and sign back in.
 ### Step 10 — Put it on the internet *(10 minutes)*
 
 1. Go to [vercel.com](https://vercel.com) and sign in **with GitHub**.
-2. **Add New → Project.** Find `open-sentry-beacon` and click **Import**.
+2. **Add New → Project.** Find your fork, `Open-Sentry-Beacon`, and click **Import**.
 3. Before clicking Deploy, expand **Environment Variables** and add two. They
    are in the `.env.local` file that Step 6 created in your project folder —
    open it and copy both lines.
@@ -1057,6 +1058,6 @@ asks of you: a migration, a setting, or nothing at all.
 | [AI-TOOLKIT.md](AI-TOOLKIT.md) | Longer version of Part 5 |
 | [UPDATES.md](UPDATES.md) | Keeping your copy current |
 
-**Stuck?** Open an Issue at
-`https://github.com/klydo131/open-sentry-beacon/issues`. Include what you did,
+**Stuck?** Open an Issue on the Open-Sentry-Beacon repository (its **Issues**
+tab). Include what you did,
 what you expected, and the exact error. That is a contribution too.

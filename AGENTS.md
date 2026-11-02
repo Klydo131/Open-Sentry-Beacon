@@ -31,7 +31,7 @@ and it is not trying to. That part is yours.
 
 ## 0.1 Working today first, then right: the first-day protocol
 
-The owner's standing instruction (29 September 2026): *"we always need a quick
+The founder's standing instruction (29 September 2026): *"we always need a quick
 and reliable fix for at least a day to make it operational with optimized
 systems (including tools like Caveman for optimization of token use and
 Ponytail for optimization of codes and systems)."*
@@ -51,8 +51,8 @@ When something is broken, or blocking the people who use the app:
 4. **Security is never the day-two part.** A quick fix that widens who can see
    or do something is not quick; it is the next incident. So is one that locks
    real people out: expiring every old invitation password at once would have
-   locked out 38 active members and the owner, which is why that change
-   applies to new invitations and waits for the owner for the rest.
+   locked out every active member and the founder, which is why that change
+   applies to new invitations and waits for the founder for the rest.
 
 **The two tools every agent here works with**, because they make the work
 cheaper and the code smaller without changing what ships:
@@ -62,7 +62,7 @@ cheaper and the code smaller without changing what ships:
 | **Caveman** | Tokens: short agent prose | `claude plugin marketplace add Klydo131/caveman` then `claude plugin install caveman@caveman` | For chat, plans and notes between agents. **Never** in code comments, docs, commit messages, report files or anything a church member reads: those stay full sentences, as this file is. Security warnings and anything irreversible are always said in full. |
 | **Ponytail** | Code: the fewest lines that work | `claude plugin marketplace add Klydo131/ponytail` then `claude plugin install ponytail@ponytail` | The platform before a dependency (`<input type="date">` before a date library). A deliberately small choice is marked `// shortcut: why` (Ponytail 5's marker; older `// ponytail:` markers still count). Never trade a safety check, a test or an accessibility rule for fewer lines. |
 
-Both are MIT-licensed and come from the owner's own forks of
+Both are MIT-licensed and come from the founder's own forks of
 `JuliusBrussee/caveman` and `DietrichGebert/ponytail`, so a change upstream
 does not arrive here unannounced. In Codex, Ponytail installs with
 `codex plugin marketplace add Klydo131/ponytail` and Caveman from a clone of
@@ -79,9 +79,9 @@ holds under load, tested, fast, lean). Comments keep only a reason the code
 cannot show; the story goes in the commit message (CONTRIBUTING.md, House
 style).
 
-## 0.2 The owner sees it before it ships
+## 0.2 The founder sees it before it ships
 
-The owner's standing instruction (30 September 2026): *"If you see something to
+The founder's standing instruction (30 September 2026): *"If you see something to
 improve more, please help me plan and see it so we can improve this app more and
 better for modern use. Just remember to test, polish, and before pushing I
 should be aware. Same principle for the developers who will participate in this
@@ -91,19 +91,19 @@ It applies to every change, whoever or whatever writes it:
 
 1. **Plan it, and show the plan.** What changes, why, what it costs, and what
    you are unsure of, before building anything larger than a fix. When there is
-   a choice about how the app behaves, it is the owner's: set out the options,
+   a choice about how the app behaves, it is the founder's: set out the options,
    recommend one, and do not pick for them.
 2. **Test it.** The gate (section 5), a new check that goes red when the thing
    it guards is broken on purpose, and, for anything somebody sees, the walks at
    phone, pad and desktop sizes.
 3. **Polish it.** Look at it rendered, at the sizes it was checked at, and fix
    what looks wrong before anybody is asked to look.
-4. **The owner is aware before it is pushed.** Say exactly what would reach
+4. **The founder is aware before it is pushed.** Say exactly what would reach
    `main`: the commits, what they change, what passed, and what was **not**
    verified (Safari, a real phone, the signed-in live app). Then wait for a go.
    `main` is what churches run.
 
-Outside contributors meet step 4 through the pull request, which the owner
+Outside contributors meet step 4 through the pull request, which the founder
 merges and nobody else does. An AI tool works on a branch, opens a pull request,
 and never pushes to `main` itself, whoever is driving it.
 
@@ -247,7 +247,7 @@ announcements then blog posts, each card its picture first; a card opens the
 whole post in a sheet. `components/HomeBoard.tsx` draws it for both halves and
 reads no database; `components/LiveBillboard.tsx` and
 `components/ChurchBillboard.tsx` hand it their rows. Those two files moved from
-Codex's lane to Claude's on the owner's decision that day. Checked by
+Codex's lane to Claude's on the founder's decision that day. Checked by
 `tests/e2e/home-is-a-billboard.js` and section 5 of
 `tests/blog-and-announcements-are-home.mjs`.
 
@@ -259,9 +259,9 @@ lists the looks. Classic is first and is the app exactly as it is, with no
 stylesheet of its own; the page says which look it is as `data-ui-theme` on
 `<html>`. What a device shows until somebody chooses is `DEFAULT_LOOK`, Classic.
 
-**Classic's faint writing was made readable, on the owner's decision.** On 6
+**Classic's faint writing was made readable, on the founder's decision.** On 6
 October 2026 every look was measured on every screen, and Classic itself had
-writing under 3:1. Asked, the owner chose to make the faint grey writing, the
+writing under 3:1. Asked, the founder chose to make the faint grey writing, the
 profile banners, and coloured words and labels a shade deeper, and to keep
 Classic otherwise exactly as it was. So: no `text-gray-400` on words (it is
 `text-gray-500`; icons and placeholders keep the 400), the Explorer and Guide
@@ -277,7 +277,7 @@ registered.
 **On a computer, Classic is the desktop design**, under every look: the rooms
 down the left (`components/DesktopNav.tsx`) and a light top bar
 (`app/desktop-layout.css`), from 1280px. It was a look of its own, Desktop, for
-a few hours on 3 October 2026, until the owner: "this is the classic. I dont
+a few hours on 3 October 2026, until the founder: "this is the classic. I dont
 want the UI classic with the outdated version where the UI is still mobile in
 desktop". A device that stored "desktop" is on Classic. A look recolours the
 top bar through `--top-bar-bg`, `--top-bar-ink` and the other `--top-bar-*`
@@ -306,7 +306,7 @@ things; what may not change is how Classic looks: its colours, type, shapes and
 spacing. `tests/the-classic-look-stays.mjs` holds the rule, and
 `tests/e2e/the-classic-look-stays.js` holds Classic's colours as measured on the
 day it was named. If that walk fails, your change has altered Classic: make it a
-look of its own, or ask the owner whether Classic itself should change.
+look of its own, or ask the founder whether Classic itself should change.
 
 ---
 
@@ -454,7 +454,7 @@ shipped:
 - **The bottom bar is the navigation on a phone and a pad.** **Menu | People |
   My Files** (`components/TabBar.tsx`, `lib/tab-bar.ts`), and Menu lists every
   room. On a computer (1280px and up, which includes a large iPad turned
-  sideways, kept so by the owner on 3 October 2026) the same rooms are down the
+  sideways, kept so by the founder on 3 October 2026) the same rooms are down the
   left and the bar is put away (section 2, "On a computer, Classic is the
   desktop design"). The right
   rail (the person's own desk) sits beside the page from `xl`, and below `xl`

@@ -80,7 +80,7 @@ with a message the dashboard setting does not explain.
 
 ### 4. Vercel
 
-New project → import `klydo131/open-sentry-beacon` → add two environment
+New project → import your fork of `Open-Sentry-Beacon` → add two environment
 variables:
 
 ```

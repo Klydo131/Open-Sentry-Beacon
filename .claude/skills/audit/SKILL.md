@@ -31,14 +31,14 @@ Root Causes and Test Behavior, Not Implementation.
 5. **Report** what the app does and the load you assumed, then **Must fix**,
    **Should fix** and **Suggestions**, each with `file:line`, the case and the
    smallest fix. Plain English, full sentences (Caveman is for chat, never for
-   a report). A security hole goes to the owner privately, never into a public
+   a report). A security hole goes to the founder privately, never into a public
    file, issue or commit message.
 
 ## Fixing what it found
 
 pstack's Refactoring playbook (`tools/pstack/skills/poteto-mode/playbooks/refactoring.md`):
 one verifiable unit per commit, deletions first. A comment-only unit is proven
-with `scripts/same-code.mjs`. The owner sees it before `main` (AGENTS.md 0.2).
+with `scripts/same-code.mjs`. The founder sees it before `main` (AGENTS.md 0.2).
 
 ## Comments
 

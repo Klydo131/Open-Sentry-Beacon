@@ -93,10 +93,12 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
-          # Which repository this is running in, so the job can tell a fork
-          # (nothing to back up) from the real one (misconfigured). The same
-          # test keep-awake.yml makes, for the same reason.
-          UPSTREAM: Klydo131/Open-Sentry-Beacon
+          # Whether this repository is a fork, as GitHub itself says, so the job
+          # can tell a fork (nothing to back up) from a church's own copy
+          # (misconfigured). The same test keep-awake.yml makes, for the same
+          # reason. It used to compare this repository's name with one upstream
+          # name, which put an account name into every copy.
+          GH_TOKEN: ${{ github.token }}
           HERE: ${{ github.repository }}
         run: |
           set -euo pipefail
@@ -109,7 +111,10 @@ jobs:
             # the provided path" -- a message that reads like a bug in the
             # workflow rather than "the church has no backup". Quiet is exactly
             # wrong here: the point of the job is that nobody is watching.
-            if [ "${HERE}" = "${UPSTREAM}" ]; then
+            # Anything but GitHub saying "fork", a failed answer included, is
+            # treated as a church's own copy: loud, never a quiet tick.
+            FORK="$(gh api "repos/${HERE}" --jq .fork 2>/dev/null || echo unknown)"
+            if [ "${FORK}" != "true" ]; then
               echo "::error::SUPABASE_DB_URL is not set on the live repository, so the database is NOT being backed up."
               echo "::error::Add SUPABASE_DB_URL and BACKUP_PASSPHRASE as secrets of the backup environment (Settings → Environments → backup)."
               exit 1

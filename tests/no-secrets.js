@@ -289,6 +289,57 @@ if (foreignRefs.length) {
 }
 
 // ---------------------------------------------------------------------------
+// 7b. The founder's account name only where an address has to carry it.
+//
+// The founder, 2 November 2026: "I dont want to see my name ... or any
+// similarities, just quote author or founder." The name went from every
+// sentence, clone command and comment. It stays only in working addresses:
+// the repository's own (the app's Source link, the package, security.txt, the
+// issue form and the guides' links), the code owners who review protected
+// paths, and the install commands for the project's two plugin forks. Moving
+// the repository to an organisation would take it out of those too.
+//
+// Kept as a fingerprint, as section 7 keeps its own, so this file does not
+// name anybody either.
+// ---------------------------------------------------------------------------
+{
+  const crypto = require('crypto');
+  const fingerprint = (s) => crypto.createHash('sha256').update(s.toLowerCase()).digest('hex').slice(0, 24);
+  const FOUNDER_ACCOUNT = '8a0c09b2afbc11a1da27aee3';
+  const ADDRESSES = new Set([
+    'lib/brand.ts', // SOURCE_URL: the app's Source link (AGPL-3.0)
+    'package.json', // the package's repository, homepage and issues
+    'public/.well-known/security.txt', // where a security report goes (RFC 9116)
+    '.github/ISSUE_TEMPLATE/config.yml', // the issue form's two links
+    '.github/CODEOWNERS', // who must review protected paths
+    'AGENTS.md', // the plugin forks' install commands
+    'docs/DEVELOPER-TOOLKIT.md', // the same, in the toolkit's table
+    'tools/developer-toolkit.json', // the same, as data
+    'docs/guides/build-guides.mjs', // the printed guides' links to the repository
+    'docs/handbook/build-pdf.js', // the printed handbook's links to the repository
+  ]);
+  const named = [];
+  for (const file of tracked) {
+    if (!/\.(md|ts|tsx|js|mjs|cjs|json|ya?ml|sql|txt|html|css)$|CODEOWNERS$/i.test(file)) continue;
+    if (file === 'tests/no-secrets.js' || /package-lock\.json$/.test(file)) continue;
+    let body;
+    try {
+      body = read(file);
+    } catch {
+      continue;
+    }
+    const hit = [...body.matchAll(/\b[a-z]+\d{2,}\b/gi)].some((m) => fingerprint(m[0]) === FOUNDER_ACCOUNT);
+    if (hit && !ADDRESSES.has(file)) named.push(file);
+  }
+  if (named.length) {
+    fail('the founder\'s account name is in a file that is not a working address:\n    ' + named.join('\n    ') +
+      '\n    Write "the founder", "this repository" or <your-account> instead.');
+  } else {
+    ok(`the founder's account name is only in the ${ADDRESSES.size} files whose addresses must carry it`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 8. No file that holds a secret by what it is.
 //
 // Sections 1 and 2 read what a file says. These are refused for what they are,

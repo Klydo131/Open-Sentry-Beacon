@@ -28,7 +28,7 @@ phone".
 
 ## Licence
 
-- [ ] I have read the [Contributor Licence Agreement](https://github.com/Klydo131/Open-Sentry-Beacon/blob/main/CONTRIBUTING.md#contributor-licence-agreement)
+- [ ] I have read the Contributor Licence Agreement in `CONTRIBUTING.md`
       and I agree to it for this contribution
 
 <!--

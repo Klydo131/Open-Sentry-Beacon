@@ -2,7 +2,7 @@
 
 Everything needed to run Hope Beacon, move it to a new project, and keep it working. Written for the people who run a church, and for the AI tools that will be asked to continue the work.
 
-**Version:** 4 October 2026 · **Applies to:** migrations through `20261003130000` · **Licence:** AGPL-3.0-only · **Source:** `github.com/Klydo131/Open-Sentry-Beacon` (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
+**Version:** 4 October 2026 · **Applies to:** migrations through `20261003130000` · **Licence:** AGPL-3.0-only · **Source:** the Open-Sentry-Beacon repository on GitHub (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
 
 > **NOTE** · How to read this
 >
@@ -75,7 +75,7 @@ All three need the database update that came with them (migration `2026100112000
 
 ### The limit is people, not computers
 
-A Guide walks with at most as many Explorers as the church has set, and the database enforces it rather than the screen. The figure started at five, which is roughly what one person can actually walk with; this congregation has raised it to a hundred. The app will run a church of a hundred without complaint, on the plan it is on today and with room to spare. See [What it costs](./WHAT-IT-COSTS.md) for the measured figures. What it cannot do is find you a sixth Guide. Growth here means recruiting and training people, and the app is built to keep that constraint visible rather than hide it behind a number that keeps rising.
+A Guide walks with at most as many Explorers as the church has set, and the database enforces it rather than the screen. The figure starts at five, which is roughly what one person can actually walk with, and a church can change it. The app will run a church of a hundred without complaint, even on the free plans; [What it costs](./WHAT-IT-COSTS.md) has what each plan allows. What it cannot do is find you a sixth Guide. Growth here means recruiting and training people, and the app is built to keep that constraint visible rather than hide it behind a number that keeps rising.
 
 ## 2. The roles
 
@@ -1449,17 +1449,15 @@ So a photo is made smaller before it is sent: sixteen hundred pixels on its long
 
 > **IMPORTANT** · And from PNG and WebP pictures too, since 1 October 2026
 >
-> A small picture is not worth re-drawing, so until then a PNG or WebP under 400 KB went out exactly as it was, location and all. Their metadata is now cut out at the byte level, whatever their size, and the picture itself is untouched (checked by opening a stripped picture in Chromium). A HEIC photo still goes as it is. Safari on an iPhone is thought to convert one to JPEG before sending, which would remove the location, but that has not been checked here; what to do about HEIC is one of the owner's open decisions.
+> A small picture is not worth re-drawing, so until then a PNG or WebP under 400 KB went out exactly as it was, location and all. Their metadata is now cut out at the byte level, whatever their size, and the picture itself is untouched (checked by opening a stripped picture in Chromium). A HEIC photo still goes as it is. Safari on an iPhone is thought to convert one to JPEG before sending, which would remove the location, but that has not been checked here; what to do about HEIC is one of the founder's open decisions.
 
 **A photograph is shown, not named.** A picture sent into a conversation draws as the picture, tappable for the full size; a voice note draws as a player. Anything else is a filename, which is right for a study sheet. The sample side had done this for months and the live conversation had not, so somebody who learned the app in the tutorial signed in, sent their Guide a photo, and got `20260901_110714.jpg`.
 
 Pictures further up a thread are not fetched until they are scrolled to, and a voice note downloads nothing until it is played. That is not politeness: a private file is fetched through a signed link no cache keeps, so a conversation with thirty photographs in it would otherwise download all thirty to show today's message.
 
-> **NOTE** · Why there is no video
+> **NOTE** · Why a conversation takes no video
 >
-> Video cannot be sent today. A minute of it is about four hundred shrunk photographs, and it is paid for again on every view. Put it on YouTube and share the link; the composer says so.
->
-> **This is under review and the cost has been worked out.** At this church's size video turns out to be affordable, and it stops being affordable at about ten churches sharing one instance. [What it costs](./WHAT-IT-COSTS.md) has the numbers, the three arguments against that are not about money, and the recommendation: allow it with a short cap, and measure for a month before widening it.
+> A minute of video is about four hundred shrunk photographs, and it is paid for again on every view. So a conversation takes no video: put it on YouTube and share the link; the composer says so. A blog post or an announcement may carry one short clip, 50 MB at most (see "Photos and a short video"). [What it costs](./WHAT-IT-COSTS.md) has the arithmetic.
 
 **Files reach the server in three places, all within the same 10 MB limit and none of them video:** a **conversation**, because the two people are rarely holding their phones at the same moment and the file has to wait somewhere; a **study handout**; and, since 25 September 2026, a **resource**, because files in Resources should be easy to add and easy to share. A file saved under *On this device* in My Files still never leaves the phone that saved it, unless its owner shares it through the phone's own share sheet.
 
@@ -1506,32 +1504,30 @@ Two storage rules matched on the folder name alone, so any signed-in account cou
 
 ## 10. What it costs
 
-Worked out from the live systems rather than estimated, and it produced two
-surprises worth stating here.
+**Each church pays for its own copy**, under its own accounts: a Supabase
+project for the database, sign-in and files, and a Vercel project that serves
+the app. Its data, its bill and its decisions stay its own.
 
-**This app is not on a free plan.** The Supabase organisation is on **Pro**, and
-there are **two projects** on it: the live one, and the predecessor with nine
-accounts that nobody uses. That is about **$35 a month, roughly ₱2,030**,
-against a stated budget of ₱2,000. Pausing the old project brings it to about
-**₱1,450**, and is the single cleanest saving available.
+**It can cost nothing.** Supabase's free plan and Vercel's Hobby plan run a
+small church, as long as two of this repository's jobs are switched on to
+answer the free plan's two gaps:
 
-Every document in this repository said "free plan", including this handbook, and
-that error was informing decisions.
+- `keep-awake.yml` stops the project pausing after seven idle days;
+- `backup.yml` makes the weekly encrypted backup the free plan does not.
 
-**Storage will not be a problem this decade.** Sixteen days in, with 63 members,
-the database is 16 MB of an 8 GB allowance and the files are 34 MB of 100 GB.
-Traffic is the meter that moves, because a private file is downloaded again on
-every view.
+Vercel's Hobby plan is for non-commercial use only.
 
-**The bill does not multiply as churches join**, because the plan is per
-organisation and the app is already multi-tenant. Ten churches on one instance
-is about ₱145 each. Ten separate projects would be ten times the compute for the
-same work.
+**Supabase Pro is about ₱1,710 a month** ($25 plus 12% tax in the
+Philippines). It brings no pause, daily backups, and allowances a single church
+is unlikely to outgrow.
 
-[docs/WHAT-IT-COSTS.md](./WHAT-IT-COSTS.md) has the measured figures, the video
-question costed both ways, and the list of what could not be seen from here.
-Chief among it is the Vercel account that actually serves the site, which is the
-one number that could still put the church over budget.
+**Traffic is the meter that moves, not storage.** A private file is
+downloaded again on every view, which is why photos are shrunk before sending
+and why a conversation takes no video.
+
+[docs/WHAT-IT-COSTS.md](./WHAT-IT-COSTS.md) has the plans side by side, when
+to upgrade, and the steps to create, budget for and secure your church's own
+copy.
 
 ## 11. Data protection
 
@@ -1567,7 +1563,7 @@ That raises the standard in four ways: consent has to be **express** rather than
 ### The progress report, folders and the account copy, 2 October 2026
 
 - **The progress report reads nothing new.** A Guide's is built from what their sign-in could already read about the Explorers they walk with; leadership's from every Explorer's stage and its history, which leadership could already read, and nothing from inside a pairing. No rule was added or widened. Its notes are kept on the device, per account and per period, and leave only in a Word file or text somebody chooses to take (`tests/a-progress-report-counts-what-happened.mjs`).
-- **Sabbath programs and evangelistic meetings now have an account copy**, in `office_plans`, on a database that has had migration `20261002150000`. Each row is one program or series and is readable and writable only by the account that made it: four owner-only rules, nothing for a signed-out visitor, and nothing for leadership. It holds what the device holds, including **Team only** blocks and platform notes, because it is the owner's own copy. A deletion keeps a row with its content emptied, so another device does not bring the program back. Limits keep the database from being anybody's free storage: each plan up to 200 KB, and per account up to 200 plans, 1000 rows and 10 MB in all (migration `20261003120000`, which also lets only an approved member keep one). A real 31-night series is about 55 KB. The app keeps a plan over 150 KB on the device rather than sending it. Deleting the account deletes them.
+- **Sabbath programs and evangelistic meetings now have an account copy**, in `office_plans`, on a database that has had migration `20261002150000`. Each row is one program or series and is readable and writable only by the account that made it: four owner-only rules, nothing for a signed-out visitor, and nothing for leadership. It holds what the device holds, including **Team only** blocks and platform notes, because it is the founder's own copy. A deletion keeps a row with its content emptied, so another device does not bring the program back. Limits keep the database from being anybody's free storage: each plan up to 200 KB, and per account up to 200 plans, 1000 rows and 10 MB in all (migration `20261003120000`, which also lets only an approved member keep one). A real 31-night series is about 55 KB. The app keeps a plan over 150 KB on the device rather than sending it. Deleting the account deletes them.
 - **A calendar file holds what is shared only**, never a Team only block or a platform note, and is made on the device. **Google Calendar** is the one button here that sends anything to another company: tapping it opens Google Calendar with the night's name, time, place and what is shared filled in, which reaches Google as it would if typed there. The privacy notice says so.
 
 ### Terms of Use, and what was agreed, 28 October 2026
@@ -1767,8 +1763,8 @@ Stated plainly, because a plan that hides its gaps is worse than no plan.
 | Evangelistic meetings | **Built**, kept on the device and shared as posts, and walked in the sample church: a Guide shapes a series, posts a night, the Explorer she walks with reads it with the network off, and one she does not walk with does not see it. Not yet done from a church's own app with a real sign-in; neither Word file has been opened in Word, Google Docs or Pages. |
 | The progress report | **Built** for both halves and walked in the sample church as a Guide and as a Director. Not yet seen from a church's own app with a real sign-in, and its Word file has not been opened in Word. |
 | Calendar files | **Built** and held to the standard by a check, and the walk downloads one. Nobody has yet opened one on a real iPhone, Android phone or in Outlook. |
-| Beacon, Study and Focus, and the desk's colours in each | **Built**, and walked in the sample church on a computer and a phone, with every look measured against every colour for readable text. Not yet seen on Safari, an iPhone or the owner's own devices. |
-| Frutiger Aero: five looks in one drop-down | **Built**, and walked in the sample church on a phone and a computer, each look measured for readable text on glass and on its gloss. Not yet seen on Safari, an iPhone or the owner's own devices. |
+| Beacon, Study and Focus, and the desk's colours in each | **Built**, and walked in the sample church on a computer and a phone, with every look measured against every colour for readable text. Not yet seen on Safari, an iPhone or the founder's own devices. |
+| Frutiger Aero: five looks in one drop-down | **Built**, and walked in the sample church on a phone and a computer, each look measured for readable text on glass and on its gloss. Not yet seen on Safari, an iPhone or the founder's own devices. |
 | The computer layout | **Built**, Classic's since 3 October 2026, and walked in the sample church at 1280, 1440 and 1920 pixels and on a phone. The live header's top bar has been seen on a real screen; a live sign-in walk does not exist yet, and Safari has not been tried. |
 | Programs on every device | **Built**: the merge rules are tested case by case and the table's rules are written. Two real devices signed in to the same account have not been tried from here, because this sandbox cannot sign in to a church's site. |
 | The Sabbath program in Canva | The way in is Canva's own Upload, on a free account. That Canva's free plan takes the Word file comes from search results quoting Canva's help; nobody has tried it on a real Canva account. |

@@ -21,7 +21,7 @@ These come from the app as it already was, not from the Music room:
 - **The security policy stays as it is.** `next.config.mjs` allows scripts only
   from this site and does not allow WebAssembly to be compiled
   (`wasm-unsafe-eval`) or code to be evaluated (`unsafe-eval`). Anything that
-  needs either is out unless the owner decides the policy should change.
+  needs either is out unless the founder decides the policy should change.
 - **The camera stays off.** `Permissions-Policy` says `camera=()`. The
   microphone is allowed for this site only (`microphone=(self)`), which the
   voice messages already needed.
@@ -61,7 +61,7 @@ reason comes from what the project says about itself.
 | Page scanner | jscanify | MIT | Built on OpenCV.js, which is WebAssembly of several megabytes. | From its documentation |
 | Notes from a photo (OMR) | Audiveris | AGPL-3.0 | A Java desktop and server program; it cannot run on a phone, so a photo would have to be sent to a server. | From its documentation |
 | Notes from a photo (OMR) | oemer | MIT | A Python deep-learning program; the same problem as Audiveris. | From its documentation |
-| Notes from a PDF | Audiveris on a server, or a hosted reading service | AGPL-3.0 / paid | The PDF would leave the phone. Offered to the owner on 6 October 2026 with reading on the phone; the owner chose the phone. | From their documentation |
+| Notes from a PDF | Audiveris on a server, or a hosted reading service | AGPL-3.0 / paid | The PDF would leave the phone. Offered to the founder on 6 October 2026 with reading on the phone; the founder chose the phone. | From their documentation |
 
 ## What was written here, and how it stays safe
 
@@ -82,7 +82,7 @@ reason comes from what the project says about itself.
 | `lib/music/pdf-score.ts` | From that ink to parts and notes, rhythm, ties, words, loud and soft, tempo | Pure geometry on numbers; limits on notes and marks; words shown as text, never markup |
 | `lib/music/pdf-read.ts` | Loads pdf.js only when a PDF is opened | Its worker is a file of this site; a failed download can be tried again |
 
-## Fast and light, by the owner's rule
+## Fast and light, by the founder's rule
 
 "I dont want the app to be bloated, I want the app to be fast and stable"
 (4 October 2026). So:
@@ -116,7 +116,7 @@ table above. `tests/e2e/the-music-room.js` walks the room in a browser, with a
 Asked for on 6 October 2026: Pieces should "scan the pieces (specially PDF)"
 so that "it accurately detects the notes, speed of the notes, speed of the
 piece, what the pieces conveys ... the choir singers and conductors understand
-how the piece works already". The owner was told plainly that no reader of
+how the piece works already". The founder was told plainly that no reader of
 printed music is perfect, and chose **Read music PDFs on phone**.
 
 **How it reads.** A PDF that a notation program exports (MuseScore, Dorico and
@@ -247,7 +247,7 @@ the nearest note there measures the ruler, not the ear.
 
 **Sing the note's judge** (`lib/music/sing-the-note.ts`) waits for a note to be
 held for 0.6 s and judges the middle of what was sung, leaving out the scoop.
-Since 15 October 2026 it grades in three, as the owner asked ("detect if I hit
+Since 15 October 2026 it grades in three, as the founder asked ("detect if I hit
 a perfect note or close enough"): **Perfect** within 10 cents, **Close** within
 25, **Try again** beyond, or on another note, saying what was sung. On every
 one of the 121 notes sung in tune: 121 Perfect, each within 0.67 s of the
@@ -262,7 +262,7 @@ A = 445 the same C4 (20 cents flat of the app's C4) is Close, "A little flat".
 for 1.4 s. Until 15 October 2026 the card fed the judge nothing in that time,
 so a breath taken then went unheard, and the same note sung again was taken
 for the last one still held: of three short C4s (a second each, 0.4 s breaths)
-only two were graded. The owner met it the same day ("the voice no longer
+only two were graded. The founder met it the same day ("the voice no longer
 accurate after using it one time"). Now the judge hears every reading; while a
 grade shows it only shows nothing and judges nothing, and a try begun then is
 timed from its first sound. The same three C4s: three graded, all Perfect.
@@ -284,7 +284,7 @@ note one vowel, missed both) and `tests/e2e/a-sung-note-is-heard-as-itself.js`
 (the browser, with every look measured for contrast).
 
 **Your voice, redrawn** (`components/music/TunerAdvanced.tsx`, 14 October
-2026). The owner's phone showed the old trail: every row from C2 to G4, 31 of
+2026). The founder's phone showed the old trail: every row from C2 to G4, 31 of
 them in 176 pixels, the names printed over each other, and three lines falling
 from E4 to near A2 and D2 ("not aesthetically pleasing... too small to see").
 That phone runs the tuner on `main`, from before the fixes above, and what made
@@ -297,13 +297,13 @@ note; every row is 25 pixels tall on a phone with its name in 14-pixel type;
 each note sung is its own line, and a line shorter than an eighth of a second
 is not drawn (`trailBand`, `trailLines` in `lib/music/notes.ts`, checked in
 `tests/the-music-room.mjs`; the row height is checked in the browser walk).
-Whether the new tuner makes such readings on the owner's phone is not yet
+Whether the new tuner makes such readings on the founder's phone is not yet
 known: it has not been tried there.
 
 **Not measured**: a real phone's microphone, Safari's audio (WebKit has no
 pretend microphone to sing into), more than one real singer, children's
 voices, and singing in a full room. The first check on a real iPhone is still
-the owner's.
+the founder's.
 
 ## What is not done, and why
 
@@ -315,7 +315,7 @@ the owner's.
 - **Turning a photo, or a scanned PDF, into notes that play** (optical music
   recognition) is not built. Every working approach either sends the picture
   to a server (Audiveris, oemer) or runs a model on the phone that needs the
-  security policy to allow WebAssembly. The owner decided on 4 October 2026 to
+  security policy to allow WebAssembly. The founder decided on 4 October 2026 to
   leave it out: scanned pages stay pictures to read. On 6 October 2026 the
   owner chose the narrower thing that can be done on the phone: PDFs exported
   by notation programs are read note by note (above).

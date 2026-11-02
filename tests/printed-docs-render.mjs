@@ -36,7 +36,7 @@ const ok = (cond, msg) => {
 };
 
 // The documents that are built into PDFs and handed to people.
-const PRINTED = ['HANDBOOK.md', 'HOW-TO-USE.md', 'WHAT-IT-COSTS.md', 'DATA-PROTECTION.md', 'DO-THIS-NEXT.md'];
+const PRINTED = ['HANDBOOK.md', 'HOW-TO-USE.md', 'WHAT-IT-COSTS.md', 'DATA-PROTECTION.md'];
 
 // The builder's own renderer, used rather than reimplemented: a second copy of
 // the rules would drift from the first and then this would be checking a

@@ -45,7 +45,7 @@ check the same tools and see what was decided.
 Minutes for each line, with the start time of every line worked out from them,
 is what service planners generally offer; it is here as an Advanced setting.
 
-**Details of your own** (Advanced) came from the owner the same day, not from
+**Details of your own** (Advanced) came from the founder the same day, not from
 any of these tools: "users can add additional input in the advance settings if
 the basic is not enough for them". A detail is a name and what it says, such as
 "Deacons on duty: Anna Yu and Peter Tan", printed under the theme on every

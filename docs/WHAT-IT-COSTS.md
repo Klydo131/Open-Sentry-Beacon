@@ -1,215 +1,176 @@
-# What it costs, and whether video is affordable
+# What it costs, and how to run your own
 
-Measured against the live systems on 1 September 2026, not estimated.
+For whoever sets Hope Beacon up for their own local church: a developer, a
+church's IT volunteer, or somebody working with an AI assistant. Four things,
+in the order you meet them: **create it, budget for it, secure it, and make
+it your own.**
 
-> **Update, 26 October 2026.** The bill below left out tax. The latest
-> invoice was **$38.47**: the Pro plan ($25), compute for the second project
-> ($9.35), and tax of $4.12 (12% of the two). At about ₱61 to the dollar
-> that is about **₱2,350 a month**.
-> The plan is per organisation, and each church runs its own project, because
-> one shared project would make the hubs one company's service, not each
-> church's own. To meet the monthly cost, a church can now choose to ask its
-> members: the giving room, optional and off until switched on, shows the
-> month's goal and how to give, and never who gave ([HANDBOOK.md](HANDBOOK.md),
-> "Keep our Hope Hub running").
-
-**Two things turned up while costing this, and both change the answer.**
+Prices are what each service published when this was written (October 2026).
+They change, so read each service's pricing page before you decide.
 
 ---
 
-## 1. This app is not on a free plan, and every document said it was
+## 1. Create it
 
-The Supabase organisation **Local Church** is on the **Pro** plan. The handbook
-says "the app will run a church of a hundred on a free plan"; the pivot plan is
-built around "$0/month, honestly" and lists Supabase Pro as a *future* trigger.
-Both are wrong, and they have been wrong while decisions were made on them,
-including the advice I gave yesterday that video "would end this church's free
-plan".
+**One church, one copy.** Each church runs its own Supabase project and its
+own deployment, under its own accounts. Its members' data, its bill and its
+decisions stay its own, and no other church's settings or outages reach it.
 
-There are also **two projects** on that organisation, not one:
-
-| Project | Created | Size | Accounts | Last sign-in |
-|---|---|---|---|---|
-| **Open-Sentry-Beacon** | 12 Aug 2026 | 16 MB | 63 | live, today |
-| Local Church App Project | 20 Jul 2026 | 14 MB | 9 | 26 Aug 2026 |
-
-The second is the predecessor with nine accounts on it. Supabase charges per
-project beyond the plan's included compute, and the API reports **$10/month**
-for an additional project.
-
-### So the bill today
-
-| | Monthly |
+| You want to | Read |
 |---|---|
-| Supabase Pro, organisation | $25 |
-| Second project, still running | $10 |
-| **Total, confirmed** | **$35** |
-| Vercel | **not known — see §5** |
-| Brevo | $0 on the free tier |
-| GitHub Actions | $0, unmetered on a public repository |
+| Set it up with no coding, step by step | [START-HERE.md](START-HERE.md), "The simple path, for everyone else" |
+| Set it up with an AI assistant doing the typing | [AI-SETUP-GUIDE.md](AI-SETUP-GUIDE.md) |
+| Set it up by hand, as a developer | [START-HERE.md](START-HERE.md), "The manual path, for people who code" |
+| Run it without Supabase, on your own server | [POSTGRES.md](POSTGRES.md) |
+| Host it somewhere other than Vercel | [DEPLOY-ANYWHERE.md](DEPLOY-ANYWHERE.md) |
 
-At roughly ₱58 to the dollar, **$35 is about ₱2,030 a month**, against a stated
-budget of **₱2,000**.
-
-> **You are a fraction over budget, and the whole of the overage is a project
-> nobody uses.** Pausing *Local Church App Project* takes it to $25, about
-> **₱1,450**, which is comfortably inside. Its data is kept while paused.
->
-> I have not paused it. It holds a client's data and turning it off is not mine
-> to decide.
+**Start from your own fork.** Fork this repository into your own GitHub
+account first, and connect *your fork* to Vercel. Then the church's copy
+updates when you choose, not when somebody else pushes.
 
 ---
 
-## 2. What is actually being used
+## 2. Budget for it
 
-The church has been live for **sixteen days**.
+### What you pay for
 
-| | Now | Pro includes | Used |
+| Service | What it does | Free | Paid |
 |---|---|---|---|
-| Database | 16 MB | 8 GB | 0.2% |
-| Files | 34 MB | 100 GB | 0.03% |
-| Accounts | 63 | 100,000 monthly | negligible |
+| **Supabase** | The database, sign-in and files | 500 MB database, 1 GB files, 5 GB traffic a month, 50,000 monthly users. **Pauses after 7 idle days. No backups.** | **Pro: $25 a month** per organisation: 8 GB database, 100 GB files, 250 GB traffic, 100,000 monthly users, seven days of daily backups. Each extra project on it adds about $10 a month. |
+| **Vercel** | Serves the app | **Hobby: free, for non-commercial use only** | Pro: $20 a month per team member |
+| **E-mail** (Brevo, or any SMTP account) | Invitations and password resets | A free tier is enough for invitations ([EMAIL.md](EMAIL.md)) | Only if a church sends far more than invitations |
+| **GitHub** | The code, and the keep-alive and backup jobs | Free; Actions are unmetered on a public repository | — |
+| **A domain** | Your own address | Optional: the app works on the address Vercel gives it | A year's renewal; prices vary by name |
 
-People: **63 members, 29 Guides, 26 Explorers, 24 active pairings.** Twenty-nine
-Guides at five each is capacity for 145 Explorers, so the app is at about a
-sixth of what its people can carry.
+**Add your local tax.** In the Philippines that is 12%, so Supabase Pro comes
+to about **₱1,710 a month** ($25 plus 12%).
 
-**Four Explorers have no Guide.** That is the only number on this page that is
-about somebody being ignored rather than about money.
+### Three budgets
 
-### The rate it is growing at
+1. **₱0 a month.** Supabase Free and Vercel Hobby, with this repository's two
+   free jobs switched on, because they answer the free plan's two gaps:
+   - `.github/workflows/keep-awake.yml` touches the database once a day, so
+     it never reaches its seventh idle day;
+   - `.github/workflows/backup.yml` makes a weekly encrypted backup.
 
-Measured over the last seven days: **15 files, 27 MB, averaging 2.14 MB each**,
-and 31 messages. Every one of those files is a photograph.
+   Section 3 has the setup for both. This suits a small church, as long as
+   its use stays non-commercial.
+2. **About ₱1,710 a month.** Supabase Pro. No pause, daily backups from
+   Supabase itself, and allowances a single church is unlikely to outgrow.
+3. **Add about $20 a month per person** for Vercel Pro if the use becomes
+   commercial. That is Vercel's rule about what the site is for, and it
+   applies however small the church is.
 
-| Photos, at the current rate | Per month | 100 GB reached in |
-|---|---|---|
-| As they were, unshrunk | ~117 MB | ~71 years |
-| Shrunk, as they are since yesterday | ~21 MB | ~400 years |
+### The meter to watch is traffic
 
-**Storage is not a constraint and was never going to be.** I said yesterday that
-shrinking photos was mostly a cost fix; on the Pro plan that was wrong. It is
-worth keeping for two other reasons that stand on their own: it removes the GPS
-coordinates a phone writes into every picture, and it cuts the traffic each
-photo costs *every time somebody opens the thread*, which is the meter that
-actually moves.
+Text costs almost nothing; files are what move the bill. A private file is
+downloaded again **every time somebody opens it**: no cache keeps it, because
+each view gets a fresh signed link.
 
----
+- **Photos are shrunk on the phone before sending,** to about 0.2 MB each.
+  1 GB holds roughly five thousand of them.
+- **Video is the expensive thing.** A minute of 1080p phone video is about
+  80 MB, which is four hundred shrunk photos, and it is paid for again on
+  every view. So only a blog post or an announcement may carry a clip: one
+  per post, 50 MB at most, and 200 MB of files per person. Conversations take
+  no video. For anything longer, share a YouTube link.
+- **Read the number monthly:** Supabase, **Usage**, egress.
 
-## 3. The video question, costed
+### Decide when to upgrade before you need to
 
-A minute of phone video is roughly **80 MB** at 1080p and about half that at
-720p. A photograph, after shrinking, is about **0.2 MB**. One minute of video is
-therefore about **four hundred photographs**.
+Then the decision is made by a number, not a nervous week:
 
-### Storage: not the problem
+- **Supabase Pro:** when files approach 1 GB, traffic approaches 5 GB a
+  month, or you would rather Supabase kept the backups than a workflow.
+- **Vercel Pro:** when the use becomes commercial.
+- **More Guides, not more servers:** a Guide walks with at most five
+  Explorers. When the Guides are full and Explorers wait, the answer is
+  people. A bigger plan does not help.
 
-| If the church sent | Per month | 100 GB reached in |
-|---|---|---|
-| 1 video a week | ~350 MB | ~24 years |
-| 5 videos a week | ~1.7 GB | ~5 years |
+### Paying for it
 
-### Traffic: the meter that matters, and it still holds
-
-Every view of a private file is a fresh download; no cache keeps them. Pro
-includes **250 GB a month**.
-
-| If the church sent | Watched by 20 people each | Share of the 250 GB |
-|---|---|---|
-| 1 video a week | ~6 GB/month | 3% |
-| 5 videos a week | ~35 GB/month | 14% |
-| 20 videos a week | ~139 GB/month | 55% |
-
-**At this church's size, video is affordable.** That is the honest answer and it
-is not the one I gave yesterday. Twenty videos a week from sixty-three people
-would be unusual, and even that sits inside the plan.
-
-### Where it stops being affordable
-
-**Many churches on one instance**, which is the plan. Ten churches behaving like
-this one, at five videos a week each, is about **350 GB a month** — past the
-250 GB allowance and into per-gigabyte charges. Video is the one thing in this
-app whose cost grows with *both* the number of churches and how much each one
-uses it.
-
-### Three reasons that are not about money
-
-Costing was asked for, so these are separate and they are for the owner to
-weigh, not for me:
-
-1. **Safeguarding.** A conversation attachment has no moderation queue. A
-   photograph of a minor is already a serious thing to hold; a video of one is
-   a different order of risk, and this app has children in it with guardian
-   consent recorded against their names.
-2. **The member pays for it too.** Eighty megabytes on mobile data is a real
-   cost to somebody in a congregation, and they have no way to know how big the
-   thing is before it downloads. This app is built for cheap phones on
-   metered connections.
-3. **It may simply not play.** An iPhone records HEVC by default. Chrome on
-   Android often will not play it, so an Explorer could be sent a video they
-   cannot open, with nothing on screen to explain why.
-
-### What I would do
-
-**Allow it, with a short limit, and measure before widening it.** A 25 MB cap
-takes about twenty seconds of 1080p or a minute of 720p, which is enough for
-"here is the passage I meant" and not enough to be a habit. Keep the YouTube
-link as the answer for anything longer. Then look at the traffic after a month
-before deciding anything else.
-
-That is a change to the bucket's allowlist, the picker, and one line of copy.
-It is small. **I have not made it** — you asked for the cost first, and the
-decision is yours.
+The app has an optional giving room, off until a church switches it on. It
+shows the month's goal and how to give, and never who gave. See
+[HANDBOOK.md](HANDBOOK.md), "Keep our Hope Hub running".
 
 ---
 
-## 4. What the money buys as churches join
+## 3. Secure it
 
-The Pro plan is per organisation, not per church, and the app is already
-multi-tenant. So the bill does not multiply.
+Each step is one sitting. Do them before the first member is invited.
 
-| Churches on one instance | Cost each, at $25/month |
-|---|---|
-| 1 | ₱1,450 |
-| 5 | ₱290 |
-| 10 | ₱145 |
+1. **Keep the keys where they belong.** Only the *anon* (publishable) key
+   goes in the app. The **service role key passes every security rule**: it
+   lives in the server functions' settings and nowhere else, never in a file
+   in the repository, and never under a `NEXT_PUBLIC_` name. `tests/no-secrets.js`
+   fails the build if one is committed. Also turn on GitHub's **secret
+   scanning** and **push protection** for your fork: they refuse a known key
+   at `git push`, before it is public.
+2. **Switch on the backup, then restore it once.**
+   - In GitHub, under **Settings → Environments**, make an environment called
+     `backup`. Allow `main` only, and add yourself as the required reviewer.
+   - Give it two secrets:
+     - `SUPABASE_DB_URL`: Supabase, **Project Settings → Database →
+       Connection string**, the URI;
+     - `BACKUP_PASSPHRASE`: a long passphrase, kept in a password manager
+       first.
+   - Run **Actions → backup → Run workflow**.
+   - Decrypt what it made:
+     `gpg --decrypt --output beacon.sql beacon-<date>.sql.gpg`.
 
-**Never one project per church.** Ten separate Pro projects is ten times $10 in
-compute on top of the plan, for the same work.
+   A backup nobody has restored is a rumour. The workflow's own header has
+   the detail.
+3. **On the free plan, switch on the keep-alive.** In **Settings → Secrets and
+   variables → Actions**, add two secrets:
+   - `SUPABASE_URL`: the Project URL;
+   - `SUPABASE_ANON_KEY`: the anon key.
+
+   Then **Actions → keep-awake → Run workflow** once, to see it work.
+4. **Shorten how long a sign-in code lasts.** In Supabase, **Authentication**,
+   set how long an e-mailed code or link stays valid to **3600 seconds** or
+   less. A code that lasts longer has longer to be stolen.
+5. **Meet the law before the members arrive.** This app holds sensitive
+   personal information under the Philippine Data Privacy Act: a person's
+   age, and their religious affiliation.
+   - **Name a Data Protection Officer,** with an e-mail address that is not
+     a personal one.
+   - **Fill in Settings → Church → Legal details:** the legal name, the
+     registered address, the officer and their e-mail. The Terms of Use and
+     the Privacy Notice show these.
+   - **Decide how long things are kept.**
+   - **Register with the National Privacy Commission** once the church
+     passes about a thousand members.
+
+   [DATA-PROTECTION.md](DATA-PROTECTION.md) is the map a lawyer will want.
+6. **Keep it current.** Apply database updates in order, and read
+   [CHANGELOG.md](../CHANGELOG.md) before each one.
+   [SECURITY-LAYERS.md](SECURITY-LAYERS.md) explains every layer and what
+   proves it. [SECURITY.md](SECURITY.md) explains how to report a weakness
+   privately, through the repository's **Security** tab.
 
 ---
 
-## 5. What I cannot see, and will not guess
+## 4. Make it your own
 
-- **The Vercel account that serves the site.** The one this session can reach is
-  `klydo131's projects`, on the free Hobby plan, and it has **no projects in
-  it**. The live site is deployed from an account I have no access to. If it is
-  Hobby, it is free and the totals above stand. If it is Pro, add **$20/month**
-  (about ₱1,160), which would put the bill over budget again even with the old
-  project paused.
-- **The actual invoice.** The $25 and $10 are the published plan price and the
-  figure Supabase's own API reports for an added project. The billing page is
-  the only thing that can confirm what is really charged.
-- **Per-gigabyte overage rates.** This sandbox cannot reach Supabase's pricing
-  page. The allowances above are what matters at today's volumes; the overage
-  rates matter only in the ten-church case and should be read off the pricing
-  page before that decision.
-- **The domain.** Yours is not pointed at anything yet, and I do not know what
-  it renews at.
-- **Development cost.** Your time, and the assistants. Not something I can put a
-  number on.
-
----
-
-## 6. The short version
-
-- **You are on Pro, paying about $35 a month, which is roughly ₱2,030 against a
-  ₱2,000 budget.** Every document in the repository said you were on a free
-  plan. They have been corrected.
-- **Pausing the old project takes you to about ₱1,450** and is the single
-  cleanest saving available.
-- **Storage will not be a problem this decade.** Traffic is the meter to watch.
-- **Video is affordable at this size** and stops being affordable at about ten
-  churches. If it goes in, it goes in with a short cap and gets measured.
-- **Confirm the Vercel account.** It is the one number that could still put you
-  over, and it has been unknown for the whole of this project.
+- **The name and colours** are in `lib/brand.ts`: `APP_NAME`,
+  `APP_SHORT_NAME`, and the brand colours. The browser tab, the installed
+  app, link previews and e-mails all read them. "Hope Beacon" is an example.
+- **Your source address** is `SOURCE_URL` in the same file. Point it at your
+  fork. The app is AGPL-3.0: if you change it and run it for other people,
+  its **Source** link must lead to your changed code.
+- **Your church** is in the app itself. A Director sets its name and legal
+  details in **Settings → Church**, and giving in **Settings → Giving**. The
+  roles are the Executive Director, Directors, Guides and Explorers. People
+  join only by invitation.
+- **Where it is hosted.** The Privacy Notice (`app/privacy/page.tsx`) names
+  the hosting region. If your Supabase project is not in Seoul, change it.
+- **Your own domain.**
+  1. In Vercel, open **Settings → Domains**, add the domain, and create the
+     records Vercel shows you with whoever sold you the name.
+  2. Then set `CANONICAL_HOST` to the domain and redeploy.
+  3. **Tell the members before you move.** An installed app is tied to its
+     address, so every installed copy has to be added again from the new one.
+- **Changing the code safely.** [BUILD-YOUR-OWN.md](BUILD-YOUR-OWN.md) covers
+  the front end and the backend. [CONTRIBUTING.md](../CONTRIBUTING.md) covers
+  sending a change back. `npm run verify` must pass before anything reaches
+  your church.

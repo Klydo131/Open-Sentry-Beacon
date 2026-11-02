@@ -15,7 +15,7 @@ build if a dependency arrives under a licence nobody here has read.
 
 ## Open Morbital — playlists and the queue player
 
-**Upstream:** <https://github.com/Klydo131/open_morbital_official>
+**Upstream:** Open Morbital, a local-first music player by the same author as this project
 **Upstream licence:** GNU AGPL-3.0-or-later
 **Used here under:** GNU AGPL-3.0, as part of this AGPL-3.0 work. The copyright
 holder has additionally granted this project the right to use this material

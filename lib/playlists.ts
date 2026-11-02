@@ -2,8 +2,8 @@
 
 // Playlists for the library player.
 //
-// PORTED FROM OPEN MORBITAL, the owner's local-first music player
-// (github.com/Klydo131/open_morbital_official), AGPL-3.0 upstream, and used
+// PORTED FROM OPEN MORBITAL, the founder's local-first music player,
+// AGPL-3.0 upstream, and used
 // here under its terms as part of this AGPL-3.0 work. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code
 // is written against this app's own storage rather than copied, because
 // Morbital is Vite/zustand/dexie and this is Next.js.

@@ -99,7 +99,7 @@ function inline(text) {
       + '</figure>';
   });
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) =>
-    `<a href="${absolute(href)}">${label}</a>`);
+    `<a href="${absolute(href)}"${docPath(href) ? ` data-doc="${docPath(href)}"` : ''}>${label}</a>`);
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
   return out.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${escapeHtml(codes[i])}</code>`);
@@ -174,6 +174,13 @@ function embed(src) {
     return '';
   }
   return `data:${type};base64,${fs.readFileSync(file).toString('base64')}`;
+}
+
+/** The repository path of a link to one of its own documents, or ''. */
+function docPath(href) {
+  if (/^(https?:|mailto:|#)/i.test(href)) return '';
+  const [file] = href.split('#');
+  return /\.md$/i.test(file) ? path.posix.normalize(`docs/${file}`) : '';
 }
 
 function absolute(href) {
@@ -331,6 +338,10 @@ const page = (title, body) => `<!doctype html>
      real destinations, not for the in-page contents table. */
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 7.5pt; color: #6b7280;
                            border: none; word-break: break-all; }
+  /* One of this repository's own documents prints its path there, not the
+     whole address: the address names an account, and the path is what a
+     reader looks for in their own copy. */
+  a[data-doc]::after { content: " (" attr(data-doc) ")"; }
   strong { color: #0b1f3a; }
   /* A screenshot is evidence, so it gets a frame and stays with its caption.
      max-height keeps a tall screenshot from taking a whole page on its own,

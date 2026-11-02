@@ -10,6 +10,54 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 2 November 2026: the guides are general, and one church's records are its own
+
+### If you run a copy, do this
+
+1. Nothing in the app changes. If you link to the printed guides, they are now
+   `docs/Hope-Beacon-General-Guide-Using.pdf` and
+   `docs/Hope-Beacon-General-Guide-Building.pdf`.
+2. If your copy is not a GitHub fork, `keep-awake` and `backup` now treat it
+   as a church's own copy: a missing secret turns the job red instead of
+   skipping. Set the secrets ([WHAT-IT-COSTS.md](docs/WHAT-IT-COSTS.md),
+   "Secure it"), or switch the workflows off.
+
+### What changed
+
+- **What it costs is now a guide, not one church's bill.** The founder: "I
+  just want straight to the point how developers can create, budget, do their
+  own security, do their own app for their local church."
+  [WHAT-IT-COSTS.md](docs/WHAT-IT-COSTS.md) is four parts, create, budget,
+  secure, make it your own, with each service's plans side by side and dated.
+  The general setup steps (the keep-alive, the backup and a restore, the
+  sign-in code's life, the church's legal details, the domain) moved into it.
+  One church's own bill, budget, accounts, numbers and to-do list are kept
+  privately by that church: `COST-AND-FUTURE.md`, `DO-THIS-NEXT.md` and
+  `Do-This-Next.pdf` are gone, and so is the handbook's section of measured
+  figures.
+- **General guides in public, complete guides in private.** The two printed
+  books are the **General** edition: how to create, use, develop, budget for
+  and secure the app. `build-guides.mjs --complete <records> <out>` prints a
+  **Complete** edition with a church's own records as a last part. It refuses
+  to read those records from inside the repository, or to write the book
+  there.
+- **The founder, not a name.** The founder asked not to be named, by name or
+  by account: "just quote author or founder".
+  - The documents say "the founder".
+  - Clone commands use your own fork, `<your-account>`.
+  - Security reports go through the repository's **Security** tab.
+  - The app's Source link reads `SOURCE_URL`.
+  - The account name is left only in addresses that must carry it: the
+    repository's own, the code owners, and the plugin forks' install
+    commands.
+  - `tests/no-secrets.js` now fails if it appears anywhere else.
+- **A fork is what GitHub says is a fork.** `keep-awake.yml` and `backup.yml`
+  used to compare the repository's name with one upstream name. Now they ask
+  GitHub, and anything but a plain "yes, a fork", a failed answer included,
+  counts as a church's own copy. So the loud branch is the default.
+
+---
+
 ## 2 November 2026: nothing private in a public repository, checked wider
 
 ### If you run a copy, do this
@@ -23,12 +71,12 @@ the part that goes wrong when nobody reads past the headline.
 
 ### What changed
 
-- **The sweep.** The owner: "I dont want to see any sensitive information in
+- **The sweep.** The founder: "I dont want to see any sensitive information in
   this project like API keys, secret keys or any private information in this
   open source project." Every tracked file, the text of every PDF in the
   repository today, every line added in every commit on every branch and every
   commit message were searched for 22 shapes of credential (keys, tokens,
-  private keys, a database address with its password in it), the owner's own
+  private keys, a database address with its password in it), the founder's own
   addresses, a real member's name and phone numbers; every image ever
   committed, 1,696 of them, was read for the place it was taken. **No key or
   password was found, anywhere in the history.** The history search was first
@@ -37,9 +85,9 @@ the part that goes wrong when nobody reads past the headline.
 - **What history still holds, and why it stays.** Two things removed from the
   files in September are still in old commits: the live project's Supabase
   address, which every visitor's browser is sent by the live site anyway and is
-  not a key, and the owner's domain as an old fallback sender. Neither unlocks
+  not a key, and the founder's domain as an old fallback sender. Neither unlocks
   anything. Rewriting a public history would break every clone and fork and
-  would not take back what was already copied, so it is the owner's decision,
+  would not take back what was already copied, so it is the founder's decision,
   not a test's.
 - **`tests/no-secrets.js` checks what it did not.** It knew five key shapes and
   now knows 21, among them Brevo's (the mail service the guides recommend) and
@@ -71,7 +119,7 @@ the part that goes wrong when nobody reads past the headline.
 
 ### What changed
 
-- **Back goes back inside the room.** The owner: "when click back or tap back
+- **Back goes back inside the room.** The founder: "when click back or tap back
   in the study room it all goes back to the menu, it seems to disorient me
   when I just want to go back to the study room." An open page was only the
   room's own state, so the phone's Back, a back swipe and the browser's button
@@ -82,7 +130,7 @@ the part that goes wrong when nobody reads past the headline.
   room's own buttons takes its step off too, so no press of Back ever does
   nothing. On a page the top-left button says **‹ Study Room**; on the shelf it
   still says **‹ Hope Beacon** and leaves.
-- **Screens settle in.** The owner: "Make the transition to have subtle
+- **Screens settle in.** The founder: "Make the transition to have subtle
   animations to transition." `settleIn` in `lib/motion.ts`, where the app keeps
   every animation started from code: a page comes in 14px from the right, the
   shelf 14px from the left, a new place rises 6px, over 220ms
@@ -96,7 +144,7 @@ the part that goes wrong when nobody reads past the headline.
   colours and the bin did nothing there: AFFiNE's bar cancels the pointerdown
   of every press, to keep the selection, and WebKit then sends no click.
   Safari is WebKit, and every browser on an iPhone or iPad is too, so this
-  may be the "so hard to delete ... customize" the owner met. Not tried on a
+  may be the "so hard to delete ... customize" the founder met. Not tried on a
   real device. `StudyBoardTools.tsx` now presses the button itself as a
   finger lifts, and sets aside the browser's own click for that tap where one
   comes, so nothing happens twice; a mouse is left alone. The whiteboard walk
@@ -155,7 +203,7 @@ the part that goes wrong when nobody reads past the headline.
 
 ### What changed
 
-- **The whiteboard on a phone or tablet.** The owner: "it's pretty bad and
+- **The whiteboard on a phone or tablet.** The founder: "it's pretty bad and
   clunky for mobile and pad. It's so hard to delete objects, customize, and use
   the tools when we are trying to tap or double tap." Tried with real touches
   on a 390px phone and an 820px tablet first. Everything waited on a
@@ -184,7 +232,7 @@ the part that goes wrong when nobody reads past the headline.
   - **a double-tap that forgives a finger**: 40px and 450ms, not 24px and 400ms;
   - **AFFiNE's zoom control steps aside on any touched screen**, not only below
     640px, because on a tablet it sat on the left end of the dock.
-- **The approval notice names the person.** The owner, with a picture of the
+- **The approval notice names the person.** The founder, with a picture of the
   bell: "Why is it called somebody, it should be the name being approved
   please." The title is now "<name> is waiting to be approved": the name they
   signed up with, else the name on the invitation, else "A new member". It is
@@ -224,7 +272,7 @@ the part that goes wrong when nobody reads past the headline.
 
 ### What changed
 
-- **Why:** the owner: "Audit right now, see if there are any exploits in the
+- **Why:** the founder: "Audit right now, see if there are any exploits in the
   updates and fix it." The two updates of 28 October were read as an attacker
   would, on the database and in the app, before either reached the live
   database. Each fault found was proved on a database built from nothing,
@@ -287,7 +335,7 @@ the part that goes wrong when nobody reads past the headline.
 
 ### What changed
 
-- **Why:** the owner: "a feedback system where AI tools can receive it, human
+- **Why:** the founder: "a feedback system where AI tools can receive it, human
   checks it the feedback, then human can either fix it manually through code
   or give the feedback to other developers or the one who reviewed and
   recieved the feedback can use AI tools to help develop for solutions". The
@@ -352,7 +400,7 @@ the part that goes wrong when nobody reads past the headline.
 
 ### What changed
 
-- **Why:** the owner: "update our UI for agreeing on 'Terms' and 'Privacy
+- **Why:** the founder: "update our UI for agreeing on 'Terms' and 'Privacy
   Policy'. I want all of those to be handled professionally so that we won't
   face any legalities in the future." The app had a privacy notice and a
   safeguarding policy, and no terms at all.
@@ -424,7 +472,7 @@ Nothing: no migration and no setting. Rebuild the site.
 
 ### What changed
 
-- **Why:** the owner: "we want the board to have less tools setup, tools will
+- **Why:** the founder: "we want the board to have less tools setup, tools will
   only appear when you double tap an object or the board (or right click in
   desktop). I want the board to be clean as possible", and "You can just copy
   the Affine ... when it comes to tools". Also: "dont copy the branded notes
@@ -512,7 +560,7 @@ Nothing: no migration and no setting. Rebuild the site.
 
 ### What changed
 
-- **Why:** the owner: "The advance should be same with the simple feature,
+- **Why:** the founder: "The advance should be same with the simple feature,
   what I mean for advance feature is the little details where users can
   customize in their liking like what other apps can do." Asked what that
   should be, they chose office tools for teaching, the office, church and
@@ -571,7 +619,7 @@ Nothing: no migration and no setting. Rebuild the site.
 
 ### What changed
 
-- **Why:** the owner circled the room's own bar across the top of the board
+- **Why:** the founder circled the room's own bar across the top of the board
   ("This is not the solution for replacing the '3 dots'") and asked for the
   ⋯ back on a selected thing, as in every whiteboard, and for the Study Room
   to feel like Notion, Obsidian and Notes.
@@ -791,7 +839,7 @@ Asked for: "Admin reports will just be admin reports by now, not a court room.
 I think it will complicate more things if we do online court rooms in this
 application. It will be just faster if Admins can see reports, see the problems
 and reports and be transparent to both Guide and Explorer users by chatting them
-as Admins, no more trial online." Asked how, the owner chose one shared
+as Admins, no more trial online." Asked how, the founder chose one shared
 conversation per report, and that the person a report is about joins only when
 the Director holding it brings them in, having read it.
 

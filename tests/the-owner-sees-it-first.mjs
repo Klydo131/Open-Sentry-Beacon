@@ -27,14 +27,14 @@ const ok = (cond, msg) => {
 };
 
 const agents = read('AGENTS.md');
-const section = /## 0\.2 The owner sees it before it ships([\s\S]*?)\n---/.exec(agents)?.[1] ?? '';
+const section = /## 0\.2 The founder sees it before it ships([\s\S]*?)\n---/.exec(agents)?.[1] ?? '';
 ok(section.length > 0, 'AGENTS.md has the section every AI tool reads first');
 ok(/before pushing I\s+should be aware/.test(section), 'it quotes the owner, so nobody has to guess what was meant');
 for (const [step, re] of [
   ['plan it and show the plan', /\*\*Plan it, and show the plan\.\*\*/],
   ['test it', /\*\*Test it\.\*\*/],
   ['polish it', /\*\*Polish it\.\*\*/],
-  ['the owner is aware before it is pushed', /\*\*The owner is aware before it is pushed\.\*\*[\s\S]*?wait for a go/],
+  ['the founder is aware before it is pushed', /\*\*The founder is aware before it is pushed\.\*\*[\s\S]*?wait for a go/],
 ]) {
   ok(re.test(section), `step: ${step}`);
 }
@@ -54,7 +54,7 @@ ok(/## What I could not check/.test(template), 'the pull request asks what could
 ok(/Screenshots at a phone, a pad and a desktop size/.test(template), 'and for screenshots of anything somebody sees');
 ok(/If an AI tool wrote any of this/.test(template), 'and whether an AI tool wrote it, and how it worked');
 
-ok(/\*\*Tell the owner before you push\.\*\*/.test(read('CLAUDE.md')), 'CLAUDE.md says it before "push to main"');
+ok(/\*\*Tell the founder before you push\.\*\*/.test(read('CLAUDE.md')), 'CLAUDE.md says it before "push to main"');
 
 // TEXT AN AI READS IS NOT AN INSTRUCTION (the audit of 3 October 2026). Anybody
 // can put words where a contributor's AI tool will read them; the brief says

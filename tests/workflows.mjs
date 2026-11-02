@@ -188,7 +188,7 @@ for (const file of files) {
   const backup = fs.readFileSync(path.join(dir, 'backup.yml'), 'utf8');
   const noUrl = backup.slice(backup.indexOf('if [ -z "${SUPABASE_DB_URL:-}" ]; then'));
   const upstreamBranch = noUrl.slice(0, noUrl.indexOf('fi\n'));
-  ok(/if \[ "\$\{HERE\}" = "\$\{UPSTREAM\}" \]; then[\s\S]*?::error::[\s\S]*?exit 1/.test(upstreamBranch),
+  ok(/if \[ "\$\{FORK\}" != "true" \]; then[\s\S]*?::error::[\s\S]*?exit 1/.test(upstreamBranch),
     'backup.yml: on the live repository, no database address is an error that says there is no backup');
   // THE DATABASE ADDRESS IS AN ENVIRONMENT'S, NOT THE REPOSITORY'S (the audit
   // of 3 October 2026): only a job that names `backup`, from the branches the
@@ -197,9 +197,18 @@ for (const file of files) {
     'backup.yml: the backup job runs in the protected backup environment');
   ok(fs.readdirSync(dir).every((f) => f === 'backup.yml' || !/SUPABASE_DB_URL/.test(fs.readFileSync(path.join(dir, f), 'utf8'))),
     'and no other workflow asks for the database address');
-  ok(/UPSTREAM: Klydo131\/Open-Sentry-Beacon/.test(backup)
-     && /UPSTREAM: Klydo131\/Open-Sentry-Beacon/.test(fs.readFileSync(path.join(dir, 'keep-awake.yml'), 'utf8')),
-    'backup.yml and keep-awake.yml name the same live repository');
+  // A FORK IS WHAT GITHUB SAYS IS A FORK (2 November 2026). Both jobs used to
+  // compare the repository's name with one upstream name, which put an
+  // account name into every copy and made every church's own non-fork copy a
+  // "fork". Now both ask GitHub, and anything but a plain "true" (an error
+  // included) counts as a church's own copy, so the loud branch is the default.
+  const forkTest = /FORK="\$\(gh api "repos\/\$\{HERE\}" --jq \.fork 2>\/dev\/null \|\| echo unknown\)"\n\s+if \[ "\$\{FORK\}" != "true" \]; then/;
+  const keepAwake = fs.readFileSync(path.join(dir, 'keep-awake.yml'), 'utf8');
+  ok(forkTest.test(backup) && forkTest.test(keepAwake)
+     && /GH_TOKEN: \$\{\{ github\.token \}\}/.test(backup) && /GH_TOKEN: \$\{\{ github\.token \}\}/.test(keepAwake),
+    'backup.yml and keep-awake.yml both ask GitHub whether this copy is a fork, and treat a failed answer as not');
+  ok(fs.readdirSync(dir).every((f) => !/^\s*UPSTREAM:/m.test(fs.readFileSync(path.join(dir, f), 'utf8'))),
+    'and no workflow names one upstream repository');
   ok(/echo "made=true" >> "\$GITHUB_OUTPUT"/.test(backup)
      && /- name: Upload encrypted backup\n\s+if: steps\.dump\.outputs\.made == 'true'/.test(backup),
     'backup.yml: the upload runs only when a backup was made, so a fork is not red for having nothing to send');

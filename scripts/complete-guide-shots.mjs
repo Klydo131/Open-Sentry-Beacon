@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Every screen of the sample church, for the two complete guides.
+// Every screen of the sample church, for the two general guides.
 //
 // THE LIST OF SCREENS IS READ FROM THE APP, NOT WRITTEN HERE. For each sample
 // person it opens every room in their Menu and, inside each room, opens the

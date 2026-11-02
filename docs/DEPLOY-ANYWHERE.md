@@ -60,7 +60,7 @@ Read this once; every section below assumes it.
 anything, she wants to see what the app does, on her laptop, in ten minutes.
 
 ```bash
-git clone https://github.com/Klydo131/Open-Sentry-Beacon.git
+git clone https://github.com/<your-account>/Open-Sentry-Beacon.git   # your fork
 cd Open-Sentry-Beacon
 npm install
 npm run dev          # http://localhost:3000

@@ -4,7 +4,7 @@ The first run of the three research agents ([docs/agents/README.md](agents/READM
 made for the redesigned chat: replies, reactions and voice messages, one shared
 conversation view for both halves of the app (`components/talk/`).
 
-The owner's brief: *"Search for open source chats that we can use to improve it
+The founder's brief: *"Search for open source chats that we can use to improve it
 … in design and also security. Security will always be the number one priority
 … Make sure we don't have any issues with our open source project when it comes
 to other companies."*
@@ -17,7 +17,7 @@ church's invented people.
 
 - **Read-only.** The agents read this repository and public sources and wrote
   reports. Every change below was made afterwards, by hand, tested, and shown
-  to the owner before it was pushed.
+  to the founder before it was pushed.
 - **Not seen running.** Other projects were studied through their source, help
   pages and shipped strings, not by using them. Contrast figures are computed
   from the colours in the code; nothing was measured on a screen.
@@ -51,7 +51,7 @@ below was copied: every pattern was rebuilt here. The licence column says what
 
 Built in this change:
 
-- **Reply, react and speak**, the three the owner chose. Swipe or hold to reply;
+- **Reply, react and speak**, the three the founder chose. Swipe or hold to reply;
   six reactions with 🙏 first; tap to record, then Cancel or Send, never
   hold-to-talk (kinder to an older hand than Signal's or FluffyChat's
   press-and-hold).
@@ -111,15 +111,15 @@ owner.
 | Finding | Severity | Done |
 |---|---|---|
 | A file's storage path was written by the sender and used to build a request in the recipient's browser, with the recipient's sign-in; `../../auth/v1/logout` would have signed them out of every device whenever they opened the chat | High | **Fixed.** The database accepts only `<conversation>/<uuid>`; the browser refuses any unsafe path before it signs one, for every bucket (`lib/live/storage-path.ts`); a browser can no longer write a file's id or time |
-| A photo, file or voice message can be removed without trace; nothing is kept for safeguarding | High | **For the owner** (below) |
+| A photo, file or voice message can be removed without trace; nothing is kept for safeguarding | High | **For the founder** (below) |
 | Taking a reaction back was a delete, which the realtime feed sends to every signed-in user in every church; and the migration's comment said the opposite | Medium | **Fixed.** Taking back is an update, which reaches only the two people; the comment now says what the feed does |
-| No limit on how fast reactions or files could be sent | Medium | **Fixed.** Thirty reaction changes and ten files a minute; a daily size cap is for the owner |
-| A small PNG or WebP kept its location data; HEIC is sent as it is | Medium | **PNG and WebP fixed** at the byte level, checked by decoding in Chromium; HEIC is for the owner |
+| No limit on how fast reactions or files could be sent | Medium | **Fixed.** Thirty reaction changes and ten files a minute; a daily size cap is for the founder |
+| A small PNG or WebP kept its location data; HEIC is sent as it is | Medium | **PNG and WebP fixed** at the byte level, checked by decoding in Chromium; HEIC is for the founder |
 | `react_to` said "taken back" before asking whose the message was | Low | **Fixed**: one answer for "not yours" and "no such message" |
 | Cancel, or leaving, during the microphone prompt still started recording | Low | **Fixed** |
 | File titles could hide a reversed name (`photo<U+202E>gnp.js` style) and run on | Low | **Fixed**: refused by the database, cleaned before drawing, 200 characters |
 | A link to a look-alike address in another alphabet showed as the real name | Low | **Fixed**: such a host is shown as the address the browser will open |
-| An ended pairing can still be written to; message text on the lock screen; a nonce-based Content-Security-Policy | Low | **For the owner** / later |
+| An ended pairing can still be written to; message text on the lock screen; a nonce-based Content-Security-Policy | Low | **For the founder** / later |
 
 Also found while fixing these: the first draft of the title cleaner put the
 invisible characters themselves into the source code, where nobody reading it
@@ -156,7 +156,7 @@ were in the paperwork, and each is closed:
 - **Smaller notes:** Vercel's free tier is non-commercial (now said in
   START-HERE); the Code of Conduct's CC BY 4.0 licence is linked.
 
-## For the owner to decide
+## For the founder to decide
 
 1. **Removed files and voice messages.** Keep them for a while where only
    leadership handling a report can open them, and show "a photo was removed"

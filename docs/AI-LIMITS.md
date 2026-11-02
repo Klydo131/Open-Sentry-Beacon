@@ -35,7 +35,7 @@ to set the app up with one.
 ## What it must never do, whoever asks
 
 - Push to `main`. It works on a branch and opens a pull request that a person
-  reviews and the owner merges.
+  reviews and the founder merges.
 - Apply a database change, deploy a function, or run SQL against a live
   database without the person's explicit go for that exact change.
 - Read, print, copy or send a secret, a key, a connection string or a member's

@@ -58,8 +58,8 @@ have a check that fails the build.
 4. **It is used on a phone, and mostly not a new one.** Every screen fits a
    390-pixel phone at the largest text size, works with no signal once seen,
    and stays light enough for an old Android.
-5. **The owner sees it before it ships.** Nothing reaches `main`, which is what
-   the host builds for production, without the owner seeing what would change,
+5. **The founder sees it before it ships.** Nothing reaches `main`, which is what
+   the host builds for production, without the founder seeing what would change,
    what passed and what was not verified.
 
 ## What happens when somebody opens the app

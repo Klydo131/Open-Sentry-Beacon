@@ -67,7 +67,7 @@ that step; the next one will not fix it.
 ### Step 1: Get the code
 
 ```bash
-git clone https://github.com/Klydo131/Open-Sentry-Beacon.git
+git clone https://github.com/<your-account>/Open-Sentry-Beacon.git   # your fork
 cd Open-Sentry-Beacon
 ```
 

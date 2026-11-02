@@ -862,7 +862,7 @@ WHAT A PLAYER HAS TO HAVE, and this had none of it: a progress bar you can drag,
 
 Playlists, and a player that keeps going.
 
-PORTED FROM OPEN MORBITAL (github.com/Klydo131/open_morbital_official), used under AGPL-3.0 as part of this work; see NOTICES.md and lib/playlists.ts. Morbital's shape is kept: a named, ordered list of track ids, with a queue that has shuffle and repeat over it.
+PORTED FROM OPEN MORBITAL, the founder's local-first music player, used under AGPL-3.0 as part of this work; see NOTICES.md and lib/playlists.ts. Morbital's shape is kept: a named, ordered list of track ids, with a queue that has shuffle and repeat over it.
 
 WHAT THIS ADDS THAT MediaPlayer DOES NOT. MediaPlayer plays ONE item, chosen by tapping it, and stops at the end. That is right for a Guide opening a study video somebody shared. It is not a music player: there is no next track, so listening to eight songs means going back to the list eight times.
 
@@ -2156,9 +2156,11 @@ The credit line comes from NEXT_PUBLIC_PLAYER_CREDIT; unset, nothing is drawn.
 
 Playlists for the library player.
 
-PORTED FROM OPEN MORBITAL, the owner's local-first music player (github.com/Klydo131/open_morbital_official), AGPL-3.0 upstream, and used here under its terms as part of this AGPL-3.0 work. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code is written against this app's own storage rather than copied, because Morbital is Vite/zustand/dexie and this is Next.js.
+PORTED FROM OPEN MORBITAL, the founder's local-first music player, AGPL-3.0 upstream, and used here under its terms as part of this AGPL-3.0 work. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code is written against this app's own storage rather than copied, because Morbital is Vite/zustand/dexie and this is Next.js.
 
 WHY A PLAYLIST IS ONLY NAMES AND IDS. The media itself is already in IndexedDB (lib/localMedia.ts) and can be hundreds of megabytes a file. A playlist that stored tracks would store them AGAIN, so putting one song in five playlists would cost five copies of the song. Storing ids costs five short strings, and localStorage — which is small, synchronous and perfect for a few kilobytes of ordering — is exactly the right place for them.
+
+Everything here is on the device. Nothing is uploaded, and a playlist cannot reach a church's database any more than the files it points at can.
 
 #### `lib/pocket.ts`
 
@@ -2616,7 +2618,7 @@ node scripts/check-links.mjs
 
 #### `scripts/complete-guide-shots.mjs`
 
-Every screen of the sample church, for the two complete guides.
+Every screen of the sample church, for the two general guides.
 
 THE LIST OF SCREENS IS READ FROM THE APP, NOT WRITTEN HERE. For each sample person it opens every room in their Menu and, inside each room, opens the folder list and visits every folder it finds. A room or folder added later is photographed the next time this runs, without anybody remembering to add it; one that is removed simply stops appearing. That is what keeps the guides honest about what the app shows today.
 
@@ -2718,7 +2720,7 @@ Every picture and every printed guide, in one command.
 
 npm run docs:refresh build, then every picture and every PDF npm run docs:refresh -- --no-build use the build already in .next npm run docs:refresh -- --pictures pictures only, no PDFs
 
-WHY ONE COMMAND. Until 6 October 2026 a new edition was eight commands run by hand in the right order against a server started by hand: four picture scripts (the README, the setup guide, the illustrated walkthrough, the complete guides in three parts), the reference appendices, the two complete guides, and the two printed manuals, which were then copied by hand from docs/handbook/pdf/ to the names the README links to. That last step was written down nowhere. A church that copies this app, or a developer who changes a screen, should be able to bring every picture and every guide up to date without knowing any of that.
+WHY ONE COMMAND. Until 6 October 2026 a new edition was eight commands run by hand in the right order against a server started by hand: four picture scripts (the README, the setup guide, the illustrated walkthrough, the general guides in three parts), the reference appendices, the two general guides, and the two printed manuals, which were then copied by hand from docs/handbook/pdf/ to the names the README links to. That last step was written down nowhere. A church that copies this app, or a developer who changes a screen, should be able to bring every picture and every guide up to date without knowing any of that.
 
 #### `scripts/run-next.mjs`
 

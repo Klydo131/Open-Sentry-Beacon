@@ -258,7 +258,7 @@ handled badly because nobody knew what to do.
   (`tests/a-report-is-one-conversation.mjs`,
   `supabase/tests/a-report-is-one-conversation.sql`).
 - The weekly audit (layer 1) and Supabase's Security Advisor.
-- Backups, and a restore actually tried ([DO-THIS-NEXT.md](DO-THIS-NEXT.md)).
+- Backups, and a restore actually tried ([WHAT-IT-COSTS.md](WHAT-IT-COSTS.md), "Secure it").
 - [EMERGENCY-DEPLOY.md](EMERGENCY-DEPLOY.md): rolling back, and a short checked fix.
 - `public/.well-known/security.txt` and GitHub's private vulnerability
   reporting: how somebody outside tells you.
@@ -287,7 +287,7 @@ defaults, and a person or a tool holding more access than their job needs.
 - [SECURITY.md](SECURITY.md), "Settings that live outside the code": the
   Supabase, GitHub and hosting switches, each with why.
 - `.github/CODEOWNERS`: database rules, workflows, server routes and the
-  AI brief wait for the owner's review.
+  AI brief wait for the founder's review.
 - `AGENTS.md`: what an AI tool may and may not do, including never running
   SQL against a live database without being asked in that session.
 - `.claude/agents/`: research agents that only read

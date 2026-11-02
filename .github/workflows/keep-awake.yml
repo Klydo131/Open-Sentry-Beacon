@@ -65,9 +65,11 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          # Which repository this is running in, so the job can tell a fork
-          # (nothing to keep awake) from the real one (misconfigured).
-          UPSTREAM: Klydo131/Open-Sentry-Beacon
+          # Whether this repository is a fork, as GitHub itself says, so the job
+          # can tell a fork (nothing to keep awake) from a church's own copy
+          # (misconfigured). It used to compare this repository's name with
+          # one upstream name, which put an account name into every copy.
+          GH_TOKEN: ${{ github.token }}
           HERE: ${{ github.repository }}
         run: |
           set -euo pipefail
@@ -80,7 +82,10 @@ jobs:
             # watching the thing it protects. A silent success on the one
             # repository that owns a database is the failure it was built to
             # prevent, wearing a tick.
-            if [ "${HERE}" = "${UPSTREAM}" ]; then
+            # Anything but GitHub saying "fork", a failed answer included, is
+            # treated as a church's own copy: loud, never a quiet tick.
+            FORK="$(gh api "repos/${HERE}" --jq .fork 2>/dev/null || echo unknown)"
+            if [ "${FORK}" != "true" ]; then
               echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY are not set on the live repository."
               echo "::error::Nothing is keeping the database awake. Add them under Settings → Secrets and variables → Actions."
               exit 1

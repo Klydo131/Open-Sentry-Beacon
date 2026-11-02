@@ -77,8 +77,10 @@ asks.
 
 ## Try it in two minutes
 
+Fork this repository on GitHub first (the **Fork** button on its page), so the copy is under your own account. Then:
+
 ```bash
-git clone https://github.com/Klydo131/Open-Sentry-Beacon
+git clone https://github.com/<your-account>/Open-Sentry-Beacon
 cd Open-Sentry-Beacon
 npm install
 npm run dev

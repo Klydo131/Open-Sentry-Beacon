@@ -12,7 +12,7 @@ This file adds only what is specific to a Claude session.
 - `npm run verify` must pass. It is typecheck, build and every guardrail, and CI
   runs the same thing on Ubuntu, macOS and Windows.
 - Break each new check on purpose and watch it go red before you trust it.
-- **Tell the owner before you push.** Say which commits would reach `main`,
+- **Tell the founder before you push.** Say which commits would reach `main`,
   what they change, what passed and what was not verified, and wait for their
   go (AGENTS.md section 0.2).
 - Push to `main`; that is the only branch Vercel builds Production from.

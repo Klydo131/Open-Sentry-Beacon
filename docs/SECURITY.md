@@ -15,10 +15,8 @@ if you maintain a copy.
 
 ## Reporting a vulnerability
 
-**Do not open a public issue.** Use GitHub's private
-[Security Advisories](https://github.com/Klydo131/Open-Sentry-Beacon/security/advisories/new)
-on this repository, which is visible only to maintainers until a fix is
-published.
+**Do not open a public issue.** Use GitHub's private vulnerability reporting: on this repository's page, open the **Security** tab and choose **Report a vulnerability**.
+A report there is visible only to maintainers until a fix is published.
 
 Include what an attacker can do, stated as an outcome ("any visitor can read
 X"), the smallest steps that reproduce it, and the commit you tested. You will
@@ -472,7 +470,7 @@ builds with Supabase's new default so CI proves a new church's install works.
 A migration that adds a table must grant it to `authenticated` by name, or
 revoke it; `tests/every-table-says-who-may-reach-it.mjs` fails otherwise.
 
-**For the owner of each project** (settings no code can change):
+**For the founder of each project** (settings no code can change):
 
 - In Supabase, Authentication, set the email code and link lifetime to one
   hour or less (the security advisor's `auth_otp_long_expiry`).

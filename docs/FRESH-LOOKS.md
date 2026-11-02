@@ -38,7 +38,7 @@ Frutiger Eco, Dark Aero, Technozen, DORFic and Four Colors.
   `tests/e2e/frutiger-aero-looks.js` walks the row and all five looks.
 
 The design sheets showed Menu, People and My Files at the top of the computer
-sidebar; on the owner's word that stays on phones and tablets only. Their
+sidebar; on the founder's word that stays on phones and tablets only. Their
 "Continue", "Today", "Recent Activity" and search panels are not part of the
 looks: those would be new features with real data behind them.
 

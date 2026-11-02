@@ -116,9 +116,12 @@ for (const t of tools) {
 
 // 3. THE RULES THAT DECIDED IT.
 const byId = Object.fromEntries(tools.map((t) => [t.id, t]));
-ok(byId['caveman']?.status === 'already-ours' && byId['ponytail']?.status === 'already-ours'
-   && /Klydo131\//.test(byId['caveman']?.repo) && /Klydo131\//.test(byId['ponytail']?.repo),
-  "Caveman and Ponytail come from the owner's own forks");
+// The forks sit under the same account as this repository, read from
+// package.json rather than written here, so no account is named in a test.
+const projectAccount = (JSON.parse(fs.readFileSync('package.json', 'utf8')).repository?.url || '').match(/github\.com\/([^/]+)\//)?.[1];
+ok(!!projectAccount && byId['caveman']?.status === 'already-ours' && byId['ponytail']?.status === 'already-ours'
+   && byId['caveman']?.repo?.startsWith(`${projectAccount}/`) && byId['ponytail']?.repo?.startsWith(`${projectAccount}/`),
+  "Caveman and Ponytail come from the project's own forks");
 ok(byId['claude-mem']?.status === 'left-out' && byId['claude-code-router']?.status === 'left-out',
   'nothing that records sessions or sends them to another company is recommended: sessions here can read live member data');
 ok(byId['system-prompts']?.status === 'left-out', "other companies' unlicensed prompts are not built on");

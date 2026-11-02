@@ -1,6 +1,19 @@
 #!/usr/bin/env node
-// The two complete guides, as PDFs: one for using Hope Beacon, one for building
+// The two general guides, as PDFs: one for using Hope Beacon, one for building
 // it.
+//
+// GENERAL IN PUBLIC, COMPLETE IN PRIVATE. What this repository holds, and
+// prints by default, is the General edition: how to create, use, develop,
+// budget for and secure the app. The Complete edition adds a part of private
+// records (a church's own costs and its own to-do list) that never belong in a
+// public repository. It is built only with --complete, from a folder of
+// records kept somewhere private, and written only outside this repository:
+//
+//   node docs/guides/build-guides.mjs all --complete <records-folder> <out-folder>
+//
+// Every Markdown file in the records folder becomes a chapter of a last part,
+// Records, in name order; a README.md opens it. A record's links are read as
+// if it still sat in docs/, where records of this kind used to be.
 //
 // ONE SOURCE, STILL. Nearly every page of both guides is a document that is
 // already in docs/ and already read on GitHub; this lays them out as one book
@@ -27,8 +40,9 @@
 //
 // Needs Playwright's Chromium (as the browser walks do), `sharp` (installed
 // with Next) to shrink the pictures, and poppler's pdftotext and pdfunite.
-// Writes docs/Hope-Beacon-Complete-Guide-Using.pdf and
-// docs/Hope-Beacon-Complete-Guide-Building.pdf.
+// Writes docs/Hope-Beacon-General-Guide-Using.pdf and
+// docs/Hope-Beacon-General-Guide-Building.pdf (or, with --complete, the
+// Complete editions into the folder named).
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -124,7 +138,7 @@ const tidyTitle = (t) => t
  *   { file, intro: true }           what comes before the first H2
  */
 function slice(spec) {
-  const abs = path.join(ROOT, spec.file);
+  const abs = path.isAbsolute(spec.file) ? spec.file : path.join(ROOT, spec.file);
   const lines = scan(fs.readFileSync(abs, 'utf8'));
   let start = 0; let end = lines.length; let title = '';
   const find = (re, from = 0) => lines.findIndex((l, i) => i >= from && !l.fenced && headingOf(l.line) && re.test(headingOf(l.line).text));
@@ -154,7 +168,7 @@ function slice(spec) {
   }
   let body = lines.slice(start, end);
   for (const re of spec.drop || []) body = body.filter((l) => l.fenced || !re.test(l.line));
-  return { file: spec.file, title: tidyTitle(title), lines: body };
+  return { file: spec.file, alias: spec.alias, title: tidyTitle(title), lines: body };
 }
 
 /** Headings shifted so the shallowest one in the chapter is a level-2. */
@@ -199,7 +213,9 @@ class Book {
       for (const c of this.byFile.get(chapter.file) || []) if (c.anchors.has(slug(anchor))) return { href: `#${c.anchors.get(slug(anchor))}` };
       return null;
     }
-    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(chapter.file), target.replace(/^\.\//, '')));
+    // A private record is read as if it were still in docs/.
+    const base = path.isAbsolute(chapter.file) ? 'docs' : path.posix.dirname(chapter.file);
+    const resolved = path.posix.normalize(path.posix.join(base, target.replace(/^\.\//, '')));
     const inBook = this.byFile.get(resolved);
     if (inBook) {
       if (anchor) for (const c of inBook) if (c.anchors.has(slug(anchor))) return { href: `#${c.anchors.get(slug(anchor))}` };
@@ -438,8 +454,10 @@ async function assemble(spec) {
       }
       book.chapters.push(chapter);
       for (const s of sources) {
-        if (!book.byFile.has(s.file)) book.byFile.set(s.file, []);
-        book.byFile.get(s.file).push(chapter);
+        for (const key of [s.file, s.alias].filter(Boolean)) {
+          if (!book.byFile.has(key)) book.byFile.set(key, []);
+          book.byFile.get(key).push(chapter);
+        }
       }
     }
   }
@@ -468,7 +486,7 @@ function chapterHtml(c, marks) {
     ? `<nav class="mini"><div class="label">In this chapter</div>${inThis.map(([id, s]) => `<a class="row" href="#${id}"><span class="t">${inline(s, ctx)}</span><span class="dots"></span><span class="pg" data-k="${id}"></span></a>`).join('')}</nav>`
     : '';
   const lead = c.spec.lead ? `<p class="lead">${inline(c.spec.lead, ctx)}</p>` : '';
-  const source = c.spec.src ? [].concat(c.spec.src).map((s) => s.file) : [];
+  const source = c.spec.src ? [].concat(c.spec.src).map((s) => (path.isAbsolute(s.file) ? `private record: ${path.basename(s.file)}` : s.file)) : [];
   const from = source.length ? `<p class="source">From <code>${[...new Set(source)].join('</code>, <code>')}</code></p>` : '';
   return `<section class="chapter${c.spec.atlas || c.spec.gallery ? ' atlas' : ''}" id="${c.key}">
 <div class="chapter-head"><div class="eyebrow">${marks ? `<span class="mk">@@${c.key}@@</span>` : ''}Chapter ${c.n}</div><h1>${inline(c.title, ctx)}</h1>${lead}${from}</div>
@@ -516,7 +534,7 @@ function coverHtml(book) {
   <div class="cover-top"><div class="brand"><span class="beacon"></span>Hope Beacon</div><div class="kind">${esc(book.spec.kind)}</div></div>
   <div class="cover-main">
     <div class="cover-words">
-      <div class="eyebrow">The complete guide</div>
+      <div class="eyebrow">${book.spec.complete ? 'The complete guide · private' : 'The general guide'}</div>
       <h1>${esc(book.spec.title)}</h1>
       <p class="sub">${esc(book.spec.subtitle)}</p>
       <ul class="for">${book.spec.audience.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>
@@ -725,8 +743,48 @@ function findMarks(pdf) {
   return pages;
 }
 
-const which = process.argv[2] || 'all';
-const books = [USING, BUILDING].filter((b) => which === 'all' || b.id === which);
+const which = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'all';
+let books = [USING, BUILDING].filter((b) => which === 'all' || b.id === which);
+
+// THE COMPLETE EDITION: the general one, plus the private records, written
+// only outside this repository so it can never be committed to it by mistake.
+let OUT_DIR = path.join(ROOT, 'docs');
+const flag = process.argv.indexOf('--complete');
+if (flag >= 0) {
+  const [recordsArg, outArg] = process.argv.slice(flag + 1);
+  if (!recordsArg || !outArg) {
+    console.error('Usage: node docs/guides/build-guides.mjs [using|building|all] --complete <records-folder> <out-folder>');
+    process.exit(1);
+  }
+  const records = path.resolve(recordsArg);
+  OUT_DIR = path.resolve(outArg);
+  const inside = (dir) => !path.relative(ROOT, dir).startsWith('..') && !path.isAbsolute(path.relative(ROOT, dir));
+  if (inside(OUT_DIR) || inside(records)) {
+    console.error('The complete edition holds private records: its records and its output must be outside this repository.');
+    process.exit(1);
+  }
+  const files = fs.readdirSync(records).filter((f) => f.endsWith('.md'))
+    .sort((a, b) => (a === 'README.md' ? -1 : b === 'README.md' ? 1 : a.localeCompare(b)));
+  if (!files.length) { console.error(`No Markdown records in ${records}.`); process.exit(1); }
+  const firstHeading = (f) => (fs.readFileSync(path.join(records, f), 'utf8').match(/^#{1,6}\s+(.+)$/m) || [, f])[1];
+  const recordsPart = {
+    title: 'Records',
+    intro: 'Private. The church’s own records: what it has cost, the accounts it runs on, and its own list of what to do next. This part is only in the complete edition, which is never published.',
+    chapters: files.map((f) => ({
+      src: { file: path.join(records, f), alias: `docs/${f}` },
+      title: tidyTitle(firstHeading(f)),
+      flat: false,
+    })),
+  };
+  books = books.map((b) => ({
+    ...b,
+    complete: true,
+    output: b.output.replace('General', 'Complete'),
+    footer: b.footer.replace('General', 'Complete'),
+    parts: [...b.parts, recordsPart],
+  }));
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+}
 fs.mkdirSync(WORK, { recursive: true });
 const { browser: engine, launchOptions } = require('../../tests/e2e/_playwright.js');
 const browser = await engine.launch(launchOptions);
@@ -750,7 +808,7 @@ try {
     const cover = path.join(WORK, `${spec.id}-cover.pdf`);
     await print(page, coverHtml(book), cover, { cover: true });
     await page.close();
-    const out = path.join(ROOT, 'docs', spec.output);
+    const out = path.join(OUT_DIR, spec.output);
     await join(cover, body, out);
     const info = execFileSync('pdfinfo', [out], { encoding: 'utf8' });
     const count = info.match(/Pages:\s+(\d+)/)[1];

@@ -1,6 +1,6 @@
 # About this guide
 
-This is the complete guide to **using** Hope Beacon: every room, every folder
+This is the general guide to **using** Hope Beacon: every room, every folder
 and every role, in plain words, with a picture of each screen on a phone and on
 a computer.
 

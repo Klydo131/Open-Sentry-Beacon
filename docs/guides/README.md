@@ -1,11 +1,13 @@
-# The complete guides
+# The general guides
 
-Two books, built from the documents in this repository:
+Two books, built from the documents in this repository. They are the **General**
+edition: how to create, use, develop, budget for and secure the app, with nothing
+of any one church's own in them.
 
-- **[Using Hope Beacon](../Hope-Beacon-Complete-Guide-Using.pdf)**: every room,
+- **[Using Hope Beacon](../Hope-Beacon-General-Guide-Using.pdf)**: every room,
   every folder and every role, in plain words, with every screen shown on a
   phone beside a computer. For the people in a church.
-- **[Building Hope Beacon](../Hope-Beacon-Complete-Guide-Building.pdf)**: how it
+- **[Building Hope Beacon](../Hope-Beacon-General-Guide-Building.pdf)**: how it
   is made, how to run a church's own copy, and how to change it safely. Reading
   paths for beginners, developers junior to senior, IT, and AI coding agents.
 
@@ -16,7 +18,7 @@ Two books, built from the documents in this repository:
 | `books.mjs` | What goes in each book, in what order, and one line for every room and folder in the picture atlas |
 | `using/`, `building/` | The chapters only a book needs: introductions, an overview, a code tour, quality, recipes, lessons, a FAQ and a glossary. Every other chapter is a document from `docs/` or the repository root |
 | `build-reference.mjs` | Writes the reference appendices in `building/generated/` from the code: every file's header comment, every migration, check, walk, route, command and release note |
-| `build-guides.mjs` | Lays both books out and prints them to PDF, with a cover, contents with real page numbers, bookmarks and a footer |
+| `build-guides.mjs` | Lays both books out and prints them to PDF, with a cover, contents with real page numbers, bookmarks and a footer. With `--complete <records> <out>` it prints the private Complete edition instead: the same books plus a part of a church's own records, written only outside this repository |
 
 The pictures are taken by `scripts/complete-guide-shots.mjs`, which signs in as
 each sample person and photographs every room and folder their Menu offers, so a

@@ -3,7 +3,7 @@
 The changes people make most often, each as a list of steps with the files to
 touch and the proof to show. Each recipe assumes you have read *Proving it
 works*; each ends at the same place: `npm run verify` passes, every new check
-has been seen to fail, and the change is shown to the owner before it reaches
+has been seen to fail, and the change is shown to the founder before it reaches
 `main`.
 
 > **IMPORTANT** · Every recipe touches both halves
@@ -104,7 +104,7 @@ The rule, from `AGENTS.md`: **a new look never changes Classic.**
 7. **Prove it.** A SQL test in `supabase/tests/`; `fresh-install.yml` runs every
    migration from nothing on each push; the matching change in the sample store
    (`lib/demo/store.tsx`) and its seed.
-8. **Never apply it to a live church's database without the owner's go**, and
+8. **Never apply it to a live church's database without the founder's go**, and
    then verify it read-only afterwards.
 
 ## Add a check, or a walk
@@ -144,7 +144,7 @@ Members read these in **Settings**, **What's new**.
 ## Refresh the screenshots and the guides
 
 1. `npm run build`, then `node scripts/run-next.mjs start -p 4321`.
-2. The handbook's pictures: `node scripts/walkthrough-shots.mjs`. The complete
+2. The handbook's pictures: `node scripts/walkthrough-shots.mjs`. The general
    guides' atlas: `node scripts/complete-guide-shots.mjs 4321` (or its three
    parts, `phone`, `computer` and `extras`, side by side).
 3. **Look at every picture before using it.** Sample people only; no tutorial
@@ -154,7 +154,7 @@ Members read these in **Settings**, **What's new**.
 5. Search the text of every PDF for anything that must never be in a public
    file before sharing it.
 
-## Hand a change to the owner
+## Hand a change to the founder
 
 Whatever the recipe, the last step is the same, and it is in `AGENTS.md`
 section 0.2:
@@ -163,6 +163,6 @@ section 0.2:
 2. Say what passed, and **what was not verified**: screens nobody has seen on a
    real phone, Safari if it did not run, the live database if a migration has
    not been applied.
-3. Wait for the owner's go.
+3. Wait for the founder's go.
 4. After pushing, report **pushed, build not observed** until somebody has
    seen the deployed site.

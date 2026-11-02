@@ -7,7 +7,7 @@
 // WHY ONE COMMAND. Until 6 October 2026 a new edition was eight commands run by
 // hand in the right order against a server started by hand: four picture
 // scripts (the README, the setup guide, the illustrated walkthrough, the
-// complete guides in three parts), the reference appendices, the two complete
+// general guides in three parts), the reference appendices, the two general
 // guides, and the two printed manuals, which were then copied by hand from
 // docs/handbook/pdf/ to the names the README links to. That last step was
 // written down nowhere. A church that copies this app, or a developer who
@@ -19,9 +19,9 @@
 //   scripts/screenshots.mjs           docs/screenshots/*.png       README
 //   scripts/guide-shots.mjs           docs/screenshots/guide/      setup guide
 //   scripts/walkthrough-shots.mjs     docs/screenshots/walkthrough/ HOW-TO-USE, HANDBOOK
-//   scripts/complete-guide-shots.mjs  docs/screenshots/complete/   complete guides
+//   scripts/complete-guide-shots.mjs  docs/screenshots/complete/   general guides
 //   docs/guides/build-reference.mjs   docs/guides/building/generated/
-//   docs/guides/build-guides.mjs      docs/Hope-Beacon-Complete-Guide-*.pdf
+//   docs/guides/build-guides.mjs      docs/Hope-Beacon-General-Guide-*.pdf
 //   docs/handbook/build-pdf.js        docs/Hope-Beacon-Handbook.pdf, docs/Hope-Beacon-How-To-Use.pdf
 //
 // Sample people only: the app is started with no database, so no picture can
@@ -100,9 +100,9 @@ try {
 
   console.log(`Taking every picture, ${JOBS} at a time`);
   failures.push(...await pool([
-    () => run('complete guides: phone', 'node', ['scripts/complete-guide-shots.mjs', port, 'phone']),
-    () => run('complete guides: computer', 'node', ['scripts/complete-guide-shots.mjs', port, 'computer']),
-    () => run('complete guides: extras', 'node', ['scripts/complete-guide-shots.mjs', port, 'extras']),
+    () => run('general guides: phone', 'node', ['scripts/complete-guide-shots.mjs', port, 'phone']),
+    () => run('general guides: computer', 'node', ['scripts/complete-guide-shots.mjs', port, 'computer']),
+    () => run('general guides: extras', 'node', ['scripts/complete-guide-shots.mjs', port, 'extras']),
     () => run('walkthrough (HOW-TO-USE, HANDBOOK)', 'node', ['scripts/walkthrough-shots.mjs', port]),
     () => run('README', 'node', ['scripts/screenshots.mjs', port]),
     () => run('setup guide', 'node', ['scripts/guide-shots.mjs', port]),
@@ -116,7 +116,7 @@ try {
 if (printing && !failures.length) {
   console.log('Printing');
   await run('reference appendices', 'node', ['docs/guides/build-reference.mjs']);
-  await run('complete guides (both PDFs)', 'node', ['docs/guides/build-guides.mjs']);
+  await run('general guides (both PDFs)', 'node', ['docs/guides/build-guides.mjs']);
   await run('HANDBOOK and HOW-TO-USE', 'node', ['docs/handbook/build-pdf.js', 'HANDBOOK.md', 'HOW-TO-USE.md']);
   // The builder names its output after the repository; the README links to these.
   for (const [from, to] of [['HANDBOOK', 'Hope-Beacon-Handbook'], ['HOW-TO-USE', 'Hope-Beacon-How-To-Use']]) {

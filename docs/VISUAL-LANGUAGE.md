@@ -14,7 +14,7 @@ the app. When a room is redone, read `components/study/study-shell.css` first.
 
 Neutral surfaces with **one tint colour doing all the talking**, and ours is
 Hope Beacon's **navy**. The look is our own: it borrows principles, never
-another company's screens (the owner, 28 October 2026: "I want ours to be
+another company's screens (the founder, 28 October 2026: "I want ours to be
 original as possible"). Everything else is warm
 neutral: a ground, white grouped lists, hairlines instead of boxes, and the
 system's own typeface. Navy appears only where something can be pressed or is
@@ -178,7 +178,7 @@ Counted across `app/` and `components/`, to say where an overhaul starts:
 
 ## Decisions to make before the rest of the app follows
 
-These are the owner's to make, not a developer's, and each changes a lot of
+These are the founder's to make, not a developer's, and each changes a lot of
 screens at once:
 
 1. **56px or 44px.** `globals.css` gives every button a 56px floor, and

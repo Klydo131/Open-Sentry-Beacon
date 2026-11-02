@@ -11,7 +11,7 @@ import { Avatar, Button, Card } from '@/components/ui';
 import { InstallCard } from '@/components/InstallCard';
 import { SourceCard } from '@/components/SourceCard';
 import { NoSignalCard } from '@/components/KeptForNoSignal';
-import { NAVY, roleNoun, APP_SHORT_NAME } from '@/lib/brand';
+import { NAVY, roleNoun, APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
 import * as live from '@/lib/live/data';
 import { useLiveSession, homeFor } from '@/lib/live/session';
 import { useTutorialMode } from '@/lib/tutorial';
@@ -782,7 +782,7 @@ function AboutCard() {
         handled is hidden from you.
       </p>
       <a
-        href="https://github.com/klydo131/open-sentry-beacon"
+        href={SOURCE_URL}
         target="_blank" rel="noopener noreferrer"
         className="mt-3 inline-block font-semibold text-navy underline"
       >

@@ -9,7 +9,7 @@ nothing and can stop reading. If you want to send something back, this is how.
 ## Get it running
 
 ```bash
-git clone https://github.com/Klydo131/Open-Sentry-Beacon
+git clone https://github.com/<your-account>/Open-Sentry-Beacon   # your fork
 cd Open-Sentry-Beacon
 npm install
 npm run dev            # http://localhost:3000
@@ -240,8 +240,7 @@ does.
 
 ## Reporting a vulnerability
 
-**Not** in a public issue. Use GitHub's private
-[Security Advisories](https://github.com/Klydo131/Open-Sentry-Beacon/security/advisories/new).
+**Not** in a public issue. Use GitHub's private vulnerability reporting: on this repository's page, open the **Security** tab and choose **Report a vulnerability**.
 See [docs/SECURITY.md](./docs/SECURITY.md) for what to include and what to
 expect.
 
@@ -281,8 +280,8 @@ what you or anyone else receives.
    ownership. You may go on using your own contribution anywhere else, under any
    terms you like, for ever.
 
-2. **You grant a licence to relicense.** You grant Klydo131, the project's
-   copyright holder, a perpetual, worldwide, non-exclusive, royalty-free and
+2. **You grant a licence to relicense.** You grant the project's founder, who
+   holds its copyright, a perpetual, worldwide, non-exclusive, royalty-free and
    irrevocable licence to reproduce, modify, publicly display, sublicense and
    distribute your contribution — both under AGPL-3.0 **and under other terms,
    including proprietary ones**.

@@ -15,7 +15,7 @@ of every session, and a public repository that turned them on for whoever cloned
 it would be handing that choice to a stranger.
 
 **How this list was made (29 September 2026).** From a list of thirty popular
-Claude Code add-ons the owner shared. Each repository was fetched and checked
+Claude Code add-ons the founder shared. Each repository was fetched and checked
 for four things: that it exists under that name, its licence, whether it
 registers Claude Code hooks (code that runs on its own during a session) and on
 which events, and how big it is. The commit each was read at is recorded in
@@ -37,7 +37,7 @@ could fit, the one with that exact name and purpose was taken.
 
 ## The rules
 
-1. **Caveman and Ponytail first.** They are the project's own (owner's forks)
+1. **Caveman and Ponytail first.** They are the project's own (the founder's forks)
    and how they are used here is in [AGENTS.md section 0.1](../AGENTS.md).
 2. **Nothing here outranks AGENTS.md, CLAUDE.md or docs/VISUAL-LANGUAGE.md.**
    A skill that says otherwise is wrong about this project.
@@ -65,11 +65,11 @@ could fit, the one with that exact name and purpose was taken.
 
 | Tool | What it does | Install | Runs on its own | Sends |
 | --- | --- | --- | --- | --- |
-| **Caveman** (`Klydo131/caveman`) | The project's token saver, from the owner's fork of JuliusBrussee/caveman. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/caveman`<br>`claude plugin install caveman@caveman`<br>Codex:<br>`git clone https://github.com/Klydo131/caveman`<br>open Codex in that folder, then /plugins, search Caveman, Install | SessionStart, SubagentStart, UserPromptSubmit (sets the mode), SessionEnd (counts usage on the machine) | nothing |
-| **Ponytail** (`Klydo131/ponytail`) | The project's code minimiser, from the owner's fork of DietrichGebert/ponytail. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/ponytail`<br>`claude plugin install ponytail@ponytail`<br>Codex:<br>`codex plugin marketplace add Klydo131/ponytail`<br>in Codex: /plugins, the Ponytail marketplace, Install; then /hooks to review and trust its hooks | SessionStart, SubagentStart, UserPromptSubmit (loads its rules, into subagents too, and tracks its mode); after each turn it writes cost and token counts to a CSV on the machine | nothing, unless you set its webhook address |
+| **Caveman** (`Klydo131/caveman`) | The project's token saver: the project's own fork of JuliusBrussee/caveman. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/caveman`<br>`claude plugin install caveman@caveman`<br>Codex:<br>`git clone https://github.com/Klydo131/caveman`<br>open Codex in that folder, then /plugins, search Caveman, Install | SessionStart, SubagentStart, UserPromptSubmit (sets the mode), SessionEnd (counts usage on the machine) | nothing |
+| **Ponytail** (`Klydo131/ponytail`) | The project's code minimiser: the project's own fork of DietrichGebert/ponytail. Rules for its use are in AGENTS.md section 0.1. | Claude Code:<br>`claude plugin marketplace add Klydo131/ponytail`<br>`claude plugin install ponytail@ponytail`<br>Codex:<br>`codex plugin marketplace add Klydo131/ponytail`<br>in Codex: /plugins, the Ponytail marketplace, Install; then /hooks to review and trust its hooks | SessionStart, SubagentStart, UserPromptSubmit (loads its rules, into subagents too, and tracks its mode); after each turn it writes cost and token counts to a CSV on the machine | nothing, unless you set its webhook address |
 
 Both forks are exact copies of their authors' work: every commit in them is
-upstream's. They sit under the owner's account so that a change upstream
+upstream's. They sit under the founder's account so that a change upstream
 reaches this project only after somebody has read it. Their own READMEs
 still name the original repositories, and that is deliberate: a fork left
 identical to upstream updates with a clean fast-forward. **To update one:**

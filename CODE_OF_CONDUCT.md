@@ -28,17 +28,17 @@ indexed within minutes.
 
 ## Reporting
 
-Report a problem privately to the repository owner through GitHub, at
-[github.com/Klydo131](https://github.com/Klydo131). There is no dedicated
+Report a problem privately to the project's founder through GitHub: the account
+that owns this repository, linked at the top of its page. There is no dedicated
 address and no committee; this is a small project maintained in spare time, and
 saying so is better than implying a process that does not exist.
 
 Reports are read. Anything credible is acted on: a warning, removal of content,
 or a block, depending on what happened.
 
-**A security vulnerability is not a conduct report.** Use the private
-[Security Advisories](https://github.com/Klydo131/Open-Sentry-Beacon/security/advisories/new)
-route instead — see [docs/SECURITY.md](docs/SECURITY.md).
+**A security vulnerability is not a conduct report.** Use
+GitHub's private vulnerability reporting: on this repository's page, open the **Security** tab and choose **Report a vulnerability**,
+instead — see [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Scope
 
