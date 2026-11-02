@@ -201,7 +201,7 @@ const emails = (rows) => sendable(rows).map((r) => r.email);
 
 // --- what must never reach a send -------------------------------------------
 {
-  const rows = parseInviteList('not an address\nreal@example.org\n\n   \nalso-bad@\n@nope.org');
+  const rows = parseInviteList('not an address\nreal@example.org\n\n   \nalso-bad@\n@nope.example');
   ok(emails(rows).join(',') === 'real@example.org', 'only the real address is sendable');
   ok(rows.every((r) => r.problem || r.email === 'real@example.org'),
      'and every skipped line carries a reason rather than vanishing');

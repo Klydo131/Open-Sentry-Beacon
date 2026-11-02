@@ -137,7 +137,7 @@ Four of them hold the oldest promises this project makes about itself:
 | File | Refuses |
 |---|---|
 | `tests/no-backend.js` | A database dependency, a route that stores data, an analytics SDK, a call to an external server, or somebody else's deployment pipeline reappearing. |
-| `tests/no-secrets.js` | A credential of recognisable shape in any tracked file, a real `.env`, sample data at a domain that could reach a real inbox. |
+| `tests/no-secrets.js` | A credential of recognisable shape in any tracked file, a filled-in secret slot or a real `.env`, a key file, saved login or database dump, an e-mail address at a domain that could reach a real inbox or a phone number anywhere, a photo that says where it was taken. |
 | `tests/security-invariants.mjs` | A weakened Content-Security-Policy, a URL guard that stops blocking `javascript:`, CI a pull request could hijack. |
 | `tests/brand-consistency.mjs` | Icons drifting from the one drawing of the logo, or the app's name hardcoded somewhere a rename would miss. |
 

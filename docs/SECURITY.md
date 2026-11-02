@@ -57,7 +57,7 @@ Three tests hold that promise:
 | Check | What it refuses |
 |---|---|
 | `tests/no-backend.js` | A database dependency, an API route that stores data, any analytics or error-reporting SDK, any call to an external server. |
-| `tests/no-secrets.js` | A credential of recognisable shape in any tracked file, a real `.env`, anything secret exposed under a browser-visible prefix, sample data at a domain that could reach a real inbox. |
+| `tests/no-secrets.js` | A credential of recognisable shape in any tracked file, a filled-in secret slot or a real `.env`, a key file, saved login or database dump, anything secret exposed under a browser-visible prefix, an e-mail address at a domain that could reach a real inbox or a phone number anywhere, a photo that says where it was taken. |
 | `tests/security-invariants.mjs` | Weakened security headers, a URL guard that stops blocking `javascript:`, CI that could be hijacked by a pull request. |
 
 Run them with `npm test`.

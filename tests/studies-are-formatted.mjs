@@ -138,7 +138,7 @@ const hrefs = (t) => richParts(t).filter((s) => s.href).map((s) => s.href);
 }
 {
   // Addresses of people, not of pages.
-  ok(hrefs('Write to pastor@adventist.org for help').length === 0,
+  ok(hrefs('Write to pastor@example.org for help').length === 0,
      'an email address is not turned into a link to its domain');
   // `good.org@evil.example/give` -- the scheme'd form is refused by
   // parseSafeHttpUrl for carrying user info. Written bare the run stops at the
@@ -180,7 +180,7 @@ const hrefs = (t) => richParts(t).filter((s) => s.href).map((s) => s.href);
      'while the pasted meeting link it was widened for still works');
   ok(safeHref('example.com:8080/x') === 'https://example.com:8080/x',
      'and a real port is matched whole rather than read as a scheme');
-  for (const t of ['javascript:alert(1)', 'data:text/html,x', 'mailto:a@b.com', 'data.io:evil']) {
+  for (const t of ['javascript:alert(1)', 'data:text/html,x', 'mailto:a@b.example', 'data.io:evil']) {
     ok(safeHref(t) === null, `and a scheme is never completed into one: ${JSON.stringify(t)}`);
   }
 }

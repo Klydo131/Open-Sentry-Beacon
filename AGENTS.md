@@ -22,8 +22,10 @@ identifiers, no database dumps, no counts small enough to point at a person.
 When a live check informs a decision, write down **what you learned**, not the
 row it came from.
 
-`tests/no-secrets.js` catches credentials of recognisable shape. It cannot catch
-a name, and it is not trying to. That part is yours.
+`tests/no-secrets.js` catches credentials of recognisable shape, files that are
+secret by what they are, an e-mail address at any domain somebody can own, a
+phone number and a photo that says where it was taken. It cannot catch a name,
+and it is not trying to. That part is yours.
 
 ---
 

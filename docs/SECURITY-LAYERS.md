@@ -200,6 +200,9 @@ somebody lives, and data kept after the person has gone.
 - Photos lose their location before they leave the phone
   (`tests/photos-lose-their-location.mjs`), and one person's uploads are
   bounded (`tests/what-one-person-can-upload.mjs`).
+- Nothing committed is a key, a person's address or number, or a photo that
+  says where it was taken: the repository is public, and every commit stays in
+  its history (`tests/no-secrets.js`).
 - Deleting somebody queues every file their rows pointed at
   (`supabase/tests/what-is-deleted-leaves-no-file-behind.sql`).
 - What is not needed is not kept: a gift has no giver column at all.

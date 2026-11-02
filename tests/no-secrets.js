@@ -47,14 +47,16 @@ const notExample = envFiles.filter((f) => !/example/i.test(f));
 if (notExample.length) fail(`a real env file is committed: ${notExample.join(', ')}`);
 else ok('no env file is committed except the example');
 
+// Every slot whose name says it holds something private, not a list of the
+// ones that existed when this was written. Until 2 November 2026 it named seven
+// slots of the hosted edition, so selfhost/.env.example could have carried a
+// working JWT_SECRET, SERVICE_ROLE_KEY, SMTP_PASS or database password and
+// passed.
+const SECRET_SLOT = /^\s*([A-Z0-9_]*(KEY|SECRET|TOKEN|PASS|PASSWORD|PASSPHRASE|WEBHOOK_URL|DATABASE_URL|DB_URL|DB_URI)[A-Z0-9_]*|SMTP_USER)\s*=\s*\S+/;
 for (const f of envFiles) {
   const filled = read(f)
     .split('\n')
-    .filter((l) =>
-      /^\s*(SUPABASE_SERVICE_ROLE_KEY|VAPID_PRIVATE_KEY|NEXT_PUBLIC_SUPABASE_ANON_KEY|FEEDBACK_SUPABASE_ANON_KEY|FEEDBACK_INGRESS_TOKEN|FEEDBACK_RESEND_API_KEY|FEEDBACK_WEBHOOK_URL)\s*=\s*\S+/.test(
-        l,
-      ),
-    );
+    .filter((l) => SECRET_SLOT.test(l));
   if (filled.length) fail(`${f} has a filled-in secret slot: ${filled.map((l) => l.split('=')[0].trim()).join(', ')}`);
   else ok(`${f} names its settings and fills none of them in`);
 }
@@ -65,13 +67,47 @@ for (const f of envFiles) {
 // Shape-based, so it catches a paste regardless of what the variable was called.
 // A Supabase key is a JWT and starts "eyJ"; Resend keys start "re_"; the ingress
 // token is 64 hex characters.
+//
+// WIDENED ON 2 NOVEMBER 2026, after a sweep of every tracked file, the text of
+// every committed PDF and every line ever added in the history found no key
+// (the owner: "I dont want to see any sensitive information in this project
+// like API keys, secret keys or any private information"). These were five
+// shapes. They are now every service this project's guides send a person to
+// (Supabase, Brevo, Resend, GitHub) and the ones a developer is most likely to
+// have on the clipboard from somewhere else.
 // ---------------------------------------------------------------------------
 const SHAPES = [
   [/eyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{20,}/, 'a JWT (Supabase key)'],
   [/\bre_[A-Za-z0-9]{20,}\b/, 'a Resend API key'],
   [/\bsb_secret_[A-Za-z0-9_-]{10,}/, 'a Supabase secret key'],
-  [/\bghp_[A-Za-z0-9]{30,}\b/, 'a GitHub token'],
-  [/-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----/, 'a private key'],
+  // The CLI's access token: not one project but every project on the account.
+  [/\bsbp_[a-f0-9]{30,}\b/, 'a Supabase access token'],
+  [/\bgh[pousr]_[A-Za-z0-9]{30,}\b/, 'a GitHub token'],
+  [/\bgithub_pat_[A-Za-z0-9_]{40,}/, 'a GitHub fine-grained token'],
+  // docs/EMAIL.md sends a church to Brevo for its mail.
+  [/\bxkeysib-[a-f0-9]{30,}/, 'a Brevo API key'],
+  [/\bxsmtpsib-[a-f0-9]{30,}/, 'a Brevo SMTP key'],
+  [/\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}/, 'a SendGrid key'],
+  [/\bAKIA[0-9A-Z]{16}\b/, 'an AWS access key'],
+  [/\bAIza[0-9A-Za-z_-]{35}\b/, 'a Google API key'],
+  [/\bGOCSPX-[A-Za-z0-9_-]{20,}/, 'a Google OAuth client secret'],
+  [/\bxox[abposr]-[A-Za-z0-9-]{10,}/, 'a Slack token'],
+  // FEEDBACK_WEBHOOK_URL takes one of these, and the address is the key.
+  [/hooks\.slack\.com\/services\/T[A-Za-z0-9]+\/B[A-Za-z0-9]+\/[A-Za-z0-9]+/, 'a Slack webhook address'],
+  [/discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]{20,}/, 'a Discord webhook address'],
+  [/\bsk-ant-[A-Za-z0-9_-]{20,}/, 'an Anthropic API key'],
+  [/\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{40,}/, 'an OpenAI API key'],
+  // The giving plan's processors (PayMongo, Stripe) share this shape.
+  [/\b[rs]k_(?:live|test)_[A-Za-z0-9]{16,}/, 'a payment processor secret key'],
+  [/\bnpm_[A-Za-z0-9]{36}\b/, 'an npm token'],
+  [/-----BEGIN [A-Z ]*PRIVATE KEY(?: BLOCK)?-----/, 'a private key'],
+  // A database address with its password written in. `${VAR}` and
+  // `<placeholder>` are how every guide here writes one, and are not caught.
+  // Nor is one on the loopback address: .github/workflows/fresh-install.yml
+  // starts a database for one run on the runner itself and throws it away, and
+  // nobody reading this can reach a machine's 127.0.0.1 but that machine.
+  [/\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|amqps?):\/\/[^\s:/@'"`]+:(?![$<{])[^\s@/'"`]+@(?!(?:127\.0\.0\.1|localhost)[:/])/,
+    'a database address with its password in it'],
 ];
 let literals = 0;
 for (const f of tracked) {
@@ -250,6 +286,186 @@ if (foreignRefs.length) {
   } else {
     ok('nothing of the first church\'s own is in any tracked text file');
   }
+}
+
+// ---------------------------------------------------------------------------
+// 8. No file that holds a secret by what it is.
+//
+// Sections 1 and 2 read what a file says. These are refused for what they are,
+// whatever is in them: a key file, a tool's saved login, a database dump
+// (encrypted or not: backup.yml's encrypted dumps are a workflow's artifacts and
+// never belong in the history), and the folders where the Supabase CLI, Vercel
+// and the Postgres edition keep a project's own address and data. .gitignore
+// keeps most of these out; this keeps out the one somebody adds with -f.
+// ---------------------------------------------------------------------------
+{
+  const BY_NATURE = [
+    [/(^|\/)\.envrc$|(^|\/)\.dev\.vars$/, 'an environment file under another name'],
+    [/\.(pem|key|p12|pfx|jks|keystore|ppk|kdbx)$/i, 'a key or keystore file'],
+    [/(^|\/)id_(rsa|dsa|ecdsa|ed25519)$/, 'a private SSH key'],
+    [/(^|\/)\.(pgpass|netrc|git-credentials)$/, 'a saved login'],
+    [/(^|\/)(credentials|client_secret[^/]*|service[-_]?account[^/]*)\.json$/i, 'a cloud credentials file'],
+    [/\.(sql\.gpg|sql\.gz|dump|pgdump|backup)$/i, 'a database dump'],
+    [/(^|\/)supabase\/\.(temp|branches)\/(?!cli-latest$)/, 'the Supabase CLI\'s record of a linked project'],
+    [/(^|\/)\.vercel\//, 'Vercel\'s record of a linked project'],
+    [/^selfhost\/data\//, 'a running Postgres edition\'s own data'],
+  ];
+  const byNature = [];
+  for (const f of tracked) {
+    for (const [re, what] of BY_NATURE) if (re.test(f)) byNature.push(`${f} (${what})`);
+  }
+  // An .npmrc is ordinary configuration until it carries a login.
+  for (const f of tracked.filter((f) => /(^|\/)\.(npmrc|yarnrc\.yml)$/.test(f))) {
+    if (/_auth(Token)?\s*[=:]\s*\S/.test(read(f))) byNature.push(`${f} (a package registry login)`);
+  }
+  if (byNature.length) fail('a file that holds secrets by its nature is committed:\n    ' + byNature.join('\n    '));
+  else ok('no key file, saved login, database dump or linked-project folder is committed');
+}
+
+// ---------------------------------------------------------------------------
+// 9. No real person's e-mail address or phone number, anywhere.
+//
+// Section 5 holds the sample data to this. Everything else was held only to
+// section 7's short list of addresses already known to be private, so a new one
+// pasted into a guide, a test or a comment (a member's, from a bug report; the
+// owner's own) would have passed. Now every address in every tracked text file
+// must be at a domain nobody can own, be a system sender, or be one of the few
+// below, each with the reason it is safe. Each exception must still be in use,
+// so the list cannot quietly grow into a place to hide things.
+// ---------------------------------------------------------------------------
+{
+  const BINARY = /\.(jpe?g|png|gif|ico|webp|pdf|gz|zip|wasm|woff2?|ttf|otf|mp3|wav|ogg|m4a|mp4|webm)$/i;
+  const texts = tracked.filter((f) => !BINARY.test(f) && f !== 'tests/no-secrets.js' && !/package-lock\.json$/.test(f));
+  const RESERVED = /@([\w-]+\.)*(example|test|invalid|localhost)$|@example\.(com|net|org)$/i;
+  const SYSTEM = /^(no-?reply|postmaster|donotreply)@/i;
+  const ADDRESS_EXCEPTIONS = new Map([
+    // How a guide shows the reader where their own address goes.
+    ['you@yourchurch.org', 'a placeholder in the first-leader command'],
+    ['you@your-church.org', 'a placeholder in the first-leader command'],
+    ['admin@yourchurch.org', 'a placeholder in a guide'],
+    ['invites@yourchurch.org', 'a placeholder in a guide'],
+    ['hello@your-domain.org', 'a placeholder in a guide'],
+    // The demo runbook's tip about Gmail's plus addresses needs Gmail's domain.
+    ['you@gmail.com', 'a placeholder for "your own Gmail address"'],
+    ['yourname+guide@gmail.com', 'a placeholder showing a Gmail plus address'],
+    ['yourname+explorer@gmail.com', 'a placeholder showing a Gmail plus address'],
+    // Addresses a service defines, shown so a reader recognises them.
+    ['onboarding@resend.dev', 'Resend\'s own shared test sender'],
+    ['something@smtp-brevo.com', 'the shape of a Brevo SMTP login'],
+    // A licence asks for its copyright notice to be kept, address and all.
+    ['jonasschievink@gmail.com', 'a crate author\'s notice in THIRD-PARTY-LICENCES.txt'],
+    // A disguised link a test and an applied migration must refuse.
+    ['faithlife.com@example.tld', 'a deceptive link a migration refuses'],
+  ]);
+  const ADDRESS = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b/g;
+  // A Philippine mobile number, or anything written with the country code.
+  const PHONE = /(?:\+63[\s-]?|\b0)9\d{2}[\s-]?\d{3}[\s-]?\d{4}\b|\+63[\s-]?\d{1,2}[\s-]?\d{3,4}[\s-]?\d{4}\b/g;
+  // The tests' own numbers, in the shapes everybody uses for a made-up one.
+  const PHONE_EXCEPTIONS = new Set(['09171234567', '09175551234', '09175550142']);
+  const digits = (s) => s.replace(/\D/g, '').replace(/^63/, '0');
+
+  const foreign = [];
+  const phones = [];
+  const usedAddresses = new Set();
+  const usedPhones = new Set();
+  for (const f of texts) {
+    let body;
+    try {
+      body = read(f);
+    } catch {
+      continue;
+    }
+    // Only lines with an @ in them: run over whole files, this one pattern
+    // took longer than every other check here put together.
+    for (const line of body.includes('@') ? body.split('\n') : []) {
+      if (!line.includes('@')) continue;
+      for (const m of line.matchAll(ADDRESS)) {
+        const a = m[0].toLowerCase();
+        if (RESERVED.test(a) || SYSTEM.test(a)) continue;
+        if (ADDRESS_EXCEPTIONS.has(a)) {
+          usedAddresses.add(a);
+          continue;
+        }
+        foreign.push(`${f}: ${a}`);
+      }
+    }
+    for (const m of body.matchAll(PHONE)) {
+      const n = digits(m[0]);
+      if (PHONE_EXCEPTIONS.has(n)) {
+        usedPhones.add(n);
+        continue;
+      }
+      phones.push(`${f}: ${m[0].trim()}`);
+    }
+  }
+  if (foreign.length) {
+    fail('an e-mail address at a domain somebody can own:\n    ' + [...new Set(foreign)].join('\n    ') +
+      '\n    Use a reserved domain (name@example.org, name@church.example). If it truly must stay, add it' +
+      '\n    to ADDRESS_EXCEPTIONS with the reason, where a reviewer will see it.');
+  } else {
+    ok(`every e-mail address is at a reserved domain, a system sender or a named exception (${texts.length} text files)`);
+  }
+  const unusedAddresses = [...ADDRESS_EXCEPTIONS.keys()].filter((a) => !usedAddresses.has(a));
+  if (unusedAddresses.length) fail(`ADDRESS_EXCEPTIONS lists addresses no file uses any more; remove them: ${unusedAddresses.join(', ')}`);
+  else ok(`each of the ${ADDRESS_EXCEPTIONS.size} address exceptions is still in use`);
+  if (phones.length) {
+    fail('a phone number:\n    ' + [...new Set(phones)].join('\n    ') +
+      '\n    A test that needs one uses 0917 123 4567; nothing else needs one.');
+  } else {
+    ok('no phone number beyond the tests\' made-up ones');
+  }
+  const unusedPhones = [...PHONE_EXCEPTIONS].filter((n) => !usedPhones.has(n));
+  if (unusedPhones.length) fail(`PHONE_EXCEPTIONS lists numbers no file uses any more; remove them: ${unusedPhones.join(', ')}`);
+}
+
+// ---------------------------------------------------------------------------
+// 10. No photo says where it was taken.
+//
+// A phone writes the place into every photo it takes, to a few metres. A
+// screenshot carries none, but a photo of a church hall, a guide's picture
+// from a member, or a "before" image for a bug report does: a home address,
+// published. lib/live/photo-location.ts strips it from what members upload; this is
+// the same rule for what is committed. tests/fixtures/located-upright.jpg is
+// the one photo kept with a place in it (an invented one, in the sea off West
+// Africa), because the server's check is tested against it, and the check below
+// must see that place or it is not looking.
+// ---------------------------------------------------------------------------
+{
+  const FIXTURE = 'tests/fixtures/located-upright.jpg';
+  const PLACED = new Set([FIXTURE]);
+  // The GPS pointer of an EXIF block (tag 0x8825, type LONG), in either byte order.
+  const GPS_MM = Buffer.from([0x88, 0x25, 0x00, 0x04]);
+  const GPS_II = Buffer.from([0x25, 0x88, 0x04, 0x00]);
+  const saysWhere = (buf) => {
+    let at = buf.indexOf('Exif\0\0');
+    while (at !== -1) {
+      const block = buf.subarray(at, at + 65536);
+      if (block.includes(GPS_MM) || block.includes(GPS_II)) return true;
+      at = buf.indexOf('Exif\0\0', at + 6);
+    }
+    return false;
+  };
+  const placed = [];
+  let seenFixture = false;
+  for (const f of tracked.filter((f) => /\.(jpe?g|tiff?|heic|heif|webp|png)$/i.test(f))) {
+    let buf;
+    try {
+      buf = fs.readFileSync(path.join(root, f));
+    } catch {
+      continue;
+    }
+    if (!saysWhere(buf)) continue;
+    if (f === FIXTURE) seenFixture = true;
+    if (!PLACED.has(f)) placed.push(f);
+  }
+  if (placed.length) {
+    fail('a photo says where it was taken:\n    ' + placed.join('\n    ') +
+      '\n    Strip it first, e.g. exiftool -gps:all= <file>, or save it again from a screenshot.');
+  } else {
+    ok('no committed photo says where it was taken');
+  }
+  if (!seenFixture) fail(`the check did not find the place in ${FIXTURE}, so it is not looking`);
+  else ok('and it finds the invented place in the one photo kept with one, so it is looking');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

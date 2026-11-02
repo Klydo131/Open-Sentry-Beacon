@@ -294,7 +294,7 @@ for (const role of ROLES) {
   ok(text.includes('Hi Maria,'), 'and the plain-text half is greeted too, not just the HTML');
 
   // What a row with no name produces once the panel has fallen back.
-  for (const notAName of ['stormwell88', 'maria.santos', 'a', '', '   ', 'x@y.org']) {
+  for (const notAName of ['stormwell88', 'maria.santos', 'a', '', '   ', 'x@y.example']) {
     const anon = inviteHtml('ds', CHURCH, URL_, APP_URL, SIGN_IN_EMAIL, TEMP_PASSWORD, notAName);
     ok(!/Hi\s/.test(anon.replace(/<[^>]*>/g, '')),
        `"${notAName}" is not a name, so there is no greeting rather than a bad one`);

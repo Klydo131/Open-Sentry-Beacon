@@ -10,6 +10,59 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 2 November 2026: nothing private in a public repository, checked wider
+
+### If you run a copy, do this
+
+1. Nothing. No database change, no rebuild needed: this is a check, not a
+   feature.
+2. If you keep your own fork public, turn on GitHub's own secret scanning and
+   push protection (Settings → Code security). They are free for a public
+   repository, and they refuse a known key at `git push`, before it is public,
+   which no test here can do.
+
+### What changed
+
+- **The sweep.** The owner: "I dont want to see any sensitive information in
+  this project like API keys, secret keys or any private information in this
+  open source project." Every tracked file, the text of every PDF in the
+  repository today, every line added in every commit on every branch and every
+  commit message were searched for 22 shapes of credential (keys, tokens,
+  private keys, a database address with its password in it), the owner's own
+  addresses, a real member's name and phone numbers; every image ever
+  committed, 1,696 of them, was read for the place it was taken. **No key or
+  password was found, anywhere in the history.** The history search was first
+  shown that it could find what it looked for (a planted fake), so "nothing"
+  means nothing.
+- **What history still holds, and why it stays.** Two things removed from the
+  files in September are still in old commits: the live project's Supabase
+  address, which every visitor's browser is sent by the live site anyway and is
+  not a key, and the owner's domain as an old fallback sender. Neither unlocks
+  anything. Rewriting a public history would break every clone and fork and
+  would not take back what was already copied, so it is the owner's decision,
+  not a test's.
+- **`tests/no-secrets.js` checks what it did not.** It knew five key shapes and
+  now knows 21, among them Brevo's (the mail service the guides recommend) and
+  the Supabase CLI's access token, which controls every project on an account.
+  Every secret-named slot of every example settings file must be empty, where
+  only seven named slots of one file had to be (`selfhost/.env.example` could
+  have carried a working `JWT_SECRET`). Three new checks: no file that is
+  secret by what it is (a key file, a saved login, a database dump, the
+  Supabase CLI's or Vercel's record of a linked project); no e-mail address at
+  a domain somebody can own and no phone number anywhere, apart from a named
+  list of placeholders, each with its reason, each still in use; and no photo
+  that says where it was taken, proved by finding the invented place in the one
+  test photo kept with one.
+- **Four test inputs moved to reserved domains** (`example.org`, `.example`):
+  they were addresses at a denomination's real domain and at three short
+  domains somebody owns. The pastor's address in
+  `tests/studies-are-formatted.mjs` is now at `example.org` rather than a
+  `.example` name because the linker links `example.org` on its own, so the
+  test that an address is not turned into a link still has something to
+  refuse.
+
+---
+
 ## 29 October 2026: Back stays in the study room, and screens settle in
 
 ### If you run a copy, do this
