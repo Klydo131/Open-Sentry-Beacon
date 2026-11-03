@@ -22,7 +22,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-11-03',
     title: 'A new program opens smoothly',
     items: [
-      'In the Sabbath program and Evangelistic meetings, a new program or a new series now unfolds downward into view, and the screen moves gently to it, instead of the list being swapped for it all at once.',
+      'In the Sabbath program and Evangelistic meetings, pressing New is now one smooth movement: the choices grow open and the screen glides to them, the list fades away, and the new program or series settles gently into view. Nothing pops.',
       'Opening one you already made does the same. If your phone is set to reduce motion, it simply appears.',
     ],
   },

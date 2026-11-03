@@ -25,7 +25,10 @@
 // fold shut.
 
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
-import { unfoldIn } from '@/lib/motion';
+import { leaveThen, settleIn, unfoldIn } from '@/lib/motion';
+import { Reveal } from '@/components/Reveal';
+
+const LIST_PANEL = '[data-panel="sabbath-programs"]';
 import { Button, Card } from '@/components/ui';
 import {
   ArrowDownGlyph, ArrowUpGlyph, CalendarGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph,
@@ -136,6 +139,13 @@ export function SabbathPrograms({ owner, churchName, role, share, store }: {
   const [advanced, setAdvanced] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
+  // Back to the list settles it in from the side the page went, not in one frame.
+  const [returned, setReturned] = useState(false);
+  useEffect(() => {
+    if (openId || !returned) return;
+    setChoosing(false);
+    settleIn(document.querySelector<HTMLElement>(LIST_PANEL), 'back');
+  }, [openId, returned]);
   const [saved, setSaved] = useState(true);
 
   useEffect(() => {
@@ -177,10 +187,12 @@ export function SabbathPrograms({ owner, churchName, role, share, store }: {
   const full = programs.length >= LIMITS.programs;
   const church = churchName ?? programs[0]?.church ?? '';
 
+  // The list fades away first, then the page settles in (lib/motion.ts).
+  const list = () => document.querySelector<HTMLElement>(LIST_PANEL);
+  const openPage = (id: string) => leaveThen(list(), () => setOpenId(id));
   const start = (p: SabbathProgram) => {
-    setChoosing(false);
     commit([p, ...programs]);
-    setOpenId(p.id);
+    openPage(p.id);
   };
 
   if (open) {
@@ -194,7 +206,7 @@ export function SabbathPrograms({ owner, churchName, role, share, store }: {
         canCopy={!full}
         role={role}
         share={share}
-        onBack={() => setOpenId(null)}
+        onBack={() => { setReturned(true); setOpenId(null); }}
         onChange={(p) => commit(programs.map((x) => (x.id === p.id ? { ...p, updated: Date.now() } : x)))}
         onCopy={() => start(copyForNextSabbath(open))}
         onDelete={() => {
@@ -244,7 +256,7 @@ export function SabbathPrograms({ owner, churchName, role, share, store }: {
         >
           <PlusGlyph /> New program
         </Button>
-        {choosing && (
+        <Reveal open={choosing}>
           <div className="mt-3 space-y-2" role="group" aria-label="Start from" data-template-chooser>
             <p className="text-sm font-semibold text-navy">Start from</p>
             <Button variant="ghost" className={WIDE} onClick={() => start(fromTemplate(church))}>
@@ -271,7 +283,7 @@ export function SabbathPrograms({ owner, churchName, role, share, store }: {
               A blank page
             </Button>
           </div>
-        )}
+        </Reveal>
         {full && (
           <p className="mt-2 text-sm text-gray-600">
             This device holds {LIMITS.programs} programs. Delete an old one to make room.
@@ -301,7 +313,7 @@ export function SabbathPrograms({ owner, churchName, role, share, store }: {
               <li key={p.id}>
                 <button
                   type="button"
-                  onClick={() => setOpenId(p.id)}
+                  onClick={() => openPage(p.id)}
                   data-program-row
                   className="tap flex w-full items-center gap-3 rounded-xl bg-white px-4 py-2 text-left ring-1 ring-navy/10 transition hover:bg-navy/5"
                 >

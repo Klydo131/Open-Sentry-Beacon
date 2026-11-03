@@ -28,6 +28,20 @@ the part that goes wrong when nobody reads past the headline.
   the screen moves smoothly to its top if that top is off the screen or low
   on it (`unfoldIn` in `lib/motion.ts`). Under reduce-motion it simply
   appears, and the jump to it is immediate.
+- **Then, the same day:** "There is still a pop out where the user gets
+  shocked pressing the button new." Three things still happened in one frame,
+  and each now moves:
+  - The choices under **New meetings**, and under **New program** with
+    templates, appeared all at once and shoved the page down. Now they grow
+    open and shrink closed (`components/Reveal.tsx`). On a phone, where they
+    opened below the fold and the press seemed to do nothing, the screen then
+    glides just far enough to show them.
+  - The list vanished in a single frame. Now it fades away first
+    (`leaveThen`).
+  - The page was drawn from nothing with a clip. Now it fades in and settles
+    8px.
+
+  Back to the list settles it in from the side the page went.
 - **The check:** `tests/e2e/a-new-page-unfolds-into-view.js`, on a phone.
   Both planners unfold, the new page's top lands in the upper half of the
   screen, and nothing moves under reduce-motion. With the unfolding switched

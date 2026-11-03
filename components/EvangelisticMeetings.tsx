@@ -21,7 +21,10 @@
 // renamed, moved or taken out.
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { unfoldIn } from '@/lib/motion';
+import { leaveThen, settleIn, unfoldIn } from '@/lib/motion';
+import { Reveal } from '@/components/Reveal';
+
+const LIST_PANEL = '[data-panel="evangelistic-meetings"]';
 import { Button, Card } from '@/components/ui';
 import {
   ArrowDownGlyph, ArrowUpGlyph, CalendarGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph,
@@ -70,6 +73,13 @@ export function EvangelisticMeetings({ owner, churchName, role, share, store }: 
   const [meetings, setMeetings] = useState<EvangelisticMeeting[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
+  // Back to the list settles it in from the side the page went, not in one frame.
+  const [returned, setReturned] = useState(false);
+  useEffect(() => {
+    if (openId || !returned) return;
+    setChoosing(false);
+    settleIn(document.querySelector<HTMLElement>(LIST_PANEL), 'back');
+  }, [openId, returned]);
   const [first, setFirst] = useState(() => comingSunday());
   const [count, setCount] = useState('7');
   const [saved, setSaved] = useState(true);
@@ -96,10 +106,12 @@ export function EvangelisticMeetings({ owner, churchName, role, share, store }: 
   };
   const full = meetings.length >= L.meetings;
   const church = churchName ?? meetings[0]?.church ?? '';
+  // The list fades away first, then the page settles in (lib/motion.ts).
+  const list = () => document.querySelector<HTMLElement>(LIST_PANEL);
+  const openPage = (id: string) => leaveThen(list(), () => setOpenId(id));
   const start = (m: EvangelisticMeeting) => {
-    setChoosing(false);
     commit([m, ...meetings]);
-    setOpenId(m.id);
+    openPage(m.id);
   };
 
   const open = openId ? meetings.find((m) => m.id === openId) : undefined;
@@ -112,7 +124,7 @@ export function EvangelisticMeetings({ owner, churchName, role, share, store }: 
         saved={saved}
         role={role}
         share={share}
-        onBack={() => setOpenId(null)}
+        onBack={() => { setReturned(true); setOpenId(null); }}
         onChange={(m) => commit(meetings.map((x) => (x.id === m.id ? { ...m, updated: Date.now() } : x)))}
         onDelete={() => {
           sync.deleted(open.id);
@@ -141,7 +153,7 @@ export function EvangelisticMeetings({ owner, churchName, role, share, store }: 
         <Button onClick={() => setChoosing(!choosing)} disabled={full}>
           <PlusGlyph /> New meetings
         </Button>
-        {choosing && (
+        <Reveal open={choosing}>
           <div className="mt-3 space-y-3 rounded-xl bg-navy/[0.03] p-3" role="group" aria-label="Start new meetings" data-meeting-chooser>
             <div className="grid gap-2 sm:grid-cols-2">
               <label className="block">
@@ -182,7 +194,7 @@ export function EvangelisticMeetings({ owner, churchName, role, share, store }: 
               <p className="mt-1 text-sm text-gray-600">One night and nothing on it. Add only what you want.</p>
             </div>
           </div>
-        )}
+        </Reveal>
         {full && (
           <p className="mt-2 text-sm text-gray-600">
             This device holds {L.meetings} series. Delete an old one to make room.
@@ -207,7 +219,7 @@ export function EvangelisticMeetings({ owner, churchName, role, share, store }: 
             <li key={m.id}>
               <button
                 type="button"
-                onClick={() => setOpenId(m.id)}
+                onClick={() => openPage(m.id)}
                 data-meeting-row
                 className="tap flex w-full items-center gap-3 rounded-xl bg-white px-4 py-2 text-left ring-1 ring-navy/10 transition hover:bg-navy/5"
               >

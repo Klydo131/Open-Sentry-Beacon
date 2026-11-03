@@ -7,6 +7,12 @@
 // going down on fill in, not a pop up." Until then the list was swapped for
 // the page in one frame (lib/motion.ts, unfoldIn).
 //
+// The founder again, the same day: "There is still a pop out where the user
+// gets shocked pressing the button new". The choice box under New appeared in
+// one frame and pushed the page down; the list vanished in one frame; and the
+// page was drawn from nothing with a clip. Now the box grows open (growIn),
+// the list fades away first (leaveThen) and the page settles in with a fade.
+//
 //   node tests/e2e/a-new-page-unfolds-into-view.js [port]
 
 const { browser: engine, launchOptions, pageErrors } = require('./_playwright');
@@ -20,8 +26,13 @@ const recordUnfolds = () => {
   window.__unfolds = [];
   const animate = Element.prototype.animate;
   Element.prototype.animate = function (keyframes, options) {
-    if (options && options.id === 'unfold-in') {
-      window.__unfolds.push({ panel: this.getAttribute('data-panel'), clips: keyframes.some((k) => /inset\(0px 0px 100%|inset\(0 0 100%/.test(k.clipPath || '')) });
+    if (options && ['unfold-in', 'leave-then', 'grow-in'].includes(options.id)) {
+      window.__unfolds.push({
+        id: options.id,
+        panel: this.getAttribute('data-panel') || this.getAttribute('data-reveal'),
+        fades: keyframes[0].opacity === 0 || keyframes[keyframes.length - 1].opacity === 0,
+        clips: keyframes.some((k) => !!k.clipPath),
+      });
     }
     return animate.call(this, keyframes, options);
   };
@@ -66,8 +77,11 @@ const where = (page, panel) => page.evaluate((p) => {
     await page.getByRole('button', { name: 'New program' }).click();
     await page.waitForTimeout(700);
     const program = await where(page, 'sabbath-program');
-    ok(!!program && program.unfolds.some((u) => u.panel === 'sabbath-program' && u.clips),
-       `New program unfolds the new page downward, from its top edge (${JSON.stringify(program && program.unfolds)})`);
+    const seen = (program && program.unfolds) || [];
+    ok(seen.some((u) => u.id === 'leave-then' && u.panel === 'sabbath-programs'),
+       `New program lets the list fade away first, never a swap in one frame (${JSON.stringify(seen)})`);
+    ok(seen.some((u) => u.id === 'unfold-in' && u.panel === 'sabbath-program' && u.fades && !u.clips),
+       'then the new page settles in with a fade, not drawn from nothing');
     ok(!!program && program.top >= 0 && program.top < program.vh * 0.5,
        `and the new page's top is on the screen, in its upper half (${program && program.top}px of ${program && program.vh})`);
 
@@ -76,11 +90,23 @@ const where = (page, panel) => page.evaluate((p) => {
     await page.waitForTimeout(1500);
     await page.evaluate(() => { window.__unfolds = []; });
     await page.getByRole('button', { name: 'New meetings' }).click();
+    await page.waitForTimeout(400);
+    const box = await page.evaluate(() => window.__unfolds.slice());
+    ok(box.some((u) => u.id === 'grow-in' && u.fades),
+       `New meetings grows its choices open, rather than popping them in (${JSON.stringify(box)})`);
+    await page.waitForTimeout(500);
+    const shown = await page.evaluate(() => {
+      const r = document.querySelector('[data-meeting-chooser]')?.getBoundingClientRect();
+      return r ? { top: Math.round(r.top), bottom: Math.round(r.bottom), vh: innerHeight } : null;
+    });
+    ok(!!shown && shown.bottom <= shown.vh && shown.top >= 0,
+       `and the screen glides to show them, so the press is never answered below the fold (${JSON.stringify(shown)})`);
     await page.getByRole('button', { name: 'Start with a plan' }).click();
     await page.waitForTimeout(800);
     const series = await where(page, 'evangelistic-meeting');
-    ok(!!series && series.unfolds.some((u) => u.panel === 'evangelistic-meeting' && u.clips),
-       `a new series unfolds downward too (${JSON.stringify(series && series.unfolds)})`);
+    const seen2 = (series && series.unfolds) || [];
+    ok(seen2.some((u) => u.id === 'leave-then') && seen2.some((u) => u.id === 'unfold-in' && u.panel === 'evangelistic-meeting' && !u.clips),
+       `a new series: the list fades away, then the page settles in (${JSON.stringify(seen2)})`);
     ok(!!series && series.top >= 0 && series.top < series.vh * 0.5,
        `and its top is on the screen, in its upper half (${series && series.top}px of ${series && series.vh})`);
 

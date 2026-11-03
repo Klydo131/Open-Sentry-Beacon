@@ -122,16 +122,16 @@ export function fadeInAfter(from: HTMLElement | null): void {
  * while what is inside it changes.
  */
 /**
- * Open a page that has just taken the place of a list, by unfolding it
- * downward: it is drawn from its top edge to its bottom, and the screen
- * travels to it, so a finger sees where the new page went.
+ * Open a page that has just taken the place of a list: it settles down into
+ * place, fading in as it comes, and the screen travels gently to its top.
  *
  * ASKED FOR ON 3 NOVEMBER 2026, for a new Sabbath program and a new series
- * of evangelistic meetings: "I dont want the push button new page where I
- * push it and then it will go up ... I want it smooth with tweak animation or
- * scroll down where I will see the new page going down on fill in, not a pop
- * up." Before this the list was swapped for the page in one frame, and the
- * screen stayed wherever it had been scrolled to.
+ * of evangelistic meetings: "I want it smooth with tweak animation or scroll
+ * down where I will see the new page going down on fill in, not a pop up."
+ * The first version drew the page from nothing with a clip, which still read
+ * as a pop ("There is still a pop out where the user gets shocked"), so it is
+ * now a fade and an 8px settle, after the list has faded away (leaveThen),
+ * the same quiet movement as a page in the Study Room.
  *
  * Under reduced motion the page is simply there, and the jump to it is
  * immediate rather than smooth.
@@ -146,11 +146,60 @@ export function unfoldIn(el: HTMLElement | null): void {
   }
   if (prefersLessMotion() || typeof el.animate !== 'function') return;
   el.animate(
-    [
-      { opacity: 0, transform: 'translateY(-12px)', clipPath: 'inset(0 0 100% 0 round 16px)' },
-      { opacity: 1, transform: 'none', clipPath: 'inset(0 0 0% 0 round 16px)' },
-    ],
-    { id: 'unfold-in', duration: MOTION.slow + 140, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+    [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }],
+    { id: 'unfold-in', duration: MOTION.slow, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+  );
+}
+
+/**
+ * Let a list fade away before the page that replaces it is drawn, so the
+ * swap is never a single frame. `then` runs when the fade ends, or at once
+ * under reduced motion or where nothing can animate.
+ */
+export function leaveThen(el: HTMLElement | null, then: () => void): void {
+  if (!el || prefersLessMotion() || typeof el.animate !== 'function') {
+    then();
+    return;
+  }
+  const out = el.animate(
+    [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-4px)' }],
+    { id: 'leave-then', duration: MOTION.quick, easing: 'ease-in', fill: 'forwards' },
+  );
+  let done = false;
+  const go = () => { if (!done) { done = true; then(); } };
+  out.onfinish = go;
+  // A tab put in the background can hold an animation; never hold the press.
+  window.setTimeout(go, MOTION.quick + 120);
+}
+
+/**
+ * A box that opens under a button grows to its height and fades in; closing,
+ * it shrinks away. Nothing below it jumps: it is pushed down as the box grows.
+ */
+export function growIn(el: HTMLElement | null): void {
+  if (!el) return;
+  // On a phone the box often opens below the bottom of the screen, where the
+  // press seems to have done nothing: once it is open, the screen glides just
+  // far enough to show it.
+  const show = () => el.scrollIntoView({ behavior: scrollMotion(), block: 'nearest' });
+  if (prefersLessMotion() || typeof el.animate !== 'function') {
+    show();
+    return;
+  }
+  const h = el.scrollHeight;
+  const grow = el.animate(
+    [{ height: '0px', opacity: 0, overflow: 'hidden' }, { height: `${h}px`, opacity: 1, overflow: 'hidden' }],
+    { id: 'grow-in', duration: MOTION.slow, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+  );
+  grow.onfinish = show;
+}
+
+export function shrinkOut(el: HTMLElement | null): void {
+  if (!el || prefersLessMotion() || typeof el.animate !== 'function') return;
+  const h = el.scrollHeight;
+  el.animate(
+    [{ height: `${h}px`, opacity: 1, overflow: 'hidden' }, { height: '0px', opacity: 0, overflow: 'hidden' }],
+    { id: 'shrink-out', duration: MOTION.base, easing: 'ease-in', fill: 'forwards' },
   );
 }
 
