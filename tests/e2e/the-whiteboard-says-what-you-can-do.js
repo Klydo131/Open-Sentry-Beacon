@@ -472,8 +472,37 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     // ITS COLOURS BY FINGER: the palette AFFiNE opens from the bar.
     await touch(tx, ty, 40);
     await p.waitForTimeout(800);
+    // THE COLOURS ARE A FINGER WIDE FROM THEIR FIRST FRAME (3 November 2026).
+    // Under WebKit a tap of a colour raised a ResizeObserver loop, and the
+    // likeliest cause was the finger sizes arriving a frame or 250ms late, so
+    // they are now handed over as AFFiNE adds each part (watchForFingers).
+    // This guards the result. It is NOT the proof of that fix: on Chromium the
+    // old timers also had the colours at 44px by their first frame, so this
+    // passed before the change too. Safari CI is the test of the fix.
+    await p.evaluate(() => {
+      // Only the palette's colours: the bar's own button shows the current
+      // colour as a small circle of the same kind, and that one stays small.
+      const deep = (root, inPanel = false, out = []) => {
+        for (const el of root.querySelectorAll('*')) {
+          if (inPanel && el.localName === 'edgeless-color-button') out.push(el);
+          if (el.shadowRoot) deep(el.shadowRoot, inPanel || el.localName === 'edgeless-color-panel', out);
+        }
+        return out;
+      };
+      window.__firstSwatch = null;
+      const started = performance.now();
+      const look = () => {
+        const found = deep(document).map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0);
+        if (found.length) { window.__firstSwatch = Math.round(Math.min(...found.map((r) => r.width))); return; }
+        if (performance.now() - started < 3000) requestAnimationFrame(look);
+      };
+      requestAnimationFrame(look);
+    });
     await p.locator('affine-toolbar-widget edgeless-shape-color-picker').tap({ timeout: 5000 }).catch(() => {});
     await p.waitForTimeout(800);
+    const firstSwatch = await p.evaluate(() => window.__firstSwatch);
+    ok(firstSwatch !== null && firstSwatch >= 44,
+       `the colours are a finger wide on the first frame they are drawn, not grown afterwards (${firstSwatch}px)`);
     const swatches = await p.locator('affine-toolbar-widget edgeless-color-panel edgeless-color-button').evaluateAll((els) => els
       .map((e) => { const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), right: r.right }; })
       .filter((x) => x.w > 0));

@@ -129,8 +129,20 @@ export function ServiceWorker() {
         reg.addEventListener('updatefound', onUpdateFound);
         teardown.push(() => reg.removeEventListener('updatefound', onUpdateFound));
 
+        // ONE CHECK AT A TIME (3 November 2026). At start-up the hourly check
+        // below and VersionWatch's asked for the worker at the same moment, and
+        // WebKit cancels the first fetch of /sw.js when a second starts,
+        // reporting "Cannot load ... sw.js due to access control checks" as a
+        // page error (Safari CI, runs 381 and 382). A check already running is
+        // shared, never started twice.
+        let running: Promise<void> | null = null;
+        const update = () => {
+          running ??= reg.update().then(() => undefined).finally(() => { running = null; });
+          return running;
+        };
+
         // Let any screen trigger a check — the Settings panel has a button.
-        setChecker(() => reg.update().then(() => undefined));
+        setChecker(update);
         teardown.push(() => setChecker(null));
         teardown.push(() => setRegistration(null));
 
@@ -140,8 +152,7 @@ export function ServiceWorker() {
         // one only covers the case where the browser spots a new worker without
         // being asked.
         const check = () => {
-          reg
-            .update()
+          update()
             .then(() => {
               // Don't overwrite a pending 'ready' with 'current'.
               setUpdateState({ checkedAt: Date.now() });

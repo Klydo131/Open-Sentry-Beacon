@@ -162,6 +162,12 @@ export interface BoardApi {
    * touched screen. Safe to call often: returns false until the bar exists.
    */
   fitForFingers(): boolean;
+  /**
+   * Keep everything AFFiNE adds to its bar a finger's size from the moment it
+   * is added, before it is drawn. Call once the bar exists (fitForFingers
+   * returned true). Returns a way to stop.
+   */
+  watchForFingers(): () => void;
   selectAll(): void;
   showEverything(): void;
   undo(): void;
@@ -189,6 +195,42 @@ export function boardApi(std: BlockStdScope): BoardApi | null {
     return null;
   }
   const store = std.store;
+
+  function fitForFingers(): boolean {
+    const root = std.host.querySelector('affine-toolbar-widget')?.shadowRoot;
+    if (!root) return false;
+    handTo(root, FINGERS);
+    // The lists that open under the bar: ⋯, and the one holding the palettes.
+    const lists: HTMLElement[] = [...root.querySelectorAll<HTMLElement>("editor-menu-button > div[data-orientation='vertical']")];
+    // Every palette open in the bar now, and every colour in it.
+    const inward = (from: ParentNode) => {
+      for (const el of from.querySelectorAll('*')) {
+        const inner = el.shadowRoot;
+        if (!inner) continue;
+        if (el.localName === 'edgeless-color-panel') handTo(inner, PALETTE);
+        else if (el.localName === 'edgeless-color-button') handTo(inner, COLOUR);
+        else if (/color-picker/.test(el.localName)) {
+          handTo(inner, PICKER);
+          lists.push(...inner.querySelectorAll<HTMLElement>("[data-orientation='vertical']"));
+        }
+        inward(inner);
+      }
+    };
+    inward(root);
+    // AN OPEN LIST ENDS ON THE SCREEN. A finger's choices are taller than a
+    // mouse's, and a list opens wherever the bar is, so a fixed height cannot
+    // know how much room is left under it: it is measured once the list is
+    // open, and the rest scrolls (FINGERS and PICKER above set the most).
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      const view = window.visualViewport;
+      const bottom = view ? view.offsetTop + view.height : window.innerHeight;
+      for (const list of lists) {
+        const box = list.getBoundingClientRect();
+        if (box.height > 0 && box.top < bottom) list.style.maxHeight = `${Math.max(160, Math.floor(bottom - box.top - 12))}px`;
+      }
+    }
+    return true;
+  }
 
   return {
     watch(run) {
@@ -248,40 +290,46 @@ export function boardApi(std: BlockStdScope): BoardApi | null {
       }
     },
 
-    fitForFingers() {
-      const root = std.host.querySelector('affine-toolbar-widget')?.shadowRoot;
-      if (!root) return false;
-      handTo(root, FINGERS);
-      // The lists that open under the bar: ⋯, and the one holding the palettes.
-      const lists: HTMLElement[] = [...root.querySelectorAll<HTMLElement>("editor-menu-button > div[data-orientation='vertical']")];
-      // Every palette open in the bar now, and every colour in it.
-      const inward = (from: ParentNode) => {
-        for (const el of from.querySelectorAll('*')) {
-          const inner = el.shadowRoot;
-          if (!inner) continue;
-          if (el.localName === 'edgeless-color-panel') handTo(inner, PALETTE);
-          else if (el.localName === 'edgeless-color-button') handTo(inner, COLOUR);
-          else if (/color-picker/.test(el.localName)) {
-            handTo(inner, PICKER);
-            lists.push(...inner.querySelectorAll<HTMLElement>("[data-orientation='vertical']"));
+    fitForFingers,
+
+    // WHY A WATCHER, NOT A TIMER (3 November 2026). The finger sizes used to
+    // be handed in two frames and again 250ms after a press, so a palette was
+    // drawn at AFFiNE's 24px first and then grew to 44px. Under WebKit that
+    // second resize, landing while AFFiNE's own size watchers were still
+    // reporting, raised "ResizeObserver loop completed with undelivered
+    // notifications" on every tap of a colour (Safari CI, runs 376 to 382,
+    // "after a finger's tap on a colour paints the shape"). A mutation is
+    // reported before the page is next laid out, so a palette handed its
+    // sizes here is drawn at a finger's size the first time and never grows.
+    watchForFingers() {
+      const watched = new WeakSet<ShadowRoot>();
+      let queued = false;
+      const look = () => {
+        const root = std.host.querySelector('affine-toolbar-widget')?.shadowRoot;
+        if (!root) return;
+        const visit = (r: ShadowRoot) => {
+          if (!watched.has(r)) {
+            watched.add(r);
+            changes.observe(r, { childList: true, subtree: true });
           }
-          inward(inner);
-        }
+          for (const el of r.querySelectorAll('*')) if (el.shadowRoot) visit(el.shadowRoot);
+        };
+        visit(root);
       };
-      inward(root);
-      // AN OPEN LIST ENDS ON THE SCREEN. A finger's choices are taller than a
-      // mouse's, and a list opens wherever the bar is, so a fixed height cannot
-      // know how much room is left under it: it is measured once the list is
-      // open, and the rest scrolls (FINGERS and PICKER above set the most).
-      if (window.matchMedia('(pointer: coarse)').matches) {
-        const view = window.visualViewport;
-        const bottom = view ? view.offsetTop + view.height : window.innerHeight;
-        for (const list of lists) {
-          const box = list.getBoundingClientRect();
-          if (box.height > 0 && box.top < bottom) list.style.maxHeight = `${Math.max(160, Math.floor(bottom - box.top - 12))}px`;
-        }
-      }
-      return true;
+      const changes = new MutationObserver(() => {
+        if (queued) return;
+        queued = true;
+        queueMicrotask(() => {
+          queued = false;
+          fitForFingers();
+          look();
+        });
+      });
+      // Only the bar and what opens inside it are watched, never the page,
+      // so writing on the board costs nothing here.
+      look();
+      fitForFingers();
+      return () => changes.disconnect();
     },
 
     selectAll() {

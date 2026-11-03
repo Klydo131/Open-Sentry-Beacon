@@ -133,27 +133,25 @@ export function StudyBoardTools({ api, frame }: {
 
   // A finger's size for AFFiNE's bar and ⋯, once the bar exists, and for a
   // palette of colours once a press on the bar has opened one.
+  // Sizes are handed to whatever AFFiNE adds to the bar as it is added,
+  // before it is drawn, never a frame later (lib/study/board-actions.ts,
+  // watchForFingers: the late resize is what Safari reported as a
+  // ResizeObserver loop on every tap of a colour).
   useEffect(() => {
     if (!api) return;
     let tries = 0;
     let frameId = 0;
+    let stop: (() => void) | null = null;
     const fit = () => {
-      if (!api.fitForFingers() && tries++ < 120) frameId = requestAnimationFrame(fit);
+      if (api.fitForFingers()) stop = api.watchForFingers();
+      else if (tries++ < 120) frameId = requestAnimationFrame(fit);
     };
     fit();
-    const el = frame.current;
-    // Twice: once AFFiNE has drawn what the press opened, and again once it
-    // has placed it, which it does a moment later.
-    const afterPress = () => {
-      requestAnimationFrame(() => requestAnimationFrame(() => api.fitForFingers()));
-      setTimeout(() => api.fitForFingers(), 250);
-    };
-    el?.addEventListener('click', afterPress, true);
     return () => {
       cancelAnimationFrame(frameId);
-      el?.removeEventListener('click', afterPress, true);
+      stop?.();
     };
-  }, [api, barFor, frame]);
+  }, [api, barFor]);
 
   // Redraw when the history or the selection changes: Undo and Redo say
   // whether they can, and a bar opened for one thing closes when another, or

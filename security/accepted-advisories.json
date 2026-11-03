@@ -18,6 +18,15 @@
       "why": "An existing prototype pollution can bypass KaTeX's trust setting. It needs a separate prototype-pollution flaw to exist first, and the editor renders the reader's own formulas. Fixed in KaTeX 0.18.2, which the editor pins below. docs/SECURITY.md, October 2026.",
       "accepted_on": "2026-10-26",
       "review_by": "2027-01-31"
+    },
+    {
+      "id": "GHSA-g3hv-75wg-m249",
+      "package": "minimatch",
+      "severity": "moderate",
+      "where": "the Study Room's editor (@blocksuite/* 0.22.4), in the reader's own browser",
+      "why": "A pattern built to amplify can make minimatch slow. The editor's only use is @blocksuite/store's schema check, matching one block type name against another from its own registered schema (affine:paragraph against affine:*); no member writes a pattern, and the worst case is one person's own editor slowing. Fixed only in minimatch 11.0.1, a major version the editor does not take, and npm's offered fix is a downgrade of the editor to 0.19.5. Review when the editor is updated.",
+      "accepted_on": "2026-11-03",
+      "review_by": "2027-01-31"
     }
   ]
 }
