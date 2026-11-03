@@ -21,6 +21,7 @@
 // renamed, moved or taken out.
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { unfoldIn } from '@/lib/motion';
 import { Button, Card } from '@/components/ui';
 import {
   ArrowDownGlyph, ArrowUpGlyph, CalendarGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph,
@@ -293,8 +294,14 @@ function MeetingEditor({ meeting: m, folders, saved, role, share, onBack, onChan
     setMessage(ok ? 'Copied. Paste it into a message.' : 'This browser would not copy it. Download the file instead.');
   };
 
+  // A new or opened page unfolds downward into view, rather than replacing
+  // the list in one frame (lib/motion.ts, unfoldIn).
+  useEffect(() => {
+    unfoldIn(document.querySelector<HTMLElement>('[data-panel="evangelistic-meeting"]'));
+  }, []);
+
   return (
-    <Card className="p-5" data-panel="evangelistic-meeting">
+    <Card className="p-5 scroll-mt-24" data-panel="evangelistic-meeting">
       <button
         type="button"
         onClick={onBack}

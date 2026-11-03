@@ -121,6 +121,39 @@ export function fadeInAfter(from: HTMLElement | null): void {
  * room's editor host would throw away the editor. So it is a box that stays
  * while what is inside it changes.
  */
+/**
+ * Open a page that has just taken the place of a list, by unfolding it
+ * downward: it is drawn from its top edge to its bottom, and the screen
+ * travels to it, so a finger sees where the new page went.
+ *
+ * ASKED FOR ON 3 NOVEMBER 2026, for a new Sabbath program and a new series
+ * of evangelistic meetings: "I dont want the push button new page where I
+ * push it and then it will go up ... I want it smooth with tweak animation or
+ * scroll down where I will see the new page going down on fill in, not a pop
+ * up." Before this the list was swapped for the page in one frame, and the
+ * screen stayed wherever it had been scrolled to.
+ *
+ * Under reduced motion the page is simply there, and the jump to it is
+ * immediate rather than smooth.
+ */
+export function unfoldIn(el: HTMLElement | null): void {
+  if (!el || typeof window === 'undefined') return;
+  const top = el.getBoundingClientRect().top;
+  // Only travel when the page's top is off the screen, or low enough that
+  // the page reads as somewhere else.
+  if (top < 0 || top > window.innerHeight * 0.5) {
+    el.scrollIntoView({ behavior: scrollMotion(), block: 'start' });
+  }
+  if (prefersLessMotion() || typeof el.animate !== 'function') return;
+  el.animate(
+    [
+      { opacity: 0, transform: 'translateY(-12px)', clipPath: 'inset(0 0 100% 0 round 16px)' },
+      { opacity: 1, transform: 'none', clipPath: 'inset(0 0 0% 0 round 16px)' },
+    ],
+    { id: 'unfold-in', duration: MOTION.slow + 140, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+  );
+}
+
 export function settleIn(el: HTMLElement | null, way: 'forward' | 'back' | 'here' | 'fade'): void {
   if (!el || prefersLessMotion() || typeof el.animate !== 'function') return;
   const from = way === 'forward' ? 'translateX(14px)'

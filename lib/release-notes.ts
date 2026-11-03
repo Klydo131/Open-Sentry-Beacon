@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-03-a-new-page-unfolds',
+    date: '2026-11-03',
+    title: 'A new program opens smoothly',
+    items: [
+      'In the Sabbath program and Evangelistic meetings, a new program or a new series now unfolds downward into view, and the screen moves gently to it, instead of the list being swapped for it all at once.',
+      'Opening one you already made does the same. If your phone is set to reduce motion, it simply appears.',
+    ],
+  },
+  {
     id: '2026-10-29-back-stays-in-the-study-room',
     date: '2026-10-29',
     title: 'Back stays in the Study Room',

@@ -10,6 +10,31 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 3 November 2026: a new program unfolds into view
+
+### If you run a copy, do this
+
+1. Rebuild. Nothing else: no database change.
+
+### What changed
+
+- **The founder:** "I dont want the push button new page where I push it and
+  then it will go up ... I want it smooth with tweak animation or scroll down
+  where I will see the new page going down on fill in, not a pop up."
+- **Before:** in the Sabbath program and Evangelistic meetings, a new or
+  opened page replaced the list in one frame, and the screen stayed wherever
+  it had been.
+- **Now:** the page unfolds downward from its top edge over about 0.4 s, and
+  the screen moves smoothly to its top if that top is off the screen or low
+  on it (`unfoldIn` in `lib/motion.ts`). Under reduce-motion it simply
+  appears, and the jump to it is immediate.
+- **The check:** `tests/e2e/a-new-page-unfolds-into-view.js`, on a phone.
+  Both planners unfold, the new page's top lands in the upper half of the
+  screen, and nothing moves under reduce-motion. With the unfolding switched
+  off, its two unfolding checks fail.
+
+---
+
 ## 2 November 2026: the guides are general, and one church's records are its own
 
 ### If you run a copy, do this

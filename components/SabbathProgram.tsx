@@ -25,6 +25,7 @@
 // fold shut.
 
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { unfoldIn } from '@/lib/motion';
 import { Button, Card } from '@/components/ui';
 import {
   ArrowDownGlyph, ArrowUpGlyph, CalendarGlyph, ChevronGlyph, ChevronLeftGlyph, CloseGlyph, CopyGlyph,
@@ -404,8 +405,14 @@ function ProgramEditor({
       : 'This browser would not copy it. Download the file instead.');
   };
 
+  // A new or opened page unfolds downward into view, rather than replacing
+  // the list in one frame (lib/motion.ts, unfoldIn).
+  useEffect(() => {
+    unfoldIn(document.querySelector<HTMLElement>('[data-panel="sabbath-program"]'));
+  }, []);
+
   return (
-    <Card className="p-5" data-panel="sabbath-program">
+    <Card className="p-5 scroll-mt-24" data-panel="sabbath-program">
       <button
         type="button"
         onClick={onBack}
