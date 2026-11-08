@@ -44,10 +44,19 @@ the part that goes wrong when nobody reads past the headline.
     there, and a drag draws a line to anything, as canvas apps do.
   - **AFFiNE's bar sits higher over one note**, as AFFiNE already sets it over
     one shape, so the top handle is clear (`lib/study/board-connections.ts`).
-- **Checked by** `tests/e2e/the-whiteboard-says-what-you-can-do.js` on a
-  phone: both rows, each new tool, the note's bar on screen, four handles,
-  and a tap that adds a joined note. Each check was broken once to see it go
-  red.
+  - **The new note never lands on another card.** AFFiNE puts it a fixed
+    distance away on that side; when something is there, it goes further
+    along until it finds room.
+  - **The board moves just enough** to show a new note made past its edge.
+  - **A locked thing shows no handles,** including the card with the page's
+    writing.
+- **Checked by** `tests/e2e/the-whiteboard-says-what-you-can-do.js`:
+  - **on a phone:** both rows, each new tool, the note's bar on screen, four
+    handles, a tap that adds a joined note beside a card placed in its way,
+    and no handles on the locked card;
+  - **with a mouse:** a click on a handle, the new note brought into view,
+    and a drag that joins two notes.
+  Each check was broken once to see it go red.
 
 ## 3 November 2026: a new program unfolds into view
 

@@ -20,6 +20,8 @@
 //   * a TAP on one makes a new note on that side AND the line to it;
 //   * a DRAG is AFFiNE's own: a line to whatever it is dropped on, or, on empty
 //     board, AFFiNE's choice of what to make there.
+//   * the new note goes AFFiNE's distance away on that side, and further along
+//     if something is already there, never on top of another card.
 //
 // Shapes are left exactly as AFFiNE draws them. This is the room's own code
 // laid over AFFiNE's widget (`edgeless-auto-complete`): its two methods for a
@@ -72,10 +74,22 @@ type Toolbar = HTMLElement & {
   std: { get(id: unknown): unknown };
 };
 
+/** AFFiNE's own box type: x, y, w, h, and whether it is copied. */
+type Box = { x: number; y: number; w: number; h: number; clone(): Box };
+
 type Widget = HTMLElement & {
   current: unknown;
   selectedRect: { width: number; height: number };
-  gfx: { selection: { selectedIds: string[] } };
+  gfx: {
+    selection: { selectedIds: string[] };
+    getElementsByBound(bound: Box): Array<{ id: string; type?: string }>;
+    viewport: {
+      viewportBounds: Box;
+      zoom: number;
+      setCenter(x: number, y: number): void;
+    };
+  };
+  _computeNextBound(side: Side): Box;
   _onPointerDown(e: PointerEvent, side: Side): void;
   _addConnector(source: { id: string; position: [number, number] }, target: { id: string; position: [number, number] }): unknown;
   _renderArrow(): unknown;
@@ -86,6 +100,9 @@ const isShape = (w: Widget) => w.current instanceof ShapeElementModel;
 
 /** The four round handles around a selected note. */
 function renderHandles(this: Widget): TemplateResult[] {
+  // A locked thing is not changed from the board, joined or otherwise: its
+  // bar offers only Unlock, and the card with the page's writing is locked.
+  if ((this.current as { isLocked?: () => boolean } | undefined)?.isLocked?.()) return [];
   const { width, height } = this.selectedRect;
   return SIDES.map(({ side, name }) => {
     const [x, y] = side === Side.Top ? [width / 2, -OUT]
@@ -121,6 +138,50 @@ function renderHandles(this: Widget): TemplateResult[] {
   });
 }
 
+/** The gap AFFiNE leaves between a note and the next, and how far to look for room. */
+const GAP = 100;
+const TRIES = 8;
+
+/**
+ * WHERE A NEW NOTE GOES: on that side, AFFiNE's distance away, and then on
+ * along that side until nothing is under it. AFFiNE puts it at that distance
+ * whatever is there, so a tap below a note could drop the new one on top of
+ * the next card down (seen 8 November 2026). Chosen before the note is made,
+ * so the caret AFFiNE then places lands in the new note, not the one under it.
+ */
+function freeBound(this: Widget, original: (side: Side) => Box, side: Side): Box {
+  const from = (this.current as { id?: string } | undefined)?.id;
+  const bound = original.call(this, side);
+  const taken = (b: Box) => this.gfx.getElementsByBound(b)
+    .some((el) => el.id !== from && el.type !== 'connector');
+  for (let i = 0; i < TRIES && taken(bound); i++) {
+    if (side === Side.Right) bound.x += bound.w + GAP;
+    else if (side === Side.Left) bound.x -= bound.w + GAP;
+    else if (side === Side.Bottom) bound.y += bound.h + GAP / 2;
+    else bound.y -= bound.h + GAP / 2;
+  }
+  inView.call(this, bound);
+  return bound;
+}
+
+/**
+ * THE NEW NOTE IN VIEW. Made past the edge of the board's window, a new note
+ * was half out of sight with its caret in it (seen on a desktop, 8 November
+ * 2026). The board moves only as far as it must, once, before the note is
+ * made, so the caret AFFiNE then places lands where the note is drawn. Not
+ * animated on purpose: the caret is placed by screen position a frame later.
+ */
+function inView(this: Widget, bound: Box) {
+  const { viewport } = this.gfx;
+  const view = viewport.viewportBounds;
+  const pad = 24 / viewport.zoom;
+  const shift = (lo: number, hi: number, viewLo: number, viewHi: number) =>
+    lo - pad < viewLo ? lo - pad - viewLo : hi + pad > viewHi ? Math.min(hi + pad - viewHi, lo - pad - viewLo) : 0;
+  const dx = shift(bound.x, bound.x + bound.w, view.x, view.x + view.w);
+  const dy = shift(bound.y, bound.y + bound.h, view.y, view.y + view.h);
+  if (dx || dy) viewport.setCenter(view.x + view.w / 2 + dx, view.y + view.h / 2 + dy);
+}
+
 /** A tap on a handle: a new note on that side, and the line to it. */
 function joinNewNote(this: Widget, original: (side: Side) => void, side: Side) {
   const from = this.current as { id: string } | undefined;
@@ -147,6 +208,12 @@ export function connectOnEverySide(): boolean {
   }
   const renderArrow = proto._renderArrow;
   const generate = proto._generateElementOnClick;
+  const nextBound = proto._computeNextBound;
+  if (typeof nextBound === 'function') {
+    proto._computeNextBound = function (this: Widget, side: Side) {
+      return isShape(this) ? nextBound.call(this, side) : freeBound.call(this, nextBound, side);
+    };
+  }
   proto._renderArrow = function (this: Widget) {
     return isShape(this) ? renderArrow.call(this) : renderHandles.call(this);
   };

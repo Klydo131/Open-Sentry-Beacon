@@ -116,6 +116,43 @@ const selected = (page) => page.evaluate(() => [...(document.querySelector('affi
 const moreItems = async (page) => (await page.locator('affine-toolbar-widget editor-menu-action').allInnerTexts().catch(() => []))
   .map((t) => t.replace(/\s+/g, ' ').trim()).filter(Boolean);
 
+/** The four join handles around a selected note, by side, where a person sees them. */
+const joinHandles = (page) => page.evaluate(() => {
+  const found = {};
+  const walk = (root) => {
+    for (const el of root.querySelectorAll('*')) {
+      if (el.dataset?.join) { const r = el.getBoundingClientRect(); found[el.dataset.join] = { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }
+      if (el.shadowRoot) walk(el.shadowRoot);
+    }
+  };
+  walk(document);
+  return found;
+});
+
+/** Notes and lines on the board, and which notes lie on top of each other. */
+const notesAndLines = (page) => page.evaluate(() => {
+  const models = document.querySelector('editor-host')?.std?.store?.getAllModels?.() ?? [];
+  const surface = models.find((b) => b.flavour === 'affine:surface');
+  const boxes = models.filter((b) => b.flavour === 'affine:note').map((n) => JSON.parse(n.xywh));
+  let overlaps = 0;
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+    const [a, b] = [boxes[i], boxes[j]];
+    if (a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3]) overlaps++;
+  }
+  const lines = (surface?.elementModels ?? []).filter((e) => e.type === 'connector');
+  return { notes: boxes.length, lines: lines.length, overlaps, joined: lines.map((c) => [c.source?.id, c.target?.id]) };
+});
+
+/** A sticky note put straight on the board around a point on the screen; returns its id. */
+const putNote = (page, x0, y0) => page.evaluate(([cx, cy]) => {
+  const root = document.querySelector('affine-edgeless-root');
+  const [x, y] = root.gfx.viewport.toModelCoordFromClientCoord([cx, cy]);
+  const store = root.std.store;
+  const id = store.addBlock('affine:note', { xywh: `[${x - 90},${y - 35},180,70]`, displayMode: 'edgeless' }, store.root.id);
+  store.addBlock('affine:paragraph', { type: 'text' }, id);
+  return id;
+}, [x0, y0]);
+
 async function openBoard(page) {
   await signInAsExplorer(page, BASE);
   await openStudyRoom(page, BASE, 'simple');
@@ -378,6 +415,65 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     const afterAll = await pageWriting(page);
     ok(afterAll.count === 1 && afterAll.locked,
        `Undo, however many times, leaves the page’s writing in place and locked (${JSON.stringify(afterAll)})`);
+
+    // A NOTE'S HANDLES WITH A MOUSE (8 November 2026): a click on one makes a
+    // joined note, in view, and on nothing else; a drag joins two notes.
+    await page.keyboard.press('Escape');
+    const nA = { x: box.x + box.width * 0.12, y: box.y + box.height * 0.18 };
+    const nB = { x: box.x + box.width * 0.6, y: box.y + box.height * 0.18 };
+    const idA = await putNote(page, nA.x, nA.y);
+    const idB = await putNote(page, nB.x, nB.y);
+    await page.waitForTimeout(400);
+    await page.mouse.click(nA.x, nA.y);
+    await page.waitForTimeout(600);
+    let hj = await joinHandles(page);
+    ok(['top', 'right', 'bottom', 'left'].every((k) => hj[k]), `a clicked note shows a handle on all four sides (${Object.keys(hj).join(', ')})`);
+    const m0 = await notesAndLines(page);
+    if (hj.left) await page.mouse.click(hj.left.x, hj.left.y);
+    await page.waitForTimeout(900);
+    const m1 = await notesAndLines(page);
+    const made = await page.evaluate(() => {
+      const root = document.querySelector('affine-edgeless-root');
+      const id = [...(root?.gfx?.selection?.selectedIds ?? [])][0];
+      const el = id && root.gfx.getElementById(id);
+      if (!el) return null;
+      const [x, y] = root.gfx.viewport.toViewCoord(el.elementBound.x, el.elementBound.y);
+      const [x2, y2] = root.gfx.viewport.toViewCoord(el.elementBound.x + el.elementBound.w, el.elementBound.y + el.elementBound.h);
+      const v = root.getBoundingClientRect();
+      return { inView: x >= 0 && y >= 0 && x2 <= v.width && y2 <= v.height };
+    });
+    ok(m1.notes === m0.notes + 1 && m1.lines === m0.lines + 1 && m1.overlaps === m0.overlaps,
+       `a click on its left handle makes a joined note, on top of nothing (notes ${m0.notes}→${m1.notes}, lines ${m0.lines}→${m1.lines}, overlaps ${m1.overlaps})`);
+    ok(made && made.inView, 'and the board moves so the new note, made past its edge, is all in view');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    const aNow = await page.evaluate((id) => {
+      const root = document.querySelector('affine-edgeless-root');
+      const b = root.gfx.getElementById(id).elementBound;
+      const [x, y] = root.gfx.viewport.toViewCoord(b.x + b.w / 2, b.y + b.h / 2);
+      const v = root.getBoundingClientRect();
+      return { x: v.left + x, y: v.top + y };
+    }, idA);
+    const bNow = await page.evaluate((id) => {
+      const root = document.querySelector('affine-edgeless-root');
+      const b = root.gfx.getElementById(id).elementBound;
+      const [x, y] = root.gfx.viewport.toViewCoord(b.x + b.w / 2, b.y + b.h / 2);
+      const v = root.getBoundingClientRect();
+      return { x: v.left + x, y: v.top + y };
+    }, idB);
+    await page.mouse.click(aNow.x, aNow.y);
+    await page.waitForTimeout(600);
+    hj = await joinHandles(page);
+    if (hj.right) {
+      await page.mouse.move(hj.right.x, hj.right.y);
+      await page.mouse.down();
+      await page.mouse.move(bNow.x - 30, bNow.y, { steps: 15 });
+      await page.mouse.move(bNow.x, bNow.y, { steps: 5 });
+      await page.mouse.up();
+    }
+    await page.waitForTimeout(800);
+    ok((await notesAndLines(page)).joined.some(([a, b]) => a === idA && b === idB), 'a drag from its right handle to another note joins the two');
 
     const errors = caught.list();
     ok(errors.length === 0, `no page errors${errors.length ? `: ${errors.slice(0, 2).join(' | ')}` : ''}`);
@@ -648,12 +744,40 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
       const surface = models.find((b) => b.flavour === 'affine:surface');
       return { notes: models.filter((b) => b.flavour === 'affine:note').length, lines: (surface?.elementModels ?? []).filter((e) => e.type === 'connector').length };
     });
+    // A card exactly where AFFiNE would put the new note (its own distance
+    // below), so "on top of no other card" is a real test, not luck.
+    await p.evaluate(() => {
+      const root = document.querySelector('affine-edgeless-root');
+      const id = [...root.gfx.selection.selectedIds][0];
+      const b = root.gfx.getElementById(id).elementBound;
+      const store = root.std.store;
+      const blocker = store.addBlock('affine:note', { xywh: `[${b.x},${b.y + b.h + 100},${b.w},${b.h}]`, displayMode: 'edgeless' }, store.root.id);
+      store.addBlock('affine:paragraph', { type: 'text' }, blocker);
+    });
+    await p.waitForTimeout(300);
     const j0 = await parts();
     if (joins.bottom) await touch(Math.round(joins.bottom.x), Math.round(joins.bottom.y), 40);
     await p.waitForTimeout(1000);
     const j1 = await parts();
     ok(j1.notes === j0.notes + 1 && j1.lines === j0.lines + 1,
        `a tap on the bottom handle makes a note below, joined by a line${how} (notes ${j0.notes}→${j1.notes}, lines ${j0.lines}→${j1.lines})`);
+    await touch(ex, ey, 40);
+    await p.waitForTimeout(500);
+    ok((await notesAndLines(p)).overlaps === 0, 'and the new note is put where it lies on top of no other card');
+    // The card with the page's writing is locked: no handles to join it from.
+    const lockedAt = await p.evaluate(() => {
+      const root = document.querySelector('affine-edgeless-root');
+      const note = root.std.store.getAllModels().find((b) => b.flavour === 'affine:note' && b.props?.displayMode !== 'edgeless');
+      if (!note) return null;
+      const b = JSON.parse(note.xywh);
+      const [x, y] = root.gfx.viewport.toViewCoord(b[0] + 24, b[1] + 16);
+      const v = root.getBoundingClientRect();
+      return [Math.round(v.left + x), Math.round(v.top + y)];
+    });
+    if (lockedAt) await touch(lockedAt[0], lockedAt[1], 40);
+    await p.waitForTimeout(800);
+    const lockedJoins = Object.keys(await joinHandles(p));
+    ok(lockedAt && lockedJoins.length === 0, `the locked card with the page's writing shows no handles to join it${how} (${lockedJoins.join(', ') || 'none'})`);
     await touch(ex, ey, 40);
     await p.waitForTimeout(500);
 
