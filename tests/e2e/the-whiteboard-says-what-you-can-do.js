@@ -475,6 +475,20 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     await page.waitForTimeout(800);
     ok((await notesAndLines(page)).joined.some(([a, b]) => a === idA && b === idB), 'a drag from its right handle to another note joins the two');
 
+    // RIGHT-CLICK ON A NOTE (8 November 2026): its bar, as for a shape. The
+    // right press used to put the caret in the note's text, and a note being
+    // written in shows no bar, so nothing opened.
+    await page.keyboard.press('Escape');
+    await page.mouse.click(empty.x, empty.y);
+    await page.waitForTimeout(300);
+    await page.mouse.click(bNow.x, bNow.y, { button: 'right' });
+    await page.waitForTimeout(900);
+    const rbar = await selectionBar(page);
+    const inText = await page.evaluate(() => document.querySelector('affine-edgeless-root')?.gfx?.selection?.editing === true);
+    ok(rbar && rbar.labels.includes('More menu') && !inText,
+       `right-click on a note opens its bar, not its text (${rbar ? rbar.labels.filter(Boolean).join(', ') : 'no bar'}${inText ? '; in its text' : ''})`);
+    await page.keyboard.press('Escape');
+
     const errors = caught.list();
     ok(errors.length === 0, `no page errors${errors.length ? `: ${errors.slice(0, 2).join(' | ')}` : ''}`);
     await context.close();

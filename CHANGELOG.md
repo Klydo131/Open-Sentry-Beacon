@@ -50,6 +50,12 @@ the part that goes wrong when nobody reads past the headline.
   - **The board moves just enough** to show a new note made past its edge.
   - **A locked thing shows no handles,** including the card with the page's
     writing.
+- **Right-click on a note opens its bar,** as on a shape. Before, the right
+  press put the caret in the note's text, and a note being written in shows
+  no bar, so nothing opened. Found while checking the desktop.
+  - **A desktop keeps AFFiNE's dock**, which shows every tool at once.
+  - **A browser window narrower than 600px** gets the phone's row, with More
+    and Less.
 - **Checked by** `tests/e2e/the-whiteboard-says-what-you-can-do.js`:
   - **on a phone:** both rows, each new tool, the note's bar on screen, four
     handles, a tap that adds a joined note beside a card placed in its way,

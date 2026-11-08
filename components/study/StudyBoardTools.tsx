@@ -272,6 +272,16 @@ export function StudyBoardTools({ api, frame }: {
 
     const onDown = (e: PointerEvent) => {
       if (ours(e.target)) return;
+      // A RIGHT PRESS is the menu's, nothing else's. Let through, it put the
+      // caret in a note's text, AFFiNE took the note as being written in,
+      // and a note being written in shows no bar: right-click on a note
+      // opened nothing (found on a desktop, 8 November 2026). The menu
+      // selects what is under the pointer itself (openMenu, pickAt).
+      if (e.pointerType === 'mouse' && e.button === 2) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       if (isSecond(e) && api.selecting()) {
         e.preventDefault();

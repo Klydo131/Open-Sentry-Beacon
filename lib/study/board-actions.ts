@@ -253,7 +253,11 @@ export function boardApi(std: BlockStdScope): BoardApi | null {
       const [x, y] = gfx.viewport.toModelCoordFromClientCoord([clientX, clientY]);
       const hit = gfx.getElementByPoint(x, y, { all: false }) as GfxModel | null;
       if (!hit) { gfx.selection.clear(); return false; }
-      if (!gfx.selection.has(hit.id)) gfx.selection.set({ elements: [hit.id] });
+      // Selected and not being written in: a note right-clicked was left in
+      // writing (by AFFiNE's own press, or by an earlier click on it), and a
+      // note being written in shows no bar, so right-click on a note opened
+      // nothing (found on a desktop, 8 November 2026).
+      if (!gfx.selection.has(hit.id) || gfx.selection.editing) gfx.selection.set({ elements: [hit.id], editing: false });
       return true;
     },
 
