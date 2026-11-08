@@ -3,7 +3,7 @@
 pstack is Lauren Tan's set of agent skills for writing less code of higher
 quality. These files are copied unchanged from
 [`cursor/plugins`](https://github.com/cursor/plugins/tree/main/pstack) at commit
-`ddf824aff1e55ba14bd666b30bce3fc69962abe6` (MIT, see [`LICENSE`](LICENSE)).
+`6b0300214a09fd6029cfb7077043125758cd1fd2` (MIT, see [`LICENSE`](LICENSE)).
 
 Nothing here runs or loads by itself. They are text an agent reads when
 somebody asks for an audit: `/audit` in Claude Code

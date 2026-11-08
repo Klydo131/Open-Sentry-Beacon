@@ -62,6 +62,19 @@ for (const [page, name] of [
      `${name} loads ${size.kB} kB of JavaScript, within ${CEILING_KB} kB (${size.files} files)`);
 }
 
+// EVERY OTHER PAGE HAS A CEILING TOO (8 November 2026, the pstack audit).
+// Behind the door nothing was measured, and the heaviest pages were
+// 379-413 kB: the Office, Admin and Settings. This does not make them lighter;
+// it stops them growing unnoticed, the way the sign-in page once grew to
+// 432 kB. Raise it only with a reason written beside it.
+const INSIDE_KB = 430;
+const door = new Set(['/page', '/login/page', '/signup/page', '/join/page']);
+const inside = Object.keys(pages).filter((k) => k.endsWith('/page') && !door.has(k));
+const heavy = inside.map((k) => [k, firstLoad(k).kB]).filter(([, kB]) => kB > INSIDE_KB);
+const heaviest = inside.map((k) => [k, firstLoad(k).kB]).sort((a, b) => b[1] - a[1])[0];
+ok(inside.length > 20 && heavy.length === 0,
+   `every page behind the door loads ${INSIDE_KB} kB of JavaScript or less (${inside.length} pages; heaviest ${heaviest?.[0]} at ${heaviest?.[1]} kB${heavy.length ? `; over: ${heavy.map(([k, kB]) => `${k} ${kB}`).join(', ')}` : ''})`);
+
 // And the file that carried every screen into them stays gone.
 ok(!fs.existsSync(path.join(root, 'components/LiveCorePages.tsx')),
    'there is no file re-exporting every live screen for a page to import through');
