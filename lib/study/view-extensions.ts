@@ -23,7 +23,8 @@
 
 import { ViewExtensionManager } from '@blocksuite/affine/ext-loader';
 import { getInternalViewExtensions } from '@blocksuite/affine/extensions/view';
-import type { DocMode } from '@blocksuite/affine/model';
+import { changeNoteDisplayMode } from '@blocksuite/affine/blocks/note';
+import { type DocMode, NoteBlockModel, NoteDisplayMode } from '@blocksuite/affine/model';
 import {
   ActionPlacement,
   DocModeExtension,
@@ -39,6 +40,8 @@ import { BlockFlavourIdentifier, type BlockStdScope } from '@blocksuite/affine/s
 import type { ExtensionType } from '@blocksuite/affine/store';
 import { ParagraphViewExtension } from '@blocksuite/affine-block-paragraph/view';
 import { html } from 'lit';
+
+import { connectOnEverySide } from '@/lib/study/board-connections';
 
 /**
  * WHAT AN EMPTY ROOM SAYS. BlockSuite's own placeholder is `Type '/' for
@@ -140,12 +143,117 @@ const DeleteOnTheBar = ToolbarModuleExtension({
   },
 });
 
+/**
+ * A NOTE'S BAR FITS A PHONE (8 November 2026: "the tools are still clanky").
+ * Over a selected note AFFiNE put Display in Page, Colour, Size, a 100%
+ * text-size picker, Draw connector, Lock, the bin and ⋯ in one row. On a
+ * 390px phone that row ran off the screen, and Lock, the bin and ⋯ could not
+ * be reached at all. The canvas apps people know keep a card's bar to a few
+ * marks and put the rest one tap away.
+ *
+ * So the bar keeps Colour, Draw connector, Lock, the bin and ⋯. Into ⋯, in
+ * words, go: putting the note into the page's writing (AFFiNE's "Display in
+ * Page"), fitting its height to the writing, and larger or smaller text.
+ * Each runs as AFFiNE's own did: AFFiNE's own command for the page, and the
+ * same changes to the note for height and size, with Undo for each.
+ * AFFiNE's originals are switched off by their ids, so a later AFFiNE that
+ * renames one shows it again rather than losing it.
+ */
+const SCALES = [0.5, 1, 2];
+const notesOf = (ctx: ToolbarContext) => ctx.getSurfaceModelsByType(NoteBlockModel);
+const oneNote = (ctx: ToolbarContext) => {
+  const notes = notesOf(ctx);
+  return notes.length === 1 ? notes[0] : null;
+};
+const resize = (ctx: ToolbarContext, scale: number) => {
+  ctx.store.captureSync();
+  for (const note of notesOf(ctx)) {
+    const old = note.props.edgeless.scale ?? 1;
+    const [x, y, w, h] = JSON.parse(note.xywh) as number[];
+    const ratio = scale / old;
+    ctx.store.updateBlock(note, () => {
+      note.xywh = `[${x},${y},${w * ratio},${h * ratio}]`;
+      note.props.edgeless.scale = scale;
+    });
+  }
+};
+const step = (ctx: ToolbarContext, by: 1 | -1) => {
+  const now = SCALES.indexOf(oneNote(ctx)?.props.edgeless.scale ?? 1);
+  return SCALES[(now === -1 ? 1 : now) + by];
+};
+
+const ANoteBarThatFits = ToolbarModuleExtension({
+  id: BlockFlavourIdentifier('custom:affine:surface:note'),
+  config: {
+    actions: [
+      // AFFiNE's own, off the bar.
+      { id: 'b.display-in-page', when: () => false },
+      { id: 'f.auto-height', when: () => false },
+      { id: 'g.scale', when: () => false },
+      // The same, in ⋯, said in words.
+      {
+        placement: ActionPlacement.More,
+        id: 'a.page-writing',
+        when: (ctx) => {
+          const note = oneNote(ctx);
+          return !!note && !note.isPageBlock();
+        },
+        generate: (ctx) => {
+          const note = oneNote(ctx);
+          const onPage = note?.props.displayMode === NoteDisplayMode.DocAndEdgeless;
+          return {
+            label: onPage ? 'Take out of the page\'s writing' : 'Add to the page\'s writing',
+            run: () => {
+              if (!note) return;
+              ctx.command.exec(changeNoteDisplayMode, {
+                noteId: note.id,
+                mode: onPage ? NoteDisplayMode.EdgelessOnly : NoteDisplayMode.DocAndEdgeless,
+                stopCapture: true,
+              });
+            },
+          };
+        },
+      },
+      {
+        placement: ActionPlacement.More,
+        id: 'a.fit-height',
+        when: (ctx) => notesOf(ctx).some((n) => n.props.edgeless.collapse),
+        label: 'Fit height to the writing',
+        run: (ctx) => {
+          ctx.store.captureSync();
+          for (const note of notesOf(ctx)) {
+            ctx.store.updateBlock(note, () => { note.props.edgeless.collapse = false; });
+          }
+        },
+      },
+      {
+        placement: ActionPlacement.More,
+        id: 'a.text-larger',
+        when: (ctx) => !!oneNote(ctx) && step(ctx, 1) !== undefined,
+        label: 'Larger text',
+        run: (ctx) => { const to = step(ctx, 1); if (to) resize(ctx, to); },
+      },
+      {
+        placement: ActionPlacement.More,
+        id: 'a.text-smaller',
+        when: (ctx) => !!oneNote(ctx) && step(ctx, -1) !== undefined,
+        label: 'Smaller text',
+        run: (ctx) => { const to = step(ctx, -1); if (to) resize(ctx, to); },
+      },
+    ] as ToolbarActions,
+    when: (ctx) => notesOf(ctx).length > 0,
+  },
+});
+
 /** Everything a page or a whiteboard is drawn with, for that mode. */
 export function studyViewExtensions(mode: DocMode): ExtensionType[] {
+  // AFFiNE's effects are registered by now (StudyRoomEditor imports them
+  // first), so a note's join handles can be given all four sides.
+  if (mode === 'edgeless') connectOnEverySide();
   return [
     ...studyViewManager().get(mode),
     DocModeExtension(fixedMode(mode)),
-    ...(mode === 'edgeless' ? [DeleteOnTheBar] : []),
+    ...(mode === 'edgeless' ? [DeleteOnTheBar, ANoteBarThatFits] : []),
   ];
 }
 

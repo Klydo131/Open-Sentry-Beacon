@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-08-whiteboard-tools',
+    date: '2026-11-08',
+    title: 'Simpler whiteboard tools, and notes that join on every side',
+    items: [
+      'On a phone, More under the whiteboard tools now opens a second row with Move, Line, Marker and Frame, and Less folds it away again. Your first row stays where it is.',
+      'The bar over a note now fits on a phone: Colour, Connect, Lock, Delete and ⋯. The rest is in ⋯, in plain words.',
+      'A selected note has a dot on each side: top, right, bottom and left. Tap one to add a new note there, joined by a line, or drag it to join another note.',
+    ],
+  },
+  {
     id: '2026-11-03-a-new-page-unfolds',
     date: '2026-11-03',
     title: 'A new program opens smoothly',

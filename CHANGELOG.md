@@ -10,6 +10,45 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 8 November 2026: the whiteboard's tools, a note's bar and joining notes
+
+### If you run a copy, do this
+
+1. Rebuild. Nothing else: no database change.
+
+### What changed
+
+- **The founder:** "the tools are still clanky when I click 'more', I should
+  get back to more and simple tool sets flexibly ... the connecting tools are
+  confusing, is it just left and right or with north and south connection?"
+  The founder also asked that it feel like the canvas and block editors people
+  already know, without copying their code.
+- **More on a phone's row of tools** used to swap the row for AFFiNE's own
+  dock: the same tools drawn another way, and no way back but hiding the
+  tools.
+  - **Now More opens a second row** above the first, with tools the first row
+    lacks: Move, Line, Marker and Frame.
+  - **More becomes Less**, which folds the second row away again. The first
+    row never moves, and the choice is remembered on the device.
+  - A wide board keeps AFFiNE's dock (`components/study/StudyBoardTools.tsx`).
+- **A note's bar ran off a 390px phone.** Lock, the bin and ⋯ were
+  unreachable.
+  - **Now the bar holds** Colour, Draw connector, Lock, the bin and ⋯.
+  - **⋯ gains, in words,** "Add to the page's writing" (AFFiNE's Display in
+    Page), "Fit height to the writing", and Larger and Smaller text.
+  - AFFiNE's originals are switched off by id (`lib/study/view-extensions.ts`).
+- **A note joins on all four sides.** A selected shape had four arrows; a
+  note had a "+" left and right only, and a tap on one made a new note with
+  no line.
+  - **Now a note has a round handle on each side.** A tap makes a joined note
+    there, and a drag draws a line to anything, as canvas apps do.
+  - **AFFiNE's bar sits higher over one note**, as AFFiNE already sets it over
+    one shape, so the top handle is clear (`lib/study/board-connections.ts`).
+- **Checked by** `tests/e2e/the-whiteboard-says-what-you-can-do.js` on a
+  phone: both rows, each new tool, the note's bar on screen, four handles,
+  and a tap that adds a joined note. Each check was broken once to see it go
+  red.
+
 ## 3 November 2026: a new program unfolds into view
 
 ### If you run a copy, do this

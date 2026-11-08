@@ -571,18 +571,91 @@ const emptyAt = (box) => ({ x: box.x + box.width * 0.15, y: box.y + box.height *
     ok(await p.locator('[data-board-tray] button', { hasText: 'Select' }).getAttribute('aria-pressed') === 'true' && !!(await selectionBar(p)),
        `and AFFiNE goes back to Select, with the new shape's bar open to change it${how}`);
 
-    // MORE: AFFiNE's own dock, with everything else.
+    // MORE MEANS MORE TOOLS (8 November 2026): a second row with the tools the
+    // first has not got, and Less to fold it away, the first row unmoved.
     await touch(ex, ey, 40);
     await p.waitForTimeout(500);
+    const rowAt = async () => p.locator('[data-board-tray] button', { hasText: 'Select' }).boundingBox();
+    const before = await rowAt();
     await p.locator('[data-board-tray] button', { hasText: 'More' }).tap({ timeout: 5000 }).catch(() => {});
-    await p.waitForTimeout(800);
+    await p.waitForTimeout(500);
+    const words = async () => (await p.locator('[data-board-tray] button').allInnerTexts()).map((t) => t.trim());
+    const withMore = await words();
+    ok(['Move', 'Line', 'Marker', 'Frame', 'Less'].every((w) => withMore.includes(w)) && !withMore.includes('More'),
+       `More opens a second row of tools the first has not got, and becomes Less (${withMore.join(', ')})`);
+    const after = await rowAt();
+    ok(before && after && Math.abs(before.y - after.y) < 2, 'and the first row stays where the thumb left it');
+    const toolNow = () => p.evaluate(() => document.querySelector('affine-edgeless-root')?.gfx?.tool?.currentToolName$?.value);
+    const picked = [];
+    for (const [word, name] of [['Line', 'connector'], ['Marker', 'highlighter'], ['Frame', 'frame'], ['Move', 'pan']]) {
+      await p.locator('[data-board-tray] button', { hasText: word }).tap({ timeout: 5000 }).catch(() => {});
+      await p.waitForTimeout(250);
+      picked.push(`${word}=${await toolNow()}`);
+      if ((await toolNow()) !== name) picked.push('(wrong)');
+    }
+    ok(!picked.includes('(wrong)'), `each of them is a real tool of AFFiNE's (${picked.join(', ')})`);
+    const extra = await p.locator('[data-board-more-row] button').evaluateAll((els) => els.map((e) => {
+      const r = e.getBoundingClientRect();
+      return r.width >= 44 && r.height >= 44;
+    }));
+    ok(extra.length === 4 && extra.every(Boolean), 'every one a finger wide');
+    await p.locator('[data-board-tray] button', { hasText: 'Select' }).tap({ timeout: 5000 }).catch(() => {});
+    await p.locator('[data-board-tray] button', { hasText: 'Less' }).tap({ timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(500);
+    const withLess = await words();
+    ok(!withLess.includes('Line') && withLess.includes('More') && withLess.includes('Pen'),
+       `Less folds the second row away and the first is as it was (${withLess.join(', ')})`);
     const pfull = await chrome(p);
-    ok(pfull.dock && !pfull.tray, `More in the row brings AFFiNE's own dock in its place (${JSON.stringify(pfull)})`);
+    ok(pfull.tray && !pfull.dock, 'and AFFiNE\'s dock never replaces the row on a phone');
     ok(!pfull.zoom, 'the zoom control stays away on a phone; two fingers zoom');
     await p.getByRole('button', { name: 'Hide tools' }).tap({ timeout: 5000 }).catch(() => {});
     await p.waitForTimeout(500);
     const phidden = await chrome(p);
     ok(!phidden.dock && !phidden.tray && phidden.open, `Hide tools puts them away, and the Tools button is back (${JSON.stringify(phidden)})`);
+
+    // A NOTE'S BAR FITS A PHONE, AND A NOTE JOINS ON EVERY SIDE (8 November
+    // 2026). The bar used to run off a 390px screen with Lock, the bin and ⋯;
+    // a note had a "+" left and right only, and a tap made no line.
+    const nx = Math.round(pbox.x + pbox.width * 0.5), ny = Math.round(pbox.y + pbox.height * 0.2);
+    await p.evaluate(([x0, y0]) => {
+      const root = document.querySelector('affine-edgeless-root');
+      const [x, y] = root.gfx.viewport.toModelCoordFromClientCoord([x0, y0]);
+      const store = root.std.store;
+      const id = store.addBlock('affine:note', { xywh: `[${x - 90},${y - 35},180,70]`, displayMode: 'edgeless' }, store.root.id);
+      store.addBlock('affine:paragraph', { type: 'text' }, id);
+    }, [nx, ny]);
+    await p.waitForTimeout(500);
+    await touch(nx, ny, 40);
+    await p.waitForTimeout(900);
+    const nbar = await selectionBar(p);
+    ok(nbar && nbar.left >= 0 && nbar.right <= 390 && nbar.labels.includes('Delete') && nbar.labels.includes('More menu'),
+       `a note's bar is all on the screen, bin and ⋮ included${how} (${nbar ? `${Math.round(nbar.left)}–${Math.round(nbar.right)}px: ${nbar.labels.filter(Boolean).join(', ')}` : 'no bar'})`);
+    const joins = await p.evaluate(() => {
+      const found = {};
+      const walk = (root) => {
+        for (const el of root.querySelectorAll('*')) {
+          if (el.dataset?.join) { const r = el.getBoundingClientRect(); found[el.dataset.join] = { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }
+          if (el.shadowRoot) walk(el.shadowRoot);
+        }
+      };
+      walk(document);
+      return found;
+    });
+    ok(['top', 'right', 'bottom', 'left'].every((k) => joins[k] && joins[k].w >= 44),
+       `a selected note has a join handle on all four sides, each a finger wide (${Object.keys(joins).join(', ') || 'none'})`);
+    const parts = () => p.evaluate(() => {
+      const models = document.querySelector('editor-host')?.std?.store?.getAllModels?.() ?? [];
+      const surface = models.find((b) => b.flavour === 'affine:surface');
+      return { notes: models.filter((b) => b.flavour === 'affine:note').length, lines: (surface?.elementModels ?? []).filter((e) => e.type === 'connector').length };
+    });
+    const j0 = await parts();
+    if (joins.bottom) await touch(Math.round(joins.bottom.x), Math.round(joins.bottom.y), 40);
+    await p.waitForTimeout(1000);
+    const j1 = await parts();
+    ok(j1.notes === j0.notes + 1 && j1.lines === j0.lines + 1,
+       `a tap on the bottom handle makes a note below, joined by a line${how} (notes ${j0.notes}→${j1.notes}, lines ${j0.lines}→${j1.lines})`);
+    await touch(ex, ey, 40);
+    await p.waitForTimeout(500);
 
     // A DOUBLE-TAP THAT FORGIVES A FINGER: 28px apart, 200ms apart.
     await touch(ex, ey, 40);

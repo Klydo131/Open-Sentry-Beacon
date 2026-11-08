@@ -851,6 +851,7 @@
   z-index: 20;
   transform: translateX(-50%);
   display: flex;
+  flex-direction: column;
   gap: 2px;
   max-width: calc(100% - 16px);
   padding: 4px;
@@ -858,6 +859,10 @@
   background: var(--sr-surface);
   box-shadow: 0 0 0 0.5px var(--sr-sep), 0 6px 20px rgba(16, 24, 40, 0.16);
 }
+/* Two rows when More is open: the extra tools above, so the first row stays
+ * under the thumb (components/study/StudyBoardTools.tsx). */
+.sr-board-row { display: flex; gap: 2px; }
+.sr-board-row[data-board-more-row] { padding-bottom: 2px; border-bottom: 0.5px solid var(--sr-sep); }
 .sr-board-tool {
   display: inline-flex;
   flex: 1 1 0;

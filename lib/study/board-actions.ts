@@ -41,17 +41,18 @@
 // ---------------------------------------------------------------------------
 
 import { DefaultTool } from '@blocksuite/affine/blocks/surface';
-import { BrushTool, EraserTool } from '@blocksuite/affine/gfx/brush';
+import { BrushTool, EraserTool, HighlighterTool } from '@blocksuite/affine/gfx/brush';
+import { ConnectorTool } from '@blocksuite/affine/gfx/connector';
 import { NoteTool } from '@blocksuite/affine/gfx/note';
 import { PanTool } from '@blocksuite/affine/gfx/pointer';
 import { ShapeTool } from '@blocksuite/affine/gfx/shape';
 import { TextTool } from '@blocksuite/affine/gfx/text';
-import { ShapeType } from '@blocksuite/affine/model';
+import { ConnectorMode, ShapeType } from '@blocksuite/affine/model';
 import type { BlockStdScope } from '@blocksuite/affine/std';
 import { GfxBlockElementModel, GfxControllerIdentifier, type GfxController, type GfxModel } from '@blocksuite/affine/std/gfx';
 
 /** AFFiNE's tools, by what a person calls them. */
-export type BoardTool = 'select' | 'hand' | 'pen' | 'eraser' | 'shape' | 'note' | 'text';
+export type BoardTool = 'select' | 'hand' | 'pen' | 'eraser' | 'shape' | 'note' | 'text' | 'line' | 'highlighter' | 'frame';
 
 /** The name AFFiNE gives each of them. */
 const AFFINE_NAME: Record<BoardTool, string> = {
@@ -62,6 +63,9 @@ const AFFINE_NAME: Record<BoardTool, string> = {
   shape: 'shape',
   note: 'affine:note',
   text: 'text',
+  line: 'connector',
+  highlighter: 'highlighter',
+  frame: 'frame',
 };
 
 /**
@@ -287,6 +291,13 @@ export function boardApi(std: BlockStdScope): BoardApi | null {
         case 'shape': gfx.tool.setTool(ShapeTool, { shapeName: ShapeType.Rect }); break;
         case 'note': gfx.tool.setTool(NoteTool, { childFlavour: 'affine:paragraph', childType: 'text', tip: 'Text' }); break;
         case 'text': gfx.tool.setTool(TextTool); break;
+        // The second row (StudyBoardTools, More): a line between things, a
+        // see-through pen for marking text, and a frame to group an area.
+        case 'line': gfx.tool.setTool(ConnectorTool, { mode: ConnectorMode.Curve }); break;
+        case 'highlighter': gfx.tool.setTool(HighlighterTool); break;
+        // AFFiNE does not export its frame tool's class; setTool reads only
+        // the tool's registered name, which is all this passes.
+        case 'frame': gfx.tool.setTool({ toolName: 'frame' } as unknown as typeof TextTool); break;
       }
     },
 

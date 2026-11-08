@@ -47,8 +47,17 @@
 //     never only behind a gesture nobody can see. The board is otherwise as
 //     clean as before.
 //   * ON A NARROW BOARD (a phone), AFFiNE's tools as one row of buttons with
-//     their names under them (Select, Pen, Eraser, Shape, Note, Text), and More
-//     for AFFiNE's own dock with everything else.
+//     their names under them (Select, Pen, Eraser, Shape, Note, Text), and More.
+//
+// MORE MEANS MORE TOOLS (8 November 2026): "when I click 'more', I should get
+// back to more and simple tool sets flexibly (there's no change of more
+// tools, it only changed the UI)". More used to swap the row for AFFiNE's own
+// dock: the same tools drawn another way, and no way back but hiding the
+// tools. Now More opens a second row above the first with the tools the first
+// row has not got (Move, Line, Marker, Frame) and becomes Less, which folds it
+// away again. The first row never moves under the thumb, and the choice is
+// remembered on this device. A wide board keeps AFFiNE's dock, which already
+// shows every tool at once.
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -78,6 +87,15 @@ const TRAY: { tool: BoardTool; word: string; icon: React.ReactNode }[] = [
   { tool: 'note', word: 'Note', icon: <><path d="M5 4h14v10l-6 6H5z" /><path d="M13 20v-6h6" /></> },
   { tool: 'text', word: 'Text', icon: <><path d="M5 7V4h14v3" /><path d="M12 4v16" /><path d="M9 20h6" /></> },
 ];
+/** The second row, behind More: tools the first row has not got. */
+const MORE: { tool: BoardTool; word: string; icon: React.ReactNode }[] = [
+  { tool: 'hand', word: 'Move', icon: <><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12" /><path d="M11 11.5v-7a1.5 1.5 0 0 1 3 0V12" /><path d="M14 11.5V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.3 15a1.5 1.5 0 0 1 2.4-1.8L8 15.5" /></> },
+  { tool: 'line', word: 'Line', icon: <><circle cx="5" cy="18" r="2" /><circle cx="19" cy="6" r="2" /><path d="M6.5 16.5C10 9 12 15 17.5 7.5" /></> },
+  { tool: 'highlighter', word: 'Marker', icon: <><path d="M9 15l-4 4h5l2-2" /><path d="M9 15l7-11 4 3-7 11z" /></> },
+  { tool: 'frame', word: 'Frame', icon: <><path d="M4 8V4h4" /><path d="M16 4h4v4" /><path d="M20 16v4h-4" /><path d="M8 20H4v-4" /></> },
+];
+/** Whether the second row was open, remembered on this device. */
+const MORE_KEY = 'beacon.board-more-tools';
 /** Remembered on this device once the tools have been opened. */
 const SEEN_KEY = 'beacon.board-tools-seen';
 
@@ -89,8 +107,8 @@ export function StudyBoardTools({ api, frame }: {
   const [, setTick] = useState(0);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [dock, setDock] = useState(false);
-  // On a narrow board: AFFiNE's own dock instead of the room's row (More).
-  const [full, setFull] = useState(false);
+  // On a narrow board: the second row of tools (More), or not (Less).
+  const [more, setMore] = useState(false);
   const [narrow, setNarrow] = useState(false);
   // The ids the bar was opened for. Another selection puts the bar away.
   const [barFor, setBarFor] = useState<string[] | null>(null);
@@ -98,6 +116,11 @@ export function StudyBoardTools({ api, frame }: {
 
   useEffect(() => {
     try { setSeen(localStorage.getItem(SEEN_KEY) === '1'); } catch { setSeen(false); }
+    try { setMore(localStorage.getItem(MORE_KEY) === '1'); } catch { /* private window */ }
+  }, []);
+  const showMore = useCallback((on: boolean) => {
+    setMore(on);
+    try { localStorage.setItem(MORE_KEY, on ? '1' : '0'); } catch { /* private window */ }
   }, []);
   const opened = useCallback(() => {
     setSeen(true);
@@ -105,7 +128,7 @@ export function StudyBoardTools({ api, frame }: {
   }, []);
   const showDock = useCallback((on: boolean) => {
     setDock(on);
-    if (on) opened(); else setFull(false);
+    if (on) opened();
   }, [opened]);
 
   // How wide the board is, for the row of tools on a phone. A change the
@@ -179,9 +202,9 @@ export function StudyBoardTools({ api, frame }: {
   useEffect(() => {
     const el = frame.current;
     if (!el) return;
-    if (dock) el.dataset.boardDock = narrow && !full ? 'tray' : 'open'; else delete el.dataset.boardDock;
+    if (dock) el.dataset.boardDock = narrow ? 'tray' : 'open'; else delete el.dataset.boardDock;
     if (barFor) el.dataset.boardBar = 'open'; else delete el.dataset.boardBar;
-  }, [dock, narrow, full, barFor, frame]);
+  }, [dock, narrow, barFor, frame]);
   useEffect(() => () => {
     const el = frame.current;
     if (el) { delete el.dataset.boardDock; delete el.dataset.boardBar; }
@@ -264,7 +287,7 @@ export function StudyBoardTools({ api, frame }: {
           const ids = api.selectedIds();
           if (ids.length) { setBarFor(ids); opened(); }
         } else {
-          setDock((on) => { if (!on) opened(); else setFull(false); return !on; });
+          setDock((on) => { if (!on) opened(); return !on; });
         }
         return;
       }
@@ -439,16 +462,29 @@ export function StudyBoardTools({ api, frame }: {
         </div>
       )}
 
-      {dock && narrow && !full && (
-        <div role="toolbar" aria-label="Tools" className="sr-board-tray" data-board-own data-board-tray>
-          {TRAY.map(({ tool, word, icon }) => (
-            <TrayButton key={tool} word={word} pressed={api.tool() === tool} onClick={() => api.useTool(tool)}>
-              {icon}
+      {dock && narrow && (
+        <div role="toolbar" aria-label="Tools" className="sr-board-tray" data-board-own data-board-tray data-more={more ? 'open' : undefined}>
+          {more && (
+            <div className="sr-board-row" data-board-more-row>
+              {MORE.map(({ tool, word, icon }) => (
+                <TrayButton key={tool} word={word} pressed={api.tool() === tool} onClick={() => api.useTool(tool)}>
+                  {icon}
+                </TrayButton>
+              ))}
+            </div>
+          )}
+          <div className="sr-board-row">
+            {TRAY.map(({ tool, word, icon }) => (
+              <TrayButton key={tool} word={word} pressed={api.tool() === tool} onClick={() => api.useTool(tool)}>
+                {icon}
+              </TrayButton>
+            ))}
+            <TrayButton word={more ? 'Less' : 'More'} expanded={more} onClick={() => showMore(!more)}>
+              {more
+                ? <path d="M6 15l6-6 6 6" />
+                : <><circle cx="5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="19" cy="12" r="1.3" /></>}
             </TrayButton>
-          ))}
-          <TrayButton word="More" onClick={() => setFull(true)}>
-            <circle cx="5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="19" cy="12" r="1.3" />
-          </TrayButton>
+          </div>
         </div>
       )}
 
@@ -529,8 +565,8 @@ function IconButton({ label, keys, onClick, disabled, children }: {
 }
 
 /** One of AFFiNE's tools in the row on a narrow board: a picture with its name under it. */
-function TrayButton({ word, pressed, onClick, children }: {
-  word: string; pressed?: boolean; onClick: () => void; children: React.ReactNode;
+function TrayButton({ word, pressed, expanded, onClick, children }: {
+  word: string; pressed?: boolean; expanded?: boolean; onClick: () => void; children: React.ReactNode;
 }) {
   return (
     <button
@@ -538,6 +574,7 @@ function TrayButton({ word, pressed, onClick, children }: {
       onClick={onClick}
       onMouseDown={keepFocus}
       aria-pressed={pressed}
+      aria-expanded={expanded}
       className="sr-board-tool"
     >
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
