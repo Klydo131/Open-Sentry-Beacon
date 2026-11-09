@@ -1,6 +1,6 @@
 # Appendix D. Every browser walk
 
-91 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+92 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -9,6 +9,14 @@ A link to a card lands on the card even when the smooth scroll is cut short or t
 WHY THIS EXISTS. On WebKit, landing.js followed `/settings#install` to a card that appeared late and finished 2842px away from it (13 October 2026). The scroll was aimed once and nothing looked again. lib/scroll-to-hash.ts now waits for the page to stop moving, checks, and goes the rest of the way.
 
 This makes the two things that defeat a single aimed scroll happen on purpose, so Chromium shows them too:
+
+#### `a-new-page-unfolds-into-view.js`
+
+A new Sabbath program, or a new series of meetings, unfolds downward into view, and the screen travels to it.
+
+3 November 2026, the founder: "I dont want the push button new page where I push it and then it will go up, it's not a good UI experience at all. I want it smooth with tweak animation or scroll down where I will see the new page going down on fill in, not a pop up." Until then the list was swapped for the page in one frame (lib/motion.ts, unfoldIn).
+
+The founder again, the same day: "There is still a pop out where the user gets shocked pressing the button new". The choice box under New appeared in one frame and pushed the page down; the list vanished in one frame; and the page was drawn from nothing with a clip. Now the box grows open (growIn), the list fades away first (leaveThen) and the page settles in with a fade.
 
 #### `a-phone-can-insert-things.js`
 

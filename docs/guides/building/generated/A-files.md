@@ -912,6 +912,10 @@ The hard part of this is not the form. It is that a person about to use it is up
 
 * WHAT HAPPENS IS STATED BEFORE THEY TYPE, not after they submit. The facts that decide whether somebody reports at all are who is told and when, so they are the first thing on screen: the other person is not told when it is sent, a Director reads it first and may then bring them into the conversation about it, and the person reporting is told if so (20261027130000_a_report_is_one_conversation; until 27 October 2026 the other person was never told at all, and reports made then stay that way). * THE DETAIL BOX IS OPTIONAL. Requiring an explanation asks the person to write down the thing they are upset about before they are ready, and some will close the dialog instead. * NO "ARE YOU SURE?". A confirmation step reads as the app doubting them. Reporting is reversible in the sense that matters — a Director can close it as nothing to answer — so there is nothing to guard against. * IT CANNOT BE FIRED BY A MIS-TAP. The control that opens it is a plain text link, not a button sitting next to Send.
 
+#### `components/Reveal.tsx`
+
+A box under a button that grows open and shrinks closed, instead of appearing in one frame and pushing the page down with a jolt (3 November 2026: "There is still a pop out where the user gets shocked pressing the button new"). The movement itself is in lib/motion.ts (growIn, shrinkOut), behind the reduce-motion setting.
+
 #### `components/Rich.tsx`
 
 The renderer for lib/rich-text.ts.
@@ -2325,6 +2329,16 @@ The few things the room itself does on a whiteboard; AFFiNE does the rest.
 WHAT AFFiNE DOES. Its tools are a dock along the bottom of the board, and a selected thing gets a bar floating over it: colour, style, Lock, and ⋯ More, with Frame and Group, Bring to Front / Forward, Send Backward / to Back, Copy, Duplicate and Delete. The room uses AFFiNE's own tools rather than drawing its own, so what somebody learns here is what AFFiNE itself does (28 October 2026: "You can just copy the Affine ... when it comes to tools").
 
 WHEN THEY SHOW. Since 28 October 2026 the board starts clean: "tools will only appear when you double tap an object or the board (or right click in desktop). I want the board to be clean as possible." components/study/StudyBoardTools.tsx decides when; this file answers the questions it has to ask: is anything under this point, what is selected, and is the Select tool the one in use (a double-tap with a pen is drawing).
+
+#### `lib/study/board-connections.ts`
+
+A note on the whiteboard connects on all four sides, like a shape does.
+
+ASKED FOR (8 November 2026): "the connecting tools are confusing, is it just left and right or with north and south connection?"
+
+What AFFiNE did: a selected SHAPE had an arrow on each of its four sides; a tap made a new shape there, joined by a line, and a drag drew a line to anything. A selected NOTE had a "+" on its left and right only, and a tap on one made a new note beside it with NO line between them. So one board had two meanings for the same kind of button, and a note could not be joined above or below by a tap at all.
+
+The convention people already know from canvas apps: every card can be joined from any of its four edges. A dot on the edge; drag it to another card to join them; let go on empty board to make a new card at the end. That is what a note does here now:
 
 #### `lib/study/doc-source.ts`
 

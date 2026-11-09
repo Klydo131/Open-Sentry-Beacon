@@ -1,6 +1,21 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 65 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 67 releases, as members read them in Settings, What's new.
+
+### Simpler whiteboard tools, and notes that join on every side
+
+*2026-11-08*
+
+- On a phone, More under the whiteboard tools now opens a second row with Move, Line, Marker and Frame, and Less folds it away again. Your first row stays where it is.
+- The bar over a note now fits on a phone: Colour, Connect, Lock, Delete and ⋯. The rest is in ⋯, in plain words.
+- A selected note has a dot on each side: top, right, bottom and left. Tap one to add a new note there, joined by a line, or drag it to join another note.
+
+### A new program opens smoothly
+
+*2026-11-03*
+
+- In the Sabbath program and Evangelistic meetings, pressing New is now one smooth movement: the choices grow open and the screen glides to them, the list fades away, and the new program or series settles gently into view. Nothing pops.
+- Opening one you already made does the same. If your phone is set to reduce motion, it simply appears.
 
 ### Back stays in the Study Room
 
