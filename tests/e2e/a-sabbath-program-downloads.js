@@ -140,15 +140,10 @@ function storedEntry(buf, name) {
   ok(documentXml.includes('Rest &amp; renewal'), 'an ampersand is escaped on its way into the file');
   ok(documentXml.indexOf('Opening hymn') < documentXml.indexOf('Song service'),
      'and the file is in the order the lines were arranged');
-  // In a blank page: the app's own pages refuse to parse a string as markup
-  // unless their Trusted Types policy allows it (lib/trusted-types.ts), and a
-  // test's string is not one it allows. The parser is the same browser's.
-  const blank = await page.context().newPage();
-  const parsed = await blank.evaluate((xml) => {
+  const parsed = await page.evaluate((xml) => {
     const doc = new DOMParser().parseFromString(xml, 'application/xml');
     return doc.getElementsByTagName('parsererror').length === 0 ? doc.documentElement.localName : 'parsererror';
   }, documentXml);
-  await blank.close();
   ok(parsed === 'document', `the browser's own XML parser reads the document part (${parsed})`);
   ok((await page.getByRole('status').allInnerTexts()).some((t) => t.includes(name)), 'and the screen says which file arrived');
 

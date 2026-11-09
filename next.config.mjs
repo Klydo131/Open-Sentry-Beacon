@@ -124,11 +124,6 @@ const csp = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  // TRUSTED TYPES (9 November 2026). No string becomes HTML or a script
-  // address in the browser unless the page's one policy approves it, and it
-  // approves only what was measured (lib/trusted-types.ts). The strongest
-  // defence there is against script injected into the page itself.
-  "require-trusted-types-for 'script'",
 ].join('; ');
 
 // Search visibility, decided in one place. Kept in step with app/robots.ts and
@@ -144,6 +139,14 @@ const indexable = process.env.BEACON_PUBLIC_SITE === '1';
 
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
+  // TRUSTED TYPES, REPORTED, NOT YET ENFORCED (9 November 2026,
+  // lib/trusted-types.ts). The browser checks every string written into the
+  // page as HTML or used as a script address against the page's one policy,
+  // and says in the console each time the policy would have refused it. It
+  // refuses nothing yet: enforced, it would refuse opening a music score and
+  // pasting into the Study Room, which each need a named policy first.
+  // Report-only, it can break nothing.
+  { key: 'Content-Security-Policy-Report-Only', value: "require-trusted-types-for 'script'" },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -166,11 +169,9 @@ const securityHeaders = [
   // screen capture, idle detection and the browser's advertising topics.
   // Features the video players ask for (autoplay, fullscreen, the motion
   // sensors) are left to the players' own allow= lists.
-  {
-    key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(self), geolocation=(), payment=(), usb=(), serial=(), hid=(), '
-      + 'bluetooth=(), midi=(), display-capture=(), idle-detection=(), browsing-topics=()',
-  },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()'
+      + ', payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=()'
+      + ', display-capture=(), idle-detection=(), browsing-topics=()' },
   // THIS SITE'S FILES ARE FOR THIS SITE (9 November 2026). Without it, any
   // other page can load the app's scripts, pictures and data responses into
   // itself as an <img> or <script>, which is how side-channel attacks such as

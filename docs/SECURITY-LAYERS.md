@@ -96,11 +96,11 @@ secret scanning with push protection; require review from code owners for
 ## Layer 2: the edge
 
 **It stops** another site framing the app to trick a click (clickjacking), a
-script from anywhere but this app running in it, a script injected into the
-page writing its own HTML or loading its own code, a first visit over plain
+script from anywhere but this app running in it, a first visit over plain
 HTTP being answered by somebody on the same network, another window reaching
 into this one through `window.opener`, and another site loading this one's
-files into itself.
+files into itself. **It reports, but does not yet stop,** a script in the
+page writing its own HTML or loading its own code (Trusted Types, below).
 
 **Where it lives**
 - `next.config.mjs`: the Content-Security-Policy (`default-src 'self'`,
@@ -109,12 +109,24 @@ files into itself.
   `nosniff`, a tight Referrer-Policy, a Permissions-Policy with the camera
   and location off, `Cross-Origin-Opener-Policy: same-origin`, and
   `X-Permitted-Cross-Domain-Policies: none`.
-- **Trusted Types** (`require-trusted-types-for 'script'` in the same
-  policy, with the page's one policy in `lib/trusted-types.ts`): the browser
-  refuses to turn any string into HTML or a script address unless that policy
-  allows it, and it allows only what the frameworks were measured doing. An
-  injected script that tries `innerHTML` or loads code from elsewhere is
-  refused by the browser itself.
+- **Trusted Types, reported and not yet enforced**
+  (`Content-Security-Policy-Report-Only: require-trusted-types-for 'script'`,
+  with the page's one policy in `lib/trusted-types.ts`). The browser checks
+  every string written into the page as HTML or used as a script address
+  against that policy, which allows only what the frameworks were measured
+  doing, and logs in the console each write it would have refused. It refuses
+  nothing yet.
+  - **Why not enforced:** two features would stop working, opening a music
+    score (MusicXML) and pasting formatted text or a drawing into the Study
+    Room. Both parse markup in the browser. With every walk run once under
+    enforcement, the music room's walk could not open its score; the paste
+    was found by searching the shipped code, since the walks paste only
+    pictures (which passed).
+  - **What enforcing needs:** a named policy of its own for each of those two,
+    then the header moved into the main policy.
+  - **Enforcing on the sign-in pages alone was rejected.** A browser keeps one
+    policy for the whole visit, and the app moves on from those pages without
+    reloading.
 - The Permissions-Policy also turns off every browser feature nothing here
   uses (payments, USB, serial, HID, Bluetooth, MIDI, screen capture, idle
   detection, advertising topics), and `Cross-Origin-Resource-Policy:
@@ -124,8 +136,9 @@ files into itself.
   indexed unless it says so.
 
 **What proves it**: `tests/the-protections-hold.mjs`, `tests/security-invariants.mjs`,
-`tests/backend-csp.mjs`, and every walk in `tests/e2e/`, which fails on any
-page error and so on anything Trusted Types refuses.
+`tests/backend-csp.mjs`. The Trusted Types policy itself (what it allows, and
+that it is first in `<head>`) is held line by line in
+`tests/the-protections-hold.mjs`.
 
 **Keeping it current**: renew the `Expires` line of `security.txt` before it
 passes (the build fails once it has). When a feature needs a new origin (a

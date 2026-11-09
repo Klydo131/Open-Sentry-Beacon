@@ -224,6 +224,19 @@ select pg_temp.check(
   (select count(*) filter (where signed_in) = 1 and count(*) filter (where not signed_in) = 1
      from private.tripwire_hits where touched = 'export_all_members'),
   'and both touches are kept in the operator''s own list, signed in and not');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000009b1', 'authenticated',
+  $q$ do $d$ begin perform * from public.export_all_members(); end $d$ $q$,
+  'ok', 'the same account touching it again is still answered');
+select pg_temp.check(
+  (select count(*) = 1 from public.security_audit_events
+    where event_type = 'tripwire_touched' and subject_id = '00000000-0000-0000-0000-0000000009b1'),
+  'but its church''s record gets one line an hour, not one a call');
+select pg_temp.as_user(null, 'anon',
+  $q$ do $d$ begin for i in 1..100 loop perform * from public.export_all_members(); end loop; end $d$ $q$,
+  'ok', 'a visitor calling it a hundred times in a row is answered each time');
+select pg_temp.check(
+  (select count(*) = 60 from private.tripwire_hits where touched = 'export_all_members'),
+  'and the operator''s list stops at sixty an hour, so it cannot be used to fill the database');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000009a1', 'authenticated',
   $q$ select * from private.tripwire_hits $q$,
   '42501', 'which no signed-in person can read, a Director included');

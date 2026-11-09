@@ -525,10 +525,16 @@ year after, by somebody with no part in building it.
 
 **What was added after it, the same week:**
 
-- **Trusted Types** in the content security policy, with one strict policy
-  (`lib/trusted-types.ts`): no string becomes HTML or a script address in the
-  browser unless it is something the frameworks were measured doing. Every
-  walk runs with it enforced.
+- **Trusted Types, reported and not yet enforced**, with one strict policy
+  (`lib/trusted-types.ts`). The browser logs every string written into the
+  page as HTML or used as a script address that the policy would refuse. It
+  refuses nothing yet.
+  - **Why:** enforced, it would stop opening a music score and pasting into
+    the Study Room, which each need a named policy of their own first.
+  - **How that was found:** every walk was run once with it enforced, and the
+    music room's walk could not open its score. The paste was found by
+    searching the shipped code, since the walks paste only pictures (which
+    passed).
 - **The supply chain held by a check** (`tests/the-supply-chain-holds.mjs`):
   every package from the public registry with a SHA-512 hash, only four named
   packages allowed to run code at install, Dependabot waiting a week before

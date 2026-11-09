@@ -177,9 +177,13 @@ create trigger security_line_is_not_deleted
   for each row execute function private.security_line_is_not_deleted();
 
 -- Walk a church's chain: how many lines, and the first that does not add up.
+-- VOLATILE, though it changes nothing, on purpose: the app keeps a copy of a
+-- STABLE function's answer to show with no signal (lib/live/kept.ts), and a
+-- check of the record must always be asked of the record itself, never read
+-- back from a copy made before somebody changed it.
 create or replace function public.security_record_check(p_church uuid)
 returns table (lines bigint, intact boolean, first_break bigint)
-language plpgsql stable security definer set search_path = '' as $$
+language plpgsql volatile security definer set search_path = '' as $$
 declare
   r public.security_audit_events;
   prev bytea := null;
@@ -207,10 +211,11 @@ begin
 end $$;
 
 -- The latest line's place and hash: written down outside the database, proof
--- the record up to it was not rewritten later.
+-- the record up to it was not rewritten later. VOLATILE for the same reason
+-- as the check: a seal is only worth writing down if it is the latest.
 create or replace function public.security_record_seal(p_church uuid)
 returns table (lines bigint, seal text, sealed_at timestamptz)
-language plpgsql stable security definer set search_path = '' as $$
+language plpgsql volatile security definer set search_path = '' as $$
 begin
   if (select auth.uid()) is not null and not public.manages_church(p_church) then
     raise exception 'Only this church''s leaders may seal its security record.' using errcode = '42501';
@@ -256,6 +261,7 @@ create table if not exists private.tripwire_hits (
   at         timestamptz not null default now()
 );
 revoke all on private.tripwire_hits from public, anon, authenticated;
+create index if not exists tripwire_hits_at_idx on private.tripwire_hits (at);
 
 create or replace function public.export_all_members()
 returns table (id uuid, full_name text, email text, phone text, role text)
@@ -270,10 +276,22 @@ begin
   exception when others then agent := null;
   end;
 
-  insert into private.tripwire_hits (touched, caller, signed_in, user_agent)
-  values ('export_all_members', who, who is not null, agent);
+  -- BOUNDED, because bait anybody may call is also a way to fill the database
+  -- by calling it in a loop. At most 60 hits are written down an hour, and
+  -- a hit is kept for 90 days, so the list never holds more than about 130,000
+  -- small rows. The first calls of any burst are the ones that matter.
+  delete from private.tripwire_hits where at < now() - interval '90 days';
+  if (select count(*) from private.tripwire_hits where at > now() - interval '1 hour') < 60 then
+    insert into private.tripwire_hits (touched, caller, signed_in, user_agent)
+    values ('export_all_members', who, who is not null, agent);
+  end if;
 
-  if who is not null then
+  -- The church's record is never trimmed, so an account is written into it at
+  -- most once an hour: enough to be seen, not enough to bury the rest.
+  if who is not null and not exists (
+       select 1 from public.security_audit_events e
+        where e.actor_id = who and e.event_type = 'tripwire_touched'
+          and e.occurred_at > now() - interval '1 hour') then
     select * into me from public.profiles p where p.id = who;
     if me.church_id is not null and me.role is not null then
       insert into public.security_audit_events (

@@ -28,9 +28,11 @@ for (const feature of ['payment', 'usb', 'serial', 'hid', 'bluetooth', 'midi', '
 }
 ok(/'Cross-Origin-Resource-Policy',\s*value:\s*'same-origin'/.test(config), "Cross-Origin-Resource-Policy: same-origin, so no other site can load this one's files into itself");
 
-// TRUSTED TYPES (9 November 2026, lib/trusted-types.ts). The header is on, the
-// policy is the first thing in <head>, and it allows only what was measured.
-ok(/"require-trusted-types-for 'script'"/.test(config), "require-trusted-types-for 'script': no string becomes HTML or a script address unless the page's policy allows it");
+// TRUSTED TYPES (9 November 2026, lib/trusted-types.ts). Reported, not yet
+// enforced: the header is on in report-only form, the policy is the first
+// thing in <head>, and it allows only what was measured.
+ok(/key: 'Content-Security-Policy-Report-Only', value: "require-trusted-types-for 'script'"/.test(config),
+   "Trusted Types reports every write the page's policy would refuse (report-only until the music score and editor paste paths have policies of their own)");
 const layout = read('app/layout.tsx');
 const head = layout.split('<head>')[1]?.split('</head>')[0] ?? '';
 ok(/^\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<TrustedTypesPolicy \/>/.test(head), 'and the policy is the first thing in <head>, before any other script');

@@ -17,20 +17,25 @@ the part that goes wrong when nobody reads past the headline.
 1. **Run `supabase/migrations/20261109120000_the_security_record_cannot_be_rewritten.sql`.**
    It chains the security record and adds the tripwire. Existing lines are
    chained in order as it runs.
-2. **Rebuild.** The new browser policy (Trusted Types) comes with the build.
+2. **Rebuild.** The new browser headers come with the build.
 3. **Optional:** in your repository's Settings, Code security, look at the
    OpenSSF Scorecard and CodeQL results once their first runs finish.
 
 ### What changed
 
-- **Trusted Types** (`lib/trusted-types.ts`, `next.config.mjs`). The browser
-  refuses to turn a string into HTML or a script address unless the page's
-  one policy allows it.
-  - **What it allows:** only what the frameworks were measured doing: React's
-    empty script element, the exact text of a script or style the server
-    already sent, and this site's own code files.
-  - **Checked:** every walk runs with it enforced. A walk that parsed a test
-    file's XML inside the app's page now does it in a blank page.
+- **Trusted Types, reported and not yet enforced** (`lib/trusted-types.ts`,
+  `next.config.mjs`). The browser checks every string written into the page
+  as HTML or used as a script address against the page's one policy, and
+  logs each one the policy would refuse. It refuses nothing yet.
+  - **What the policy allows:** only what the frameworks were measured doing:
+    React's empty script element, the exact text of a script or style the
+    server already sent, and this site's own code files.
+  - **Why not enforced:** enforced, it would stop opening a music score and
+    pasting formatted text or a drawing into the Study Room. Both parse
+    markup in the browser and need a named policy of their own first. With
+    every walk run once under enforcement, the music room's walk could not
+    open its score; the paste was found by searching the shipped code, since
+    the walks paste only pictures (which passed).
 - **The supply chain is held by a check** (`tests/the-supply-chain-holds.mjs`):
   - every package comes from the public registry, with a SHA-512 hash;
   - only four named packages may run code at install;
@@ -53,12 +58,13 @@ the part that goes wrong when nobody reads past the headline.
   it.
   - It returns nothing.
   - A signed-in caller is recorded as urgent in their church's security
-    record; anybody else goes in a list only the database's operator can
-    read.
+    record, once an hour at most; anybody else goes in a list only the
+    database's operator can read, at most sixty an hour and kept 90 days, so
+    calling it in a loop cannot fill the database.
   - The security record screen also shows the two line types it had no icon
     for (a removed guild post, an opened message history).
 - **Checked by:**
-  - `supabase/tests/the-security-record-cannot-be-rewritten.sql`, 26 checks
+  - `supabase/tests/the-security-record-cannot-be-rewritten.sql`, 30 checks
     on a database built from nothing, run by `scripts/fresh-install.sh`;
   - new checks in `tests/the-protections-hold.mjs`.
 
