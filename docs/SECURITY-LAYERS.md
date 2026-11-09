@@ -308,6 +308,8 @@ anybody who no longer needs it.
 | Every month, 15 minutes | Supabase Security Advisor; any accepted advisory near its review date; did the backup run? | The project's owner |
 | Every quarter | Restore a backup into a scratch database; check the layer 3 settings | The project's owner |
 | Every year | Renew `security.txt`; review who has access; rotate keys that people who left once held | The project's owner |
+| Before each release | Compare `supabase/migrations` with the database's applied migrations; run `/audit` on what changed | A developer |
+| Every year, and before a second church joins | An independent penetration test by somebody outside the project | The project's owner |
 
 ### When an advisory lands
 

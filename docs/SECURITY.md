@@ -478,6 +478,59 @@ revoke it; `tests/every-table-says-who-may-reach-it.mjs` fails otherwise.
   Vercel's to apply. A new deployment after 21 October picks up what Vercel
   has rolled out.
 
+### November 2026: an audit against a checklist, and what it changed
+
+On 8 November 2026 the app was audited with the method in
+`.claude/skills/audit/SKILL.md` (pstack's Investigation playbook, kept in
+`tools/pstack/`): correct, safe, holds under load, tested, fast, lean. It also
+measured the app against OWASP's Top 10 (2021), the checklist most security
+reviews use. Where each stood, in one line:
+
+| OWASP risk | Where it stands | Proved by |
+|---|---|---|
+| Broken access control | Row-level security on every table; each table opened or closed by name; nobody can raise their own role | `tests/every-table-says-who-may-reach-it.mjs`, `tests/nobody-promotes-themselves.mjs` |
+| Cryptographic failures | HTTPS with two years of HSTS; backups encrypted; no secrets in the repository | `tests/no-secrets.js` |
+| Injection | No raw HTML from people's words; a sanitiser for rich text; the database reached through parameterised calls | `tests/security-invariants.mjs` |
+| Insecure design | Eight layers, each with a check | `tests/the-security-layers-hold.mjs` |
+| Security misconfiguration | Strict headers, no plugins, forms send only to the app; one known looseness, `'unsafe-inline'` for scripts, below | `tests/the-protections-hold.mjs` |
+| Vulnerable components | An audit gate with dated exceptions; Dependabot; every Action pinned to a commit | `scripts/audit-gate.mjs` |
+| Identification and authentication | Two-step sign-in; a session ended at once; temporary passwords that run out; no list of accounts to find | `tests/an-ended-session-ends-at-once.mjs` |
+| Software and data integrity | A lockfile; pinned Actions; the offline helper served by the app itself; backups behind an approval | `tests/the-security-layers-hold.mjs` |
+| Logging and monitoring | A security audit table and the feedback inbox; no alerting on unusual activity, which is usual at one church's size | Layer 7 of [SECURITY-LAYERS.md](SECURITY-LAYERS.md) |
+| Server-side request forgery | The one server fetch refuses private addresses and checks every redirect | `tests/the-protections-hold.mjs` |
+
+**A known looseness, and why it stays for now.** The script rule has to allow
+`'unsafe-inline'` because Next.js writes small startup scripts into each page.
+The stricter way, a fresh random value on every request, makes every page
+rendered per request and stops it being cached, which costs the phones this
+app is for. What stands in for it: no raw HTML from people's words, a
+sanitiser for rich text, no third-party scripts, and `form-action 'self'`.
+Revisit it when Next.js can allow its startup scripts by hash.
+
+**Page weight is now guarded, because a heavy page is a risk on weak signal.**
+`tests/the-door-is-light.mjs` holds the four pages somebody sees before signing
+in to 340 kB of JavaScript, and every page behind sign-in to 430 kB, so neither
+grows unnoticed.
+
+**Known and accepted: `minimatch`.** A pattern built to amplify can make it
+slow. The only path to it is the Study Room editor's own schema matching, and
+the fix exists only in a major version the editor does not take yet. It is in
+`security/accepted-advisories.json` with a date to review it.
+
+**What an audit of this size cannot do, so should not be mistaken for it.**
+Every database function was not read one by one, and nobody outside the
+project has tried to break in. A church holding records about minors should
+have an independent penetration test before a second church joins and once a
+year after, by somebody with no part in building it.
+
+**One habit the audit added.** Before each release, compare the files in
+`supabase/migrations` with the database's own list of applied migrations
+(Supabase's migration list, or `select version from
+supabase_migrations.schema_migrations`). An update that is in the code and not
+in the database is not a hole, because the app is built to cope, but a
+protection or a record the update was written for is not happening until it is
+applied.
+
 ### 12. Working with AI tools
 
 - Give an AI tool a development database, never your live one's keys.

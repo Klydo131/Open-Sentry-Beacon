@@ -341,8 +341,13 @@ pretty bad and clunky for mobile and pad"):
 - **Tools**, a button in the board's corner, brings the tools, with **Undo**,
   **Redo** and **Hide tools** beside them. On a phone they are one row, each
   with its name under it: **Select**, **Pen**, **Eraser**, **Shape**, **Note**,
-  **Text**, and **More** for AFFiNE's own dock with everything else. A tablet
-  has room for AFFiNE's dock itself. Two fingers zoom.
+  **Text**, and **More**. **More** opens a second row above the first with the
+  tools it has not got (since 8 November 2026): **Move** (the hand that drags
+  the board), **Line** (a line from one thing to another), **Marker** (a
+  see-through pen) and **Frame** (a box around an area). **More** then reads
+  **Less**, which folds the second row away; the first row never moves, and the
+  choice is remembered on that device. A tablet or a computer has room for
+  AFFiNE's dock itself, which shows every tool at once. Two fingers zoom.
 - **Tap a thing once** and its bar opens straight away, with every button in
   it, every choice under **⋮** and every colour in its palette a finger wide.
   A list too long for the room under the bar scrolls.
@@ -361,7 +366,10 @@ pretty bad and clunky for mobile and pad"):
 - **Double-click a thing** for its bar.
 
 **The bar over a thing**, either way: its colour or style, **Lock**, a **bin**
-that deletes it at once, and **⋮** for everything else:
+that deletes it at once, and **⋮** for everything else. Over a sticky note the
+bar is kept to its colour, **Draw connector**, **Lock**, the bin and **⋮**, so
+it fits a phone (since 8 November 2026); what AFFiNE put there besides moved
+into **⋮**, in words, shown below:
 
   | In ⋮ | |
   |---|---|
@@ -370,14 +378,26 @@ that deletes it at once, and **⋮** for everything else:
   | **Copy**, **Duplicate** | Copy it to paste elsewhere, or make a copy beside it |
   | **Create linked doc** | Turn it into a page of its own, linked from the board |
   | **Delete** | Take it off the board; **Undo** brings it back |
+  | **Add to the page's writing**, **Take out of the page's writing** | For a sticky note only: whether it is also part of the page you read on **Write** (AFFiNE calls this Display in Page) |
+  | **Fit height to the writing** | For a sticky note only, once it has been given a fixed height |
+  | **Larger text**, **Smaller text** | For a sticky note only: 50%, 100% or 200% |
 
   The bin is AFFiNE's own Delete, moved onto the bar: on a phone it was the
   last of ten choices under ⋮.
 
+- **To join things.** A selected **shape or sticky note** has a round dot on
+  **each of its four sides**: top, right, bottom and left (since 8 November
+  2026; a note used to have only left and right, and a tap made a new note with
+  no line to it). **Tap a dot** and a new thing appears on that side with a line
+  to it, put where nothing else is and brought into view if it would be off
+  the edge. **Drag a dot** to another thing to join the two, or onto empty board
+  to have AFFiNE offer what to make there. The card with your page's writing is
+  locked, so it has no dots.
 - **To write in it:** tap a selected sticky note or text again, or press
   **Add text** on a shape's bar.
-- **Right-click** a thing (or **press and hold** with a finger, then lift) to
-  open its ⋮ menu at once. On an empty part of the board the same gesture
+- **Right-click** a thing (a sticky note too, since 8 November 2026, when it
+  stopped putting the cursor in the note's text instead) or **press and hold**
+  with a finger, then lift, to open its ⋮ menu at once. On an empty part of the board the same gesture
   brings the tools and a short menu: **Undo**, **Redo**, **Select everything**
   and **Show everything**.
 - On a keyboard, AFFiNE's keys work with the tools put away: **S** a shape,
