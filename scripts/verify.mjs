@@ -30,6 +30,7 @@ if (!(shardCount >= 1 && shardIndex >= 1 && shardIndex <= shardCount)) {
 // data or access; layout and wording wait for the full run on main.
 const QUICK = new Set([
   'tests/no-secrets.js',
+  'tests/the-supply-chain-holds.mjs',
   'tests/no-backend.js',
   'tests/backend-csp.mjs',
   'tests/security-invariants.mjs',
@@ -136,6 +137,7 @@ run('build', 'npm', ['run', 'build']);
 
 const staticChecks = [
   ['no secrets', 'tests/no-secrets.js'],
+  ['the supply chain holds', 'tests/the-supply-chain-holds.mjs'],
   ['no backend, no pipelines', 'tests/no-backend.js'],
   ['test portability', 'tests/test-portability.mjs'],
   ['brand consistency', 'tests/brand-consistency.mjs'],

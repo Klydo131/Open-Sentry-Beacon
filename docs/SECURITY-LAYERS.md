@@ -25,13 +25,13 @@ of date.
 
 | | Layer | It stops | The check that proves it |
 |---|---|---|---|
-| 1 | **What it is built from** | A poisoned or outdated package, a hijacked build | `scripts/audit-gate.mjs`, `tests/the-october-2026-patches-hold.mjs`, `tests/workflows.mjs` |
+| 1 | **What it is built from** | A poisoned or outdated package, a hijacked build | `scripts/audit-gate.mjs`, `tests/the-october-2026-patches-hold.mjs`, `tests/workflows.mjs`, `tests/the-supply-chain-holds.mjs` |
 | 2 | **The edge** | A page framed, scripted or downgraded by somebody else | `tests/the-protections-hold.mjs`, `tests/security-invariants.mjs` |
 | 3 | **Who is signing in** | A guessed, stolen or reused password; a session that outlives its welcome | `tests/accounts-and-sessions.mjs`, `tests/a-new-password-has-its-own-page.mjs`, `supabase/tests/a-second-step-is-required.sql` |
 | 4 | **What they may do** | A signed-in person reaching past their own place | `tests/every-table-says-who-may-reach-it.mjs`, `tests/nobody-promotes-themselves.mjs`, `supabase/tests/fresh-install-holds.sql` |
 | 5 | **What is kept, and how** | A secret in the browser, a file anybody can open, data kept longer than needed | `tests/no-secrets.js`, `tests/photos-lose-their-location.mjs`, `supabase/tests/what-is-deleted-leaves-no-file-behind.sql` |
 | 6 | **What a person sees** | Somebody's words run as code; a database error read out to a member | `tests/linkify.mjs`, `tests/errors-are-human.mjs`, `tests/translations-say-only-what-english-says.mjs` |
-| 7 | **Knowing, and acting** | A problem nobody notices, and a problem nobody knows how to handle | `tests/a-record-that-outlives-the-people-in-it.mjs`, `tests/a-report-is-one-conversation.mjs` |
+| 7 | **Knowing, and acting** | A problem nobody notices, and a problem nobody knows how to handle | `tests/a-record-that-outlives-the-people-in-it.mjs`, `tests/a-report-is-one-conversation.mjs`, `supabase/tests/the-security-record-cannot-be-rewritten.sql` |
 | 8 | **The people who run it** | A setting no code can change left at its default; a tool given more than it needs | `tests/the-research-agents-only-read.mjs`, `tests/data-protection.mjs` |
 
 ---
@@ -57,9 +57,25 @@ nobody was told, and a build pipeline taken over through a pull request.
   pinned by digest, not by a tag that can move.
 - `.github/workflows/`: every action pinned to a full commit, read-only
   tokens, never `pull_request_target`.
+- Both lockfiles: every package from `https://registry.npmjs.org/` with a
+  SHA-512 hash npm checks before installing it.
+- Only four packages may run code when they are installed (esbuild,
+  @swc/core, @parcel/watcher, fsevents), each named with why in
+  `tests/the-supply-chain-holds.mjs`; a new one fails the build until it has
+  been looked at. That is how the npm worms spread.
+- Dependabot's `cooldown`: a new version is offered a week after it is
+  published (two for a major), long enough for most hijacked releases to be
+  found and pulled. Security fixes are not delayed.
+- `.github/workflows/scorecard.yml`: OpenSSF Scorecard, an outside measure of
+  how the repository is kept, every week.
+- `.github/workflows/codeql.yml`: GitHub's CodeQL security queries over the
+  code on every pull request and every week.
+- `.github/workflows/audit.yml`: a CycloneDX bill of materials of every
+  package the app ships, kept with each run, so "are we affected?" is a
+  search, not an investigation.
 
 **What proves it**: `scripts/audit-gate.mjs` (in CI), `tests/the-october-2026-patches-hold.mjs`,
-`tests/workflows.mjs`, `tests/the-lockfile-can-install.mjs`.
+`tests/workflows.mjs`, `tests/the-lockfile-can-install.mjs`, `tests/the-supply-chain-holds.mjs`.
 
 **Keeping it current**
 - Read each Dependabot pull request before merging it: who published the new
@@ -80,9 +96,11 @@ secret scanning with push protection; require review from code owners for
 ## Layer 2: the edge
 
 **It stops** another site framing the app to trick a click (clickjacking), a
-script from anywhere but this app running in it, a first visit over plain
-HTTP being answered by somebody on the same network, and another window
-reaching into this one through `window.opener`.
+script from anywhere but this app running in it, a script injected into the
+page writing its own HTML or loading its own code, a first visit over plain
+HTTP being answered by somebody on the same network, another window reaching
+into this one through `window.opener`, and another site loading this one's
+files into itself.
 
 **Where it lives**
 - `next.config.mjs`: the Content-Security-Policy (`default-src 'self'`,
@@ -91,12 +109,23 @@ reaching into this one through `window.opener`.
   `nosniff`, a tight Referrer-Policy, a Permissions-Policy with the camera
   and location off, `Cross-Origin-Opener-Policy: same-origin`, and
   `X-Permitted-Cross-Domain-Policies: none`.
+- **Trusted Types** (`require-trusted-types-for 'script'` in the same
+  policy, with the page's one policy in `lib/trusted-types.ts`): the browser
+  refuses to turn any string into HTML or a script address unless that policy
+  allows it, and it allows only what the frameworks were measured doing. An
+  injected script that tries `innerHTML` or loads code from elsewhere is
+  refused by the browser itself.
+- The Permissions-Policy also turns off every browser feature nothing here
+  uses (payments, USB, serial, HID, Bluetooth, MIDI, screen capture, idle
+  detection, advertising topics), and `Cross-Origin-Resource-Policy:
+  same-origin` keeps other sites from loading this one's files.
 - `public/.well-known/security.txt`: where to report a problem (RFC 9116).
 - The search-engine switch (`BEACON_PUBLIC_SITE`): a church's copy is not
   indexed unless it says so.
 
 **What proves it**: `tests/the-protections-hold.mjs`, `tests/security-invariants.mjs`,
-`tests/backend-csp.mjs`.
+`tests/backend-csp.mjs`, and every walk in `tests/e2e/`, which fails on any
+page error and so on anything Trusted Types refuses.
 
 **Keeping it current**: renew the `Expires` line of `security.txt` before it
 passes (the build fails once it has). When a feature needs a new origin (a
@@ -257,6 +286,19 @@ handled badly because nobody knew what to do.
   evidence opens only to whoever may handle it
   (`tests/a-report-is-one-conversation.mjs`,
   `supabase/tests/a-report-is-one-conversation.sql`).
+- **A security record that cannot be quietly rewritten.** Each line of a
+  church's security record holds a SHA-256 hash of itself and of the line
+  before it, the way a ledger does. Lines cannot be edited or deleted; one
+  changed outside the app, even with the guards switched off, breaks the
+  chain at that line. A Director's **Check the record** walks it, and its
+  seal (the latest line's hash), written down outside the app, proves later
+  that nothing before it was rewritten
+  (`supabase/tests/the-security-record-cannot-be-rewritten.sql`).
+- **A tripwire.** A database function that looks like the most valuable thing
+  to steal and that no screen calls. It gives nothing, and records who called:
+  as urgent in the church's security record for a signed-in caller, in the
+  operator's own list for anybody else. Only somebody writing their own
+  requests against the database ever touches it.
 - The weekly audit (layer 1) and Supabase's Security Advisor.
 - Backups, and a restore actually tried ([WHAT-IT-COSTS.md](WHAT-IT-COSTS.md), "Secure it").
 - [EMERGENCY-DEPLOY.md](EMERGENCY-DEPLOY.md): rolling back, and a short checked fix.

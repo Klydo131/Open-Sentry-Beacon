@@ -124,6 +124,11 @@ const csp = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  // TRUSTED TYPES (9 November 2026). No string becomes HTML or a script
+  // address in the browser unless the page's one policy approves it, and it
+  // approves only what was measured (lib/trusted-types.ts). The strongest
+  // defence there is against script injected into the page itself.
+  "require-trusted-types-for 'script'",
 ].join('; ');
 
 // Search visibility, decided in one place. Kept in step with app/robots.ts and
@@ -154,7 +159,24 @@ const securityHeaders = [
   // Facebook players frame-src allows -- can ask for it. It is requested on the
   // tap that starts a recording and released when it stops. Camera and
   // location stay off: nothing in the app uses them.
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
+  //
+  // EVERYTHING ELSE NOTHING HERE USES IS OFF TOO (9 November 2026). A browser
+  // feature that is never needed is one an injected script, or a frame, cannot
+  // borrow: payment sheets, USB, serial and HID devices, Bluetooth, MIDI,
+  // screen capture, idle detection and the browser's advertising topics.
+  // Features the video players ask for (autoplay, fullscreen, the motion
+  // sensors) are left to the players' own allow= lists.
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(self), geolocation=(), payment=(), usb=(), serial=(), hid=(), '
+      + 'bluetooth=(), midi=(), display-capture=(), idle-detection=(), browsing-topics=()',
+  },
+  // THIS SITE'S FILES ARE FOR THIS SITE (9 November 2026). Without it, any
+  // other page can load the app's scripts, pictures and data responses into
+  // itself as an <img> or <script>, which is how side-channel attacks such as
+  // Spectre read what they are not given. Nothing here is meant to be loaded
+  // by another site: no email or other site embeds an image from it.
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
   // A WINDOW OF ITS OWN (26 October 2026, the layered review). Another site
   // that opens this app in a pop-up, or that this app opens, cannot reach
   // into it through window.opener: the classic way to swap a signed-in tab

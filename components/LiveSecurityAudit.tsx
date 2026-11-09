@@ -16,6 +16,9 @@ const EVENT_ICON: Record<live.SecurityAuditEvent['event_type'], string> = {
   account_restored: '✅',
   account_removed: '🗑️',
   approval_changed: '🔎',
+  guild_post_removed: '🧹',
+  message_history_read: '👁️',
+  tripwire_touched: '🪤',
 };
 
 const SEVERITY: Record<live.SecurityAuditEvent['severity'], { label: string; className: string }> = {
@@ -35,6 +38,20 @@ function when(iso: string) {
 export function LiveSecurityAudit() {
   const [events, setEvents] = useState<live.SecurityAuditEvent[] | null>(null);
   const [error, setError] = useState('');
+  // The record's own check: every line's hash against the one before it.
+  const [check, setCheck] = useState<live.SecurityRecordCheck | null | 'checking' | 'unavailable'>(null);
+
+  const runCheck = useCallback(async () => {
+    setCheck('checking');
+    try {
+      const church = await live.myChurch();
+      const result = church ? await live.checkSecurityRecord(church.id) : null;
+      setCheck(result ?? 'unavailable');
+    } catch (cause) {
+      setCheck(null);
+      setError(humanError(cause, 'Could not check the security record.'));
+    }
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -65,8 +82,35 @@ export function LiveSecurityAudit() {
             conversations or files.
           </p>
         </div>
-        <Button variant="ghost" onClick={() => void load()}>Refresh</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="ghost" onClick={() => void runCheck()} disabled={check === 'checking'}>
+            {check === 'checking' ? 'Checking…' : 'Check the record'}
+          </Button>
+          <Button variant="ghost" onClick={() => void load()}>Refresh</Button>
+        </div>
       </div>
+
+      {check === 'unavailable' && (
+        <p className="mt-3 break-words rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600" data-record-check="unavailable">
+          This database cannot check its record yet: it needs the update that chains the record.
+        </p>
+      )}
+      {check && typeof check === 'object' && (
+        check.intact ? (
+          <p className="mt-3 break-words rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-900 ring-1 ring-emerald-200" data-record-check="intact">
+            The record is whole: all {check.lines} line{check.lines === 1 ? '' : 's'} add up, none edited or removed.
+            {check.seal && (
+              <> Its seal today is <code className="break-all font-mono text-xs">{check.seal.slice(0, 16)}</code>. Write it
+                down somewhere outside the app; it proves later that nothing up to here was rewritten.</>
+            )}
+          </p>
+        ) : (
+          <p className="mt-3 break-words rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-900 ring-1 ring-red-200" data-record-check="broken">
+            The record does not add up from line {check.firstBreak}: a line there was changed or removed outside the app.
+            Tell whoever runs your church&apos;s database today.
+          </p>
+        )
+      )}
 
         <p className="mt-3 break-words rounded-xl bg-navy/5 px-3 py-2 text-sm text-navy">
         Directors review Guide and Explorer events. Executive Directors also

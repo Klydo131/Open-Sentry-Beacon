@@ -523,6 +523,25 @@ project has tried to break in. A church holding records about minors should
 have an independent penetration test before a second church joins and once a
 year after, by somebody with no part in building it.
 
+**What was added after it, the same week:**
+
+- **Trusted Types** in the content security policy, with one strict policy
+  (`lib/trusted-types.ts`): no string becomes HTML or a script address in the
+  browser unless it is something the frameworks were measured doing. Every
+  walk runs with it enforced.
+- **The supply chain held by a check** (`tests/the-supply-chain-holds.mjs`):
+  every package from the public registry with a SHA-512 hash, only four named
+  packages allowed to run code at install, Dependabot waiting a week before
+  offering a new version, OpenSSF Scorecard and CodeQL every week, and a
+  bill of materials kept with every audit run.
+- **Every unused browser feature switched off**, and other sites kept from
+  loading this one's files (`Cross-Origin-Resource-Policy`).
+- **A security record chained by its hashes**, which cannot be edited or
+  deleted and shows where it was changed if it ever is, with a **Check the
+  record** button and a seal for the church's leaders.
+- **A tripwire** function that no screen calls, which records whoever calls
+  it.
+
 **One habit the audit added.** Before each release, compare the files in
 `supabase/migrations` with the database's own list of applied migrations
 (Supabase's migration list, or `select version from

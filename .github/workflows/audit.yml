@@ -39,3 +39,16 @@ jobs:
           check-latest: true
       - name: Advisories, against the register
         run: node scripts/audit-gate.mjs
+      # WHAT THE APP SHIPS, LISTED (9 November 2026): a CycloneDX bill of
+      # materials, every package the running app carries with its version and
+      # hash, read from the lockfile so nothing is installed. When the next
+      # advisory lands, "are we affected?" is a search of this file. Peer-range
+      # warnings are not what it is for, hence --legacy-peer-deps.
+      - name: Bill of materials
+        run: npm sbom --sbom-format cyclonedx --package-lock-only --omit dev --legacy-peer-deps > sbom.cdx.json
+      - name: Keep it with the run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom
+          path: sbom.cdx.json
+          retention-days: 90

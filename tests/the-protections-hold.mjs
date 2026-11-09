@@ -23,6 +23,25 @@ for (const [h, v] of [['X-Frame-Options', 'DENY'], ['X-Content-Type-Options', 'n
   ok(new RegExp(`'${h}',\\s*value:\\s*'${v}'`).test(config), `${h} is ${v}`);
 }
 ok(/camera=\(\), microphone=\(self\), geolocation=\(\)/.test(config), 'Permissions-Policy has camera and location off and the microphone for this site only');
+for (const feature of ['payment', 'usb', 'serial', 'hid', 'bluetooth', 'midi', 'display-capture', 'idle-detection', 'browsing-topics']) {
+  ok(new RegExp(`\\b${feature}=\\(\\)`).test(headers), `Permissions-Policy turns ${feature} off: nothing here uses it, so nothing may borrow it`);
+}
+ok(/'Cross-Origin-Resource-Policy',\s*value:\s*'same-origin'/.test(config), "Cross-Origin-Resource-Policy: same-origin, so no other site can load this one's files into itself");
+
+// TRUSTED TYPES (9 November 2026, lib/trusted-types.ts). The header is on, the
+// policy is the first thing in <head>, and it allows only what was measured.
+ok(/"require-trusted-types-for 'script'"/.test(config), "require-trusted-types-for 'script': no string becomes HTML or a script address unless the page's policy allows it");
+const layout = read('app/layout.tsx');
+const head = layout.split('<head>')[1]?.split('</head>')[0] ?? '';
+ok(/^\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<TrustedTypesPolicy \/>/.test(head), 'and the policy is the first thing in <head>, before any other script');
+const policy = read('lib/trusted-types.ts');
+ok(/createPolicy\('default'/.test(policy) && /createScript: function \(\) \{ return null; \}/.test(policy),
+   'the policy is the default one, and turns no string into a script');
+ok(/createScriptURL: function \(s\) \{ return own\(s\) \? s : null; \}/.test(policy)
+   && /x\.origin === location\.origin/.test(policy) && /'\/_next\/static\/'/.test(policy) && !/blob:|data:/.test(policy.replace(/\/\/.*$/gm, '')),
+   "a script address only from this site's own code or offline helper, never blob: or data:");
+ok(/s === EMPTY_SCRIPT \|\| served\(s\) \? s : null/.test(policy),
+   'and HTML only as an empty script element or the exact text of a script or style already served');
 // Looked for in the policy's own lines, not the whole file: next.config.mjs
 // talks about `default-src 'self'` in its comments, and a comment is not a policy.
 const policyLines = stripComments(config.split('const csp = [')[1]?.split('].join')[0] ?? '');
@@ -39,8 +58,10 @@ const walk = (dir) => fs.readdirSync(path.join(root, dir), { withFileTypes: true
 for (const f of ['app', 'components', 'lib'].flatMap(walk)) {
   if (/dangerouslySetInnerHTML/.test(stripComments(read(f)))) inlineUses.push(f);
 }
-ok(inlineUses.sort().join(',') === 'components/LookBeforePaint.tsx,components/SelfHeal.tsx',
-  `dangerouslySetInnerHTML only in the two known files (${inlineUses.join(', ') || 'none'})`);
+// Each one writes a fixed script of the app's own, never anybody's words. The
+// third, since 9 November 2026, is the Trusted Types policy (lib/trusted-types.ts).
+ok(inlineUses.sort().join(',') === 'components/LookBeforePaint.tsx,components/SelfHeal.tsx,components/TrustedTypesPolicy.tsx',
+  `dangerouslySetInnerHTML only in the three known files, each a fixed script of the app's own (${inlineUses.join(', ') || 'none'})`);
 
 const url = read('lib/url.ts');
 ok(/if \(parsed\.protocol !== 'http:' && parsed\.protocol !== 'https:'\) return null;/.test(stripComments(url)) && /if \(parsed\.username \|\| parsed\.password\) return null;/.test(stripComments(url)),

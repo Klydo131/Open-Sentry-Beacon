@@ -1,0 +1,53 @@
+# CodeQL: GitHub's own search of the code for security mistakes.
+#
+# It reads the TypeScript and JavaScript the app is built from and looks for
+# the patterns behind most web vulnerabilities: data from a request reaching
+# HTML, a URL, a file path or a query unescaped; secrets in code; unsafe
+# regular expressions. What it finds lands in the repository's Security tab.
+# tests/the-supply-chain-holds.mjs keeps this workflow in place.
+
+name: codeql
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Tuesdays, 03:41 UTC.
+    - cron: '41 3 * * 2'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: codeql-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: javascript-typescript
+          # The extended set: the default queries plus the security ones that
+          # are right more often than not.
+          queries: security-extended
+          # Copies of other people's code, the printed guides and the build
+          # are not ours to fix here.
+          config: |
+            paths-ignore:
+              - node_modules
+              - .next
+              - docs
+              - tools
+      - name: Analyse
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3

@@ -10,6 +10,60 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 9 November 2026: security beyond the checklist
+
+### If you run a copy, do this
+
+1. **Run `supabase/migrations/20261109120000_the_security_record_cannot_be_rewritten.sql`.**
+   It chains the security record and adds the tripwire. Existing lines are
+   chained in order as it runs.
+2. **Rebuild.** The new browser policy (Trusted Types) comes with the build.
+3. **Optional:** in your repository's Settings, Code security, look at the
+   OpenSSF Scorecard and CodeQL results once their first runs finish.
+
+### What changed
+
+- **Trusted Types** (`lib/trusted-types.ts`, `next.config.mjs`). The browser
+  refuses to turn a string into HTML or a script address unless the page's
+  one policy allows it.
+  - **What it allows:** only what the frameworks were measured doing: React's
+    empty script element, the exact text of a script or style the server
+    already sent, and this site's own code files.
+  - **Checked:** every walk runs with it enforced. A walk that parsed a test
+    file's XML inside the app's page now does it in a blank page.
+- **The supply chain is held by a check** (`tests/the-supply-chain-holds.mjs`):
+  - every package comes from the public registry, with a SHA-512 hash;
+  - only four named packages may run code at install;
+  - Dependabot waits seven days (fourteen for a major) before offering a new
+    version;
+  - OpenSSF Scorecard and CodeQL run every week;
+  - a CycloneDX bill of materials is kept with every audit run.
+- **Browser features nothing uses are off** (payments, USB, serial, HID,
+  Bluetooth, MIDI, screen capture, idle detection, advertising topics), and
+  `Cross-Origin-Resource-Policy: same-origin` stops other sites loading this
+  one's files.
+- **The security record is chained by SHA-256 hashes.**
+  - Its lines cannot be edited or deleted, except when a whole church is
+    removed.
+  - A line changed with the guards switched off is found at its own place.
+  - Directors get **Check the record** and a seal to write down outside the
+    app.
+  - Deleting an account still works and leaves the chain whole.
+- **A tripwire.** `export_all_members()` looks valuable and no screen calls
+  it.
+  - It returns nothing.
+  - A signed-in caller is recorded as urgent in their church's security
+    record; anybody else goes in a list only the database's operator can
+    read.
+  - The security record screen also shows the two line types it had no icon
+    for (a removed guild post, an opened message history).
+- **Checked by:**
+  - `supabase/tests/the-security-record-cannot-be-rewritten.sql`, 26 checks
+    on a database built from nothing, run by `scripts/fresh-install.sh`;
+  - new checks in `tests/the-protections-hold.mjs`.
+
+  Each new check was broken once to see it go red.
+
 ## 8 November 2026: the whiteboard's tools, a note's bar and joining notes
 
 ### If you run a copy, do this

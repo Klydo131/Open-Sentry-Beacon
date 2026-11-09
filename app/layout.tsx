@@ -34,6 +34,7 @@ import { TutorialExtras } from '@/components/TutorialExtras';
 import { PlayerProvider } from '@/lib/player';
 import { UiTheme } from '@/components/UiTheme';
 import { LookBeforePaint } from '@/components/LookBeforePaint';
+import { TrustedTypesPolicy } from '@/components/TrustedTypesPolicy';
 
 export const metadata: Metadata = {
   // The name comes from lib/brand.ts so a fork changes it in one place. It also
@@ -112,6 +113,10 @@ export default function RootLayout({
     // one attribute, which React would otherwise report as a mismatch.
     <html lang="en" data-ui-theme="classic" suppressHydrationWarning>
       <head>
+        {/* What may be written into the page as HTML or loaded as a script:
+            before any other script, so it is in place for all of them
+            (lib/trusted-types.ts). */}
+        <TrustedTypesPolicy />
         {/* This device's look, set before <body> exists, so before anything
             can be drawn (lib/look-before-paint.ts). */}
         <LookBeforePaint />

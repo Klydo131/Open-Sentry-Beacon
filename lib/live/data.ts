@@ -324,7 +324,10 @@ export interface SecurityAuditEvent {
     | 'account_suspended'
     | 'account_restored'
     | 'account_removed'
-    | 'approval_changed';
+    | 'approval_changed'
+    | 'guild_post_removed'
+    | 'message_history_read'
+    | 'tripwire_touched';
   severity: 'info' | 'review' | 'urgent';
   summary: string;
   actor_label: string;
@@ -335,6 +338,38 @@ export async function securityAuditFeed(limit = 100): Promise<SecurityAuditEvent
   const { data, error } = await db().rpc('security_audit_feed', { p_limit: limit });
   if (error) throw new Error(error.message);
   return (data ?? []) as SecurityAuditEvent[];
+}
+
+/** Whether a church's security record still adds up, line by line, and its latest seal. */
+export interface SecurityRecordCheck {
+  lines: number;
+  intact: boolean;
+  firstBreak: number | null;
+  seal: string | null;
+}
+
+/**
+ * Walks the church's security record and checks every line's hash against the
+ * one before it (20261109120000_the_security_record_cannot_be_rewritten). Null
+ * on a database from before that update, which has no chain to check.
+ */
+export async function checkSecurityRecord(churchId: string): Promise<SecurityRecordCheck | null> {
+  const check = await db().rpc('security_record_check', { p_church: churchId });
+  if (check.error) {
+    if (isMissingFromDatabase(check.error)) return null;
+    throw new Error(check.error.message);
+  }
+  const row = (Array.isArray(check.data) ? check.data[0] : check.data) as
+    { lines: number; intact: boolean; first_break: number | null } | undefined;
+  const sealed = await db().rpc('security_record_seal', { p_church: churchId });
+  if (sealed.error && !isMissingFromDatabase(sealed.error)) throw new Error(sealed.error.message);
+  const seal = (Array.isArray(sealed.data) ? sealed.data[0] : sealed.data) as { seal: string } | undefined;
+  return {
+    lines: Number(row?.lines ?? 0),
+    intact: row?.intact ?? true,
+    firstBreak: row?.first_break ?? null,
+    seal: seal?.seal ?? null,
+  };
 }
 
 // --- Invitations sent, and who has not arrived yet ---

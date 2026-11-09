@@ -228,6 +228,12 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-waiting-member-is-named.sql"
 
+# THE SECURITY RECORD CANNOT BE REWRITTEN: each line chained to the one before
+# by its hash, never edited or deleted, a change behind the guards found at its
+# own place, and the tripwire recording whoever calls it. Rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/the-security-record-cannot-be-rewritten.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

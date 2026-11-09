@@ -1,0 +1,46 @@
+# OpenSSF Scorecard: an outside score of how this repository is kept.
+#
+# The Open Source Security Foundation's Scorecard checks what an attacker
+# would look for first in an open-source project: whether workflows can write,
+# whether dependencies and Actions are pinned, whether changes are reviewed,
+# whether a vulnerability has somewhere private to be reported. Its findings
+# land in the repository's Security tab (Code scanning). tests/the-supply-
+# chain-holds.mjs keeps this workflow in place.
+#
+# It starts with no write access at all; the one job is given exactly the two
+# it needs to post its results, and reads nothing secret.
+
+name: scorecard
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Thursdays, 02:23 UTC.
+    - cron: '23 2 * * 4'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Score
+        uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        with:
+          results_file: scorecard.sarif
+          results_format: sarif
+          publish_results: true
+      - name: Post to the Security tab
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: scorecard.sarif
