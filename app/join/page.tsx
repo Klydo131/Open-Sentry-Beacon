@@ -51,7 +51,7 @@ function Join() {
   const params = useSearchParams();
   const token = params.get('token') ?? '';
   const router = useRouter();
-  const { db, inviteByToken, acceptInvite, signInAs } = useDemo();
+  const { db, inviteByToken, acceptInvite, declineInvite, signInAs } = useDemo();
 
   const invite = inviteByToken(token);
   const status: Invite['status'] | undefined = invite?.status;
@@ -78,6 +78,8 @@ function Join() {
   // The Terms of Use and Privacy Notice: their own box, unticked (lib/legal.ts).
   const [agreed, setAgreed] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  // Saying no (the sample's half of 20261110120000): asked once more first.
+  const [confirmDecline, setConfirmDecline] = useState(false);
 
   // Prefill the name from the invite once it's known (works for both paths).
   useEffect(() => {
@@ -95,6 +97,16 @@ function Join() {
       <Shell>
         <p className="text-white/70">This invitation link isn’t valid.</p>
         <BackHome note="Ask your church for a new invitation." />
+      </Shell>
+    );
+  }
+  if (status === 'declined') {
+    return (
+      <Shell>
+        <p className="text-white/70" data-invitation-declined>
+          You declined this invitation. Your church has been told.
+        </p>
+        <BackHome note="Nothing more will be sent unless they invite you again." />
       </Shell>
     );
   }
@@ -281,6 +293,27 @@ function Join() {
               Tick both boxes above to continue.
             </p>
           )}
+          <div className="mt-6 border-t border-gray-100 pt-4" data-invitation-choice>
+            {!confirmDecline ? (
+              <Button variant="ghost" onClick={() => setConfirmDecline(true)}>
+                Decline the invitation
+              </Button>
+            ) : (
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="text-sm text-gray-700">
+                  Decline? Whoever invited you will be told. They can invite you again later.
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <Button variant="danger" onClick={() => declineInvite(token)}>
+                    Yes, decline
+                  </Button>
+                  <Button variant="ghost" onClick={() => setConfirmDecline(false)}>
+                    Go back
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </Card>
       </div>
     </div>

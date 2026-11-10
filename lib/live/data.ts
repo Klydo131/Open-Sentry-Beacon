@@ -396,6 +396,11 @@ export interface OpenInvite {
    * means the account was made and later removed.
    */
   redeemed_at: string | null;
+  /**
+   * When the invited person said no (20261110120000). Absent on a database
+   * that does not have that update yet, which reads as "not declined".
+   */
+  declined_at?: string | null;
 }
 
 /** Invitations this church has sent, so unaccepted ones can be seen and re-sent. */
@@ -420,6 +425,48 @@ export async function claimMyPendingInvitation(): Promise<boolean> {
   const { data, error } = await db().rpc('claim_my_pending_invitation');
   if (error) throw new Error(error.message);
   return data === true;
+}
+
+/** The signed-in person's own invitation, while it can still be accepted or declined. */
+export interface MyOpenInvitation {
+  invite_id: string;
+  church_name: string;
+  role: Role;
+  invited_by_name: string | null;
+}
+
+/**
+ * The invitation the person arriving from its e-mail can still decline, or
+ * null: none open, already finished signing up, or a database without the
+ * 10 November update (then arriving works exactly as before).
+ */
+export async function myOpenInvitation(): Promise<MyOpenInvitation | null> {
+  const { data, error } = await db().rpc('my_open_invitation');
+  if (error) {
+    if (isMissingFromDatabase(error)) return null;
+    throw new Error(error.message);
+  }
+  const row = (Array.isArray(data) ? data[0] : data) as MyOpenInvitation | undefined;
+  return row ?? null;
+}
+
+/**
+ * Say no to the invitation. Whoever sent it is told, and the account the
+ * invitation made is removed, so the session ends here too.
+ */
+export async function declineMyInvitation(): Promise<void> {
+  const { data, error } = await db().rpc('decline_my_invitation');
+  if (error) {
+    if (isMissingFromDatabase(error)) {
+      throw new Error('Declining is not available on this church\'s copy yet. Ask your church to remove the invitation.');
+    }
+    throw new Error(error.message);
+  }
+  if (data !== true) {
+    throw new Error('This invitation can no longer be declined. It may have expired, or you have already finished joining.');
+  }
+  // The account is gone; this device forgets its session and every kept copy.
+  await endBrowserSession();
 }
 
 /** Withdraw an invitation that has not been accepted. */

@@ -10,6 +10,44 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 10 November 2026: an invitation can be declined
+
+### If you run a copy, do this
+
+1. **Run `supabase/migrations/20261110120000_an_invitation_can_be_declined.sql`.**
+   Until you do, nothing changes: the invitation link opens the app as
+   before, and nobody is offered Decline.
+2. **Rebuild.**
+
+### What changed
+
+- **The founder:** "make the invitation option to have a decline and if it
+  got decline by the user, the admin will be notified that the invitation got
+  decline."
+- **Arriving from the invitation e-mail,** the person is asked before the
+  app opens: **Join**, or **Decline the invitation** (asked once more to be
+  sure).
+- **Declining:**
+  - marks the invitation declined;
+  - tells the Director who sent it, in the bell, by name. If that person has
+    left or stepped down, every approved Director and Executive Director is
+    told instead;
+  - removes the account the invitation made, so the address can be invited
+    again.
+- **Invitations** shows a **Declined** group. Re-send all skips it; sending
+  a new invitation to the same address opens it again.
+- **Not a link in the e-mail, on purpose.** Mail services check every link in
+  a message automatically, and a one-click decline would be pressed by them.
+- **The invitation guard** (`validate_invite_privilege`) lets an update that
+  changes only `declined_at` through. Otherwise the person could not say no
+  once the Director who sent it had stepped down. Every other check is
+  unchanged.
+- **The sample half** has the same: Decline on its join page, a Declined badge
+  and the same notice.
+- **Checked by** `supabase/tests/an-invitation-can-be-declined.sql`: 26 checks
+  on a database built from nothing, run by `scripts/fresh-install.sh`. A check
+  went red when the sender test was loosened.
+
 ## 9 November 2026: security beyond the checklist
 
 ### If you run a copy, do this

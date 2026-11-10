@@ -34,6 +34,8 @@ const ICON: Record<string, string> = {
 
 function routeFor(n: AppNotification, role: Role): string {
   if (n.type === 'approval') return '/admin';
+  // Where the sample's invitations are listed, with the declined one marked.
+  if (n.type === 'invitation_declined') return '/admin';
   return HOME[role] ?? '/';
 }
 

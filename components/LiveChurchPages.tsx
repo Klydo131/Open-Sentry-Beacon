@@ -257,12 +257,19 @@ export function LiveMailPage() {
   // redeemed_at alone must never be read as "they joined" -- see OpenInvite,
   // where doing so was wrong twice. Paired with the absence of an account it is
   // exact: the invitation was spent, so an account existed, and it is gone now.
+  //
+  // DECLINED COMES FIRST (10 November 2026). Declining removes the account the
+  // invitation made, so a declined row would otherwise read as "removed".
+  // Neither list sends: somebody who said no is asked again only by a leader
+  // choosing to invite them again.
+  const isDeclined = (i: live.OpenInvite) => Boolean(i.declined_at) && !i.joined_at;
   const isRemoved = (i: live.OpenInvite) =>
-    !i.joined_at && i.redeemed_at !== null && !i.has_account;
+    !isDeclined(i) && !i.joined_at && i.redeemed_at !== null && !i.has_account;
   const removed = (invites ?? []).filter(isRemoved);
+  const declinedRows = (invites ?? []).filter(isDeclined);
   // Everything that sends -- the row buttons and the bulk send alike -- works
-  // from this list, so neither can reach a removed person.
-  const unfinished = (invites ?? []).filter((i) => !i.joined_at && !isRemoved(i));
+  // from this list, so neither can reach a removed person or one who declined.
+  const unfinished = (invites ?? []).filter((i) => !i.joined_at && !isRemoved(i) && !isDeclined(i));
 
   const resendAllUnfinished = async () => {
     const queue = unfinished;
@@ -340,7 +347,7 @@ export function LiveMailPage() {
   // Director does on their own device to check it works. Both filed people
   // under Accepted who had never touched anything — and left them with no
   // Re-send button, because the screen believed there was nothing left to do.
-  const waiting = (invites ?? []).filter((i) => !i.joined_at && !isRemoved(i));
+  const waiting = (invites ?? []).filter((i) => !i.joined_at && !isRemoved(i) && !isDeclined(i));
   const joined = (invites ?? []).filter((i) => i.joined_at);
 
   return (
@@ -626,6 +633,48 @@ export function LiveMailPage() {
           </ul>
         )}
       </Card>
+
+      {declinedRows.length > 0 && (
+        <Card className="p-5">
+          <div data-invitations-declined>
+            <h2 className="text-xl font-bold text-navy">
+              Declined <span className="text-gray-500">· {declinedRows.length}</span>
+            </h2>
+            <p className="mt-1 text-sm text-gray-600">
+              These people opened their invitation and said no. The account it made was
+              removed. To ask again, send a new invitation from the form above;
+              removing the record here only tidies the list.
+            </p>
+            <ul className="mt-4 space-y-2">
+              {declinedRows.map((i) => (
+                <li key={i.id} className="rounded-xl bg-gray-50 p-4">
+                  <p className="font-semibold text-navy">{i.full_name || i.email}</p>
+                  <p className="truncate text-sm text-gray-600">{i.email}</p>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {roleNoun(i.role)} &middot; invited {ago(i.created_at)}
+                    <span className="ml-1 font-semibold text-red-700">
+                      &middot; declined {ago(i.declined_at!)}
+                    </span>
+                  </p>
+                  <span className="mt-2 flex w-full flex-wrap gap-2 sm:w-auto">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setConfirmCancel(confirmCancel === i.id ? '' : i.id)}
+                    >
+                      {confirmCancel === i.id ? 'Keep it' : 'Remove this record'}
+                    </Button>
+                    {confirmCancel === i.id && (
+                      <Button variant="danger" disabled={busy === i.id} onClick={() => cancel(i)}>
+                        {busy === i.id ? 'Removing…' : 'Yes, remove it'}
+                      </Button>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      )}
 
       {removed.length > 0 && (
         <Card className="p-5">

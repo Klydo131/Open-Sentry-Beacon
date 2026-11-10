@@ -193,6 +193,7 @@ function StatusBadge({ status }: { status: Invite['status'] }) {
     pending: { label: 'Pending', bg: '#FEF3C7', fg: '#92400E' },
     accepted: { label: 'Joined', bg: '#DCFCE7', fg: '#166534' },
     revoked: { label: 'Revoked', bg: '#F3F4F6', fg: '#6B7280' },
+    declined: { label: 'Declined', bg: '#FEE2E2', fg: '#991B1B' },
   };
   const s = map[status];
   return (

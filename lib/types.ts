@@ -363,9 +363,11 @@ export interface Invite {
   /** The Guide whose recommendation this came from; accepting creates the pairing. */
   pair_with_dm?: string;
   recommendation_id?: string;
-  status: 'pending' | 'accepted' | 'revoked';
+  status: 'pending' | 'accepted' | 'revoked' | 'declined';
   created_at: string;
   accepted_at?: string;
+  /** When the invited person said no (the sample's half of 20261110120000). */
+  declined_at?: string;
 }
 
 // The email the app would have sent, shown in the admin's Outbox.

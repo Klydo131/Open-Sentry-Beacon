@@ -184,7 +184,16 @@ export function LiveLoginPage() {
   // The sign-in from the invitation link runs once only.
   const arrived = useRef(false);
 
+  // ARRIVING FROM AN INVITATION, the person is asked to join or decline
+  // (supabase/migrations/20261110120000). Set while that question is open, or
+  // once it is answered no, and the page is not sent home behind their back.
+  const [choice, setChoice] = useState<(live.MyOpenInvitation & { home: string }) | null>(null);
+  const [confirmDecline, setConfirmDecline] = useState(false);
+  const [declined, setDeclined] = useState<{ church: string } | null>(null);
+
   useEffect(() => {
+    // The invitation link's own sign-in decides where to go (below).
+    if (arrived.current) return;
     if (!sessionLoading && session && profile?.is_approved) {
       router.replace(homeFor(profile.role));
     }
@@ -229,6 +238,14 @@ export function LiveLoginPage() {
         if (!mine.is_approved) {
           setNotice('');
           setError('Your password is correct, but your account is waiting for a Director to approve it. Ask your church to approve you, then sign in again.');
+          return;
+        }
+        // Still open: ask before the app opens. Not open (already joined, or a
+        // database without the update) and nothing is asked, as before.
+        const open = await live.myOpenInvitation().catch(() => null);
+        if (open) {
+          setNotice('');
+          setChoice({ ...open, home: homeFor(mine.role) });
           return;
         }
         window.location.replace(homeFor(mine.role));
@@ -279,6 +296,80 @@ export function LiveLoginPage() {
     const q = [extra, typed ? `email=${encodeURIComponent(typed)}` : ''].filter(Boolean).join('&');
     return `/forgot-password${q ? `?${q}` : ''}`;
   };
+
+  if (declined) {
+    return (
+      <div className="min-h-screen">
+        <PublicHeader title={say('Invitation declined')} subtitle={say('Thank you for letting us know.')} />
+        <div className="mx-auto max-w-md px-4 py-8" data-invitation-declined>
+          <Card className="p-6 text-center">
+            <p className="text-gray-700">
+              {say('{church} has been told, and the account made for you has been removed. Nothing more will be sent unless they invite you again.', { church: declined.church })}
+            </p>
+            <Link href="/" className="mt-5 inline-block font-semibold text-navy underline">
+              {say('Home')}
+            </Link>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (choice) {
+    const church = choice.church_name || say('your church');
+    const decline = async () => {
+      setBusy(true);
+      setError('');
+      try {
+        await live.declineMyInvitation();
+        setDeclined({ church });
+        setChoice(null);
+      } catch (cause) {
+        setError(errorText(cause));
+      } finally {
+        setBusy(false);
+      }
+    };
+    return (
+      <div className="min-h-screen">
+        <PublicHeader title={say('You are invited')} subtitle={church} />
+        <div className="mx-auto max-w-md space-y-4 px-4 py-8" data-invitation-choice>
+          <Card className="p-6">
+            <p className="text-gray-700">
+              {choice.invited_by_name
+                ? say('{who} invited you to join {church} as {role}.', { who: choice.invited_by_name, church, role: roleNoun(choice.role) })
+                : say('You have been invited to join {church} as {role}.', { church, role: roleNoun(choice.role) })}
+            </p>
+            {error && <div className="mt-4"><Notice tone="error">{error}</Notice></div>}
+            {!confirmDecline ? (
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                <Button className="w-full sm:w-auto" onClick={() => window.location.replace(choice.home)}>
+                  {say('Join {church}', { church })}
+                </Button>
+                <Button variant="ghost" className="w-full sm:w-auto" onClick={() => setConfirmDecline(true)}>
+                  {say('Decline the invitation')}
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-5 rounded-xl bg-gray-50 p-4">
+                <p className="text-sm text-gray-700">
+                  {say('Decline? {church} will be told, and the account made for you will be removed. They can invite you again later.', { church })}
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <Button variant="danger" className="w-full sm:w-auto" disabled={busy} onClick={() => void decline()}>
+                    {busy ? say('Declining…') : say('Yes, decline')}
+                  </Button>
+                  <Button variant="ghost" className="w-full sm:w-auto" disabled={busy} onClick={() => setConfirmDecline(false)}>
+                    {say('Go back')}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (codeStep || secondStep) {
     return (

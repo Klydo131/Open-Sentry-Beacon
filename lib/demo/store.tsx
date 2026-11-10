@@ -34,7 +34,7 @@ import type {
   BlogAudienceKind,
   PostMedia,
 } from '../types';
-import { nextStage, roleLabel, canKick } from '../brand';
+import { nextStage, roleLabel, roleNoun, canKick } from '../brand';
 
 // An Explorer is welcomed by name, never told their category; other roles are
 // told the job they now hold.
@@ -279,6 +279,8 @@ export interface Ctx {
     recommendation_id?: string;
   }) => Invite;
   revokeInvite: (id: string) => void;
+  /** The invited person says no; whoever sent it is told. False if it is no longer open. */
+  declineInvite: (token: string) => boolean;
   inviteByToken: (token: string) => Invite | undefined;
   acceptInvite: (
     token: string,
@@ -2166,6 +2168,45 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  // The invited person says no. Like the live half, whoever sent it is told,
+  // or every Director if that person is gone; nothing is created.
+  const declineInvite = useCallback(
+    (token: string): boolean => {
+      const invite = db.invites.find((i) => i.token === token);
+      if (!invite || invite.status !== 'pending') return false;
+      const name = invite.full_name?.trim() || invite.email;
+      const noun = roleNoun(invite.role);
+      const article = /^[aeiou]/i.test(noun) ? 'an' : 'a';
+      persistUpdate((prev) => {
+        const inviter = prev.profiles.find((p) => p.id === invite.invited_by && p.is_approved);
+        const told = inviter
+          ? [inviter.id]
+          : prev.profiles
+              .filter((p) => p.is_approved && (p.role === 'admin' || p.role === 'executive'))
+              .map((p) => p.id);
+        return {
+          ...prev,
+          invites: prev.invites.map((i) =>
+            i.id === invite.id ? { ...i, status: 'declined' as const, declined_at: nowIso() } : i,
+          ),
+          notifications: [
+            ...told.map((user_id) => ({
+              id: uid(),
+              user_id,
+              type: 'invitation_declined',
+              title: `${name} declined the invitation`,
+              body: `${invite.email} will not be joining as ${article} ${noun}. If they change their mind, invite them again from Invitations.`,
+              created_at: nowIso(),
+            })),
+            ...prev.notifications,
+          ],
+        };
+      });
+      return true;
+    },
+    [db.invites],
+  );
+
   // Complete an invited sign-up: create the account (approved, since an admin
   // invited them), mark the invite used and notify the admin. Null if the token
   // is missing, used or revoked.
@@ -2355,6 +2396,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     inviteRecommended,
     declineRecommendation,
     revokeInvite,
+    declineInvite,
     inviteByToken,
     acceptInvite,
   };

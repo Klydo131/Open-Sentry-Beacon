@@ -57,6 +57,9 @@ function routeFor(type: string, role: Role): string {
       return leads ? '/admin?room=security' : '/church';
     case 'approval':
       return leads ? '/admin?room=approvals' : '/church';
+    case 'invitation_declined':
+      // Invitations, where the declined row is (20261110120000).
+      return leads ? '/mail' : '/church';
     case 'pairing':
       return leads ? '/admin?room=pairings' : role === 'dm' ? '/dm' : '/ds';
     case 'prayer':
