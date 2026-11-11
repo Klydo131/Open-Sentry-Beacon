@@ -6,8 +6,18 @@
 
 import { APP_NAME } from './brand';
 
-/** The shortest password the app accepts. The sign-in service may ask for more. */
-export const PASSWORD_MIN = 10;
+/**
+ * The shortest password the app accepts. The sign-in service may ask for more.
+ *
+ * 8 since 11 November 2026, the founder's decision ("can we make it 6
+ * characters"; offered 6, 8 or 10, chose 8). Ten had been the rule since
+ * September. Eight is the floor NIST SP 800-63B sets for a password a person
+ * chooses, and the floor the Postgres edition already enforced
+ * (selfhost/server/src/config.mjs), so nothing in the project goes below it:
+ * tests/a-new-password-has-its-own-page.mjs fails if this ever drops under 8.
+ * Every screen and check reads this one number; none repeats it.
+ */
+export const PASSWORD_MIN = 8;
 
 /**
  * The longest, in bytes. The sign-in service stores passwords with bcrypt,

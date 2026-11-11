@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-11-passwords-of-eight',
+    date: '2026-11-11',
+    title: 'A password now needs 8 characters, not 10',
+    items: [
+      'When you choose a new password, 8 characters are enough. A few words only you would put together is still the easiest to remember and the hardest to guess.',
+      'Your current password keeps working. Nothing to do.',
+    ],
+  },
+  {
     id: '2026-11-08-whiteboard-tools',
     date: '2026-11-08',
     title: 'Simpler whiteboard tools, and notes that join on every side',

@@ -388,7 +388,7 @@ export function LiveNewPasswordPage() {
               {say('Show what I am typing')}
             </label>
             <p id="new-password-rules" className="text-xs text-gray-500">
-              {say('At least 10 characters. A few words only you would put together is easy to remember and hard to guess.')}
+              {say('At least {n} characters. A few words only you would put together is easy to remember and hard to guess.', { n: String(PASSWORD_MIN) })}
             </p>
             {!error && hint && password.length > 0 && (
               <p className="text-sm font-semibold text-amber-800" data-new-password-hint>{say(hint)}</p>

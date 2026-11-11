@@ -74,9 +74,10 @@ which looks exactly like a broken invitation.
 
 ### 3. Supabase — raise the password minimum
 
-**Settings → Authentication → Password.** Set the minimum to **10**. The app
-enforces 10; if the dashboard says 6, a member typing 8 characters is rejected
-with a message the dashboard setting does not explain.
+**Settings → Authentication → Password.** Set the minimum to **8**. The app
+enforces 8 (`PASSWORD_MIN` in `lib/password-rules.ts`). Set it to the same
+number: if the dashboard asks for more than the app, a member whose password
+the app accepted is rejected with a message the app cannot explain.
 
 ### 4. Vercel
 
