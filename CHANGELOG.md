@@ -10,6 +10,37 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 11 November 2026: passwords need at least 8 characters, not 10
+
+### If you run a copy, do this
+
+1. **In Supabase, Authentication, set the minimum password length to 8.**
+   Do it when this update goes live. A service set to 10 would refuse an
+   8-character password the app accepted, with a message the app cannot
+   explain.
+2. **Rebuild.** No database change.
+
+### What changed
+
+- **The founder asked for 6.** Offered 6, 8 or 10, the founder chose 8.
+- **Why 8 is the floor:**
+  - it is the minimum NIST SP 800-63B sets for a password a person chooses;
+  - the Postgres edition already refused to go below it.
+- **One number now:** `PASSWORD_MIN` in `lib/password-rules.ts`.
+  - The join page, Settings, the new-password page, the preview, the
+    sign-up and the password-change call all read it. Before, five places
+    wrote "10" themselves.
+  - The Postgres edition's default is 8, with its floor unchanged.
+- **Unchanged:** the other rules. At most 72 bytes; not the e-mail address,
+  not the app's name, not a row of the keyboard. Leaked-password protection
+  and two-step sign-in are recommended as before.
+- **Checked by** `tests/a-new-password-has-its-own-page.mjs`:
+  - 7 characters refused, 8 accepted;
+  - the rule can never be set below 8;
+  - no screen writes a length of its own.
+
+  Each new check went red when broken on purpose.
+
 ## 10 November 2026: an invitation can be declined
 
 ### If you run a copy, do this
@@ -47,37 +78,6 @@ the part that goes wrong when nobody reads past the headline.
 - **Checked by** `supabase/tests/an-invitation-can-be-declined.sql`: 26 checks
   on a database built from nothing, run by `scripts/fresh-install.sh`. A check
   went red when the sender test was loosened.
-
-## 11 November 2026: passwords need at least 8 characters, not 10
-
-### If you run a copy, do this
-
-1. **In Supabase, Authentication, set the minimum password length to 8.**
-   Do it when this update goes live. A service set to 10 would refuse an
-   8-character password the app accepted, with a message the app cannot
-   explain.
-2. **Rebuild.** No database change.
-
-### What changed
-
-- **The founder asked for 6.** Offered 6, 8 or 10, the founder chose 8.
-- **Why 8 is the floor:**
-  - it is the minimum NIST SP 800-63B sets for a password a person chooses;
-  - the Postgres edition already refused to go below it.
-- **One number now:** `PASSWORD_MIN` in `lib/password-rules.ts`.
-  - The join page, Settings, the new-password page, the preview, the
-    sign-up and the password-change call all read it. Before, five places
-    wrote "10" themselves.
-  - The Postgres edition's default is 8, with its floor unchanged.
-- **Unchanged:** the other rules. At most 72 bytes; not the e-mail address,
-  not the app's name, not a row of the keyboard. Leaked-password protection
-  and two-step sign-in are recommended as before.
-- **Checked by** `tests/a-new-password-has-its-own-page.mjs`:
-  - 7 characters refused, 8 accepted;
-  - the rule can never be set below 8;
-  - no screen writes a length of its own.
-
-  Each new check went red when broken on purpose.
 
 ## 9 November 2026: security beyond the checklist
 
