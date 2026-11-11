@@ -25,7 +25,7 @@ import { FaqCard } from '@/components/Faq';
 import { WhatsNewButton } from '@/components/WhatsNew';
 import { FeedbackButton } from '@/components/Feedback';
 import { humanError } from '@/lib/live/errors';
-import { passwordProblem } from '@/lib/live/password';
+import { PASSWORD_MIN, passwordProblem } from '@/lib/live/password';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 import { appleKind, addChip, type AppleKind } from '@/lib/apple-install';
 import { ReadingSettings } from '@/components/ReadingSettings';
@@ -386,10 +386,10 @@ function PasswordCard() {
   const [nonce, setNonce] = useState('');
   // A friendly early warning, with the same rules as every page that sets a
   // password (lib/live/password.ts); the sign-in service checks again.
-  const tooShort = next.length > 0 && next.length < 10;
+  const tooShort = next.length > 0 && next.length < PASSWORD_MIN;
   const mismatch = again.length > 0 && next !== again;
-  const problem = next.length >= 10 && again.length > 0 ? passwordProblem(next, again, session?.user?.email ?? '') : '';
-  const ready = next.length >= 10 && next === again && !problem && !busy;
+  const problem = next.length >= PASSWORD_MIN && again.length > 0 ? passwordProblem(next, again, session?.user?.email ?? '') : '';
+  const ready = next.length >= PASSWORD_MIN && next === again && !problem && !busy;
 
   const save = async () => {
     if (!ready) return;
@@ -478,7 +478,7 @@ function PasswordCard() {
         Show what I am typing
       </label>
 
-      <p className="mt-2 text-xs text-gray-500">At least 10 characters.</p>
+      <p className="mt-2 text-xs text-gray-500">At least {PASSWORD_MIN} characters.</p>
       {tooShort && (
         <p className="mt-2 text-sm font-semibold text-amber-800">
           That is {next.length} characters. Ten or more, please.

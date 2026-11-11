@@ -110,7 +110,17 @@ await build({
 });
 const { passwordProblem, PASSWORD_MIN } = await import(pathToFileURL(path.join(out, 'rules.mjs')).href);
 const said = (a, b = a, email = 'maria.santos@example.org') => passwordProblem(a, b, email);
-ok(PASSWORD_MIN === 10 && /at least 10/.test(said('short')), 'fewer than 10 characters is refused, with the count');
+// 8 since 11 November 2026 (lib/password-rules.ts says why). Never below 8:
+// that is the floor NIST SP 800-63B sets, and the Postgres edition's too.
+ok(PASSWORD_MIN === 8 && /at least 8/.test(said('short')), 'fewer than 8 characters is refused, with the count');
+ok(PASSWORD_MIN >= 8, 'and the rule can never be set below 8');
+ok(/at least 8/.test(said('rivers7')) && said('river st') === '', 'seven characters are refused, eight are enough');
+// One number, read everywhere: a screen that writes its own would drift from it.
+for (const f of ['components/LiveAccountPages.tsx', 'components/live/DoorPages.tsx', 'components/live/PasswordPages.tsx', 'lib/live/data.ts']) {
+  const c = code(f);
+  ok(!/(\b(next|again|chosen|confirmation|password|chosenPassword)\.length\s*[<>]=?\s*(?!0\b)\d+|minLength=\{\d+\}|[Aa]t least \d+ characters)/.test(c),
+     `${f} writes no password length of its own; it reads PASSWORD_MIN`);
+}
 ok(said('river stone morning light') === '', 'a few words only the person would put together is fine');
 ok(/too long/.test(said('a'.repeat(30) + 'é'.repeat(25))), 'more than 72 bytes is refused before the service refuses it');
 ok(/do not match/.test(said('river stone morning', 'river stone mornin')), 'the two must match');

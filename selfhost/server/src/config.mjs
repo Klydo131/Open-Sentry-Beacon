@@ -42,7 +42,7 @@ export function readConfig(env = process.env, needs = ['database', 'keys', 'site
     // arrive by invitation, so an open door here would only be a way round it.
     signupEnabled: flag(env.ENABLE_SIGNUP, false),
     autoconfirm: flag(env.MAILER_AUTOCONFIRM, false),
-    passwordMinLength: Math.max(8, Number(env.PASSWORD_MIN_LENGTH) || 10),
+    passwordMinLength: Math.max(8, Number(env.PASSWORD_MIN_LENGTH) || 8),
     trustProxy: flag(env.TRUST_PROXY, false),
     smtp: {
       url: env.SMTP_URL || '',

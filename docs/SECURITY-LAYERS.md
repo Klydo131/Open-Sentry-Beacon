@@ -160,7 +160,7 @@ been suspended or has changed their password.
 - Invitation only: sign-up is closed and accounts are made by the
   invitation function (`supabase/functions/invite`).
 - `lib/password-rules.ts`: one set of rules for every page that sets a
-  password: at least 10 characters, at most 72 bytes, not the e-mail address,
+  password: at least 8 characters, at most 72 bytes, not the e-mail address,
   not the app's name, not a row of the keyboard. The sign-in service checks
   again.
 - `components/live/PasswordPages.tsx`: a forgotten password on pages of its
@@ -184,7 +184,7 @@ they live in the Supabase dashboard where no test can see them.
 **Stronger in your copy** (Supabase, Authentication):
 - **Prevent use of leaked passwords**: on. It refuses any password found in
   the Have I Been Pwned list, and needs the Pro plan.
-- **Minimum password length**: 10, to match the app.
+- **Minimum password length**: 8, to match the app.
 - **Email OTP expiration**: 3600 seconds (one hour) or less.
 - **Secure password change**: optional. When it is on, Settings, Password
   e-mails a code to confirm it is really the account holder; the app handles

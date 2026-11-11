@@ -18,6 +18,7 @@ import { uuid } from '@/lib/uuid';
 import { shrinkImage } from '@/lib/live/shrink-image';
 import { isSafeStoragePath, safeStoragePath } from '@/lib/live/storage-path';
 import { NotOnThisDatabaseYet, isMissingFromDatabase } from '@/lib/live/not-yet';
+import { PASSWORD_MIN } from '@/lib/password-rules';
 import type { PlaceSuggestion } from '@/lib/live/place-pin';
 import { SecondStepNeeded, enterCode, isSecondStepRefusal } from '@/lib/live/two-step';
 import type { Session } from '@supabase/supabase-js';
@@ -150,7 +151,7 @@ async function afterSignIn(mine: SignInResult): Promise<SignInResult> {
 }
 
 export async function signUp(email: string, password: string, fullName: string): Promise<void> {
-  if (password.length < 10) throw new Error('Use at least 10 characters.');
+  if (password.length < PASSWORD_MIN) throw new Error(`Use at least ${PASSWORD_MIN} characters.`);
   const client = supabaseAuth();
   if (!client) throw new NotLive();
   const { error } = await client.auth.signUp({
@@ -172,7 +173,7 @@ export async function signOut(): Promise<void> {
  * temporary-password reminder is best effort, so its failure is not reported.
  */
 export async function changeMyPassword(next: string, nonce?: string): Promise<void> {
-  if (next.length < 10) throw new Error('Use at least 10 characters.');
+  if (next.length < PASSWORD_MIN) throw new Error(`Use at least ${PASSWORD_MIN} characters.`);
   const client = supabaseAuth();
   if (!client) throw new NotLive();
 

@@ -21,7 +21,7 @@ import { TwoStepSignInCard } from '@/components/live/TwoStep';
 import { LanguagePick } from '@/components/LanguagePick';
 import { usePhrases } from '@/lib/i18n';
 import { DOOR_WORDS } from '@/lib/words/door';
-import { NEW_PASSWORD_PATH, isResetLink, passwordProblem, sendPasswordLink } from '@/lib/live/password';
+import { NEW_PASSWORD_PATH, PASSWORD_MIN, isResetLink, passwordProblem, sendPasswordLink } from '@/lib/live/password';
 import { humanError } from '@/lib/live/errors';
 import { GENDER_OPTIONS, LIFE_STATUS_OPTIONS, optionsFor, selectedValue } from '@/lib/about-you';
 
@@ -695,7 +695,7 @@ export function LiveJoinPage() {
     if (preview) {
       // A preview still runs these checks, so a room can watch a short password refused.
       const { chosen, confirmation } = readPasswordFields();
-      if (chosen.length < 10) { setError('Use at least 10 characters.'); return; }
+      if (chosen.length < PASSWORD_MIN) { setError(`Use at least ${PASSWORD_MIN} characters.`); return; }
       if (chosen !== confirmation) { setError('The passwords do not match.'); return; }
       if (!agreed) { setError('Tick the box agreeing to the Terms of Use and Privacy Notice to continue.'); return; }
       if (!consent) { setError('Tick the permission box to continue.'); return; }
@@ -962,7 +962,7 @@ export function LiveJoinPage() {
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
-                    minLength={10}
+                    minLength={PASSWORD_MIN}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     onInput={(event) => setPassword(event.currentTarget.value)}
@@ -982,7 +982,7 @@ export function LiveJoinPage() {
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
-                <span className="mt-1 block text-xs text-gray-500">At least 10 characters.</span>
+                <span className="mt-1 block text-xs text-gray-500">At least {PASSWORD_MIN} characters.</span>
               </label>
 
               <label className="block">
@@ -996,7 +996,7 @@ export function LiveJoinPage() {
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
-                  minLength={10}
+                  minLength={PASSWORD_MIN}
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
                   onInput={(event) => setConfirm(event.currentTarget.value)}

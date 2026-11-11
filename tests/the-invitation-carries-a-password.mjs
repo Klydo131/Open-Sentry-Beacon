@@ -152,7 +152,7 @@ ok(/encodeURIComponent\(email\)/.test(fn), 'with the address escaped into it pro
   const body = data.slice(data.indexOf('export async function changeMyPassword'));
   const fnBody = body.slice(0, body.indexOf('\nexport ', 1));
   ok(/auth\.updateUser\(\{ password/.test(fnBody), 'which really changes it');
-  ok(/length < 10/.test(fnBody), 'and holds the same ten-character rule as signing up');
+  ok(/length < PASSWORD_MIN/.test(fnBody), 'and holds the same rule as signing up (PASSWORD_MIN)');
   ok(/saveBrowserSession/.test(fnBody),
      'and re-saves the session, because changing a password rotates the tokens');
   ok(/password_is_temporary: false/.test(fnBody), 'and clears the reminder');

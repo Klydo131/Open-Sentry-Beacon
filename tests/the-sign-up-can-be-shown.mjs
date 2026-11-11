@@ -66,7 +66,7 @@ ok(/This is a preview\. Nothing was created/.test(src),
 
 // The password rules still run, because watching a short password be refused is
 // half of what a room is being shown.
-ok(/if \(preview\)[\s\S]{0,400}Use at least 10 characters/.test(src),
+ok(/if \(preview\)[\s\S]{0,400}Use at least \$\{PASSWORD_MIN\} characters/.test(src),
    'the password rules still apply in a preview');
 ok(/if \(preview\)[\s\S]{0,500}Tick the permission box/.test(src),
    'and so does the permission box');
