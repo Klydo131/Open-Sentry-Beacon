@@ -403,7 +403,7 @@ export function LiveLibraryForGuide({ pairings, sharesShownFor, heading, intro }
     try {
       await live.setMaterialPublished(m.id, next);
       setFlash(next
-        ? `\u201c${m.title}\u201d is on the church shelf. Everyone in the church can find it.`
+        ? `\u201c${m.title}\u201d is on the church shelf. Every Guide and Director can find it and send it on.`
         : `Took \u201c${m.title}\u201d off the church shelf. Whoever you shared it with still has it.`);
       await load();
     } catch (cause) { setError(message(cause)); }

@@ -10,6 +10,40 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 12 November 2026: a changed address is judged again
+
+### If you run a copy, do this
+
+1. **Run the new migration:** `20261112120000_a_changed_address_is_judged_again.sql`.
+   It adds two triggers and changes no rows.
+2. **Rebuild.**
+
+### What changed
+
+- **The activity record now follows an address that is changed afterwards.**
+  A resource's link, or a pocket web app's address, was judged when it was
+  added and when it was shared. Changing it later now writes a line too, with
+  the same labels and the same alert, naming each person who already has it.
+- **Resource sharing has its own database test:**
+  `supabase/tests/a-resource-is-shared-and-watched.sql`, 34 checks, signed in
+  as invented Guides, Explorers and a Director in two churches. It runs in
+  `scripts/fresh-install.sh` and in CI.
+- **Wording:** putting a resource on the church shelf now says who can find
+  it: every Guide and Director. Explorers receive resources from their Guide,
+  as before.
+- **The tutorial says the same as the privacy notice about Talk:** it stays
+  between the two people unless one of them reports a message. Four lines in
+  `lib/quest.ts` said nobody else could ever read it.
+- **"Distant surf" no longer crackles on a rare start.** The level was set
+  from average loudness alone, and about 1 start in 120 at 48 kHz left a
+  sample past full scale. `lib/noise.ts` now lowers the level when a peak
+  would not fit. The check that failed by chance (1 run in about 3,000) now
+  tests the worst case on purpose.
+- **Packages, patch and minor only, each at least seven days old:** Next.js
+  15.5.29, supabase-js 2.119.0, @supabase/ssr 0.12.7, yjs 13.6.33.
+
+---
+
 ## 11 November 2026: passwords need at least 8 characters, not 10
 
 ### If you run a copy, do this

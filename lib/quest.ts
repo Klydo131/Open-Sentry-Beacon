@@ -109,9 +109,9 @@ const DM_STEPS: QuestStep[] = [
     id: 'message',
     where: 'My Explorers \u203a an Explorer \u203a Message',
     learn:
-      'Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it. It lives in the Talk bubble in the corner, and the number on it counts messages you have not opened yet.',
+      'Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it unless one of you reports a message. It lives in the Talk bubble in the corner, and the number on it counts messages you have not opened yet.',
     title: 'Send a message',
-    hint: 'Type in the highlighted box and send. This conversation is private. Only the two of you can ever read it.',
+    hint: 'Type in the highlighted box and send. This conversation is private: it stays between the two of you unless one of you reports a message.',
     target: 'chat-send',
     fallbacks: [
       {
@@ -394,9 +394,9 @@ const DS_STEPS: QuestStep[] = [
     id: 's-message',
     where: 'My Journey › Message your Guide',
     learn:
-      'This conversation is only between you and the person walking with you. Church leaders cannot read it. Nobody else in the church can read it. It lives in the Talk bubble in the corner, so it is there on every screen.',
+      'This conversation is only between you and the person walking with you. Church leaders cannot read it unless one of you reports a message. Nobody else in the church can read it. It lives in the Talk bubble in the corner, so it is there on every screen.',
     title: 'Say hello',
-    hint: 'Type in the highlighted box and send. Only the two of you can ever read this.',
+    hint: 'Type in the highlighted box and send. It stays between the two of you unless one of you reports a message.',
     target: 'chat-send',
     fallbacks: [
       {

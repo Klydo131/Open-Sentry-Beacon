@@ -239,6 +239,12 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/an-invitation-can-be-declined.sql"
 
+# A RESOURCE IS SHARED AND WATCHED: it reaches only the person it was sent to,
+# both ways; the record sees an add, a share and a changed address; a Director
+# can stop it, and a sender can take it back. Rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-resource-is-shared-and-watched.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"
