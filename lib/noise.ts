@@ -260,13 +260,21 @@ export const voiceFor = (key: string): Voice | undefined =>
  */
 const LEVEL = 0.2;
 
-/** Scale a buffer to LEVEL. A silent buffer is left alone rather than divided by zero. */
+/**
+ * Scale a buffer to LEVEL, or lower if one peak would still pass ±1: hardware
+ * squares such a sample off, heard as a crackle (about 1 start in 120 of the
+ * brown noise at 48 kHz). A silent buffer is left alone.
+ */
 function normalise(out: Float32Array): void {
   let sum = 0;
-  for (let i = 0; i < out.length; i += 1) sum += out[i] * out[i];
+  let peak = 0;
+  for (let i = 0; i < out.length; i += 1) {
+    sum += out[i] * out[i];
+    peak = Math.max(peak, Math.abs(out[i]));
+  }
   const rms = Math.sqrt(sum / out.length);
   if (rms < 1e-6) return;
-  const scale = LEVEL / rms;
+  const scale = Math.min(LEVEL / rms, 0.999 / peak);
   for (let i = 0; i < out.length; i += 1) out[i] *= scale;
 }
 

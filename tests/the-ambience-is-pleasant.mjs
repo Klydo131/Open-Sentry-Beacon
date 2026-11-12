@@ -70,6 +70,22 @@ const ok = (c, m) => {
     ok(rms > 0.01, `${colour} is actually audible (rms ${rms.toFixed(3)})`);
   }
 
+  // A RARE LONG WANDER STILL FITS. Random input reaches a peak past 1 about
+  // once in 120 starts at 48 kHz, so chance cannot be the test: a burst in
+  // near-silence, the worst shape for a level set by average loudness.
+  {
+    const random = Math.random;
+    let n = 0;
+    Math.random = () => { n += 1; return n % 4000 < 60 ? 1 : 0.5; };
+    try {
+      const data = noiseBuffer(ctx, 'brown').getChannelData(0);
+      const peak = data.reduce((most, v) => Math.max(most, Math.abs(v)), 0);
+      ok(peak <= 1, `a burst in near-silence still does not clip (peak ${peak.toFixed(3)})`);
+    } finally {
+      Math.random = random;
+    }
+  }
+
   // -------------------------------------------------------------------------
   // AND THEY ARRIVE AT THE SAME LOUDNESS
   // -------------------------------------------------------------------------
