@@ -590,15 +590,9 @@ begin
     key := key || jsonb_build_object(col, to_jsonb(rec) -> col);
   end loop;
   perform pg_notify('beacon_realtime', jsonb_build_object(
-    's', tg_table_schema, 't', tg_table_name, 'op', tg_op, 'k', key,
-    -- A deleted row cannot be re-read, so its small values travel with the
-    -- notice for the watchers' filters. Long text never does.
-    'o', case when tg_op = 'DELETE' then (
-      select coalesce(jsonb_object_agg(e.key, e.value), '{}')
-        from jsonb_each(to_jsonb(old)) e
-       where jsonb_typeof(e.value) in ('string', 'number', 'boolean')
-         and length(e.value::text) <= 80
-    ) end
+    's', tg_table_schema, 't', tg_table_name, 'op', tg_op, 'k', key
+    -- A deleted row's values never travel with the notice: nothing outside
+    -- the database may learn what a deleted row held.
   )::text);
   return null;
 end

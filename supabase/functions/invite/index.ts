@@ -192,6 +192,12 @@ async function handle(req: Request): Promise<Response> {
       // A member of another church: do not say which, or the refusal reveals it.
       return json({ error: `${email} already has a Hope Beacon account.` }, 409);
     }
+
+    // Another church's account is never this church's to re-invite: a re-send
+    // sets its password.
+    if (existing && existing.church_id && existing.church_id !== church) {
+      return json({ error: `${email} already has a Hope Beacon account.` }, 409);
+    }
   }
 
   // One invitation per address: refresh an existing one and send again,

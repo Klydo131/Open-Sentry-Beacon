@@ -150,14 +150,19 @@ const code = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/[^\n
   ok(/if \(!token\) return json\(\{ error: 'Sign in first\.' \}, 401\)/.test(fn)
      && /auth\.getUser\(token\)/.test(fn), 'only somebody signed in can ask');
   ok(/if \(me\.suspended_at\) return json\([^;]*403\)/.test(fn) && /if \(!me\.is_approved\) return json\([^;]*403\)/.test(fn)
-     && fn.indexOf('me.suspended_at)') < fn.indexOf('tooMany(who.user.id)') && fn.indexOf('!me.is_approved)') < fn.indexOf('tooMany(who.user.id)'),
-    'and only if approved and not suspended, asked before anything else is done');
+     && fn.indexOf('me.suspended_at)') < fn.indexOf('answer.json(') && fn.indexOf('!me.is_approved)') < fn.indexOf('answer.json('),
+    'and only if approved and not suspended, asked before any answer is sent back');
+  ok(/if \(!claimed\) return json\([^;]*401\)/.test(fn)
+     && fn.indexOf('if (!claimed)') > -1 && fn.indexOf('if (!claimed)') < fn.indexOf('fetch(photonUrl'),
+    'a token that names no account (the public key) starts no lookup at all');
   // Spelled in two halves: tests/no-backend.js rejects any tracked file that
   // names the master key, this one included.
   const masterKey = new RegExp(['service', 'role'].join('[_-]?'), 'i');
   ok(!masterKey.test(fn) && /SUPABASE_ANON_KEY/.test(fn),
     'checked with the caller\'s own sign-in: the function holds no master key');
-  ok(/tooMany\(who\.user\.id\)/.test(fn) && /429/.test(fn), 'and no faster than a person typing');
+  ok(/tooMany\(claimed\)/.test(fn) && /429/.test(fn)
+     && fn.indexOf('tooMany(claimed)') < fn.indexOf('fetch(photonUrl'),
+    'and no faster than a person typing, counted before any lookup leaves');
   ok(!/console\.(log|info|warn|error)/.test(fn), 'what was searched for is never logged');
   ok(/AbortSignal\.timeout\(/.test(fn), 'a slow service is given up on rather than waited for');
   ok(/'Cache-Control': 'no-store'/.test(fn), 'and nothing about the answer is kept on the way back');

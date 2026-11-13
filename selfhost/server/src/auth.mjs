@@ -486,7 +486,7 @@ export function createAuth({ cfg, pool, mailer }) {
   async function updateUser(req, res) {
     const body = await readJson(req);
     const answer = await withClient(async (client) => {
-      const { user, claims } = await caller(client, req);
+      const { user, claims, session } = await caller(client, req);
       if (body.email !== undefined && cleanEmail(body.email) !== user.email) {
         throw new HttpError(422, 'Changing the e-mail address is not available on this server.', 'email_change_unavailable');
       }
@@ -507,6 +507,9 @@ export function createAuth({ cfg, pool, mailer }) {
         ({ rows: [row] } = await client.query(
           'update auth.users set encrypted_password = $1, updated_at = now() where id = $2 returning *', [hash, user.id]));
         await audit(client, 'user_updated_password', user.id, clientIp(req, cfg.trustProxy));
+        // Every other sign-in ends with the old password, in the same
+        // transaction, rather than waiting on the app to ask for it.
+        await client.query('delete from auth.sessions where user_id = $1 and id <> $2', [user.id, session.id]);
       }
       if (body.data && typeof body.data === 'object') {
         ({ rows: [row] } = await client.query(

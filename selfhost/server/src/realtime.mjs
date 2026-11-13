@@ -40,19 +40,9 @@ export function parseFilter(text) {
   return { column: m[1], op: m[2], value: m[3] };
 }
 
-/** Whether a deleted row's remembered values pass the filter. */
-export function oldRowMatches(filter, old) {
-  if (filter.none) return true;
-  if (!old || !(filter.column in old)) return false;
-  const have = old[filter.column];
-  const text = have === null ? 'null' : String(have);
-  if (filter.op === 'in') return filter.value.includes(text);
-  if (filter.op === 'eq') return text === filter.value;
-  if (filter.op === 'neq') return text !== filter.value;
-  const a = Number(have);
-  const b = Number(filter.value);
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
-  return { lt: a < b, lte: a <= b, gt: a > b, gte: a >= b }[filter.op];
+/** A sign-in token for a person, not the public key: it names an account. */
+export function signedIn(claims) {
+  return Boolean(claims && typeof claims.sub === 'string' && claims.sub && claims.role !== 'anon');
 }
 
 export function createRealtime({ cfg, pool, preRequest, keys }) {
@@ -202,7 +192,9 @@ export function createRealtime({ cfg, pool, preRequest, keys }) {
         tasks.push((async () => {
           const ids = [];
           for (const b of candidates) {
-            const ok = change.op === 'DELETE' ? oldRowMatches(b.parsed, change.o) : await canSee(channel.claims, change, b);
+            // A deleted row cannot be re-read, and matching it to a filter would
+            // reveal its values: signed-in watchers are told, nobody else.
+            const ok = change.op === 'DELETE' ? signedIn(channel.claims) : await canSee(channel.claims, change, b);
             if (ok) ids.push(b.id);
           }
           if (ids.length === 0) return;

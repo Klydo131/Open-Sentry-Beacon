@@ -17,6 +17,38 @@ const homeForRole: Record<Role, string> = {
   ds: '/ds',
 };
 
+// Every attempt reaches the sign-in service from this server, so its own limit
+// cannot tell callers apart. shortcut: failures are counted per instance, in
+// memory; an address gets more room, as one church Wi-Fi is many people.
+const FAIL_WINDOW_MS = 15 * 60 * 1000;
+const FAILS_PER_EMAIL = 10;
+const FAILS_PER_ADDRESS = 30;
+const fails = new Map<string, number[]>();
+
+function recent(key: string): number[] {
+  const now = Date.now();
+  const kept = (fails.get(key) ?? []).filter((t) => now - t < FAIL_WINDOW_MS);
+  if (kept.length) fails.set(key, kept); else fails.delete(key);
+  return kept;
+}
+
+function heldBack(keys: string[]): boolean {
+  return keys.some((k) => recent(k).length >= (k.startsWith('ip:') ? FAILS_PER_ADDRESS : FAILS_PER_EMAIL));
+}
+
+function failed(keys: string[]): void {
+  if (fails.size > 20000) fails.clear();
+  for (const k of keys) fails.set(k, [...recent(k), Date.now()]);
+}
+
+/** The caller's address as the hosting platform reports it. */
+function callerAddress(request: NextRequest): string {
+  const real = request.headers.get('x-real-ip')?.trim();
+  if (real) return real;
+  const hops = (request.headers.get('x-forwarded-for') ?? '').split(',');
+  return hops[hops.length - 1].trim();
+}
+
 function withSession(
   next: NextResponse,
   cookies: PendingCookie[] = [],
@@ -92,6 +124,14 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  const address = callerAddress(request);
+  const limitKeys = [`email:${email}`, ...(address ? [`ip:${address}`] : [])];
+  if (heldBack(limitKeys)) {
+    return expectsJson
+      ? jsonResponse({ error: TOO_MANY }, 429)
+      : formRedirect(request, '/login?error=busy');
+  }
+
   try {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
     // TOO MANY TRIES IS NOT A WRONG PASSWORD (the audit of 3 October 2026).
@@ -106,6 +146,7 @@ export async function POST(request: NextRequest) {
         : formRedirect(request, '/login?error=busy', pendingCookies, pendingHeaders);
     }
     if (authError || !authData.user || !authData.session) {
+      failed(limitKeys);
       // Keep unknown addresses and wrong passwords indistinguishable. An
       // invitation-only church directory must not become enumerable.
       return expectsJson
@@ -117,6 +158,7 @@ export async function POST(request: NextRequest) {
           )
         : formRedirect(request, '/login?error=credentials', pendingCookies, pendingHeaders);
     }
+    fails.delete(`email:${email}`);
 
     // THE PASSWORD WAS RIGHT, AND IT IS NOT ENOUGH for somebody who has set up
     // two-step sign-in. Their profile cannot be read yet (the database refuses

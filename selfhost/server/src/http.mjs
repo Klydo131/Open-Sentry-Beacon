@@ -1,6 +1,8 @@
 // Small pieces every route uses: reading a body with a ceiling, answering in
 // JSON, and the cross-site rules.
 
+import net from 'node:net';
+
 export class HttpError extends Error {
   constructor(status, message, code = '', extra = {}) {
     super(message);
@@ -106,13 +108,21 @@ export function cors(req, res, allowedOrigins) {
   return false;
 }
 
-/** The caller's address: the socket's, or the proxy's report of it when one is trusted. */
+/**
+ * The caller's address: the socket's, or the proxy's report of it when one is
+ * trusted. The proxy's report is the LAST entry -- the one the nearest proxy
+ * added; anything before it was written by the caller. Only a real IP
+ * address is used, so a made-up value never reaches a limit's key or an
+ * address column.
+ */
 export function clientIp(req, trustProxy) {
   if (trustProxy) {
-    const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-    if (forwarded) return forwarded;
+    const hops = String(req.headers['x-forwarded-for'] || '').split(',');
+    const forwarded = hops[hops.length - 1].trim();
+    if (net.isIP(forwarded)) return forwarded;
   }
-  return req.socket.remoteAddress || '';
+  const own = req.socket.remoteAddress || '';
+  return net.isIP(own) ? own : '';
 }
 
 export function bearer(req) {

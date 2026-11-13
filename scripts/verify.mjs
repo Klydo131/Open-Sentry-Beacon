@@ -305,6 +305,8 @@ const staticChecks = [
   ['what one person can upload', 'tests/what-one-person-can-upload.mjs'],
   ['nobody promotes themselves', 'tests/nobody-promotes-themselves.mjs'],
   ['place search', 'tests/place-search.mjs'],
+  ['an account belongs to one church', 'tests/an-account-belongs-to-one-church.mjs'],
+  ['what a request can learn', 'tests/what-a-request-can-learn.mjs'],
   ['church and mission updates', 'tests/church-and-mission-updates.mjs'],
   ['a folder does not say whose church', 'tests/a-folder-does-not-say-whose-church.mjs'],
   ['the tutorial ring keeps up', 'tests/the-tutorial-ring-keeps-up.mjs'],

@@ -93,14 +93,18 @@ async function handle(req: Request): Promise<Response> {
   const near = nearFrom(body?.near) ?? nearFrom(Deno.env.get('PLACES_NEAR') ?? '');
 
   // THE THREE QUESTIONS ARE ASKED AT ONCE, not one after another (12 November
-  // 2026: the search was slow, most of a second each time, measured). Who is signing in, their own row, and the map service all start
-  // together; nothing the map service says is sent back until the first two
+  // 2026: the search was slow, most of a second each time, measured). Who is
+  // signing in, their own row, and the map service all start together; nothing the map service says is sent back until the first two
   // have answered yes. The function is deployed with the platform's own token
   // check on (verify_jwt), so a forged token never reaches this line to start
   // a lookup. The row is read under the caller's own sign-in, so the
   // database's rules decide it; the id it is asked for is checked against the
   // verified one below.
   const claimed = subjectOf(token);
+  // Nothing starts for a token that names no account (the public key names
+  // none), and the rate limit is counted before any lookup leaves.
+  if (!claimed) return json({ error: 'Sign in first.' }, 401);
+  if (tooMany(claimed)) return json({ error: 'Slow down a little, then try again.' }, 429);
   const [whoAnswer, meAnswer, mapAnswer] = await Promise.all([
     asCaller.auth.getUser(token),
     asCaller.from('profiles').select('id, is_approved, suspended_at').eq('id', claimed).maybeSingle(),
@@ -124,7 +128,6 @@ async function handle(req: Request): Promise<Response> {
   if (me.suspended_at) return json({ error: 'This account is suspended.' }, 403);
   if (!me.is_approved) return json({ error: 'Your account is waiting to be approved.' }, 403);
 
-  if (tooMany(who.user.id)) return json({ error: 'Slow down a little, then try again.' }, 429);
 
   const answer = mapAnswer;
   if (!answer || !answer.ok) return json({ error: 'Place search is not available right now.' }, 502);
