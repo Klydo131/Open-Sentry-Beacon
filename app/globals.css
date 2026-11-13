@@ -1,0 +1,2232 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #1e2a4a;
+  --gold: #e8b84b;
+
+  /* ELEVATION, AS A SCALE RATHER THAN A GUESS.
+     Every surface in the app was `shadow-sm ring-1 ring-black/5` — one weight
+     for a page card, a floating panel and a dialog alike, so nothing on screen
+     said which of them was on top. Three steps is enough for an app this shape:
+     a resting surface, one that has been lifted, and one that is over
+     everything. Two layers each, a tight dark one for the edge and a wide soft
+     one for the shadow, because a single blur reads as fog rather than height. */
+  --lift-1: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --lift-2: 0 2px 4px -1px rgba(16, 24, 40, 0.05), 0 6px 16px -3px rgba(16, 24, 40, 0.09);
+  --lift-3: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 16px 40px -8px rgba(16, 24, 40, 0.16);
+
+  /* MOTION, AS A SCALE RATHER THAN A GUESS. Asked for on 1 October 2026.: three lengths and two curves, so a menu, a panel and a
+     drawer all move like one app. lib/motion.ts carries the same three
+     numbers for the few places JavaScript has to know them, and
+     tests/every-animation-can-be-stilled.mjs keeps the two in step.
+       quick  160ms  a menu, a panel, a fade between rooms, anything leaving
+       base   220ms  a view sliding across inside the chat, the chat arriving
+       slow   280ms  something crossing a good part of the screen: the drawer
+     `settle` arrives fast and eases to rest, which is what reads as smooth;
+     `leave` speeds up as it goes, because nobody waits to watch a thing go. */
+  --motion-quick: 160ms;
+  --motion-base: 220ms;
+  --motion-slow: 280ms;
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-leave: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* KOREAN WRAPS BETWEEN WORDS. Korean puts spaces between words, as English
+   does, but a browser's default lets it break inside one, so "사람과" (with a
+   person) came out as "사 / 람과" on a phone. keep-all breaks only at the
+   spaces; break-word still lets one word too long for the line wrap rather
+   than push the page sideways. Chinese and Japanese have no spaces to break
+   at and keep the default. */
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* ARABIC, WHILE MOST OF THE APP IS STILL ENGLISH. Choosing Arabic turns the
+   whole page right to left, and most sentences inside the app are not
+   translated yet. An English sentence laid out right to left puts its full
+   stop at the wrong end (".forward") and scrambles "1 of 6". So, only in a
+   right-to-left page, each block of text takes its direction from its own
+   first letter: Arabic reads right to left, English left to right, and the
+   page around them stays mirrored. */
+html[dir='rtl'] :where(p, h1, h2, h3, h4, h5, h6, li, dt, dd, label, legend, summary, figcaption, blockquote, td, th, button, a) {
+  unicode-bidi: plaintext;
+}
+
+html {
+  font-size: 18px; /* senior-friendly base */
+
+  /* THE SIDEWAYS SCROLL GUARD, AND WHY IT IS HERE AND NOT ONLY ON `body`.
+     `overflow-x: clip` was set on the body alone. On Chrome and on Android that
+     is enough. On iOS Safari it is not dependable — `clip` is a late addition
+     to WebKit and where it is not honoured the declaration is simply dropped,
+     leaving the page free to scroll sideways. That is exactly the shape of the
+     bug iOS users reported and Android users did not: a tall empty strip down
+     the right of every screen, which is the page being wider than the phone.
+
+     `clip` on the root is the right tool where it works, and the @supports
+     block below hands the job to `hidden` where it does not. `hidden` belongs
+     on `html` rather than `body`: putting it on the body makes the body the
+     scrolling box, and `position: sticky` headers stop sticking. */
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  html {
+    overflow-x: hidden;
+  }
+}
+
+body {
+  background: #f4f6fb;
+  color: #1a2233;
+  -webkit-font-smoothing: antialiased;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  /* Nothing should push the page sideways on a phone. `clip` rather than
+     `hidden` on purpose: `hidden` turns the body into a scroll container and
+     breaks the sticky header. Anything that genuinely needs to scroll
+     horizontally (a wide table, the tab strip) does so in its own box. */
+  overflow-x: clip;
+
+  /* ROOM FOR THE INSTALL BAR.
+
+     The bar is `position: fixed`, so the document does not know it exists and
+     the page used to end flush with the bottom of the screen underneath it. On
+     an iPhone that bar is 323px of a 664px screen — half the phone — because it
+     carries the install steps as well as the button, so the bottom half of
+     every screen was covered with nothing to scroll into.
+
+     InstallPrompt publishes the bar's real measured height as `--install-bar`
+     while it is on screen and removes it when it goes, so this is exactly zero
+     the rest of the time and on every device that never sees the bar.
+
+     The bottom bar (Menu | People | My Files) is fixed too, and publishes
+     `--tab-bar` the same way; the install bar stands on top of it, so the page
+     makes room for both. Each is 0px wherever it is not drawn. */
+  padding-bottom: calc(var(--install-bar, 0px) + var(--tab-bar, 0px));
+}
+
+/* Visible focus for keyboard + low-vision users.
+   TWO LAYERS, AND THAT IS THE POINT. This was a single gold ring, which is
+   handsome on the navy header and very nearly invisible everywhere else:
+   measured, gold on white is 1.84:1 against the 3:1 that WCAG asks of a focus
+   indicator, while navy on white is 14.1:1 and navy on navy is 1:1. No single
+   colour serves both surfaces, so the ring carries one of each — a navy outline
+   for light surfaces and a gold band inside it for dark ones. Whichever surface
+   the control sits on, one of the two layers is doing the work. */
+:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--gold);
+  border-radius: 0.5rem;
+}
+
+/* THE SURFACES.
+   `.lift-1` is the resting card, `.lift-2` something raised on purpose, and
+   `.lift-3` a panel over the page. Written as classes rather than left to each
+   component's own guess, which is how one screen ended up with `shadow-2xl` and
+   the one beside it with `shadow-sm` for the same kind of thing. */
+.lift-1 { box-shadow: var(--lift-1); }
+.lift-2 { box-shadow: var(--lift-2); }
+.lift-3 { box-shadow: var(--lift-3); }
+
+/* A surface that responds to being pointed at, for the ones that are a link or
+   a button underneath. Not applied to every card: a card that lifts when the
+   pointer passes and does nothing when it is clicked is a lie about what it is. */
+.lift-hover {
+  transition: box-shadow 180ms cubic-bezier(0.2, 0.7, 0.3, 1),
+              transform 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+@media (hover: hover) {
+  .lift-hover:hover { box-shadow: var(--lift-2); transform: translateY(-1px); }
+}
+
+/* DISPLAY TYPE SITS TIGHTER.
+   At 18px root a heading set at the browser's default tracking looks loose and
+   slightly cheap; large type wants slightly negative tracking and small type
+   wants none. This is the whole of the typographic change: no new sizes, no new
+   weights, no font swap — the same headings, spaced the way a large size wants
+   to be spaced. */
+h1, .text-4xl, .text-3xl { letter-spacing: -0.021em; }
+h2, .text-2xl { letter-spacing: -0.015em; }
+h3, .text-xl { letter-spacing: -0.009em; }
+
+/* Every interactive control clears the 56px tap-target minimum. */
+button,
+a[role='button'],
+.tap {
+  min-height: 56px;
+}
+
+/* The one exception: controls packed into the top bar.
+   56px each is generous for a page body but there are six of them in a row,
+   and on a 360px phone that overflows the header — which in turn drags the
+   notification panel anchored inside it off the side of the screen. 44px is
+   still at or above the WCAG 2.5.8 / Apple / Material minimum, so this trades
+   nothing that matters for a header that fits. */
+.tap-sm {
+  min-height: 44px;
+  height: 44px;
+  min-width: 44px;
+}
+
+/* The second exception: dense furniture that is not a primary action —
+   a toggle switch, a colour swatch, a station button in the player. The 56px
+   floor above is a rule about reachable page controls; applied to a 24px
+   switch it inflates it into an unrecognisable blob. Anything inside a
+   `.compact-ui` box sizes itself, and each of those controls is still a
+   comfortable click target in its own right. */
+.compact-ui button,
+.compact-ui a,
+.compact-ui [role='switch'],
+.compact-ui label {
+  min-height: 0;
+}
+
+/* ---- Intro animation (the live app's front door) ----
+   CSS only: no library, nothing to download, nothing the CSP has to allow.
+   Every one of these is switched off under prefers-reduced-motion at the
+   bottom of this block — motion is decoration here, never information. */
+
+/* Content arrives from just below, one element after another. */
+@keyframes beaconRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The halo behind the candle, breathing slowly. */
+@keyframes beaconGlow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.15);
+  }
+}
+
+/* A candle flame never holds still. */
+@keyframes beaconFlicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.07) rotate(-2.5deg);
+  }
+  65% {
+    transform: scale(0.96) rotate(1.5deg);
+  }
+}
+
+.rise {
+  opacity: 0;
+  animation: beaconRise 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.rise-1 {
+  animation-delay: 0.1s;
+}
+.rise-2 {
+  animation-delay: 0.25s;
+}
+.rise-3 {
+  animation-delay: 0.4s;
+}
+.rise-4 {
+  animation-delay: 0.55s;
+}
+.rise-5 {
+  animation-delay: 0.7s;
+}
+
+.beacon-glow {
+  animation: beaconGlow 3.4s ease-in-out infinite;
+}
+/* The halo behind the loading mark.
+   Its own name rather than `.beacon-glow`, which is taken twice in this file:
+   once for the animation above and once, further down, for the large radial
+   rings behind the sign-in door. A loader that borrowed that name inherited
+   the door's scenery. */
+.beacon-halo {
+  opacity: 0.32;
+  animation: beaconGlow 3.4s ease-in-out infinite;
+}
+.beacon-flame {
+  display: inline-block;
+  transform-origin: 50% 80%;
+  animation: beaconFlicker 2.8s ease-in-out infinite;
+}
+
+/* ---- Waiting ----
+   A screen that is fetching and a screen that has finished and found nothing
+   used to look identical, so people tapped the button again. These say "still
+   working" without words. */
+
+@keyframes beaconSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The label breathes when the ring cannot turn, so the "still working" signal
+   survives prefers-reduced-motion instead of disappearing with the spin. */
+@keyframes beaconBreathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* A block standing in for content, sweeping left to right.
+
+   THE SAME DEFECT THE JOURNEY BAR HAD, found by the check written for that one
+   and not by anybody looking. This animated background-position, so every
+   loading skeleton on every screen repainted itself sixty times a second for as
+   long as it was on display -- which is precisely while the device is already
+   busy fetching the thing the skeleton stands for. The worst possible moment to
+   spend paint on decoration.
+   A sweeping highlight moved by transform costs nothing per frame. */
+@keyframes beaconShimmer {
+  0%   { transform: translate3d(-100%, 0, 0); }
+  100% { transform: translate3d(220%, 0, 0); }
+}
+
+/* A newly arrived person, greeted once. Two turns of a soft ring, then it
+   stops on its own: a badge that pulses forever is a badge people stop
+   seeing, and then it is only noise on somebody's name. */
+@keyframes beaconWelcome {
+  0% {
+    box-shadow: 0 0 0 0 rgba(232, 184, 75, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(232, 184, 75, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 184, 75, 0);
+  }
+}
+
+.beacon-spinner {
+  border-top-color: #1e2a4a;
+  animation: beaconSpin 0.75s linear infinite;
+}
+
+.beacon-skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #f3f4f6;
+}
+
+.beacon-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent 0%, #e5e7eb 50%, transparent 100%);
+  transform: translate3d(-100%, 0, 0);
+  animation: beaconShimmer 1.3s ease-in-out infinite;
+  will-change: transform;
+}
+
+.beacon-new {
+  animation: beaconWelcome 1.9s ease-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lift-hover {
+    transition: none;
+  }
+  .lift-hover:hover {
+    transform: none;
+  }
+  .rise {
+    opacity: 1;
+    animation: none;
+  }
+  .beacon-glow,
+  .beacon-halo,
+  .beacon-flame {
+    animation: none;
+  }
+  .beacon-spinner {
+    animation: none;
+  }
+  .beacon-spinner-label {
+    animation: beaconBreathe 1.6s ease-in-out infinite;
+  }
+  /* THE SWEEP MOVED TO ::after, SO THIS HAD TO FOLLOW IT. Silencing
+     .beacon-skeleton alone would have left the highlight sliding for exactly
+     the people who asked for less movement -- a reduced-motion rule aimed at
+     the element the animation used to be on is worse than none, because it
+     looks handled. */
+  .beacon-skeleton::after {
+    animation: none;
+    opacity: 0;
+  }
+  .beacon-new {
+    animation: none;
+    box-shadow: 0 0 0 2px rgba(232, 184, 75, 0.7);
+  }
+}
+
+/* Tutorial arrow bob. */
+@keyframes beaconBob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, 6px);
+  }
+}
+
+/* ---- The loader (components/BeaconLoader.tsx) ---- */
+
+/* The beam sweeping out from the lamp. */
+/* The lamp itself, brightening as the beam comes round. */
+@keyframes beaconPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* An indeterminate progress bar that slides rather than fills — it makes no
+   promise about how long it will take, because we don't know. */
+@keyframes beaconSlide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(430%);
+  }
+}
+@keyframes beaconFadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+/* A panel dropping in from the top edge (the update banner). */
+@keyframes beaconDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.beacon-bar {
+  animation: beaconSlide 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+/* THE BEACON ITSELF, on the front door.
+   A lighthouse is not a logo that sits there; it is a light somebody far away
+   can see, and the app is named after one. The glow is a radial wash BEHIND
+   the mark rather than a filter on it, so the logo's own colours stay exact
+   and only the air around it brightens.
+
+   Two layers at different speeds. One breathing halo alone reads as a pulsing
+   button; a slow wide wash under a slightly faster near glow reads as light
+   carrying, which is the thing being described. Six seconds, because anything
+   quicker becomes a demand for attention on a screen somebody is trying to
+   sign in on.
+
+   Pointer events off and aria-hidden at the call site: it is scenery, and it
+   must never sit between a finger and the button underneath. */
+.beacon-glow {
+  position: relative;
+  isolation: isolate;
+}
+.beacon-glow::before,
+.beacon-glow::after {
+  content: '';
+  position: absolute;
+  inset: -60%;
+  z-index: -1;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.beacon-glow::before {
+  background: radial-gradient(
+    circle,
+    rgba(90, 170, 255, 0.38) 0%,
+    rgba(47, 128, 237, 0.16) 42%,
+    rgba(47, 128, 237, 0) 70%
+  );
+  animation: beaconGlowWide 6s ease-in-out infinite;
+}
+.beacon-glow::after {
+  inset: -25%;
+  background: radial-gradient(
+    circle,
+    rgba(232, 184, 75, 0.30) 0%,
+    rgba(232, 184, 75, 0.10) 45%,
+    rgba(232, 184, 75, 0) 72%
+  );
+  animation: beaconGlowNear 4.2s ease-in-out infinite;
+}
+@keyframes beaconGlowWide {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+@keyframes beaconGlowNear {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1.04);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.92);
+  }
+}
+
+.beacon-splash-out {
+  animation: beaconFadeOut 0.3s ease forwards;
+}
+.animate-drop {
+  animation: beaconDrop 0.28s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* ---- Smoothness ----
+   One place that makes the whole app feel considered instead of abrupt.
+   Interactive things ease; surfaces that appear, fade in; long panels scroll
+   under a thin scrollbar rather than the OS default slab. */
+
+button,
+a,
+select,
+input,
+textarea,
+[role='tab'] {
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* Toggle tracks: colour transition only — no scale, no transform. */
+[role='switch'] {
+  transition: background-color 0.2s ease !important;
+}
+/* Toggle thumb: smooth lateral slide only. */
+[role='switch'] > span {
+  transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1) !important;
+}
+
+/* Pressing something should feel like pressing something.
+   Exclude [role='switch'] — toggle tracks must never scale; the thumb
+   is the only thing that moves inside them. */
+button:active:not(:disabled, [role='switch']),
+a[role='button']:active {
+  transform: scale(0.985);
+}
+
+/* NO GLIDE FOR THE WHOLE PAGE (4 October 2026). `scroll-behavior: smooth`
+   here turned every scroll anybody's code started into a glide, so a button
+   being scrolled into view was still moving when it was tapped. That failed a
+   Safari walk, and a person tapping quickly meets the same moving target. The
+   glides that are wanted (a link to a card, Show me in the tutorial, the
+   newest message) ask for one themselves through scrollMotion() in
+   lib/motion.ts, which also honours reduced motion. */
+html {
+  /* The other half of the install-bar fix above. Padding lets the page scroll
+     far enough to lift a control clear of the bar; this decides where a
+     scrolled-to control comes to REST. Without it, `scrollIntoView` on anything
+     near the bottom parks it in the covered strip — technically on screen and
+     impossible to press. */
+  scroll-padding-bottom: calc(var(--install-bar, 0px) + var(--tab-bar, 0px));
+
+  /* And the same at the top, for the same reason. The header is sticky and the
+     tutorial bar is fixed, so both sit outside the flow and a scrolled-to
+     control lands behind them. Reserving the bottom is what exposed this: with
+     the install bar accounted for, WebKit scrolled a name on the sign-in list
+     up and parked it under the header instead. AppShell publishes the header's
+     measured height, TutorialBar the chrome above it. */
+  scroll-padding-top: calc(var(--beacon-chrome-top, 0px) + var(--app-header, 0px));
+}
+
+/* THE CONVERSATION IS BOUNDED BY WHAT IS LEFT ON THE GLASS, NOT BY A FRACTION
+   OF IT.
+
+   THE BUG, photographed on an Android phone: a Guide opened a conversation and
+   the screen ended mid-sentence, on the line about photo sizes. The box to type
+   in and the Send button were below the glass, and dragging did not bring them
+   up, because the thread fills nearly the whole screen and `overscroll-contain`
+   correctly stops a drag inside it from scrolling the page. So there was no
+   part of the screen left to pull on.
+
+   The thread was capped at 55dvh, which sounds modest until the rest is added
+   up. On that phone the sticky app header is two rows and takes about 170px of
+   a roughly 715px viewport, leaving 545. The card wants 55dvh of thread (394)
+   plus its own heading (95), the photo note (30) and the composer (70): 589.
+   Forty-four pixels over, every time, and the forty-four that matter are the
+   ones you type into.
+
+   A fraction of the viewport cannot know any of that. This measures instead:
+   the card may be as tall as the viewport less the chrome above and below it,
+   and inside that the thread is the only part allowed to give up space. So the
+   composer is in the card, the card is on the screen, and the arithmetic holds
+   whatever height the header happens to be that day. */
+[data-live-conversation] {
+  display: flex;
+  flex-direction: column;
+  /* `vh` first for anything too old to know `dvh`; the second wins where it is
+     understood. `dvh` is the part actually visible, which is what shrinks when
+     a phone opens its keyboard. */
+  max-height: calc(100vh - var(--beacon-chrome-top, 0px) - var(--app-header, 0px) - var(--install-bar, 0px) - var(--tab-bar, 0px) - 1rem);
+  max-height: calc(100dvh - var(--beacon-chrome-top, 0px) - var(--app-header, 0px) - var(--install-bar, 0px) - var(--tab-bar, 0px) - 1rem);
+}
+
+/* Only the thread gives up space. Without this the heading, the note and the
+   composer shrink in proportion with it, and the thing that ends up clipped is
+   whichever one is tallest -- which is the composer. */
+[data-live-conversation] > :not([data-live-thread]) {
+  flex: 0 0 auto;
+}
+
+/* `min-height: 0` is the half that is easy to leave out. A flex child will not
+   shrink below its content by default, so a long thread simply pushes the
+   composer out of the card and the cap above achieves nothing. */
+[data-live-thread] {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* INSIDE THE TALK BUBBLE THE CARD IS NOT MEASURED AGAINST THE VIEWPORT.
+   The rule above caps the conversation at the height of the screen less the
+   page chrome, which is right when the conversation IS the page. The bubble is
+   a 32rem panel that already has a height of its own, and a cap far larger than
+   its container does nothing -- so the card grew to its content, the panel
+   scrolled it, and the thread scrolled itself inside that. TWO SCROLLBARS, one
+   of which dragged the composer and the photo note up and down.
+   Reported with a screenshot of both. The bubble is the whole chat, with one
+   scroll, and that scroll is the messages only, as in any messaging app.
+   Here the card simply fills the panel. The rules above still apply unchanged:
+   only the thread gives up space, so the heading and composer keep their height
+   and the messages take whatever is left. One scrollport, on the messages. */
+.talk-sheet [data-live-conversation] {
+  max-height: none;
+  height: 100%;
+}
+
+/* WHILE THE CHAT (OR THE DESK DRAWER) COVERS A PHONE OR A PAD, WHAT FLOATS
+   ABOVE IT STEPS ASIDE.
+   Below 1280px the Talk bubble opens to the whole screen, and several small
+   things float at a higher layer than it on purpose -- the install invitation,
+   the sample app's DEMO pill, the feedback nudge, the tutorial's Resume pill,
+   the update toast. Over a page they are fine. Over a full-screen chat they sat
+   on Attach and Send: seen on 30 September 2026, the DEMO pill across "Attach
+   a file" on a 390px phone. Each is back the moment the chat closes. Marked
+   `data-steps-aside-for-chat` where it is drawn.
+
+   AND THE SHEET STARTS UNDER THE TUTORIAL BAR. That bar is fixed at the top at
+   a higher layer, and the sheet's own header -- the name, Report and close --
+   was underneath it: Report could not be pressed in the sample app. The bar
+   publishes its height as `--beacon-chrome-top`, zero without it.
+   `div[data-talk-sheet]` outweighs the sheet's `inset-0` utility. */
+@media (max-width: 1279px) {
+  body:has([data-talk-sheet]) [data-steps-aside-for-chat],
+  body:has([data-desk-drawer][data-open='true']) [data-steps-aside-for-chat] {
+    display: none !important;
+  }
+  div[data-talk-sheet] {
+    top: var(--beacon-chrome-top, 0px);
+  }
+}
+
+/* THE CONVERSATION AND THE INSTALL INVITATION CANNOT BOTH OWN THE BOTTOM OF A
+   SHORT SCREEN, SO THE INVITATION STANDS DOWN.
+
+   REPORTED AS (a bug report), and it was not
+   a Safari bug at all. The full WebKit job log says exactly what broke:
+
+       BAD iPhone SE, upright:   and is still worth reading (0px)
+       BAD a phone on its side:  and is still worth reading (0px)
+
+   Zero pixels of messages. The two numbers beside it are worse than the one
+   that went red: the card reported bottom 305 while its own composer reported
+   bottom 363, and the card is `overflow-hidden`. The box you type in was being
+   clipped straight out of the card -- on a phone held sideways, 154px of it,
+   which is all of it. Two assertions stayed green through that, because "the
+   whole card fits" passes when the card SHRINKS, and "the box you type in is on
+   the screen" passes because getBoundingClientRect does not know its ancestor
+   is clipping it. Both measured the wrong rectangle.
+
+   THE ARITHMETIC. The rule above bounds the conversation by what the chrome
+   leaves. The install bar's own ceiling is half the viewport. On a 667px screen
+   showing the iOS Add to Home Screen steps that is ~357px, so the conversation
+   is left 667 - 71 (header) - 357 (bar) - 16 = 223px, and its heading, photo
+   note and composer alone want ~292. The thread is the only part allowed to
+   give way, so it gives way to nothing and the composer overflows.
+
+   WHY ONLY ON WEBKIT. `isIos()` is false in headless Chromium, so the bar there
+   is a title and a button, about 100px, and the sum comes out fine. The bug is
+   arithmetic, not an engine quirk -- reproduced in Chromium by publishing the
+   heights WebKit reports, which is also how this fix was checked without a
+   WebKit to check it against.
+
+   WHY THE INVITATION IS WHAT YIELDS. Squeezing its ceiling was tried first and
+   cannot work: swept across sixteen real device sizes the best ceiling still
+   left three broken, because on a 320px-tall screen a bottom-anchored
+   invitation and a conversation do not both fit at any size. One of them has to
+   go, and only one of them is dismissible. The invitation is an invitation; the
+   conversation is the app.
+
+   NO JAVASCRIPT AND NO NEW STATE. InstallPrompt already publishes its own
+   height through a ResizeObserver, and a hidden element measures zero, so
+   `--install-bar` falls to 0px on its own and the cap above widens by exactly
+   the amount the bar was taking. Verified: 358px before, 0px after.
+
+   The conversation is gone from the DOM when the bubble is closed, so this is
+   precisely "a conversation is on screen" and not "the app has a chat feature". */
+body:has([data-live-conversation]) [data-install-prompt='bar'] {
+  display: none;
+}
+
+/* ON A COMPUTER, THE INSTALL CARD AND TALK SHARED ONE CORNER, AND TALK LOST.
+
+   Found on 4 October 2026 by the WebKit job, as three walks that timed out on
+   a 1280px screen (safeguarding, media-and-realtime, chat-order): Playwright
+   named the install card as what received the click on Send, and on the
+   Report dialog's reasons. Measured as Mac Safari in Chromium: the card is
+   535px tall at `fixed bottom-4 right-4`, the closed Talk button is
+   `fixed bottom-4 right-4` underneath it, and from 1280px the open chat is a
+   22rem panel at `bottom-4 right-4` too. One layer up, the same width, the
+   same corner: a Mac user could not open their conversations, send in one,
+   or report one, until they had found the card's close button. Chrome on a
+   computer draws the same card when it offers to install.
+
+   So the card stands above the Talk button (1rem from the bottom, 3.5rem
+   tall, then a gap), and while a conversation is open it is not there at all,
+   at any width. Below 1280px the rule above already did that; this adds the
+   computer. The card's height is capped so a short window still shows its
+   header and close button. Walked in tests/e2e/the-install-prompt-covers-nothing.js. */
+body:has([data-talk-bubble]) [data-install-prompt='card'] {
+  bottom: 5.25rem;
+}
+/* And it steps aside for anything the person has opened: the chat, the
+   bell's list, a menu, a share sheet. Every one of those is a role="dialog"
+   (AnchoredPanel, the Talk sheet, the modals); the card is not. Standing
+   above Talk put it high enough to cover the middle of the bell's list on a
+   1280px screen, and WebKit's run said so (header-layers, 4 October 2026). */
+body:has([data-talk-sheet]) [data-install-prompt='card'],
+body:has([role='dialog']) [data-install-prompt='card'] {
+  display: none !important;
+}
+[data-install-prompt='card'] {
+  max-height: calc(100dvh - 7rem);
+  overflow-y: auto;
+}
+
+/* A strip that scrolls sideways with no visible scrollbar.
+   Used by the header's feature icons. A scrollbar under a 44px row of icons
+   eats a third of the row's height on desktop and looks like a defect on a
+   phone, where the platform hides it anyway. The overflow is still there and
+   still scrollable by touch, trackpad and keyboard. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* A quieter scrollbar for the rails and any panel that scrolls. */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 120, 140, 0.35) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 120, 140, 0.35);
+  border-radius: 999px;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(120, 120, 140, 0.55);
+}
+
+/* Each screen fades up as it mounts. Cheap, and it removes the "flash of new
+   page" that makes a single-page app feel like a slide projector. */
+@keyframes beaconPageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-in {
+  animation: beaconPageIn 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* The room's background changes when someone picks a new theme — ease it. */
+.room-surface {
+  transition: background 0.45s ease;
+}
+
+/* TEXT THAT SITS ON THE PAGE, NOT IN A CARD.
+   A card paints its own white surface, so navy text inside one is right in
+   every theme. A page title has no surface: it is drawn straight onto
+   theme.bg, and hard-coding navy made the church name vanish the moment
+   somebody chose Slate. These follow the theme and fall back to the brand
+   navy wherever the variables are not set, which is every screen outside the
+   signed-in shell. */
+.text-room {
+  color: var(--room-ink, #1E2A4A);
+}
+.text-room-soft {
+  color: var(--room-ink-soft, #5B6472);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beacon-bar {
+    animation: none;
+  }
+  /* The glow STAYS, it just stops moving: somebody who asked for less motion
+     asked for less motion, not a different design. */
+  .beacon-glow::before,
+  .beacon-glow::after {
+    animation: none;
+  }
+  .animate-drop,
+  .page-in {
+    animation: none;
+  }
+  /* THE CHAT'S MOTION, SWITCHED OFF WITH EVERYTHING ELSE. The panel, the sheet,
+     a message arriving and the bubble's dip. Each still ends exactly where it
+     would have ended -- an animation set to `none` lands on its `to` state, and
+     the transition simply stops interpolating -- so nothing is mid-flight or
+     invisible for somebody who asked for stillness. */
+  .talk-panel-in,
+  .talk-panel-out,
+  .talk-message-in,
+  .talk-view-forward,
+  .talk-view-back,
+  .talk-count-pop {
+    animation: none;
+  }
+  .talk-bubble {
+    transition: none;
+  }
+  .talk-bubble:active:not(:disabled) {
+    transform: none;
+  }
+  button:active:not(:disabled),
+  a[role='button']:active {
+    transform: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles: the Board report becomes a clean PDF via the browser's own
+   "Save as PDF". No PDF library needed. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .print-area {
+    box-shadow: none !important;
+  }
+}
+
+/* ---- A scroll bar somebody can actually see and grab ----
+   The default on Windows is a thin grey sliver and on macOS it is invisible
+   until you scroll, so an inner scroll area reads as a list that has simply
+   been cut off. Making the bar visible is what tells somebody there is more
+   below without them having to discover it by accident. */
+.beacon-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #c7cbd4 transparent;
+}
+.beacon-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.beacon-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.beacon-scroll::-webkit-scrollbar-thumb {
+  background-color: #c7cbd4;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+.beacon-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #9aa1ad;
+}
+
+/* ---- Landing on a linked card ----
+   Somebody who followed "3 people waiting to be approved" into the middle of a
+   long screen has to be told which card answered it. A ring for two seconds,
+   then gone: a permanent highlight would still be there tomorrow. */
+@keyframes beaconLanded {
+  0%,
+  70% {
+    box-shadow: 0 0 0 3px rgba(232, 184, 75, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgba(232, 184, 75, 0);
+  }
+}
+.beacon-landed {
+  border-radius: 1rem;
+  animation: beaconLanded 2.2s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .beacon-landed {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(232, 184, 75, 0.85);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Overlays on a phone held upright.
+   ---------------------------------------------------------------------------
+   THE BUG: pop-ups did not fit phones and tablets, and were fine on a
+   computer.
+
+   That last sentence is the diagnosis. `vh` and `dvh` are IDENTICAL on a
+   desktop, because a desktop window has no browser chrome that comes and goes.
+   On a phone `vh` is the LAYOUT viewport, measured as though the address bar
+   were hidden. So `max-h-[90vh]` is 90% of a taller screen than the one you are
+   looking at, and the bottom of the sheet, which is where the buttons live,
+   sits under the address bar or off the glass entirely. Scroll to reach it and
+   the bar hides, the viewport grows, and the sheet grows with it.
+
+   `dvh` is the part actually visible right now. components/live/shared.tsx has
+   said so since the message box was fixed, and was the only place in the app
+   that did: seven other overlays still measured themselves against a screen
+   that is not there.
+
+   The plain `vh` line stays first, as the fallback for anything too old to
+   know `dvh`.
+
+   The padding is the other half. A bottom sheet ends at the bottom of the
+   screen, which on any recent phone is where the home indicator is drawn, so
+   the last button sat underneath it and could not be pressed.  */
+.overlay-sheet {
+  max-height: 85vh;
+  max-height: 85dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Same rule, for an overlay that wants most of the screen rather than part of
+   it (a consent notice nobody can dismiss without reading). */
+.overlay-sheet-tall {
+  max-height: 92vh;
+  max-height: 92dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* THE CHAT MOVES WHEN YOU TOUCH IT.
+ *
+ * Asked for directly. Right, and worth doing carefully rather than sprinkling.
+ *
+ * MOTION HERE HAS A JOB, IT IS NOT DECORATION. Each of the three says something
+ * the static version left the person to work out:
+ *
+ *   OPENING   the panel grows from the corner it was tapped in, so it reads as
+ *             THAT BUBBLE becoming this panel rather than a new thing appearing
+ *             over the page. On a phone it rises from the bottom edge, which is
+ *             where a sheet lives and where the thumb already is.
+ *   ARRIVING  a new message fades up a few pixels. In a thread that reloads
+ *             wholesale, that is the only thing distinguishing "somebody just
+ *             said this" from "the list redrew".
+ *   PRESSING  the bubble dips under the finger. A control that big with no
+ *             press state reads as an image until it happens to work.
+ *
+ * ALL OF IT IS SHORT. 160-220ms (--motion-quick and --motion-base): long enough
+ * to be seen as movement, too short to be waited for. Anything slower puts a delay between somebody deciding to
+ * read a message and being able to.
+ *
+ * AND ALL OF IT STOPS UNDER prefers-reduced-motion, at the bottom of this file,
+ * where the rest of the app's motion is already switched off. Somebody who
+ * asked for less motion asked for less motion.
+ */
+@keyframes talkPanelIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* The sheet comes from the bottom edge, not from the middle of the screen,
+   and settles rather than stops: the curve below decelerates hard at the end,
+   which is what reads as smooth rather than as a slide that hit a wall. */
+@keyframes talkSheetIn {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes talkMessageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.talk-panel-in {
+  /* TRANSFORM-ORIGIN AT THE CORNER IT CAME FROM, which is what makes this read
+     as the bubble opening rather than as a card fading in over the page. */
+  transform-origin: bottom right;
+  animation: talkSheetIn var(--motion-base) var(--ease-settle);
+}
+
+@media (min-width: 1280px) {
+  .talk-panel-in {
+    animation: talkPanelIn var(--motion-quick) var(--ease-settle);
+  }
+}
+
+.talk-message-in {
+  animation: talkMessageIn var(--motion-quick) var(--ease-settle);
+}
+
+/* THE LIST AND A CONVERSATION SLIDE PAST EACH OTHER, the way you went.
+   Asked for on 30 September 2026.. Opening a person
+   brings their conversation in from the right; going back brings the list in
+   from the left. A short distance and a fade, so it says "you moved" without
+   making anybody wait to read. components/talk/Dock.tsx, TalkView. */
+@keyframes talkViewForward {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes talkViewBack {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.talk-view-forward {
+  animation: talkViewForward var(--motion-base) var(--ease-settle);
+}
+
+.talk-view-back {
+  animation: talkViewBack var(--motion-base) var(--ease-settle);
+}
+
+/* THE COUNT POPS WHEN IT GOES UP: something arrived. Only then -- the bubble
+   re-keys the badge on a rise, never on a fall. */
+@keyframes talkCountPop {
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.talk-count-pop {
+  animation: talkCountPop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* LEAVING IS AS MUCH A MOVEMENT AS ARRIVING.
+   Reported: (a bug report)
+
+   Opening had an animation from the day it was written; closing had none,
+   because closing was an unmount -- the panel was simply not rendered on the
+   next frame and vanished mid-blink. That is not a missing flourish. Without
+   it there is nothing telling somebody where the conversation WENT, so the
+   chat feels like it was destroyed rather than put down, and the bubble in the
+   corner does not read as the place it went back into.
+
+   The exit is the entrance reversed, and slightly quicker, which is the usual
+   asymmetry: people wait to see a thing arrive and do not want to wait to see
+   it leave. Same transform-origin, so it collapses towards the bubble it came
+   from. */
+@keyframes talkSheetOut {
+  from { opacity: 1; transform: scale(1)    translateY(0); }
+  to   { opacity: 0; transform: scale(.97)  translateY(8px); }
+}
+
+@keyframes talkPanelOut {
+  from { opacity: 1; transform: scale(1)   translateY(0); }
+  to   { opacity: 0; transform: scale(.94) translateY(6px); }
+}
+
+.talk-panel-out {
+  transform-origin: bottom right;
+  animation: talkSheetOut var(--motion-quick) var(--ease-leave) forwards;
+  /* Nothing can be pressed while it is on its way out, so a second tap cannot
+     land on a control that is already half gone. */
+  pointer-events: none;
+}
+
+@media (min-width: 1280px) {
+  .talk-panel-out {
+    animation: talkPanelOut var(--motion-quick) var(--ease-leave) forwards;
+  }
+}
+
+/* THE BUBBLE DIPS, and `transform` only -- never width or padding, which would
+   reflow the page behind it on every press. */
+.talk-bubble {
+  transition: transform 120ms ease-out;
+}
+
+.talk-bubble:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+/* THE DESK AS A DRAWER BELOW 1280px. components/DeskDrawer.tsx.
+   Asked for on 30 September 2026: the desk stacked under every page on a
+   phone, a second page nobody had asked for. Below 1280px it waits off the
+   right edge behind a small tab and slides in over the page; from 1280px it is
+   the column beside the page it always was, and the drawer box steps out of
+   the layout with `display: contents`, so the desk is the flex child again.
+
+   `visibility` IS RESET AT 1280px ON PURPOSE. It is inherited, and a box with
+   `display: contents` still passes it to its children: a closed drawer's
+   `hidden` would otherwise hide the desktop's desk. */
+.desk-tab {
+  top: 42%;
+  transform: translateY(-50%);
+  transition: transform 160ms ease-out;
+}
+
+.desk-tab:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.desk-backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-base) ease-out;
+}
+
+.desk-backdrop-on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.desk-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  width: min(24rem, 88vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #eef1f6;
+  box-shadow: -12px 0 32px rgba(15, 23, 42, 0.18);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--beacon-chrome-top, 0px) + 12px) 12px
+    calc(env(safe-area-inset-bottom, 0px) + 12px);
+  transform: translateX(105%);
+  visibility: hidden;
+  /* Hidden only once it has finished sliding out, so the way out is seen. */
+  transition: transform var(--motion-slow) var(--ease-settle), visibility 0s linear var(--motion-slow);
+}
+
+.desk-drawer[data-open='true'] {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform var(--motion-slow) var(--ease-settle), visibility 0s;
+}
+
+.desk-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 1280px) {
+  .desk-drawer {
+    display: contents;
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desk-drawer,
+  .desk-drawer[data-open='true'],
+  .desk-backdrop,
+  .desk-tab {
+    transition: none;
+  }
+}
+
+/* THE MUSIC ROOM KEEPS THE WIDTH. Asked for on 15 October 2026, with a
+   picture of the Tuner, Sing the note and their settings side by side: "Can
+   we make a full set like this in desktop please. I dont like to scroll much
+   in desktop version." On a window about 1300px wide (a 1080p laptop at
+   140%) the desk beside the page left the room 640px, the Tuner fell back to
+   a phone's single column, and with Advanced on it was 1,891px tall. So on the
+   Music page the desk stays in its drawer (the cabinet tab on the right edge,
+   as on a pad) until the window has room for both: 1680px, where the Tuner
+   still has two octaves beside the desk. */
+@media (min-width: 1280px) and (max-width: 1679.98px) {
+  body:has([data-music-room]) .desk-drawer {
+    display: block;
+    visibility: hidden;
+  }
+  body:has([data-music-room]) .desk-drawer[data-open='true'] {
+    visibility: visible;
+  }
+  body:has([data-music-room]) .desk-tab {
+    display: flex;
+  }
+  body:has([data-music-room]) .desk-backdrop {
+    display: block;
+  }
+  body:has([data-music-room]) .desk-drawer-head {
+    display: flex;
+  }
+  /* The drawer's tab on the right edge clears the room instead of sitting
+     over its last column (it hid Concert pitch's arrow at 1280px). */
+  body:has([data-music-room]) [data-music-room] {
+    padding-inline-end: 1.5rem;
+  }
+}
+
+/* THE DESK TUCKED AWAY ON A COMPUTER (12 November 2026, DeskDrawer.tsx).
+   The column's ››› is shown only where the desk is a column; once pressed,
+   <html data-desk-tucked> makes the desk the pad's drawer at every width. */
+.desk-tuck-row,
+.desk-pin {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .desk-tuck-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+  }
+  :root[data-desk-tucked] .desk-tuck-row {
+    display: none;
+  }
+  :root[data-desk-tucked] .desk-drawer {
+    display: block;
+    visibility: hidden;
+  }
+  :root[data-desk-tucked] .desk-drawer[data-open='true'] {
+    visibility: visible;
+  }
+  :root[data-desk-tucked] .desk-tab {
+    display: flex;
+  }
+  :root[data-desk-tucked] .desk-backdrop {
+    display: block;
+  }
+  :root[data-desk-tucked] .desk-drawer-head,
+  :root[data-desk-tucked] .desk-pin {
+    display: flex;
+  }
+}
+
+/* The Music room's title and its folder button share one row once there is
+   room, instead of three blocks stacked above every folder. */
+[data-music-room] {
+  container: music-room / inline-size;
+}
+.music-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+@container music-room (min-width: 760px) {
+  .music-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title folders" "about about";
+    align-items: center;
+    column-gap: 1.5rem;
+    row-gap: 0.25rem;
+  }
+  .music-title { display: contents; }
+  .music-title h1 { grid-area: title; }
+  .music-title p { grid-area: about; margin-top: 0; }
+  .music-folders { grid-area: folders; }
+}
+
+/* ---- Things that hang off a button ----
+   A menu, the bell's list, the role and mode switchers. Each comes OUT OF THE
+   THING THAT WAS PRESSED: a short drop and a fade from the button's corner, so
+   it reads as part of that button rather than as a card appearing over the
+   page. And each goes back the same way, on the `leave` curve that speeds up
+   as it goes, instead of vanishing mid-blink. Asked for on 1 October 2026.. */
+@keyframes beaconMenuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes beaconMenuOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+/* The sub-room list opens downwards from its button, which sits at its left.
+   components/SubroomMenu.tsx. */
+.subroom-menu-in {
+  transform-origin: top left;
+  animation: beaconMenuIn var(--motion-quick) var(--ease-settle);
+}
+
+/* A panel is right-aligned to its button (components/AnchoredPanel.tsx), so it
+   grows from the top right. Leaving, nothing in it can be pressed: a second tap
+   must not land on a control that is half gone. */
+.anchored-in {
+  transform-origin: top right;
+  animation: beaconMenuIn var(--motion-quick) var(--ease-settle);
+}
+
+.anchored-out {
+  transform-origin: top right;
+  animation: beaconMenuOut var(--motion-quick) var(--ease-leave) forwards;
+  pointer-events: none;
+}
+
+/* ---- Something that folds open under what was pressed ----
+   A person's profile under Profile; the Report form in the chat. It eases down
+   a few pixels into place: enough to show where it came from. */
+@keyframes beaconFoldIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fold-in {
+  animation: beaconFoldIn var(--motion-base) var(--ease-settle);
+}
+
+/* ---- The tutorial's arrow ----
+   It bobbed from an inline style, and an inline style is beyond the reach of
+   every stylesheet rule, so it kept bobbing for people who had asked their
+   device for less movement. A class can be switched off; components/Quest.tsx
+   wears this one. */
+.quest-arrow {
+  animation: beaconBob 1s ease-in-out infinite;
+}
+
+/* ---- The conversation's own pieces (components/talk/ChatView.tsx) ----
+   Asked for on 1 October 2026: a chat that feels like the ones people already
+   use. The menu for a message rises from the bottom of the conversation, a
+   picture fades in full screen, and the dot beside a recording breathes while
+   it records. Each is switched off under reduced motion in the block below. */
+@keyframes menuSheetIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.menu-sheet-in {
+  animation: menuSheetIn var(--motion-base) var(--ease-settle);
+}
+
+@keyframes viewerIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.viewer-in {
+  animation: viewerIn var(--motion-quick) ease-out;
+}
+
+@keyframes voiceDot {
+  0%,
+  100% { opacity: 1; }
+  50%  { opacity: 0.3; }
+}
+
+.voice-dot {
+  animation: voiceDot 1.2s ease-in-out infinite;
+}
+
+/* HOLD A MESSAGE FOR ITS MENU, on a touch screen. The browser has its own
+   long-press -- select the words, or iOS's call-out -- and both would open on
+   top of ours. Copy is in our menu, so selecting is not lost. `pan-y` keeps
+   the thread scrolling under a thumb while a sideways drag is ours: swipe a
+   message right to reply. The ⋯ beside each message is for a mouse and a
+   keyboard; a phone holds instead. */
+@media (pointer: coarse) {
+  .chat-bubble {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: pan-y;
+  }
+  .chat-more {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * CHAT BUBBLES: WHOSE WORDS ARE WHOSE (7 October 2026)
+ * ---------------------------------------------------------------------------
+ * Asked for in these words..
+ *
+ * Before, yours was a pale teal and theirs a pale peach, near enough one
+ * colour on a phone in daylight, and under the two dark looks both were
+ * repainted the same slate, so they WERE one colour. Now yours is blue with
+ * white writing and theirs is white, as every phone draws a conversation, on
+ * a ground a shade darker than white so a white bubble has an edge. A dark
+ * look keeps your blue and makes theirs a lifted slate.
+ *
+ * THE CHAT'S OWN CLASSES, so a look cannot repaint them by accident: the looks
+ * repaint the shared grey and white classes, which is how both bubbles came
+ * to be one slate. And NO LOOK NAMED HERE: a dark look is one that says
+ * `color-scheme: dark` in its own file, and light-dark() reads that, as the
+ * Music room's green does below. A dark look added later gets the dark
+ * bubbles without anybody remembering this file. A browser too old for
+ * light-dark() keeps white for theirs everywhere, which still reads.
+ *
+ * Measured: white on your blue 5.7:1, the time under it 5.0:1; their writing
+ * 15.9:1 on white and 11.1:1 on the dark slate.
+ * ------------------------------------------------------------------------- */
+:root {
+  --bubble-mine: #1d5fd6;
+  --bubble-mine-ink: #ffffff;
+  --bubble-theirs: #ffffff;
+  --bubble-theirs-ink: #1a2233;
+  --bubble-edge: rgba(26, 34, 51, 0.1);
+  --bubble-file-mine: #dce8fb;
+  --chat-ground: var(--look-page, #eef2f7);
+}
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    --bubble-theirs: light-dark(#ffffff, #26354d);
+    --bubble-theirs-ink: light-dark(#1a2233, #eef3fa);
+    --bubble-edge: light-dark(rgba(26, 34, 51, 0.1), rgba(255, 255, 255, 0.1));
+    --bubble-file-mine: light-dark(#dce8fb, #1e3a66);
+  }
+}
+.chat-ground {
+  background: var(--chat-ground);
+}
+.bubble-mine {
+  background: var(--bubble-mine);
+  color: var(--bubble-mine-ink);
+}
+.bubble-theirs {
+  background: var(--bubble-theirs);
+  color: var(--bubble-theirs-ink);
+  box-shadow: 0 0 0 1px var(--bubble-edge);
+}
+/* The time and a quoted line take the bubble's own writing colour, softened.
+   Softened only to 0.9: at 0.8 the time on your blue measured 4.3:1, under the
+   4.5:1 small writing needs (caught by tests/e2e/fresh-looks.js in Beacon). */
+.bubble-meta {
+  color: inherit;
+  opacity: 0.9;
+}
+.bubble-quote {
+  color: inherit;
+  border-left: 3px solid currentColor;
+  background: rgba(127, 127, 127, 0.14);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+/* A file, a recording or a video: a quieter tint of the same two, because the
+   player and the file's name inside keep the page's own writing colours. */
+.bubble-file-mine {
+  background: var(--bubble-file-mine);
+}
+.bubble-file-theirs {
+  background: var(--bubble-theirs);
+  box-shadow: 0 0 0 1px var(--bubble-edge);
+}
+
+/* THE CHAT'S MOTION OFF, HERE, AFTER IT IS SWITCHED ON. The block near the top
+   of this file that names these classes under prefers-reduced-motion comes
+   BEFORE the rules that set them, and a media query adds no weight: two rules
+   of equal specificity, the later one wins. So every one of these animations
+   still played for somebody who had asked their phone for less movement --
+   found on 30 September 2026 while adding the two below. Switching them off
+   after they are switched on is what makes the switch-off stick.
+   tests/every-animation-can-be-stilled.mjs checks that order for every
+   animation in the app, and the-chat-is-the-bubble-and-it-moves.mjs for the
+   chat's. */
+@media (prefers-reduced-motion: reduce) {
+  .subroom-menu-in,
+  .anchored-in,
+  .anchored-out,
+  .fold-in,
+  .quest-arrow,
+  .menu-sheet-in,
+  .voice-dot {
+    animation: none;
+  }
+  .talk-panel-in,
+  .talk-panel-out,
+  .talk-message-in,
+  .talk-view-forward,
+  .talk-view-back,
+  .talk-count-pop {
+    animation: none;
+  }
+  .talk-bubble {
+    transition: none;
+  }
+  .talk-bubble:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* THE CHAT, COVERING THE WHOLE SCREEN ON A PHONE OR A PAD.
+ *
+ * The dock used to be `hidden xl:block`, so only a very wide screen ever got
+ * the floating chat and a phone was sent to /talk instead -- a page you
+ * navigate away to, losing the screen you were on and the place you had
+ * scrolled to. Reported plainly: .
+ *
+ * The old reasoning was not wrong: a SMALL floating panel on a small screen
+ * covers the thing it floats over and is worse than a page. The answer is that
+ * the panel is not small on a phone. Collapsed it is a bubble covering almost
+ * nothing; opened it takes the whole screen, the way a conversation does in
+ * every messaging app people already use. So the objection and the request are
+ * both satisfied, and neither had to lose.
+ *
+ * A full-screen overlay is the one place BOTH safe areas matter: the status bar
+ * and notch at the top, the home indicator at the bottom. `.safe-bottom` covers
+ * only the second, because until now nothing in this app reached the top edge.
+ *
+ * The insets are switched off at 1280px, where this stops being a sheet and
+ * becomes the corner panel again -- there the padding would shrink the panel
+ * for nothing, since a desktop has no notch to clear. */
+.talk-sheet {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (min-width: 1280px) {
+  .talk-sheet {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* Anything anchored to the BOTTOM of a phone screen.
+   ---------------------------------------------------------------------------
+   The bottom strip of a modern phone is the home indicator, and it is drawn on
+   top of the page. `bottom-4` is sixteen pixels; the indicator is about
+   thirty-four. So an update toast, the feedback nudge, the install bar and the
+   tutorial's coach panel all sat underneath it: readable, half covered, and on
+   the panel's case with a button that could not be pressed because the swipe
+   gesture won.
+
+   None of it shows on a Mac. `env(safe-area-inset-bottom)` is zero there, which
+   is exactly why this stays a single class rather than a number typed into each
+   of them.
+
+   Margin, not padding: these are fixed elements positioned from the bottom, and
+   margin moves them up without changing how they are drawn. */
+.safe-bottom {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+  /* ABOVE THE BOTTOM BAR, where there is one. The bar already clears the home
+     indicator itself (its own padding is the inset), so whichever is taller
+     wins rather than the two adding up. `--tab-bar` is only set on a phone or
+     a pad, so a desktop is exactly as before. The line above stays as the
+     fallback for an engine without max(). */
+  margin-bottom: max(env(safe-area-inset-bottom, 0px), var(--tab-bar, 0px));
+}
+
+/* The install prompt's ceiling: half of the height left ABOVE the bottom bar.
+   It stands on the bar (it is `.safe-bottom` like everything else floating),
+   so on a phone held sideways half of the whole screen plus the bar left the
+   page almost nothing to tap. `vh` first for engines without `dvh`. */
+.install-bar-ceiling {
+  max-height: 50vh;
+  max-height: calc((100dvh - var(--tab-bar, 0px)) * 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   THE BOTTOM BAR: Menu | People | My Files. components/TabBar.tsx.
+
+   Drawn to docs/VISUAL-LANGUAGE.md: a white surface the page scrolls under,
+   one hairline, the system font, navy only on the tab you are in. The label
+   is never hidden and never below 15px, because these are the three words a
+   person steers the whole app by. Nothing here sets `display` on the bar
+   itself, so Tailwind's `xl:hidden` on the element still wins (the trap
+   recorded in VISUAL-LANGUAGE.md).
+   ------------------------------------------------------------------------ */
+.tab-bar {
+  background: rgb(255 255 255 / 0.96);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-top: 0.5px solid rgb(26 34 51 / 0.14);
+  /* The home indicator is drawn over the bottom of the glass on a modern
+     phone. The bar reaches the edge; its tabs sit above the indicator. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tab-bar-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 6px 4px;
+  /* Secondary ink: 64% of the body ink, about 4.6:1 on white. */
+  color: rgb(26 34 51 / 0.64);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-bar-label {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.tab-bar-pill {
+  display: grid;
+  place-items: center;
+  height: 32px;
+  width: 64px;
+  border-radius: 999px;
+  transition: background-color 150ms ease;
+}
+
+/* The tab you are in: navy, and a pill behind the icon, so it is not told by
+   colour alone. */
+.tab-bar-tab[aria-current] {
+  color: #1e2a4a;
+  font-weight: 800;
+}
+
+.tab-bar-tab[aria-current] .tab-bar-pill {
+  background: rgb(30 42 74 / 0.12);
+}
+
+@media (hover: hover) {
+  .tab-bar-tab:hover .tab-bar-pill {
+    background: rgb(26 34 51 / 0.06);
+  }
+  .tab-bar-tab[aria-current]:hover .tab-bar-pill {
+    background: rgb(30 42 74 / 0.16);
+  }
+}
+
+/* A pad has the width for the word beside the icon, as iPadOS draws its own
+   tab bars; the bar stays centred rather than spreading three tabs across a
+   kilometre of glass. */
+@media (min-width: 768px) {
+  .tab-bar-tab {
+    flex-direction: row;
+    gap: 8px;
+    min-height: 60px;
+  }
+  .tab-bar-pill {
+    width: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-bar-pill {
+    transition: none;
+  }
+}
+
+/* INSIDE A CONVERSATION THE BAR STEPS ASIDE, at every width. Asked for in
+   those words: "Hide the bar inside conversations too." A screen that IS a
+   conversation marks itself `data-conversation-screen`. Since the chat moved
+   into the Talk bubble (30 September 2026) that is /talk alone: a Guide's page
+   opens on Appointments, an Explorer's home is their studies and their Guide,
+   and neither is a conversation any more. The header's Back and its home link
+   are the way out. `:has()` is new enough that an old engine simply
+   keeps the bar, which is the behaviour before this rule. */
+body:has([data-conversation-screen]) .tab-bar {
+  display: none;
+}
+
+/* A PHONE HELD SIDEWAYS has width to spare and almost no height, so the bar
+   goes compact the way a phone's own tab bars do in landscape: the word
+   beside the icon, and 44px tall, which is still a full-size target. */
+@media (max-height: 500px) {
+  .tab-bar-tab {
+    flex-direction: row;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 4px;
+  }
+  .tab-bar-pill {
+    height: 28px;
+    width: 44px;
+  }
+
+  /* AND IN A CONVERSATION IT STEPS ASIDE, as a messaging app's tab bar does
+     inside a chat. On a phone held sideways the bar cost the thread 65px of
+     412 and left 18px of messages (tests/e2e/conversation-fits-the-glass.js).
+     Only on a short screen and only while a conversation is on it; the
+     header's Back and its home link are still there, and turning the phone
+     upright brings the bar back. `:has()` is new enough that an old engine
+     simply keeps the bar, which is the behaviour before this rule. */
+  body:has([data-live-conversation]) .tab-bar {
+    display: none;
+  }
+}
+
+/* The person's own desk (RoomRails' right rail), where it is a sticky column
+   beside the page: as tall as the window less the header above it AND the
+   bottom bar below it, so scrolled to its end its last line is above the bar.
+   `vh` first for engines without `dvh`.
+
+   IT STICKS BELOW THE HEADER, HOWEVER TALL THE HEADER IS. It stuck a fixed
+   76px from the top, which is less than the header plus the sample church's
+   purple strip, and less than the live header alone: as the page scrolled,
+   the desk's first card slid underneath ("MY OFFICE" cut in half on the
+   owner's screen, 3 October 2026; "yes fix it in Classic too"). Both shells
+   publish the header's measured height, the tutorial bar its own, and 1rem
+   is the gap the page itself keeps under the header. Before the header has
+   been measured, 60px plus that gap is the 76px it always was. */
+@media (min-width: 1280px) {
+  .desk-rail {
+    top: calc(var(--beacon-chrome-top, 0px) + var(--app-header, 60px) + 1rem);
+    max-height: calc(100vh - var(--beacon-chrome-top, 0px) - var(--app-header, 60px) - 2rem - var(--tab-bar, 0px));
+    max-height: calc(100dvh - var(--beacon-chrome-top, 0px) - var(--app-header, 60px) - 2rem - var(--tab-bar, 0px));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   THE MENU: every room, written out. app/menu/page.tsx, components/MenuList.
+
+   An inset grouped list, the Study Room's `.sr-group` vocabulary brought to
+   the rest of the app: white rows, hairlines inset to the text, 14px corners,
+   each row a whole-width target at least 56px tall.
+   ------------------------------------------------------------------------ */
+.menu-group {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1a2233;
+  box-shadow: 0 0 0 0.5px rgb(26 34 51 / 0.12);
+}
+
+/* The hairline starts where the words do, not under the icon. */
+.menu-group > li + li {
+  position: relative;
+}
+
+.menu-group > li + li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 62px;
+  right: 0;
+  border-top: 0.5px solid rgb(26 34 51 / 0.12);
+  pointer-events: none;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 14px;
+  color: #1a2233;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+.menu-row:hover {
+  background: rgb(26 34 51 / 0.04);
+}
+
+.menu-icon {
+  display: grid;
+  place-items: center;
+  height: 34px;
+  width: 34px;
+  flex: none;
+  border-radius: 999px;
+  background: rgb(30 42 74 / 0.08);
+  font-size: 18px;
+}
+
+.menu-group-head {
+  margin: 0 0 6px 14px;
+  color: var(--room-ink-soft, rgb(26 34 51 / 0.64));
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   THE TUTORIAL'S PANEL, when it sits at the bottom. components/Quest.tsx.
+
+   Its home is the bottom of the glass, and the bottom bar lives there now. A
+   panel over the bar would hide the very tab a step points at (Menu, on the
+   way to Home), so the panel stands on top of the bar instead. Where there is
+   no bar it reaches the edge as before, and only its content clears the home
+   indicator. On a wider screen it is a card in the corner, lifted the same way.
+   ------------------------------------------------------------------------ */
+.quest-dock {
+  bottom: var(--tab-bar, 0px);
+  padding-bottom: calc(0.75rem + max(0px, env(safe-area-inset-bottom, 0px) - var(--tab-bar, 0px)));
+}
+
+@media (min-width: 640px) {
+  .quest-dock {
+    bottom: calc(1rem + var(--tab-bar, 0px));
+    padding-bottom: 1rem;
+  }
+}
+
+/* A PANEL THAT FLOATS OVER WORDS IS SOLID, IN EVERY LOOK (6 October 2026).
+
+   The Frutiger Aero looks paint every white panel as glass, 86 to 90 per cent
+   opaque, which is right for a card lying on the page: only the sky is behind
+   it. It is wrong for a panel that opens on top of other words. In Dark Aero,
+   words behind the glass showed through the words on it and confused people
+   reading them. The folder names sat on top of the page's own heading and buttons.
+
+   So anything that floats (a drop-down, a sheet, a dialog, the chat) carries
+   `solid-panel` and is painted in the look's panel colour, fully opaque. The
+   look's sheen and rim still apply; only the see-through goes. It names no
+   look (the looks' own rules stay in app/themes/, tests/the-classic-look-
+   stays.mjs), and outweighs the glass rule by naming its class twice rather
+   than by coming later, so the order the stylesheets load in cannot undo it.
+   Under Classic, Beacon, Study and Focus the panel colour is the one their
+   `bg-white` already uses, so nothing there changes. */
+:root .solid-panel.solid-panel.bg-white:not([data-look-preview]) {
+  background-color: var(--look-panel, #ffffff) !important;
+}
+
+/* THE MUSIC ROOM'S GREEN (6 October 2026): your part on the score, the trail
+   of your voice, the beat a score starts from. No one green reads on both a
+   light and a dark panel (measured on all ten looks: teal-700 is 2.4:1 on
+   Focus, teal-400 is 1.5:1 on Classic), so a light look gets the deep green
+   and a dark look (color-scheme: dark, which Focus and Dark Aero set) the
+   bright one. A browser too old for light-dark() keeps the middle green. */
+:root {
+  --music-accent: #0d9488;
+}
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    --music-accent: light-dark(#0f766e, #2dd4bf);
+  }
+}
+
+/* PALE WASHES (6 October 2026). The header strip of a card, washed from one
+   pale colour through white to another, and the featured card in My Files. A
+   look repaints a card's white and its writing, but not a gradient drawn over
+   them, so under a dark look (Focus, Dark Aero) the wash stayed pale beneath
+   writing the look had turned pale: Featured titles measured 1.03:1, a lesson
+   count 1.6:1. In a light look, Classic included, these are exactly the
+   Tailwind gradients they replace; in a dark look (color-scheme: dark) they
+   are clear and the look's own card shows. A browser too old for light-dark()
+   keeps the wash everywhere, as before. */
+.wash-sky-teal { background-image: linear-gradient(to right, #f0f9ff, #ffffff, #f0fdfa); }
+.wash-teal-sky { background-image: linear-gradient(to right, #f0fdfa, #ffffff, #f0f9ff); }
+.wash-emerald-teal { background-image: linear-gradient(to right, #ecfdf5, #ffffff, #f0fdfa); }
+.wash-featured { background-image: linear-gradient(to bottom right, #ffffff, rgb(240 249 255 / 0.8)); }
+@supports (color: light-dark(#000, #fff)) {
+  .wash-sky-teal { background-image: linear-gradient(to right, light-dark(#f0f9ff, transparent), light-dark(#ffffff, transparent), light-dark(#f0fdfa, transparent)); }
+  .wash-teal-sky { background-image: linear-gradient(to right, light-dark(#f0fdfa, transparent), light-dark(#ffffff, transparent), light-dark(#f0f9ff, transparent)); }
+  .wash-emerald-teal { background-image: linear-gradient(to right, light-dark(#ecfdf5, transparent), light-dark(#ffffff, transparent), light-dark(#f0fdfa, transparent)); }
+  .wash-featured { background-image: linear-gradient(to bottom right, light-dark(#ffffff, transparent), light-dark(rgb(240 249 255 / 0.8), transparent)); }
+}
+
+/* SING THE NOTE (14 October 2026; made simpler on 15 October 2026): a piano
+   keyboard to tap a note on, the ring that fills while it is held, and the
+   reward for a perfect note. The keyboard keeps a piano's own colours in every
+   look (white keys light, black keys dark, the chosen key the Music room's
+   green), so it always reads as a keyboard; a dark look (color-scheme: dark)
+   only dims the white keys a little. The reward is a burst of notes around the
+   ring and a glow; under Reduce Motion the glow stands still and the burst is
+   not drawn (components/music/SingTheNote.tsx). */
+.sing-piano {
+  --key-white: #ffffff;
+  --key-black: #1f2937;
+  --key-on-ink: #ffffff;
+}
+@supports (color: light-dark(#000, #fff)) {
+  .sing-piano {
+    --key-white: light-dark(#ffffff, #e6ebf3);
+    --key-black: light-dark(#1f2937, #0b1220);
+    --key-on-ink: light-dark(#ffffff, #052421);
+  }
+}
+.sing-key {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color var(--motion-quick, 160ms) ease, transform 80ms ease;
+}
+/* A solid colour under each gradient, so a contrast check (and a browser
+   that cannot draw the gradient) reads the key's own colour. */
+.sing-key-white {
+  border-radius: 0 0 0.6rem 0.6rem;
+  background-color: var(--key-white);
+  background-image: linear-gradient(to bottom, var(--key-white) 82%, color-mix(in srgb, var(--key-white) 90%, #1e2a4a));
+  color: #1e2a4a;
+  box-shadow: inset 0 0 0 1px rgb(30 42 74 / 0.16), 0 2px 0 rgb(30 42 74 / 0.14);
+}
+.sing-key-black {
+  z-index: 1;
+  border-radius: 0 0 0.45rem 0.45rem;
+  background-color: var(--key-black);
+  background-image: linear-gradient(to bottom, color-mix(in srgb, var(--key-black) 75%, #ffffff), var(--key-black) 35%);
+  box-shadow: 0 3px 5px rgb(0 0 0 / 0.3);
+}
+.sing-key:active {
+  transform: translateY(1px);
+}
+.sing-key[aria-pressed="true"] {
+  background: var(--music-accent);
+  color: var(--key-on-ink);
+}
+.sing-key:focus-visible {
+  outline: 3px solid var(--music-accent);
+  outline-offset: 2px;
+}
+.sing-ring-fill {
+  transition: stroke-dashoffset var(--motion-quick, 160ms) linear, stroke var(--motion-base, 220ms) ease;
+}
+.perfect-pitch-glow {
+  animation: perfectPitchGlow 1000ms ease-out both;
+}
+.perfect-pitch-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--music-accent);
+  opacity: 0;
+  animation: perfectPitchSpark 1100ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--i, 0) * 40ms) both;
+}
+@keyframes perfectPitchGlow {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--music-accent) 55%, transparent); }
+  100% { box-shadow: 0 0 0 28px color-mix(in srgb, var(--music-accent) 0%, transparent); }
+}
+@keyframes perfectPitchSpark {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(-2.5rem) rotate(calc(-1 * var(--a, 0deg))) scale(0.6); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(-6rem) rotate(calc(-1 * var(--a, 0deg))) scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sing-key,
+  .sing-ring-fill {
+    transition: none;
+  }
+  .perfect-pitch-glow {
+    animation: none;
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--music-accent) 35%, transparent);
+  }
+  .perfect-pitch-spark {
+    animation: none;
+    display: none;
+  }
+}
+
+/* THE TUNER'S ROUND BUTTON (15 October 2026), while it listens: the Music
+   room's green, with a soft ring that breathes outwards so it is plain that
+   the microphone is on. The stop square is drawn in white on the deep green
+   of a light look and in near-black on the bright green of a dark one. Still
+   under Reduce Motion. */
+.tuner-mic-on {
+  position: relative;
+  background: var(--music-accent);
+  color: #ffffff;
+}
+@supports (color: light-dark(#000, #fff)) {
+  .tuner-mic-on {
+    color: light-dark(#ffffff, #052421);
+  }
+}
+.tuner-mic-on::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 3px solid var(--music-accent);
+  opacity: 0;
+  /* Grown and faded, not a spreading shadow: a loop that runs as long as the
+     microphone is on must move only what the compositor moves
+     (tests/an-animation-that-loops-does-not-repaint.mjs). */
+  animation: tunerMicOn 1600ms ease-out infinite;
+}
+@keyframes tunerMicOn {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tuner-mic-on::after {
+    animation: none;
+    opacity: 0.35;
+    transform: scale(1.15);
+  }
+}
+
+/* THE TUNER ON EVERY DEVICE (15 October 2026).. The folder measures its own width (a container query, not the
+   window's, since a computer's sidebar and desk take some of it). Narrow, as on
+   a phone: one column, the dial first, Sing the note under it with Advanced,
+   then the settings. From 720px wide, as on a tablet or a computer: two
+   columns, the dial beside its settings, or with Advanced the dial and its
+   settings on the left and Sing the note on the right, all in view at once.
+   A browser without container queries keeps the single column. */
+.tuner-shell {
+  container: tuner / inline-size;
+}
+.tuner-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "main" "sing" "side";
+}
+.tuner-grid[data-advanced="false"] {
+  grid-template-areas: "main" "side";
+}
+.tuner-main { grid-area: main; }
+.tuner-side,
+.tuner-sing {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+.tuner-side { grid-area: side; }
+.tuner-sing { grid-area: sing; }
+@container tuner (min-width: 720px) {
+  .tuner-grid,
+  .tuner-grid[data-advanced="false"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "main side";
+    align-items: start;
+  }
+  .tuner-grid[data-advanced="true"] {
+    grid-template-areas: "main sing" "side sing";
+    /* Any height the keyboard's column has over the dial's goes below the
+       settings, not between the dial and them. */
+    grid-template-rows: auto 1fr;
+  }
+  /* Side by side, the dial card is no taller than it needs to be, so the
+     dial, the keyboard and the grade fit one screen (, 15 October 2026). */
+  .tuner-main .tuner-gauge {
+    max-width: 15rem;
+  }
+  .tuner-main [data-tuner-mic] {
+    width: 3.75rem;
+    height: 3.75rem;
+    margin-top: 0.5rem;
+  }
+  .tuner-main [data-tuner-verdict] {
+    margin-top: 0.25rem;
+  }
+  /* The keys a little shorter, the grade a little closer under them, and the
+     settings beside the dial in slimmer cards: measured on a 1366 x 657
+     laptop, the keys were 198px tall and the three settings 306px. */
+  .tuner-sing .sing-piano {
+    height: 7.5rem;
+    margin-top: 0.75rem;
+  }
+  .tuner-sing [data-sing-now] {
+    margin-top: 0.75rem;
+  }
+  .tuner-grid .tuner-side {
+    gap: 0.75rem;
+  }
+  .tuner-grid .tuner-side > * {
+    padding-block: 0.75rem;
+  }
+  /* With Advanced on, the dial card is an instrument's face: the dial, and the
+     one round button beside it rather than under it. 401px tall before, on a
+     1366 x 657 laptop. Without Advanced the big dial stays as it is. */
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-reading] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "gauge mic"
+      "gauge caption"
+      "gauge verdict"
+      "gauge hz"
+      "sounds sounds";
+    grid-template-rows: auto auto auto auto;
+    align-content: center;
+    align-items: center;
+    justify-items: center;
+    column-gap: 1rem;
+  }
+  .tuner-grid[data-advanced="true"] .tuner-main .tuner-gauge { grid-area: gauge; }
+  /* The note in the smaller dial, smaller with it: at full size it ran into
+     the dial's marks. */
+  .tuner-grid[data-advanced="true"] .tuner-main .tuner-gauge p { font-size: 3.25rem; }
+  .tuner-grid[data-advanced="true"] .tuner-main .tuner-gauge p span { font-size: 1.5rem; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-mic] { grid-area: mic; margin-top: 0; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-mic-label] { grid-area: caption; margin-top: 0.25rem; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-sounds] { grid-area: sounds; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-verdict] { grid-area: verdict; }
+  .tuner-grid[data-advanced="true"] .tuner-main [data-tuner-hz] { grid-area: hz; }
+  .tuner-grid[data-advanced="true"] .tuner-main > p:last-child { margin-top: 0.5rem; }
+  .tuner-grid[data-advanced="true"] .tuner-side { gap: 0.5rem; }
+  .tuner-grid[data-advanced="true"] .tuner-side > * { padding-block: 0.5rem; }
+  .tuner-sing [data-sing-ring] {
+    width: 7rem;
+    height: 7rem;
+  }
+}
+/* Wide enough for the keyboard's two octaves beside the dial: the keyboard's
+   side gets the larger share. Below this (an upright tablet) the halves stay
+   equal, or the settings beside the dial are squeezed. 940px, not 1000: a
+   1300px window with the Music room's full width is 990px, and at 1000 it
+   was one octave short. */
+@container tuner (min-width: 940px) {
+  .tuner-grid[data-advanced="true"] {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  }
+}
+
+/* The letter that plays each key from a computer's keyboard, and the Z and X
+   beside the octave arrows. Shown only where there is a mouse to point with
+   (a touch screen has no letters to type). Keys lighten under the pointer. */
+.key-hint {
+  display: none;
+  position: absolute;
+  inset-inline: 0;
+  top: 0.4rem;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.6;
+}
+/* Beside the octave arrows the letter sits in the line, not on a key. */
+[data-sing-octave] .key-hint { position: static; opacity: 0.75; }
+.sing-key-black .key-hint { top: auto; bottom: 0.4rem; }
+.sing-key-white .key-hint { color: #1e2a4a; opacity: 0.5; }
+.sing-key-black .key-hint { color: #ffffff; opacity: 0.7; }
+.sing-key[aria-pressed="true"] .key-hint { color: inherit; opacity: 0.8; }
+@media (hover: hover) and (pointer: fine) {
+  .key-hint { display: block; }
+  .sing-key-white:hover:not([aria-pressed="true"]) {
+    background-image: linear-gradient(to bottom, color-mix(in srgb, var(--music-accent) 10%, var(--key-white)) 82%, color-mix(in srgb, var(--key-white) 88%, #1e2a4a));
+  }
+  .sing-key-black:hover:not([aria-pressed="true"]) {
+    background-image: linear-gradient(to bottom, color-mix(in srgb, var(--key-black) 55%, #ffffff), color-mix(in srgb, var(--key-black) 85%, #ffffff) 35%);
+  }
+}
+
+
+/* LINE ICONS (components/NavLineIcon.tsx): hidden here, so Old Classic keeps
+   its emoji; every other look shows them, each in its own stylesheet. Added
+   on 12 November 2026, first for Modern, then for every other look. */
+.nav-icon .nav-line { display: none; }
+
+/* Each look's own entrance (app/themes/<look>.css uses these; asked for on 12
+   November 2026: "there must be differences in each themes"). */
+@keyframes lookDawn {
+  from { opacity: 0; transform: scale(0.985); filter: brightness(1.08); }
+  to { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+@keyframes lookPage {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes lookFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lookBubble {
+  from { opacity: 0; transform: scale(0.97); filter: blur(6px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+/* ---- Celebrations (components/Celebration.tsx, 13 November 2026) ----
+   Five kinds of burst, each piece resting invisible and seen only while its
+   animation runs (no fill-mode, so nothing lingers or traps a layer). */
+.celebrate { position: fixed; inset: 0; z-index: 70; pointer-events: none; display: grid; place-items: center; }
+.celebrate-field { position: absolute; inset: 0; overflow: hidden; }
+.celebrate-piece {
+  position: absolute; left: var(--x); top: 40%; opacity: 0;
+  color: var(--c); font-size: calc(1.4rem * var(--s)); line-height: 1;
+  animation-duration: 2.4s; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation-delay: var(--d);
+}
+.celebrate-confetti { top: -4%; width: 9px; height: 14px; border-radius: 2px; background: var(--c); animation-name: celebrateFall; }
+.celebrate-stars { top: 85%; animation-name: celebrateRise; }
+.celebrate-balloons { top: 100%; font-size: calc(2rem * var(--s)); animation-name: celebrateFloat; animation-duration: 2.7s; }
+.celebrate-hearts { top: 70%; animation-name: celebrateRise; animation-duration: 2.2s; }
+.celebrate-fireworks {
+  left: 50%; top: 42%; width: 6px; height: 6px; border-radius: 9999px; background: var(--c);
+  box-shadow: 0 0 10px var(--c); animation-name: celebrateBurst; animation-duration: 1.4s;
+}
+.celebrate-words {
+  position: relative; opacity: 0; margin: 0; padding: 0.75rem 1.25rem; border-radius: 9999px;
+  background: #ffffff; color: #14231d; font-weight: 800; font-size: 1.15rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 12px 24px rgba(0, 0, 0, 0.15);
+  animation: celebrateWords 2.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+@keyframes celebrateFall {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(105vh) rotate(calc(var(--a) * 2)); }
+}
+@keyframes celebrateRise {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-60vh) scale(1.2) rotate(var(--a)); }
+}
+@keyframes celebrateFloat {
+  0% { opacity: 1; transform: translate(0, 0); }
+  50% { transform: translate(12px, -55vh); }
+  100% { opacity: 0; transform: translate(-10px, -115vh); }
+}
+@keyframes celebrateBurst {
+  0% { opacity: 1; transform: rotate(var(--a)) translateX(0) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(min(38vw, 220px)) scale(0.4); }
+}
+@keyframes celebrateWords {
+  0% { opacity: 0; transform: scale(0.8); }
+  12% { opacity: 1; transform: scale(1.05); }
+  20% { transform: scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+/* Asked for less motion: the words, still, and no burst. */
+@media (prefers-reduced-motion: reduce) {
+  .celebrate-field { display: none; }
+  .celebrate-confetti, .celebrate-stars, .celebrate-balloons, .celebrate-hearts, .celebrate-fireworks { animation: none; }
+  .celebrate-words { animation: none; opacity: 1; }
+}
+
+/* ---- Outlines in a sideways row are drawn inside (13 November 2026) ----
+   "the corners are cut off": a chip's ring is drawn just OUTSIDE its edge, and
+   a row that scrolls sideways clips everything outside its own box, so the top
+   and the ends of each outline were shaved off. Inside a scrolling row, the
+   ring is drawn on the inside instead: the same line, nothing left to clip. */
+.overflow-x-auto > [class*="ring-1"],
+.overflow-x-auto > * > [class*="ring-1"],
+.overflow-x-auto > [class*="ring-2"],
+.overflow-x-auto > * > [class*="ring-2"] {
+  --tw-ring-inset: inset;
+}

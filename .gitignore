@@ -1,0 +1,104 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# next.js
+/.next/
+/.next-dev/
+/out/
+/.vercel/
+next-env.d.ts
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env — never commit real keys
+#
+# Ignore EVERY .env variant and allow back only the example. An earlier list
+# named `.env`, `.env.local` and `.env*.local` one by one, which left
+# `.env.production` tracked — exactly the name somebody reaches for when they
+# are setting a deployment up and in a hurry.
+.env
+.env.*
+!.env.example
+
+# editor
+.vscode/
+.idea/
+
+# Build artifact — regenerated on every typecheck.
+tsconfig.tsbuildinfo
+
+# Anything a contributor keeps beside the project but should never publish:
+# scratch notes, exports, a local copy of somebody's real data.
+/private/
+/scratch/
+/.ui-check/
+
+# Generated handbooks (build output)
+docs/handbook/*.docx
+docs/handbook/*.pdf
+docs/handbook/node_modules/
+docs/handbook/package*.json
+
+# Local environment files — never commit keys
+.env.local
+.env*.local
+
+# Generated guides. The Markdown in docs/ is the source; these are built from it
+# with `node docs/handbook/build-pdf.js`. Committing them would give the repo two
+# copies of every guide that drift apart, and the PDF is always the stale one.
+docs/handbook/pdf/
+
+# The Supabase CLI's scratch directory. Holds the CLI version it last saw and
+# nothing anybody wrote; it appears the first time you run the CLI and is not
+# part of the project.
+supabase/.temp/
+
+# The drawing board's fonts, copied from node_modules before every build by
+# scripts/excalidraw-assets.mjs. Generated, and the package is the source.
+/public/excalidraw/
+# scripts/third-party-notices.mjs. Written at every build from what is installed.
+/public/third-party-notices.txt
+
+# A developer's own Claude Code settings: which plugins they turned on or off for
+# this project. Personal, and never shared (docs/DEVELOPER-TOOLKIT.md).
+/.claude/settings.local.json
+
+# A tool installed "for this project only" writes its setup into these, and a
+# committed copy would switch the tool on for everybody who clones the
+# repository. A developer's own copy stays here, harmless and uncommitted
+# (docs/DEVELOPER-TOOLKIT.md, rule 6; tests/the-toolkit-is-opt-in.mjs).
+/.mcp.json
+/.claude/CLAUDE.md
+/.codex/
+/.cursor/mcp.json
+/.vscode/mcp.json
+/.gemini/settings.json
+/opencode.json
+/opencode.jsonc
+/.kiro/settings/mcp.json
+
+# The Postgres edition's own install, and what a running copy keeps: the
+# database files and uploaded files of whoever runs it (selfhost/README.md).
+/selfhost/server/node_modules/
+/selfhost/data/
+
+# tools/trends: Python caches and the charts and numbers it writes, which are
+# a church's own and never belong in a public repository.
+__pycache__/
+trends-out/
+
+# tools/photo-remake: Rust's build folder. What ships is the module it writes
+# into supabase/functions/_shared/, checked by its SHA-256.
+/tools/photo-remake/target/

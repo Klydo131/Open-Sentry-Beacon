@@ -1,0 +1,38 @@
+/* DORFic, a Frutiger Aero look: playful, optimistic and futuristic; the glossiest of the five.
+   Its colours and what is only its own; what the five share is in
+   app/themes/aero.css. Scoped to this choice. Screen only. */
+@media screen {
+:root[data-ui-theme="aero-dorfic"] {
+  --look-page: #e3f1ff;
+  --look-panel: #ffffff;
+  --look-inset: #cfe6ff;
+  --look-ink: #0a2a57;
+  --look-soft: #3d5a80;
+  --look-line: #9fc6ee;
+  --look-header: #0846a6;
+  --look-primary: #0846a6;
+  --look-onPrimary: #ffffff;
+  --look-accent: #006fb0;
+  --look-gold: #e8b84b;
+  --top-bar-bg: var(--look-panel);
+  --top-bar-ink: var(--look-ink);
+  --top-bar-soft: var(--look-soft);
+  --top-bar-chip: var(--look-inset);
+  --top-bar-chip-hover: var(--look-inset);
+  --top-bar-line: var(--look-line);
+  --top-bar-avatar: var(--look-primary);
+  color-scheme: light;
+  --navy: var(--look-ink);
+  --gold: var(--look-gold);
+  --aero-opacity: 86%;
+  --aero-sheen: .85;
+  --aero-gloss: .24;
+  --aero-rim: rgb(255 255 255 / .95);
+  --aero-shadow: rgb(8 70 166 / .3);
+  --aero-radius: 26px;
+  --aero-icon: linear-gradient(180deg, #1e9be8 0%, #0846a6 100%);
+  --aero-backdrop: radial-gradient(44rem 24rem at 90% -6rem, #a9dcff 0%, rgb(169 220 255 / 0) 70%), radial-gradient(30rem 20rem at -6% 28rem, #e2f5ff 0%, rgb(226 245 255 / 0) 70%);
+}
+/* DORFic's room icons are white on the glossy blue tile. */
+:root[data-ui-theme="aero-dorfic"] .fresh-room-icon { color:#ffffff; }
+}

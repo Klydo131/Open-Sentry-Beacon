@@ -1,0 +1,26 @@
+/* The drawing board, as this app wants it. Every rule is under
+   [data-drawing-board], so nothing here reaches the rest of the app.
+
+   THE LIBRARY BUTTON IS HIDDEN. Excalidraw's library is a shelf of shapes that
+   lives in memory here (nothing keeps it), and its "Browse libraries" link
+   leaves the app for Excalidraw's own site. For somebody drawing a picture for
+   a study it is one more button that does not do what it seems to. */
+[data-drawing-board] .default-sidebar-trigger,
+[data-drawing-board] .sidebar-trigger {
+  display: none !important;
+}
+
+/* Excalidraw sets its own text in its own face; the bar above it is the app's. */
+[data-drawing-board] .excalidraw {
+  --ui-font: Assistant, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* THE WHOLE CANVAS TAKES FOCUS, as Excalidraw's editing surface, so the app's
+   focus ring (app/globals.css) was drawn round the entire drawing area in gold
+   and navy the moment the board opened. It says nothing there: the canvas is
+   the only thing to type into. Every button on the board keeps its own ring. */
+[data-drawing-board] .excalidraw:focus,
+[data-drawing-board] .excalidraw:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

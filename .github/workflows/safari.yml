@@ -1,0 +1,145 @@
+# The iOS and Mac suites, on the engine that actually ships to Apple devices.
+#
+# WHY THIS EXISTS, AND WHAT IT COST NOT TO HAVE IT.
+#
+# Every iOS bug reported by this church's users was found by a person holding an
+# iPhone, after passing CI. `overflow-x: clip` was rendered one way by Blink and
+# another by WebKit, and produced an empty strip down the right of every screen.
+# `dvh` against `vh` broke the height of the message box once a keyboard opened.
+# Neither of those is a mistake Chromium can see, because Chromium is not the
+# engine those people are using.
+#
+# The rest of the suites run on Chromium in `verify.yml`, which is right: it is
+# fast, it runs on three operating systems, and it catches logic. This one is
+# the other half. Same suites, WebKit, on a real macOS machine.
+#
+# WHAT THIS PROVES, AND WHAT IT STILL DOES NOT.
+#
+# WebKit is the engine inside Safari, so this catches the engine-level bugs
+# above, which is the whole class that has actually hurt. It is NOT Safari, and
+# it is not iOS. Safari adds its own layer on top, and iOS Safari adds another
+# again: real rubber-band scrolling, the software keyboard, Low Power Mode,
+# Private Relay, and the seven-day eviction of storage on a site nobody visits.
+# A green run here means the engine is happy. It does not mean an iPhone is.
+#
+# So this narrows what a person has to check by hand. It does not replace them.
+#
+# COST. macOS runners bill at ten times the Linux rate. This repository is
+# public, where GitHub Actions is free and unmetered, so today it costs nothing.
+# If this repository is ever made private, that stops being true and this is the
+# workflow to look at first.
+
+name: safari
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # So it can be run by hand while chasing a specific iOS report.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A second push should not leave two macOS runners racing each other.
+concurrency:
+  group: safari-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  webkit:
+    # An emergency pull request skips Safari; the merge to main runs it.
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'emergency') }}
+    runs-on: macos-latest
+    # 45, not 30, since 29 October 2026. Every suite in WebKit took about 27
+    # minutes on 7137b83; that day's walks (back-stays-in-the-study-room, and a
+    # finger and a tablet in the whiteboard walk) took it past 30, and the run on
+    # 4ca34ce was cut off at 30 with a third of the suites unrun: no summary,
+    # reported only as "cancelled", which reads like a newer push. A run that is
+    # cut off proves nothing about the suites it never reached.
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # The newest 22.x, not whatever the runner cached: Node's 21 October 2026
+          # security release (22.23.4) fixed a Brotli decoder flaw and nine more.
+          check-latest: true
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Playwright is deliberately NOT a dependency of this project: it is a
+      # ~300 MB install with its own browser downloads and the app does not use
+      # it at runtime. tests/e2e/_playwright.js resolves it from a local
+      # install, a global one, or reports its absence honestly. --no-save keeps
+      # it out of package.json.
+      - name: Install Playwright and WebKit
+        run: |
+          set -euo pipefail
+          npm i --no-save playwright
+          npx playwright install webkit
+
+      # E2E_BROWSER is read by tests/e2e/_playwright.js. Without it the suites
+      # run on Chromium, which is what verify.yml already does and would make
+      # this job an expensive duplicate that proves nothing new.
+      # WHY THIS JOB IS NOT PINNED TO ONE AT A TIME, HAVING BEEN, BRIEFLY.
+      #
+      # The walks run four at a time in verify.yml, and that number was
+      # measured against Chromium on Linux by somebody with no WebKit to try it
+      # on. When this job then reported fourteen failing suites, the honest
+      # question was whether that was Safari or the concurrency -- so it was
+      # pinned to one at a time to find out.
+      #
+      # THAT WOULD HAVE ANSWERED NOTHING. Fifty-four WebKit suites in single
+      # file runs well past this job's thirty-minute timeout, so the run would
+      # have been killed with no result at all, on every push, on a macOS
+      # runner. A slower experiment that cannot finish is not a more careful
+      # one.
+      #
+      # And the answer was already in the log. The failures are app-level and
+      # engine-specific, not the shape concurrency makes:
+      #
+      #   landing               a bare pushState does not scroll the page in
+      #                         WebKit as it does in Blink
+      #   quest-roles           a walk step points at nothing
+      #   the-study-room-opens  navigation interrupted by /?fresh=... -- which
+      #                         is SelfHeal, firing because a chunk failed to
+      #                         load. That is a real thing happening to Safari
+      #                         users and the most interesting of the three.
+      #
+      # So: four, which finishes in about twelve minutes and leaves the
+      # findings legible. If a suite here is ever suspected of failing only
+      # alongside others, run it with E2E_WORKERS=1 by hand through
+      # workflow_dispatch rather than making every push pay for the doubt.
+      - name: Run every suite on WebKit
+        env:
+          E2E_BROWSER: webkit
+          E2E_OUT: ${{ runner.temp }}/webkit-shots
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          set -euo pipefail
+          mkdir -p "${E2E_OUT}"
+          npm run test:all
+
+      # Only on failure, and only because a WebKit layout bug is something you
+      # have to LOOK at. A stack trace saying an element was not visible does
+      # not tell you it was pushed off screen by a strip nobody meant to draw.
+      #
+      # Artifacts on a PUBLIC repository can be downloaded by anyone on the
+      # internet. These screenshots are safe to publish because the suites run
+      # against the built-in sample data with no Supabase configured, so there
+      # is no real congregation in them. If that ever changes, this step is the
+      # thing that starts leaking, and it must go.
+      - name: Keep the screenshots when something breaks
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: webkit-screenshots
+          path: ${{ runner.temp }}/webkit-shots
+          retention-days: 7
+          if-no-files-found: ignore

@@ -1,0 +1,147 @@
+// Classic, in a browser: Settings names it and has it chosen, and the app
+// still draws exactly the colours it drew on the day it was named.
+//
+// Asked for on 3 October 2026.
+//
+// THE FINGERPRINT BELOW IS CLASSIC, measured on 3 October 2026 from the app as
+// it was before this walk existed. If a change makes this walk fail, the
+// change has altered Classic: make it a look of its own instead (see
+// lib/ui-themes.ts). Change these numbers only when the owner has decided that
+// Classic itself should change, and say so in the commit.
+//
+//   npm run build && node scripts/run-next.mjs start -p 4414
+//   node tests/e2e/the-classic-look-stays.js 4414
+
+const { chromium, launchOptions, pageErrors } = require('./_playwright');
+
+const PORT = process.argv[2] || '4414';
+const BASE = `http://localhost:${PORT}`;
+
+let bad = 0;
+const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
+
+const CLASSIC = {
+  ground: 'rgb(244, 246, 251)',
+  ink: 'rgb(26, 34, 51)',
+  header: 'rgb(30, 42, 74)',
+  bar: 'rgba(255, 255, 255, 0.96)',
+  folder: 'rgb(30, 42, 74)',
+  folderRadius: '18px',
+  heading: 'rgb(30, 42, 74)',
+  rootSize: '18px',
+};
+
+async function signInAs(page, who) {
+  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1100);
+  const pick = page.getByText(who).first();
+  if (await pick.count()) await pick.click();
+  await page.waitForTimeout(1500);
+  const consent = page.getByRole('button', { name: /I understand, continue/i }).first();
+  try {
+    await consent.waitFor({ state: 'visible', timeout: 3000 });
+    await consent.click();
+    await page.waitForTimeout(600);
+  } catch {
+    // Not shown, or already accepted.
+  }
+}
+
+/** What Classic looks like on a Guide's home: the colours a person would notice changing. */
+const fingerprint = (page) => page.evaluate(() => {
+  const style = (selector) => {
+    const el = document.querySelector(selector);
+    return el ? getComputedStyle(el) : null;
+  };
+  const body = style('body');
+  const folder = style('[data-subroom-toggle]');
+  return {
+    ground: body?.backgroundColor,
+    ink: body?.color,
+    header: style('header')?.backgroundColor,
+    bar: style('nav[aria-label="Main"]')?.backgroundColor,
+    folder: folder?.backgroundColor,
+    folderRadius: folder?.borderRadius,
+    heading: style('h1')?.color,
+    rootSize: getComputedStyle(document.documentElement).fontSize,
+    font: body?.fontFamily,
+  };
+});
+
+const lookOf = (page) => page.evaluate(() => document.documentElement.getAttribute('data-ui-theme'));
+const sideways = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+
+(async () => {
+  const browser = await chromium.launch(launchOptions);
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await context.addInitScript(() => {
+    try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 3650 * 24 * 60 * 60 * 1000)); } catch { /* fine */ }
+  });
+  const page = await context.newPage();
+  // Through the shared collector, which leaves out WebKit's report of a fetch
+  // the walk itself cut short (tests/e2e/_playwright.js, pageErrors).
+  const caught = pageErrors(page);
+
+  // 1. CLASSIC, AS IT IS, before anybody chooses anything. On a computer
+  // Classic has its own layout (rooms down the left, tests/e2e/the-desktop-
+  // layout.js); a phone is where these colours were measured, and still are.
+  await signInAs(page, 'Maria Santos');
+  await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1400);
+  ok((await lookOf(page)) === 'classic', 'before anybody chooses, the page is Classic');
+  const before = await fingerprint(page);
+  ok(before.ground === CLASSIC.ground && before.ink === CLASSIC.ink,
+     `Classic's ground and ink are the same pale blue-grey and dark ink (${before.ground}, ${before.ink})`);
+  ok(before.header === CLASSIC.header, `the same navy header (${before.header})`);
+  ok(before.bar === CLASSIC.bar, `the same white bar along the bottom (${before.bar})`);
+  ok(before.folder === CLASSIC.folder && before.folderRadius === CLASSIC.folderRadius,
+     `the same navy folder button, rounded the same (${before.folder}, ${before.folderRadius})`);
+  ok(before.heading === CLASSIC.heading && before.rootSize === CLASSIC.rootSize && /system-ui/.test(before.font ?? ''),
+     `the same navy headings in the same system font at the same size (${before.heading}, ${before.rootSize})`);
+
+  // 2. SETTINGS NAMES IT
+  await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1300);
+  const card = page.locator('[data-panel="look-settings"]');
+  ok((await card.count()) === 1, 'Settings, General, has the Look card');
+  const radios = card.getByRole('radio');
+  // Named "Old Classic" since 12 November 2026, when Modern became the default.
+  ok((await radios.count()) >= 1 && /^Old Classic/.test((await radios.first().innerText()).trim()),
+     'its first look is Classic, named Old Classic');
+  const classic = card.locator('[data-ui-theme-choice="classic"]');
+  ok((await classic.getAttribute('aria-checked')) === 'true' && /Chosen/.test(await classic.innerText()),
+     'and Classic is the one chosen, said in words as well as colour');
+  ok((await card.locator('[data-ui-theme-choice="desktop"]').count()) === 0,
+     'Desktop is not offered any more: on a computer it is Classic');
+  await classic.scrollIntoViewIfNeeded();
+  ok((await sideways(page)) <= 1, 'the card does not push a phone sideways');
+  await classic.click();
+  await page.waitForTimeout(400);
+  ok((await page.evaluate(() => localStorage.getItem('beacon-ui-theme'))) === 'classic' && (await lookOf(page)) === 'classic',
+     'choosing Classic chooses it, and this device remembers it');
+
+  // 3. NOTHING ELSE CAN BE SMUGGLED IN, AND AN OLD CHOICE LANDS ON CLASSIC.
+  // A value that is no look is the look a device shows until somebody
+  // chooses: Modern, since 12 November 2026. "desktop" was a choice, and the
+  // founder kept it as Classic on 3 October 2026.
+  for (const [stored, lands] of [['nonsense"><b', 'modern'], ['desktop', 'classic']]) {
+    await page.evaluate((v) => localStorage.setItem('beacon-ui-theme', v), stored);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(1200);
+    ok((await lookOf(page)) === lands && (await page.locator(`[data-ui-theme-choice="${lands}"]`).getAttribute('aria-checked')) === 'true',
+       `a stored ${JSON.stringify(stored)} is ${lands}, and nothing else`);
+  }
+
+  // 4. AND CLASSIC IS STILL CLASSIC
+  await page.goto(`${BASE}/dm`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1400);
+  const after = await fingerprint(page);
+  ok((await lookOf(page)) === 'classic' && JSON.stringify(after) === JSON.stringify(before),
+     'after all of that, a phone draws exactly what it drew before: nothing has changed colour or size');
+
+  const errors = caught.list();
+  ok(errors.length === 0, `no errors in the page${errors.length ? `: ${errors[0]}` : ''}`);
+  await browser.close();
+  console.log(bad ? `RESULT: ${bad} BAD` : 'RESULT: ALL OK');
+  process.exit(bad ? 1 : 0);
+})().catch((e) => { console.error(e); process.exit(1); });

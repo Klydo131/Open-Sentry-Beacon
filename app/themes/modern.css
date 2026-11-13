@@ -1,0 +1,486 @@
+/* Modern: the look a device shows until somebody chooses (12 November 2026).
+   Light surfaces, one green, soft shapes. Scoped to this choice; Classic is untouched.
+   Original local SVG art; no external assets. Screen only. */
+@media screen {
+:root[data-ui-theme="modern"] {
+  --look-page: #f6f8f5;
+  --look-panel: #ffffff;
+  --look-inset: #e6f3ec;
+  --look-ink: #14231d;
+  --look-soft: #4a5a52;
+  --look-line: #d5e2da;
+  --look-header: #0f5a43;
+  --look-primary: #0f7b5f;
+  --look-onPrimary: #ffffff;
+  --look-accent: #0f7b5f;
+  --look-gold: #e8b84b;
+  --top-bar-bg: var(--look-panel);
+  --top-bar-ink: var(--look-ink);
+  --top-bar-soft: var(--look-soft);
+  --top-bar-chip: var(--look-inset);
+  --top-bar-chip-hover: var(--look-inset);
+  --top-bar-line: var(--look-line);
+  --top-bar-avatar: var(--look-primary);
+  color-scheme: light;
+  --navy: var(--look-ink);
+  --gold: var(--look-gold);
+  /* The small details, taken from the Astryx design system's published
+     values (MIT; github.com/meta/astryx, packages/core/src/theme). Values
+     only: no Astryx code or package is used. */
+  /* Astryx's scale (13 November 2026.): an inner 6px, a
+     control 10px, every card 12px, one radius per kind of thing. */
+  --m-radius-inner: 6px;
+  --m-radius-element: 10px;
+  --m-radius-container: 12px;
+  --m-radius-card: var(--m-radius-container);
+  --m-radius-page: var(--m-radius-container);
+  /* Astryx's hairline: a quiet edge that is the same on every card. */
+  --m-hairline: rgba(20, 35, 29, 0.08);
+  --m-fast: 175ms;
+  --m-medium: 410ms;
+  --m-ease: cubic-bezier(0.24, 1, 0.4, 1);
+  --m-ease-exit: cubic-bezier(0.3, 0, 0.6, 0.6);
+  --m-shadow-low: 0 2px 4px rgba(20, 35, 29, 0.05), 0 4px 8px rgba(20, 35, 29, 0.06);
+  --m-shadow-med: 0 1px 2px rgba(20, 35, 29, 0.1), 0 4px 16px rgba(20, 35, 29, 0.1);
+  --m-shadow-high: 0 2px 2px rgba(20, 35, 29, 0.1), 0 8px 24px rgba(20, 35, 29, 0.14);
+}
+:root[data-ui-theme="modern"] .sr {
+  --sr-bg: var(--look-page);
+  --sr-surface: var(--look-panel);
+  --sr-ink: var(--look-ink);
+  --sr-ink-2: var(--look-soft);
+  --sr-sep: var(--look-line);
+  --sr-fill: var(--look-inset);
+  --sr-fill-2: var(--look-inset);
+  --sr-tint: var(--look-accent);
+  --sr-tint-soft: var(--look-inset);
+}
+:root[data-ui-theme="modern"] .sr-bar,
+:root[data-ui-theme="modern"] .sr-formatbar,
+:root[data-ui-theme="modern"] .sr-side {
+  background: var(--look-panel);
+}
+:root[data-ui-theme="modern"] .sr-action-icon,
+:root[data-ui-theme="modern"] .sr-side-item[aria-current='true'] {
+  background: var(--look-primary);
+  color: var(--look-onPrimary);
+}
+:root[data-ui-theme="modern"] .sr-side-item[aria-current='true'] svg {
+  color: inherit;
+}
+:root[data-ui-theme="modern"] .sr-side-item[aria-current='true'] .opacity-60 {
+  opacity: 1;
+}
+:root[data-ui-theme="modern"] body {
+  background: var(--look-page);
+  color: var(--look-ink);
+}
+:root[data-ui-theme="modern"] .room-surface {
+  background: var(--look-page) !important;
+}
+/* The desk drawer on a phone or tablet, behind its cards: the look's page,
+   not Classic's grey (4 October 2026). A room colour recolours it too. */
+:root[data-ui-theme="modern"] .desk-drawer {
+  background: var(--look-page);
+}
+:root[data-ui-theme="modern"] [data-app-header] {
+  background-color: var(--look-header) !important;
+  color: #ffffff;
+}
+:root[data-ui-theme="modern"] .bg-white:not([data-look-preview]),
+:root[data-ui-theme="modern"] .menu-group,
+:root[data-ui-theme="modern"] [data-desk-drawer] .rounded-2xl[style*="background-color"] {
+  background-color: var(--look-panel) !important;
+  border-color: var(--look-line) !important;
+}
+:root[data-ui-theme="modern"] .bg-white\/95,
+:root[data-ui-theme="modern"] .bg-white\/90,
+:root[data-ui-theme="modern"] .bg-white\/80,
+:root[data-ui-theme="modern"] .bg-white\/70,
+:root[data-ui-theme="modern"] .bg-white\/65 {
+  background-color: var(--look-panel);
+}
+:root[data-ui-theme="modern"] .bg-gray-50,
+:root[data-ui-theme="modern"] .bg-gray-100,
+:root[data-ui-theme="modern"] .bg-slate-50,
+:root[data-ui-theme="modern"] .bg-slate-100,
+:root[data-ui-theme="modern"] .menu-icon,
+:root[data-ui-theme="modern"] .tab-bar-pill,
+:root[data-ui-theme="modern"] [data-ui-theme-choice][aria-checked="false"] {
+  background-color: var(--look-inset) !important;
+}
+:root[data-ui-theme="modern"] .text-navy,
+:root[data-ui-theme="modern"] .text-room,
+:root[data-ui-theme="modern"] .text-gray-800,
+:root[data-ui-theme="modern"] .text-gray-900,
+:root[data-ui-theme="modern"] .text-slate-800,
+:root[data-ui-theme="modern"] .text-slate-900,
+:root[data-ui-theme="modern"] .menu-row,
+:root[data-ui-theme="modern"] [data-ui-theme-choice][aria-checked="false"] {
+  color: var(--look-ink) !important;
+}
+:root[data-ui-theme="modern"] .text-room-soft,
+:root[data-ui-theme="modern"] .text-gray-400,
+:root[data-ui-theme="modern"] .text-gray-500,
+:root[data-ui-theme="modern"] .text-gray-600,
+:root[data-ui-theme="modern"] .text-gray-700,
+:root[data-ui-theme="modern"] .text-slate-400,
+:root[data-ui-theme="modern"] .text-slate-500,
+:root[data-ui-theme="modern"] .text-slate-600,
+:root[data-ui-theme="modern"] .text-slate-700,
+:root[data-ui-theme="modern"] .menu-group-head,
+:root[data-ui-theme="modern"] .menu-row .text-\[15px\],
+:root[data-ui-theme="modern"] .menu-row > svg,
+:root[data-ui-theme="modern"] [data-desk-drawer] p[style*="color"],
+:root[data-ui-theme="modern"] [data-desk-drawer] a[style*="color"],
+:root[data-ui-theme="modern"] [data-desk-drawer] span[style*="color"],
+:root[data-ui-theme="modern"] [data-desk-drawer] button[style*="color"]:not([style*="background-color"]) {
+  color: var(--look-soft) !important;
+}
+:root[data-ui-theme="modern"] [data-desk-drawer] p.font-extrabold,
+:root[data-ui-theme="modern"] [data-desk-drawer] p.font-bold,
+:root[data-ui-theme="modern"] [data-desk-drawer] span.font-extrabold {
+  color: var(--look-ink) !important;
+}
+:root[data-ui-theme="modern"] .bg-navy,
+:root[data-ui-theme="modern"] .bg-\[\#1e2a4a\],
+:root[data-ui-theme="modern"] button[style*="background-color: rgb(30"],
+:root[data-ui-theme="modern"] button[style*="background-color: #1E2A4A"],
+:root[data-ui-theme="modern"] [data-subroom-toggle],
+:root[data-ui-theme="modern"] [data-ui-theme-choice][aria-checked="true"] {
+  background-color: var(--look-primary) !important;
+  color: var(--look-onPrimary) !important;
+}
+:root[data-ui-theme="modern"] [data-subroom-toggle] * {
+  color: inherit !important;
+}
+:root[data-ui-theme="modern"] .border-gray-100,
+:root[data-ui-theme="modern"] .border-gray-200,
+:root[data-ui-theme="modern"] .border-gray-300,
+:root[data-ui-theme="modern"] .border-slate-200,
+:root[data-ui-theme="modern"] .border-black\/5,
+:root[data-ui-theme="modern"] .border-navy\/10,
+:root[data-ui-theme="modern"] .menu-group > li + li::before {
+  border-color: var(--look-line);
+}
+:root[data-ui-theme="modern"] .ring-black\/5,
+:root[data-ui-theme="modern"] .ring-navy\/10,
+:root[data-ui-theme="modern"] .ring-navy\/20,
+:root[data-ui-theme="modern"] .menu-group {
+  --tw-ring-color: var(--look-line);
+  box-shadow: 0 0 0 1px var(--look-line);
+}
+:root[data-ui-theme="modern"] .tab-bar {
+  background: var(--look-panel);
+  border-top-color: var(--look-line);
+  /* The panel is solid, so the blur behind it shows nothing and only costs
+     the phone work on every frame of scrolling. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-ui-theme="modern"] .tab-bar-tab {
+  color: var(--look-soft);
+}
+:root[data-ui-theme="modern"] .tab-bar-tab[aria-current] {
+  color: var(--look-ink);
+}
+:root[data-ui-theme="modern"] .tab-bar-tab[aria-current] .tab-bar-pill {
+  background: var(--look-primary) !important;
+  color: var(--look-onPrimary);
+}
+:root[data-ui-theme="modern"] .menu-group {
+  color: var(--look-ink);
+}
+:root[data-ui-theme="modern"] .menu-row.text-\[\#b42318\] {
+  color: #b42318 !important;
+}
+:root[data-ui-theme="modern"] .menu-row:hover,
+:root[data-ui-theme="modern"] .tab-bar-tab:hover {
+  background: var(--look-inset);
+}
+:root[data-ui-theme="modern"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+:root[data-ui-theme="modern"] textarea,
+:root[data-ui-theme="modern"] select {
+  background-color: var(--look-panel);
+  color: var(--look-ink);
+  border-color: var(--look-line);
+  accent-color: var(--look-primary);
+}
+:root[data-ui-theme="modern"] input::placeholder,
+:root[data-ui-theme="modern"] textarea::placeholder {
+  color: var(--look-soft);
+  opacity: 1;
+}
+:root[data-ui-theme="modern"] .bg-gold,
+:root[data-ui-theme="modern"] button[style*="background-color: rgb(232"],
+:root[data-ui-theme="modern"] button[style*="background-color: #E8B84B"] {
+  color: #302f27 !important;
+}
+:root[data-ui-theme="modern"] [data-look-preview] .text-gray-700 {
+  color: #374151 !important;
+}
+:root[data-ui-theme="modern"] :focus-visible {
+  outline: 2px solid var(--look-primary);
+  outline-offset: 3px;
+}
+:root[data-ui-theme="modern"] .bg-navy .text-white\/60,
+:root[data-ui-theme="modern"] .bg-navy .text-white\/70,
+:root[data-ui-theme="modern"] .bg-navy .text-white\/80,
+:root[data-ui-theme="modern"] .bg-navy .text-white\/85,
+:root[data-ui-theme="modern"] .bg-navy .text-white\/90 {
+  color: var(--look-onPrimary) !important;
+}
+
+
+:root[data-ui-theme="modern"] .fresh-menu { width:100%; max-width:56rem; margin:auto; display:flex; flex-direction:column; gap:1.2rem; }
+:root[data-ui-theme="modern"] .fresh-page-title { margin:0; font-size:15px; font-weight:700; color:var(--look-soft); }
+:root[data-ui-theme="modern"] .fresh-hero { position:relative; overflow:hidden; min-height:190px; border:1px solid var(--look-line); border-radius:20px; background:var(--look-panel); }
+:root[data-ui-theme="modern"] .fresh-art { position:absolute; right:0; top:0; width:56%; height:100%; object-fit:cover; }
+:root[data-ui-theme="modern"] .fresh-hero-copy { position:relative; width:52%; min-height:190px; padding:22px; background:var(--look-panel); }
+:root[data-ui-theme="modern"] .fresh-eyebrow { margin:0 0 8px; color:var(--look-accent); font-size:13px; font-weight:700; }
+:root[data-ui-theme="modern"] .fresh-hero h2 { margin:0; color:var(--look-ink); font:600 25px/1.2 system-ui, sans-serif; letter-spacing:-.025em; overflow-wrap:anywhere; }
+:root[data-ui-theme="modern"] .fresh-hero h2 span { font-weight:800; }
+:root[data-ui-theme="modern"] .fresh-intro { margin:12px 0 0; color:var(--look-soft); font-size:15px; line-height:1.45; }
+:root[data-ui-theme="modern"] .fresh-profile { display:flex; gap:12px; align-items:center; min-height:68px; padding:10px 14px; border:1px solid var(--look-line); border-radius:14px; background:var(--look-panel); color:var(--look-ink); }
+:root[data-ui-theme="modern"] .fresh-profile-copy { min-width:0; flex:1; display:flex; flex-direction:column; }
+:root[data-ui-theme="modern"] .fresh-profile-copy strong { font-size:17px; overflow-wrap:anywhere; }
+:root[data-ui-theme="modern"] .fresh-profile-copy > span { color:var(--look-soft); font-size:13px; }
+:root[data-ui-theme="modern"] .fresh-room-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+:root[data-ui-theme="modern"] .fresh-personal-list { display:grid; gap:10px; }
+:root[data-ui-theme="modern"] .fresh-room-grid > li { min-width:0; }
+:root[data-ui-theme="modern"] .fresh-room { height:100%; display:flex; position:relative; align-items:center; gap:12px; min-height:70px; padding:14px; border:1px solid var(--look-line); border-radius:16px; background:var(--look-panel); color:var(--look-ink); }
+:root[data-ui-theme="modern"] .fresh-room-grid .fresh-room { flex-wrap:wrap; align-content:flex-start; min-height:150px; gap:10px; }
+:root[data-ui-theme="modern"] .fresh-room-icon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:14px; background:var(--look-inset); color:var(--look-accent); }
+:root[data-ui-theme="modern"] .fresh-room-copy { display:flex; flex-direction:column; flex:1; min-width:0; gap:4px; }
+:root[data-ui-theme="modern"] .fresh-room-grid .fresh-room-copy { flex-basis:100%; order:2; }
+:root[data-ui-theme="modern"] .fresh-room-copy strong { font-size:17px; line-height:1.3; overflow-wrap:anywhere; }
+:root[data-ui-theme="modern"] .fresh-room-copy > span { font-size:13px; line-height:1.4; color:var(--look-soft); }
+:root[data-ui-theme="modern"] .fresh-chevron { margin-left:auto; flex-shrink:0; color:var(--look-soft); }
+:root[data-ui-theme="modern"] .fresh-beta { flex-shrink:0; background:var(--look-gold); color:#302f27; border-radius:999px; padding:2px 7px; font-size:13px; font-weight:700; }
+:root[data-ui-theme="modern"] .fresh-count { flex-shrink:0; background:var(--look-primary); color:var(--look-onPrimary); border-radius:999px; padding:2px 7px; font-size:13px; font-weight:700; }
+:root[data-ui-theme="modern"] .fresh-room:hover { background:var(--look-inset); border-color:var(--look-accent); }
+
+@media (max-width:479px) {
+:root[data-ui-theme="modern"] .fresh-menu { gap:14px; }
+:root[data-ui-theme="modern"] .fresh-hero { min-height:170px; }
+:root[data-ui-theme="modern"] .fresh-hero-copy { min-height:170px; padding:16px; width:61%; }
+:root[data-ui-theme="modern"] .fresh-hero h2 { font-size:23px; }
+:root[data-ui-theme="modern"] .fresh-intro { font-size:13px; margin-top:10px; }
+:root[data-ui-theme="modern"] .fresh-eyebrow { display:none; }
+:root[data-ui-theme="modern"] .fresh-room { padding:12px; }
+:root[data-ui-theme="modern"] .fresh-room-grid { gap:10px; }
+:root[data-ui-theme="modern"] .fresh-room-copy strong { font-size:15px; }
+:root[data-ui-theme="modern"] .fresh-profile { padding:8px 12px; min-height:60px; }
+}
+@media (max-width:359px) {
+:root[data-ui-theme="modern"] .fresh-room-grid { grid-template-columns:minmax(0,1fr); }
+:root[data-ui-theme="modern"] .fresh-room-grid .fresh-room { min-height:68px; flex-wrap:nowrap; align-items:center; }
+:root[data-ui-theme="modern"] .fresh-room-grid .fresh-room-copy { flex-basis:auto; order:0; }
+}
+
+:root[data-ui-theme="modern"] [data-desktop-nav] { background:var(--look-panel) !important; color:var(--look-ink) !important; border-right:1px solid var(--look-line); }
+:root[data-ui-theme="modern"] [data-desktop-nav] .text-white\/85 { color:var(--look-ink) !important; }
+:root[data-ui-theme="modern"] [data-desktop-nav] .text-white\/60 { color:var(--look-soft) !important; }
+:root[data-ui-theme="modern"] [data-desktop-nav] a[aria-current] { background:var(--look-primary); color:var(--look-onPrimary) !important; }
+:root[data-ui-theme="modern"] [data-desktop-nav] .bg-gold\/90 { color:#302f27 !important; }
+@media (min-width:1280px) {
+:root[data-ui-theme="modern"] body:has([data-desktop-nav]) [data-app-header] { background-color:var(--top-bar-bg) !important; color:var(--top-bar-ink); }
+:root[data-ui-theme="modern"] body:has([data-desktop-nav]) [data-app-header] [data-avatar] { color:var(--look-onPrimary) !important; }
+}
+
+/* ---- Modern's own: Home ---- */
+/* The greeting is a light card, not a navy block; its words take the look's ink. */
+:root[data-ui-theme="modern"] [data-church-masthead] {
+  background: linear-gradient(135deg, #ffffff 0%, var(--look-inset) 100%) !important;
+  color: var(--look-ink) !important;
+  border-radius: var(--m-radius-page) !important;
+  box-shadow: 0 0 0 1px var(--m-hairline), var(--m-shadow-low);
+}
+:root[data-ui-theme="modern"] [data-church-masthead] [class*="text-white"] {
+  color: var(--look-soft) !important;
+}
+:root[data-ui-theme="modern"] [data-church-masthead] [data-home-greeting] {
+  color: var(--look-ink) !important;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+:root[data-ui-theme="modern"] [data-church-masthead] [data-home-church] {
+  color: var(--look-accent) !important;
+}
+:root[data-ui-theme="modern"] [data-home-quick] a {
+  background: var(--look-panel) !important;
+  color: var(--look-ink) !important;
+  border-radius: var(--m-radius-element) !important;
+  box-shadow: inset 0 0 0 1px var(--m-hairline);
+  transition: background-color var(--m-fast) var(--m-ease), box-shadow var(--m-fast) var(--m-ease),
+    transform var(--m-fast) var(--m-ease);
+}
+:root[data-ui-theme="modern"] [data-home-quick] a:active,
+:root[data-ui-theme="modern"] [data-update-card]:active,
+:root[data-ui-theme="modern"] [data-update-link]:active,
+:root[data-ui-theme="modern"] [data-board-card]:active {
+  transform: scale(0.98);
+}
+:root[data-ui-theme="modern"] [data-home-quick] a:hover {
+  background: var(--look-inset) !important;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--look-accent) 35%, transparent);
+}
+/* The counts are words, not buttons: nothing to press, so nothing that looks
+   pressable. A quiet dot between them, as Astryx sets a metadata line. */
+:root[data-ui-theme="modern"] [data-home-counts] span {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: var(--look-soft) !important;
+  font-weight: 600;
+  display: inline;
+}
+/* One line of words that wraps like a sentence: the dot holds on to the word
+   before it, so a wrapped line never starts with one. */
+:root[data-ui-theme="modern"] [data-home-counts] { display: block !important; line-height: 1.6; }
+:root[data-ui-theme="modern"] [data-home-counts] span + span::before {
+  content: '\00a0\00a0·  ';
+  white-space: pre-wrap;
+  color: var(--look-soft);
+}
+/* Chips that are on: the look's green, not Classic's teal. */
+:root[data-ui-theme="modern"] [data-church-updates] button[aria-pressed="true"] {
+  background-color: var(--look-primary) !important;
+  color: var(--look-onPrimary) !important;
+  --tw-ring-color: var(--look-primary);
+}
+/* Softer, rounder cards, and a little lift where a pointer can hover. */
+:root[data-ui-theme="modern"] [data-update-card],
+:root[data-ui-theme="modern"] [data-update-link],
+:root[data-ui-theme="modern"] [data-board-card] {
+  border-radius: var(--m-radius-card) !important;
+  border: 0 !important;
+  box-shadow: inset 0 0 0 1px var(--m-hairline), var(--m-shadow-low) !important;
+  transition: box-shadow var(--m-fast) var(--m-ease), background-color var(--m-fast) var(--m-ease);
+}
+/* Hover and focus are a ring drawn INSIDE the card, as Astryx draws them: it
+   follows the corner exactly and moves nothing, where a coloured border on top
+   of a shadow ring met the corner unevenly and jumped the card. */
+@media (hover: hover) {
+  :root[data-ui-theme="modern"] [data-update-card]:hover,
+  :root[data-ui-theme="modern"] [data-update-link]:hover,
+  :root[data-ui-theme="modern"] [data-board-card]:hover {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--look-accent) 30%, transparent), var(--m-shadow-med) !important;
+  }
+}
+:root[data-ui-theme="modern"] [data-update-card]:focus-visible,
+:root[data-ui-theme="modern"] [data-update-link]:focus-visible,
+:root[data-ui-theme="modern"] [data-board-card]:focus-visible {
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px var(--look-accent), var(--m-shadow-med) !important;
+}
+/* A card pressed with a finger or a mouse keeps no ring once it is let go. */
+:root[data-ui-theme="modern"] [data-board-card]:focus:not(:focus-visible),
+:root[data-ui-theme="modern"] [data-update-card]:focus:not(:focus-visible) {
+  outline: none;
+}
+/* Small things inside a card take the inner radius, so corners nest. */
+:root[data-ui-theme="modern"] [data-board-card] [class*="rounded-full"][class*="h-7"] {
+  border-radius: var(--m-radius-inner) !important;
+}
+/* Home arrives in order: the greeting, then each row. Decoration only. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-ui-theme="modern"] [data-church-masthead],
+  :root[data-ui-theme="modern"] [data-home-board],
+  :root[data-ui-theme="modern"] [data-church-updates] {
+    animation: beaconRise var(--m-medium) var(--m-ease) backwards;
+  }
+  :root[data-ui-theme="modern"] [data-home-board="notices"] { animation-delay: 80ms; }
+  :root[data-ui-theme="modern"] [data-home-board="posts"] { animation-delay: 160ms; }
+  :root[data-ui-theme="modern"] [data-church-updates] { animation-delay: 240ms; }
+  :root[data-ui-theme="modern"] [data-desktop-nav] a {
+    transition: background-color var(--m-fast) var(--m-ease), color var(--m-fast) var(--m-ease);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui-theme="modern"] [data-church-masthead],
+  :root[data-ui-theme="modern"] [data-home-board],
+  :root[data-ui-theme="modern"] [data-church-updates] {
+    animation: none;
+  }
+  :root[data-ui-theme="modern"] [data-update-card],
+  :root[data-ui-theme="modern"] [data-update-link],
+  :root[data-ui-theme="modern"] [data-board-card] {
+    transition: none;
+  }
+}
+/* Counts that change do not shift their neighbours; headings break evenly. */
+:root[data-ui-theme="modern"] [data-church-masthead] span,
+:root[data-ui-theme="modern"] [data-home-board] [class*="rounded-full"] {
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui-theme="modern"] main h1,
+:root[data-ui-theme="modern"] main h2 {
+  text-wrap: balance;
+}
+:root[data-ui-theme="modern"] main p {
+  text-wrap: pretty;
+}
+/* Floating surfaces sit one step above the page, cards a half step. */
+:root[data-ui-theme="modern"] [data-desk-drawer][data-open='true'] {
+  box-shadow: var(--m-shadow-high);
+}
+:root[data-ui-theme="modern"] [data-desk-tab],
+:root[data-ui-theme="modern"] [data-desk-tuck] {
+  transition: transform var(--m-fast) var(--m-ease);
+}
+/* With forced colours the soft shadows are gone, so every card keeps an edge. */
+@media (forced-colors: active) {
+  :root[data-ui-theme="modern"] [data-update-card],
+  :root[data-ui-theme="modern"] [data-update-link],
+  :root[data-ui-theme="modern"] [data-board-card],
+  :root[data-ui-theme="modern"] [data-church-masthead] {
+    border: 1px solid CanvasText;
+  }
+}
+}
+
+/* ---- Modern's own icons and page entrance (12 November 2026) ---- */
+:root[data-ui-theme="modern"] .nav-icon[data-line] { display: inline-grid; place-items: center; }
+:root[data-ui-theme="modern"] .nav-icon[data-line] .nav-emoji { display: none; }
+:root[data-ui-theme="modern"] .nav-icon[data-line] .nav-line { display: block; }
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-ui-theme="modern"] .page-in { animation: beaconRise var(--m-medium) var(--m-ease) backwards; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui-theme="modern"] .page-in { animation: none; }
+}
+
+/* ---- One radius per kind of thing, everywhere (Astryx, 13 November 2026) ----
+   Cards, panels and dialogs were drawn at 16, 20 and 24px side by side; a
+   button inside one at 8 or full round. Astryx keeps one scale: a container
+   12px, a control 10px, a small inner thing 6px. Pills that mean "a person"
+   or "on/off" (avatars, dots, switches) stay round: only the boxes change. */
+:root[data-ui-theme="modern"] .rounded-3xl,
+:root[data-ui-theme="modern"] .rounded-2xl {
+  border-radius: var(--m-radius-container);
+}
+:root[data-ui-theme="modern"] .rounded-xl {
+  border-radius: var(--m-radius-element);
+}
+:root[data-ui-theme="modern"] .rounded-lg,
+:root[data-ui-theme="modern"] .rounded-md {
+  border-radius: var(--m-radius-inner);
+}
+/* The edge of every white card is the same quiet hairline. */
+:root[data-ui-theme="modern"] main .ring-navy\/10,
+:root[data-ui-theme="modern"] main .ring-black\/5 {
+  --tw-ring-color: var(--m-hairline);
+}
+
+/* In a row that scrolls sideways the hairline is drawn inside, so the row's
+   own edge cannot shave it off (13 November 2026.).
+   app/globals.css does the same for Tailwind's rings in every look. */
+:root[data-ui-theme="modern"] .overflow-x-auto > .ring-navy\/10,
+:root[data-ui-theme="modern"] .overflow-x-auto > .ring-navy\/20,
+:root[data-ui-theme="modern"] .overflow-x-auto > .ring-black\/5,
+:root[data-ui-theme="modern"] .overflow-x-auto > * > .ring-navy\/10,
+:root[data-ui-theme="modern"] .overflow-x-auto > * > .ring-navy\/20,
+:root[data-ui-theme="modern"] .overflow-x-auto > * > .ring-black\/5 {
+  box-shadow: inset 0 0 0 1px var(--look-line);
+}

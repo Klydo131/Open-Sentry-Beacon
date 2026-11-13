@@ -1,0 +1,36 @@
+/* Frutiger Eco, a Frutiger Aero look: nature, clean and fresh; sky, water and leaves.
+   Its colours and what is only its own; what the five share is in
+   app/themes/aero.css. Scoped to this choice. Screen only. */
+@media screen {
+:root[data-ui-theme="aero-eco"] {
+  --look-page: #eaf7f6;
+  --look-panel: #fbfefe;
+  --look-inset: #d6efee;
+  --look-ink: #0c3242;
+  --look-soft: #3f5f6b;
+  --look-line: #a8d5d8;
+  --look-header: #0b5c7a;
+  --look-primary: #0a559f;
+  --look-onPrimary: #ffffff;
+  --look-accent: #13794c;
+  --look-gold: #e8b84b;
+  --top-bar-bg: var(--look-panel);
+  --top-bar-ink: var(--look-ink);
+  --top-bar-soft: var(--look-soft);
+  --top-bar-chip: var(--look-inset);
+  --top-bar-chip-hover: var(--look-inset);
+  --top-bar-line: var(--look-line);
+  --top-bar-avatar: var(--look-primary);
+  color-scheme: light;
+  --navy: var(--look-ink);
+  --gold: var(--look-gold);
+  --aero-opacity: 88%;
+  --aero-sheen: .75;
+  --aero-gloss: .2;
+  --aero-rim: rgb(255 255 255 / .9);
+  --aero-shadow: rgb(12 84 110 / .35);
+  --aero-radius: 20px;
+  --aero-icon: linear-gradient(180deg, #effcf6 0%, #c6ecdc 100%);
+  --aero-backdrop: radial-gradient(42rem 22rem at 88% -4rem, #bfe9ff 0%, rgb(191 233 255 / 0) 70%), radial-gradient(36rem 20rem at -6% 32rem, #c8f0d9 0%, rgb(200 240 217 / 0) 70%);
+}
+}

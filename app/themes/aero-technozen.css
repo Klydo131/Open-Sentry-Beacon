@@ -1,0 +1,36 @@
+/* Technozen, a Frutiger Aero look: calm, minimal and balanced; little gloss, soft sage.
+   Its colours and what is only its own; what the five share is in
+   app/themes/aero.css. Scoped to this choice. Screen only. */
+@media screen {
+:root[data-ui-theme="aero-technozen"] {
+  --look-page: #eef2ef;
+  --look-panel: #fbfcfb;
+  --look-inset: #dfe7e2;
+  --look-ink: #1d2b27;
+  --look-soft: #4d5f58;
+  --look-line: #c3d0c8;
+  --look-header: #2f4a40;
+  --look-primary: #1b6e4b;
+  --look-onPrimary: #ffffff;
+  --look-accent: #1b6e4b;
+  --look-gold: #e8b84b;
+  --top-bar-bg: var(--look-panel);
+  --top-bar-ink: var(--look-ink);
+  --top-bar-soft: var(--look-soft);
+  --top-bar-chip: var(--look-inset);
+  --top-bar-chip-hover: var(--look-inset);
+  --top-bar-line: var(--look-line);
+  --top-bar-avatar: var(--look-primary);
+  color-scheme: light;
+  --navy: var(--look-ink);
+  --gold: var(--look-gold);
+  --aero-opacity: 90%;
+  --aero-sheen: .5;
+  --aero-gloss: .1;
+  --aero-rim: rgb(255 255 255 / .85);
+  --aero-shadow: rgb(40 60 52 / .22);
+  --aero-radius: 14px;
+  --aero-icon: linear-gradient(180deg, #f3f7f4 0%, #dde7e0 100%);
+  --aero-backdrop: radial-gradient(44rem 22rem at 80% -6rem, #ffffff 0%, rgb(255 255 255 / 0) 70%), radial-gradient(30rem 18rem at 0% 34rem, #dde8e1 0%, rgb(221 232 225 / 0) 70%);
+}
+}

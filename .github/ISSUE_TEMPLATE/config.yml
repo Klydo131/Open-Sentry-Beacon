@@ -1,0 +1,10 @@
+# Security reports must never arrive as a public issue, so the route is offered
+# here, above the template list, where somebody about to file one will see it.
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Klydo131/Open-Sentry-Beacon/security/advisories/new
+    about: Private, visible only to maintainers until a fix is published. Please do not open a public issue for this.
+  - name: How do I connect a real backend?
+    url: https://github.com/Klydo131/Open-Sentry-Beacon/blob/main/docs/BACKENDS.md
+    about: The walkthrough, in two sizes. Most "how do I store this" questions are answered here.

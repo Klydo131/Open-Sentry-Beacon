@@ -1,0 +1,189 @@
+# A weekly backup of the live database, encrypted, for free.
+#
+# WHY THIS EXISTS. The Supabase free plan takes no backups at all. This database
+# holds real pastoral conversations, prayer requests, safeguarding reports and
+# the record of every disciplinary decision. One bad migration and it is simply
+# gone, with nothing to restore from. Supabase Pro adds seven days of daily
+# backups for $25 a month; this does a weekly one for nothing.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# THE RULE THAT MATTERS MORE THAN THE BACKUP ITSELF
+#
+# THIS REPOSITORY IS PUBLIC, AND WORKFLOW ARTIFACTS ON A PUBLIC REPOSITORY CAN
+# BE DOWNLOADED BY ANYONE ON THE INTERNET. Not by collaborators — by anyone.
+#
+# So a plain `pg_dump` uploaded as an artifact would publish every private
+# message in this church to the world, from a job whose name says "backup". That
+# is not a smaller problem than having no backup; it is a much larger one.
+#
+# The dump is therefore encrypted with AES-256 before it is uploaded, and only
+# the encrypted file ever leaves this job. Someone who downloads it gets
+# ciphertext. If BACKUP_PASSPHRASE is missing, the job FAILS rather than falling
+# back to an unencrypted upload — the failure mode has to be "no backup", never
+# "public backup".
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# WHAT TO SET UP (Settings → Environments → New environment, named `backup`):
+#
+#   Under "Deployment branches and tags", allow `main` only, and under
+#   "Required reviewers" add the owner. Then add the two secrets below as
+#   ENVIRONMENT secrets of `backup`, and delete them from Settings → Secrets and
+#   variables → Actions if they are there.
+#
+#   WHY AN ENVIRONMENT (the audit of 3 October 2026). A repository secret can be
+#   read by any workflow on any branch, so anybody who can push to this
+#   repository, and any AI tool working with that access, could add a workflow
+#   that copies the database address out. An environment secret reaches only a
+#   job that names the environment, only from the branches it allows, and only
+#   after its reviewer approves the run. The cost is one approval a week.
+#
+#   SUPABASE_DB_URL     the pooler connection string from
+#                       Supabase → Project Settings → Database → Connection string
+#                       (URI). This one IS a real secret — it can read everything.
+#   BACKUP_PASSPHRASE   a long random passphrase. Store it somewhere you will
+#                       still have if GitHub is the thing that broke — a password
+#                       manager, not this repository.
+#
+# TO RESTORE:
+#
+#   gpg --decrypt --output beacon.sql beacon-<date>.sql.gpg
+#   psql "$SUPABASE_DB_URL" -f beacon.sql
+#
+# A backup nobody has ever restored is a rumour. Try it once against a scratch
+# Supabase project, so the first restore is not during an emergency.
+
+name: backup
+
+on:
+  schedule:
+    # 20:00 UTC on Sundays — after the weekend, before the week's activity.
+    - cron: '0 20 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    # The database address lives here, not in the repository's secrets: see
+    # WHAT TO SET UP above.
+    environment: backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # The runner ships an older pg_dump than the database server, and a
+      # mismatch aborts with "server version ... pg_dump version ...". Pull the
+      # matching major from the PostgreSQL project's own apt repository.
+      - name: Install PostgreSQL 17 client
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sS -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
+            https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Dump and encrypt
+        id: dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          # Whether this repository is a fork, as GitHub itself says, so the job
+          # can tell a fork (nothing to back up) from a church's own copy
+          # (misconfigured). The same test keep-awake.yml makes, for the same
+          # reason. It used to compare this repository's name with one upstream
+          # name, which put an account name into every copy.
+          GH_TOKEN: ${{ github.token }}
+          HERE: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            # ON THE REAL REPOSITORY, NO DATABASE URL MEANS NO BACKUPS, and that
+            # must be loud. Until 28 September 2026 this step said so in a line
+            # nobody reads and exited cleanly; the job went red only because the
+            # upload step then found no file, with "No files were found with
+            # the provided path" -- a message that reads like a bug in the
+            # workflow rather than "the church has no backup". Quiet is exactly
+            # wrong here: the point of the job is that nobody is watching.
+            # Anything but GitHub saying "fork", a failed answer included, is
+            # treated as a church's own copy: loud, never a quiet tick.
+            FORK="$(gh api "repos/${HERE}" --jq .fork 2>/dev/null || echo unknown)"
+            if [ "${FORK}" != "true" ]; then
+              echo "::error::SUPABASE_DB_URL is not set on the live repository, so the database is NOT being backed up."
+              echo "::error::Add SUPABASE_DB_URL and BACKUP_PASSPHRASE as secrets of the backup environment (Settings → Environments → backup)."
+              exit 1
+            fi
+
+            # A fork has no database of its own and nothing to back up. Say so
+            # and stop cleanly — a fork must never inherit a red tick for not
+            # having somebody else's credentials. The upload step below runs
+            # only when a backup was made, so it is skipped too.
+            echo "SUPABASE_DB_URL is not set — no database to back up here."
+            echo "This looks like a fork (${HERE}), so there is nothing to do."
+            exit 0
+          fi
+
+          # Past this point a database IS configured, so a missing passphrase is
+          # a misconfiguration rather than a fork, and it is the dangerous kind.
+          # No passphrase means no encryption, and no encryption means a public
+          # dump. Refuse, loudly. See the header.
+          if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+            echo "::error::BACKUP_PASSPHRASE is not set."
+            echo "::error::Refusing to produce an unencrypted dump — artifacts on a public repository are downloadable by anyone."
+            exit 1
+          fi
+
+          stamp="$(date -u +%Y-%m-%d)"
+          plain="beacon-${stamp}.sql"
+
+          # --no-owner / --no-privileges so the dump restores into a fresh
+          # project without fighting over roles that do not exist there.
+          pg_dump "${SUPABASE_DB_URL}" \
+            --no-owner --no-privileges --format=plain --file="${plain}"
+
+          # A dump that failed halfway can still leave a small file behind, and
+          # uploading that is worse than uploading nothing because it looks like
+          # a backup. 10 KB is far below any real dump of this schema.
+          size=$(stat -c%s "${plain}")
+          echo "Dump is ${size} bytes."
+          if [ "${size}" -lt 10240 ]; then
+            echo "::error::Dump is implausibly small (${size} bytes) — treating as a failure."
+            exit 1
+          fi
+
+          # Encrypt, then destroy the plaintext before anything can pick it up.
+          gpg --batch --yes --symmetric --cipher-algo AES256 \
+            --passphrase "${BACKUP_PASSPHRASE}" \
+            --output "${plain}.gpg" "${plain}"
+          shred -u "${plain}" 2>/dev/null || rm -f "${plain}"
+
+          test -f "${plain}.gpg"
+          echo "Encrypted backup ready: ${plain}.gpg"
+
+          # Belt and braces: if a plaintext .sql somehow survives, fail rather
+          # than let the upload step take it.
+          if ls ./*.sql >/dev/null 2>&1; then
+            echo "::error::A plaintext .sql is still present. Refusing to upload."
+            exit 1
+          fi
+
+          # Only now is there something to upload. The upload step reads this.
+          echo "made=true" >> "$GITHUB_OUTPUT"
+
+      # Only *.sql.gpg is ever uploaded. Ninety days is the GitHub maximum and
+      # gives a full quarter of weekly restore points. Only when a backup was
+      # made: on a fork the step above stops cleanly with nothing to send.
+      - name: Upload encrypted backup
+        if: steps.dump.outputs.made == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: beacon-backup
+          path: '*.sql.gpg'
+          retention-days: 90
+          if-no-files-found: error

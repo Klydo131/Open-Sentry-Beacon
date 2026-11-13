@@ -1,0 +1,75 @@
+# One question, asked of WebKit, in about a minute.
+#
+# WHY THIS IS SEPARATE FROM safari.yml. That workflow builds the app and runs
+# every suite, which takes seventeen minutes. Attachments fail on WebKit and
+# pass on Chromium, and diagnosing that by editing code and waiting seventeen
+# minutes produced two wrong answers in a row: reading the File into an
+# ArrayBuffer broke Chromium, and holding the bytes across the write changed
+# nothing. Both were guesses that a faster instrument would have killed in
+# minutes.
+#
+# So this asks the platform directly: which shapes will WebKit put in
+# IndexedDB, and what is the real error for the ones it refuses? It serves a
+# single static file rather than building anything, because IndexedDB is scoped
+# to an origin and the app plays no part in the question.
+#
+# It never fails the build. A difference between engines is the finding, not a
+# broken repository.
+
+name: webkit-probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/e2e/webkit-idb-probe.js'
+      - 'lib/localMedia.ts'
+      - '.github/workflows/webkit-probe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: macos-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # The newest 22.x, not whatever the runner cached: Node's 21 October 2026
+          # security release (22.23.4) fixed a Brotli decoder flaw and nine more.
+          check-latest: true
+
+      - name: Install Playwright and WebKit
+        run: |
+          set -euo pipefail
+          npm i --no-save playwright
+          npx playwright install webkit
+
+      - name: Ask WebKit, and ask Chromium the same thing
+        run: |
+          set -euo pipefail
+
+          # A real origin, and nothing else. No build, no framework.
+          mkdir -p /tmp/probe-root
+          printf '<!doctype html><meta charset=utf-8><title>probe</title><p>probe origin' \
+            > /tmp/probe-root/index.html
+          python3 -m http.server 4599 --directory /tmp/probe-root &
+          SERVER=$!
+          trap 'kill $SERVER 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null "http://localhost:4599/" && break
+            sleep 1
+          done
+
+          # Chromium first, so the two answers sit next to each other in the log
+          # and nobody has to remember what "normal" looks like.
+          npx playwright install chromium
+          E2E_BROWSER=chromium node tests/e2e/webkit-idb-probe.js 4599
+          E2E_BROWSER=webkit   node tests/e2e/webkit-idb-probe.js 4599

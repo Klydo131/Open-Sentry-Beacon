@@ -1,0 +1,172 @@
+# Everything `npm test` runs, on every push and every pull request.
+#
+# Deliberately boring. It checks the code and reports; it does not deploy, it
+# does not post anywhere, and it needs no repository secrets — so a fork gets a
+# working CI the moment it clicks Fork, with nothing to configure.
+#
+# `permissions: contents: read` is set explicitly. The default token is broader
+# than this job needs, and a workflow that can only read is a workflow that
+# cannot be turned into a way to write.
+#
+# Note the trigger: `pull_request`, never `pull_request_target`. The second one
+# runs with repository secrets and a writable token while checking out a fork's
+# code, and it is the most common way a repository is taken over through a pull
+# request. tests/security-invariants.mjs fails the build if it ever appears.
+
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    # `labeled` so that adding the emergency label starts the short run at once.
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels the run it replaces. Pushes to
+# main are grouped by commit, so every commit on main is checked in full.
+concurrency:
+  group: verify-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # THE EMERGENCY LANE (docs/EMERGENCY-DEPLOY.md). A pull request carrying the
+  # `emergency` label runs this instead of everything below: typecheck, build
+  # and the checks that guard data and access, on one machine, in a few
+  # minutes. Only people with write access can add a label, so a fork cannot
+  # use it to skip checks. The merge to main then runs everything in full.
+  quick:
+    if: contains(github.event.pull_request.labels.*.name, 'emergency')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # The newest 22.x, not whatever the runner cached: Node's 21 October 2026
+          # security release (22.23.4) fixed a Brotli decoder flaw and nine more.
+          check-latest: true
+          cache: npm
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - name: Install
+        run: npm ci
+      - name: Safety checks
+        run: node scripts/verify.mjs --quick
+
+  verify:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'emergency') }}
+    # Three operating systems, because "it should work on Windows" is a guess
+    # until something runs it there. The specific thing this catches: npm and
+    # npx are .cmd shims on Windows and Node will not execute them without a
+    # shell, so `npm run verify` died at its first step on every Windows machine
+    # while every Linux run stayed green. Nobody would have found that from
+    # here; a Windows contributor would have found it, and concluded the project
+    # does not work.
+    #
+    # macOS is here because it is what most of the people writing this use, and
+    # because a case-insensitive filesystem hides import-casing mistakes that
+    # only fail on Linux.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Node 22 is a floor, not a preference: some tests import TypeScript
+      # directly and rely on native type stripping, so an older runtime fails
+      # with a syntax error that reads like broken code.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # The newest 22.x, not whatever the runner cached: Node's 21 October 2026
+          # security release (22.23.4) fixed a Brotli decoder flaw and nine more.
+          check-latest: true
+          cache: npm
+
+      # Next.js keeps what it compiled in .next/cache. Restoring it from the
+      # last run on this system turns most of the build into a cache hit.
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - name: Install
+        run: npm ci
+
+      # `npm test` is the same command a contributor runs locally, on purpose.
+      # A CI script that drifts from the local one is a CI script that fails on
+      # things nobody can reproduce.
+      #
+      # It covers: typecheck, production build, and every static guardrail —
+      # no backend, no secrets, security invariants, brand consistency, test
+      # portability, media, the update floor, and workflow structure.
+      - name: Verify
+        run: npm test
+
+  # ---------------------------------------------------------------------------
+  # THE BROWSER WALKS, WHICH UNTIL NOW RAN NOWHERE BUT A DEVELOPER'S MACHINE.
+  #
+  # Fifty-four suites drive a real browser through the app. They existed, they
+  # passed, and `npm test` does not include them -- so they ran when somebody
+  # remembered, which is to say rarely. Every layout bug reported from the live
+  # site in one week (a tag box stretched across the page, a whiteboard toolbar
+  # drawn off the bottom of the screen, a pairing form that came apart when one
+  # list was long) is the exact class these catch, and each one shipped through
+  # a gate that never looked at a rendered page.
+  #
+  # They took a little over half an hour one after another, and about nineteen
+  # minutes four at a time on one machine, which made every pull request wait
+  # twenty minutes for its slowest job. They are now dealt across four
+  # machines, each walking four at a time. The static checks are not repeated
+  # here: the job above runs them.
+  #
+  # UBUNTU ONLY, AND THAT IS A CHOICE RATHER THAN AN OVERSIGHT. The job above
+  # runs on three operating systems because it is cheap and catches real
+  # portability faults. This one downloads a browser and drives it for ten
+  # minutes; doing that three times over would triple the cost to re-check
+  # layout, which does not differ between a Linux runner and a Windows one --
+  # they are the same Chromium. Safari is the engine that actually behaves
+  # differently, and it has its own workflow.
+  walks:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'emergency') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # The newest 22.x, not whatever the runner cached: Node's 21 October 2026
+          # security release (22.23.4) fixed a Brotli decoder flaw and nine more.
+          check-latest: true
+          cache: npm
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - name: Install
+        run: npm ci
+      # The browser is a separate download from the npm package, and without it
+      # every suite fails at launch with a message about a missing executable.
+      - name: Get a browser
+        run: npx playwright install --with-deps chromium
+      - name: Walk through the app
+        run: node scripts/verify.mjs --walks-only --shard=${{ matrix.shard }}/4

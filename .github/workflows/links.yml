@@ -1,0 +1,71 @@
+# Does every resource on the church's shelf still open?
+#
+# The starter kit is twenty links to other people's websites, and nothing in this
+# repository controls any of them. A publisher reorganises, a PDF moves, a
+# ministry lets a domain lapse. Every other check in this project reads the
+# source, so not one of them would notice — and the church would find out when an
+# Explorer taps a resource on their first day and gets a 404.
+#
+# WHY IT IS NOT PART OF `npm run verify`. Two reasons, and both matter.
+#
+# First, the sandbox the app is developed in has no route to the open internet;
+# every one of these hosts answers 403 at the proxy there. A check that always
+# fails locally is a check people learn to ignore.
+#
+# Second, and more important: somebody else's website being down for ten minutes
+# must never block a merge. This is a report on the world, not a gate on the code.
+# So it runs on a schedule, by hand when somebody reports a dead link, and on any
+# push that touches the shelf itself.
+#
+# THAT LAST TRIGGER EXISTS BECAUSE OF A REAL FAILURE. Eight resources were added
+# to the shelf from this sandbox, which has no route to the open internet, so not
+# one of the addresses could be opened before it shipped. Four of the eight were
+# wrong. The church found out when an Explorer tapped Jesus 101 and got nothing.
+# A plausible-looking address is not a checked one, and the only machine in this
+# project that can tell the difference is the CI runner.
+#
+# It needs no repository secrets, so it runs unchanged on a fork.
+
+name: links
+
+on:
+  schedule:
+    # Weekly, early on a Monday in UTC. Nothing here is urgent enough for daily,
+    # and twenty requests a week is a courtesy to the publishers.
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+  push:
+    # Only when the shelf or the checker changes. A push that touches neither
+    # cannot have broken a link, and the publishers do not need the traffic.
+    paths:
+      - 'lib/starter-kit.ts'
+      - 'scripts/check-links.mjs'
+      - '.github/workflows/links.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: links-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  starter-kit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # The newest 22.x, not whatever the runner cached: Node's 21 October 2026
+          # security release (22.23.4) fixed a Brotli decoder flaw and nine more.
+          check-latest: true
+
+      # No `npm ci`. The checker is plain Node with no imports beyond the
+      # standard library, and installing the whole project to make twenty HTTP
+      # requests would be a minute spent for nothing.
+      - name: Check every link in the starter kit
+        run: node scripts/check-links.mjs

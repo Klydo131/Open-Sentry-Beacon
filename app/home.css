@@ -1,0 +1,11 @@
+/* Home: cards arrive one after another. Decoration only, so it is off for
+   anybody who asked their device for less motion. */
+.home-rise {
+  animation: beaconRise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-rise {
+    animation: none;
+  }
+}

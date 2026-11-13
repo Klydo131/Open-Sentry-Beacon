@@ -1,0 +1,330 @@
+'use client';
+
+// What we do with what you tell us.
+//
+// WRITTEN TO BE READ, like the safeguarding policy beside it. Almost nobody
+// finishes a privacy notice, which is why almost every one of them is written
+// as though nobody will. This one is short sentences and no clause numbers,
+// because the audience is a church member who has just been invited by
+// somebody they trust and is deciding whether to sign up.
+//
+// TWO THINGS EVERY CHURCH RUNNING THIS MUST FILL IN: who the controller is,
+// and who the Data Protection Officer is. Since 28 October 2026 they are a
+// setting the church's Director fills in (Settings, Church), read here by
+// components/ChurchLegal.tsx, so no person's name is written into this public
+// source. Until they are filled in the notice says so, visibly: a notice with
+// a plausible-looking wrong name on it is worse than one that admits it is
+// unfinished.
+//
+// WHY IT MATTERS MORE THAN IT LOOKS. Under the Philippine Data Privacy Act a
+// person's age, marital status and religious affiliation are SENSITIVE personal
+// information, and this app records all three by existing. That raises the
+// standard from "tell people" to "get express consent, appoint a Data
+// Protection Officer, and register if you pass a thousand members".
+// docs/DATA-PROTECTION.md has the full map and the list of what is still
+// missing.
+//
+// It is not legal advice. It is a starting draft for a lawyer to correct.
+
+import Link from 'next/link';
+import { NAVY, APP_NAME, APP_SHORT_NAME } from '@/lib/brand';
+import { SentryBeaconMark } from '@/components/SentryBeaconMark';
+import { Card } from '@/components/ui';
+import { oversightPoints } from '@/lib/oversight';
+import { ChurchLegalLine, useChurchLegal } from '@/components/ChurchLegal';
+import { LEGAL_EFFECTIVE, PRIVACY_VERSION, legalComplete } from '@/lib/legal';
+
+export default function PrivacyPage() {
+  const { church, loading } = useChurchLegal();
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="px-4 py-8 text-center text-white" style={{ backgroundColor: NAVY }}>
+        <div className="mx-auto flex max-w-2xl flex-col items-center">
+          <SentryBeaconMark size={48} />
+          <h1 className="mt-3 text-3xl font-extrabold">What we do with what you tell us</h1>
+          <p className="mt-1 text-white/75">
+            The short version: it stays inside your church, and you can ask for it back
+            or ask for it to be deleted.
+          </p>
+          <p className="mt-2 text-sm text-white/60" data-legal-version>
+            In force from <span className="whitespace-nowrap">{LEGAL_EFFECTIVE}</span> ·{' '}
+            <span className="whitespace-nowrap">version {PRIVACY_VERSION}</span>
+          </p>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-2xl space-y-5 px-4 py-8">
+        {!loading && !legalComplete(church) && (
+          <Card className="p-5 ring-2 ring-amber-300" data-legal-missing>
+            <h2 className="text-xl font-bold text-navy">Two lines are still missing</h2>
+            <p className="mt-2 text-gray-700">
+              Your church&rsquo;s legal name and the name of its Data Protection Officer.
+              Nobody but the church can supply them, and its Director adds them under
+              Settings, Church. A notice carrying a plausible wrong name would be worse
+              than one that says it is unfinished. Everything else below is decided and
+              applies as written.
+            </p>
+          </Card>
+        )}
+
+        {/* WHAT THIS APP IS, AND WHO LOOKS AFTER IT: the same words as the
+            invitation e-mail and the sign-up (lib/oversight.ts). */}
+        <Card className="p-5" data-oversight>
+          <h2 className="text-xl font-bold text-navy">What this app is, and who looks after it</h2>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            {oversightPoints(null).map((point) => (
+              <li key={point.icon} className="flex gap-2">
+                <span aria-hidden>{point.icon}</span>
+                <span>{point.text}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">Who holds your information</h2>
+          <p className="mt-2 text-gray-700">
+            <ChurchLegalLine church={church} loading={loading} /> Questions, and any request
+            below, go to the Data Protection Officer.
+          </p>
+          <p className="mt-2 text-gray-700">
+            If you are not satisfied with the answer, you can complain to the National
+            Privacy Commission at <span className="font-semibold">privacy.gov.ph</span>,
+            or, if you are in Europe, to your own data protection authority.
+          </p>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">What is collected</h2>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            <li><strong>Who you are.</strong> Your name, your email address, and whatever
+              you choose to add: a picture, your city, your work, what you are interested
+              in, your language.</li>
+            <li><strong>Your birthday.</strong> Because somebody under 18 is walked with
+              differently, and their parent or guardian has to agree first.</li>
+            <li><strong>What you write.</strong> Your conversation with the person walking
+              with you, prayer requests, meetings you arrange, anything you post.</li>
+            <li><strong>What the church records.</strong> When you were approved, and any
+              safeguarding report or decision about you.</li>
+          </ul>
+          <p className="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-slate-700 ring-1 ring-sky-100">
+            <strong>Some of this is what the law calls sensitive.</strong> Your age and
+            your participation in a church both are, under the Philippine Data Privacy
+            Act. That is why you are asked to agree clearly rather than by carrying on,
+            and why the rules below are stricter than they would be for a mailing list.
+          </p>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">Who can see it</h2>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            <li><strong>Your conversation is yours and your Guide&rsquo;s.</strong> No
+              other account in the app can open it: not other Guides, not Directors. The one
+              exception is a safeguarding report, and the screen where you make one says
+              so before you make it. It is encrypted on its way and where it is stored, but
+              not end to end: the church&rsquo;s server keeps it, so the few people who run
+              the church&rsquo;s database could reach it there, outside the app. Who they
+              are is the church&rsquo;s to limit, and its privacy manual says how.</li>
+            <li><strong>Your Guide</strong> sees your profile and what you write to them.</li>
+            <li><strong>Your Directors</strong> see the church&rsquo;s members and its
+              numbers, safeguarding reports, and a 30-day record of which links people
+              shared. They do not see conversations.</li>
+            <li><strong>A report, and the conversation about it,</strong> are read by the
+              person who made it and the Directors who handle it. Once a Director has read
+              it, they may bring the person it is about into that conversation, and both
+              of you are told when they do; that person then reads the report and what was
+              said, but never the evidence attached to it. A report made before
+              27&nbsp;October 2026 is never opened to the person it is about.</li>
+            <li><strong>Nobody who is not signed in sees anything at all.</strong> There
+              is no public page with a member on it, and nothing here is indexed by a
+              search engine.</li>
+          </ul>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">Where it is kept, and for how long</h2>
+          {/* A CHURCH RUNNING ITS OWN COPY: the providers and the region below are
+              this deployment's. Replace them with yours (docs/DEPLOY-ANYWHERE.md). */}
+          {/* THE BACKUP, SAID AS IT IS (13 October 2026). This used to say "A weekly
+              backup is encrypted before it leaves" while .github/workflows/backup.yml
+              had failed every run since it was added. Say it again only after a run
+              has succeeded AND a copy has been restored somewhere to prove it opens. */}
+          <p className="mt-2 text-gray-700">
+            The database and files are hosted by Supabase in <strong>Seoul, South
+            Korea</strong>, so information about you leaves the Philippines. That is
+            allowed, and you are being told because you should know.
+            The pages are served by Vercel. Email is sent through Brevo. A weekly
+            encrypted backup is being set up and is not running yet.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>What you last saw while signed in is also kept on your phone or
+            computer</strong>, so the app opens with no signal: the same posts, people,
+            messages and lists your screens showed you, and nothing more. It is kept in
+            the browser&rsquo;s storage for this app, for your account only, and nobody
+            else who uses the device can open it in the app. It is deleted when you sign
+            out, and when somebody else signs in on the same device. Anything you send
+            still goes only to the church&rsquo;s database, and only with a signal.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>When you arrange to meet somebody in person</strong>, the words you type
+            in the place box are sent to a place search so it can suggest where you mean.
+            It is Photon, run by komoot in Germany over OpenStreetMap data. The words go
+            from the church&rsquo;s server, not from your phone, and nothing else goes with
+            them: not your name, not your email, not your phone&rsquo;s internet address.
+            The only other thing sent is the town where you last met, rounded to about ten
+            kilometres, so nearby places come first. Nothing about the search is kept.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>When you play a YouTube or Facebook video</strong> that somebody shared,
+            the video comes from that company, and its player is loaded only when you tap
+            Play. From then on, YouTube (Google) or Facebook (Meta) can see that your
+            browser played it, as they would on their own site. YouTube videos use its
+            privacy-enhanced mode, which sets no tracking cookie until you play. Nothing is
+            loaded from either company before you tap.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>A Sabbath program or evangelistic meetings you plan in the Office</strong> are
+            saved on your own phone or computer first. A copy is also kept with your account, so
+            they are there when you sign in on another device. Only you can read that copy: not
+            your Guide, and not the church&rsquo;s leaders. The names in them reach other people
+            only when you choose: in a file or picture you download or share, or when you
+            press <strong>Post it</strong>, which makes it a post with your name on it for the
+            people you chose, the same as any other post. Notes for the platform, and anything
+            you mark <strong>Team only</strong>, are never in a picture, a post or a calendar
+            file. A program or a meeting shared with you is kept on your phone so you can read it
+            with no signal.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>When you press Google Calendar</strong> on a night of meetings, Google
+            Calendar opens with that night&rsquo;s name, time, place and what is shared about it
+            filled in, so Google receives them, as it would if you typed them there.{' '}
+            <strong>Add to calendar</strong> sends nothing anywhere: it makes a file on your
+            phone or computer.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>A progress report</strong> is made only from what its reader can already see
+            in the app. The notes you write on it stay on your phone or computer until you
+            download or copy the report.
+          </p>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            <li><strong>The record of shared links: 30 days</strong>, then deleted
+              automatically.</li>
+            <li><strong>Everything else: for as long as you have an account.</strong>{' '}
+              When it is removed, what is in it goes at once rather than after a waiting
+              period. Every stored file that belonged to it, or to a conversation that
+              went with it, goes too: your pictures straight away, and the rest at the
+              nightly clean-up, which removes each file whose record is gone.</li>
+            <li><strong>Safeguarding reports, the conversation about each, and the record
+              of a removal are kept permanently</strong>, including after an account is
+              deleted. A church has to be able to show that it acted, and a record the
+              person it describes can erase would not show anything. This is the one
+              thing that survives a deletion request. What stays is the name as it was,
+              shown with &ldquo;(account deleted)&rdquo;, and what the report already
+              held: nothing else about the person, and it is read only by
+              those who could read it before.</li>
+          </ul>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">What you can ask for</h2>
+          <p className="mt-2 text-gray-700">
+            Write to the Data Protection Officer above. You have the right to:
+          </p>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            <li><strong>See it.</strong> A copy of what is held about you.</li>
+            <li><strong>Correct it.</strong> Anything wrong, put right.</li>
+            <li><strong>Delete it.</strong> Your account and what is in it, with the
+              safeguarding exception above.</li>
+            <li><strong>Object, or withdraw your agreement</strong>, at any time. You do
+              not have to give a reason, and nothing bad happens to you for asking.</li>
+            <li><strong>Take it with you.</strong> A copy in a form you can use elsewhere.</li>
+          </ul>
+          <p className="mt-3 text-sm text-gray-600">
+            Ask, and you will get an answer within <strong>30 days</strong>. If the
+            request is complicated and will take longer, you will be told that inside
+            the 30 days, along with when to expect it.
+          </p>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">If something goes wrong</h2>
+          <p className="mt-2 text-gray-700">
+            If your information is exposed in a way that could harm you, you and the
+            National Privacy Commission are told within 72 hours of it being known,
+            which is what the law requires.
+          </p>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">Photos and files</h2>
+          <p className="mt-2 text-gray-700">
+            A photo you send or add is made smaller first, and <strong>the location your
+            camera recorded in it is removed</strong> before it is stored. That is true of a
+            photo in a conversation, your profile picture, a resource and a study handout.
+            The one exception: evidence attached to a safeguarding report is kept exactly
+            as you send it, because changing it could make it worth less, and only the
+            church&rsquo;s leadership handling the report can open it.
+          </p>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            <li><strong>A file you add to Resources</strong> is kept by the church. Until
+              you send it to somebody, only you can open it; after that, so can the person
+              you sent it to. Directors see that something was added or shared, not the
+              file. Deleting the resource deletes the file.</li>
+            <li><strong>A handout on a study</strong> can be opened by anybody who can read
+              that study.</li>
+            <li><strong>A voice message</strong> is a recording kept like a photo in the
+              conversation: only the two of you can play it, and it goes when either of you
+              removes it. The app asks to use your microphone only when you tap to record,
+              and lets go of it when you stop. Recordings are at most two minutes.</li>
+            <li><strong>A reaction</strong> to a message (🙏, a heart and four others) is
+              seen by the two of you, like the conversation itself.</li>
+            <li><strong>Each file can be up to 10 MB</strong>, and each person can keep up
+              to 300 files or 200 MB of resources and handouts. Apart from one short clip
+              on a post, video is not kept; share a link to it instead.</li>
+            <li><strong>Photos and a short video on a post</strong> are kept by the church
+              where only the people who may read that post can open them: up to ten photos
+              and one clip of about a minute (50 MB at most), and up to 40 files or 200 MB
+              for each person. Deleting the post deletes them.</li>
+            <li><strong>Files you save under <em>On this device</em></strong> in My Files
+              stay on your phone and are passed straight to the other person; they never
+              reach a server.</li>
+            <li><strong>The Music room</strong> works entirely on your phone. Its tuner asks
+              to use your microphone only when you tap its microphone button, measures the sound
+              there and throws it away, and lets go of the microphone when you stop, leave
+              the tuner, or your phone locks; nothing is recorded or sent. A page you scan
+              is kept on your phone as the clean page only, never the photo, and scores you
+              open are kept on your phone too.</li>
+          </ul>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-xl font-bold text-navy">This is a starting point</h2>
+          <p className="mt-2 text-gray-700">
+            {APP_NAME} is free software, and this notice ships with it as a draft.
+            Any church running it should read it, fill in its legal name and Data Protection
+            Officer under Settings, and have somebody qualified check it against the law where
+            they are. It is
+            <code className="mx-1 rounded bg-gray-100 px-1.5 py-0.5 text-sm">app/privacy/page.tsx</code>
+            in the source, and <code className="rounded bg-gray-100 px-1.5 py-0.5 text-sm">docs/DATA-PROTECTION.md</code>
+            {' '}lists what is still missing.
+          </p>
+          <p className="mt-2 text-sm text-gray-600">
+            It is not legal advice.
+          </p>
+        </Card>
+
+        <div className="flex flex-col items-center gap-3 pb-10 text-center">
+          <Link href="/terms" className="font-semibold text-navy underline underline-offset-4" data-terms-link>
+            Terms of Use
+          </Link>
+          <Link href="/faq" className="font-semibold text-navy underline underline-offset-4" data-faq-link>
+            Questions people ask
+          </Link>
+          <Link href="/" className="font-semibold text-navy underline underline-offset-4">
+            ← Back to {APP_SHORT_NAME}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

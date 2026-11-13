@@ -1,0 +1,119 @@
+// The bar over selected words is on top of the page, never under it.
+//
+// 28 October 2026. Selecting a word on a page opens AFFiNE's own bar over it
+// (Bold, Italic, Link, and ⋮ for the rest), the way Notion and Apple Notes do.
+// On the first lines of a page that bar opened underneath the room's insert
+// bar, which is stuck to the top of the page, so it was there and nobody could
+// see it: AFFiNE keeps its editor in a layer of its own, and the insert bar is
+// outside that layer. While the bar is open the insert bar now steps back
+// (lib/study/view-extensions.ts, whenAffineBarShows; study-shell.css).
+//
+// Checked by what the browser itself says is on top at the middle of the bar,
+// on a computer and on two phones, one narrow enough that the first line
+// wraps, and that the insert bar goes back to its place
+// over the writing when the bar closes.
+//
+//   node tests/e2e/the-bar-over-a-selection-is-on-top.js [port]
+const { browser: engine, launchOptions, pageErrors } = require('./_playwright');
+const { signInAsExplorer, openStudyRoom, newPage } = require('./_study');
+
+const BASE = `http://localhost:${process.argv[2] || '4415'}`;
+let bad = 0;
+const ok = (c, m) => { if (!c) bad++; console.log(`${c ? 'OK ' : 'BAD'} ${m}`); };
+
+/** AFFiNE's bar: whether it is open, its buttons, and what is on top at its middle. */
+const theBar = (page) => page.evaluate(() => {
+  const widget = document.querySelector('affine-toolbar-widget');
+  const bar = widget?.shadowRoot?.querySelector('editor-toolbar');
+  if (!bar || !bar.dataset.open) return null;
+  const r = bar.getBoundingClientRect();
+  const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  return {
+    labels: [...bar.querySelectorAll('editor-icon-button, editor-menu-button')].map((b) => b.getAttribute('aria-label') || ''),
+    onTop: top === widget || !!(top && widget.contains(top)),
+    covering: top ? `${top.tagName.toLowerCase()}.${String(top.className).split(' ')[0]}` : 'nothing',
+  };
+});
+
+async function walk(browser, label, options) {
+  const context = await browser.newContext(options);
+  await context.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
+  const page = await context.newPage();
+  const caught = pageErrors(page);
+  await signInAsExplorer(page, BASE);
+  await openStudyRoom(page, BASE, 'simple');
+  await newPage(page);
+  const first = page.locator('affine-paragraph').first();
+  await first.click();
+  await page.keyboard.type('The Lord is my shepherd; I shall not want.');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('He makes me lie down in green pastures.');
+  await page.waitForTimeout(400);
+
+  // Words on the FIRST line, right under the insert bar, selected the way a
+  // person does: the caret put before the first word with a click, then the
+  // keyboard. The walk checks it selected what it meant to, because twice it
+  // did not, and AFFiNE's bar shows its buttons by what is selected (a
+  // selection across two lines offers "Create Table" and no Bold):
+  //   * at 2caaf91 and 22c6c35 the caret went in with Home alone;
+  //   * at 5e70b44 and c57527b the click was at the paragraph's middle. On
+  //     CI's phone the first sentence wraps after "not", so the middle is the
+  //     second visual line, and Home went to ITS start: "want. He" was
+  //     selected. Locally the sentence fits on one line, which is why it
+  //     passed here, so the walk now also runs on a narrow phone, where it
+  //     wraps on every machine.
+  // So the click is on the first letter itself, found from the text.
+  const letter = await first.evaluate((el) => {
+    const text = document.createTreeWalker(el.querySelector('.inline-editor'), NodeFilter.SHOW_TEXT).nextNode();
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, 1);
+    const box = range.getBoundingClientRect();
+    return { x: box.left + 1, y: box.top + box.height / 2 };
+  });
+  await page.mouse.click(letter.x, letter.y);
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 8; i++) await page.keyboard.press('Shift+ArrowRight');
+  const chosen = await page.evaluate(() => String(window.getSelection() || ''));
+  ok(chosen === 'The Lord', `${label}: the walk selected the first two words ("${chosen}")`);
+  // UP TO 6 S FOR BOLD, rather than one look after a fixed wait: a slow
+  // runner is not a missing button. (This was first added on the guess that a
+  // slow runner explained CI's bar without Bold at 2caaf91. It did not; the
+  // selection did, above. The wait stays because it costs nothing when the
+  // bar is right, and a bar that never gets Bold still fails.)
+  let bar = null;
+  for (let waited = 0; waited < 6000; waited += 250) {
+    await page.waitForTimeout(250);
+    bar = await theBar(page);
+    if (bar?.labels.includes('Bold')) break;
+  }
+  ok(!!bar, `${label}: selecting a word opens AFFiNE’s bar over it`);
+  ok(bar?.onTop, `${label}: and it is on top, not under the insert bar (on top at its middle: ${bar?.covering})`);
+  ok(['Bold', 'Italic', 'Link', 'More menu'].every((l) => bar?.labels.includes(l)),
+     `${label}: with Bold, Italic, Link and ⋮ in it (${bar?.labels.filter(Boolean).join(', ')})`);
+
+  // And when the bar closes, the insert bar is back over the writing.
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('End');
+  await page.waitForTimeout(600);
+  const z = await page.locator('.sr-formatbar').evaluate((el) => getComputedStyle(el).zIndex);
+  ok(!(await theBar(page)) && z === '10', `${label}: with nothing selected, the insert bar is back in its place (z-index ${z})`);
+
+  const errors = caught.list();
+  ok(errors.length === 0, `${label}: no page errors${errors.length ? `: ${errors.slice(0, 2).join(' | ')}` : ''}`);
+  await context.close();
+}
+
+(async () => {
+  const browser = await engine.launch(launchOptions);
+  try {
+    await walk(browser, 'computer', { viewport: { width: 1280, height: 860 } });
+    await walk(browser, 'phone', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    // The first sentence wraps here everywhere, as it does on CI's phone.
+    await walk(browser, 'narrow phone', { viewport: { width: 330, height: 844 }, isMobile: true, hasTouch: true });
+  } finally {
+    await browser.close();
+  }
+  console.log(bad ? `\n${bad} check(s) failed` : '\nAll checks passed');
+  process.exit(bad ? 1 : 0);
+})().catch((e) => { console.error(e); process.exit(1); });

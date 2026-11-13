@@ -1,0 +1,87 @@
+{
+  "name": "open-sentry-beacon",
+  "version": "1.0.0",
+  "private": false,
+  "license": "AGPL-3.0-only",
+  "description": "A web application for one-on-one discipleship. Runs entirely in the browser with sample data; bring your own backend when ready.",
+  "homepage": "https://github.com/Klydo131/Open-Sentry-Beacon#readme",
+  "bugs": "https://github.com/Klydo131/Open-Sentry-Beacon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Klydo131/Open-Sentry-Beacon.git"
+  },
+  "keywords": [
+    "church",
+    "discipleship",
+    "nextjs",
+    "one-on-one",
+    "web-app",
+    "pwa",
+    "no-backend"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "predev": "node scripts/excalidraw-assets.mjs && node scripts/third-party-notices.mjs",
+    "dev": "node scripts/run-next.mjs dev",
+    "build": "node scripts/run-next.mjs build",
+    "start": "node scripts/run-next.mjs start",
+    "test": "node scripts/verify.mjs",
+    "test:all": "node scripts/verify.mjs --all",
+    "icons": "node scripts/gen-icons.mjs",
+    "lint": "node scripts/lint.mjs",
+    "prebuild": "node scripts/stamp-build.mjs && node scripts/excalidraw-assets.mjs && node scripts/third-party-notices.mjs",
+    "verify": "node scripts/verify.mjs",
+    "verify:all": "node scripts/verify.mjs --all",
+    "docs:refresh": "node scripts/refresh-docs.mjs"
+  },
+  "dependencies": {
+    "@blocksuite/affine": "^0.22.4",
+    "@excalidraw/excalidraw": "0.18.1",
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3",
+    "@vanilla-extract/next-plugin": "^2.5.2",
+    "lit": "^3.3.3",
+    "next": "^15.5.28",
+    "pdfjs-dist": "6.4.299",
+    "pitchy": "4.1.0",
+    "react": "19.0.9",
+    "react-dom": "19.0.9",
+    "yjs": "^13.6.32"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.28.2",
+    "playwright": "^1.62.1",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.10",
+    "lodash-es": "^4.18.1",
+    "@excalidraw/excalidraw": {
+      "nanoid": "^3.3.18"
+    },
+    "@blocksuite/data-view": {
+      "vitest": "^4.1.11"
+    },
+    "@excalidraw/mermaid-to-excalidraw": {
+      "nanoid": "^5.1.16",
+      "@mermaid-js/parser": "^1.2.1"
+    },
+    "dompurify": "^3.4.17",
+    "fast-uri": "^3.1.9",
+    "postcss-selector-parser": "^6.1.5",
+    "vite": "^7.3.7",
+    "@blocksuite/icons": {
+      "react": "$react",
+      "@types/react": "$@types/react"
+    }
+  }
+}

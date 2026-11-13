@@ -1,0 +1,12 @@
+# How to report a security problem in Hope Beacon (RFC 9116).
+#
+# This file describes the open-source app. A church running its own copy
+# should put its own Contact: line FIRST, above these, for problems with its
+# copy (its database, its settings, its accounts), and keep these for problems
+# in the app's code. Expires must stay under a year away:
+# tests/the-security-layers-hold.mjs fails the build once it has passed.
+
+Contact: https://github.com/Klydo131/Open-Sentry-Beacon/security/advisories/new
+Expires: 2027-07-26T00:00:00.000Z
+Policy: https://github.com/Klydo131/Open-Sentry-Beacon/blob/main/docs/SECURITY.md#making-hope-beacon-safer-together
+Preferred-Languages: en, fil

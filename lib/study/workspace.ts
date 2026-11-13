@@ -1,0 +1,573 @@
+// The Explorer's study room, as a workspace the church owns.
+//
+// ---------------------------------------------------------------------------
+// WHY THIS IS OURS AND NOT THEIRS. BlockSuite ships exactly one implementation
+// of each of `Workspace`, `Doc` and `WorkspaceMeta`, and all three are in
+// `@blocksuite/store/test`, carrying this note:
+//
+//     @internal
+//     Test only
+//     Do not use this in production
+//
+// It is a church's discipleship app; shipping something to members that its own
+// authors mark "do not use in production" is not a thing to do quietly. So the
+// three classes here implement those interfaces over BlockSuite's PUBLIC pieces
+// -- DocEngine, BlobEngine, AwarenessStore, StoreContainer, createYProxy --
+// which are exported for exactly this purpose.
+//
+// The structure follows their test implementation closely, because it is the
+// reference for how these interfaces fit together and inventing a different
+// shape would be guessing at Yjs subdoc semantics. BlockSuite is MIT; the
+// notice is in NOTICES.md.
+//
+// WHAT IS ACTUALLY DIFFERENT, and it is the only part that matters: the doc
+// source. Theirs defaults to a no-op that forgets everything; ours is
+// SupabaseDocSource, so a study room is rows in the church's own database
+// behind owner-only policies. That was never a detail -- it is the whole reason
+// this file exists, because AFFiNE's own server is Enterprise-licensed and
+// could not be used.
+// ---------------------------------------------------------------------------
+
+import { NoopLogger } from '@blocksuite/global/utils';
+
+import type { Collection } from '@/lib/study/shelf';
+import {
+  AwarenessStore,
+  createYProxy,
+  StoreContainer,
+  type Doc,
+  type DocMeta,
+  type DocsPropertiesMeta,
+  type GetStoreOptions,
+  type IdGenerator,
+  type Workspace,
+  type WorkspaceMeta,
+  type YBlock,
+  nanoid,
+} from '@blocksuite/store';
+import {
+  AwarenessEngine,
+  BlobEngine,
+  DocEngine,
+  DocPeerStep,
+  MemoryBlobSource,
+  type AwarenessSource,
+  type BlobSource,
+  type DocSource,
+} from '@blocksuite/sync';
+import type { ExtensionType } from '@blocksuite/store';
+import { Subject } from 'rxjs';
+import { Awareness } from 'y-protocols/awareness.js';
+import * as Y from 'yjs';
+
+type MetaState = {
+  pages?: unknown[];
+  properties?: DocsPropertiesMeta;
+  name?: string;
+  /**
+   * Whether this room has already been given its Getting Started page.
+   *
+   * A FLAG AND NOT A LOOK AT THE PAGE LIST, and the difference is the whole
+   * behaviour. "Is the guide page there?" is also false for somebody who read
+   * it and deleted it, so a room that asks that question writes the page again
+   * every time they open it. Given once, recorded once, never argued about
+   * again. Same rule as the starter tile in the pocket.
+   */
+  guided?: boolean;
+  /**
+   * The saved views in this room.
+   *
+   * IN THE WORKSPACE DOCUMENT AND NOT ON A PAGE, because a collection is about
+   * the room rather than about any page in it: the pages it gathers do not know
+   * they are in it and must not have to be rewritten when one is saved. It
+   * syncs with the page list, so a collection made on a phone is there on a
+   * laptop.
+   */
+  collections?: unknown[];
+};
+
+/**
+ * The pictures and files a page shows, by their keys. Read from the blocks
+ * themselves (`sourceId`), which is where BlockSuite keeps them.
+ */
+export function picturesIn(spaceDoc: Y.Doc): string[] {
+  const keys = new Set<string>();
+  const blocks = spaceDoc.getMap('blocks') as Y.Map<Y.Map<unknown>>;
+  blocks.forEach((block) => {
+    const source = block.get?.('prop:sourceId');
+    if (typeof source === 'string' && source) keys.add(source);
+  });
+  return [...keys];
+}
+
+/** The list of pages in a room, and their titles. */
+class StudyMeta implements WorkspaceMeta {
+  readonly id = 'meta';
+
+  docMetaAdded = new Subject<string>();
+  docMetaRemoved = new Subject<string>();
+  docMetaUpdated = new Subject<void>();
+
+  private readonly _yMap: Y.Map<MetaState[keyof MetaState]>;
+  private readonly _proxy: MetaState;
+  private _prevDocs = new Set<string>();
+
+  constructor(readonly doc: Y.Doc) {
+    this._yMap = doc.getMap(this.id) as Y.Map<MetaState[keyof MetaState]>;
+    this._proxy = createYProxy(this._yMap);
+    this._yMap.observeDeep(this._onMetaEvents);
+  }
+
+  private get _yDocs() {
+    return this._yMap.get('pages') as unknown as Y.Array<unknown>;
+  }
+
+  private readonly _onMetaEvents = (
+    events: Y.YEvent<Y.Array<unknown> | Y.Text | Y.Map<unknown>>[],
+  ) => {
+    for (const e of events) {
+      const touchedPages = e.target === this._yMap && e.changes.keys.has('pages');
+      if (e.target === this._yDocs || e.target.parent === this._yDocs || touchedPages) {
+        this._announce();
+      }
+    }
+  };
+
+  /**
+   * Turn "the list changed" into added/removed, which is what the workspace
+   * needs to keep its Doc objects in step with the list.
+   */
+  private _announce() {
+    const now = new Set<string>();
+    for (const meta of this.docMetas) {
+      if (!this._prevDocs.has(meta.id)) this.docMetaAdded.next(meta.id);
+      now.add(meta.id);
+    }
+    for (const was of this._prevDocs) {
+      if (!now.has(was)) this.docMetaRemoved.next(was);
+    }
+    this._prevDocs = now;
+    this.docMetaUpdated.next();
+  }
+
+  get docMetas(): DocMeta[] {
+    return (this._proxy.pages as DocMeta[] | undefined) ?? [];
+  }
+
+  get docs() {
+    return this._proxy.pages;
+  }
+
+  get properties(): DocsPropertiesMeta {
+    return this._proxy.properties ?? { tags: { options: [] } };
+  }
+
+  initialize() {
+    if (!this._proxy.pages) this._proxy.pages = [];
+  }
+
+  /** Whether this room has had its Getting Started page. */
+  get guided(): boolean {
+    return this._proxy.guided === true;
+  }
+
+  /** Remember that it has, so it is never written a second time. */
+  markGuided() {
+    this.doc.transact(() => { this._proxy.guided = true; }, this.doc.clientID);
+  }
+
+  /** The saved views in this room. */
+  get collections(): Collection[] {
+    const saved = this._proxy.collections;
+    return Array.isArray(saved) ? (saved as Collection[]) : [];
+  }
+
+  /**
+   * Save a view, or replace the one with the same id.
+   *
+   * REPLACED BY ID RATHER THAN APPENDED, so renaming a collection on one device
+   * does not leave two of it on another. The list is small enough that rewriting
+   * it whole is cheaper than teaching Yjs to patch one entry in place, and a
+   * patch that goes wrong here loses somebody's saved views.
+   */
+  saveCollection(collection: Collection) {
+    this.doc.transact(() => {
+      const kept = this.collections.filter((c) => c.id !== collection.id);
+      this._proxy.collections = [...kept, collection];
+    }, this.doc.clientID);
+    this.docMetaUpdated.next();
+  }
+
+  /** Forget a saved view. The pages it gathered are untouched. */
+  removeCollection(id: string) {
+    this.doc.transact(() => {
+      this._proxy.collections = this.collections.filter((c) => c.id !== id);
+    }, this.doc.clientID);
+    this.docMetaUpdated.next();
+  }
+
+  addDocMeta(meta: DocMeta, index?: number) {
+    this.doc.transact(() => {
+      const docs = this.docs as unknown[] | undefined;
+      if (!docs) return;
+      if (index === undefined) docs.push(meta);
+      else docs.splice(index, 0, meta);
+    }, this.doc.clientID);
+  }
+
+  getDocMeta(id: string) {
+    return this.docMetas.find((m) => m.id === id);
+  }
+
+  setDocMeta(id: string, props: Partial<DocMeta>) {
+    const index = this.docMetas.findIndex((m) => m.id === id);
+    if (index === -1) return;
+    this.doc.transact(() => {
+      const docs = this.docs;
+      if (!docs) return;
+      const target = docs[index] as Record<string, unknown>;
+      for (const [key, value] of Object.entries(props)) target[key] = value;
+    }, this.doc.clientID);
+  }
+
+  removeDocMeta(id: string) {
+    const index = this.docMetas.findIndex((m) => m.id === id);
+    if (index === -1) return;
+    this.doc.transact(() => {
+      this.docs?.splice(index, 1);
+    }, this.doc.clientID);
+  }
+
+  setProperties(meta: DocsPropertiesMeta) {
+    this._proxy.properties = meta;
+    this.docMetaUpdated.next();
+  }
+}
+
+/** One page in the room. A Yjs subdocument, loaded when it is opened. */
+class StudyDoc implements Doc {
+  readonly id: string;
+  readonly rootDoc: Y.Doc;
+  readonly awarenessStore: AwarenessStore;
+
+  private readonly _workspace: Workspace;
+  private readonly _storeContainer: StoreContainer;
+  private readonly _ySpaceDoc: Y.Doc;
+  private readonly _yBlocks: Y.Map<YBlock>;
+  private _loaded = false;
+  private _ready = false;
+
+  constructor(options: {
+    id: string;
+    workspace: Workspace;
+    rootDoc: Y.Doc;
+    awarenessStore: AwarenessStore;
+  }) {
+    this.id = options.id;
+    this.rootDoc = options.rootDoc;
+    this.awarenessStore = options.awarenessStore;
+    this._workspace = options.workspace;
+    this._ySpaceDoc = this._openSubDoc();
+    this._yBlocks = this._ySpaceDoc.getMap('blocks');
+    this._storeContainer = new StoreContainer(this);
+  }
+
+  /**
+   * A page that already exists arrives unloaded and announces itself later, so
+   * the `subdocs` listener is how a room opened on a second device learns its
+   * pages have arrived. A page created here is loaded from the start.
+   */
+  private _openSubDoc(): Y.Doc {
+    const spaces = this.rootDoc.getMap('spaces');
+    const existing = spaces.get(this.id) as Y.Doc | undefined;
+    if (existing) {
+      this._loaded = false;
+      this.rootDoc.on('subdocs', this._onSubdocs);
+      return existing;
+    }
+    const fresh = new Y.Doc({ guid: this.id });
+    spaces.set(this.id, fresh);
+    this._loaded = true;
+    return fresh;
+  }
+
+  private readonly _onSubdocs = ({ loaded }: { loaded: Set<Y.Doc> }) => {
+    const mine = [...loaded].find((d) => d.guid === this._ySpaceDoc.guid);
+    if (!mine) return;
+    this.rootDoc.off('subdocs', this._onSubdocs);
+    this._loaded = true;
+  };
+
+  get workspace() { return this._workspace; }
+  get blobSync() { return this._workspace.blobSync; }
+  get meta() { return this._workspace.meta.getDocMeta(this.id); }
+  get loaded() { return this._loaded; }
+  get ready() { return this._ready; }
+  get spaceDoc() { return this._ySpaceDoc; }
+  get yBlocks() { return this._yBlocks; }
+  get isEmpty() { return this._yBlocks.size === 0; }
+  get removeStore() { return this._storeContainer.removeStore; }
+
+  getStore({ readonly, query, provider, extensions, id }: GetStoreOptions = {}) {
+    const all = (this._workspace as StudyWorkspace).storeExtensions.concat(extensions ?? []);
+    // An id is only derived when neither a readonly view nor a query is asked
+    // for; those each want their own store rather than the shared one.
+    const storeId = id ?? (readonly !== undefined || query ? undefined : this.spaceDoc.guid);
+    return this._storeContainer.getStore({ id: storeId, readonly, query, provider, extensions: all });
+  }
+
+  load(initFn?: () => void): this {
+    if (this._ready) return this;
+    this._ySpaceDoc.load();
+    initFn?.();
+    this._ready = true;
+    return this;
+  }
+
+  clear() { this._yBlocks.clear(); }
+
+  dispose() {
+    if (this._ready) this._yBlocks.clear();
+  }
+
+  remove() {
+    this._ySpaceDoc.destroy();
+    this._loaded = false;
+    this.rootDoc.getMap('spaces').delete(this.id);
+  }
+}
+
+export type StudyWorkspaceOptions = {
+  id: string;
+  /**
+   * Where pages are kept first: this device's copy (lib/study/local-source.ts),
+   * or the database itself where a browser will not keep one.
+   */
+  docSource: DocSource;
+  /** Kept in step behind it, both ways: the church's database. */
+  shadowSources?: DocSource[];
+  blobSource?: BlobSource;
+  shadowBlobs?: BlobSource[];
+  awarenessSources?: AwarenessSource[];
+  idGenerator?: IdGenerator;
+};
+
+/** Where the room's writing has reached, for the line under a page's title. */
+export type SaveState = 'device' | 'saving' | 'saved' | 'waiting';
+
+/** A source that can forget a page deleted for good. */
+type Forgetful = { forget?: (docId: string) => Promise<void> };
+
+export class StudyWorkspace implements Workspace {
+  readonly id: string;
+  readonly doc: Y.Doc;
+  readonly idGenerator: IdGenerator;
+  readonly awarenessStore: AwarenessStore;
+  readonly awarenessSync: AwarenessEngine;
+  readonly docSync: DocEngine;
+  readonly blobSync: BlobEngine;
+  readonly meta: StudyMeta;
+
+  storeExtensions: ExtensionType[] = [];
+
+  private readonly _docs = new Map<string, StudyDoc>();
+
+  slots = { docListUpdated: new Subject<void>() };
+
+  get docs() { return this._docs; }
+
+  private readonly _docSources: Array<DocSource & Forgetful>;
+  private readonly _blobSources: BlobSource[];
+
+  constructor({
+    id,
+    docSource,
+    shadowSources = [],
+    // Attachments stay in memory until the church decides where they live.
+    // Uploads already have rules in this app and a study room must not become
+    // a second, quieter way to store files.
+    blobSource = new MemoryBlobSource(),
+    shadowBlobs = [],
+    awarenessSources = [],
+    idGenerator = nanoid,
+  }: StudyWorkspaceOptions) {
+    this.id = id;
+    this.doc = new Y.Doc({ guid: id });
+    this.idGenerator = idGenerator;
+
+    const logger = new NoopLogger();
+    this.awarenessStore = new AwarenessStore(new Awareness(this.doc));
+    this.awarenessSync = new AwarenessEngine(this.awarenessStore.awareness, awarenessSources);
+    this.docSync = new DocEngine(this.doc, docSource, shadowSources, logger);
+    this.blobSync = new BlobEngine(blobSource, shadowBlobs, logger);
+    this._docSources = [docSource, ...shadowSources];
+    this._blobSources = [blobSource, ...shadowBlobs];
+
+    this.meta = new StudyMeta(this.doc);
+    this._followTheList();
+  }
+
+  /**
+   * The page list is the source of truth, not this map. A page added on another
+   * device arrives as a meta change, and this is what turns it into something
+   * the editor can open.
+   */
+  private _followTheList() {
+    this.meta.docMetaAdded.subscribe((docId) => {
+      this._docs.set(docId, new StudyDoc({
+        id: docId,
+        workspace: this,
+        rootDoc: this.doc,
+        awarenessStore: this.awarenessStore,
+      }));
+    });
+    this.meta.docMetaUpdated.subscribe(() => this.slots.docListUpdated.next());
+    this.meta.docMetaRemoved.subscribe((docId) => {
+      const gone = this._docs.get(docId);
+      if (!gone) return;
+      this._docs.delete(docId);
+      gone.remove();
+    });
+  }
+
+  createDoc(docId?: string): Doc {
+    const id = docId ?? this.idGenerator();
+    if (this._docs.has(id)) {
+      // Louder than returning the existing one: two pages sharing an id is a
+      // bug that shows up later as edits landing in the wrong place.
+      throw new Error(`A page called ${id} is already open in this room.`);
+    }
+    this.meta.addDocMeta({ id, title: '', createDate: Date.now(), tags: [] });
+    const made = this._docs.get(id);
+    if (!made) throw new Error('That page could not be added to the room.');
+    return made;
+  }
+
+  getDoc(docId: string): Doc | null {
+    return this._docs.get(docId) ?? null;
+  }
+
+  removeDoc(docId: string) {
+    if (!this.meta.getDocMeta(docId)) return;
+    const doc = this._docs.get(docId);
+    if (!doc) return;
+    doc.dispose();
+    this.meta.removeDocMeta(docId);
+    this._docs.delete(docId);
+  }
+
+  /**
+   * Delete a page for good: off the list, off this device, out of the
+   * database, and the pictures only it used with it. Returns what could not
+   * be forgotten (say, the database while offline), for the room to report.
+   *
+   * PICTURES ARE CLEARED ONLY WHEN EVERY PAGE IS IN HAND. A picture may be on
+   * two pages, and a page still arriving from the database cannot be asked
+   * whether it uses one. So while anything is still loading, the pictures stay;
+   * a picture nobody uses costs a little space, and a picture deleted from under
+   * a page costs that page.
+   */
+  async deleteForever(docId: string): Promise<unknown[]> {
+    const doc = this._docs.get(docId);
+    let theirPictures: string[] = [];
+    if (doc) {
+      doc.load();
+      theirPictures = picturesIn(doc.spaceDoc);
+    }
+    this.removeDoc(docId);
+    const failures: unknown[] = [];
+    await Promise.all(this._docSources.map((source) => source.forget?.(docId).catch((e) => { failures.push(e); })));
+
+    if (theirPictures.length && this.everythingLoaded()) {
+      const stillUsed = new Set<string>();
+      for (const other of this._docs.values()) {
+        other.load();
+        for (const key of picturesIn(other.spaceDoc)) stillUsed.add(key);
+      }
+      const unused = theirPictures.filter((key) => !stillUsed.has(key));
+      await Promise.all(this._blobSources.flatMap((source) => unused.map((key) =>
+        Promise.resolve(source.delete(key)).catch((e) => { failures.push(e); }))));
+    }
+    return failures;
+  }
+
+  /** Every page is in hand from every source. */
+  everythingLoaded(): boolean {
+    const { main, shadows } = this.docSync.status;
+    return [main, ...shadows].every((s) => !!s && s.step >= DocPeerStep.Loaded && s.pendingPullUpdates === 0);
+  }
+
+  /** Resolves when the first source (this device, usually) has every page in hand. */
+  waitForMain(): Promise<void> {
+    return this._waitFor((status) => !!status.main && status.main.step >= DocPeerStep.Loaded);
+  }
+
+  /**
+   * Resolves when the database has answered with the room's page list. Without
+   * a database behind the device copy there is nothing to wait for.
+   */
+  waitForRemoteList(): Promise<void> {
+    if (this.docSync.shadows.length === 0) return this.waitForMain();
+    return this._waitFor((status) => !!status.shadows[0] && status.shadows[0].step >= DocPeerStep.LoadingSubDoc);
+  }
+
+  /** Bring this page to the front of the queue; the rest follow. */
+  putFirst(docId: string) {
+    this.docSync.setPriorityRule((id) => id === docId);
+  }
+
+  /** Where the writing is: on this device only, on its way, or with the church. */
+  saveState(): SaveState {
+    const { main, shadows } = this.docSync.status;
+    const remote = shadows.length ? shadows[0] : main;
+    if (!remote) return 'saving';
+    if (remote.step === DocPeerStep.Retrying) return shadows.length ? 'waiting' : 'saving';
+    if (remote.pendingPushUpdates > 0) return 'saving';
+    return remote.step >= DocPeerStep.Loaded ? 'saved' : 'saving';
+  }
+
+  /** Told whenever the save state may have changed. */
+  onSaveState(cb: () => void): () => void {
+    const sub = this.docSync.onStatusChange.subscribe(() => cb());
+    return () => sub.unsubscribe();
+  }
+
+  private _waitFor(test: (status: DocEngine['status']) => boolean): Promise<void> {
+    if (test(this.docSync.status)) return Promise.resolve();
+    return new Promise((resolve) => {
+      const sub = this.docSync.onStatusChange.subscribe((status) => {
+        if (test(status)) {
+          sub.unsubscribe();
+          resolve();
+        }
+      });
+    });
+  }
+
+  /** Begin syncing with the database. */
+  start() {
+    this.docSync.start();
+    this.blobSync.start();
+    this.awarenessSync.connect();
+  }
+
+  /** Everything written is safely in the database. */
+  waitForSynced() { return this.docSync.waitForSynced(); }
+  canGracefulStop() { return this.docSync.canGracefulStop(); }
+  waitForGracefulStop(abort?: AbortSignal) { return this.docSync.waitForGracefulStop(abort); }
+
+  /**
+   * Stop without waiting. Loses anything not yet written, so the caller checks
+   * `canGracefulStop` first -- leaving a room should not lose the last sentence
+   * somebody typed in it.
+   */
+  forceStop() {
+    this.docSync.forceStop();
+    this.blobSync.stop();
+    this.awarenessSync.disconnect();
+  }
+
+  dispose() {
+    this.awarenessStore.destroy();
+  }
+}

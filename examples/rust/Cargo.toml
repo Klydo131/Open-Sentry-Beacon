@@ -1,0 +1,11 @@
+[package]
+name = "hope-beacon-walk"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Small, blocking HTTP and JSON. For an async service, reqwest and tokio do the
+# same calls.
+[dependencies]
+ureq = { version = "2.12", features = ["json"] }
+serde_json = "1"

@@ -1,0 +1,134 @@
+-- What a brand-new Supabase project already has before its first migration,
+-- beyond what the supabase/postgres image sets up by itself.
+--
+-- WHY THIS FILE EXISTS. scripts/fresh-install.sh builds a database the way a
+-- new church does -- every migration in supabase/migrations, in order, on an
+-- empty project -- to prove the repository installs in one pass and produces
+-- the same database as the live one. The supabase/postgres image is the same
+-- Postgres Supabase runs, with the same roles and extensions, but the sign-in
+-- and storage SERVICES add their own tables when a real project starts, and the
+-- image alone does not have them. These are those tables' shapes, copied from a
+-- live project's catalogue on 23 September 2026. Columns only; no rows.
+--
+-- Run as supabase_admin, before the first migration.
+
+alter table auth.users add column if not exists phone text default null;
+alter table auth.users add column if not exists phone_confirmed_at timestamptz;
+alter table auth.users add column if not exists phone_change text default '';
+alter table auth.users add column if not exists phone_change_token varchar(255) default '';
+alter table auth.users add column if not exists phone_change_sent_at timestamptz;
+alter table auth.users add column if not exists confirmed_at timestamptz;
+alter table auth.users add column if not exists email_change_token_current varchar(255) default '';
+alter table auth.users add column if not exists email_change_confirm_status smallint default 0;
+alter table auth.users add column if not exists banned_until timestamptz;
+alter table auth.users add column if not exists reauthentication_token varchar(255) default '';
+alter table auth.users add column if not exists reauthentication_sent_at timestamptz;
+alter table auth.users add column if not exists is_sso_user boolean default false;
+alter table auth.users add column if not exists deleted_at timestamptz;
+alter table auth.users add column if not exists is_anonymous boolean default false;
+create table if not exists auth.sessions (
+  id uuid primary key, user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz, updated_at timestamptz, factor_id uuid, aal text, not_after timestamptz,
+  refreshed_at timestamp, user_agent text, ip inet, tag text, oauth_client_id uuid,
+  refresh_token_hmac_key text, refresh_token_counter bigint, scopes text);
+alter table auth.refresh_tokens add column if not exists session_id uuid;
+-- What a real project lets the postgres role do with the sign-in tables. That
+-- role owns this app's functions, and on a live project it may read and change
+-- all three (its grants, read on 13 October 2026). The sessions table above is
+-- made by supabase_admin and granted to nobody, so suspend_member -- which ends
+-- the suspended person's sessions -- was refused here and only here, and
+-- fresh-install failed 2 of 50 checks in a-leader-stays-within-their-rank.sql
+-- from 7 to 13 October 2026. The app was never broken; this stand-in was.
+grant all on auth.users, auth.sessions, auth.refresh_tokens to postgres;
+-- Two-step sign-in's factors: one row per authenticator app a person has added,
+-- `verified` once they have confirmed it with a code. Shape copied from a live
+-- project on 13 October 2026, where the postgres role may read it. The first
+-- migration to ask (20261013140000_a_second_step_once_set_up_is_required)
+-- stopped a fresh install without it.
+do $$ begin
+  if to_regtype('auth.factor_type') is null then
+    create type auth.factor_type as enum ('totp', 'webauthn', 'phone');
+  end if;
+  if to_regtype('auth.factor_status') is null then
+    create type auth.factor_status as enum ('unverified', 'verified');
+  end if;
+end $$;
+create table if not exists auth.mfa_factors (
+  id uuid primary key, user_id uuid not null references auth.users(id) on delete cascade,
+  friendly_name text, factor_type auth.factor_type not null, status auth.factor_status not null,
+  created_at timestamptz not null, updated_at timestamptz not null, secret text, phone text,
+  last_challenged_at timestamptz, web_authn_credential jsonb, web_authn_aaguid uuid,
+  last_webauthn_challenge_data jsonb);
+create index if not exists mfa_factors_user_id_idx on auth.mfa_factors (user_id);
+grant all on auth.mfa_factors to postgres;
+alter table storage.buckets add column if not exists public boolean default false;
+alter table storage.buckets add column if not exists avif_autodetection boolean default false;
+alter table storage.buckets add column if not exists file_size_limit bigint;
+alter table storage.buckets add column if not exists allowed_mime_types text[];
+alter table storage.buckets add column if not exists owner_id text;
+alter table storage.objects add column if not exists version text;
+alter table storage.objects add column if not exists owner_id text;
+alter table storage.objects add column if not exists user_metadata jsonb;
+-- auth.uid(), auth.role() and auth.email() as the sign-in service leaves them.
+-- The image's own versions read only the old one-setting-per-claim form
+-- (request.jwt.claim.sub); a real project's also read request.jwt.claims,
+-- which is what every signed-in request sets today and what the SQL tests set
+-- to act as somebody. Without these, every "as a person" check in
+-- supabase/tests/a-conversation-can-reply-react-and-speak.sql ran as nobody,
+-- and this install failed in CI on every push from 1 to 4 October 2026.
+-- Copied from a live project on 4 October 2026.
+create or replace function auth.uid()
+returns uuid
+language sql
+stable
+as $$
+  select
+  coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
+  )::uuid
+$$;
+create or replace function auth.role()
+returns text
+language sql
+stable
+as $$
+  select
+  coalesce(
+    nullif(current_setting('request.jwt.claim.role', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role')
+  )::text
+$$;
+create or replace function auth.email()
+returns text
+language sql
+stable
+as $$
+  select
+  coalesce(
+    nullif(current_setting('request.jwt.claim.email', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email')
+  )::text
+$$;
+-- auth.jwt(), the request's claims. The image has auth.uid() and auth.role(),
+-- but this one is added by the sign-in service's own migrations when a real
+-- project starts. Copied from a live project on 29 September 2026; the first
+-- migration to use it (20260929130000_an_ended_session_ends_at_once) stopped a
+-- fresh install without it.
+create or replace function auth.jwt()
+returns jsonb
+language sql
+stable
+as $$
+  select
+    coalesce(
+        nullif(current_setting('request.jwt.claim', true), ''),
+        nullif(current_setting('request.jwt.claims', true), '')
+    )::jsonb
+$$;
+-- The realtime publication a new project is created with.
+do $$ begin
+  if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    create publication supabase_realtime;
+  end if;
+end $$;

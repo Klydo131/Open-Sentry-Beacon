@@ -1,0 +1,1599 @@
+# Changelog
+
+What changed for developers and for whoever runs a copy, newest first: the
+migrations to run, the settings to set, and the rules that changed. What members
+see is written for them in `lib/release-notes.ts` and shown in the app under
+**What's new**; the full history is `git log`.
+
+Each entry starts with what a church running a copy has to do, because that is
+the part that goes wrong when nobody reads past the headline.
+
+---
+
+## 13 November 2026 (later): plans on a shelf, shown to the Guides
+
+**To run:** migration `20261113120000_a_leader_can_show_a_plan_to_the_guides.sql`
+on each database, after the build is out. Until it runs, a Director who picks
+**The Guides of my church** gets an error from the database and nothing is
+posted (the enum value does not exist yet); nothing else changes.
+
+- **A new audience, `guides`.** `can_read_post` gains one clause: a Director's
+  or Executive Director's post with this audience is read by the approved,
+  unsuspended Guides and leaders of the author's own church. An Explorer never
+  reads it. Every existing clause is kept word for word.
+- **Who a plan can be shown to, by role.** A Director or ED: the Guides of the
+  church, or everyone. A Guide: their Explorers, or everyone. A plan remembers
+  its audience (`sharedTo`) until it is taken down.
+- **The plan shelf** (`components/PlanShelf.tsx`) replaces the folder list for
+  Sabbath programs and evangelistic meetings: folders as tiles with a path back
+  to All plans, a 📂 button on each row to move it (into a folder, a new one, or
+  out), and a label on each row for who can see it.
+- Guarded by `tests/plans-are-shelved-and-shown.mjs`.
+- **Outlines in sideways rows are drawn inside** (filter chips, quick links): the
+  row's own edge was shaving the top and ends off each one.
+- **`docs/LESSONS.md`:** thirteen real failures from this codebase, each with the
+  rule, the guarding test and a way to break it on purpose. Linked from the
+  README and CONTRIBUTING.
+- **Home quick links** are two even columns on a phone, never a row cut off at
+  the card's edge; the **Study Room search** field no longer shows a white square
+  inside its grey box (every look painted the inner input).
+- **Profile:** the form that edits your details comes first; your picture and
+  the copy of your information follow it.
+
+---
+
+## 13 November 2026: a simpler Home and top bar, celebrations, deleting plans for good
+
+**To run:** nothing. No migration and no function. **If you host on Vercel:**
+keep Deployment Protection on preview builds only. Covering production puts a
+Vercel sign-in in front of your members. Leave `BEACON_PUBLIC_SITE` unset for a
+private, invite-only church; search engines are then told to stay out.
+
+- **Deleting a Sabbath program or evangelistic meetings takes every shared copy
+  down,** by the posts it remembers and by its title. A copy shared twice, or
+  from another device, used to stay up. This Sabbath also gives whoever shared a
+  copy **Take down what I shared**, for a copy whose plan is already gone.
+- **Home is simpler.** A shared plan is no longer a blog card: Announcements
+  shows at most two short cards (the coming Sabbath's program, the newest
+  meetings), each opening This Sabbath (`lib/home-plans.ts`).
+- **The top bar:** a person icon with a green (connected) or red (offline) dot
+  in place of the initials, name and LIVE chip (`components/ProfileStatus.tsx`);
+  the brand shows just the mark on a phone; the search box sits under the brand
+  in the computer sidebar and is easier to see on a phone and a pad.
+- **Lesson studies take pictures:** **Add a picture** beside Draw a picture.
+- **Celebrations:** an Explorer marking a lesson done, moving forward on their
+  journey or finishing a tutorial step gets one of five short bursts, never the
+  same twice running; with reduced motion, only the words (`lib/celebrate.ts`).
+- **Modern look follows Astryx's scale:** cards 12px, controls 10px, small
+  inner things 6px, one hairline edge, a hover ring drawn inside the card. The
+  Home counts are words, not pill buttons.
+- **The install invitation is quieter:** closing it puts it away for thirty
+  days, not an hour, and **No thanks, don't ask again** ends it for good.
+  Installing stays in Settings and the header.
+- The analytics rooms of the Office load when opened, keeping the Office under
+  the 430 kB budget.
+
+---
+
+## 12 November 2026 (late): programs come down, appointments change, search, motion
+
+**To run:** migration `20261112150000_an_appointment_changes_only_by_its_answer.sql`
+on each database. **To deploy:** the `places` function (it now asks its three
+questions at once). Until the function is redeployed the place box is still
+quicker, because of the change in the app; the server part waits for it.
+
+- **A deleted Sabbath program or evangelistic meeting comes off This Sabbath.**
+  Sharing posts a copy for Explorers; deleting the plan never took that copy
+  down. Now a plan remembers the posts it was shared as: deleting it takes them
+  down first (and if that cannot happen, nothing is deleted and the reason is
+  shown); posting again replaces the earlier copy; and the share box has
+  **Take it down**. A plan shared before tonight is found by its title.
+- **Appointments can be changed** like a calendar appointment: **Change** fills
+  the form with it, and sending proposes the new time for the other person to
+  confirm and calls the old one off with a note saying where it moved. In the
+  database an appointment now changes only through its answer: no direct edit
+  or delete from a browser (`supabase/tests/an-appointment-is-kept-like-one.sql`,
+  23 checks, in the fresh install).
+- **Place search is quicker:** places already found for the first letters show
+  at once while the full answer comes, and the pause before asking is 300ms.
+- **Search the app** from the header: rooms, every Settings card, every look by
+  name and every help answer, word for word (`lib/app-search.ts`). Nothing
+  typed leaves the device.
+- **Each look moves in its own way** (`app/look-motion.css`); Old Classic is
+  unchanged and every movement stops under reduced motion.
+- **Line icons in every look but Old Classic.**
+- **SLPUM's card opens SLPUM's own site**, adventisthope.ph, not the Division's
+  news.
+
+## 12 November 2026: Modern's small details, from the Astryx design system
+
+Nothing to run or set. Modern only; Old Classic and the other looks are unchanged.
+
+- Corner radii, motion timings and easing, the keyboard focus ring (2px,
+  3px offset, never a shadow) and three quiet elevation shadows follow the
+  published values of Astryx (MIT, credited in `NOTICES.md`). Values only: no
+  Astryx code or package is installed.
+- Cards press in a little when tapped; counts use even-width digits; headings
+  break evenly; with forced colours every card keeps an edge.
+- The left menu and Home's quick links show plain line icons in Modern
+  (`components/NavLineIcon.tsx`); every other look keeps the emoji.
+
+## 12 November 2026: the desk can be tucked away on a computer
+
+Nothing to run or set.
+
+- Asked for the same day. From 1280px the desk column has a **Full
+  width ›››** button at its top. Pressed, the desk becomes the drawer it is on
+  a pad (the cabinet tab on the right edge, the swipe, Escape) and the page
+  takes the whole width. **Keep beside the page** in the drawer puts the column
+  back. The choice is the device's (`beacon-desk-tucked` in browser storage),
+  applied before paint by `lib/look-before-paint.ts`.
+- Phones and pads are unchanged. Walked by `tests/e2e/the-desk-tucks-away.js`.
+
+## 12 November 2026: Modern is the look until somebody chooses; Home has Church & Mission Updates
+
+### If you run a copy, do this
+
+1. **Rebuild.** No database change.
+2. **Optional: name the organisations Home starts with.** Set
+   `NEXT_PUBLIC_UPDATES_FEATURED` to a comma-separated list of ids from
+   `lib/updates/organisations.ts` (for example `slpum,ssd,gc`). Unset, Home
+   starts with the first two. Each person can change their own list.
+3. **Tell your members the look has changed.** Anybody who prefers the old
+   one chooses Old Classic in Settings, General, Look (the founder, 12 November.).
+   Only the name shown changed; its id is still `classic`.
+
+### What changed
+
+- **`DEFAULT_LOOK` is `modern`** (the founder, 12 November 2026.). Classic is untouched and still first in the list. A
+  device that chose Classic, or the retired "desktop", stays on Classic.
+  - `app/themes/modern.css`, `public/themes/modern.svg`, registered in
+    `lib/ui-themes.ts`. Measured in every look walk the day it was added.
+  - **The walks' browsers choose Classic** (`tests/e2e/_playwright.js`),
+    because they were written against Classic and measure it. A walk about a
+    device that has chosen nothing asks for one with `untouched()`.
+- **Church & Mission Updates** (`components/ChurchUpdates.tsx`, on both
+  halves of Home):
+  - the stories are read by this app's own server (`app/api/updates`), at
+    most once an hour per organisation, from the addresses in
+    `lib/updates/organisations.ts` and nowhere else;
+  - a story is plain text and an https link on the organisation's own site;
+  - **a feed that refuses is not an error.** On the day this was written both
+    official news sites answered an automatic reader with a security
+    checkpoint. Home then offers that organisation's news page as a link.
+    Whether a deployed copy is allowed to read them is up to each
+    organisation; ask it, and never pretend to be a browser;
+  - the tutorial fetches nothing and shows samples that say so;
+  - four organisations to begin with. Add one only after confirming its own
+    news address (`tests/church-and-mission-updates.mjs` holds the rules).
+- **Home greets by name** (`components/HomeWelcome.tsx`): the church, the
+  time of day, This Sabbath, the Study Room and up to four apps from the
+  person's own pocket. The billboard rows under it are unchanged.
+- **A share can be taken back** by whoever sent it, from the send panel
+  (`tests/a-share-can-be-taken-back.mjs`).
+
+---
+
+## 12 November 2026: a changed address is judged again
+
+### If you run a copy, do this
+
+1. **Run the new migration:** `20261112120000_a_changed_address_is_judged_again.sql`.
+   It adds two triggers and changes no rows.
+2. **Rebuild.**
+
+### What changed
+
+- **The activity record now follows an address that is changed afterwards.**
+  A resource's link, or a pocket web app's address, was judged when it was
+  added and when it was shared. Changing it later now writes a line too, with
+  the same labels and the same alert, naming each person who already has it.
+- **Resource sharing has its own database test:**
+  `supabase/tests/a-resource-is-shared-and-watched.sql`, 34 checks, signed in
+  as invented Guides, Explorers and a Director in two churches. It runs in
+  `scripts/fresh-install.sh` and in CI.
+- **Wording:** putting a resource on the church shelf now says who can find
+  it: every Guide and Director. Explorers receive resources from their Guide,
+  as before.
+- **The tutorial says the same as the privacy notice about Talk:** it stays
+  between the two people unless one of them reports a message. Four lines in
+  `lib/quest.ts` said nobody else could ever read it.
+- **"Distant surf" no longer crackles on a rare start.** The level was set
+  from average loudness alone, and about 1 start in 120 at 48 kHz left a
+  sample past full scale. `lib/noise.ts` now lowers the level when a peak
+  would not fit. The check that failed by chance (1 run in about 3,000) now
+  tests the worst case on purpose.
+- **Packages, patch and minor only, each at least seven days old:** Next.js
+  15.5.29, supabase-js 2.119.0, @supabase/ssr 0.12.7, yjs 13.6.33.
+
+---
+
+## 11 November 2026: passwords need at least 8 characters, not 10
+
+### If you run a copy, do this
+
+1. **In Supabase, Authentication, set the minimum password length to 8.**
+   Do it when this update goes live. A service set to 10 would refuse an
+   8-character password the app accepted, with a message the app cannot
+   explain.
+2. **Rebuild.** No database change.
+
+### What changed
+
+- **The founder asked for 6.** Offered 6, 8 or 10, the founder chose 8.
+- **Why 8 is the floor:**
+  - it is the minimum NIST SP 800-63B sets for a password a person chooses;
+  - the Postgres edition already refused to go below it.
+- **One number now:** `PASSWORD_MIN` in `lib/password-rules.ts`.
+  - The join page, Settings, the new-password page, the preview, the
+    sign-up and the password-change call all read it. Before, five places
+    wrote "10" themselves.
+  - The Postgres edition's default is 8, with its floor unchanged.
+- **Unchanged:** the other rules. At most 72 bytes; not the e-mail address,
+  not the app's name, not a row of the keyboard. Leaked-password protection
+  and two-step sign-in are recommended as before.
+- **Checked by** `tests/a-new-password-has-its-own-page.mjs`:
+  - 7 characters refused, 8 accepted;
+  - the rule can never be set below 8;
+  - no screen writes a length of its own.
+
+  Each new check went red when broken on purpose.
+
+## 10 November 2026: an invitation can be declined
+
+### If you run a copy, do this
+
+1. **Run `supabase/migrations/20261110120000_an_invitation_can_be_declined.sql`.**
+   Until you do, nothing changes: the invitation link opens the app as
+   before, and nobody is offered Decline.
+2. **Rebuild.**
+
+### What changed
+
+- **The founder:**.
+- **Arriving from the invitation e-mail,** the person is asked before the
+  app opens: **Join**, or **Decline the invitation** (asked once more to be
+  sure).
+- **Declining:**
+  - marks the invitation declined;
+  - tells the Director who sent it, in the bell, by name. If that person has
+    left or stepped down, every approved Director and Executive Director is
+    told instead;
+  - removes the account the invitation made, so the address can be invited
+    again.
+- **Invitations** shows a **Declined** group. Re-send all skips it; sending
+  a new invitation to the same address opens it again.
+- **Not a link in the e-mail, on purpose.** Mail services check every link in
+  a message automatically, and a one-click decline would be pressed by them.
+- **The invitation guard** (`validate_invite_privilege`) lets an update that
+  changes only `declined_at` through. Otherwise the person could not say no
+  once the Director who sent it had stepped down. Every other check is
+  unchanged.
+- **The sample half** has the same: Decline on its join page, a Declined badge
+  and the same notice.
+- **Checked by** `supabase/tests/an-invitation-can-be-declined.sql`: 26 checks
+  on a database built from nothing, run by `scripts/fresh-install.sh`. A check
+  went red when the sender test was loosened.
+
+## 9 November 2026: security beyond the checklist
+
+### If you run a copy, do this
+
+1. **Run `supabase/migrations/20261109120000_the_security_record_cannot_be_rewritten.sql`.**
+   It chains the security record. Existing lines are chained in order as it
+   runs.
+2. **Rebuild.** The new browser headers come with the build.
+3. **Optional:** in your repository's Settings, Code security, look at the
+   OpenSSF Scorecard and CodeQL results once their first runs finish.
+
+### What changed
+
+- **Trusted Types, reported and not yet enforced** (`lib/trusted-types.ts`,
+  `next.config.mjs`). The browser checks every string written into the page
+  as HTML or used as a script address against the page's one policy, and
+  logs each one the policy would refuse. It refuses nothing yet.
+  - **What the policy allows:** only what the frameworks were measured doing:
+    React's empty script element, the exact text of a script or style the
+    server already sent, and this site's own code files.
+  - **Why not enforced:** enforced, it would stop opening a music score and
+    pasting formatted text or a drawing into the Study Room. Both parse
+    markup in the browser and need a named policy of their own first. With
+    every walk run once under enforcement, the music room's walk could not
+    open its score; the paste was found by searching the shipped code, since
+    the walks paste only pictures (which passed).
+- **The supply chain is held by a check** (`tests/the-supply-chain-holds.mjs`):
+  - every package comes from the public registry, with a SHA-512 hash;
+  - only four named packages may run code at install;
+  - Dependabot waits seven days (fourteen for a major) before offering a new
+    version;
+  - OpenSSF Scorecard and CodeQL run every week;
+  - a CycloneDX bill of materials is kept with every audit run.
+- **Browser features nothing uses are off** (payments, USB, serial, HID,
+  Bluetooth, MIDI, screen capture, idle detection, advertising topics), and
+  `Cross-Origin-Resource-Policy: same-origin` stops other sites loading this
+  one's files.
+- **The security record is chained by SHA-256 hashes.**
+  - Its lines cannot be edited or deleted, except when a whole church is
+    removed.
+  - A line changed with the guards switched off is found at its own place.
+  - Directors get **Check the record** and a seal to write down outside the
+    app.
+  - Deleting an account still works and leaves the chain whole.
+  - The security record screen also shows the two line types it had no icon
+    for (a removed guild post, an opened message history).
+- **Checked by:**
+  - `supabase/tests/the-security-record-cannot-be-rewritten.sql`, 30 checks
+    on a database built from nothing, run by `scripts/fresh-install.sh`;
+  - new checks in `tests/the-protections-hold.mjs`.
+
+  Each new check was broken once to see it go red.
+
+## 8 November 2026: the whiteboard's tools, a note's bar and joining notes
+
+### If you run a copy, do this
+
+1. Rebuild. Nothing else: no database change.
+
+### What changed
+
+- **The founder:**.
+  The founder also asked that it feel like the canvas and block editors people
+  already know, without copying their code.
+- **More on a phone's row of tools** used to swap the row for AFFiNE's own
+  dock: the same tools drawn another way, and no way back but hiding the
+  tools.
+  - **Now More opens a second row** above the first, with tools the first row
+    lacks: Move, Line, Marker and Frame.
+  - **More becomes Less**, which folds the second row away again. The first
+    row never moves, and the choice is remembered on the device.
+  - A wide board keeps AFFiNE's dock (`components/study/StudyBoardTools.tsx`).
+- **A note's bar ran off a 390px phone.** Lock, the bin and ⋯ were
+  unreachable.
+  - **Now the bar holds** Colour, Draw connector, Lock, the bin and ⋯.
+  - **⋯ gains, in words,** "Add to the page's writing" (AFFiNE's Display in
+    Page), "Fit height to the writing", and Larger and Smaller text.
+  - AFFiNE's originals are switched off by id (`lib/study/view-extensions.ts`).
+- **A note joins on all four sides.** A selected shape had four arrows; a
+  note had a "+" left and right only, and a tap on one made a new note with
+  no line.
+  - **Now a note has a round handle on each side.** A tap makes a joined note
+    there, and a drag draws a line to anything, as canvas apps do.
+  - **AFFiNE's bar sits higher over one note**, as AFFiNE already sets it over
+    one shape, so the top handle is clear (`lib/study/board-connections.ts`).
+  - **The new note never lands on another card.** AFFiNE puts it a fixed
+    distance away on that side; when something is there, it goes further
+    along until it finds room.
+  - **The board moves just enough** to show a new note made past its edge.
+  - **A locked thing shows no handles,** including the card with the page's
+    writing.
+- **Right-click on a note opens its bar,** as on a shape. Before, the right
+  press put the caret in the note's text, and a note being written in shows
+  no bar, so nothing opened. Found while checking the desktop.
+  - **A desktop keeps AFFiNE's dock**, which shows every tool at once.
+  - **A browser window narrower than 600px** gets the phone's row, with More
+    and Less.
+- **Checked by** `tests/e2e/the-whiteboard-says-what-you-can-do.js`:
+  - **on a phone:** both rows, each new tool, the note's bar on screen, four
+    handles, a tap that adds a joined note beside a card placed in its way,
+    and no handles on the locked card;
+  - **with a mouse:** a click on a handle, the new note brought into view,
+    and a drag that joins two notes.
+  Each check was broken once to see it go red.
+
+## 3 November 2026: a new program unfolds into view
+
+### If you run a copy, do this
+
+1. Rebuild. Nothing else: no database change.
+
+### What changed
+
+- **The founder:**.
+- **Before:** in the Sabbath program and Evangelistic meetings, a new or
+  opened page replaced the list in one frame, and the screen stayed wherever
+  it had been.
+- **Now:** the page unfolds downward from its top edge over about 0.4 s, and
+  the screen moves smoothly to its top if that top is off the screen or low
+  on it (`unfoldIn` in `lib/motion.ts`). Under reduce-motion it simply
+  appears, and the jump to it is immediate.
+- **Then, the same day:** pressing New still caused a sudden jump. Three things still happened in one frame,
+  and each now moves:
+  - The choices under **New meetings**, and under **New program** with
+    templates, appeared all at once and shoved the page down. Now they grow
+    open and shrink closed (`components/Reveal.tsx`). On a phone, where they
+    opened below the fold and the press seemed to do nothing, the screen then
+    glides just far enough to show them.
+  - The list vanished in a single frame. Now it fades away first
+    (`leaveThen`).
+  - The page was drawn from nothing with a clip. Now it fades in and settles
+    8px.
+
+  Back to the list settles it in from the side the page went.
+- **The check:** `tests/e2e/a-new-page-unfolds-into-view.js`, on a phone.
+  Both planners unfold, the new page's top lands in the upper half of the
+  screen, and nothing moves under reduce-motion. With the unfolding switched
+  off, its two unfolding checks fail.
+
+---
+
+## 2 November 2026: the guides are general, and one church's records are its own
+
+### If you run a copy, do this
+
+1. Nothing in the app changes. If you link to the printed guides, they are now
+   `docs/Hope-Beacon-General-Guide-Using.pdf` and
+   `docs/Hope-Beacon-General-Guide-Building.pdf`.
+2. If your copy is not a GitHub fork, `keep-awake` and `backup` now treat it
+   as a church's own copy: a missing secret turns the job red instead of
+   skipping. Set the secrets ([WHAT-IT-COSTS.md](docs/WHAT-IT-COSTS.md),
+   "Secure it"), or switch the workflows off.
+
+### What changed
+
+- **What it costs is now a guide, not one church's bill.** The founder.
+  [WHAT-IT-COSTS.md](docs/WHAT-IT-COSTS.md) is four parts, create, budget,
+  secure, make it your own, with each service's plans side by side and dated.
+  The general setup steps (the keep-alive, the backup and a restore, the
+  sign-in code's life, the church's legal details, the domain) moved into it.
+  One church's own bill, budget, accounts, numbers and to-do list are kept
+  privately by that church: `COST-AND-FUTURE.md`, `DO-THIS-NEXT.md` and
+  `Do-This-Next.pdf` are gone, and so is the handbook's section of measured
+  figures.
+- **General guides in public, complete guides in private.** The two printed
+  books are the **General** edition: how to create, use, develop, budget for
+  and secure the app. `build-guides.mjs --complete <records> <out>` prints a
+  **Complete** edition with a church's own records as a last part. It refuses
+  to read those records from inside the repository, or to write the book
+  there.
+- **The founder, not a name.** The founder asked not to be named, by name or
+  by account: "just quote author or founder".
+  - The documents say "the founder".
+  - Clone commands use your own fork, `<your-account>`.
+  - Security reports go through the repository's **Security** tab.
+  - The app's Source link reads `SOURCE_URL`.
+  - The account name is left only in addresses that must carry it: the
+    repository's own, the code owners, and the plugin forks' install
+    commands.
+  - `tests/no-secrets.js` now fails if it appears anywhere else.
+- **A fork is what GitHub says is a fork.** `keep-awake.yml` and `backup.yml`
+  used to compare the repository's name with one upstream name. Now they ask
+  GitHub, and anything but a plain "yes, a fork", a failed answer included,
+  counts as a church's own copy. So the loud branch is the default.
+
+---
+
+## 2 November 2026: nothing private in a public repository, checked wider
+
+### If you run a copy, do this
+
+1. Nothing. No database change, no rebuild needed: this is a check, not a
+   feature.
+2. If you keep your own fork public, turn on GitHub's own secret scanning and
+   push protection (Settings → Code security). They are free for a public
+   repository, and they refuse a known key at `git push`, before it is public,
+   which no test here can do.
+
+### What changed
+
+- **The sweep.** The founder. Every tracked file, the text of every PDF in the
+  repository today, every line added in every commit on every branch and every
+  commit message were searched for 22 shapes of credential (keys, tokens,
+  private keys, a database address with its password in it), the founder's own
+  addresses, a real member's name and phone numbers; every image ever
+  committed, 1,696 of them, was read for the place it was taken. **No key or
+  password was found, anywhere in the history.** The history search was first
+  shown that it could find what it looked for (a planted fake), so "nothing"
+  means nothing.
+- **What history still holds, and why it stays.** Two things removed from the
+  files in September are still in old commits: the live project's Supabase
+  address, which every visitor's browser is sent by the live site anyway and is
+  not a key, and the founder's domain as an old fallback sender. Neither unlocks
+  anything. Rewriting a public history would break every clone and fork and
+  would not take back what was already copied, so it is the founder's decision,
+  not a test's.
+- **`tests/no-secrets.js` checks what it did not.** It knew five key shapes and
+  now knows 21, among them Brevo's (the mail service the guides recommend) and
+  the Supabase CLI's access token, which controls every project on an account.
+  Every secret-named slot of every example settings file must be empty, where
+  only seven named slots of one file had to be (`selfhost/.env.example` could
+  have carried a working `JWT_SECRET`). Three new checks: no file that is
+  secret by what it is (a key file, a saved login, a database dump, the
+  Supabase CLI's or Vercel's record of a linked project); no e-mail address at
+  a domain somebody can own and no phone number anywhere, apart from a named
+  list of placeholders, each with its reason, each still in use; and no photo
+  that says where it was taken, proved by finding the invented place in the one
+  test photo kept with one.
+- **Four test inputs moved to reserved domains** (`example.org`, `.example`):
+  they were addresses at a denomination's real domain and at three short
+  domains somebody owns. The pastor's address in
+  `tests/studies-are-formatted.mjs` is now at `example.org` rather than a
+  `.example` name because the linker links `example.org` on its own, so the
+  test that an address is not turned into a link still has something to
+  refuse.
+
+---
+
+## 29 October 2026: Back stays in the study room, and screens settle in
+
+### If you run a copy, do this
+
+1. Rebuild. Nothing else: no database change.
+
+### What changed
+
+- **Back goes back inside the room.** The founder. An open page was only the
+  room's own state, so the phone's Back, a back swipe and the browser's button
+  skipped past it and out of the room, and the top-left button always left the
+  room. Now opening a page takes one step in the history, on the same address,
+  and Back takes it off: the page closes and the shelf is where it was, in the
+  same place (`components/study/StudyRoomEditor.tsx`). A page closed by the
+  room's own buttons takes its step off too, so no press of Back ever does
+  nothing. On a page the top-left button says **‹ Study Room**; on the shelf it
+  still says **‹ Hope Beacon** and leaves.
+- **Screens settle in.** The founder. `settleIn` in `lib/motion.ts`, where the app keeps
+  every animation started from code: a page comes in 14px from the right, the
+  shelf 14px from the left, a new place rises 6px, over 220ms
+  (`--motion-base`). A whiteboard only fades, because AFFiNE works out where a
+  finger is from where its canvas was when it opened. The box that moves is the
+  room's scroll box, which stays while a page swaps its loading line for its
+  editor; an animation on the loading line ended when it was replaced. Nothing
+  moves under reduce-motion.
+- **A finger's tap on AFFiNE's bar is a press, in WebKit too.** Safari's CI
+  run on `7137b83` was the first to tap the bar's buttons. The dots, the
+  colours and the bin did nothing there: AFFiNE's bar cancels the pointerdown
+  of every press, to keep the selection, and WebKit then sends no click.
+  Safari is WebKit, and every browser on an iPhone or iPad is too, so this
+  may be the "so hard to delete ... customize" the founder met. Not tried on a
+  real device. `StudyBoardTools.tsx` now presses the button itself as a
+  finger lifts, and sets aside the browser's own click for that tap where one
+  comes, so nothing happens twice; a mouse is left alone. The whiteboard walk
+  now also picks a colour by finger and checks the shape took it.
+- **What Safari found next (`4ca34ce`, read at 09:14 UTC).** The bar fix holds
+  under WebKit: every finger check in the whiteboard walk passed, and so did
+  all 17 checks of `back-stays-in-the-study-room`. Three things did not:
+  - The whiteboard walk's phone raised "ResizeObserver loop completed with
+    undelivered notifications" as a page error. The observer that watches the
+    board's width for the phone's row of tools set state inside its own
+    report; it now does so in the next frame, as `lib/published-height.ts`
+    already does for the same error. It does not happen in Chromium, so this
+    is unconfirmed until Safari runs again.
+  - `feedback-is-handed-on` still stopped: WebKit refuses the next page, not
+    the permission request. The permissions are now asked for in Chromium
+    only.
+  - The job was cut off at its 30-minute limit with a third of the suites
+    unrun. GitHub calls that "cancelled", which reads like a newer push. It
+    now has 45 minutes (`.github/workflows/safari.yml`).
+- **Two walks that WebKit could not run.** `feedback-is-handed-on` asked
+  WebKit for a clipboard permission it does not have and stopped before its
+  first check; it now reads the brief from the screen there.
+  (`the-music-room` also failed under WebKit on `7137b83` and passed on
+  `438832a`. It is not touched here and is not understood.)
+
+### Checks
+
+- `tests/e2e/back-stays-in-the-study-room.js` (17 checks, a computer and a
+  phone). It checks that:
+  - the browser's Back from a page stays in the room, and from a Journal page
+    returns to the Journal;
+  - the button reads Study Room on a page and Hope Beacon on the shelf;
+  - after the button closes a page, the next Back leaves the room;
+  - Back from a whiteboard goes to the shelf;
+  - each transition starts, sliding or only fading as it should, and none
+    starts under reduce-motion.
+
+  Transitions are recorded as they start: opening a page keeps the browser busy
+  loading the editor for most of a second, and a look afterwards found them
+  already finished. The history step, the button's words, the whiteboard's
+  fade-only and the transitions themselves were each taken out once, and their
+  checks failed.
+
+---
+
+## 29 October 2026: the whiteboard by finger, and who is waiting is named
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261029110000_a_waiting_member_is_named.sql`**
+   after `20261029100000`. It replaces `handle_new_user` (only the notice's
+   wording changes) and renames the "Somebody is waiting to be approved"
+   notices already sent. Until it is applied, the notice still says
+   "Somebody".
+2. Rebuild. Nothing else.
+
+### What changed
+
+- **The whiteboard on a phone or tablet.** The founder. Tried with real touches
+  on a 390px phone and an 820px tablet first. Everything waited on a
+  double-tap, and two taps 28px apart were not one. The bar's buttons were 24px
+  wide. Delete was the last of ten choices under ⋮. A phone's dock showed one
+  tool at a time behind 20px arrows, because AFFiNE's dock needs about 460px
+  and a phone's board has about 340. A mouse keeps everything it had. A finger
+  now gets:
+  - **one tap on a thing opens its bar** (`components/study/StudyBoardTools.tsx`);
+  - **a bin on the bar**, AFFiNE's own Delete run as it is, for a mouse too, and
+    never on a locked thing or the page's own writing
+    (`lib/study/view-extensions.ts`, a `custom:affine:surface:*` toolbar module);
+  - **every button on the bar, every choice under ⋮ and every colour at least
+    44px**, on a touched screen only. Stylesheets are handed to the bar's
+    shadow root and to the palettes' own roots, two levels further in, where
+    the colours were 24px circles 4px apart. AFFiNE's dividers go, so seven
+    buttons fit a 360px phone. Each list that opens is sized to the room under
+    it, and scrolls for the rest; AFFiNE's `min-height: fit-content` on menu
+    lists had to go for any cap to hold (`lib/study/board-actions.ts`,
+    `fitForFingers`);
+  - **a Tools button** in the board's corner while the tools are put away, on
+    a touched screen only, and out of the way while a thing's bar is open;
+  - **on a board narrower than 600px, AFFiNE's tools as one named row**:
+    Select, Pen, Eraser, Shape, Note, Text, and More for AFFiNE's own dock
+    (`useTool` switches AFFiNE's tools by their own classes);
+  - **a double-tap that forgives a finger**: 40px and 450ms, not 24px and 400ms;
+  - **AFFiNE's zoom control steps aside on any touched screen**, not only below
+    640px, because on a tablet it sat on the left end of the dock.
+- **The approval notice names the person.** The founder, with a picture of the
+  bell:  The title is now "<name> is waiting to be approved": the name they
+  signed up with, else the name on the invitation, else "A new member". It is
+  cut at 80 characters, since it is theirs to type. The line under it no longer
+  repeats it. Notices already sent are renamed from the line under them, which
+  this function always began with the name; nothing else in a bell is touched.
+
+### Checks
+
+- `tests/e2e/the-whiteboard-says-what-you-can-do.js` walks a phone and a tablet
+  with a finger. It checks: one tap opens the bar, inside the screen, every
+  button at least 44px; ⋮ at least 44px a choice; the bin deletes and Undo
+  restores; the colours open 44px and their list ends on the screen; Tools
+  steps aside under an open bar, gives the row on a phone and AFFiNE's dock on
+  a tablet; a Shape from the row lands where tapped, then Select; More gives
+  the dock; a double-tap 28px apart counts. With a mouse it checks: the bin works, no Tools
+  button, and no bin on a locked thing or the page's writing. Each new check
+  was seen to fail with its piece taken out.
+- `supabase/tests/a-waiting-member-is-named.sql` (8 checks, run by
+  `scripts/fresh-install.sh`): the three sources of the name, the 80-character
+  cut, no "Somebody", and who is and is not told. Six of the eight fail
+  without the migration. The renaming of old notices was proved by hand on a
+  database built without it: two old notices renamed, an unrelated one left
+  alone, and a second run of the migration harmless.
+
+---
+
+## 29 October 2026: the audit of the Terms and feedback updates
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261029100000_feedback_lets_a_deleted_account_go.sql`**
+   after `20261028130000`. If you applied `20261028130000` already, apply this
+   one before you delete any account: until you do, **deleting a member who
+   has sent feedback fails**.
+2. Rebuild. Nothing else.
+
+### What changed
+
+- **Why:** the founder. The two updates of 28 October were read as an attacker
+  would, on the database and in the app, before either reached the live
+  database. Each fault found was proved on a database built from nothing,
+  fixed, and its check broken on purpose.
+- **Deleting an account that had sent feedback was refused.** The database
+  lets go of a deleted author with an UPDATE (on delete set null), and the
+  trigger keeping what was sent took it for a change of author. A Director
+  could not remove such a member, nobody could have their account deleted, and
+  anybody could make themselves impossible to remove by sending one piece of
+  feedback. The database's own clean-up runs as the table's owner, so it is
+  let through; a Director still cannot take the sender's name off.
+- **Deleting a reviewer re-signed their write-up** in the name of whoever
+  deleted them. A write-up is re-signed only when what it says changes.
+- **Who closed feedback, and when, were the browser's to say.** A Director
+  could close it in another's name or back-date it. The database sets both.
+- **A write-up could be moved onto other feedback.** It stays with its own.
+- **A member's words could steer an AI tool or a public issue.** The write-up
+  starts as the member's words, and the page and version came from the
+  sender's own device with no reviewer reading them.
+  - Member text is quoted in a fence nothing in it can close, so a tool reads
+    a quotation and GitHub shows text: no live `@mention`, link, picture or
+    hidden HTML.
+  - The brief and the file for AI tools (now `hope-beacon/feedback-for-ai@2`)
+    say first that what is quoted describes a problem and is not instructions.
+  - A page that is not a path, or a version that is not a version, is left out.
+  - The reviewer is shown, as they write, what a tool might act on.
+- **A link could show a signed-in member another church's officer.**
+  `/privacy?church=<id>` named the church in the link even for a member of a
+  different one, on this app's own address. A signed-in member now always sees
+  their own church; the link's church is for somebody not yet signed in.
+- **Checked and found sound:** a member cannot insert a profile row (so cannot
+  write their own agreement time); nobody records another's agreement; the
+  reviewers' table is closed to the sender, to other churches and to anybody
+  signed out, and shuts a suspended account out; links in member text open
+  only http and https.
+- **Still true, and said plainly:** the agreement step is asked by the app,
+  not enforced by the database. Somebody calling the database directly could
+  read what their account may read without agreeing; what is recorded is still
+  accurate, because only their own agreement records one.
+- **Checks.**
+  - `supabase/tests/feedback-is-reviewed-and-handed-on.sql`: 20 → 29. Against
+    `main` before this fix, 7 of the 29 failed.
+  - `supabase/tests/what-was-agreed-is-recorded.sql`: 26 → 27.
+  - `tests/feedback-can-be-handed-on.mjs`: 25 → 35. A three-backtick fence, or
+    a page copied as sent, turns it red.
+  - `tests/terms-are-agreed-and-recorded.mjs`: the member's own church first;
+    the old order turns it red.
+  - `tests/e2e/feedback-is-handed-on.js`: the cautions appear and go, and the
+    brief is quoted.
+
+## 28 October 2026: feedback is written up and handed on
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261028130000_feedback_is_reviewed_and_handed_on.sql`**,
+   then rebuild. The code works before the migration: the inbox shows
+   everything, and saving a write-up says the database needs the update.
+2. Nothing else. Directors and the Executive Director already read the
+   Feedback inbox; nobody new can.
+
+### What changed
+
+- **Why:** the founder. The
+  owner chose who reviews (Directors and the Executive Director), all three
+  ways out, and that the sender sees a status. `docs/FEEDBACK.md` is the guide.
+- **A person writes it up first.** Under Admin → Feedback a reviewer turns the
+  member's words into a write-up without names, says what done looks like, and
+  chooses who takes it: themselves, a developer, or an AI tool.
+- **Three ways to hand it on**, all built by `lib/feedback/hand-on.ts` from the
+  write-up alone, never the member's words, name or contact:
+  - a brief to copy, in Markdown;
+  - a GitHub issue, opened filled in for the reviewer to submit;
+  - one file for AI tools (`hope-beacon/feedback-for-ai@1`) holding everything
+    written up and still open.
+  - Email addresses, phone numbers and links carrying a token are scrubbed on
+    the way out as a second guard; dates and versions are kept.
+- **The sender sees what happened**, under the feedback button in Settings:
+  Received, Being looked at, Done in a version, or Not this time.
+- **The database** (`20261028130000`): `feedback` gains `status`, `reply`,
+  `fixed_in` and `status_at`; the write-up is its own table, `feedback_review`,
+  readable only by reviewers, because the sender reads their own feedback row
+  and row security cannot hide columns. A trigger refuses any change to what
+  was sent; new feedback always starts as Received; `handled_at` follows the
+  status, so older copies of the app keep working. `feedback_review` is on the
+  live connection, with the rule that shuts a suspended account out, which
+  `fresh-install-holds.sql` refused to install without.
+- **The walkthrough has the same inbox**, reading the feedback sent from that
+  device (`lib/feedback/on-this-device.ts`), so a Director practises on the
+  real screen.
+- **The inbox keeps an item as it moves.** A write-up moves feedback from
+  "Waiting on you" to "Being looked at". In three separate lists React built
+  the item afresh and lost its "Saved."; it is one list now. Keying the items
+  by section again made the walk stall at that step.
+- **Checks.**
+  - `tests/feedback-can-be-handed-on.mjs` (25), in the gate.
+  - `supabase/tests/feedback-is-reviewed-and-handed-on.sql` (20), run by
+    `scripts/fresh-install.sh`. Dropping the guard on what was sent, or opening
+    the write-ups to anybody, each turned it red.
+  - `tests/e2e/feedback-is-handed-on.js` (21): a Guide sends, a Director
+    writes it up and hands it on three ways, the Guide sees it done.
+- **Also:** saving a church's legal details before
+  `20261028120000_what_was_agreed_is_recorded` is applied now says the
+  database needs that update, instead of the database's own words.
+
+## 28 October 2026: Terms of Use, and an agreement that is recorded
+
+### If you run a copy, do this
+
+1. **Apply `supabase/migrations/20261028120000_what_was_agreed_is_recorded.sql`**,
+   then rebuild the site. The code works before the migration, so the order
+   does not matter: until the columns exist, nobody is asked to agree.
+2. **Once it is applied, every member is asked once** to agree to the Terms of
+   Use and the Privacy Notice the next time they open the app. That is the
+   point. Tell your church before you apply it.
+3. **Your church's Director fills in Settings → Church → Legal details**: the
+   church's legal name, its registered address, and its Data Protection
+   Officer's name and email. Until they do, both documents say plainly that
+   the church has not filled them in. These used to be blanks in
+   `app/privacy/page.tsx` that only a developer could fill.
+4. **Have somebody qualified read both documents** (`/terms` and `/privacy`).
+   They are drafts written for a church in the Philippines, not legal advice.
+
+### What changed
+
+- **Why:** the founder. The app had a privacy notice and a
+  safeguarding policy, and no terms at all.
+- **Terms of Use** at `/terms` (`app/terms/page.tsx`): who the agreement is
+  with, who may use the app, the account, conduct (the safeguarding policy is
+  part of them), what you write, privacy, limits, leaving, changes, and
+  Philippine law. Written to be read, in our own words. Each section is a link
+  target (`/terms#leaving`). It promises nothing the app does not do: in
+  particular no withdrawal of permission, which migration 0035 removed; the
+  first draft said "you can take that permission back" and was corrected.
+- **One box for both documents** (`components/AgreementBox.tsx`): unticked,
+  each document a link that opens beside the form, and the version agreed to
+  said under it. It is a box of its own, beside the permission to keep
+  sensitive information, never folded into it (the Data Privacy Act wants that
+  consent specific). Both invitation forms, the live agreement step and the
+  sample's agreement step use it, and every button waits for it.
+- **What was agreed is recorded.** `profiles` gains `terms_version`,
+  `privacy_version` and `terms_agreed_at`. The person writes the versions; a
+  trigger stamps the time from the database's clock; nobody records an
+  agreement for somebody else, a Director included.
+  - The profile's column grant (20261007130000) names each column a member may
+    update. The first draft of this migration did not add the two new ones,
+    and every join would then have failed with "permission denied for table
+    profiles". The database test caught it before anything was committed.
+- **A raised version asks everybody again.** `lib/legal.ts` holds
+  `TERMS_VERSION` and `PRIVACY_VERSION`. Change a document, raise its version
+  and write `WHAT_CHANGED`: on their next visit every member meets "We have
+  updated our terms", with what changed, before the app opens
+  (`components/live/ConsentStep.tsx`, the sample's
+  `components/AgreementNotice.tsx`).
+- **The church is named from its own record.** `churches` gains `legal_name`,
+  `legal_address`, `dpo_name` and `dpo_email`, written by the church's
+  Director. `church_privacy_contact(church)` answers exactly those and the
+  church's name to anybody holding the church's id, because a notice must be
+  readable before sign-in. The invitation form and the agreement step pass the
+  church in the link (`/privacy?church=…`).
+- **Checks.**
+  - `supabase/tests/what-was-agreed-is-recorded.sql`: 26 checks, run by
+    `scripts/fresh-install.sh`.
+  - `tests/terms-are-agreed-and-recorded.mjs`: the rules, the box and each
+    form's wait, in the gate.
+  - `tests/e2e/the-terms-are-agreed.js`: the documents, a Director naming the
+    officer, and an Explorer asked again.
+  - `tests/data-protection.mjs`: seven of its patterns read the consent
+    step's old source. Each was rewritten to the new code, protecting the same
+    thing, and broken on purpose to watch it go red.
+- **The stand-in backend** (`scripts/fake-supabase.mjs`) takes
+  `FAKE_AGREED=none|older`, so the live agreement step can be seen without a
+  real database, and keeps a profile update.
+- **The documents keep up.** A Terms of Use or Privacy Notice left open names
+  what a Director saved a moment later (`useKeepUp` on `churches`), as
+  `tests/every-room-keeps-up.mjs` requires of every screen that reads.
+- **CI was still red on `main` at `5e70b44` and `c57527b`**, on
+  `the-bar-over-a-selection-is-on-top`, and the cause given in the entry below
+  was half right. The computer half passed after that fix; the phone half
+  selected "want. He". On CI's phone the first sentence wraps after "not", the
+  walk clicked at the paragraph's middle, which is the second visual line, and
+  Home went to the start of that line. Locally the sentence fits on one line,
+  so it passed here. The walk now clicks on the first letter, found from the
+  text itself, and runs a third time on a phone narrow enough that the line
+  wraps everywhere: the old click selects "not want" there, the new one
+  "The Lord".
+
+## 28 October 2026: a clean whiteboard, and our own words
+
+### If you run a copy, do this
+
+Nothing: no migration and no setting. Rebuild the site.
+
+### What changed
+
+- **Why:** the founder, and. Also.
+- **The board opens clean** (`components/study/StudyBoardTools.tsx`).
+  - AFFiNE's dock, zoom control and bar over a selection are hidden until
+    asked for. The room says what is wanted on the frame (`data-board-dock`,
+    `data-board-bar`), and `study-shell.css` hides the rest.
+  - The dock is made invisible and untouchable, not taken out of the page. In
+    the first version it was taken out (`display: none`), and AFFiNE's keys
+    went with it: S drew no shape.
+    `tests/e2e/the-affine-features-actually-work.js` caught that, after this
+    entry had already claimed the keys still worked. Now the claim is a check
+    in the whiteboard walk.
+  - Double-tap or double-click empty board brings the dock, with the room's
+    Undo, Redo and Hide tools. Doing it again, Escape with nothing selected,
+    or Hide tools puts them away.
+  - Double-tap a thing for AFFiNE's bar with ⋮. A single tap only selects it.
+  - Right-click or long press works as before, and on empty board it also
+    brings the dock.
+  - One line ("Double-tap the board for tools") shows until the tools have
+    been opened once on that device.
+- **The room takes the double-click from AFFiNE.** On empty board AFFiNE makes
+  a text box on a double-click; on a thing it starts typing, which closes the
+  bar that was asked for. The room swallows the second press and its lift
+  before AFFiNE sees them. AFFiNE's own ways to write remain: tap a selected
+  sticky note again, or Add text on a shape's bar.
+- **Escape is read before AFFiNE answers it** (the capture phase). Read
+  afterwards, the Escape that lets go of a shape found a board with nothing
+  selected and put the dock away with it.
+- **`lib/study/board-actions.ts`** gains `hitAt`, `selectedIds` and
+  `selecting`, the last reading AFFiNE's current tool, so a double-tap with
+  the pen still draws. Its first version read the tool's name from the
+  options object, which has none, so every tool looked like Select; it reads
+  `currentTool$` now, and the walk double-clicks with the pen to check.
+- **Our own words.**
+  - Member-facing text no longer compares the room to other companies' apps.
+  - "Take a copy for Obsidian" is now "Take a copy of every page" (Markdown
+    files for any notes app), and "zipped vault" is now "zipped folder". The
+    format is unchanged.
+  - The design notes (`docs/VISUAL-LANGUAGE.md`, the head of
+    `study-shell.css`) and the templates' rationale now state our own
+    principles.
+  - The Church templates group said "For Sunday"; it says "For Sabbath".
+- **CI was still red on `main` at `22c6c35`**, on the same walk, and the cause
+  given in the entry below was wrong. AFFiNE was not filling the bar in steps.
+  `the-bar-over-a-selection-is-on-top` put the caret on the first line with a
+  click and **Home**. On CI's Chrome 151, Home did not move it to the start,
+  so eight Shift+Right presses ran from the end of the line into the next
+  paragraph:
+  - on the phone, AFFiNE's bar showed "Create Table", which it offers only for
+    a selection across blocks;
+  - on the computer, it found no text box behind the selection and showed no
+    Bold.
+
+  The walk now clicks at the start of the line and checks that it selected
+  "The Lord" before judging the bar. Chrome 151 could not be run here: the
+  sandbox's proxy refuses Playwright's download server. So this is reasoned
+  from AFFiNE's source and CI's output, not reproduced. Whether Home misbehaves
+  for people using Chrome 151 is unverified.
+- **Safari on `22c6c35` passed everything**, the first clean WebKit run in
+  several days. On `2caaf91` it failed 1 of 278, `tutorial-repeat`, which
+  already failed some runs and not others.
+- **Proved:** `tests/e2e/the-whiteboard-says-what-you-can-do.js`, rewritten,
+  42 checks with a mouse and a finger. Five breakages were made on
+  purpose and each turned it red:
+  - the dock left showing;
+  - the double-click passed to AFFiNE, which made a text box;
+  - Escape read after AFFiNE;
+  - the dock taken out of the page (`display: none`): the S-key check;
+  - the tool read from its options again: both Escape checks. The walk
+    then stops, so the pen check itself was not seen to go red.
+
+  The first run of the breakages found two blind checks, both fixed. The
+  board count left out AFFiNE's text boxes, and Escape just after drawing
+  could not tell the two versions apart; Escape on a selected shape can. Two
+  walks that measured the dock now reveal it first, as a person would. All
+  16 walks that use the Study Room helper pass (321 checks).
+
+## 28 October 2026: Simple has the whole Study Room, and Advanced has templates
+
+### If you run a copy, do this
+
+Nothing: no migration and no setting. Rebuild the site.
+
+### What changed
+
+- **Why:** the founder. Asked what that
+  should be, they chose office tools for teaching, the office, church and
+  staff, and named ten templates.
+- **Simple has every feature.** Until today Simple hid Starred, the Journal,
+  folders, tags, saved views, the star, File this page and Obsidian. They
+  are in both modes now. `placesFor()` is gone from
+  `components/study/StudyWorkspaceShell.tsx` (both modes use `PLACES`), and
+  the insert bar's unused `simple` prop is gone with it.
+- **Advanced adds Templates** (`components/study/StudyTemplates.tsx`): a
+  button on the shelf that opens ten cards in four groups, each with a line
+  on what the page is for. A card makes a new page with the template's name,
+  in the folder being viewed, and opens it.
+  - The templates are data, in `lib/study/templates.ts`: Lesson plan,
+    Attendance, Weekly plan; Meeting notes, Task board; Sermon notes, Bible
+    study, Prayer list; Volunteer schedule, Event plan.
+  - They are made of blocks the room already had: headings, lists, to-dos,
+    dividers and AFFiNE tables (`affine:table`, five of them across four
+    templates).
+  - `writeTemplate()` lays a template out outside the undo history.
+  - Nothing in any template identifies anybody.
+- **Proved:** `tests/e2e/the-study-room-has-templates.js`, new, 32
+  checks on a computer and a phone. It covers:
+  - no Templates in Simple;
+  - four groups and ten cards;
+  - every template opening with its name, a heading of its own and the right
+    number of tables;
+  - typing into a table cell;
+  - Undo leaving the template whole;
+  - the page not moving sideways on a phone (the table scrolls inside
+    itself);
+  - every page on the shelf afterwards, and no page errors.
+
+  `tests/e2e/the-study-room-starts-simple.js` now checks the new rule, 16
+  checks. With Templates shown in Simple on purpose, both walks went red. With
+  `withoutTransact` taken out of `writeTemplate()`, the Undo check stayed
+  green: the page's history only starts once the page is open, after the
+  template is written, so the check guards the outcome and not that line. All
+  16 walks that use the Study Room helper (`tests/e2e/_study.js`) pass.
+- **CI was red on `main` at `2caaf91`**, in one walk shard:
+  `the-bar-over-a-selection-is-on-top` read the bar over a selection on the
+  computer run while it held only Create Linked Doc and ⋮. The phone run on
+  the same runner had the full bar, and every local run has had it. The walk
+  was changed to wait up to 6 s for Bold, on the guess that AFFiNE fills the
+  bar in steps. **That guess was wrong**: CI failed the same way at
+  `22c6c35`. See the entry above for the real cause.
+- **Docs:** `docs/STUDY-ROOM.md` (Simple and Advanced, the places, and a new
+  Templates section), the FAQ, the Getting started page given to new rooms,
+  What's new.
+
+## 28 October 2026: the whiteboard works like the ones people know, and a page's selection bar is seen
+
+### If you run a copy, do this
+
+Nothing: no migration and no setting. Rebuild the site.
+
+### What changed
+
+- **Why:** the room's own bar across the top of the board did not replace the
+  ⋯ menu, so the ⋯ came back on a selected thing, as in every whiteboard, and for the Study Room
+  to feel like Notion, Obsidian and Notes.
+- **The cause of the missing ⋯:** AFFiNE's bar for a selected thing
+  (`affine-toolbar-widget`) asks the doc mode service whether the editor is a
+  page or a whiteboard. AFFiNE's default answers "no mode", which it reads as
+  "page", so on every selection the bar reset itself and stayed shut. The
+  room drew its own bar instead of finding that.
+  `lib/study/view-extensions.ts` now gives each editor a doc mode service that
+  says its real mode (`studyViewExtensions(mode)`), as AFFiNE's app does.
+- **The board now:**
+  - AFFiNE's tools along the bottom, in Simple too;
+  - AFFiNE's bar over a selected thing, with colour, Lock and ⋮: Frame,
+    Group, Bring to Front / Forward, Send Backward / to Back, Copy,
+    Duplicate, Create linked doc, Delete;
+  - from the room (`components/study/StudyBoardTools.tsx`): Undo and Redo
+    in the top-left corner, for touch screens; a right-click or a long press
+    on a thing opens AFFiNE's ⋮ menu; on empty board, Undo, Redo, Select
+    everything and Show everything.
+  - The room's own bar of pictures and words is gone, and with it the room's
+    colour, copy, ordering and delete code in `lib/study/board-actions.ts`.
+- **The page's writing is locked on the board.** AFFiNE's Delete removes the
+  page's writing with its card (tried: the page came back empty). The room
+  locks that card when the board opens, outside the undo history, so it
+  cannot be moved or deleted until somebody chooses Unlock.
+- **Fixed on the way: Undo could take a new page apart.** The undo history
+  (started 27 October) was running when a new page's skeleton was made, so
+  pressing Undo enough times removed the page's writing, its canvas and its
+  root ("Cannot read properties of undefined (reading 'children')"). The
+  skeleton, and the canvas added to older pages, are now made outside the
+  history.
+- **On a page, the bar over selected words is on top.** Selecting words opens
+  AFFiNE's bar (kind of line, Bold, Code, Italic, Link, Strikethrough,
+  Underline, highlight, Create linked doc, ⋮), and on a page's first lines it
+  opened underneath the room's sticky insert bar: AFFiNE keeps its editor in
+  a layer of its own (`isolation: isolate` on editor-host), so no z-index can
+  lift its bar out. While that bar is open the insert bar now steps back
+  (`whenAffineBarShows` in `lib/study/view-extensions.ts`, and
+  `[data-affine-bar='open']` in `study-shell.css`). New walk:
+  `tests/e2e/the-bar-over-a-selection-is-on-top.js`, 10 checks on a computer
+  and a phone, by what the browser says is on top at the bar's middle. It is
+  red with the insert bar held at its old layer.
+- **A long press opens its menu when the finger lifts**, not at 600 ms:
+  opened while the finger was down, the lift reached AFFiNE as a tap and shut
+  the menu.
+- **Proved:** `tests/e2e/the-whiteboard-says-what-you-can-do.js`, rewritten,
+  24 checks. It covers, at desktop and phone size:
+  - the bar floating at the shape and the ⋮ choices;
+  - Duplicate, Delete and Undo;
+  - right-click and long press;
+  - Lock;
+  - the locked page writing, and Undo all the way back.
+
+  Each of the three fixes was undone on purpose and its check went red:
+  - without the doc mode service, no bar;
+  - without the lock, an unlocked card;
+  - without the history-free skeleton, the page's writing gone and the
+    'children' error.
+
+  Every other Study Room walk passes (12).
+
+## 27 October 2026: a photo is checked on the server too, and remade in Rust
+
+### If you run a copy, do this
+
+1. **Run the new migration**, `20261027170000_a_photo_is_checked_on_the_server.sql`.
+   On its own it changes nothing.
+2. **To switch the check on**: deploy the function
+   (`npx supabase functions deploy photo-check`) and give the database its
+   address (`docs/START-HERE.md`, Step 6b). The Postgres edition does both by
+   itself when it starts.
+
+### What changed
+
+- **Why:** the app takes a photo's location out in the browser, and a modified
+  app or a direct call to the file store skipped that. The privacy page's
+  promise now holds for those too.
+- **How:** a trigger on `storage.objects` queues one request to `photo-check`
+  when a JPEG, PNG or WebP arrives in `pairing-media` or `post-media`, or is
+  replaced with new bytes. Report evidence (`reports/`) is left as raised. The
+  function reads the file with the browser's own reader
+  (`supabase/functions/_shared/photo-location.ts`, a byte-for-byte copy of
+  `lib/live/photo-location.ts` that a test keeps the same).
+  - A JPEG that says where it was taken is **remade from its pixels in
+    Rust**: `tools/photo-remake`, compiled to WebAssembly and carried as text
+    in `supabase/functions/_shared/photo-remake-wasm.ts` with its SHA-256.
+    The photo is shrunk to the browser's 1600 pixels, turned the way the camera
+    was held and encoded again at quality 82. No metadata survives, and no
+    bytes hidden after the end of the picture. If the remaker cannot read it,
+    the EXIF, XMP and IPTC blocks are cut out instead, the picture untouched.
+  - **Measured** in Node 22 on a 2.1 GHz Xeon (Deno runs WebAssembly on the
+    same engine): a 12-megapixel photo takes 0.5 s of CPU time and 63 MB of
+    WebAssembly memory, against a Supabase function's 2 s and 256 MB.
+  - A PNG or WebP loses its metadata chunks.
+  - A located JPEG it cannot read is removed.
+  - The cleaned file is checked once more and comes back clean, so the
+    check does not loop.
+- **Limits, said plainly:**
+  - the check runs a moment after the file arrives;
+  - HEIC is not covered;
+  - nothing happens until the address is set.
+- **Proved:**
+  - `supabase/tests/a-photo-is-checked-on-the-server.sql`: 8 checks on both
+    editions of when the database asks. It was seen red when evidence was not
+    skipped.
+  - `tests/a-photo-is-checked-on-the-server.mjs`: 27 checks running the
+    function itself against a stand-in file store, with photos built byte by
+    byte. It was seen red when JPEGs were not cleaned.
+  - End to end on the Postgres edition: an invented member uploaded a located
+    profile picture straight to the file store, and within seconds the stored
+    file and what they read back were clean.
+  - `tests/a-photo-is-remade-in-rust.mjs`: 13 checks on the committed
+    WebAssembly. A real photo comes back upright and clean. Hidden trailing
+    bytes do not survive. It imports nothing. Its checksum holds: one changed
+    character fails it. The Rust's own tests: `cargo test` in
+    `tools/photo-remake`, 5 checks.
+  - Not yet run on a hosted Supabase project.
+
+## 27 October 2026: trends, in counts that name nobody
+
+### If you run a copy, do this
+
+1. **Run the new migration**, `20261027160000_trends_in_counts_only.sql`. It
+   adds a `trends` schema, the view `trends.weekly` and a role,
+   `beacon_trends`, that can read only that view and cannot sign in.
+2. **Only if you want the trends:** give the role a password and run
+   `tools/trends/trends.py` on your own computer (`tools/trends/README.md`).
+   Nothing else changes until you do.
+
+### What changed
+
+- **`trends.weekly`**: for each church and each week (Monday, UTC), the people
+  who joined, pairs started, pairs who talked, messages, lessons finished and
+  read, prayer requests, meetings, and reports raised and closed. Every week is
+  listed, so a quiet week reads 0. **Any number from 1 to 4 is null** and shows
+  as "fewer than 5", because in a small church a small number can name
+  somebody. The view carries no name, message or person's id. It is a security
+  barrier, so a reader's own conditions cannot run before the counting.
+- **`beacon_trends`** reads the view and nothing else. It is not one of the
+  roles the data API switches to, and `trends` is not a schema the API
+  publishes. It is made without a login.
+- **`tools/trends/`**: a Python program (psycopg 3.3.6, matplotlib 3.11.2) that
+  writes a CSV, a summary (ranges where a week is hidden; a trend that
+  describes the past and is not a forecast) and charts. It runs on your
+  computer because Supabase cannot run Python in the database or its
+  functions. `--demo` tries it with invented numbers.
+- **Proved** by `supabase/tests/trends-are-counts-only.sql` on every fresh
+  install: 17 checks with invented people. Two breaks were each seen to fail
+  it: giving the role a table, and letting 3 and 4 show.
+  `tests/trends-are-counts-only.mjs` (17 checks) holds the parts a database
+  cannot see: no password in any file, nothing the program writes kept in
+  git.
+
+## 27 October 2026: one rule per action, and the links the screens use indexed
+
+### If you run a copy, do this
+
+1. **Run the new migration**, `20261027150000_one_rule_per_action.sql`
+   (`npx supabase db push`, or the edition's installer). The site needs no
+   rebuild first: nothing the app calls changes.
+
+### What changed
+
+- **One rule per action.** Supabase's advisor warned that `profiles` had three
+  read rules and two change rules for signed-in people, and `profile_changes`
+  three read rules. Postgres runs every one of them for every row. Each set is
+  now one rule whose condition is the old ones joined by OR, which is exactly
+  how Postgres combined them, so nobody can see or change anything they could
+  not before. That was checked person by person on the Postgres edition: 67
+  invented people, the same profiles and changes visible and the same profiles
+  changeable before and after, and a deliberately broken version showed 16
+  people seeing differently. The person's own row is the first arm of the
+  profile read rule, which keeps "insert and read it back" working.
+- **New rule:** `supabase/tests/fresh-install-holds.sql` (check 9) refuses a
+  second permissive rule for the same table, role and action in `public` or
+  `private`. Write a new condition as another OR arm. Storage is left out on
+  purpose: each file rule names its own bucket.
+- **Nine indexes** on the links Admin Reports' three lists use (who raised a
+  report, who it is about, who holds it), on a reply's link to the message it
+  answers, and on the columns Postgres scans when an account is deleted.
+- **"Open a case" is now "Raise a report"** on the leaders' library record. It
+  always raised an ordinary report. The function keeps its name
+  (`open_case_from_activity`) so older copies of the app keep working; two of
+  its messages now say "report".
+
+---
+
+## 27 October 2026: Admin Reports is reports and a conversation; the court room is closed
+
+### If you run a copy, do this
+
+1. **Let the site rebuild first, then run the two new migrations**
+   (`npx supabase db push`, or the edition's installer):
+   `20261027120000_the_court_room_is_closed.sql` and
+   `20261027130000_a_report_is_one_conversation.sql`. In that order of steps
+   nothing breaks: the new site works on the old database (without the new
+   conversation rules until they arrive), while the old site's court screens
+   would fail on the new database.
+2. **If your copy held court cases, they are kept.** The first migration drops
+   the court room's tables only when they are empty. Otherwise it moves them,
+   data and all, into a schema called `court_archive` that no app role can
+   reach, and leaves exhibit files in their bucket with no rule that opens
+   them. What to keep is your church's decision.
+3. **Delete the `door-code` function** if you deployed it
+   (`npx supabase functions delete door-code`). Keep `BREVO_API_KEY` and
+   `BREVO_SENDER`; the invitations use them.
+4. **Delete the empty `court-exhibits` bucket** in the dashboard (**Storage**).
+   Supabase refuses a bucket delete made in SQL, so the migration leaves it, empty
+   and with no rule that lets anybody in, and says so in a notice.
+5. **Postgres edition:** rebuild the images; the migrations run on start.
+6. Run `supabase/tests/ready-for-real-members.sql`: line 5 now reads READY
+   when nothing of the court room is left running.
+
+### Why
+
+Asked for. Asked how, the founder chose one shared
+conversation per report, and that the person a report is about joins only when
+the Director holding it brings them in, having read it.
+
+### What changed
+
+- **The court room is gone**: trials, the door and its e-mail codes, exhibits,
+  leave to answer and its every-minute sweep, the judge draw, the live room and
+  the Church Board's ruling. Its code is in git history, last at `82cf18f`.
+- **What leaned on it was rewritten, not left broken**: the check before every
+  request refuses a suspended account everything again; library sharing no
+  longer pauses for an open case (a Director can still switch it off for a
+  pair); the church overview drops "Cases open".
+- **One conversation per report** (`components/LiveAdminReports.tsx`, at
+  Settings, Admin Reports and at `/cases`): the person who raised it and the
+  Director holding it write; every leader who may handle it reads; the person
+  it is about reads and answers only once brought in, and then reads all of it.
+  Both sides are told, with no name in the notification.
+- **The report form's promise changed** to match: the person is not told when
+  it is sent; a Director reads it first and may bring them in; the person
+  reporting is told if so; evidence is never shown to them. **A report filed
+  before this migration can never be opened to the person it is about**: it was
+  filed under "they are not told", and `subject_may_join` is false on every
+  existing row.
+- **Suspend or remove** (`components/LiveSuspendOrRemove.tsx`) is what is left
+  of the trial room, under Admin, Safeguarding.
+
+### Two older gaps, closed on the way
+
+- **Evidence opened to every leader of the church**, including the Director a
+  report was about, and every Director on a report meant for Executive
+  Directors only. `report_files_read` and the stored-file rule now follow the
+  report's own two rules.
+- **Any leader who could handle a report could rewrite it** through the data
+  API, every column, including what the person reporting wrote. Nothing in the
+  app wrote to the table; the update rule is dropped and insert, update and
+  delete are revoked. Every change goes through a checked function.
+
+### Proof
+
+- `supabase/tests/a-report-is-one-conversation.sql`: 88 checks as invented
+  people, including every report check that lived in the court room's
+  `leave-to-answer-holds.sql`; each new protection was broken on purpose and
+  went red.
+- `tests/a-report-is-one-conversation.mjs` (replacing
+  `a-report-is-answered-by-one-person.mjs`) and
+  `tests/a-report-is-reachable-by-whoever-is-in-it.mjs`.
+- `supabase/tests/fresh-install-holds.sql` now checks nothing of the court room
+  is left.
+
+---
+
+## 27 October 2026: a simpler Study Room, and a whiteboard that says what you can do
+
+### If you run a copy, do this
+
+1. **Let the site rebuild.** Nothing in the database changes for this entry.
+
+### What was reported
+
+With two photographs: a right-click on the board offered no way to delete,
+change or edit a thing, and a page showed too many options at once, with boxes
+whose purpose was unclear. The room has to work for a five-year-old, a
+professional and a 75-year-old without them discovering anything.
+
+AFFiNE's own bar for a selected thing (`affine-toolbar-widget`) is in the room
+but draws nothing here, and its canvas has no right-click menu, so the only
+ways to delete were the Delete key and the eraser, and nothing said either.
+
+### The whiteboard
+
+- **One bar at the top of the board, in words.** Nothing selected: Select, Pen,
+  Shape, Sticky note, Words, Arrow, Eraser, then Undo, Redo and Show all.
+  Something selected: what it is ("This shape:") and what can be done to it:
+  Write on it, Colour, Copy, To front, To back, Delete, Done.
+- **The same choices on a right-click, and on a long press with a finger.** A
+  right-click on empty board offers Undo, Redo, Select everything and Show
+  everything.
+- **A delete says so, with Undo beside it**, for six seconds.
+- **The page's own writing cannot be deleted from the board.** It is the same
+  writing as the page (one AFFiNE note shown in both), so deleting it on the
+  board would take the writing off the page too. The Delete key and the eraser
+  are AFFiNE's own and are not changed.
+- **Every page can be a whiteboard, in Simple too**, with one bar: AFFiNE's own
+  bar of pictures along the bottom is shown only in Advanced, so Simple never
+  offers the same tools twice. On a narrow board in Advanced, AFFiNE's zoom
+  control steps aside (it ran into that bar on a phone); two fingers zoom.
+- **The More cards say all of what they make**, on as many lines as it takes,
+  instead of "Somethin..." cut off after one line.
+- The bar's buttons do not take the keyboard from the canvas, so AFFiNE's own
+  keys (S, P, Delete, Ctrl+Z) still answer after a click on the bar.
+- Code: `components/study/StudyBoardTools.tsx` draws; every action is AFFiNE's
+  own, named in `lib/study/board-actions.ts`, which loads only with the
+  whiteboard. Proof: `tests/e2e/the-whiteboard-says-what-you-can-do.js`.
+
+### Undo did nothing in the Study Room, and now works
+
+Found while testing the whiteboard's own Undo. The room loaded each page's doc
+but never its store (`store.load()`), and that call is where BlockSuite tells
+the store's extensions they are live. So the undo history never listened to
+itself, `canUndo` stayed false, and AFFiNE runs Ctrl+Z only when `canUndo` is
+true. Ctrl+Z did nothing on any page or board, since the room was built. No
+walk pressed it. `components/study/StudyRoomEditor.tsx` now starts the store's
+undo history itself (`store.history.loaded()`), and
+`tests/e2e/the-affine-features-actually-work.js` presses Ctrl+Z on a page and
+on a board (both checks failed on the old build first).
+
+Not `store.load()`, which was tried first: it also announces "root added", and
+AFFiNE's page block answers that by copying its own (empty) title over the
+page's name, so a page could lose its name just by being opened.
+`tests/e2e/the-room-goes-in-and-out-of-obsidian.js` caught it.
+
+### The page
+
+- **The insert bar has four things**, each a picture and a word: Heading, List,
+  To-do, Quote. **More** opens everything else as cards that show what each one
+  makes, including a picture from the phone and today's date.
+- **Folder and tags are behind one button, File this page**, which says where
+  the page is filed ("Not filed yet", "In Romans study · 2 tags") and, when
+  pressed, what a folder and a tag are for, with an example each.
+- Code: `components/study/StudyInsertBar.tsx`, `components/study/StudyFiling.tsx`.
+  Guide: `docs/STUDY-ROOM.md`.
+
+---
+
+## 27 October 2026: a forgotten password has its own pages, and security in layers
+
+### If you run a copy, do this
+
+1. **Let the site rebuild.** Nothing in the database changes for this entry.
+2. **Re-paste the recovery e-mail template**: `docs/email-templates/recovery.html`
+   into Supabase, **Authentication → Email Templates → Reset Password**. Its
+   button now opens `/new-password`. Until you do, the old link still works:
+   `/join` hands any reset link to the new page.
+3. **Add `https://your-address/new-password` to Redirect URLs** (Supabase,
+   Authentication, URL Configuration), unless you already allow
+   `https://your-address/**`.
+4. **Redeploy the `invite` function** when convenient
+   (`npx supabase functions deploy invite`): for an account that already
+   existed, its link now opens `/new-password` directly.
+5. **In Supabase, Authentication:** turn on **Prevent use of leaked passwords**
+   (Pro plan) and set the **minimum password length to 10**, to match the app.
+6. **Postgres edition:** rebuild the images as usual; its mailer now sends
+   password links to `/new-password`.
+
+### A forgotten password has its own pages
+
+Asked for. Until now **Forgot your password?** sent the e-mail straight from the
+sign-in page, and the link opened the *invitation* page, which told somebody
+who had only forgotten a password "This is the address your invitation was
+sent to."
+
+- `/forgot-password`: type your address, get a link. The answer is the same
+  whether or not the address has an account.
+- `/new-password`: the link opens here. It names the account, asks for the new
+  password twice, and says it is done. It asks before replacing whoever is
+  already signed in on the device, takes the link out of the address bar, and
+  signs out every other device afterwards.
+- The sign-in page only links to them, carrying the address already typed.
+- Code: `components/live/PasswordPages.tsx`, `lib/live/password.ts`, and the
+  rules in `lib/password-rules.ts`. Proof: `tests/a-new-password-has-its-own-page.mjs`.
+
+### What a person could do that ended in an error, and now does not
+
+Found by reading every screen that sets a password, then walking each one in a
+browser against the Postgres edition:
+
+- **A member with an authenticator app who reset a forgotten password** was
+  refused with "AAL2 session is required to update password" and could go no
+  further. The page now asks for the code, then saves the password.
+- **A password over 72 bytes** (bcrypt's limit) was refused by the service
+  with no warning; every screen now says so first.
+- **The old password typed again** read "New password should be different from
+  the old password." It now says that in plain words.
+- **Asking for a second link within the minute** printed "For security
+  purposes, you can only request this after 60 seconds", and the invitation
+  page's "send me a new link" swallowed that refusal and promised an e-mail
+  that was not coming. Both now say how long to wait.
+- **A project with Supabase's "secure password change" on**: Settings,
+  Password now e-mails the confirmation code and asks for it, instead of
+  failing with "Password update requires reauthentication".
+- Every refusal from the sign-in service is translated by its `code` in
+  `lib/live/errors.ts` (`humanError`), with the wording as a fallback.
+- One set of rules for every page that sets a password: at least 10
+  characters, at most 72 bytes, not the e-mail address, not the app's name,
+  not a row of the keyboard.
+
+### Security, in layers
+
+[docs/SECURITY-LAYERS.md](docs/SECURITY-LAYERS.md) puts the app's security in
+eight layers, each with what it stops, where it lives, the check that proves
+it, how to keep it current, and how to make it stronger in your own copy; then
+a routine (weekly, monthly, quarterly, yearly), a procedure for when an
+advisory lands, and the questions to answer when adding a table, a function, a
+page, a dependency or an optional feature. `tests/the-security-layers-hold.mjs`
+fails the build if the map names a file that does not exist or a check that
+does not run. New with it:
+
+- **An advisory gate.** `scripts/audit-gate.mjs` runs every week and on every
+  lockfile change (`.github/workflows/audit.yml`). It fails on any advisory of
+  moderate severity or worse that is not in `security/accepted-advisories.json`
+  with a reason and a review date at most six months away, and on any
+  acceptance past its date. It installs nothing.
+- **Dependabot** now watches the Postgres edition's server packages and its
+  Docker image too.
+- **The edge**: `object-src 'none'`, `Cross-Origin-Opener-Policy: same-origin`
+  and `X-Permitted-Cross-Domain-Policies: none`.
+- **`/.well-known/security.txt`** (RFC 9116) says where to report a problem. A
+  church running its own copy adds its own `Contact:` line first.
+
+---
+
+## 26 October 2026: the October security releases, tables opened by name, and giving
+
+### If you run a copy, do this
+
+1. **Update, then run the new migrations**, the same way as every update
+   (`npx supabase db push`, [START-HERE.md](docs/START-HERE.md) Part 3, Step 3; the
+   Postgres edition installs them itself when it starts):
+   - `20261026120000_a_hub_is_kept_running_by_gifts.sql`, the giving room.
+   - `20261026180000_every_table_says_who_may_reach_it.sql`, every table's
+     access granted by name. **A Supabase project created on or after 30
+     October 2026 needs this one**, or every screen answers "permission
+     denied". On an older project it changes nothing a member can do, and
+     takes away four table privileges nobody signed in should have had.
+   - `20261026200000_giving_is_a_choice.sql`, which keeps giving switched off
+     until you choose it (below).
+2. **Let the site rebuild** (a push to `main`, or Sync fork on GitHub). The
+   rebuild carries React 19.0.9 and the other patched packages below. On
+   Vercel, a deployment made after 21 October 2026 also runs on Vercel's
+   patched Node.
+3. **Postgres edition only:** rebuild the images, `docker compose --profile app
+   --profile https up -d --build` ([POSTGRES.md](docs/POSTGRES.md),
+   "Updates"). They are now built on Node 22.23.4, pinned by digest.
+4. **In Supabase, Authentication:** set the email code and link lifetime to one
+   hour or less. The security advisor reports it as `auth_otp_long_expiry`.
+
+### What was patched
+
+In the week of 14 to 21 October 2026 Node.js, Next.js, React and PHP all shipped
+emergency security releases. The full table, with what each fix was for, is in
+[SECURITY.md, "October 2026"](docs/SECURITY.md#october-2026-what-was-patched-and-what-was-not).
+In short:
+
+- **Already safe:** Next.js 15.5.28 and sharp 0.35.5, which carry the fix for
+  remote code execution through the image optimiser.
+- **Updated:** React and React DOM 19.0.0 to 19.0.9; DOMPurify to 3.4.17 in
+  every copy in the tree; fast-uri, postcss-selector-parser and vite through
+  `overrides` in `package.json`; nodemailer to 10.1.7 in the Postgres edition;
+  the edition's Docker images to Node 22.23.4; CI to the newest Node 22
+  (`check-latest: true`) wherever it asks for 22.
+- **Not affected:** PHP's "PHP2Shell" flaws (there is no PHP in this project),
+  and the keyv, cacheable, @subql/common and tensorlake package compromises
+  (none is in the dependency tree).
+- **Known and accepted:** zod and KaTeX inside the Study Room's editor
+  (`@blocksuite/*` 0.22.4). Their fixes need an editor release that does not
+  exist yet. `npm audit` reports them as 70 high and 6 low findings from those
+  two causes; SECURITY.md says why they run only in the reader's own browser.
+- **Coming:** Next.js 15 reached the end of its support on 21 October 2026.
+  15.5.28 has every fix so far; moving to Next.js 16 is planned work, not part
+  of this update.
+
+`tests/the-october-2026-patches-hold.mjs` fails the build if any of these
+versions goes backwards, through a revert, a rebase or an old lockfile.
+
+### A new rule for developers: open every new table by name
+
+From 30 October 2026 Supabase creates every new table **closed** to the data
+API. Hope Beacon's tables had always been opened by the old default and never by
+name, which is why a church creating its project after that date would have got
+an app that refused everything. Now:
+
+- A migration that creates a table in `public` grants it to `authenticated`
+  **by name**, with only the privileges the app uses, or closes it by name:
+
+  ```sql
+  create table public.my_things ( ... );
+  alter table public.my_things enable row level security;
+  grant select, insert, update, delete on public.my_things to authenticated;
+  -- or, for a table reached only through functions:
+  revoke all on public.my_things from authenticated, anon;
+  ```
+
+- Never `grant all` to `authenticated` or `anon`, and never hand out
+  `truncate`, `trigger`, `references` or `maintain`.
+- `tests/every-table-says-who-may-reach-it.mjs` fails the build for a table left
+  to a default, and the fresh install in CI (`scripts/fresh-install.sh`) now
+  builds with Supabase's new default, so a missing grant shows up as a failed
+  install, not as a church's bug report.
+
+The rule is also in [AGENTS.md](AGENTS.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md), and the pull request template asks about it.
+
+### Taking a dependency update after the npm worms
+
+The Shai-Hulud and CHAINDROP worms spread through freshly published releases of
+well-known packages. Before taking an update: check who published it and when
+(`npm view <pkg>@<version> time maintainers`), prefer a release that has been
+out a few days unless it is the security fix you came for, install with
+`npm install --ignore-scripts`, and read the `package-lock.json` diff. An update
+that adds packages you did not ask for is a question to answer before you
+commit it. This update changed six versions in `package-lock.json` and added
+no package.
+
+### New, and optional: members can give toward keeping their hub running
+
+A Hope Hub on Supabase's paid plan costs money every month, and that money has
+to come from the church. The giving room gives a church one honest place to say
+so, without the app ever handling a payment.
+
+**It is off until a project switches it on**, so a church that pays another way,
+or a developer building their own Hope Beacon, never sees it. To switch it on,
+run the third migration below, then in the SQL editor:
+
+```sql
+insert into public.app_settings (key, value) values ('HUB_GIVING', 'on')
+on conflict (key) do update set value = excluded.value, updated_at = now();
+```
+
+Delete the row to switch it off; what was set up and recorded is kept. With
+it on:
+
+- **Every member** sees, on Home under Notices, the month's goal, how much
+  has come in, what it is for, and how to give: the church's own GCash number,
+  bank account or QR code. Never a gift, never a giver.
+- **Directors** set it up and name the treasurers (Settings, **Giving**).
+- **Treasurers** record each gift as it arrives in the church's own account,
+  and only they see the list. A gift has no giver field at all.
+
+For developers: the switch is `private.hub_giving_on()`. While it is off,
+`private.hub_my_church()` answers nobody, so every giving function refuses, and
+`hub_giving_card()` returns `{"enabled": false}`, which the screens treat as no
+giving at all. The sample church shows no giving card, because it is the app
+as it comes. `public.hub_giving`, `public.hub_treasurers` and
+`public.hub_gifts` are locked tables (row-level security on, no policies,
+every privilege revoked), reached only through the `hub_*` functions in
+`20261026120000_a_hub_is_kept_running_by_gifts.sql`, which decide who may do
+what. The month is counted in Asia/Manila time. Screens:
+`components/live/HubGiving.tsx`, calls: `lib/live/giving.ts`, proof:
+`supabase/tests/a-hub-is-kept-running-by-gifts.sql`. For a church:
+[HANDBOOK.md](docs/HANDBOOK.md), "Keep our Hope Hub running", and
+[HOW-TO-USE.md](docs/HOW-TO-USE.md), "Giving toward the app".
+
+---
+
+## 21 October 2026: the court room's door can take a code sent by email
+
+Some leaders could not get an authenticator app to work, which left the court
+room shut. A project can now choose a code sent by email instead. It is a
+choice each church makes; without it nothing changes.
+
+### If you want it
+
+1. Run `20261021100000_the_court_room_door_by_email.sql` (the next
+   `npx supabase db push` does).
+2. Deploy the function: `npx supabase functions deploy door-code`.
+3. Make sure `BREVO_API_KEY` and `BREVO_SENDER` are set, as Edge Function
+   secrets or in `app_settings`: the same two the invitations use
+   ([EMAIL.md](docs/EMAIL.md)). Without them the door says it cannot send a
+   code, and makes none.
+4. Switch it on with the one `app_settings` row in
+   [COURT-ROOM.md, "Choosing email for the door"](docs/COURT-ROOM.md#choosing-email-for-the-door).
+   Delete the row to go back to authenticator apps.
+
+**What email gives up:** whoever can read a leader's email can also reset their
+password from it, so the door is then as safe as each leader's email account.
+COURT-ROOM.md says when that is the right trade.
+
+For developers: a code is made only for the leader's own live sign-in session,
+stored as a salted hash, good for ten minutes and five tries, and used once.
+The pass ends when that session does. The function refuses a suspended
+account. Proofs: `supabase/tests/the-court-room-door-by-email.sql` and
+`tests/the-court-room-door-by-email.mjs`.
+
+---
+
+## Before 21 October 2026
+
+See `git log`, and the release notes in `lib/release-notes.ts`.

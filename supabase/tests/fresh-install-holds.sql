@@ -1,0 +1,123 @@
+-- What must be true of a database built from nothing but this repository.
+--
+-- Run by scripts/fresh-install.sh after every migration has been applied to an
+-- empty Supabase database. Each check is a protection that was, at some point,
+-- present on one database and missing from another -- which is exactly the
+-- kind of thing a fresh install is the only place to catch. A failure raises,
+-- so psql exits non-zero and the job goes red.
+do $holds$
+declare
+  missing text;
+begin
+  -- 1. A suspended account is refused before any request runs
+  --    (20260923164500_a_suspension_is_immediate).
+  if not exists (
+    select 1 from pg_roles r, unnest(r.rolconfig) c
+     where r.rolname = 'authenticator'
+       and c = 'pgrst.db_pre_request=public.refuse_suspended_requests'
+  ) then
+    raise exception 'the data API does not refuse a suspended account before each request';
+  end if;
+
+  -- 2. Revoking somebody's approval closes their conversations. Live lost this
+  --    for five weeks because an older migration ran after the one that added
+  --    it (20260923190000_live_matches_the_repository).
+  if pg_get_functiondef('public.in_pairing(uuid)'::regprocedure) not like '%is_approved_user()%' then
+    raise exception 'in_pairing() lets a person whose approval was revoked keep reading their pairing';
+  end if;
+
+  -- 3. No row rule compares a column with itself
+  --    (20260923180000_a_door_compares_the_right_things).
+  select string_agg(tablename || '.' || policyname, ', ') into missing
+    from pg_policies
+   where exists (
+     select 1 from regexp_matches(coalesce(qual, '') || ' ' || coalesce(with_check, ''),
+                                  '(\m\w+\.\w+ = \w+\.\w+\M)', 'g') m
+      where split_part(m[1], ' = ', 1) = split_part(m[1], ' = ', 2));
+  if missing is not null then
+    raise exception 'these rules compare a column with itself and so check nothing: %', missing;
+  end if;
+
+  -- 4. Every table on the live connection, and the file store, shuts a
+  --    suspended account out (20260923173000_a_suspension_reaches_the_socket_too).
+  select string_agg(pt.tablename, ', ') into missing
+    from pg_publication_tables pt
+   where pt.pubname = 'supabase_realtime' and pt.schemaname = 'public'
+     and not exists (
+       select 1 from pg_policies p
+        where p.schemaname = pt.schemaname and p.tablename = pt.tablename
+          and p.policyname = 'a_suspended_account_sees_nothing' and p.permissive = 'RESTRICTIVE');
+  if missing is not null then
+    raise exception 'these broadcast tables do not shut a suspended account out: %', missing;
+  end if;
+  if not exists (
+    select 1 from pg_policies
+     where schemaname = 'storage' and tablename = 'objects'
+       and policyname = 'a_suspended_account_sees_nothing' and permissive = 'RESTRICTIVE'
+  ) then
+    raise exception 'the file store does not shut a suspended account out';
+  end if;
+
+  -- 5. Row security is on for every table in the app's own schema.
+  select string_agg(c.relname, ', ') into missing
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity;
+  if missing is not null then
+    raise exception 'these tables have row security switched off: %', missing;
+  end if;
+
+  -- 6. A session ended elsewhere is refused at once, and the signed-out role is
+  --    still let through the same check (20260929130000_an_ended_session_ends_at_once).
+  --    Replacing that function takes the signed-out role's grant away; without
+  --    it restated, every page anybody opens before signing in fails.
+  if pg_get_functiondef('public.refuse_suspended_requests()'::regprocedure) not like '%my_session_is_live()%'
+     or pg_get_functiondef('private.i_am_not_suspended()'::regprocedure) not like '%my_session_is_live()%' then
+    raise exception 'an ended session is not refused until its pass expires';
+  end if;
+  if not has_function_privilege('anon', 'public.refuse_suspended_requests()', 'execute') then
+    raise exception 'the signed-out role cannot pass the check before each request, so every signed-out page fails';
+  end if;
+
+  -- 7. The record of shared links is deleted after 30 days whether or not
+  --    anybody shares another link, as the privacy notice promises
+  --    (20261013120000_the_link_record_runs_out_on_time).
+  if not exists (
+    select 1 from cron.job
+     where jobname = 'link-record-runs-out'
+       and command like '%private.prune_library_activity()%'
+  ) then
+    raise exception 'nothing deletes the record of shared links after 30 days unless somebody shares another link';
+  end if;
+
+  -- 8. The court room is closed (20261027120000_the_court_room_is_closed): no
+  --    job runs for it, and none of its tables or functions is left behind
+  --    for a screen that no longer exists to reach.
+  if exists (select 1 from cron.job where jobname = 'court-leave-runs-out') then
+    raise exception 'the court room''s leave sweep is still scheduled';
+  end if;
+  if exists (select 1 from pg_tables where schemaname = 'public'
+              and tablename in ('trials', 'trial_parties', 'trial_statements', 'court_record',
+                                'court_exhibits', 'court_leave', 'court_departed', 'court_presence'))
+     or exists (select 1 from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
+                 where ns.nspname in ('public', 'private')
+                   and (p.proname like 'court\_%' or p.proname in ('open_trial', 'in_trial', 'my_trials', 'join_trial'))) then
+    raise exception 'something of the court room is still in the database';
+  end if;
+
+  -- 9. One permissive rule per table, role and action in the app's own schemas
+  --    (20261027150000_one_rule_per_action). Postgres runs every permissive
+  --    rule for every row, so a second one is a second check on each row.
+  --    Write the new condition as another OR arm of the existing rule. The file
+  --    store is left out on purpose: each of its rules names its own bucket.
+  select string_agg(format('%s.%s %s for %s', schemaname, tablename, cmd, role), ', ') into missing
+    from (select p.schemaname, p.tablename, p.cmd, r.role
+            from pg_policies p, unnest(p.roles) as r(role)
+           where p.permissive = 'PERMISSIVE' and p.schemaname in ('public', 'private')
+           group by 1, 2, 3, 4 having count(*) > 1) as twice;
+  if missing is not null then
+    raise exception 'these tables have more than one permissive rule for the same action: %', missing;
+  end if;
+
+  raise notice 'a fresh install holds every checked protection';
+end
+$holds$;

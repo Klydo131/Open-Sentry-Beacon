@@ -1,0 +1,340 @@
+# The Music room, in full
+
+**Music** is a room for everybody: the choir, its director, the person who
+leads the singing on Sabbath, and anybody who simply loves music. It is in
+every Menu, between *This Sabbath* and *My Files*.
+
+Two promises hold for the whole room:
+
+- **Nothing is sent anywhere.** Everything in it is worked out on the phone or
+  computer you are holding. It never talks to the church's database, so it
+  works the same in a church's own app and in the sample church.
+- **It works with no signal.** Once the room has been opened, all five of its
+  folders open again in a church hall with no connection.
+
+Every folder opens simple. At the end of the Tuner, the Conductor, a score and
+Play there is a tick box, **Advanced settings**, that opens the rest. It is off
+until you tick it, the phone remembers it, and unticking it puts that folder
+back exactly as it was.
+
+![Listen and Tuner on a phone.](../../screenshots/complete/phone-guide-music-1-listen.jpg) ![](../../screenshots/complete/phone-guide-music-2-tuner.jpg)
+
+## Listen: your music, your playlists, calming sounds
+
+**Listen** is the full player. It has three tabs.
+
+- **Vault**: your own music and video, saved on this device. Tap **Save music
+  or video** to add files from your phone or computer. A search box sits over
+  the list, because a good vault soon becomes a long one.
+- **Playlists**: your own lists. Name one, then add whatever is playing to it.
+  A playlist can mix calming sounds with your own recordings, so rainfall behind
+  a sermon is one list.
+- **Ambience**: calming sounds made on the device as they play. There is no
+  file to download, so they cost no data and work with no signal. *Calm*
+  (rainfall, distant surf, night wind) is for sitting with while you read;
+  *White noise* (soft hush, plain hush) is brighter and covers voices around
+  you.
+
+The controls are the ones every player has: a progress bar you can drag, the
+time so far and the time left, previous and next, back ten seconds and forward
+ten seconds (which is what you want in a talk), mute and volume. Videos play
+with their picture, and keep playing when you walk to another room.
+
+> **GOOD TO KNOW** · Your music stays yours
+>
+> What somebody listens to is nobody else's business. The vault and the
+> playlists live on the device and are never uploaded. Music you add here is
+> also listed in **My Files**, where each file has its own Play button.
+
+## Tuner: which note, and is it in tune
+
+The Tuner is a dial with the note in the middle, and one round button. On a
+phone everything is in one column; on a tablet or a computer the dial sits
+beside its settings (and, with Advanced, beside Sing the note), so nothing is
+scrolled to. On a computer the Music room uses the whole width of the window:
+your desk (My office) waits in its drawer, the small tab on the right edge,
+unless the window is very wide. With Advanced on, the dial, both octaves of
+keys and your grade fit on one screen of an ordinary laptop.
+
+1. Open **Tuner** and tap the round **microphone** button (*Tap to listen*).
+2. The first time, your phone asks whether the app may use the microphone. Say
+   yes; it is asked only once.
+3. Sing or play a steady note. The note shows in the middle of the dial (such
+   as *A4* or *C♯3*), and a marker moves along the dial: **left when you are
+   flat (♭)**, **right when you are sharp (♯)**. The green band at the top is
+   *in tune* (within 5 cents), and the bold line through it is the note
+   exactly. In the band the marker turns green and the dial says **✓ In
+   tune**; outside it, it says how far off you are, such as **♭ 12**. A new
+   note shows in about a tenth of a second, and when you stop, the last note
+   stays for a moment so you can read it.
+4. Tap the button again (a green square while it listens) to stop.
+
+![The Tuner on a phone: the dial, a C4 sung and in tune, and the round button, green while it listens.](../../screenshots/walkthrough/47-tuner.png)
+
+**Starting note** gives the choir its first note, like a pitch pipe: choose the
+note with **−** and **+** and tap **▶**. It plays for two seconds.
+
+### Concert pitch: where the choir's A sits
+
+Concert pitch is the A that every other note is tuned from: **A = 440 Hz**
+unless you change it, the standard most choirs, pianos and recordings use. An
+older organ, a baroque group or an orchestra may use another, and then
+everything should follow it: the tuner should call a note in tune when it
+matches that instrument, and the starting note should sound like it.
+
+Tap **Concert pitch** to open it.
+
+1. Tap one of the common pitches: **415** (Baroque), **432**, **440**
+   (Standard) or **442** (Orchestra), or move it one hertz at a time with
+   **−** and **+**. Every change plays the new A, so you hear it, and a line
+   says what it does to every note, such as *2 Hz above the standard 440:
+   every note sounds about 8 cents higher*. A hundred cents is one semitone,
+   one key on a piano. **Hear A** plays it again.
+2. **To match an instrument**, ask the organist or pianist to hold an A, tap
+   **Listen for the A**, and hold the phone near it. Once the A has been steady
+   for a moment, the app says what it heard, such as *Heard 441.6 Hz*, and
+   offers **Use 442 Hz**. Nothing changes until you tap it, and nothing is
+   recorded.
+
+When it is not 440, the dial shows the pitch it follows, such as *A = 442*.
+The phone remembers your concert pitch until you change it.
+
+![Concert pitch opened: one tap for each common A, a line saying what it does, Hear A, and Listen for the A.](../../screenshots/walkthrough/42-tuner-pitch.png)
+
+### Advanced: sing the note
+
+Tick **Advanced settings** and **Sing the note** opens: a piano keyboard.
+
+1. **Tap a key.** The note shows in a ring, and the tuner starts listening.
+   Use **‹** and **›** to move the keyboard down or up an octave.
+2. **Sing it and hold it.** A marker shows how near you are (flat to the left,
+   sharp to the right, the middle is the note) and the ring fills while you
+   hold it.
+3. **After about two-thirds of a second, it tells you:**
+   - **Perfect**: within a tenth of a semitone (10 cents). The ring bursts
+     with notes: perfect pitch.
+   - **Close**: within a quarter of a semitone (25 cents), close enough for a
+     choir. It says *A little sharp ↓* or *A little flat ↑*.
+   - **Try again**: further off, or another note. It says what you sang, such
+     as *You sang C4 ↑* (the arrow is the way to go), or *Too flat*.
+4. **Sing again** whenever you like: take a breath and sing, and it grades
+   you again, with no need to tap. Tap another key for another note.
+
+**On a computer**, type the note instead: the keys **A S D F G H J K** are
+C D E F G A B C, the row above (**W E**, **T Y U**) the black keys, and **Z**
+and **X** move down and up an octave. Each piano key shows its letter. A
+tablet or a computer shows two octaves at once, and the result beside the
+ring.
+
+![Sing the note on a computer: beside the dial, two octaves with a letter on each key, A typed for C4, and Perfect.](../../screenshots/walkthrough/48-sing-the-note-computer.png)
+
+The **speaker** button plays the note; the tuner does not listen while it
+plays, so the phone cannot pass a note by singing it to itself. The **square**
+stops listening.
+
+![Sing the note on a phone: a keyboard, waiting for a note to be tapped.](../../screenshots/walkthrough/44-sing-the-note.png)
+
+![C4 tapped and sung: Perfect, with a burst of notes.](../../screenshots/walkthrough/45-perfect-pitch.png)
+
+**More tools**, under Sing the note, opens three more:
+
+- **Your voice.** While the tuner listens, the last ten seconds of your voice
+  are drawn across one octave of notes, a row for each note with its name
+  beside it, as on a piano roll. The octave follows your voice; the note you
+  are singing now is lit, and its name is shown large at the top. Each note
+  you sing is a line of its own: **steady** (level), a **wobble** (a wave), or
+  a **slide** (a slope). A line that sits on a note's row is that note in
+  tune. Only the last ten seconds are drawn, and they are forgotten when you
+  leave the Tuner.
+
+  ![Your voice on a phone: one octave of notes, each named, the note being sung lit, and each note sung a line of its own.](../../screenshots/walkthrough/46-your-voice.png)
+- **Drone.** One note held for as long as you like, to sing against. Choose
+  the note and the sound (soft voice, organ or flute) and tap **Start the
+  drone**. When your voice drifts you hear it rub against the drone. With the
+  tuner listening at the same time, wear headphones, or the tuner hears the
+  drone instead of you. Tapping a key in Sing the note stops it.
+- **Your instrument.** A clarinet or trumpet, an alto saxophone or a French
+  horn reads its music higher than it sounds. Choose yours and the tuner shows
+  the note you would read, with the note it sounds underneath: a concert A on
+  a B♭ clarinet reads *B*.
+
+> **IMPORTANT** · What the microphone does, and does not do
+>
+> The tuner listens only after you tap the **microphone** button (or a key in
+> Sing the note). It measures the sound on the phone and throws it away:
+> **nothing is recorded, kept or sent**. It lets go of the microphone when you
+> tap the button again (or **■** in Sing the note), when you leave
+> the Tuner, and when the phone locks or another app comes to the front, so the
+> phone's own recording light goes off.
+
+## Conductor: a steady beat, and the conductor's hand
+
+![The Conductor on a computer: the pattern for four beats, numbered where the hand falls.](../../screenshots/complete/computer-guide-music-3-conductor.jpg)
+
+1. Open **Conductor** and choose the beats in a bar: **2**, **3**, **4** or
+   **6**. The drawing shows the pattern a conductor's hand makes, numbered
+   where each beat falls.
+2. Set the tempo, from 30 to 240 beats a minute. Its Italian name (*Largo*,
+   *Andante*, *Allegro*) is shown beside it.
+3. Tap **Start**. The clicks sound and the hand falls into each beat.
+
+To set the tempo by feel, tap **Tap the beat** four or five times in time with
+the music in your head; the tempo follows your taps. To follow the hand in
+silence, during a rehearsal say, untick **Sound the clicks**. The screen stays
+on while the conductor runs.
+
+### Advanced: clicks between beats, quiet beats, a count-in, a speed trainer
+
+Tick **Advanced settings** under **Sound the clicks**.
+
+- **Clicks between beats.** *2 to a beat*, *3 to a beat* (for triplets) or
+  *4 to a beat* adds quieter clicks between the beats, for fast notes.
+- **Each beat.** Tap a beat to make it **Loud**, **Normal** or **Silent**. A
+  silent beat still moves the hand. Beat one starts loud and the rest normal.
+- **Count in, then silent.** One bar of clicks to start the choir, then the
+  hand keeps time without a sound.
+- **Speed trainer.** For learning a hard passage: it starts at the tempo you
+  set and gets a little faster as you go. Choose how much faster, how often
+  (every so many bars), and the tempo to stop at. It never goes past that.
+- **Saved tempos.** Give the tempo a name, such as *Hymn 100*, and tap
+  **Save**. One tap on the name brings back its tempo and its beats in a bar.
+  Kept on this phone.
+
+## Pieces: the choir's music, on the phone
+
+**Pieces** keeps the music your choir sings, in two kinds.
+
+**A printed page, made clean.**
+
+1. Tap **Scan a page** and choose a photo of the printed page.
+2. Drag the four dots onto the four corners of the paper.
+3. Tap **Make a clean page**. The page is straightened, cropped to the paper,
+   and turned black on white, even with a shadow across it.
+
+Only the clean page is kept, never the photo, so nothing the camera wrote into
+the photo (such as where it was taken) is kept either.
+
+**A score that plays.**
+
+1. Tap **Open a score or PDF** and choose either:
+   - a MusicXML file (`.musicxml`, `.xml` or a compressed `.mxl`), which
+     MuseScore, Sibelius, Finale and Dorico all save; or
+   - a **PDF that a notation program made**, such as MuseScore or Dorico. It is
+     read note by note on the phone: the notes and rhythms of every part, the
+     key, time and tempo, ties, two voices on one staff, the words, and the
+     loud and soft markings.
+2. Choose **Your part**. It plays louder than the others; any part can also be
+   silenced.
+3. Slow it down to learn it, and tap any note to start from there.
+
+The score is drawn as notes on a strip, higher notes higher and longer notes
+longer: what a singer learning a part needs. It is not printed notation.
+
+A score read from a PDF says so under its title: *Read from the PDF's printed
+notes, on this phone. Check it against the page before the choir learns from
+it.* If any bar did not add up to the time signature, it says how many, so you
+know where to look. The PDF itself is kept on the phone and read again each
+time you open it.
+
+> **NOTE** · Which PDFs can be read
+>
+> A PDF exported by a notation program carries its notes as exact symbols, and
+> those are read. On 80 Bach chorales made with MuseScore that it had never
+> seen, it read 99.78% of the notes exactly right. A **scanned** PDF, or
+> a photo saved as a PDF, is only a picture: Pieces says so, and you can keep it
+> with **Scan a page** to read from instead. PDFs from older Sibelius and Finale
+> use their own music fonts and are not read yet. Tuplets, repeats, second
+> verses and grace notes are not read.
+
+**About this piece.** Above the strip, the score explains itself, from its own
+markings:
+
+- one or two sentences on its character, such as *Unhurried and bright:
+  Andante, 72 a minute, in G major, for two voices. It begins soft (p), grows
+  to loud (f) at bar 5, and ends very soft (pp).* It says what the composer
+  wrote, in plain words, and no more;
+- its tempo, time, key and length;
+- **Loud, soft and speed**: each marking, bar by bar;
+- **Each part**: how low and high it goes, and its widest leap, marked
+  *Practise this* when it is a sixth or more (or a tritone);
+- **The words** of your part, joined back into words.
+
+**Conduct this piece** opens the Conductor already set to the score's time and
+tempo (6/8 is beaten in six, 2/2 in two, 12/8 in four).
+
+![A choir PDF opened on a phone: the note under the title says it was read from the printed notes, and About this piece begins below it.](../../screenshots/walkthrough/41-music-pdf.png)
+
+**Advanced, for a score.** Tick **Advanced settings** under the parts.
+
+- **Transpose**: move every part up or down, a semitone at a time (up to an
+  octave each way), to suit your voices. The strip moves with it.
+- **Loop a passage**: choose the first and last beat and it plays them over
+  and over, to learn them.
+- **I sing my part**: your part goes silent and is drawn faintly, so you sing
+  it against the others. Choose **Your part** first.
+- **Sound**: a soft voice, an organ or a flute.
+
+Above the strip it says what it will play, such as *Looping beats 1 to 2, up 2
+semitones*. Unticking Advanced plays the score as written again.
+
+> **NOTE** · A scanned page does not play
+>
+> Turning a photo of printed music into notes that play needs either a server
+> to send the photo to, or software the app's security rules do not allow on a
+> phone. The project decided to leave it out for now: scanned pages are for
+> reading, and scores play from MusicXML files and from PDFs that notation
+> programs made.
+
+## Play: a keyboard, chords and your own beat
+
+**Play** is for making music, not only practising it.
+
+![Play on a phone: an octave of keys at the choir's concert pitch.](../../screenshots/complete/phone-guide-music-5-play.jpg)
+
+**The keyboard.** An octave of piano keys. Press and hold a key and it sounds
+for as long as you hold it; several fingers play several notes. **Lower** and
+**Higher** move the keyboard an octave at a time. It plays at your concert
+pitch. On a computer, play it from your own keyboard, held for as long as the
+key is down: **A S D F G H J K** for the white keys, **W E T Y U** for the
+black, **Z** and **X** for the octave.
+
+Tick **Advanced settings** and three more cards open.
+
+- **Sound**: a soft voice, an organ or a flute, for the keyboard and the
+  chords.
+- **Chords**: choose a key, and the six chords most songs in it are built from
+  are a tap each (in C: C, Dm, Em, F, G and Am). Tap them in time to accompany
+  a tune.
+- **Beat maker**: three drums (bass drum, snare, hi-hat) in rows of sixteen
+  squares, each square a quarter of a beat. Tap squares to turn them on, then
+  **Play the beat**; it goes round and round, lighting each square as it
+  plays, and the tempo can change while it plays. **Start from** a ready-made
+  beat (*Steady four*, *Rock*, *Ballad*, *Praise*) or an empty grid, and save
+  your own with a name. Kept on this phone.
+
+Leaving Play, or locking the phone, stops every sound.
+
+## For a choir director: a rehearsal with the room
+
+1. Before the rehearsal, ask a section leader to export each piece from
+   MuseScore as **MusicXML** and send it round. Each singer opens it in
+   **Pieces** and chooses their own part.
+2. At the start, use **Starting note** in the **Tuner** to give the first note,
+   and **Tuner** itself for anybody unsure of their pitch.
+3. Run the hard passages with the **Conductor**, slow at first; untick **Sound
+   the clicks** once the choir has the tempo, and keep the hand on a screen
+   everybody can see.
+4. For the printed copies, **Scan a page** turns a photo of each into a clean
+   page that is easy to read on a phone.
+
+## What it keeps, and where
+
+| What | Where it is kept | Who can see it |
+| --- | --- | --- |
+| Your music, video and playlists | On this device | Only you, on this device |
+| Your clean pages and scores | On this device, in the Music room's own store | Only you, on this device |
+| Concert pitch, the conductor's settings, saved tempos and beats, the notes you chose to sing, and which folders have Advanced open | On this device | Only you |
+| Sound from the microphone | Nowhere: measured and thrown away | Nobody |
+
+Because it is all on the device, a new phone starts with an empty Music room.
+Keep your score files somewhere you can open them again.

@@ -1,0 +1,30 @@
+# Normalise line endings in the repository, always.
+#
+# Without this, a Windows clone with the default `core.autocrlf=true` rewrites
+# every checked-out file to CRLF. The app still runs, which is what makes it
+# worth pinning: the damage is quiet. Diffs show every line as changed, so real
+# review becomes impossible; a contributor's first pull request looks like they
+# rewrote the file; and any check that matches source text exactly can start
+# disagreeing with itself depending on who cloned it.
+#
+# `text=auto eol=lf` means: decide what is text, store it with LF, and check it
+# out with LF on every platform. Windows editors have handled LF for years.
+* text=auto eol=lf
+
+# Binary, byte for byte. Never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.mp4 binary
+*.wav binary
+*.pdf binary
+*.zip binary
+*.skill binary

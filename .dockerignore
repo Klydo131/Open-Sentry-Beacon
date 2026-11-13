@@ -1,0 +1,10 @@
+# What a Docker build of this repository never needs (selfhost/).
+.git
+node_modules
+.next
+.next-dev
+selfhost/server/node_modules
+selfhost/data
+**/.env
+**/.env.*
+!**/.env.example

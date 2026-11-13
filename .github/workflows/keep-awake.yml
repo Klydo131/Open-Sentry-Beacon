@@ -1,0 +1,122 @@
+# Keep the Supabase project awake, for free.
+#
+# WHY THIS EXISTS. A Supabase project on the free plan pauses after seven days
+# with no API requests. The data is kept, but the project goes offline until
+# somebody signs in and resumes it by hand. For a church app that is the worst
+# possible failure: it happens during a quiet stretch — a holiday, the week
+# after a launch — and the first person to notice is a member opening a dead
+# app, not a developer watching a dashboard.
+#
+# Paying for Supabase Pro removes the pause. So does one HTTP request a day,
+# which is what this is. GitHub Actions is free and unmetered on public
+# repositories, and this repository is public.
+#
+# WHY IT CALLS SUPABASE AND NOT THE WEBSITE, which is the mistake worth avoiding:
+# the obvious version of this pings the Vercel URL. That would not work. The app
+# is rendered in the browser and every Supabase call is made by the visitor's
+# browser, not by the server — so fetching the page as a script downloads HTML
+# and JavaScript and never touches the database at all. The project would sail
+# on to its seventh idle day while a green tick every morning said otherwise.
+#
+# So the request goes straight at PostgREST, and asks for a real row from a real
+# table. Row-level security will almost certainly return an empty list to an
+# anonymous caller, and that is fine — the query still reached Postgres, which
+# is the whole point. We are proving the database was touched, not reading data.
+#
+# WHAT TO SET UP (one time, in Settings → Secrets and variables → Actions):
+#
+#   SUPABASE_URL       the Project URL, from Project Settings → API
+#   SUPABASE_ANON_KEY  the anon/publishable key, from the same page
+#
+# The URL is not written out here on purpose. tests/no-backend.js forbids this
+# repository from naming a live database host anywhere, so that a fork never
+# inherits a pointer at somebody else's church — and a placeholder in a comment
+# is close enough to the real thing to be worth keeping out too.
+#
+# The anon key is designed to be public — it already ships inside the browser
+# bundle — so this is not a meaningful secret. It lives in Secrets anyway, so
+# that a fork does not inherit a pointer to somebody else's project.
+
+name: keep-awake
+
+on:
+  schedule:
+    # 21:00 UTC daily — around 05:00 in Manila, so a failure is visible at the
+    # start of the working day rather than discovered a week later.
+    - cron: '0 21 * * *'
+  # So it can be run by hand after a deploy, or to test the setup.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping the database
+        # ONE env: BLOCK. There were two, and YAML takes the last one, so the
+        # two secrets this job exists to use were never passed to it at all.
+        # GitHub rejected the file outright and posted a failed run against
+        # every push, named by its path because it could not read the name.
+        # It could never have gone green, secrets set or not.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          # Whether this repository is a fork, as GitHub itself says, so the job
+          # can tell a fork (nothing to keep awake) from a church's own copy
+          # (misconfigured). It used to compare this repository's name with
+          # one upstream name, which put an account name into every copy.
+          GH_TOKEN: ${{ github.token }}
+          HERE: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            # ON THE REAL REPOSITORY, missing secrets are a fault and must be
+            # loud. This job ran green for a whole day doing nothing at all,
+            # because "skip quietly" and "worked" look identical from the
+            # Actions tab — and the whole point of the job is that nobody is
+            # watching the thing it protects. A silent success on the one
+            # repository that owns a database is the failure it was built to
+            # prevent, wearing a tick.
+            # Anything but GitHub saying "fork", a failed answer included, is
+            # treated as a church's own copy: loud, never a quiet tick.
+            FORK="$(gh api "repos/${HERE}" --jq .fork 2>/dev/null || echo unknown)"
+            if [ "${FORK}" != "true" ]; then
+              echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY are not set on the live repository."
+              echo "::error::Nothing is keeping the database awake. Add them under Settings → Secrets and variables → Actions."
+              exit 1
+            fi
+
+            # A fork has no database of its own. Skip cleanly — a fork must
+            # never inherit a red tick for not owning somebody else's project.
+            echo "SUPABASE_URL or SUPABASE_ANON_KEY is not set — nothing to keep awake."
+            echo "This looks like a fork (${HERE}), so there is nothing to do."
+            exit 0
+          fi
+
+          # Ask PostgREST for one row of one table. RLS decides whether anything
+          # comes back; either way Postgres ran the query.
+          code=$(curl -sS -o /tmp/ping.out -w '%{http_code}' \
+            --max-time 30 --retry 3 --retry-delay 5 --retry-all-errors \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/churches?select=id&limit=1")
+
+          echo "PostgREST answered HTTP ${code}"
+
+          # 200 is a normal answer. 401/403 mean RLS refused us, which still
+          # proves the request reached the database — that counts as activity
+          # and therefore counts as success here.
+          #
+          # A 5xx, or no answer at all, is the case worth failing on: it means
+          # the project may already be paused or broken, and somebody should
+          # look at it today rather than find out from a member.
+          case "${code}" in
+            200|401|403) echo "Project is awake." ;;
+            000) echo "::error::No response from ${SUPABASE_URL} — the project may be paused or unreachable."; exit 1 ;;
+            *)   echo "::error::Unexpected status ${code}. Response:"; cat /tmp/ping.out; exit 1 ;;
+          esac
