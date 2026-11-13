@@ -307,7 +307,7 @@
 :root[data-ui-theme^="aero-"] .bg-white.rounded-2xl:not([data-look-preview]),
 :root[data-ui-theme^="aero-"] .bg-white.rounded-3xl:not([data-look-preview]),
 :root[data-ui-theme^="aero-"] .menu-group {
-  box-shadow: inset 0 1px 0 var(--aero-rim), 0 0 0 1px var(--aero-rim), 0 12px 30px -18px var(--aero-shadow);
+  box-shadow: inset 0 1px 0 var(--aero-rim), 0 0 0 1px var(--aero-rim), 0 10px 18px -12px var(--aero-shadow);
 }
 
 /* Anything that wears the look's main colour is glossy: buttons, the chosen
@@ -331,7 +331,7 @@
 :root[data-ui-theme^="aero-"] .tab-bar {
   background: var(--aero-sheen-image), var(--aero-glass);
   border-top-color: var(--aero-rim);
-  box-shadow: 0 -10px 28px -20px var(--aero-shadow);
+  box-shadow: 0 -8px 16px -12px var(--aero-shadow);
 }
 
 /* The rooms down the left of a computer. */
@@ -348,7 +348,7 @@
   border-radius: var(--aero-radius);
   border-color: var(--aero-rim);
   background: var(--aero-sheen-image), var(--aero-glass);
-  box-shadow: inset 0 1px 0 var(--aero-rim), 0 14px 34px -20px var(--aero-shadow);
+  box-shadow: inset 0 1px 0 var(--aero-rim), 0 10px 20px -13px var(--aero-shadow);
 }
 /* The welcome: the drawn art fills the panel; the words sit on a solid card
    of their own, so nothing in the picture is ever behind them. */
@@ -357,7 +357,7 @@
   margin:14px; min-height:0; width:min(58%, 26rem);
   border-radius:calc(var(--aero-radius) - 6px);
   background: var(--aero-sheen-image), var(--look-panel);
-  box-shadow: inset 0 1px 0 var(--aero-rim), 0 8px 24px -16px var(--aero-shadow);
+  box-shadow: inset 0 1px 0 var(--aero-rim), 0 6px 14px -10px var(--aero-shadow);
 }
 :root[data-ui-theme^="aero-"] .fresh-room-icon {
   border-radius:calc(var(--aero-radius) - 6px);
@@ -366,7 +366,7 @@
 }
 :root[data-ui-theme^="aero-"] .fresh-room:hover {
   border-color: var(--look-accent);
-  box-shadow: inset 0 1px 0 var(--aero-rim), 0 0 0 1px var(--look-accent), 0 16px 34px -18px var(--aero-shadow);
+  box-shadow: inset 0 1px 0 var(--aero-rim), 0 0 0 1px var(--look-accent), 0 12px 22px -12px var(--aero-shadow);
 }
 @media (min-width:768px) {
 :root[data-ui-theme^="aero-"] .fresh-room-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -381,19 +381,20 @@
 :root[data-ui-theme^="aero-"] .nav-icon[data-line] .nav-emoji { display: none; }
 :root[data-ui-theme^="aero-"] .nav-icon[data-line] .nav-line { display: block; }
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-ui-theme^="aero-"] .page-in { animation: lookBubble 520ms cubic-bezier(0.2, 0.9, 0.25, 1) backwards; }
+  :root[data-ui-theme^="aero-"] .page-in { animation: lookBubble 200ms ease-out backwards; }
 }
 :root[data-ui-theme^="aero-"] [data-board-card],
 :root[data-ui-theme^="aero-"] [data-update-card] {
-  transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+  /* Only the lift is animated; the shadow changes at once. Animating a shadow
+     or a filter repaints the card on every frame. */
+  transition: transform 160ms ease;
 }
 @media (hover: hover) {
   :root[data-ui-theme^="aero-"] .lift-hover:hover,
   :root[data-ui-theme^="aero-"] [data-board-card]:hover,
   :root[data-ui-theme^="aero-"] [data-update-card]:hover {
     transform: translateY(-2px);
-    filter: brightness(1.05) saturate(1.08);
-    box-shadow: 0 12px 30px -14px rgba(0, 120, 200, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 20px -12px rgba(0, 120, 200, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
 }
 @media (prefers-reduced-motion: reduce) {
