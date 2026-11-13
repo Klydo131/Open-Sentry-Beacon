@@ -39,7 +39,11 @@ function prose(f, src) {
     const t = m[0];
     const isComment = t.startsWith('/*') || t.startsWith('//')
       || (t.startsWith('--') && /\.sql$/.test(f)) || (t.startsWith('#') && /\.(sh|py|toml|ya?ml)$/.test(f));
-    out += isComment ? t : keep(t);
+    // An HTML comment inside a template is still prose somebody wrote, and it
+    // is sent with whatever the template builds.
+    out += isComment ? t : t.startsWith('`')
+      ? t.replace(/<!--[\s\S]*?-->|[^\n]/g, (x) => (x.startsWith('<!--') ? x : ' '))
+      : keep(t);
     last = m.index + t.length;
   }
   return out + keep(src.slice(last));

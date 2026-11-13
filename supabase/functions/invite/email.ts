@@ -167,12 +167,6 @@ export function inviteHtml(
             <strong>${church}</strong> has invited you as ${esc(copy.word)}. ${esc(copy.lead)}
           </p>
 
-          <!-- THE CREDENTIALS COME BEFORE THE BUTTON, and the order is the
-               request: "That email and password must be emphasized first
-               before tapping the accept or join in to the Web app." Somebody
-               who taps first and reads second arrives at a sign-in box holding
-               nothing, goes back to the mail, and half of them do not come
-               back. -->
           <p style="margin:0 0 8px 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:bold;color:#1E2A4A;letter-spacing:0.6px;text-transform:uppercase;">Step 1 &middot; Your sign-in details</p>
 
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F4F8FF;border:2px solid #2F80ED;border-radius:10px;margin:0 0 14px 0;">

@@ -35,7 +35,7 @@
 // shape before it was too easy to guess:
 //
 //   * 28 September to 3 October: ONE WORD AND DIGITS, TEN CHARACTERS
-//     (`harbor4821`), asked for as. About 8 million possibilities, 23 bits. It was accepted
+//     (`harbor4821`). About 8 million possibilities, 23 bits. It was accepted
 //     because sign-in is rate-limited, but that limit counts attempts per
 //     internet address, and addresses are cheap to rent; and the app signs in
 //     through its own server, so the limit counted the server's addresses, not
