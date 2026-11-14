@@ -12,22 +12,10 @@
 import { readPdfInk, type PdfJs } from '@/lib/music/pdf-ink';
 import { readPdfScore, type PdfReadReport } from '@/lib/music/pdf-score';
 import type { Score } from '@/lib/music/musicxml';
+import { loadPdfJs as loadShared } from '@/lib/pdfjs';
 
-let loading: Promise<PdfJs> | null = null;
+const loadPdfJs = () => loadShared<PdfJs>();
 
-function loadPdfJs(): Promise<PdfJs> {
-  loading ??= import('pdfjs-dist/legacy/build/pdf.mjs')
-    .then((pdfjs) => {
-      pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.min.mjs', import.meta.url).toString();
-      return pdfjs as unknown as PdfJs;
-    })
-    .catch((cause) => {
-      // A dropped connection must not leave the room unable to try again.
-      loading = null;
-      throw cause;
-    });
-  return loading;
-}
 
 /** Read a music PDF's bytes into a Score. Throws with a sentence a person can act on. */
 export async function scoreFromPdf(bytes: Uint8Array, title: string): Promise<{ score: Score; report: PdfReadReport }> {

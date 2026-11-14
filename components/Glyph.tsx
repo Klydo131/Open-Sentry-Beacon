@@ -302,6 +302,14 @@ export function TagGlyph(props: GlyphProps) {
 }
 
 /** Add, or make a new one. */
+export function MinusGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 12h14" />
+    </Svg>
+  );
+}
+
 export function PlusGlyph(props: GlyphProps) {
   return (
     <Svg {...props}>

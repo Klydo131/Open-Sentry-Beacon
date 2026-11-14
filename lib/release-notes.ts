@@ -18,6 +18,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-14-read-a-pdf',
+    date: '2026-11-14',
+    title: 'Read a PDF in My Files',
+    items: [
+      'A PDF kept on your device now has a Read button. It opens full screen inside the app, with larger and smaller text and a page count.',
+    ],
+  },
+  {
     id: '2026-11-14-chat-your-way',
     date: '2026-11-14',
     title: 'Say it your way in a chat',

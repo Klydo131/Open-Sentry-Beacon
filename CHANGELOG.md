@@ -10,6 +10,20 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 14 November 2026 (later still): a PDF on the device can be read
+
+**Nothing to do** for a church running a copy.
+
+- A PDF in My Files offered only Download. On an Android phone a download is
+  saved to a folder with nothing shown, so the file seemed not to open. It now
+  has **Read**, which draws it in the app (`components/PdfReader.tsx`).
+- No new dependency: pdf.js was already in the app for the Music room, and its
+  loader moved to `lib/pdfjs.ts` so both use one copy, loaded only when a PDF
+  is opened. Pages are drawn to a canvas as they come into view and let go when
+  far away; scripts and forms in a PDF do not run, and eval is off.
+- `tests/e2e/a-pdf-opens-in-the-library.js` checks pages are painted, the page
+  count, zoom and closing, at phone, pad and desktop widths.
+
 ## 14 November 2026 (later): a chat that says it your way
 
 **To run:** migration `20261114120000_a_conversation_can_say_it_your_way.sql`

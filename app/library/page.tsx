@@ -36,7 +36,11 @@ import { TabBar } from '@/components/TabBar';
 import { useIsLive } from '@/lib/tutorial';
 import { STARTER_KIT, starterKitFor } from '@/lib/starter-kit';
 import type { Material } from '@/lib/types';
-import { MusicGlyph, PlayGlyph } from '@/components/Glyph';
+import { DocGlyph, MusicGlyph, PlayGlyph } from '@/components/Glyph';
+import dynamic from 'next/dynamic';
+
+// The reader and pdf.js arrive only when somebody opens a PDF.
+const PdfReader = dynamic(() => import('@/components/PdfReader').then((m) => m.PdfReader), { ssr: false });
 import Link from 'next/link';
 
 const ICON: Record<string, string> = {
@@ -162,6 +166,7 @@ function DeviceMediaCard({
   onTogglePlayer,
   onShare,
   onDownload,
+  onRead,
   onRemove,
 }: {
   item: MediaMeta;
@@ -170,6 +175,8 @@ function DeviceMediaCard({
   onTogglePlayer: () => void;
   onShare: () => void;
   onDownload: () => void;
+  /** Open a PDF in the app's own reader. */
+  onRead: () => void;
   onRemove: () => void;
 }) {
   const url = safeExternalUrl(item.external_url);
@@ -201,6 +208,11 @@ function DeviceMediaCard({
         {playable && (
           <Button variant="ghost" className="px-4 text-base" onClick={onTogglePlayer}>
             {playing ? 'Close' : <><PlayGlyph size={14} className="mr-1" />Play</>}
+          </Button>
+        )}
+        {item.type === 'pdf' && (
+          <Button variant="ghost" className="px-4 text-base" onClick={onRead}>
+            <DocGlyph size={16} className="mr-1" />Read
           </Button>
         )}
         <Button variant="gold" className="px-4 text-base" onClick={onShare}>Share</Button>
@@ -354,6 +366,16 @@ export default function LibraryPage() {
       return;
     }
     downloadBlob(blob, item.title);
+  };
+
+  const [reading, setReading] = useState<{ blob: Blob; title: string } | null>(null);
+  const read = async (item: MediaMeta) => {
+    const blob = await getBlob(item.id);
+    if (!blob) {
+      flash('This item has no file to read.');
+      return;
+    }
+    setReading({ blob, title: item.title });
   };
 
   const share = async (item: MediaMeta) => {
@@ -693,6 +715,7 @@ export default function LibraryPage() {
                     onTogglePlayer={() => setPlaying(playing === item.id ? null : item.id)}
                     onShare={() => void share(item)}
                     onDownload={() => void download(item)}
+                    onRead={() => void read(item)}
                     onRemove={() => void remove(item)}
                   />
                 ))}
@@ -708,6 +731,7 @@ export default function LibraryPage() {
           My Files and losing Menu and People with it. Whoever is signed in,
           on either half; nobody signed in, no bar. */}
       {barRole && <TabBar role={barRole} />}
+      {reading && <PdfReader blob={reading.blob} title={reading.title} onClose={() => setReading(null)} />}
     </div>
   );
 }
