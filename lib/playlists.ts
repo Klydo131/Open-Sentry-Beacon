@@ -4,7 +4,7 @@
 //
 // PORTED FROM OPEN MORBITAL, the founder's local-first music player,
 // AGPL-3.0 upstream, and used
-// here under its terms as part of this AGPL-3.0 work. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code
+// here under the copyright holder's MIT grant. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code
 // is written against this app's own storage rather than copied, because
 // Morbital is Vite/zustand/dexie and this is Next.js.
 //

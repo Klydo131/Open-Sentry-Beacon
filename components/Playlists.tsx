@@ -3,7 +3,7 @@
 // Playlists, and a player that keeps going.
 //
 // PORTED FROM OPEN MORBITAL, the founder's local-first music player,
-// used under AGPL-3.0 as part of this work; see NOTICES.md and lib/playlists.ts.
+// used under the copyright holder's MIT grant; see NOTICES.md and lib/playlists.ts.
 // Morbital's shape is kept: a named, ordered list of track ids, with a queue
 // that has shuffle and repeat over it.
 //

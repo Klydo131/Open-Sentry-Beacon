@@ -26,20 +26,21 @@ church's invented people.
 
 ## What other open-source chats do, and what we may borrow
 
-**Ideas are free; code has a licence.** This project is AGPL-3.0-only. Nothing
+**Ideas are free; code has a licence.** This project is MIT. Nothing
 below was copied: every pattern was rebuilt here. The licence column says what
-*could* be copied if it ever were.
+*could* be copied if it ever were: only permissively licensed code, never GPL,
+LGPL or AGPL.
 
 | Project | Licence | Could we copy code? | Learned from it |
 |---|---|---|---|
-| Element Web | AGPL-3.0-only or GPL-3.0-only, or commercial | Yes, under the AGPL option | A "new messages" line; "unsent" with Resend; text size; Report in the message menu |
-| FluffyChat | AGPL-3.0-or-later | Yes | "Try to send again"; offline wording; double-tap-to-react kept optional |
+| Element Web | AGPL-3.0-only or GPL-3.0-only, or commercial | No: copyleft | A "new messages" line; "unsent" with Resend; text size; Report in the message menu |
+| FluffyChat | AGPL-3.0-or-later | No: copyleft | "Try to send again"; offline wording; double-tap-to-react kept optional |
 | Rocket.Chat | MIT, **except `ee/` folders (enterprise): never copy** | MIT parts only | Text size and a high-contrast theme |
-| Mattermost | `webapp/` Apache-2.0; server AGPL; **`server/enterprise/` source-available: never copy** | `webapp/` only | "Retry" under a failed message; "N new messages" |
+| Mattermost | `webapp/` Apache-2.0; server AGPL; **`server/enterprise/` source-available: never copy** | `webapp/` only (Apache-2.0) | "Retry" under a failed message; "N new messages" |
 | Zulip | Apache-2.0 | Yes | Retry and Dismiss on a failed message; ↑ to edit, R to reply |
-| Signal | AGPL-3.0-only | Compatible, but **never its name, icons, colours or look** | Message text size; voice playback speed; one-time gesture tips; `dir="auto"` |
+| Signal | AGPL-3.0-only | No: copyleft, and **never its name, icons, colours or look** | Message text size; voice playback speed; one-time gesture tips; `dir="auto"` |
 | Conversations | GPL-3.0 | Ideas only | One switch for large text in bubbles |
-| Delta Chat | GPL-3.0-or-later | Yes | Focus moves to a quoted message when its quote is tapped; reactions not announced on open |
+| Delta Chat | GPL-3.0-or-later | No: copyleft | Focus moves to a quoted message when its quote is tapped; reactions not announced on open |
 | Tinode web | Apache-2.0 | Yes, but not its icons | "Reconnecting… Try now" |
 | Chatwoot | MIT, **except `enterprise/`: never copy** | MIT parts only | "Send message again" on the failed bubble |
 | chatscope chat-ui-kit-react | MIT | Yes | A slot for a warm empty conversation |
@@ -131,7 +132,7 @@ microphone is allowed for this site only.
 
 ## Licences: what was found, and what was done
 
-No dependency is under a licence that conflicts with AGPL-3.0-only. The gaps
+No dependency is under a licence that conflicts with the MIT License. The gaps
 were in the paperwork, and each is closed:
 
 - **No third-party notice shipped with the app.** Now written at every build
@@ -173,7 +174,7 @@ were in the paperwork, and each is closed:
 8. **"Sentry"** is a well-known software brand. A trademark search (USPTO and
    IPOPHL) is cheap. No search was run.
 9. **AI-written code and copyright** is a question for a lawyer: it may affect
-   how strongly the AGPL can be enforced.
+   how strongly the MIT License can be enforced.
 
 ## Not verified
 

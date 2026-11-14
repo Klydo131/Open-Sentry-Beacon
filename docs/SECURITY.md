@@ -30,8 +30,8 @@ copy.
 
 ## Who is responsible for what
 
-Hope Beacon is free software, provided **as is**, without warranty (AGPL-3.0,
-sections 15 and 16). Responsibility follows control:
+Hope Beacon is free software, provided **as is**, without warranty (the MIT
+License). Responsibility follows control:
 
 | Who | Responsible for |
 |---|---|

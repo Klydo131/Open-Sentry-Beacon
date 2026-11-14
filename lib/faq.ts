@@ -84,7 +84,7 @@ export function faqSections(): FaqSection[] {
           id: 'open-source',
           q: 'Who made it? Can another church use it?',
           a: [
-            'It is free software under the GNU Affero General Public License, and its source code is public. Any church can run its own copy, with its own members and database, and is responsible for that copy. No information is shared between churches.',
+            'It is free software under the MIT License, and its source code is public. Any church can run its own copy, with its own members and database, and is responsible for that copy. No information is shared between churches.',
           ],
           links: [{ label: 'The code, on GitHub', href: SOURCE_URL }],
         },

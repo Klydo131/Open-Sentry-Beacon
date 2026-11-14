@@ -120,8 +120,7 @@ The coloured boxes mean:
 
 ## The repository is public
 
-Hope Beacon is open source under the GNU Affero General Public License,
-version 3. Its repository is public, which shapes how everybody works on it:
+Hope Beacon is open source under the MIT License. Its repository is public, which shapes how everybody works on it:
 
 - **Nothing that identifies a real member** belongs in a tracked file, a commit
   message, a screenshot or a test. The sample church exists so that nobody ever

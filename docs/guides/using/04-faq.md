@@ -238,8 +238,8 @@ under Safeguarding.
 
 ### Who makes it, and who owns our data?
 
-The app is open source, made by volunteers and shared under the GNU Affero
-General Public License. Your church's copy runs on your church's own database,
+The app is open source, made by volunteers and shared under the MIT
+License. Your church's copy runs on your church's own database,
 so your church holds its members' information, not the people who wrote the
 app.
 

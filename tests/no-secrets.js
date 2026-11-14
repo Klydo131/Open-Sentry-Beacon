@@ -306,7 +306,7 @@ if (foreignRefs.length) {
   const fingerprint = (s) => crypto.createHash('sha256').update(s.toLowerCase()).digest('hex').slice(0, 24);
   const FOUNDER_ACCOUNT = '8a0c09b2afbc11a1da27aee3';
   const ADDRESSES = new Set([
-    'lib/brand.ts', // SOURCE_URL: the app's Source link (AGPL-3.0)
+    'lib/brand.ts', // SOURCE_URL: the app's Source link
     'package.json', // the package's repository, homepage and issues
     'public/.well-known/security.txt', // where a security report goes (RFC 9116)
     '.github/ISSUE_TEMPLATE/config.yml', // the issue form's two links

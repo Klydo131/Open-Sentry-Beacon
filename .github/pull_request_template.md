@@ -28,16 +28,13 @@ phone".
 
 ## Licence
 
-- [ ] I have read the Contributor Licence Agreement in `CONTRIBUTING.md`
-      and I agree to it for this contribution
+- [ ] This contribution is my own work, or I have the right to submit it, and
+      I agree it is released under the project's MIT License
 
 <!--
-You keep your copyright. The box says you also allow the maintainer to license
-the project — your part included — under terms other than AGPL-3.0, so that a
-church whose organisation bans AGPL can still be given a private licence. The
-public repository stays AGPL either way. The reasoning is written out in full in
-CONTRIBUTING.md; if you disagree with it, say so in the PR rather than ticking
-the box.
+You keep your copyright. The box says the work is yours to give and that it
+joins the rest of the project under the MIT License. See CONTRIBUTING.md; if
+you disagree, say so in the PR rather than ticking the box.
 -->
 
 <!--

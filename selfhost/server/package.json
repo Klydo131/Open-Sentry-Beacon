@@ -2,7 +2,7 @@
   "name": "beacon-server",
   "version": "1.0.0",
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "MIT",
   "description": "Hope Beacon on plain Postgres: sign-in, two-step codes, files, live data, scheduled jobs and the app's functions, in front of PostgREST.",
   "type": "module",
   "engines": {

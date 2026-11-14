@@ -2,7 +2,7 @@
 
 Everything needed to run Hope Beacon, move it to a new project, and keep it working. Written for the people who run a church, and for the AI tools that will be asked to continue the work.
 
-**Version:** 4 October 2026 · **Applies to:** migrations through `20261003130000` · **Licence:** AGPL-3.0-only · **Source:** the Open-Sentry-Beacon repository on GitHub (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
+**Version:** 4 October 2026 · **Applies to:** migrations through `20261003130000` · **Licence:** MIT · **Source:** the Open-Sentry-Beacon repository on GitHub (a church's own copy points this at its own repository: `SOURCE_URL` in `lib/brand.ts`)
 
 > **NOTE** · How to read this
 >
@@ -1241,7 +1241,7 @@ Brevo templates are supported as an alternative but not recommended: they put th
 
 > **IMPORTANT** · The one thing the licence asks
 >
-> The app is free software under the AGPL-3.0-only. Run it unchanged and you owe nothing. **Change it (renaming it counts) and let your congregation use it, and you must offer them the source of your version.** The app already does that from Settings → General and from its front page; point both at your own repository by changing `SOURCE_URL` in `lib/brand.ts`. The same card in Settings → General links **Code from other projects**: the licence of every open-source package inside the app, written at each build, which those packages ask for and you do not have to do anything about.
+> The app is free software under the MIT License. Run it, change it, rename it and keep your changes private if you like: the one condition is that the copyright notice and licence text stay with the source. The app links to its source from Settings → General and from its front page; if you run a changed copy, point both at your own repository by changing `SOURCE_URL` in `lib/brand.ts` (or remove them). The same card in Settings → General links **Code from other projects**: the licence of every open-source package inside the app, written at each build, which those packages ask for and you do not have to do anything about.
 
 ![Settings, General, on a phone: View the source code, Read the licence, and Code from other projects. Below them, which address and which build this copy of the app is.](screenshots/walkthrough/23-source-and-licences.png)
 
@@ -1791,4 +1791,4 @@ Inviting twenty-five people one form at a time is not a workflow. The design was
 >
 > The app's limit is not servers, it is Guides. Everything about running this well follows from that: recruit a Guide, train them, pair them with up to five people, and watch the number of Explorers waiting for one.
 
-Open Sentry Beacon is free software under the AGPL-3.0-only. This handbook contains no keys, no passwords and no member details, and is safe to share.
+Open Sentry Beacon is free software under the MIT License. This handbook contains no keys, no passwords and no member details, and is safe to share.

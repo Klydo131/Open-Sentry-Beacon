@@ -21,8 +21,8 @@ export const APP_DESCRIPTION =
   'Someone from your church walks it with you.';
 
 /**
- * Where this app's source code is. AGPL-3.0 section 13 requires a modified copy
- * to offer its users the source, so point this at your own repository.
+ * Where this app's source code is. The MIT License does not require a link, but
+ * a modified copy should point this at its own repository.
  */
 export const SOURCE_URL = 'https://github.com/Klydo131/Open-Sentry-Beacon';
 

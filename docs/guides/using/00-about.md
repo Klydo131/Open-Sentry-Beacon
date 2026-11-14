@@ -84,6 +84,5 @@ is. If something here no longer matches what you see, the app has moved on:
 tell the people who look after your church's copy, or use **Send feedback** in
 the app.
 
-Hope Beacon is open source, under the GNU Affero General Public License,
-version 3. A church may run its own copy, change it, and share it, on the terms
-of that licence.
+Hope Beacon is open source, under the MIT License. A church may run its own
+copy, change it, and share it, on the terms of that licence.

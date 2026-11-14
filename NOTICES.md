@@ -1,7 +1,7 @@
 # Notices
 
 Third-party code and content in Open Sentry Beacon, and the terms it is used
-under. Open Sentry Beacon itself is licensed under AGPL-3.0-only; see
+under. Open Sentry Beacon itself is licensed under the MIT License; see
 [LICENSE](LICENSE).
 
 **The complete list ships with the app.** Every open-source package the app is
@@ -17,10 +17,10 @@ build if a dependency arrives under a licence nobody here has read.
 
 **Upstream:** Open Morbital, a local-first music player by the same author as this project
 **Upstream licence:** GNU AGPL-3.0-or-later
-**Used here under:** GNU AGPL-3.0, as part of this AGPL-3.0 work. The copyright
-holder has additionally granted this project the right to use this material
-under the MIT License. That grant is specific to this project and confers no
-rights on third-party forks of Open Morbital.
+**Used here under:** the MIT License. The copyright holder of Open Morbital is
+the same as this project's, and has granted this project the right to use this
+material under the MIT License. That grant is specific to this project and
+confers no rights on third-party forks of Open Morbital.
 
 `lib/playlists.ts` and `components/Playlists.tsx` are derived from Open
 Morbital, a local-first music player by the same author as this project.
@@ -120,8 +120,8 @@ the app: nothing from it is built into what members download.
 
 The remaining dependencies are listed in `package.json`. Almost all are
 permissive (MIT, ISC, Apache-2.0, BSD and a few others), which is compatible
-with the AGPL-3.0 in this direction: a permissively licensed library can be
-included in a copyleft work, and each keeps its own notice. Three are not
+with the MIT License: a permissively licensed library can be included in an
+MIT work, and each keeps its own notice. Three are not
 permissive, and each is accounted for:
 
 - `@toeverything/theme`, MPL-2.0 (above).

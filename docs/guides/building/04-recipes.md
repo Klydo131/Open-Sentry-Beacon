@@ -123,7 +123,7 @@ package and everything it brings with it.
    WebAssembly** (the security policy refuses both), and fetches nothing at run
    time.
 3. Read its licence. `tests/dependency-licences.mjs` fails on any licence this
-   project has not reviewed for shipping under AGPL-3.0-only.
+   project has not reviewed for shipping in an MIT work.
 4. `npm run build` regenerates the third-party notices
    (`scripts/third-party-notices.mjs`); add a line to `NOTICES.md` if it is
    something people will see.

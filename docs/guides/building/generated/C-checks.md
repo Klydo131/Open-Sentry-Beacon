@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 200 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 204 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -1184,7 +1184,7 @@ Every package this app is built from is under a licence we can ship, and its not
 
 Asked for on 1 October 2026. The licence audit of that day found no incompatible licence -- and nothing that would have stopped one arriving with the next `npm install`, and no third-party notice anywhere in the built app. This holds both:
 
-1. AN ALLOWLIST, not a blocklist. Each installed production package's licence must be one this project has looked at and can ship under AGPL-3.0-only. A new kind of licence fails here until a person reads it and adds it, with a reason. 2. THE NOTICES. scripts/third-party-notices.mjs lists every one of those packages with its licence text, runs at every build and dev server, and Settings links what it writes.
+1. AN ALLOWLIST, not a blocklist. Each installed production package's licence must be one this project has looked at and can ship under the MIT License. A new kind of licence fails here until a person reads it and adds it, with a reason. 2. THE NOTICES. scripts/third-party-notices.mjs lists every one of those packages with its licence text, runs at every build and dev server, and Settings links what it writes.
 
 #### the research agents only read
 
@@ -1743,6 +1743,44 @@ ASKED FOR, 26 September 2026.
 This file runs the real code against two real answers from the place search (tests/fixtures/photon-*.json, saved from the service on that day; place data © OpenStreetMap contributors, ODbL). It holds three promises:
 
 1. THE RIGHT PLACE CAN BE TOLD APART. "jollibee imus" is five branches, and each must come back with its own street and barangay. 2. TAPPING ONE SECURES IT. What is saved opens that exact spot for the other person, and still reads as a place name on the card. 3. IT SENDS THE LEAST. Only the words, and a point rounded to the nearest town, leave -- from the church's server, for a signed-in, approved, unsuspended member, and nothing about it is kept.
+
+#### an account belongs to one church
+
+`tests/an-account-belongs-to-one-church.mjs`
+
+An account belongs to one church, and only that church may re-invite it.
+
+The invite function sets a fresh password on an account that already exists, so a re-send can be handed over. That is right inside the church the account belongs to, and must never happen from any other church, whether or not the person has signed in yet. This holds the refusal in place, ahead of anything the function writes.
+
+node tests/an-account-belongs-to-one-church.mjs
+
+#### what a request can learn
+
+`tests/what-a-request-can-learn.mjs`
+
+What a request can learn, and how fast it can ask.
+
+Four small rules, each held here so a later change cannot loosen it quietly:
+
+1. A deletion notice (Postgres edition) carries nothing about the row, is never matched against a watcher's filter, and reaches signed-in watchers only. 2. The caller's address is the one the nearest proxy reports, and only a real IP address is ever used. 3. A new password (Postgres edition) ends every other sign-in at once, on the server. 4. Sign-in counts failures per account and per address before the password is even checked.
+
+#### the glass stays light
+
+`tests/the-glass-stays-light.mjs`
+
+The Frutiger Aero looks stay cheap to draw on a phone.
+
+Measured with a 6x-slowed CPU: the room-change animation with a blur and a scale cost about ten times the paint work of a plain fade, and any movement re-rasterised the whole page on every frame. These rules keep that out.
+
+node tests/the-glass-stays-light.mjs
+
+#### the licence is MIT
+
+`tests/the-licence-is-mit.mjs`
+
+The licence is MIT, said the same way everywhere.
+
+node tests/the-licence-is-mit.mjs
 
 #### church and mission updates
 

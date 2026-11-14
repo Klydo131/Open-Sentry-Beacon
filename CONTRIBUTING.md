@@ -253,68 +253,18 @@ expect.
 
 ## Licence
 
-AGPL-3.0-only. By contributing you agree your work ships under it. **You keep
-your copyright** — you are not signing your work over to anybody, and you never
-will be asked to.
+MIT. By contributing you agree your work ships under the project's
+[MIT License](LICENSE), the same terms as everything else here. **You keep your
+copyright**: you are not signing your work over to anybody, and you never will
+be asked to.
 
----
+**By opening a pull request you confirm** that the contribution is your original
+work, or that you have the right to submit it under the MIT License. If your
+employer has rights in what you write, you have their permission. That is the
+one that catches people out, and it is worth ten minutes now rather than an
+argument later.
 
-## Contributor Licence Agreement
-
-Short version: you keep your copyright, and you also let the project's
-maintainer license the project — including your part of it — to somebody else on
-different terms.
-
-**Why this exists, plainly.** This app is built for churches, and some of them
-will want to run it through an organisation whose legal department refuses AGPL
-software outright. That refusal is a policy, not an argument, and it never
-reaches a technical discussion. The way past it is for the maintainer to hand
-that organisation a separate private licence for the same code while the public
-repository stays AGPL for everyone else.
-
-That only works while the maintainer can license **all** of the project. The
-moment one contribution is AGPL-only and cannot be relicensed, the whole project
-is AGPL-only forever — and a congregation gets turned away by a policy rather
-than by anything to do with the software. This document is what stops that
-happening. The public repository stays AGPL-3.0 regardless; nothing here changes
-what you or anyone else receives.
-
-**By opening a pull request you confirm all of the following.**
-
-1. **You keep your copyright.** You are granting a licence, not transferring
-   ownership. You may go on using your own contribution anywhere else, under any
-   terms you like, for ever.
-
-2. **You grant a licence to relicense.** You grant the project's founder, who
-   holds its copyright, a perpetual, worldwide, non-exclusive, royalty-free and
-   irrevocable licence to reproduce, modify, publicly display, sublicense and
-   distribute your contribution — both under AGPL-3.0 **and under other terms,
-   including proprietary ones**.
-
-3. **You grant a patent licence.** On the same terms, you grant every recipient
-   of the project a perpetual, worldwide, non-exclusive, royalty-free and
-   irrevocable licence under any patent claims you own that your contribution
-   necessarily infringes. If you start patent litigation alleging the project
-   infringes a patent, this grant to you ends.
-
-4. **It is yours to give.** The contribution is your original work, or you have
-   the right to submit it under these terms. If your employer has rights in what
-   you write, you have their permission — this is the one that catches people
-   out, and it is worth ten minutes now rather than an argument later.
-
-5. **No warranty.** You provide the contribution as-is, with no warranty of any
-   kind, to the extent the law allows.
-
-**What this is not.** It is a click-through agreement recorded by your pull
-request and the checkbox in the template, not a signed document. That is normal
-for a project this size and it is honest to say it is weaker than a signed one.
-For a large or unusual contribution the maintainer may ask for something firmer
-before merging, and saying no to that is a perfectly reasonable answer — it just
-means the contribution cannot be merged.
-
-**It is not retroactive.** It applies to contributions made after it was added.
-Every commit before it came from the copyright holder, so there is nothing
-earlier to reconcile.
-
-**Not legal advice.** If any of the above matters to you commercially, have your
-own lawyer read it before you open the pull request.
+It is a statement recorded by your pull request and the checkbox in the
+template, not a signed document. That is normal for a project this size. It is
+not legal advice: if it matters to you commercially, have your own lawyer read
+it before you open the pull request.

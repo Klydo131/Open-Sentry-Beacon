@@ -10,6 +10,24 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 14 November 2026: the licence is MIT
+
+**Nothing to do** for a church running a copy. If you fork this, keep the
+copyright notice and the licence text in `LICENSE`; that is the only condition.
+
+- The project moved from the GNU AGPL-3.0 to the **MIT License**. The copyright
+  holder is the same person throughout, so nobody's consent was needed, and
+  Open Morbital's code (`lib/playlists.ts`) was already covered by an MIT grant.
+- Copies already published under the AGPL stay under it for whoever received
+  them; every copy from here on is MIT.
+- Because copyleft code cannot go into an MIT work, the research agents and
+  `tests/dependency-licences.mjs` now refuse GPL, LGPL and AGPL code. LGPL stays
+  allowed only for the server-side image library, as before.
+- The Contributor Licence Agreement is gone: contributions come in under the
+  same MIT terms, and contributors keep their copyright.
+- The in-app source link is a courtesy now, not an obligation; the README,
+  guides and handbook say so.
+
 ## 13 November 2026 (later): plans on a shelf, shown to the Guides
 
 **To run:** migration `20261113120000_a_leader_can_show_a_plan_to_the_guides.sql`

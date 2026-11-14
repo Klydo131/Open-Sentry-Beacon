@@ -76,7 +76,7 @@ for (const file of agents) {
   const guide = read('docs/agents/README.md');
   ok(['security-reviewer', 'design-researcher', 'licence-auditor'].every((n) => guide.includes(`.claude/agents/${n}.md`)),
      'the contributor guide lists all three');
-  ok(/AGPL-3\.0-only/.test(guide) && /compatible/.test(guide), 'and the licence rule for borrowing code');
+  ok(/This project is MIT/.test(guide) && /compatible/.test(guide) && /Never GPL, LGPL or AGPL/.test(guide), 'and the licence rule for borrowing code');
   ok(/docs\/agents/.test(read('AGENTS.md')), 'and AGENTS.md points to it');
 }
 

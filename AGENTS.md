@@ -13,7 +13,7 @@ matters if you are editing the app.
 
 ## 0. This repository is public
 
-It is AGPL-3.0 and anyone can read it, including everything you write in a
+It is MIT-licensed and anyone can read it, including everything you write in a
 commit message, a test fixture or a comment.
 
 Nothing that identifies a real member of a real church belongs in a tracked

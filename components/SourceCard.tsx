@@ -2,18 +2,13 @@
 
 // Where this app's source code is — offered from inside the app, on purpose.
 //
-// THIS IS A LICENCE OBLIGATION, NOT A COURTESY. Open Sentry Beacon is AGPL-3.0,
-// and section 13 says that anyone who MODIFIES the program and lets people use
-// it over a network must prominently offer those people the source of the
-// version they are actually using. A link on the signed-out front page is not
-// enough on its own: most people who use this app never see that page again
-// after their first visit.
+// A courtesy, not an obligation: the MIT License does not require it. Most
+// people who use this app never see the signed-out front page again after
+// their first visit, so the link to the code lives here too.
 //
 // IF YOU FORK THIS AND CHANGE ANYTHING, CHANGE SOURCE_URL in lib/brand.ts to
-// point at your own repository. Leaving it pointing upstream while your deployment differs is
-// the single likeliest way an honest church ends up in breach — it tells your
-// congregation "here is the code you are running" and then shows them somebody
-// else's.
+// point at your own repository, or your congregation is told "here is the code
+// you are running" and shown somebody else's.
 
 import Link from 'next/link';
 import { APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
@@ -24,9 +19,8 @@ export function SourceCard() {
     <Card className="p-5">
       <h2 className="text-xl font-bold text-navy">📖 This app is free software</h2>
       <p className="mt-1 text-sm text-gray-600">
-        {APP_SHORT_NAME} is open source under the GNU AGPL-3.0. You are welcome to
-        read it, run it for your own church, and change it. If you change it and
-        run it for other people, you pass those same freedoms on to them.
+        {APP_SHORT_NAME} is open source under the MIT License. You are welcome to
+        read it, run it for your own church, and change it.
       </p>
       {/* The conduct policy sits here rather than only in the report dialog.
           Somebody deciding whether to report needs to read it BEFORE they are

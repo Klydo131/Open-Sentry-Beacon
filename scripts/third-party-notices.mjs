@@ -142,8 +142,8 @@ export function noticesText(packages, sourceUrl) {
   return [
     'Code from other projects',
     '',
-    'This app is free software under the GNU Affero General Public License,',
-    `version 3 only (AGPL-3.0-only). Its source: ${sourceUrl}`,
+    'This app is free software under the MIT License.',
+    `Its source: ${sourceUrl}`,
     '',
     `${packages.length} open-source packages written by other people are built into it.`,
     'Each is listed below with the licence it is under and that licence\'s own text.',

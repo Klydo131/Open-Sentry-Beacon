@@ -13,8 +13,8 @@ info:
     sends `Authorization: Bearer <access_token>`. The publishable key is safe
     to ship in an app; the secret key never is.
   license:
-    name: AGPL-3.0-only
-    url: https://www.gnu.org/licenses/agpl-3.0.html
+    name: MIT
+    url: https://opensource.org/license/mit
 servers:
   - url: https://{project}.supabase.co
     variables:

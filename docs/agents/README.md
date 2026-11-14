@@ -36,10 +36,10 @@ the tool.
 - **Never against a live system.** No agent contacts a deployed site or a real
   database with real data. Database rules are tested on a throwaway database
   (`scripts/fresh-install.sh`, and the behaviour files in `supabase/tests/`).
-- **Ideas are free, code has a licence.** This project is AGPL-3.0-only. Learn
+- **Ideas are free, code has a licence.** This project is MIT. Learn
   from how any app behaves; copy code only from projects whose licence is
-  compatible (MIT, BSD, ISC, Apache-2.0, MPL-2.0, LGPL/GPL-3.0-or-later,
-  AGPL-3.0), and say where it came from. Never copy another company's name,
+  compatible (MIT, BSD, ISC, Apache-2.0, 0BSD), and say where it came from.
+  Never GPL, LGPL or AGPL code: copyleft cannot go into an MIT work. Never copy another company's name,
   logo, icons, colours or distinctive look.
 - **Say what was not checked.** An honest "not verified" is a finding. A guess
   presented as a check is the thing these agents exist to prevent.

@@ -156,8 +156,8 @@ Each step is one sitting. Do them before the first member is invited.
   `APP_SHORT_NAME`, and the brand colours. The browser tab, the installed
   app, link previews and e-mails all read them. "Hope Beacon" is an example.
 - **Your source address** is `SOURCE_URL` in the same file. Point it at your
-  fork. The app is AGPL-3.0: if you change it and run it for other people,
-  its **Source** link must lead to your changed code.
+  fork, so the **Source** link leads to your own code (the MIT License does not
+  require it).
 - **Your church** is in the app itself. A Director sets its name and legal
   details in **Settings → Church**, and giving in **Settings → Giving**. The
   roles are the Executive Director, Directors, Guides and Explorers. People

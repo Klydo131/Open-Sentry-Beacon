@@ -139,18 +139,17 @@ Open Sentry Beacon is a free, open-source app for churches walking alongside
 people who want to know more about faith. One Guide, one Explorer, one
 conversation, and a record of it that only the right people can see.
 
-**It is licensed for you to take, change, run and keep — under the AGPL-3.0.**
+**It is licensed for you to take, change, run and keep — under the MIT License.**
 Fork it, rename it, strip out what you do not need, charge for hosting or
 support. No permission required and no fee.
 
-The one condition, in a sentence: **if you change it and run it for people over
-a network, you offer those people your changed source.** Running this repository
-unmodified for your own church obliges you to nothing at all. Keeping your
-changes on your laptop obliges you to nothing. The clause only bites when other
-people are using your modified version. The app already carries a *view the
-source* link in **Settings** — if you deploy a modified version, repoint that
-link at your own repository and you have done everything the licence asks. Full
-detail is in the project's README.
+The one condition, in a sentence: **keep the copyright notice and the licence
+text with the source.** Running this repository for your own church obliges you
+to nothing else, and nor does keeping your changes private. The app carries a
+*view the source* link in **Settings**; if you deploy a modified version, point
+that link at your own repository (the licence does not require it, but your
+congregation will expect it to be honest). Full detail is in the project's
+README.
 
 **Your data is yours and it never comes to us.** When you set up your own
 Supabase project, the database is yours, in your account, under your billing.

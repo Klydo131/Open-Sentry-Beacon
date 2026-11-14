@@ -75,7 +75,7 @@ may not.
 
 ## Licences
 
-The remaker is part of Open Sentry Beacon (AGPL-3.0-only). The 21 Rust
+The remaker is part of Open Sentry Beacon (MIT). The 21 Rust
 libraries compiled into it are all permissively licensed: MIT, Apache-2.0,
 Zlib or BSD-3-Clause. `NOTICES.md` lists them, and `THIRD-PARTY-LICENCES.txt`
 holds each one's licence files, as each library ships them.

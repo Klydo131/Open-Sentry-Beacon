@@ -541,7 +541,7 @@ function coverHtml(book) {
     </div>
     <div class="cover-pics">${pic ? `<img class="p1 ${pic.phone ? 'phone' : 'wide'}" src="${pic.src}" alt="">` : ''}${pic2 ? `<img class="p2 ${pic2.phone ? 'phone' : 'wide'}" src="${pic2.src}" alt="">` : ''}</div>
   </div>
-  <div class="cover-foot"><span>Edition of ${esc(EDITION)}${COMMIT ? ` · app at <code>${esc(COMMIT)}</code>` : ''}</span><span>Open source · AGPL-3.0-only</span></div>
+  <div class="cover-foot"><span>Edition of ${esc(EDITION)}${COMMIT ? ` · app at <code>${esc(COMMIT)}</code>` : ''}</span><span>Open source · MIT</span></div>
 </section></body></html>`;
 }
 

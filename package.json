@@ -2,7 +2,7 @@
   "name": "open-sentry-beacon",
   "version": "1.0.0",
   "private": false,
-  "license": "AGPL-3.0-only",
+  "license": "MIT",
   "description": "A web application for one-on-one discipleship. Runs entirely in the browser with sample data; bring your own backend when ready.",
   "homepage": "https://github.com/Klydo131/Open-Sentry-Beacon#readme",
   "bugs": "https://github.com/Klydo131/Open-Sentry-Beacon/issues",

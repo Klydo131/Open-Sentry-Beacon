@@ -253,7 +253,7 @@ const doc = new Document({
         spacing: { before: 400 },
         alignment: AlignmentType.CENTER,
         children: [new TextRun({
-          text: 'Open Sentry Beacon is free software under the AGPL-3.0-only. '
+          text: 'Open Sentry Beacon is free software under the MIT License. '
               + 'This handbook contains no keys, no passwords and no member details.',
           size: 18, color: GREY, italics: true,
         })],

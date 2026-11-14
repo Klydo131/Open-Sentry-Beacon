@@ -908,7 +908,7 @@ WHAT A PLAYER HAS TO HAVE, and this had none of it: a progress bar you can drag,
 
 Playlists, and a player that keeps going.
 
-PORTED FROM OPEN MORBITAL, the founder's local-first music player, used under AGPL-3.0 as part of this work; see NOTICES.md and lib/playlists.ts. Morbital's shape is kept: a named, ordered list of track ids, with a queue that has shuffle and repeat over it.
+PORTED FROM OPEN MORBITAL, the founder's local-first music player, used under the copyright holder's MIT grant; see NOTICES.md and lib/playlists.ts. Morbital's shape is kept: a named, ordered list of track ids, with a queue that has shuffle and repeat over it.
 
 WHAT THIS ADDS THAT MediaPlayer DOES NOT. MediaPlayer plays ONE item, chosen by tapping it, and stops at the end. That is right for a Guide opening a study video somebody shared. It is not a music player: there is no next track, so listening to eight songs means going back to the list eight times.
 
@@ -1032,9 +1032,9 @@ Drawn as geometry rather than shipped as an image, on purpose. A pasted PNG is t
 
 Where this app's source code is — offered from inside the app, on purpose.
 
-THIS IS A LICENCE OBLIGATION, NOT A COURTESY. Open Sentry Beacon is AGPL-3.0, and section 13 says that anyone who MODIFIES the program and lets people use it over a network must prominently offer those people the source of the version they are actually using. A link on the signed-out front page is not enough on its own: most people who use this app never see that page again after their first visit.
+A courtesy, not an obligation: the MIT License does not require it. Most people who use this app never see the signed-out front page again after their first visit, so the link to the code lives here too.
 
-IF YOU FORK THIS AND CHANGE ANYTHING, CHANGE SOURCE_URL in lib/brand.ts to point at your own repository. Leaving it pointing upstream while your deployment differs is the single likeliest way an honest church ends up in breach — it tells your congregation "here is the code you are running" and then shows them somebody else's.
+IF YOU FORK THIS AND CHANGE ANYTHING, CHANGE SOURCE_URL in lib/brand.ts to point at your own repository, or your congregation is told "here is the code you are running" and shown somebody else's.
 
 #### `components/StrayFileDrops.tsx`
 
@@ -2264,7 +2264,7 @@ The credit line comes from NEXT_PUBLIC_PLAYER_CREDIT; unset, nothing is drawn.
 
 Playlists for the library player.
 
-PORTED FROM OPEN MORBITAL, the founder's local-first music player, AGPL-3.0 upstream, and used here under its terms as part of this AGPL-3.0 work. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code is written against this app's own storage rather than copied, because Morbital is Vite/zustand/dexie and this is Next.js.
+PORTED FROM OPEN MORBITAL, the founder's local-first music player, AGPL-3.0 upstream, and used here under the copyright holder's MIT grant. See NOTICES.md. The data model below is Morbital's `StoredPlaylist`; the code is written against this app's own storage rather than copied, because Morbital is Vite/zustand/dexie and this is Next.js.
 
 WHY A PLAYLIST IS ONLY NAMES AND IDS. The media itself is already in IndexedDB (lib/localMedia.ts) and can be hundreds of megabytes a file. A playlist that stored tracks would store them AGAIN, so putting one song in five playlists would cost five copies of the song. Storing ids costs five short strings, and localStorage — which is small, synchronous and perfect for a few kilobytes of ordering — is exactly the right place for them.
 

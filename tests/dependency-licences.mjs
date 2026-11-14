@@ -9,7 +9,7 @@
 //
 //   1. AN ALLOWLIST, not a blocklist. Each installed production package's
 //      licence must be one this project has looked at and can ship under
-//      AGPL-3.0-only. A new kind of licence fails here until a person reads it
+//      the MIT License. A new kind of licence fails here until a person reads it
 //      and adds it, with a reason.
 //   2. THE NOTICES. scripts/third-party-notices.mjs lists every one of those
 //      packages with its licence text, runs at every build and dev server, and
@@ -35,7 +35,8 @@ const ok = (cond, msg) => {
 
 /**
  * Licences that may reach a browser, each read and found compatible with
- * AGPL-3.0-only. Permissive ones ask for their notice to travel with the code,
+ * the MIT License (no GPL or AGPL: a copyleft package cannot ship in an MIT
+ * work). Permissive ones ask for their notice to travel with the code,
  * which the notices file does; MPL-2.0 is per-file copyleft, satisfied by
  * naming where its source is (the notices file does that too).
  */
@@ -88,7 +89,7 @@ ok(!probe('LGPL-3.0-or-later', 'some-browser-library'), 'LGPL is allowed only fo
   const text = noticesText(packages, 'https://example.org/source');
   const missing = packages.filter((p) => !text.includes(`\n${p.id}\nLicence: `));
   ok(missing.length === 0, missing.length ? `left out of the notices: ${missing.map((p) => p.id).join(', ')}` : 'the notices name every package');
-  ok(/AGPL-3\.0-only/.test(text) && text.includes('https://example.org/source'), 'and say what this app is under and where its source is');
+  ok(/MIT License/.test(text) && text.includes('https://example.org/source'), 'and say what this app is under and where its source is');
   const noFile = packages.filter((p) => p.texts.length === 0);
   ok(noFile.length === 0 || /STANDARD LICENCE TEXTS[\s\S]*MIT, the standard text/.test(text),
      `a package with no licence file of its own gets the standard text (${noFile.length} such)`);

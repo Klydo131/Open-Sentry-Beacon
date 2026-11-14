@@ -308,6 +308,7 @@ const staticChecks = [
   ['an account belongs to one church', 'tests/an-account-belongs-to-one-church.mjs'],
   ['what a request can learn', 'tests/what-a-request-can-learn.mjs'],
   ['the glass stays light', 'tests/the-glass-stays-light.mjs'],
+  ['the licence is MIT', 'tests/the-licence-is-mit.mjs'],
   ['church and mission updates', 'tests/church-and-mission-updates.mjs'],
   ['a folder does not say whose church', 'tests/a-folder-does-not-say-whose-church.mjs'],
   ['the tutorial ring keeps up', 'tests/the-tutorial-ring-keeps-up.mjs'],
