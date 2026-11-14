@@ -728,7 +728,7 @@ function wordsOnlyPdf(words) {
     .filter((f) => /^import [^;]*['"](pdfjs-dist[^'"]*|@\/lib\/music\/pdf-(read|ink|score))['"]/m.test(code(f)) && !/lib[\\/]music[\\/]pdf-/.test(f));
   ok(/await import\('@\/lib\/music\/pdf-read'\)/.test(scoreFile) && staticImports.length === 0,
      `pdf.js and the reader load only when somebody opens a PDF${staticImports.length ? ` (imported up front by ${staticImports.join(', ')})` : ''}`);
-  ok(/new URL\('pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs', import\.meta\.url\)/.test(code('lib/music/pdf-read.ts')),
+  ok(/new URL\('pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs', import\.meta\.url\)/.test(code('lib/pdfjs.ts')) && /loadPdfJs/.test(code('lib/music/pdf-read.ts')),
      "pdf.js's worker is a file of this site, which the security policy allows");
   ok(/"pdfjs-dist": "\d+\.\d+\.\d+"/.test(read('package.json')), 'pdf.js is pinned to one exact version');
   ok(/bytes\.slice\(\)/.test(scoreFile) && /new Blob\(\[file\]/.test(scoreFile),
