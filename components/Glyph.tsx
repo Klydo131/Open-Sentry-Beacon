@@ -136,6 +136,16 @@ export function ForwardGlyph({ seconds = 10, ...props }: GlyphProps & { seconds?
   );
 }
 
+/** A smiling face: where emoji, stickers and the rest are kept in a chat. */
+export function SmileGlyph(props: GlyphProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8M9 9.8h.01M15 9.8h.01" />
+    </Svg>
+  );
+}
+
 export function CloseGlyph(props: GlyphProps) {
   return (
     <Svg {...props}>

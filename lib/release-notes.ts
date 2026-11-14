@@ -18,6 +18,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-14-chat-your-way',
+    date: '2026-11-14',
+    title: 'Say it your way in a chat',
+    items: [
+      'Tap the smiling face beside the paperclip for emoji, stickers, effects and your chat\'s look.',
+      'Stickers such as "Praying for you" and "Happy Sabbath" send with one tap.',
+      'Send a message with confetti, hearts, stars, balloons or fireworks. Nothing moves for anybody who has asked their device for less motion.',
+      'Choose the colour of your messages and what is behind the chat. Only you see it, on your own device.',
+      'More reactions: hold a message, then tap More reactions.',
+    ],
+  },
+  {
     id: '2026-11-13-plan-shelf',
     date: '2026-11-13',
     title: 'Your plans, in folders',

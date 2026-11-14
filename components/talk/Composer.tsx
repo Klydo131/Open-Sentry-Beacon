@@ -9,6 +9,10 @@
 //
 //   [paperclip]  ( Write a message…        )  (●)
 //
+//   * A smiling face beside the paperclip opens emoji, stickers, effects and
+//     the chat's look (components/talk/ExpressionPanel.tsx), since 14 November
+//     2026. Like the paperclip it stays OUTSIDE the form, for the reason at the
+//     foot of this comment.
 //   * The paperclip is a plain icon, not a box. It is still a full-size
 //     target, and still says "Attach a file" to a screen reader.
 //   * The field is a pill that grows with what is typed (MessageBox: emoji by
@@ -32,7 +36,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MessageBox } from '@/components/MessageBox';
-import { CheckGlyph, CloseGlyph, MicGlyph, PaperclipGlyph, PencilGlyph, ReplyGlyph, SendGlyph, TrashGlyph } from '@/components/Glyph';
+import { CheckGlyph, CloseGlyph, MicGlyph, PaperclipGlyph, PencilGlyph, ReplyGlyph, SendGlyph, SmileGlyph, TrashGlyph } from '@/components/Glyph';
+import { EFFECT_LABEL, type MessageEffect } from '@/lib/talk/expression';
 import { canRecordVoice, useVoiceRecorder, VOICE_MAX_MS } from '@/lib/talk/voice';
 import { clockDuration } from '@/lib/talk/thread';
 
@@ -53,6 +58,10 @@ export function Composer({
   onAttachIntent,
   onVoice,
   focusSignal,
+  onExpression,
+  expressionOpen = false,
+  effect = null,
+  onClearEffect,
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -68,6 +77,12 @@ export function Composer({
   onVoice?: (file: File) => void;
   /** Changes whenever the field should take the keyboard (Reply, Edit). */
   focusSignal?: number;
+  /** Open or close emoji, stickers, effects and the look. Without it, no face. */
+  onExpression?: () => void;
+  expressionOpen?: boolean;
+  /** What the next message will arrive with, and the way out of it. */
+  effect?: MessageEffect | null;
+  onClearEffect?: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -124,6 +139,23 @@ export function Composer({
             onClick={onCancelMode}
             aria-label={mode.kind === 'reply' ? 'Stop replying' : 'Stop changing the message'}
             className="tap-sm grid w-11 shrink-0 place-items-center rounded-full text-slate-500 hover:bg-white"
+          >
+            <CloseGlyph size={18} />
+          </button>
+        </div>
+      )}
+
+      {effect && !editing && !recording && (
+        <div className="mb-2 flex items-center gap-2 rounded-2xl bg-amber-50 py-1.5 pl-3 pr-1 ring-1 ring-amber-200" data-composer-effect={effect}>
+          <span aria-hidden className="text-base leading-none">{EFFECT_LABEL[effect].emoji}</span>
+          <p className="min-w-0 flex-1 text-[0.722rem] font-bold text-amber-900">
+            Your next message arrives with {EFFECT_LABEL[effect].label.toLowerCase()}
+          </p>
+          <button
+            type="button"
+            onClick={onClearEffect}
+            aria-label="Send without an effect"
+            className="tap-sm grid w-11 shrink-0 place-items-center rounded-full text-amber-900 hover:bg-white"
           >
             <CloseGlyph size={18} />
           </button>
@@ -206,6 +238,20 @@ export function Composer({
               </button>
             </>
           )}
+          {onExpression && (
+            <button
+              type="button"
+              onClick={onExpression}
+              aria-expanded={expressionOpen}
+              aria-controls="expression-body"
+              className={`tap grid aspect-square shrink-0 place-items-center rounded-full hover:bg-slate-100 hover:text-navy ${
+                expressionOpen ? 'bg-[#1F7A8C]/10 text-[#125e6d]' : 'text-slate-500'}`}
+              data-expression
+            >
+              <SmileGlyph size={22} />
+              <span className="sr-only">Emoji, stickers and more</span>
+            </button>
+          )}
           <form
             ref={formRef}
             data-quest="chat-send"
@@ -222,7 +268,8 @@ export function Composer({
               value={value}
               onChange={onChange}
               onSend={() => { if (typed && !busy) onSubmit(); }}
-              placeholder={editing ? 'Change your message' : 'Write a message'}
+              // One word, so it stays on one line on a narrow phone beside two buttons.
+              placeholder={editing ? 'Change your message' : 'Message'}
               ariaLabel="Message"
               className="rounded-[28px] bg-slate-100 py-[15px] text-[length:max(16px,0.889rem)] leading-snug ring-1 ring-black/[0.04] focus:bg-white"
             />

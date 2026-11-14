@@ -37,16 +37,29 @@ const ok = (cond, msg) => {
 const migration = stripSql(read('supabase/migrations/20261001120000_a_conversation_can_reply_react_and_speak.sql'));
 const data = stripTs(read('lib/live/data.ts'));
 
-// ---- 1. The six, the same six everywhere -------------------------------------
+// ---- 1. The same reactions everywhere -----------------------------------------
+// Six in the row since 1 October 2026; twenty-four more behind "More" since
+// 14 November 2026. The newest migration that names the set must name exactly
+// what the screen offers, in the column check and inside react_to().
 {
   const ts = read('lib/talk/reactions.ts');
-  const screen = [...ts.matchAll(/emoji: '([^']+)'/g)].map((m) => m[1]);
-  const lists = [...migration.matchAll(/in \(('[^)]*')\)/g)].map((m) =>
-    [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]));
-  ok(screen.length === 6 && screen[0] === '🙏', `the screen offers six, praying first (${screen.join(' ')})`);
-  ok(lists.length >= 2, `the database names the set in the column check and in react_to() (${lists.length})`);
+  const row = ts.slice(ts.indexOf('export const REACTIONS = ['), ts.indexOf('export const MORE_REACTIONS'));
+  const quick = [...row.matchAll(/emoji: '([^']+)'/g)].map((m) => m[1]);
+  const screen = [...ts.matchAll(/\{ emoji: '([^']+)', label:/g)].map((m) => m[1]);
+  ok(quick.length === 6 && quick[0] === '🙏', `the row offers six, praying first (${quick.join(' ')})`);
+  ok(new Set(screen).size === screen.length && screen.length === 30, `the screen offers thirty in all, none twice (${screen.length})`);
+  const newest = stripSql(read('supabase/migrations/20261114120000_a_conversation_can_say_it_your_way.sql'));
+  const listsIn = (sql) => [...sql.matchAll(/in \(\s*('[^)]*')\s*\)/g)].map((m) =>
+    [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1])).filter((l) => l.includes('🙏'));
   const same = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
-  ok(lists.every((l) => same(l, screen)), 'and every list is exactly the screen\'s six');
+  const first = listsIn(migration);
+  ok(first.length >= 2 && first.every((l) => same(l, quick)), 'the first migration named the six, twice');
+  const lists = listsIn(newest);
+  ok(lists.length === 2, `the newest names the set in the column check and in react_to() (${lists.length})`);
+  ok(lists.every((l) => same(l, screen)), 'and both lists are exactly what the screen offers');
+  ok(/drop constraint if exists message_reactions_emoji_check/.test(newest)
+     && /add constraint message_reactions_emoji_check check \(emoji is null or emoji in/.test(newest),
+     'the column is still checked against a list, never free text');
 }
 
 // ---- 2. Reactions: read by the two, written only through react_to() ---------
@@ -154,7 +167,7 @@ const data = stripTs(read('lib/live/data.ts'));
   const store = stripTs(read('lib/demo/store.tsx'));
   const react = store.slice(store.indexOf('const reactTo = useCallback'), store.indexOf('const markMessagesRead'));
   ok(/REACTIONS\.some\(\(r\) => r\.emoji === emoji\)/.test(react) && /pairing\.dm_id !== userId && pairing\.ds_id !== userId/.test(react),
-     'the sample app keeps the same rules: the six, in your own conversation');
+     'the sample app keeps the same rules: the list, in your own conversation');
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

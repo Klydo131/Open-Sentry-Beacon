@@ -24,7 +24,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CopyGlyph, DownloadGlyph, PencilGlyph, ReplyGlyph, TrashGlyph } from '@/components/Glyph';
-import { REACTIONS } from '@/lib/talk/reactions';
+import { MORE_REACTIONS, REACTIONS } from '@/lib/talk/reactions';
 
 export interface MenuAction {
   key: string;
@@ -41,6 +41,7 @@ export function MessageMenu({
   preview,
   myReaction,
   canReact,
+  moreReactions = false,
   actions,
   busy,
   onReact,
@@ -53,6 +54,8 @@ export function MessageMenu({
   preview: string;
   myReaction: string | null;
   canReact: boolean;
+  /** Offer the reactions behind "More" (a database that takes them). */
+  moreReactions?: boolean;
   actions: MenuAction[];
   busy?: boolean;
   onReact: (emoji: string | null) => void;
@@ -60,6 +63,8 @@ export function MessageMenu({
 }) {
   const first = useRef<HTMLButtonElement>(null);
   const [confirming, setConfirming] = useState<MenuAction | null>(null);
+  // Open already when your reaction is one of the wider set, so you can see it.
+  const [more, setMore] = useState(() => MORE_REACTIONS.some((r) => r.emoji === myReaction));
 
   useEffect(() => {
     first.current?.focus({ preventScroll: true });
@@ -143,6 +148,40 @@ export function MessageMenu({
                     </button>
                   );
                 })}
+              </div>
+            )}
+            {canReact && moreReactions && (
+              <div className="mb-2">
+                <button
+                  type="button"
+                  onClick={() => setMore((open) => !open)}
+                  aria-expanded={more}
+                  className="tap-sm w-full rounded-full text-[0.833rem] font-bold text-[#125e6d] hover:bg-slate-50"
+                  data-more-reactions
+                >
+                  {more ? 'Fewer reactions' : 'More reactions'}
+                </button>
+                {more && (
+                  <div role="group" aria-label="More reactions" className="mt-1 grid grid-cols-6 gap-1 rounded-2xl bg-slate-50 p-1.5 ring-1 ring-black/5">
+                    {MORE_REACTIONS.map((r) => {
+                      const on = myReaction === r.emoji;
+                      return (
+                        <button
+                          key={r.emoji}
+                          type="button"
+                          aria-label={on ? `Take away ${r.label}` : `React ${r.label}`}
+                          aria-pressed={on}
+                          onClick={() => onReact(on ? null : r.emoji)}
+                          className={`grid h-11 min-h-0 w-full place-items-center rounded-full text-[1.333rem] leading-none transition-transform active:scale-90 ${
+                            on ? 'bg-[#1F7A8C]/15 ring-2 ring-[#1F7A8C]/40' : 'hover:bg-white'}`}
+                          data-react={r.label}
+                        >
+                          {r.emoji}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
             <ul className="overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-black/5">

@@ -247,6 +247,7 @@ const staticChecks = [
   ['fixed advisories stay fixed', 'tests/fixed-advisories-stay-fixed.mjs'],
   ['the deploy guide matches the app', 'tests/the-deploy-guide-matches-the-app.mjs'],
   ['a conversation can reply, react and speak', 'tests/a-conversation-can-reply-react-and-speak.mjs'],
+  ['a conversation can say it your way', 'tests/a-conversation-can-say-it-your-way.mjs'],
   ['a stored path cannot leave its folder', 'tests/a-stored-path-cannot-leave-its-folder.mjs'],
   ['the chat works before its database update', 'tests/the-chat-works-before-its-database-update.mjs'],
   ['no hidden characters in the code', 'tests/no-hidden-characters.mjs'],

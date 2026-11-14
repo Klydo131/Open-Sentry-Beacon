@@ -21,6 +21,12 @@ import { reactionLabel, type Reaction, type ReactionTarget } from '@/lib/talk/re
 import { scrollMotion } from '@/lib/motion';
 import { copyText } from '@/lib/share';
 import { emitQuest } from '@/lib/quest';
+import { ExpressionPanel, StickerArt } from '@/components/talk/ExpressionPanel';
+import {
+  BUBBLE_COLOURS, EFFECT_LABEL, STANDARD_LOOK, WALLPAPERS, isEffect, plainSnippet, readLook, stickerBody, stickerOf,
+  writeLook, type ChatLook, type MessageEffect,
+} from '@/lib/talk/expression';
+import { celebrateWith } from '@/lib/celebrate';
 
 export type { ChatFile } from '@/components/talk/ChatAttachment';
 
@@ -34,6 +40,8 @@ export interface ChatMessage {
   deletedAt?: string | null;
   readAt?: string | null;
   replyTo?: string | null;
+  /** What it was sent with, when it was: one of lib/talk/expression.ts EFFECTS. */
+  effect?: string | null;
 }
 
 export type ChatEntry = ChatMessage | ChatFile;
@@ -106,6 +114,7 @@ export function ChatView({
   onRemoveFile,
   replies = true,
   voice = false,
+  expressive = true,
   attachError,
 }: {
   entries: ChatEntry[];
@@ -119,7 +128,7 @@ export function ChatView({
   draft: string;
   setDraft: (next: string) => void;
   busy?: boolean;
-  onSend: (body: string, replyTo: string | null) => Promise<void> | void;
+  onSend: (body: string, replyTo: string | null, effect?: MessageEffect | null) => Promise<void> | void;
   /** Edit or take back your own message (author-checked database functions on the live half). */
   onEdit?: (id: string, body: string) => Promise<void> | void;
   onDelete?: (id: string) => Promise<void> | void;
@@ -131,6 +140,11 @@ export function ChatView({
   voice?: boolean;
   /** Offer Reply. Off on a live database without replies yet, where it would be refused. */
   replies?: boolean;
+  /**
+   * Offer an effect on a message and the reactions behind "More". Off on a
+   * live database without them yet, where both would be refused.
+   */
+  expressive?: boolean;
   attachError?: string;
 }) {
   const [showPrivacy, hidePrivacy] = useKeepable('hb-note-private');
@@ -155,6 +169,25 @@ export function ChatView({
   const [notice, setNotice] = useState<{ text: string; bad?: boolean } | null>(null);
   const [viewer, setViewer] = useState<{ src: string; title: string } | null>(null);
 
+  // --- Saying it your way (lib/talk/expression.ts) ---
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [effect, setEffect] = useState<MessageEffect | null>(null);
+  // Read after the page is in the browser: the server cannot know it.
+  const [look, setLook] = useState<ChatLook>(STANDARD_LOOK);
+  useEffect(() => {
+    if (me) setLook(readLook(window.localStorage, me));
+  }, [me]);
+  const chooseLook = (next: ChatLook) => {
+    setLook(next);
+    if (me) writeLook(window.localStorage, me, next);
+  };
+  const colour = BUBBLE_COLOURS.find((c) => c.key === look.colour);
+  const paper = WALLPAPERS.find((w) => w.key === look.paper)?.className || 'chat-ground';
+  // Ground and ink are set together, so the words on a chosen colour always read.
+  const lookStyle = colour?.ground
+    ? ({ '--bubble-mine': colour.ground, '--bubble-mine-ink': colour.ink } as React.CSSProperties)
+    : undefined;
+
   const say = (text: string, bad = false) => {
     setNotice({ text, bad });
     window.setTimeout(() => setNotice((n) => (n?.text === text ? null : n)), bad ? 5000 : 1800);
@@ -163,7 +196,8 @@ export function ChatView({
   const snippetOf = (m: ChatMessage | undefined): string => {
     if (!m) return 'An earlier message';
     if (m.deletedAt) return 'A deleted message';
-    return m.body.length > 90 ? `${m.body.slice(0, 90)}…` : m.body;
+    const said = plainSnippet(m.body);
+    return said.length > 90 ? `${said.slice(0, 90)}…` : said;
   };
   const nameOf = (who: string) => (who === me ? 'You' : theirFirst ?? 'Them');
 
@@ -196,13 +230,34 @@ export function ChatView({
     if (!text) return;
     const replyTo = mode.kind === 'reply' ? modeTarget : null;
     try {
-      await onSend(text, replyTo);
+      await onSend(text, replyTo, expressive ? effect : null);
       // The tutorial's "React or reply" step listens for this.
       if (replyTo) emitQuest('beacon:reply');
+      setEffect(null);
       endMode();
     } catch {
       /* The caller shows the error and keeps the draft. */
     }
+  };
+
+  /** A sticker goes at once, as a reply if one was being written. */
+  const sendSticker = async (body: string) => {
+    if (mode.kind === 'edit') return;
+    const replyTo = mode.kind === 'reply' ? modeTarget : null;
+    try {
+      await onSend(body, replyTo, null);
+      if (replyTo) emitQuest('beacon:reply');
+      endMode();
+    } catch {
+      say('That sticker did not go through. Try again.', true);
+    }
+  };
+
+  /** Play what a message was sent with. Words only where less motion is asked for. */
+  const playEffect = (m: ChatMessage) => {
+    if (!isEffect(m.effect)) return;
+    const what = EFFECT_LABEL[m.effect].label.toLowerCase();
+    celebrateWith(m.effect, m.who === me ? `Sent with ${what}` : `${theirFirst ?? 'They'} sent ${what}`);
   };
 
   // --- Reactions, grouped per message ---
@@ -261,6 +316,9 @@ export function ChatView({
     const el = box.current;
     if (!el || !newestKey || newestKey === lastId.current) return;
     lastId.current = newestKey;
+    // A message that arrives with an effect plays it once, as it arrives;
+    // opening an old conversation plays nothing.
+    if (landed.current && newest?.kind === 'message' && !newest.deletedAt) playEffect(newest);
     if (newestIsMine || following.current) {
       const behavior = landed.current ? scrollMotion() : 'auto';
       el.scrollTo({ top: el.scrollHeight, behavior });
@@ -270,6 +328,7 @@ export function ChatView({
     } else {
       setUnseen((n) => n + 1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per new message, by its key
   }, [newestKey, newestIsMine]);
 
   const toNewest = () => {
@@ -452,7 +511,10 @@ export function ChatView({
       <div
         ref={box}
         data-live-thread
-        className="chat-thread chat-ground overflow-y-auto overscroll-contain px-3 pb-3 pt-2 sm:px-4"
+        className={`chat-thread ${paper} overflow-y-auto overscroll-contain px-3 pb-3 pt-2 sm:px-4`}
+        style={lookStyle}
+        data-chat-paper={look.paper}
+        data-chat-colour={look.colour}
         onScroll={() => {
           const el = box.current;
           if (!el) return;
@@ -525,6 +587,8 @@ export function ChatView({
           const message = entry.kind === 'message' ? entry : undefined;
           const bigEmoji = !!message && !message.deletedAt && !message.replyTo
             && EMOJI_ONLY.test(message.body.trim());
+          const sticker = message && !message.deletedAt ? stickerOf(message.body) : undefined;
+          const sentWith = message && !message.deletedAt && isEffect(message.effect) ? message.effect : null;
           const quoted = message?.replyTo ? byId.get(message.replyTo) : undefined;
 
           return (
@@ -560,7 +624,7 @@ export function ChatView({
                       setMenuFor(key);
                     }}
                     className={`chat-bubble relative min-w-0 ${entry.kind === 'message' && !entry.deletedAt ? 'cursor-pointer' : ''} ${lit ? 'rounded-[20px] ring-2 ring-[#1F7A8C]/40' : ''} ${
-                      entry.kind === 'file' || bigEmoji ? 'rounded-[20px]' : ''}`}
+                      entry.kind === 'file' || bigEmoji || sticker ? 'rounded-[20px]' : ''}`}
                   >
                     {/* Who is speaking, for screen readers only. */}
                     {startsRun && <span className="sr-only">{mine ? 'You:' : `${theirFirst ?? 'They'}:`}</span>}
@@ -572,6 +636,13 @@ export function ChatView({
                         meta={meta || undefined}
                         onViewImage={(src, title) => setViewer({ src, title })}
                       />
+                    ) : sticker ? (
+                      // A sticker stands on its own, with no bubble. It moves a
+                      // few times as it arrives and then rests.
+                      <div className="px-0.5">
+                        <StickerArt sticker={sticker} still={!isNewest} />
+                        {meta && <p className={`mt-0.5 text-[0.722rem] text-slate-600 ${mine ? 'text-right' : ''}`}>{meta}</p>}
+                      </div>
                     ) : bigEmoji ? (
                       <div className="px-1">
                         <p className="text-[2.222rem] leading-[1.15]" aria-label={`${entry.body}`}>{entry.body}</p>
@@ -616,6 +687,19 @@ export function ChatView({
                           )}
                         </div>
                       </div>
+                    )}
+
+                    {/* What it was sent with, on the top corner; a tap plays it again. */}
+                    {sentWith && message && (
+                      <button
+                        type="button"
+                        onClick={() => playEffect(message)}
+                        className={`absolute -top-2.5 ${mine ? '-left-2' : '-right-2'} grid h-7 min-h-0 w-7 place-items-center rounded-full bg-white text-[0.833rem] leading-none shadow-sm ring-1 ring-black/10 before:absolute before:-inset-2 before:content-['']`}
+                        aria-label={`Sent with ${EFFECT_LABEL[sentWith].label.toLowerCase()}. Play it again`}
+                        data-message-effect={sentWith}
+                      >
+                        <span aria-hidden>{EFFECT_LABEL[sentWith].emoji}</span>
+                      </button>
                     )}
 
                     {/* Reactions on the bubble's lower edge; a tap opens the menu. */}
@@ -699,6 +783,20 @@ export function ChatView({
         </div>
       )}
 
+      {panelOpen && (
+        <ExpressionPanel
+          onEmoji={(emoji) => (mode.kind === 'edit' ? setEditText(`${editText}${emoji}`) : setDraft(`${draft}${emoji}`))}
+          onSticker={(s) => void sendSticker(stickerBody(s))}
+          effect={expressive ? effect : null}
+          onEffect={setEffect}
+          look={look}
+          onLook={chooseLook}
+          onClose={() => setPanelOpen(false)}
+          canSend={mode.kind !== 'edit'}
+          effects={expressive}
+        />
+      )}
+
       <Composer
         value={mode.kind === 'edit' ? editText : draft}
         onChange={mode.kind === 'edit' ? setEditText : setDraft}
@@ -711,6 +809,10 @@ export function ChatView({
         onAttachIntent={() => setAttaching(true)}
         onVoice={voice && onAttach ? onAttach : undefined}
         focusSignal={focusSignal}
+        onExpression={() => setPanelOpen((open) => !open)}
+        expressionOpen={panelOpen}
+        effect={expressive ? effect : null}
+        onClearEffect={() => setEffect(null)}
       />
 
       {menuEntry && (
@@ -725,6 +827,7 @@ export function ChatView({
               : shapeOf(menuEntry) === 'voice' ? 'Voice message' : menuEntry.title}
           myReaction={myReactionOn(menuEntry)}
           canReact={!!onReact}
+          moreReactions={expressive}
           actions={actionsFor(menuEntry)}
           busy={rowBusy}
           onReact={(emoji) => {

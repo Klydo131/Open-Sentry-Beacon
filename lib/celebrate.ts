@@ -23,3 +23,12 @@ export function celebrate(message: string): void {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(CELEBRATE_EVENT, { detail: { message } }));
 }
+
+/**
+ * One chosen kind, for a chat message sent with an effect. The words are for
+ * anybody who has asked for less motion: they see those and nothing moves.
+ */
+export function celebrateWith(kind: CelebrationKind, message: string): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(CELEBRATE_EVENT, { detail: { message, kind } }));
+}

@@ -221,6 +221,8 @@ export interface Message {
   deleted_by?: string | null;
   /** The earlier message, in the same conversation, that this one answers. */
   reply_to?: string | null;
+  /** What it was sent with, if anything (lib/talk/expression.ts EFFECTS). */
+  effect?: string | null;
 }
 
 export interface Material {

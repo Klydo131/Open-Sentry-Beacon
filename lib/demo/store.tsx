@@ -46,7 +46,8 @@ import { publishDb, subscribeDb } from '../realtime';
 import { deleteMedia, newMediaId, putMedia, typeFromMime } from '../localMedia';
 import { forgetPostFile } from '../post-media';
 import { makeSeed } from './seed';
-import { REACTIONS, type ReactionTarget } from '../talk/reactions';
+import { ALL_REACTIONS, type ReactionTarget } from '../talk/reactions';
+import { isEffect } from '../talk/expression';
 import { plainTitle } from '../talk/thread';
 import { prayerAuthor } from '../types';
 
@@ -148,7 +149,7 @@ export interface Ctx {
   resetDemo: () => void;
   advanceStage: (pairingId: string) => void;
   /** Send a message, optionally answering an earlier one in the same thread. */
-  sendMessage: (pairingId: string, body: string, replyTo?: string | null) => void;
+  sendMessage: (pairingId: string, body: string, replyTo?: string | null, effect?: string | null) => void;
   /** Change or take back your own message. Taking back empties the words and marks it. */
   editMessage: (messageId: string, body: string) => void;
   deleteMessage: (messageId: string) => void;
@@ -415,7 +416,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   );
 
   const sendMessage = useCallback(
-    (pairingId: string, body: string, replyTo?: string | null) => {
+    (pairingId: string, body: string, replyTo?: string | null, effect?: string | null) => {
       const text = body.trim();
       if (!text || !userId) return;
       setDb((prev) => {
@@ -438,6 +439,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
               body: text,
               created_at: nowIso(),
               ...(answers ? { reply_to: answers } : {}),
+              // Only an effect the app knows, as the live database checks.
+              ...(isEffect(effect) ? { effect } : {}),
             },
           ],
           notifications: [
@@ -1086,11 +1089,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Reactions, under the live rules: your conversation, one per person per
-  // thing, one of the six, never on a taken-back message.
+  // thing, one of the list, never on a taken-back message.
   const reactTo = useCallback(
     (target: ReactionTarget, emoji: string | null) => {
       if (!userId) return;
-      if (emoji !== null && !REACTIONS.some((r) => r.emoji === emoji)) return;
+      if (emoji !== null && !ALL_REACTIONS.some((r) => r.emoji === emoji)) return;
       persistUpdate((prev) => {
         const messageId = 'message' in target ? target.message : null;
         const mediaId = 'media' in target ? target.media : null;

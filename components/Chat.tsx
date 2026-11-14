@@ -61,6 +61,7 @@ export function Chat({ pairingId }: { pairingId: string }) {
       deletedAt: m.deleted_at,
       readAt: m.read_at,
       replyTo: m.reply_to,
+      effect: m.effect,
     })),
     ...media.map((m): ChatEntry => ({
       kind: 'file',
@@ -90,8 +91,8 @@ export function Chat({ pairingId }: { pairingId: string }) {
         reactions={reactions}
         draft={text}
         setDraft={setText}
-        onSend={(body, replyTo) => {
-          sendMessage(pairingId, body, replyTo);
+        onSend={(body, replyTo, effect) => {
+          sendMessage(pairingId, body, replyTo, effect);
           emitQuest('beacon:message');
           clearDraft(pairingId);
           setText('');

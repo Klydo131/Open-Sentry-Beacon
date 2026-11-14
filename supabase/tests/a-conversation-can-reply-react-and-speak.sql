@@ -7,7 +7,7 @@
 --
 --   * a reply can only point at a message in the same conversation;
 --   * a message cannot arrive already marked edited, deleted or read;
---   * reactions are one per person per thing, from the six, written only
+--   * reactions are one per person per thing, from the list, written only
 --     through react_to(), read only by the two people, never by a suspended
 --     account or a signed-out visitor, and never on a message taken back;
 --   * taking a reaction back empties the row rather than deleting it, react_to
@@ -97,6 +97,17 @@ select pg_temp.as_person('00000000-0000-0000-0000-00000000000c',
   $q$insert into public.messages (pairing_id, sender_id, body) values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-00000000000c', 'Intruder')$q$,
   'error', 'c still cannot send into a and b''s conversation');
 
+-- AN EFFECT (20261114120000) ---------------------------------------------------
+select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
+  $q$insert into public.messages (pairing_id, sender_id, body, effect) values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-00000000000a', 'Well done', 'confetti')$q$,
+  'ok', 'a sends a message with one of the five effects');
+select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
+  $q$insert into public.messages (pairing_id, sender_id, body, effect) values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-00000000000a', 'Boom', 'explode')$q$,
+  '23514', 'an effect the app does not have is refused by the database');
+select pg_temp.as_person('00000000-0000-0000-0000-00000000000c',
+  $q$insert into public.messages (pairing_id, sender_id, body, effect) values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-00000000000c', 'Intruder', 'hearts')$q$,
+  'error', 'and an effect opens no door into somebody else''s conversation');
+
 -- REACTIONS -------------------------------------------------------------------
 select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
   $q$select public.react_to('00000000-0000-0000-0000-000000000e01', null, '🙏')$q$, 'ok', 'a reacts 🙏 to b''s message');
@@ -112,7 +123,14 @@ select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
 select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
   $q$select public.react_to('00000000-0000-0000-0000-000000000e02', null, '🙏')$q$, 'not yours', 'a cannot react inside somebody else''s conversation');
 select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
-  $q$select public.react_to('00000000-0000-0000-0000-000000000e01', null, '🔥')$q$, 'not one of the six', 'a reaction outside the six is refused');
+  $q$select public.react_to('00000000-0000-0000-0000-000000000e01', null, '🍺')$q$, 'not one of the reactions', 'a reaction outside the list is refused');
+-- Since 20261114120000 the list is thirty: one from behind "More" is taken,
+-- stored as itself, and then put back so the rest of this file reads as before.
+select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
+  $q$select public.react_to('00000000-0000-0000-0000-000000000e01', null, '🔥')$q$, 'ok', 'a reaction from behind More is taken');
+select pg_temp.check((select count(*) = 1 from public.message_reactions where message_id = '00000000-0000-0000-0000-000000000e01' and person_id = '00000000-0000-0000-0000-00000000000a' and emoji = '🔥'), 'and stored as itself, in the same row');
+select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
+  $q$select public.react_to('00000000-0000-0000-0000-000000000e01', null, '❤️')$q$, 'ok', 'a goes back to ❤️');
 select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',
   $q$select public.react_to('00000000-0000-0000-0000-000000000e01', '00000000-0000-0000-0000-000000000a01', '🙏')$q$, 'one thing', 'reacting to two things at once is refused');
 select pg_temp.as_person('00000000-0000-0000-0000-00000000000a',

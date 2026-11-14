@@ -71,6 +71,29 @@ Built in this change:
 `tests/the-thread-reads-like-a-conversation.mjs` holds the sizes, contrast and
 targets.
 
+## Added on 14 November 2026: saying it your way
+
+The chat read as plain beside the apps young adults already use. Added, all of
+it the app's own:
+
+- **A smiling face beside the paperclip** opens one panel with four tabs:
+  Emoji, Stickers, Effects, Look. It sits between the thread and the message
+  bar, so nothing floats over the conversation.
+- **Emoji to pick**, from a plain list by the same rule as the typed
+  suggestions: nothing a church would not want on a child's screen, nothing an
+  Android phone draws as an empty box.
+- **Stickers**, drawn by the app from words and emoji. A sticker travels as
+  readable text, so a notification or a safeguarding copy never shows a blank.
+- **A message sent with an effect** (five kinds), played once as it arrives and
+  again on request, and never for somebody who asked for less motion.
+- **A look for your own side**: bubble colour and the ground behind the chat,
+  kept on the device, seen only by the person who chose it.
+- **More reactions** behind the six, still from a list the database checks.
+
+Refused in the same change: **GIF and sticker services.** A search sent to one
+tells another company what somebody was looking for and when, and what comes
+back is not chosen with children in mind.
+
 ## What was refused, and why
 
 - **Typing indicators and online status.** A product rule: nobody should feel

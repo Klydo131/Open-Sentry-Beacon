@@ -7,6 +7,7 @@
 // Explorer's own journey_stage. Changing somebody's role is setMemberRole(),
 // on somebody else's row; there is no setMyRole() here, and must never be.
 
+import { isEffect } from '@/lib/talk/expression';
 import {
   endBrowserSession,
   readBrowserSession,
@@ -1084,18 +1085,25 @@ export async function listMessages(pairingId: string): Promise<Message[]> {
 }
 
 /** Send a message, optionally as a reply to an earlier one in the same conversation. */
-export async function sendMessage(pairingId: string, body: string, replyTo?: string | null): Promise<void> {
+export async function sendMessage(
+  pairingId: string, body: string, replyTo?: string | null, effect?: string | null,
+): Promise<void> {
   const text = body.trim();
   if (!text) return;
   if (text.length > 4000) throw new Error('That message is too long.');
-  const { error } = await db()
-    .from('messages')
-    .insert({
-      pairing_id: pairingId,
-      sender_id: await uid(),
-      body: text,
-      ...(replyTo ? { reply_to: replyTo } : {}),
-    });
+  const row = {
+    pairing_id: pairingId,
+    sender_id: await uid(),
+    body: text,
+    ...(replyTo ? { reply_to: replyTo } : {}),
+  };
+  // The effect is one of the app's own list and the database checks it again.
+  const withEffect = isEffect(effect) ? { ...row, effect } : row;
+  let { error } = await db().from('messages').insert(withEffect);
+  // A database without the effect column yet still gets the words.
+  if (error && withEffect !== row && isMissingFromDatabase(error)) {
+    ({ error } = await db().from('messages').insert(row));
+  }
   if (error) throw new Error(error.message);
 }
 

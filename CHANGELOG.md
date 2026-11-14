@@ -10,6 +10,29 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 14 November 2026 (later): a chat that says it your way
+
+**To run:** migration `20261114120000_a_conversation_can_say_it_your_way.sql`
+on each database, after the build is out. Until it runs, the chat works as it
+did: the emoji picker, stickers and the chat's look need no database, and the
+app does not offer an effect or the reactions behind **More** until it sees the
+new column, so nothing is offered that the database would refuse.
+
+- **Reactions are still a list, now thirty.** The six of 1 October stay in the
+  row; twenty-four more sit behind **More**. The check on
+  `message_reactions.emoji` and `react_to()` carry the same list as
+  `lib/talk/reactions.ts`, and the test fails if they differ.
+- **`messages.effect`**, one of five words or null, checked by a constraint.
+  Sending may now write five columns (the four of 1 October and `effect`) and
+  still no others.
+- **A sticker is ordinary text**, `[sticker: Praying for you]`, so
+  notifications, safeguarding copies and older copies of the app all show words
+  a person can read. Only a label the app knows is drawn as a sticker.
+- **Nothing calls another company.** No GIF or sticker service: the stickers
+  are drawn by the app, and a look is kept on the device under the person's id.
+- `tests/a-conversation-can-say-it-your-way.mjs` and
+  `tests/e2e/a-chat-says-it-your-way.js` hold it.
+
 ## 14 November 2026: the licence is MIT
 
 **Nothing to do** for a church running a copy. If you fork this, keep the

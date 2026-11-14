@@ -65,7 +65,7 @@ export function Conversation({
   body: string;
   setBody: (value: string) => void;
   /** Send `text`, as a reply to `replyTo` when there is one. Throws to keep the draft. */
-  send: (text: string, replyTo: string | null) => Promise<void>;
+  send: (text: string, replyTo: string | null, effect?: string | null) => Promise<void>;
   busy: boolean;
   /**
    * Change or take back your OWN message, through edit_message() and
@@ -77,7 +77,7 @@ export function Conversation({
   onAttach?: (file: File) => void;
   onRemoveFile?: (file: live.PairingFile) => void;
   attachError?: string;
-  /** React through react_to(): one per person per thing, from the six. */
+  /** React through react_to(): one per person per thing, from the list in lib/talk/reactions.ts. */
   onReact?: (target: ReactionTarget, emoji: string | null) => Promise<void>;
   /**
    * Whether this database has replies and voice (migration 20261001120000).
@@ -98,6 +98,7 @@ export function Conversation({
       deletedAt: m.deleted_at,
       readAt: m.read_at,
       replyTo: m.reply_to,
+      effect: m.effect,
     })),
     ...files.map((f): ChatEntry => ({
       kind: 'file',
@@ -137,6 +138,10 @@ export function Conversation({
         : undefined}
       replies={extras}
       voice={extras}
+      // The effect column arrives with every message once the database has it
+      // (migration 20261114120000); until then neither it nor the wider
+      // reactions are offered, because both would be refused.
+      expressive={extras && messages.some((m) => 'effect' in m)}
       attachError={attachError}
     />
   );

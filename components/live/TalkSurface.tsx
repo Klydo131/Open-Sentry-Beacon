@@ -138,12 +138,12 @@ export function TalkSurface({
   useKeepUp(KEEP_UP_REACTIONS, loadThread, extras);
 
   // Throws on failure, so the chat keeps the words and what they answered.
-  const send = async (text: string, replyTo: string | null) => {
+  const send = async (text: string, replyTo: string | null, effect?: string | null) => {
     if (!active || !text.trim() || busy) return;
     setBusy(true);
     setError('');
     try {
-      await live.sendMessage(active, text, replyTo);
+      await live.sendMessage(active, text, replyTo, effect);
       clearDraft(active);
       setBody('');
       await loadThread();

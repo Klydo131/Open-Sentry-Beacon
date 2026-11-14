@@ -7,7 +7,7 @@
 // (.celebrate-*), so nothing heavy is loaded for a moment of joy.
 
 import { useEffect, useRef, useState } from 'react';
-import { CELEBRATE_EVENT, nextKind, type CelebrationKind } from '@/lib/celebrate';
+import { CELEBRATE_EVENT, CELEBRATIONS, nextKind, type CelebrationKind } from '@/lib/celebrate';
 
 const PIECES = 18;
 const LASTS_MS = 2800;
@@ -36,9 +36,12 @@ export function Celebration() {
       const now = Date.now();
       if (now - at.current < QUIET_MS) return;
       at.current = now;
-      const kind = nextKind(last.current);
+      const detail = (event as CustomEvent<{ message?: string; kind?: string }>).detail;
+      // A chat effect names its kind; everything else takes the next in turn.
+      const asked = CELEBRATIONS.find((k) => k === detail?.kind);
+      const kind = asked ?? nextKind(last.current);
       last.current = kind;
-      const message = String((event as CustomEvent<{ message?: string }>).detail?.message ?? 'Well done!').slice(0, 80);
+      const message = String(detail?.message ?? 'Well done!').slice(0, 80);
       setBurst({ id: now, kind, message });
       window.clearTimeout(clear);
       clear = window.setTimeout(() => setBurst(null), LASTS_MS);
