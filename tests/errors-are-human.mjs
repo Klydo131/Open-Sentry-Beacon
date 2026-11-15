@@ -131,6 +131,8 @@ ok(/leaked/i.test(humanError(authErr('Password is known to be weak and easy to g
   'weak_password', { reasons: ['pwned'] }))), 'a leaked password is called that');
 ok(/too long/i.test(humanError(authErr('Password should be at most 72 characters.', 'weak_password'))),
   'a password over 72 characters is told it is too long');
+// The mail server refused the app (an SMTP password rejected): say it is the church's mail, not the account.
+ok(/mail settings need fixing/.test(humanError(authErr('Error sending recovery email', 'unexpected_failure'))), 'a mail server that refuses the app is named as the church\u2019s mail settings, not the account');
 ok(/mix of/i.test(humanError(authErr(
   'Password should contain at least one character of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789.',
   'weak_password', { reasons: ['characters'] }))), "a church's character rule is said in words");

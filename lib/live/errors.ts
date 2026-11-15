@@ -105,6 +105,12 @@ function authSays(cause: unknown, raw: string): string | null {
   if (/requires reauthentication/i.test(raw)) return AUTH_SAYS.reauthentication_needed;
   if (/auth session missing|session from session_id claim/i.test(raw)) return AUTH_SAYS.session_not_found;
   if (/(link|token) (is invalid or )?has expired|has expired or is invalid/i.test(raw)) return AUTH_SAYS.otp_expired;
+  // THE MAIL SERVER REFUSED THE APP (16 November 2026): "Error sending recovery
+  // email" when the project's SMTP password was rejected (535). Nothing is
+  // wrong with the person's account, and trying again will not help, so say so.
+  if (/error sending .*e-?mail/i.test(raw)) {
+    return 'The e-mail could not be sent: this church\u2019s mail settings need fixing. Nothing is wrong with your account. Please tell a Director or your administrator.';
+  }
   if (/email rate limit/i.test(raw)) return AUTH_SAYS.over_email_send_rate_limit;
   if (/rate limit/i.test(raw)) return AUTH_SAYS.over_request_rate_limit;
   if (/user is banned/i.test(raw)) return AUTH_SAYS.user_banned;
