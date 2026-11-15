@@ -224,8 +224,8 @@ const data = strip(read('lib/live/data.ts'));
      'deleting a file kept only on this device takes a second tap');
   ok(/linkOpen \? 'grid' : 'hidden xl:grid'/.test(page) && /aria-expanded=\{linkOpen\}/.test(page),
      'on a phone the link form waits behind a button; a computer shows it as before');
-  ok(/className="flex flex-col gap-4 xl:block/.test(page) && /className="contents xl:mt-5 xl:grid/.test(page)
-     && /order-1 p-4 xl:order-none/.test(page) && /order-3 xl:mt-5/.test(page) && /order-4 p-4 xl:order-none[^"]*" data-panel="music-moved"/.test(page),
+  ok(/className="flex flex-col gap-4 xl:block/.test(page) && /className=\{`contents \$\{empty \? '' : 'xl:mt-5'\} xl:grid/.test(page)
+     && /order-1 rounded-2xl \$\{empty \? 'xl:order-first' : 'xl:order-none'\}/.test(page) && /order-3 xl:mt-5/.test(page) && /order-4 p-4 xl:order-none[^"]*" data-panel="music-moved"/.test(page),
      'on a phone, adding comes first, then the files, then the note about Music; a computer keeps its order');
   ok(/max-xl:px-4 max-xl:text-base/.test(page), 'the buttons are a size smaller below 1280px only, so Upload and Add a link sit side by side');
   // The card's topic label was teal-700 in every look: 5.5:1 on Classic's
