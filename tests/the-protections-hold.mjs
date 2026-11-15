@@ -61,9 +61,12 @@ for (const f of ['app', 'components', 'lib'].flatMap(walk)) {
   if (/dangerouslySetInnerHTML/.test(stripComments(read(f)))) inlineUses.push(f);
 }
 // Each one writes a fixed script of the app's own, never anybody's words. The
-// third, since 9 November 2026, is the Trusted Types policy (lib/trusted-types.ts).
-ok(inlineUses.sort().join(',') === 'components/LookBeforePaint.tsx,components/SelfHeal.tsx,components/TrustedTypesPolicy.tsx',
-  `dangerouslySetInnerHTML only in the three known files, each a fixed script of the app's own (${inlineUses.join(', ') || 'none'})`);
+// third, since 9 November 2026, is the Trusted Types policy (lib/trusted-types.ts);
+// the fourth, since 15 November 2026, hands a password-reset link that landed on
+// the wrong page to /new-password (lib/reset-link-handover.ts, a constant that
+// reads only the address and writes nothing).
+ok(inlineUses.sort().join(',') === 'components/LookBeforePaint.tsx,components/ResetLinkHandover.tsx,components/SelfHeal.tsx,components/TrustedTypesPolicy.tsx',
+  `dangerouslySetInnerHTML only in the four known files, each a fixed script of the app's own (${inlineUses.join(', ') || 'none'})`);
 
 const url = read('lib/url.ts');
 ok(/if \(parsed\.protocol !== 'http:' && parsed\.protocol !== 'https:'\) return null;/.test(stripComments(url)) && /if \(parsed\.username \|\| parsed\.password\) return null;/.test(stripComments(url)),

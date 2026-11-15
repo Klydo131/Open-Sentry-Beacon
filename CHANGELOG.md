@@ -10,6 +10,20 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 15 November 2026 (late): a reset link finds its page
+
+**Nothing to run.** No database change. One setting to check on each church's
+Supabase project: Authentication, URL Configuration, Site URL is the live
+address and the Redirect URLs include `https://<address>/**`.
+
+- A password-reset link that landed on the home page (because the address was
+  not on Supabase's allowed list, so it fell back to the Site URL) left the
+  person on the sign-in screen. A small script in `<head>`
+  (`lib/reset-link-handover.ts`) now moves any recovery link to `/new-password`
+  untouched, before the sign-in client consumes it. Held by
+  `tests/a-reset-link-finds-its-page.mjs`.
+- A mail server that refuses the app now says so plainly (`lib/live/errors.ts`).
+
 ## 16 November 2026 (night): the appointment record
 
 **Run one migration on each live database**, after the three before it:

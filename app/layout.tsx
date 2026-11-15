@@ -36,6 +36,7 @@ import { TutorialExtras } from '@/components/TutorialExtras';
 import { PlayerProvider } from '@/lib/player';
 import { UiTheme } from '@/components/UiTheme';
 import { LookBeforePaint } from '@/components/LookBeforePaint';
+import { ResetLinkHandover } from '@/components/ResetLinkHandover';
 import { TrustedTypesPolicy } from '@/components/TrustedTypesPolicy';
 
 export const metadata: Metadata = {
@@ -119,6 +120,10 @@ export default function RootLayout({
             before any other script, so it is in place for all of them
             (lib/trusted-types.ts). */}
         <TrustedTypesPolicy />
+        {/* A password-reset link that landed on the wrong page goes on to
+            /new-password, before the sign-in client can consume it
+            (lib/reset-link-handover.ts). */}
+        <ResetLinkHandover />
         {/* This device's look, set before <body> exists, so before anything
             can be drawn (lib/look-before-paint.ts). */}
         <LookBeforePaint />
