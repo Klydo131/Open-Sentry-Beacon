@@ -35,7 +35,8 @@ export interface SaveResult {
  * right moment, which is the whole WebKit fix.
  */
 export async function saveFilesFromInput(
-  input: HTMLInputElement,
+  // An input, or anything shaped like one (a drop carries files, not an input).
+  input: { files: FileList | File[] | null; value?: string },
   note?: string,
 ): Promise<SaveResult> {
   // THE RESET HAPPENS IN THE `finally` AT THE END, NOT HERE. WebKit invalidates

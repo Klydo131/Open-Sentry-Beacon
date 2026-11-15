@@ -325,9 +325,9 @@ export default function LibraryPage() {
     );
   };
 
-  const onFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const saveFiles = async (source: { files: FileList | File[] | null; value?: string }) => {
     setBusy(true);
-    const result = await saveFilesFromInput(event.target, note);
+    const result = await saveFilesFromInput(source, note);
     setBusy(false);
     if (result.saved > 0) {
       setNote('');
@@ -335,6 +335,19 @@ export default function LibraryPage() {
     }
     const said = savedMessage(result);
     if (said) flash(said);
+  };
+  const onFiles = (event: React.ChangeEvent<HTMLInputElement>) => saveFiles(event.target);
+
+  // Drop files (many at once) or a link straight onto the card: no trip to the
+  // device's file picker.
+  const [dragging, setDragging] = useState(false);
+  const onDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setDragging(false);
+    const files = Array.from(event.dataTransfer.files ?? []);
+    if (files.length > 0) { void saveFiles({ files }); return; }
+    const dropped = (event.dataTransfer.getData('text/uri-list') || event.dataTransfer.getData('text/plain')).split('\n')[0]?.trim();
+    if (dropped && safeExternalUrl(dropped)) { setLinkUrl(dropped); setLinkOpen(true); }
   };
 
   const addLink = async () => {
@@ -428,6 +441,27 @@ export default function LibraryPage() {
   const [room, chooseRoom] = useSubroom(rooms, 'beacon:library-room', {
     'your-device-library': 'mine',
   });
+
+  // NOTHING ON THE DEVICE YET: START WHERE YOU ADD THINGS. Upload and the link
+  // form come first, not a shelf of the church's resources to wade past. Only
+  // on a first visit: an explicit ?room=, a #card or a folder somebody picked
+  // by hand is never overridden.
+  const empty = ready && items.length === 0;
+  const greeted = useRef(false);
+  useEffect(() => {
+    if (!ready || greeted.current) return;
+    greeted.current = true;
+    if (items.length > 0) return;
+    let chosen = '';
+    try { chosen = localStorage.getItem('beacon:library-room') ?? ''; } catch {}
+    const asked = typeof window !== 'undefined' && (window.location.search.includes('room=') || window.location.hash.length > 1);
+    if (!chosen && !asked) {
+      chooseRoom('mine');
+      setLinkOpen(true);
+      // Past the banner, so Upload is on screen even on a short laptop.
+      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('[data-library-drop]')?.scrollIntoView({ block: 'start' })));
+    }
+  }, [ready, items.length, chooseRoom]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-navy">
@@ -625,7 +659,7 @@ export default function LibraryPage() {
         </section>}
 
         {room === 'mine' && <section id="your-device-library" aria-labelledby="your-device-library-heading" className="flex flex-col gap-4 xl:block xl:border-t xl:border-navy/10 xl:pt-8">
-          <div className="hidden max-w-3xl xl:block">
+          <div className={`hidden max-w-3xl ${empty ? '' : 'xl:block'}`}>
             <p className="text-sm font-bold uppercase tracking-[0.15em] text-[color:var(--music-accent)]">Your device library</p>
             <h2 id="your-device-library-heading" className="mt-1 text-2xl font-extrabold text-navy">Keep your own media close.</h2>
             <p className="mt-2 text-sm leading-relaxed text-gray-600">Files and links below are stored only on this device. {APP_SHORT_NAME} does not upload them to a server.</p>
@@ -635,7 +669,7 @@ export default function LibraryPage() {
               tools left the library: the full player, both kinds of
               playlist and the calming sounds. The files did not move, and each
               one here keeps its own Play button for a quick listen. */}
-          <div className="contents xl:mt-5 xl:grid xl:grid-cols-[1.1fr_0.9fr] xl:gap-5">
+          <div className={`contents ${empty ? '' : 'xl:mt-5'} xl:grid xl:grid-cols-[1.1fr_0.9fr] xl:gap-5`}>
             <Card className="order-4 p-4 xl:order-none xl:p-5" data-panel="music-moved">
               <h3 className="flex items-center gap-2 text-base font-bold text-navy xl:text-xl"><MusicGlyph size={22} /> Music has its own room</h3>
               <p className="mt-1 text-sm text-gray-600 xl:hidden">The player, playlists and calming sounds are in Music now.</p>
@@ -651,12 +685,19 @@ export default function LibraryPage() {
               </Link>
             </Card>
 
-            <Card className="order-1 p-4 xl:order-none xl:p-5">
+            <div
+              className={`order-1 rounded-2xl ${empty ? 'xl:order-first' : 'xl:order-none'} ${dragging ? 'ring-2 ring-[color:var(--music-accent)]' : ''}`}
+              data-library-drop
+              onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+            >
+            <Card className="p-4 xl:p-5">
               <h3 className="text-base font-bold text-navy xl:text-xl">Add to this device</h3>
               <p className="mt-1 text-sm text-gray-500 xl:hidden" data-device-note>
                 A book, video, music, a picture or a link. Kept only on this device; {APP_SHORT_NAME} never uploads it.
               </p>
-              <p className="mt-1 hidden text-sm text-gray-500 xl:block">Upload a book, video, music, or image. You can also add a safe https:// link.</p>
+              <p className="mt-1 hidden text-sm text-gray-500 xl:block">Upload books, videos, music or images, as many as you like, or drop them here. You can also add a safe https:// link.</p>
               <input ref={fileRef} type="file" multiple onChange={onFiles} className="hidden" />
               {/* On a phone the two do not fit side by side, so each takes the
                   full width rather than stacking at two different widths. */}
@@ -695,6 +736,7 @@ export default function LibraryPage() {
                 <div><Button variant="ghost" onClick={addLink}>➕ Add link</Button></div>
               </div>
             </Card>
+            </div>
           </div>
 
           {toast && <p role="status" className="order-2 rounded-xl bg-navy px-4 py-3 text-center font-semibold text-white xl:mt-4">{toast}</p>}

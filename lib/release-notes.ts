@@ -18,6 +18,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-15-library-opens-on-adding',
+    date: '2026-11-15',
+    title: 'My Files starts where you add things',
+    items: [
+      'With nothing on your device yet, My Files opens straight on Upload files and the link box. Choose as many files as you like, or drop them (or a link) right onto the card.',
+    ],
+  },
+  {
     id: '2026-11-14-read-a-pdf',
     date: '2026-11-14',
     title: 'Read a PDF in My Files',

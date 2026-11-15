@@ -10,6 +10,20 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 15 November 2026: an empty My Files starts where things are added
+
+**Nothing to do** for a church running a copy.
+
+- With nothing kept on the device, My Files opens on the device folder with
+  Upload files and the link form showing, and scrolls Upload into view. Only
+  on a first visit: a `?room=`, a `#card` or a folder somebody chose is never
+  overridden.
+- Files (many at once) or a link can be dropped onto the Add card.
+  `saveFilesFromInput` now takes anything shaped like an input.
+- `tests/e2e/an-empty-library-opens-on-upload.js`, phone and desktop.
+
+---
+
 ## 14 November 2026 (later still): a PDF on the device can be read
 
 **Nothing to do** for a church running a copy.
