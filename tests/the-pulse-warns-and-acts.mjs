@@ -117,9 +117,7 @@ ok(!run({ ...base, guidesSigned: ['secret-g1'] }).w.some((x) => x.key === 'commi
 ok(!run(base).w.some((x) => x.key === 'commitments'), 'a copy that cannot tell (no table yet) never cries wolf');
 let gc;
 try { gc = await import(pathToFileURL(path.join(root, 'lib/guide-commitments.ts')).href); } catch { gc = null; }
-ok(gc && gc.sameName('  maria   SANTOS ', 'Maria Santos') && !gc.sameName('Maria', 'Maria Santos') && !gc.sameName('', ''), 'a signature must be the person\'s own full name, ignoring case and spaces');
-ok(gc && gc.commitmentsCurrent(ago(100), NOW) && !gc.commitmentsCurrent(ago(400), NOW) && !gc.commitmentsCurrent(null, NOW), 'a signature lasts a year');
-ok(gc && gc.COMMITMENTS.length === 6 && /^[a-z0-9-]+$/.test(gc.COMMITMENTS_VERSION), 'six commitments, under a version the database accepts');
+ok(gc && gc.COMMITMENTS.length === 6 && gc.COMMITMENTS.every((c) => c.title && c.detail), 'six commitments, each with a title and what it means');
 
 console.log(bad ? `\n${bad} problem(s).` : '\nThe pulse warns and acts.');
 process.exit(bad ? 1 : 0);

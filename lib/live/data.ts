@@ -3586,36 +3586,8 @@ export async function myStudyProgress(): Promise<StudyProgress | null> {
   return row ?? null;
 }
 
-// --- Guide commitments (20261116130000) ------------------------------------
-
-export interface GuideCommitment { user_id: string; version: string; signed_at: string }
-
-/** The caller's own signature for this version, or null. */
-export async function myCommitments(version: string): Promise<string | null> {
-  const me_id = await uid();
-  const { data, error } = await db().from('guide_commitments')
-    .select('signed_at').eq('user_id', me_id).eq('version', version).maybeSingle();
-  if (error) {
-    // A database from before the update has no table: nothing is signed yet.
-    if (isMissingFromDatabase(error)) return null;
-    throw new Error(error.message);
-  }
-  return (data?.signed_at as string | undefined) ?? null;
-}
-
-export async function signCommitments(version: string, name: string): Promise<string> {
-  const { data, error } = await db().rpc('sign_guide_commitments', { p_version: version, p_name: name });
-  if (error) throw new Error(error.message);
-  return data as string;
-}
-
-/** Every signature in the church for this version: leaders only (the policy says so). */
-export async function churchCommitments(version: string): Promise<GuideCommitment[]> {
-  const { data, error } = await db().from('guide_commitments')
-    .select('user_id, version, signed_at').eq('version', version);
-  if (error) {
-    if (isMissingFromDatabase(error)) return [];
-    throw new Error(error.message);
-  }
-  return (data ?? []) as GuideCommitment[];
-}
+// --- Guide commitments ------------------------------------------------------
+// Since 16 November 2026 they are agreed in the invitation e-mail
+// (supabase/functions/invite/email.ts) and read again in Settings; the app no
+// longer asks a Guide to sign. The table and sign_guide_commitments stay on the
+// database (20261116130000), unused by the app, for a church that wants them.

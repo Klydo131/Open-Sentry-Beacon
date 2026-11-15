@@ -29,7 +29,7 @@ const js = ts.transpileModule(readFileSync(SRC, 'utf8'), {
 
 const mod = { exports: {} };
 new Function('module', 'exports', js)(mod, mod.exports);
-const { inviteHtml, inviteText, subjectFor, roleWord } = mod.exports;
+const { inviteHtml, inviteText, subjectFor, roleWord, GUIDE_COMMITMENTS } = mod.exports;
 
 // All four. A role the composer does not cover renders as undefined and
 // sends a blank message, which is exactly the failure this file exists for.
@@ -336,6 +336,29 @@ for (const role of ROLES) {
      'the send hands the name to the HTML half');
   ok(/inviteText\(asRole, churchName, joinUrl, site, email, tempPassword, fullName\)/.test(fn),
      'and to the plain-text half');
+}
+
+// ---------------------------------------------------------------------------
+// BEFORE YOU JOIN (16 November 2026): the Terms, the Privacy Notice and how to
+// decline are in every invitation, and a Guide's reads their six commitments,
+// the same words as lib/guide-commitments.ts.
+// ---------------------------------------------------------------------------
+{
+  const appSrc = readFileSync('lib/guide-commitments.ts', 'utf8');
+  const appLines = [...appSrc.matchAll(/\{ title: '((?:[^'\\]|\\.)*)', detail: '((?:[^'\\]|\\.)*)' \}/g)].map((m) => m[1] + ' ' + m[2]);
+  const mailLines = (GUIDE_COMMITMENTS ?? []).map((c) => c.title + ' ' + c.detail);
+  ok(appLines.length === 6 && JSON.stringify(appLines) === JSON.stringify(mailLines),
+     `the e-mail carries the same six Guide commitments as the app (${mailLines.length} of ${appLines.length})`);
+  for (const role of ['ds', 'dm', 'admin', 'executive']) {
+    const html = inviteHtml(role, CHURCH, URL_, APP_URL, SIGN_IN_EMAIL, TEMP_PASSWORD, NAME);
+    const text = inviteText(role, CHURCH, URL_, APP_URL, SIGN_IN_EMAIL, TEMP_PASSWORD, NAME);
+    ok(html.includes(`${APP_URL}/terms`) && html.includes(`${APP_URL}/privacy`) && text.includes(`${APP_URL}/terms`),
+       `${role}: the invitation links the Terms and the Privacy Notice`);
+    ok(/Decline the invitation/.test(html) && /Decline the invitation/.test(text.replace(/\s+/g, ' ')), `${role}: and says how to decline`);
+    const guide = role === 'dm';
+    ok(html.includes('Never alone with a young person.') === guide && text.includes('Never alone with a young person.') === guide,
+       `${role}: ${guide ? 'a Guide reads the commitments' : 'only a Guide is given the Guide commitments'}`);
+  }
 }
 
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);

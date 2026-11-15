@@ -131,6 +131,40 @@ export function greetingName(fullName: string): string {
     : first;
 }
 
+
+// ---------------------------------------------------------------------------
+// THE TERMS, THE GUIDE COMMITMENTS AND THE WAY TO SAY NO, IN THE E-MAIL
+// (16 November 2026). A newcomer reads what they are agreeing to before they
+// ever sign in, and can decline from the same link; the app no longer stops a
+// Guide on their desk to sign. The six commitments are a copy of
+// lib/guide-commitments.ts (this function cannot import from the app), and
+// tests/invite-emails.mjs fails if the two differ.
+// ---------------------------------------------------------------------------
+export const GUIDE_COMMITMENTS: readonly { title: string; detail: string }[] = [
+  { title: 'Every conversation stays in this app.', detail: 'I never move an Explorer to a private chat, phone call or social media without their Director knowing.' },
+  { title: 'Never alone with a young person.', detail: 'With anyone under 18, I never meet in private, and a parent or guardian knows we are studying together.' },
+  { title: 'Harm is reported the same day.', detail: 'If I see any sign of abuse, harm or danger, I tell a Director that day, and I never promise to keep that kind of secret.' },
+  { title: 'What is shared with me stays private.', detail: 'I never post an Explorer’s name, photo or story without their permission.' },
+  { title: 'No pressure, no favours, no romance.', detail: 'I do not give or take money or gifts, I keep to the role of a Guide, and I stop when someone says stop.' },
+  { title: 'I follow the church’s safeguarding policy.', detail: 'I complete its training when asked, and I accept that breaking these commitments ends my work as a Guide.' },
+];
+
+/** What joining means, and how to say no. Guides also read their commitments. */
+export function agreementLines(role: InviteRole, appUrl: string): {
+  heading: string; intro: string; commitments: readonly { title: string; detail: string }[]; terms: string; decline: string;
+} {
+  const guide = role === 'dm';
+  return {
+    heading: 'Before you join',
+    intro: guide
+      ? 'As a Guide you walk with people who may be young or vulnerable. By accepting this invitation you agree to these commitments:'
+      : 'By accepting this invitation you agree to the Terms and the Privacy Notice.',
+    commitments: guide ? GUIDE_COMMITMENTS : [],
+    terms: `Terms: ${appUrl}/terms · Privacy Notice: ${appUrl}/privacy. You can read both again in the app at any time.`,
+    decline: 'Not for you? Open the sign-in link above and choose Decline the invitation, or simply ignore this e-mail. If you decline, your church is told.',
+  };
+}
+
 export function inviteHtml(
   role: InviteRole,
   churchName: string,
@@ -150,6 +184,7 @@ export function inviteHtml(
   const waitLine = WAITS[role] ?? '';
   const hello = greetingName(fullName);
   const oversight = oversightLines(churchName, appUrl);
+  const agree = agreementLines(role, appUrl);
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EEF1F6;margin:0;padding:0;width:100%;">
   <tr>
     <td align="center" style="padding:28px 12px;">
@@ -204,6 +239,16 @@ export function inviteHtml(
             ${esc(afterLine)} To add Hope&nbsp;Beacon to your Home Screen, open <strong>Settings</strong> inside the app.
           </p>
 
+        </td></tr>
+      </table>
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;" data-agreement>
+        <tr><td style="padding:18px 28px 0 28px;font-family:Helvetica,Arial,sans-serif;">
+          <p style="margin:0 0 8px 0;font-size:13px;font-weight:bold;color:#1E2A4A;letter-spacing:0.6px;text-transform:uppercase;">${esc(agree.heading)}</p>
+          <p style="margin:0 0 8px 0;font-size:14px;line-height:1.55;color:#3D4552;">${esc(agree.intro)}</p>
+          ${agree.commitments.map((c, i) => `<p style="margin:0 0 8px 0;font-size:14px;line-height:1.55;color:#3D4552;"><strong>${i + 1}. ${esc(c.title)}</strong> ${esc(c.detail)}</p>`).join('\n          ')}
+          <p style="margin:0 0 8px 0;font-size:14px;line-height:1.55;color:#3D4552;">${esc(agree.terms)}</p>
+          <p style="margin:0 0 8px 0;font-size:14px;line-height:1.55;color:#3D4552;">${esc(agree.decline)}</p>
         </td></tr>
       </table>
 
@@ -281,6 +326,14 @@ export function inviteText(
     wrap(AFTER[role]),
     '',
     wrap('To add Hope Beacon to your Home Screen, open Settings inside the app.'),
+    '',
+    agreementLines(role, appUrl).heading.toUpperCase(),
+    wrap(agreementLines(role, appUrl).intro),
+    '',
+    ...agreementLines(role, appUrl).commitments.flatMap((c, i) => [wrap(`${i + 1}. ${c.title} ${c.detail}`), '']),
+    wrap(agreementLines(role, appUrl).terms),
+    '',
+    wrap(agreementLines(role, appUrl).decline),
     '',
     oversightLines(churchName, appUrl).heading.toUpperCase(),
     ...oversightLines(churchName, appUrl).lines.flatMap((line) => [wrap(line), '']),

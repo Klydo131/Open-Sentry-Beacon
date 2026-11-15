@@ -609,7 +609,7 @@ function Body() {
           <div id="install">
             <InstallCard />
           </div>
-          <SourceCard />
+          <SourceCard guide={currentUser?.role === 'dm'} />
           <VersionCard />
           <SentFeedbackCard />
         </>

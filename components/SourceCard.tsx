@@ -13,8 +13,28 @@
 import Link from 'next/link';
 import { APP_SHORT_NAME, SOURCE_URL } from '@/lib/brand';
 import { Card } from '@/components/ui';
+import { COMMITMENTS } from '@/lib/guide-commitments';
 
-export function SourceCard() {
+/**
+ * A Guide's commitments, to read again (16 November 2026). They are agreed in
+ * the invitation e-mail, so the app no longer stops a Guide to sign them; this
+ * is where they can be checked after signing in.
+ */
+function GuideCommitmentsToRead() {
+  return (
+    <details className="mt-4 rounded-xl bg-slate-50 p-3 ring-1 ring-navy/5" data-guide-commitments-read>
+      <summary className="cursor-pointer text-sm font-bold text-navy">Your Guide commitments</summary>
+      <p className="mt-2 text-sm text-gray-600">What you agreed to when you accepted your invitation.</p>
+      <ol className="mt-2 space-y-1.5 text-sm text-gray-700">
+        {COMMITMENTS.map((c, i) => (
+          <li key={c.title}><strong className="text-navy">{i + 1}. {c.title}</strong> {c.detail}</li>
+        ))}
+      </ol>
+    </details>
+  );
+}
+
+export function SourceCard({ guide = false }: { guide?: boolean }) {
   return (
     <Card className="p-5">
       <h2 className="text-xl font-bold text-navy">📖 This app is free software</h2>
@@ -85,6 +105,7 @@ export function SourceCard() {
           Code from other projects ↗
         </a>
       </div>
+      {guide && <GuideCommitmentsToRead />}
     </Card>
   );
 }

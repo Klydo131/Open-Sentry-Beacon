@@ -49,10 +49,10 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     id: '2026-11-16-guide-commitments',
     date: '2026-11-16',
-    title: 'Guide commitments',
+    title: 'Guide commitments, in the invitation',
     items: [
-      'Before walking with anyone, a Guide reads six safeguarding commitments on their desk, ticks each one and signs with their full name. It is renewed every year.',
-      'Directors and Executive Directors see who has signed, and Alerts warn while a Guide has not.',
+      'A Guide\u2019s invitation e-mail lists six safeguarding commitments. Accepting the invitation is agreeing to them, and anyone invited can decline from the same e-mail.',
+      'Every invitation links the Terms and the Privacy Notice. A Guide can read their commitments again in Settings.',
     ],
   },
   {

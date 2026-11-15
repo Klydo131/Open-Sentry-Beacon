@@ -2,8 +2,6 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { GuideCommitments } from '@/components/GuideCommitments';
-import { demoSign, demoSignedAt } from '@/lib/demo/commitments';
 import { useDemo } from '@/lib/demo/store';
 import { AppShell } from '@/components/AppShell';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
@@ -41,9 +39,6 @@ function Dashboard() {
   const { db, currentUser, kickMember } = useDemo();
   const me = currentUser!;
   const [filter, setFilter] = useState<Filter>('all');
-  // The sample church keeps a Guide's signature in this browser (lib/demo/commitments.ts).
-  const [signedAt, setSignedAt] = useState<string | null>(null);
-  useEffect(() => { setSignedAt(demoSignedAt(me.id)); }, [me.id]);
 
   const today = todayKey();
 
@@ -150,9 +145,6 @@ function Dashboard() {
           {rows.length === 1 ? 'person' : 'people'}.
         </p>
       </div>
-
-      <GuideCommitments fullName={me.full_name} signedAt={signedAt}
-        onSign={async () => setSignedAt(demoSign(me.id))} />
 
       <RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} />
 

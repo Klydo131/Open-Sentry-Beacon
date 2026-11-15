@@ -132,7 +132,7 @@ const ALWAYS_ON = {
   // The Guide commitments (16 November 2026) are a safeguarding promise made
   // before walking with anyone. Inside one folder they could be missed by a
   // Guide who never opens it; once signed they shrink to a single line.
-  'components/live/GuidePages.tsx': ['LiveAnnouncements', 'LiveCommitments'],
+  'components/live/GuidePages.tsx': ['LiveAnnouncements'],
 };
 
 for (const [file, fn, label] of ROOMS_WITH_SUBROOMS) {

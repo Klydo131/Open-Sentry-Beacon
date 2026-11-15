@@ -26,8 +26,6 @@ import { useFaces, faceOf } from '@/components/live/Face';
 import { LiveAnnouncements } from '@/components/LiveAnnouncements';
 import { RoomTabs, useRoom, type Room } from '@/components/Rooms';
 import { MemberProfile } from '@/components/live/MemberProfile';
-import { GuideCommitments } from '@/components/GuideCommitments';
-import { COMMITMENTS_VERSION } from '@/lib/guide-commitments';
 
 // SPLIT OUT OF components/LiveCorePages.tsx, which had grown to three thousand
 // lines holding nineteen components: the signed-out door, the Director's whole
@@ -46,23 +44,6 @@ function greeting(): string {
   return 'Good evening';
 }
 
-
-/** The Guide's commitments, read and signed against the live table. */
-function LiveCommitments({ fullName }: { fullName: string }) {
-  const [signedAt, setSignedAt] = useState<string | null | undefined>(undefined);
-  useEffect(() => {
-    let alive = true;
-    live.myCommitments(COMMITMENTS_VERSION).then((at) => { if (alive) setSignedAt(at); }).catch(() => { if (alive) setSignedAt(null); });
-    return () => { alive = false; };
-  }, []);
-  if (signedAt === undefined) return null;
-  return (
-    <div className="mt-4">
-      <GuideCommitments fullName={fullName} signedAt={signedAt}
-        onSign={async (name) => setSignedAt(await live.signCommitments(COMMITMENTS_VERSION, name))} />
-    </div>
-  );
-}
 
 export function LiveGuidePage() {
   const { profile } = useLiveSession();
@@ -158,7 +139,6 @@ export function LiveGuidePage() {
               ? 'Nobody is paired with you yet. Your Director arranges that.'
               : 'Loading the people you walk with.'}
       </p>
-      {profile?.full_name && <LiveCommitments fullName={profile.full_name} />}
       {error && <div className="mt-5"><Notice tone="error">{error}</Notice></div>}
 
       <div className="mt-5"><RoomTabs rooms={rooms} room={room} onChoose={chooseRoom} /></div>

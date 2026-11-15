@@ -261,7 +261,7 @@ export function LiveSettingsPage() {
             <InstallCard />
           </div>
           <NoSignalCard />
-          <SourceCard />
+          <SourceCard guide={profile?.role === 'dm'} />
         </>
       )}
 

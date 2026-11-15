@@ -1,11 +1,13 @@
 // The Guide commitments: what a Guide promises before walking with anyone.
 //
 // Short on purpose, and firm on purpose. Each line is one thing a Guide does or
-// never does, in words a volunteer cannot misread. Changing a line changes the
-// VERSION, so every Guide signs the new words; a signature always belongs to
-// what was shown (supabase/migrations/20261116130000).
+// never does, in words a volunteer cannot misread.
+//
+// SINCE 16 NOVEMBER 2026 THEY ARE AGREED IN THE INVITATION E-MAIL, which
+// carries a copy (supabase/functions/invite/email.ts, held equal by
+// tests/invite-emails.mjs), and read again in Settings (components/SourceCard.tsx).
+// The app no longer stops a Guide on their desk to sign them.
 
-export const COMMITMENTS_VERSION = 'guide-2026-11';
 
 export const COMMITMENTS: readonly { title: string; detail: string }[] = [
   { title: 'Every conversation stays in this app.', detail: 'I never move an Explorer to a private chat, phone call or social media without their Director knowing.' },
@@ -15,18 +17,3 @@ export const COMMITMENTS: readonly { title: string; detail: string }[] = [
   { title: 'No pressure, no favours, no romance.', detail: 'I do not give or take money or gifts, I keep to the role of a Guide, and I stop when someone says stop.' },
   { title: 'I follow the church’s safeguarding policy.', detail: 'I complete its training when asked, and I accept that breaking these commitments ends my work as a Guide.' },
 ];
-
-/** Signatures last a year. */
-export const COMMITMENTS_TERM_DAYS = 365;
-
-export function commitmentsCurrent(signedAt: string | null | undefined, now = Date.now()): boolean {
-  if (!signedAt) return false;
-  const t = new Date(signedAt).getTime();
-  return Number.isFinite(t) && now - t < COMMITMENTS_TERM_DAYS * 86_400_000;
-}
-
-/** The name must be the person's own, compared without case or extra spaces. */
-export function sameName(typed: string, own: string): boolean {
-  const tidy = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
-  return tidy(typed).length >= 2 && tidy(typed) === tidy(own);
-}
