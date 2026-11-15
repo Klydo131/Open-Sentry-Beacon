@@ -10,6 +10,24 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 15 November 2026 (later): the PDF reader can be read like a book
+
+**Nothing to do** for a church running a copy.
+
+- `components/PdfReader.tsx` has a **Book** option beside the scrolling view:
+  one page at a time, or a two-page spread from 900px wide with the cover
+  alone, like a printed book. Next and Previous, the arrow and PageUp/PageDown
+  keys, and a swipe turn the page; the turn is a short fade and slide that
+  stops under reduced motion. The choice is kept on the device
+  (`hb-pdf-book`). Scrolling stays the default.
+- Only one or two pages are drawn at a time in Book, so it is lighter on an
+  old phone than scrolling.
+- EPUB is not built yet; the same turning controls are where it would start.
+- `tests/e2e/a-pdf-opens-in-the-library.js` walks the book view at phone, pad
+  and desktop widths.
+
+---
+
 ## 15 November 2026: an empty My Files starts where things are added
 
 **Nothing to do** for a church running a copy.

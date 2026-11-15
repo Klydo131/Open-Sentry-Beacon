@@ -83,6 +83,44 @@ async function walk(browser, viewport) {
   await page.waitForTimeout(400);
   ok(/3 of 3/.test(await reader.innerText()), `${tag}: and keeps count as the reader scrolls`);
 
+  // READ LIKE A BOOK: an option, one page (two on a wide screen) at a time.
+  await page.locator('[data-pdf-reader] .overflow-auto').evaluate((el) => el.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  const wide = viewport.width >= 900;
+  await reader.locator('[data-book-toggle]').click();
+  await page.locator('[data-book]').waitFor({ timeout: 5000 });
+  const shownPages = () => page.locator('[data-book] [data-pdf-page]').evaluateAll((els) => els.map((e) => e.dataset.pdfPage));
+  ok((await shownPages()).join() === '1', `${tag}: Book opens on the cover alone`);
+  const bar = reader.locator('[data-book-bar]');
+  await bar.getByRole('button', { name: 'Next' }).click();
+  await page.waitForTimeout(300);
+  ok((await shownPages()).join() === (wide ? '2,3' : '2'), `${tag}: Next turns to ${wide ? 'a two-page spread' : 'the next page'} (${(await shownPages()).join()})`);
+  ok(/of 3/.test(await bar.innerText()), `${tag}: the book says where you are`);
+  await page.waitForTimeout(1200);
+  const bookInk = await page.locator('[data-book] [data-pdf-page] canvas').first().evaluate((c) => {
+    if (!c.width || !c.height) return 0;
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let dark = 0;
+    for (let i = 0; i < d.length; i += 16) if (d[i + 3] > 0 && (d[i] + d[i + 1] + d[i + 2] < 300 || d[i + 2] > 200)) dark += 1;
+    return dark;
+  });
+  ok(bookInk > 200, `${tag}: the turned page is drawn (${bookInk} samples)`);
+  const barBox = await bar.boundingBox();
+  ok(!!barBox && barBox.y + barBox.height <= viewport.height + 1, `${tag}: the page buttons stay on screen`);
+  if (!wide) {
+    await bar.getByRole('button', { name: 'Next' }).click();
+    await page.waitForTimeout(300);
+    ok((await shownPages()).join() === '3' && await bar.getByRole('button', { name: 'Next' }).isDisabled(), `${tag}: the last page has no Next`);
+  }
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(300);
+  ok((await shownPages()).join() === (wide ? '1' : '2'), `${tag}: the left arrow key turns back`);
+  ok(await page.evaluate(() => localStorage.getItem('hb-pdf-book')) === '1', `${tag}: Book is remembered for next time`);
+  await reader.locator('[data-book-toggle]').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('[data-pdf-page]').count()) === 3 && (await page.locator('[data-book]').count()) === 0, `${tag}: Scroll brings every page back`);
+  await page.evaluate(() => localStorage.setItem('hb-pdf-book', '0'));
+
   await page.locator('[data-pdf-page="1"]').scrollIntoViewIfNeeded();
   const before = await page.locator('[data-pdf-page="1"]').evaluate((el) => el.getBoundingClientRect().width);
   await reader.getByRole('button', { name: 'Larger' }).click();

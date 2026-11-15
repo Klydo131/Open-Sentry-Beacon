@@ -18,6 +18,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-15-read-a-pdf-like-a-book',
+    date: '2026-11-15',
+    title: 'Read a PDF like a book',
+    items: [
+      'In the PDF reader, tap Book to read one page at a time, or two side by side on a wide screen. Turn with Next and Previous, the arrow keys, or a swipe. Tap Scroll to go back. The reader remembers your choice.',
+    ],
+  },
+  {
     id: '2026-11-15-library-opens-on-adding',
     date: '2026-11-15',
     title: 'My Files starts where you add things',
