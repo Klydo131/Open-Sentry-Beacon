@@ -209,6 +209,34 @@ export const TEMPLATES: StudyTemplate[] = [
     ],
   },
   {
+    // PEN AND PAPER, WITH THE APP BESIDE IT (16 November 2026). Hands-on study
+    // for somebody who studies best with a printed Bible and a notebook: the
+    // page says what to do on paper, then where to bring it back -- a photo of
+    // the notebook page, or the main thoughts typed.
+    id: 'paper-study',
+    group: 'Church',
+    title: 'Study on paper',
+    about: 'Work in your Bible and notebook, then add a photo of your notes here.',
+    lines: [
+      { kind: 'text', words: 'Passage: ' },
+      { kind: 'text', words: 'Date: ' },
+      { kind: 'h2', words: 'Before you start' },
+      { kind: 'todo', words: 'My Bible open at the passage' },
+      { kind: 'todo', words: 'A notebook and a pen' },
+      { kind: 'todo', words: 'My phone on quiet' },
+      { kind: 'h2', words: 'On paper' },
+      { kind: 'number', words: 'Copy the key verse by hand.' },
+      { kind: 'number', words: 'Underline the words that stand out to you.' },
+      { kind: 'number', words: 'Draw what happens: a picture, a map or a timeline.' },
+      { kind: 'number', words: 'Write one question you still have.' },
+      { kind: 'h2', words: 'Bring it here' },
+      { kind: 'text', words: 'Add a photo of your notebook page (More, then Picture), or type the main thoughts below.' },
+      { kind: 'text', words: '' },
+      { kind: 'h2', words: 'What I will do this week' },
+      { kind: 'todo', words: '' },
+    ],
+  },
+  {
     id: 'prayer-list',
     group: 'Church',
     title: 'Prayer list',

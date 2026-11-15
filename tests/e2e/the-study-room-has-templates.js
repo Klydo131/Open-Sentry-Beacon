@@ -3,7 +3,7 @@
 //
 // 28 October 2026. Simple and Advanced became the same room., and Advanced was given office
 // tools for teaching and for office and staff work. The
-// owner chose ten pages in four groups (lib/study/templates.ts), shown by
+// owner chose ten pages in four groups, and an eleventh, Study on paper, came on 16 November 2026 (lib/study/templates.ts), shown by
 // components/study/StudyTemplates.tsx.
 //
 // Walked as a person would, on a computer and on a phone: Templates is not in
@@ -35,6 +35,7 @@ const EXPECTED = {
   'prayer-list': { title: 'Prayer list', heading: 'Thanksgiving', tables: 1 },
   'volunteer-schedule': { title: 'Volunteer schedule', heading: 'Set up and clean up', tables: 1 },
   'event-plan': { title: 'Event plan', heading: 'Budget', tables: 2 },
+  'paper-study': { title: 'Study on paper', heading: 'Bring it here', tables: 0 },
 };
 
 async function openTemplates(page) {
@@ -60,8 +61,8 @@ async function walk(browser, label, options, every) {
   ok(JSON.stringify(groups) === JSON.stringify(['Education', 'Office', 'Church', 'Staff']),
      `${label}: Templates opens on four groups (${groups.join(', ')})`);
   const cards = await page.locator('[data-template]').evaluateAll((els) => els.map((el) => el.getAttribute('data-template')));
-  ok(cards.length === 10 && Object.keys(EXPECTED).every((id) => cards.includes(id)),
-     `${label}: and ten cards, one for each template (${cards.length})`);
+  ok(cards.length === 11 && Object.keys(EXPECTED).every((id) => cards.includes(id)),
+     `${label}: and eleven cards, one for each template (${cards.length})`);
   // A CARD ON A PHONE IS ONE COLUMN, and nothing runs off the side.
   const widest = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   ok(widest <= 0, `${label}: the gallery does not push the page sideways (${widest}px over)`);

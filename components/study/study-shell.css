@@ -496,7 +496,7 @@
  * A STUDY, NOT A LIST (20 October 2026).
  *
  * ASKED FOR. So the room is furnished:
- * a desk under a reading lamp, a bookcase for the places, the page you are on
+ * (the desk, lamp and bookcase went on 16 November 2026; see below), the page you are on
  * as a sheet of paper with a margin rule and a ribbon, and the titles in the
  * system's book face (New York on an iPhone or a Mac, the platform serif
  * elsewhere; nothing downloaded).
@@ -509,45 +509,89 @@
 
 .sr {
   --sr-serif: ui-serif, 'New York', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
-  --sr-wood: rgba(120, 78, 38, 0.05);
-  --sr-lamp: rgba(255, 214, 128, 0.22);
+  --sr-glow: rgba(232, 184, 75, 0.14);
   --sr-margin-rule: rgba(176, 72, 64, 0.32);
+  /* A FINISHED ROOM, NOT A DRAWN ONE (16 November 2026). The wood grain, the
+     oak bookcase and the drawn lamp read as a mock-up; what is left is one
+     warm light from the top of the room over the look's own background, so
+     every look (dark ones included) keeps its colours. */
   background-image:
-    /* The lamp's pool of light on the desk. */
-    radial-gradient(ellipse 70% 55% at 88% 0%, var(--sr-lamp), transparent 70%),
-    /* The grain of the desk: two runs at different spacings and angles, so it
-       reads as wood and not as stripes, and so faint it is felt more than seen. */
-    repeating-linear-gradient(91deg, transparent 0 31px, var(--sr-wood) 31px 32px, transparent 32px 83px),
-    repeating-linear-gradient(88.5deg, transparent 0 47px, var(--sr-wood) 47px 48.5px, transparent 48.5px 127px),
-    /* And the edges of the room a shade darker than its middle. */
-    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 60%, rgba(90, 60, 25, 0.06) 100%);
+    radial-gradient(ellipse 80% 50% at 70% -10%, var(--sr-glow), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 0% 0%, var(--sr-tint-soft), transparent 70%);
   background-attachment: fixed;
 }
 
-/* The bookcase: a light oak case for the places, so the dark ink of Classic
-   reads on it as it did on the plain panel. */
+/* The places: a quiet panel of the room's own surface, not a piece of furniture. */
 .sr-side {
-  background:
-    repeating-linear-gradient(180deg, transparent 0 118px, rgba(120, 78, 38, 0.1) 118px 120px),
-    linear-gradient(180deg, #f0e7d8, #e8dcc7);
-  box-shadow: inset -6px 0 12px -10px rgba(80, 50, 20, 0.35);
+  background: color-mix(in srgb, var(--sr-surface) 72%, transparent);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  backdrop-filter: saturate(1.4) blur(14px);
 }
+.sr-side-item { border-radius: 12px; }
 
 .sr-furniture { display: block; pointer-events: none; user-select: none; }
-.sr-shelf-art { width: 100%; max-width: 200px; height: auto; margin: 0 0 6px 2px; }
-.sr-lamp-art {
-  position: absolute;
-  top: calc(var(--sr-bar-h) + 6px);
-  right: 14px;
-  width: 104px;
-  height: auto;
-  opacity: 0.95;
-  z-index: 0;
+
+/* ---- Start studying (components/study/StudyStart.tsx) ----------------------- */
+.sr-start-head {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sr-ink-2);
+  padding: 0 4px 10px;
 }
-/* Only where it has a clear corner. The page column is centred beside the
-   288px shelf and is 792px at most, so below about 1340px the lamp's shade
-   would sit against the New page button rather than beside it. */
-@media (max-width: 1339px) { .sr-lamp-art { display: none; } }
+.sr-start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (min-width: 900px) { .sr-start-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.sr-start-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  min-height: 140px;
+  padding: 16px;
+  border-radius: 18px;
+  text-align: left;
+  color: var(--sr-ink);
+  background: var(--sr-surface);
+  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 1px 2px rgba(16, 24, 40, 0.05), 0 10px 24px -18px rgba(30, 42, 74, 0.45);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.sr-start-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 0.5px var(--sr-sep), 0 2px 4px rgba(16, 24, 40, 0.06), 0 16px 32px -18px rgba(30, 42, 74, 0.5);
+}
+.sr-start-card:focus-visible { outline: 3px solid var(--sr-tint); outline-offset: 2px; }
+.sr-start-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+  border-radius: 14px;
+  font-size: 22px;
+  background: var(--sr-tint-soft);
+}
+.sr-start-card[data-way='paper'] .sr-start-mark { background: var(--sr-glow); }
+.sr-start-title { font-family: var(--sr-serif); font-size: 18px; font-weight: 700; line-height: 1.2; }
+.sr-start-about { font-size: 14px; line-height: 1.35; color: var(--sr-ink-2); }
+.sr-start-way {
+  margin-top: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sr-tint);
+  background: var(--sr-tint-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-start-card, .sr-start-card:hover { transition: none; transform: none; }
+}
 
 /* Titles in the book face. The writing on a page stays in the system's sans,
    which is what reads best at length on a phone. */
@@ -714,8 +758,6 @@
   color: var(--sr-ink-2);
   overflow-wrap: anywhere;
 }
-.sr-shelf-art--phone { width: 132px; height: auto; margin: 2px 0 10px -2px; }
-@media (min-width: 768px) { .sr-shelf-art--phone { display: none; } }
 
 /* THE WHITEBOARD (components/study/StudyBoardTools.tsx), since 28 October 2026.
  *

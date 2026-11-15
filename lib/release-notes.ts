@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-16-study-room-start',
+    date: '2026-11-16',
+    title: 'A calmer Study Room, and four ways to start',
+    items: [
+      'The Study Room opens on Start studying: Bible study on screen, Study on paper with your Bible and notebook, Sermon notes, and Today\u2019s journal. Each opens a page already laid out.',
+      'Study on paper walks you through copying the key verse, underlining and drawing, then adding a photo of your notebook page.',
+      'Your text size and theme can now be changed from the room drawer on the right, as well as in Settings.',
+    ],
+  },
+  {
     id: '2026-11-16-activity-reaches-you',
     date: '2026-11-16',
     title: 'You are told when something happens',

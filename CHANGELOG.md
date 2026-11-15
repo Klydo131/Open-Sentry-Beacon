@@ -10,6 +10,22 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 16 November 2026 (evening): the Study Room looks finished
+
+**Nothing to run.** No database change.
+
+- **Start studying.** The shelf opens (All pages, Simple and Advanced) on four
+  cards that each make a page already laid out: Bible study, Study on paper,
+  Sermon notes and Today's journal (`components/study/StudyStart.tsx`). Each
+  says whether it is on screen, pen and paper, or either.
+- **Study on paper** is a new template (`lib/study/templates.ts`, eleven now):
+  the steps for the notebook, then a photo of the page or the thoughts typed.
+- **No drawn furniture.** The bookshelf, the lamp and the wood grain are gone;
+  one warm light over the look's own background and a frosted sidebar remain.
+  The ribbon on an open page stays.
+- Held by `tests/e2e/the-study-room-starts-studying.js`; the templates walk
+  now expects eleven cards.
+
 ## 16 November 2026 (latest): plain Analytics; Theme and Text size in the drawer
 
 **Nothing to run.** No database change.

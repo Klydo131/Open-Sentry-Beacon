@@ -32,7 +32,7 @@ import {
   GROUP_ORDER, dayInWords, foldersAcross, groupFor, hasTag, matchesCollection,
   nameForView, tagsAcross, whenWritten, type Collection, type ShelfEntry,
 } from '@/lib/study/shelf';
-import { Bookshelf } from '@/components/study/StudyFurniture';
+import { StudyStart } from '@/components/study/StudyStart';
 
 export type ShelfView = 'all' | 'favourites' | 'journal' | 'trash';
 
@@ -170,8 +170,6 @@ export function StudyShelf({
           the sidebar names the room and this names the place within it. */}
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          {/* The bookcase's shelf of books, on a phone, where there is no bookcase. */}
-          <Bookshelf className="sr-shelf-art--phone" />
           <h1 className="sr-title">
             <span className="md:hidden">Study Room</span>
             <span className="hidden md:inline">{place.label}</span>
@@ -204,6 +202,10 @@ export function StudyShelf({
           In the real app it is kept in your church&rsquo;s own database.
         </p>
       )}
+
+      {/* START STUDYING (StudyStart.tsx): four pages already laid out, on
+          screen and on paper, in Simple as much as Advanced. */}
+      {view === 'all' && <StudyStart onTemplate={onTemplate} onToday={onToday} />}
 
       {/* THE FOUR PLACES, ON A PHONE: a segmented control rather than a row of
           56px pills that ran off the side of the screen. Wider screens have

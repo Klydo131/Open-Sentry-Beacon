@@ -297,16 +297,28 @@ things nobody names and everybody wants to find again.
 
 ---
 
+## Start studying
+
+In **Simple** and **Advanced**, All pages opens on four cards, each of which
+makes a page already laid out and opens it:
+
+| Card | How you study | What the page holds |
+|---|---|---|
+| **Bible study** | On screen | Read, observe, interpret, apply, pray |
+| **Study on paper** | Pen and paper | Before you start; copy the key verse, underline, draw, a question; then a photo of your notebook page (More, then Picture) or the main thoughts typed |
+| **Sermon notes** | Either way | The main point, a verse to remember, what you will do |
+| **Today's journal** | Either way | Today's page in Journal |
+
 ## Templates
 
 In **Advanced**, the shelf has a **Templates** button under Simple and
-Advanced. It opens ten pages already laid out, in four groups:
+Advanced. It opens eleven pages already laid out, in four groups:
 
 | Group | Templates |
 |---|---|
 | **Education** | Lesson plan, Attendance, Weekly plan |
 | **Office** | Meeting notes, Task board |
-| **Church** | Sermon notes, Bible study, Prayer list |
+| **Church** | Sermon notes, Bible study, Study on paper, Prayer list |
 | **Staff** | Volunteer schedule, Event plan |
 
 Tap one and a new page opens with its name and its headings, lists, boxes to
