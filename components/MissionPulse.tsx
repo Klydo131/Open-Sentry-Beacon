@@ -137,7 +137,13 @@ function Scatter({ f }: { f: Finding }) {
     <svg viewBox="0 0 200 120" className="h-36 w-full" role="img" aria-label={`${f.n} journeys: ${f.x} against ${f.y}`}>
       <line x1="12" y1="108" x2="188" y2="108" stroke="#cbd5e1" />
       <line x1="12" y1="14" x2="12" y2="108" stroke="#cbd5e1" />
-      {f.points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r="3.6" fill="#4f46e5" fillOpacity="0.55" stroke="#312e81" strokeOpacity="0.4" />)}
+      {/* Journeys on the same point are ONE dot, sized and numbered, so none hides behind another. */}
+      {[...f.points.reduce((m, p) => m.set(`${p.x}|${p.y}`, { ...p, k: (m.get(`${p.x}|${p.y}`)?.k ?? 0) + 1 }), new Map<string, { x: number; y: number; k: number }>()).values()].map((p) => (
+        <g key={`${p.x}|${p.y}`}>
+          <circle cx={sx(p.x)} cy={sy(p.y)} r={Math.min(11, 3.6 + Math.sqrt(p.k - 1) * 2.6)} fill="#4f46e5" fillOpacity="0.55" stroke="#312e81" strokeOpacity="0.4" />
+          {p.k > 1 && <text x={sx(p.x)} y={sy(p.y) + 2.6} textAnchor="middle" fontSize="7" fontWeight="700" fill="#fff">{p.k}</text>}
+        </g>
+      ))}
       <text x="188" y="119" textAnchor="end" fontSize="8" fill="#64748b">{f.x} →</text>
       <text x="14" y="9" fontSize="8" fill="#64748b">↑ {f.y}</text>
     </svg>
@@ -145,7 +151,7 @@ function Scatter({ f }: { f: Finding }) {
 }
 
 function FindingCard({ f }: { f: Finding }) {
-  const drawable = f.points.length > 0 && (f.missing === undefined || f.missing === 'few');
+  const drawable = f.points.length > 0 && (f.missing === undefined || f.missing === 'few' || f.missing === 'ties');
   return (
     <article className="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80" data-pulse-finding={f.key}>
       <h4 className="font-bold text-navy">{f.question}</h4>
@@ -206,6 +212,16 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
     } finally { setBusy(false); }
   }, [load, actions]);
   useEffect(() => { void refresh(); }, [refresh]);
+  // LIVE, NOT A SNAPSHOT. Changes to the records reload through `load` (the live
+  // half re-creates it when the database says something changed); on top of that
+  // a quiet check every two minutes while the screen is in view catches what
+  // has no change event, such as who came back today.
+  useEffect(() => {
+    const t = setInterval(() => { if (document.visibilityState === 'visible') void refresh(); }, 120_000);
+    const back = () => { if (document.visibilityState === 'visible') void refresh(); };
+    document.addEventListener('visibilitychange', back);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', back); };
+  }, [refresh]);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 30_000); return () => clearInterval(t); }, []);
 
   const pulse = useMemo(() => (input ? missionPulse(input, period) : null), [input, period]);
@@ -274,7 +290,7 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
             <h2 id="pulse-title" className="text-xl font-extrabold tracking-tight sm:text-2xl">Mission pulse</h2>
             <p className="mt-0.5 text-sm text-white/75">
               What to act on, how journeys move, and what goes with progress.
-              {input && <> Updated {ago === 0 ? 'just now' : `${ago} min ago`}.</>}
+              {input && <> <span className="inline-flex items-center gap-1 align-middle font-semibold text-white"><span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 motion-reduce:animate-none" />Live</span> · updated {ago === 0 ? 'just now' : `${ago} min ago`}.</>}
             </p>
           </div>
           <button type="button" onClick={() => void refresh()} disabled={busy}
@@ -406,6 +422,7 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
                     <Stat label="Guides">{pulse.guides}</Stat>
                     <Stat label="Waiting for a Guide">{pulse.unpaired}{pulse.unpaired > 0 && <span className="font-normal text-slate-500"> · middle wait {days(pulse.waitMedianDays)}</span>}</Stat>
                     <Stat label="New Explorers given a Guide">{pct(pulse.pairedShare)}</Stat>
+                    {pulse.guidesUnsigned !== null && <Stat label="Guides who signed their commitments">{pulse.guides - pulse.guidesUnsigned} of {pulse.guides}</Stat>}
                     {pulse.stickiness.map((s) => (
                       <Fragment key={s.role}>
                         <Stat label={`${s.role === 'ds' ? 'Explorers' : 'Guides'} back this week`}>{pct(s.ratio)}<span className="font-normal text-slate-500"> · {s.weekly} of {s.monthly}</span></Stat>

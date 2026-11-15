@@ -110,5 +110,16 @@ ok(notification(w.filter((x) => x.severity !== 'critical')) === null, 'and stays
 ok(/Mission briefing/.test(text) && /CARE 1/.test(text) && /\[critical\]/.test(text), 'the briefing has the numbers, the stages and the warnings');
 ok(![msg, note.title, note.body, text, JSON.stringify(w.map(({ pairingIds, ...rest }) => rest)), plan[0].title].some((s) => /secret/.test(s)), 'no name or id appears in any message, notification, briefing or follow-up title');
 
+// Guide commitments: a Guide without a current signature is an urgent warning.
+const signedNone = run({ ...base, guidesSigned: [] }).w.find((x) => x.key === 'commitments');
+ok(signedNone && signedNone.severity === 'critical' && signedNone.count === 1, 'a Guide who has not signed their commitments is an urgent warning');
+ok(!run({ ...base, guidesSigned: ['secret-g1'] }).w.some((x) => x.key === 'commitments'), 'once they sign, it stops');
+ok(!run(base).w.some((x) => x.key === 'commitments'), 'a copy that cannot tell (no table yet) never cries wolf');
+let gc;
+try { gc = await import(pathToFileURL(path.join(root, 'lib/guide-commitments.ts')).href); } catch { gc = null; }
+ok(gc && gc.sameName('  maria   SANTOS ', 'Maria Santos') && !gc.sameName('Maria', 'Maria Santos') && !gc.sameName('', ''), 'a signature must be the person\'s own full name, ignoring case and spaces');
+ok(gc && gc.commitmentsCurrent(ago(100), NOW) && !gc.commitmentsCurrent(ago(400), NOW) && !gc.commitmentsCurrent(null, NOW), 'a signature lasts a year');
+ok(gc && gc.COMMITMENTS.length === 6 && /^[a-z0-9-]+$/.test(gc.COMMITMENTS_VERSION), 'six commitments, under a version the database accepts');
+
 console.log(bad ? `\n${bad} problem(s).` : '\nThe pulse warns and acts.');
 process.exit(bad ? 1 : 0);

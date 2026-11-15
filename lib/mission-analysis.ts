@@ -146,6 +146,17 @@ function finding(key: string, question: string, x: string, y: string, pts: { x: 
     return { key, question, x, y, n, r: null, strength: null, likelyReal: false, points: pts,
       reading: `Needs at least ${MIN_N} journeys to say anything; there ${n === 1 ? 'is' : 'are'} ${n}.`, missing: 'few' };
   }
+  // TIES MISLEAD. When most journeys sit on one point (every new journey waited
+  // no days and has taken no step yet), a rank correlation is computed from a
+  // handful of others and reads far stronger than it is. Say so instead.
+  const distinct = (vals: number[]) => new Set(vals).size;
+  const pile = Math.max(...[...pts.reduce((m, p) => m.set(`${p.x}|${p.y}`, (m.get(`${p.x}|${p.y}`) ?? 0) + 1), new Map<string, number>()).values()]);
+  if (distinct(pts.map((p) => p.x)) < 3 || distinct(pts.map((p) => p.y)) < 3 || pile > n / 2) {
+    return { key, question, x, y, n, r: null, strength: null, likelyReal: false, points: pts, missing: 'ties',
+      reading: pile > n / 2
+        ? `${pile} of ${n} journeys sit on exactly the same point, so a correlation here would mislead. It will mean something as journeys spread out.`
+        : 'Too few different values to compare yet. It will mean something as journeys spread out.' };
+  }
   const r = spearman(pts.map((p) => p.x), pts.map((p) => p.y));
   if (r === null) {
     return { key, question, x, y, n, r: null, strength: null, likelyReal: false, points: pts,

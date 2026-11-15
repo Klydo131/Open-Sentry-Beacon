@@ -51,6 +51,7 @@ export const RULES: RuleDef[] = [
   { key: 'wait', label: 'Explorer waiting for a Guide', detail: 'An approved Explorer has had no Guide for more than {n} days.', unit: 'days', defaultThreshold: 7, severity: 'critical', above: true },
   { key: 'request', label: 'Pairing request unanswered', detail: 'A request to be paired has waited more than {n} days for an answer.', unit: 'days', defaultThreshold: 3, severity: 'critical', above: true },
   { key: 'stalled', label: 'Journey not moving', detail: 'A journey has had no step for more than {n} days.', unit: 'days', defaultThreshold: 30, severity: 'warning', above: true },
+  { key: 'commitments', label: 'Guide commitments not signed', detail: '{n} or more Guides have not signed their safeguarding commitments this year.', unit: 'Guides', defaultThreshold: 1, severity: 'critical', above: true },
   { key: 'load', label: 'Guide carrying too many', detail: 'A Guide is walking with more than {n} people at once.', unit: 'people', defaultThreshold: 5, severity: 'warning', above: true },
   { key: 'steps-drop', label: 'Fewer journey steps', detail: 'Journey steps fell by {n}% or more against the period before (only counted from 4 steps up).', unit: '%', defaultThreshold: 30, severity: 'warning', above: true },
   { key: 'arrivals-drop', label: 'Fewer new Explorers', detail: 'New Explorers fell by {n}% or more against the period before (only counted from 4 up).', unit: '%', defaultThreshold: 50, severity: 'watch', above: true },
@@ -131,6 +132,9 @@ export function evaluate(
     }
     const ids = [...last].filter(([, t]) => (now - t) / DAY > th('stalled')).map(([id]) => id);
     if (ids.length) add('stalled', ids.length, ids.length, `${plural(ids.length, 'journey has', 'journeys have')} had no step for more than ${th('stalled')} days.`, ids);
+  }
+  if (on('commitments') && pulse.guidesUnsigned !== null && pulse.guidesUnsigned >= Math.max(1, th('commitments'))) {
+    add('commitments', pulse.guidesUnsigned, pulse.guidesUnsigned, `${plural(pulse.guidesUnsigned, 'Guide has', 'Guides have')} not signed the Guide commitments this year. Ask them to sign on their desk before walking with anyone.`);
   }
   if (on('load')) {
     const loads = new Map<string, number>();

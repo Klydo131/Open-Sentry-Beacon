@@ -128,7 +128,11 @@ const ALWAYS_ON = {
   // 
   // A notice the church has pinned is above the folders on a Guide's home for
   // that reason, and putting it inside one would undo what was asked for.
-  'components/live/GuidePages.tsx': ['LiveAnnouncements'],
+  //
+  // The Guide commitments (16 November 2026) are a safeguarding promise made
+  // before walking with anyone. Inside one folder they could be missed by a
+  // Guide who never opens it; once signed they shrink to a single line.
+  'components/live/GuidePages.tsx': ['LiveAnnouncements', 'LiveCommitments'],
 };
 
 for (const [file, fn, label] of ROOMS_WITH_SUBROOMS) {

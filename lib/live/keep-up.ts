@@ -144,6 +144,11 @@ export const KEEP_UP_PROGRESS =
 /** A person's own Sabbath programs and meetings, across their devices. */
 export const KEEP_UP_PLANS = ['office_plans'] as const;
 
+/** The Mission pulse: everything its numbers, warnings and analysis are counted from. */
+export const KEEP_UP_PULSE = [
+  'profiles', 'pairings', 'journey_events', 'meetings', 'pairing_requests', 'invites', 'feedback', 'follow_ups',
+] as const;
+
 /** The numbers. Everything they are counted from. */
 export const KEEP_UP_NUMBERS =
   ['profiles', 'pairings', 'meetings', 'materials', 'prayer_requests', 'journey_events'] as const;

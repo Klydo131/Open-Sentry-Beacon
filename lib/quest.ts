@@ -107,7 +107,7 @@ const DM_STEPS: QuestStep[] = [
     id: 'message',
     where: 'My Explorers \u203a an Explorer \u203a Message',
     learn:
-      'Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it unless one of you reports a message. It lives in the Talk bubble in the corner, and the number on it counts messages you have not opened yet. The smiling face beside the box has emoji, stickers, effects (confetti, stars, balloons, fireworks or hearts, played once on their screen) and a colour and background for your own side of the chat.',
+      'Your Guide commitments sit at the top of your desk until you sign them. Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it unless one of you reports a message. It lives in the Talk bubble in the corner, and the number on it counts messages you have not opened yet. The smiling face beside the box has emoji, stickers, effects (confetti, stars, balloons, fireworks or hearts, played once on their screen) and a colour and background for your own side of the chat.',
     title: 'Send a message',
     hint: 'Type in the highlighted box and send. This conversation is private: it stays between the two of you unless one of you reports a message.',
     target: 'chat-send',

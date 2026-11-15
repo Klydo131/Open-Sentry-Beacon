@@ -10,6 +10,41 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 16 November 2026 (later): activity reaches the other person; Guide commitments
+
+**Run two migrations on each live database**, in order:
+`20261116120000_activity_reaches_the_other_person.sql` and
+`20261116130000_a_guide_keeps_their_commitments.sql`. Until they run, the app
+works as before: no new notifications, and the commitments card shows on the
+Guide's desk but cannot be saved (a database without the table reads as
+"not signed").
+
+- **Notifications.** Until now only prayer, reports, approvals and suspensions
+  made one. Triggers now tell the other person about a message (one until read,
+  per conversation), a share, a study given or finished, a lesson read, a
+  meeting suggested/confirmed/cancelled/moved, a new pairing, a published post,
+  a church notice and the Guides' room (once per half hour). Never the words of
+  a message or post; never the person who acted; never a suspended member.
+  They reach phones through the existing push trigger (20260916210000) where
+  push is set up. The bell follows each row's own path, inside the app only.
+- **Guide commitments.** Six safeguarding commitments (`lib/guide-commitments.ts`),
+  ticked one by one and signed with the Guide's own full name through
+  `sign_guide_commitments`; renewed yearly; leaders of the church read who has
+  signed; nobody writes, changes or deletes a signature directly. On the Guide's
+  desk in both halves, and an urgent rule in the Mission pulse's Alerts.
+- **Reports**: new-reply badges, waiting age and a live summary
+  (`components/LiveAdminReports.tsx`).
+- **The Mission pulse is live**: it reloads on changes to what it counts
+  (`KEEP_UP_PULSE`) and every two minutes in view. The analysis refuses to report
+  a correlation when more than half the journeys share one point or a column has
+  fewer than three values, and draws overlapping journeys as one numbered dot.
+- Tests: `supabase/tests/activity-reaches-the-other-person.sql` (25),
+  `supabase/tests/a-guide-signs-their-commitments.sql` (19),
+  `tests/e2e/a-guide-signs-their-commitments.js`; the pulse tests gain the tie
+  case seen in a live church and the commitment rule.
+
+---
+
 ## 16 November 2026: warnings and automations for leaders
 
 **Nothing to do** for a church running a copy. No database change.

@@ -251,6 +251,17 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-resource-is-shared-and-watched.sql"
 
+# ACTIVITY REACHES THE OTHER PERSON: a pairing, a message, a share, a study,
+# a lesson read, a meeting, a post, a notice and the Guides' room each tell the
+# right person, never with the words. Rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/activity-reaches-the-other-person.sql"
+
+# A GUIDE SIGNS THEIR COMMITMENTS with their own name; leaders of their church
+# see who has; nobody writes, changes or deletes a signature directly. Rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-guide-signs-their-commitments.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"

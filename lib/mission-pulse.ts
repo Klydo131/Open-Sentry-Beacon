@@ -54,6 +54,8 @@ export interface PulseInput {
   requests: { pending: boolean; createdAt: string }[];
   invites: { createdAt: string; joinedAt: string | null; expiresAt: string | null }[];
   feedback: { createdAt: string; open: boolean }[];
+  /** Guides whose commitments are signed and current (null: not known on this copy). */
+  guidesSigned?: string[] | null;
   /** Meetings per journey, only where the app lets a leader see them (null: not visible). */
   journeyMeetings?: { pairingId: string; done: boolean }[] | null;
   /** People active in the last 7 and 30 days, by role, when the app can say. */
@@ -108,6 +110,8 @@ export interface Pulse {
   feedbackOpen: number;
   /** Share of approved people active this week out of those active this month (WAU/MAU), per role. */
   stickiness: { role: Role; weekly: number; monthly: number; approved: number; ratio: number | null }[];
+  /** Approved Guides without signed, current commitments; null when not known. */
+  guidesUnsigned: number | null;
   /** Explorers who joined in the period and were given a Guide, as a share. */
   pairedShare: number | null;
   attention: Attention[];
@@ -260,6 +264,8 @@ export function missionPulse(input: PulseInput, periodDays: number): Pulse {
     feedbackOpen,
     stickiness,
     pairedShare,
+    guidesUnsigned: input.guidesSigned == null ? null
+      : approved.filter((x) => x.role === 'dm' && !input.guidesSigned!.includes(x.id)).length,
     attention,
   };
 }

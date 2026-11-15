@@ -191,6 +191,18 @@ function Joined({ report }: { report: live.AdminReport }) {
 // One report
 // ---------------------------------------------------------------------------
 
+// WHAT IS NEW SINCE YOU LAST LOOKED. The number of messages seen in each
+// report is kept on this device; more than that is shown as new, so a reply
+// is noticed without opening every report to check.
+const seenKey = (id: string) => `hb-report-seen:${id.replace(/[^A-Za-z0-9-]/g, '').slice(0, 64)}`;
+function seenCount(id: string): number {
+  try { return Number(localStorage.getItem(seenKey(id))) || 0; } catch { return 0; }
+}
+function markSeen(id: string, n: number) {
+  try { localStorage.setItem(seenKey(id), String(n)); } catch { /* a private window */ }
+}
+const daysSince = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+
 function ReportCard({ r, me, onChanged }: {
   r: live.AdminReport;
   me: string;
@@ -199,6 +211,11 @@ function ReportCard({ r, me, onChanged }: {
   // The person who raised it and the person brought in see the conversation
   // straight away: it is the reason they are here.
   const [open, setOpen] = useState(Boolean(r.mine || r.about_me));
+  const [seen, setSeen] = useState<number | null>(null);
+  useEffect(() => { setSeen(seenCount(r.id)); }, [r.id]);
+  const fresh = seen === null ? 0 : Math.max(0, r.messages - seen);
+  // Reading it is seeing it: an open conversation keeps up with what arrives.
+  useEffect(() => { if (open && seen !== null && r.messages !== seen) { markSeen(r.id, r.messages); setSeen(r.messages); } }, [open, r.messages, r.id, seen]);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -250,7 +267,19 @@ function ReportCard({ r, me, onChanged }: {
             {line} · {when(r.created_at)}
           </p>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${chip.tone}`}>{chip.text}</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {fresh > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-xs font-extrabold text-white" data-report-new>
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-white" />{fresh} new
+            </span>
+          )}
+          {isOpen && !held && (
+            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${daysSince(r.created_at) > 3 ? 'bg-rose-100 text-rose-800' : daysSince(r.created_at) > 2 ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}`} data-report-age>
+              {daysSince(r.created_at) === 0 ? 'Raised today' : `Waiting ${daysSince(r.created_at)} day${daysSince(r.created_at) === 1 ? '' : 's'}`}
+            </span>
+          )}
+          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${chip.tone}`}>{chip.text}</span>
+        </div>
       </div>
 
       {r.detail && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-gray-700">{r.detail}</p>}
@@ -286,7 +315,7 @@ function ReportCard({ r, me, onChanged }: {
 
         {canRead && held && (
           <Button variant="ghost" onClick={() => setOpen((o) => !o)}>
-            {open ? 'Hide the conversation' : `Show the conversation${r.messages ? ` (${r.messages})` : ''}`}
+            {open ? 'Hide the conversation' : `Show the conversation${r.messages ? ` (${r.messages}${fresh ? `, ${fresh} new` : ''})` : ''}`}
           </Button>
         )}
       </div>
@@ -380,8 +409,14 @@ export function LiveAdminReports({ me }: { me: string }) {
     ['Everything else', rest],
   ];
 
+  const urgent = waiting.filter((r) => daysSince(r.created_at) > 3).length;
   return (
     <div className="space-y-5">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-slate-50 p-3 text-sm ring-1 ring-slate-200" aria-live="polite" data-report-summary>
+        <span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-emerald-500 motion-reduce:animate-none" />
+        <span className="font-semibold text-navy">Live</span>
+        <span className="text-slate-600">· {waiting.length} waiting{urgent ? `, ${urgent} over 3 days` : ''} · {holding.length} with you · updates as people write</span>
+      </div>
       {groups.filter(([, list]) => list.length > 0).map(([title, list]) => (
         <section key={title} className="space-y-2">
           <h3 className="text-sm font-extrabold uppercase tracking-wide text-gray-500">

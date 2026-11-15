@@ -38,6 +38,7 @@ import {
 } from '@/lib/live/report-formats';
 import type { Role } from '@/lib/types';
 import { humanError } from '@/lib/live/errors';
+import { useKeepUp, KEEP_UP_PULSE } from '@/lib/live/keep-up';
 import dynamic from 'next/dynamic';
 
 // Loaded when Analytics opens, not with the page that holds it: the door stays light.
@@ -275,6 +276,15 @@ export function ArrivalPanel({ panel, labels, peak }: {
 
 // ---------------------------------------------------------------------------
 
+/** The pulse, kept live: any change to what it counts makes a fresh reader, and it reloads. */
+function LivePulse() {
+  const [changed, setChanged] = useState(0);
+  useKeepUp(KEEP_UP_PULSE, () => setChanged((n) => n + 1));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const load = useCallback(() => an.pulseInput(), [changed]);
+  return <MissionPulse load={load} live actions={an.pulseActions} />;
+}
+
 export function LiveAnalytics({ churchName }: { churchName?: string }) {
   const [slices, setSlices] = useState<an.ActivitySlice[] | null>(null);
   const [head, setHead] = useState<an.Headline | null>(null);
@@ -388,7 +398,7 @@ export function LiveAnalytics({ churchName }: { churchName?: string }) {
 
   return (
     <div className="space-y-4">
-      <MissionPulse load={an.pulseInput} live actions={an.pulseActions} />
+      <LivePulse />
       <Card className="p-5">
         <h2 className="text-xl font-bold text-navy">📈 How the church is going</h2>
         <p className="mt-1 text-sm text-gray-500">

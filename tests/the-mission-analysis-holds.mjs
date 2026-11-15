@@ -65,7 +65,7 @@ const f = Object.fromEntries(findings(rows).map((x) => [x.key, x]));
 ok(f.wait.r !== null && f.wait.r < -0.9 && f.wait.strength === 'strong' && f.wait.likelyReal, `the built-in link is found: waiting longer goes with slower journeys (r = ${f.wait.r})`);
 ok(/moving more slowly/.test(f.wait.reading), 'and it is read out in plain words');
 ok(f.meetings.r !== null && f.meetings.r > 0.9, `more meetings go with further stages here (r = ${f.meetings.r})`);
-ok(f.load.r === null && f.load.missing === 'flat', 'when every Guide carries the same number there is nothing to compare, and it says so');
+ok(f.load.r === null && (f.load.missing === 'flat' || f.load.missing === 'ties'), 'when every Guide carries the same number there is nothing to compare, and it says so');
 ok(f.track.r !== null && f.track.strength === 'none' || !f.track.likelyReal, 'digital against in person, built with no link, is not called real');
 const csv = toCsv(['Journey', 'Wait'], rows.map((r) => [r.n, r.waitDays]));
 ok(!/secret/.test(JSON.stringify(rows)) && !/secret/.test(JSON.stringify(findings(rows))) && !/secret/.test(csv), 'no name or id leaves: rows, findings and the CSV are numbered');
@@ -76,6 +76,14 @@ ok(few.every((x) => x.r === null) && /at least 8/.test(few[0].reading), `with fe
 const hidden = Object.fromEntries(findings(journeyRows({ ...input, journeyMeetings: null })).map((x) => [x.key, x]));
 ok(hidden.meetings.r === null && /private/.test(hidden.meetings.reading), 'when meetings are private to the pair, that question says why it cannot be answered');
 ok(toCsv(['a'], [['=HYPERLINK("x")'], ['+1'], ['plain']]).split('\r\n')[1].startsWith('"='), 'a cell that a spreadsheet would run as a formula is quoted');
+
+// The case from a live church on 16 November 2026: sixteen journeys, fourteen of
+// them new (no wait, no step yet) on one point and two elsewhere. A rank
+// correlation computed from that read "+0.73, strong, unlikely to be chance".
+const piled = Array.from({ length: 16 }, (_, i) => ({ n: i + 1, status: 'active', waitDays: i < 14 ? 0 : i === 14 ? 2 : 30, pace: i < 14 ? 0 : i === 14 ? 0 : 3, stageIndex: 0, track: 'digital', guideLoad: 1, meetings: null, ageDays: 5, steps: 0, daysSinceStep: 5, stage: 'create' }));
+const pw = findings(piled).find((x) => x.key === 'wait');
+ok(pw.r === null && pw.missing === 'ties' && /14 of 16 journeys sit on exactly the same point/.test(pw.reading),
+  `fourteen of sixteen journeys on one point is not called a strong link (${pw.reading})`);
 
 // ---- 4. The raw counts agree with the pulse ----------------------------------
 const pulse = missionPulse(input, 90);

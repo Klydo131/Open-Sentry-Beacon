@@ -35,8 +35,12 @@ import { useKeepUp, KEEP_UP_BELL } from '@/lib/live/keep-up';
  * A room is named in the query and a card in the hash, because landing at the
  * top of a long screen is the same failure one step later.
  */
-function routeFor(type: string, role: Role): string {
+function routeFor(type: string, role: Role, data?: { url?: string } | null): string {
   const leads = role === 'admin' || role === 'executive';
+  // THE DATABASE SAYS WHERE A NEWER NOTIFICATION LEADS (20261116120000), and
+  // only a path inside this app is honoured: never another site.
+  const said = data?.url;
+  if (typeof said === 'string' && /^\/[a-z][a-z0-9/_-]*([?#][\w=&#-]*)?$/i.test(said)) return said;
   switch (type) {
     case 'trial':
       // The court room closed on 27 October 2026; a notification it sent before
@@ -175,7 +179,7 @@ export function LiveBell({ me }: { me: Profile }) {
         { tag: 'beacon-waiting', renotify: true },
       );
       const single = async (n: live.AppNotification) => showLocalNotification(
-        n.title, n.body ?? undefined, routeFor(n.type, me.role),
+        n.title, n.body ?? undefined, routeFor(n.type, me.role, n.data),
       );
 
       if (plan.kind === 'one') await single(plan.item as live.AppNotification);
@@ -367,7 +371,7 @@ export function LiveBell({ me }: { me: Profile }) {
                   // pressing it did not do.
                   setOpen(false);
                   if (!n.read_at) { await live.markNotificationRead(n.id); void load(); }
-                  router.push(routeFor(n.type, me.role));
+                  router.push(routeFor(n.type, me.role, n.data));
                 }}
                 className={`block w-full rounded-xl p-2 text-left hover:bg-gray-50 ${n.read_at ? '' : 'bg-navy/5'}`}
               >

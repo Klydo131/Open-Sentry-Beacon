@@ -18,6 +18,33 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-16-activity-reaches-you',
+    date: '2026-11-16',
+    title: 'You are told when something happens',
+    items: [
+      'Your bell, and your phone if notifications are on, now tell you when your Guide or Explorer sends a message, shares something, gives or finishes a study, reads a lesson, or arranges, confirms or moves a meeting; when you are paired; when your Guide posts for you; and when the church posts a notice. Guides and leaders hear about the Guides\u2019 room.',
+      'A busy conversation is one notification until you read it, and the words of a message are never shown on a lock screen.',
+    ],
+  },
+  {
+    id: '2026-11-16-guide-commitments',
+    date: '2026-11-16',
+    title: 'Guide commitments',
+    items: [
+      'Before walking with anyone, a Guide reads six safeguarding commitments on their desk, ticks each one and signs with their full name. It is renewed every year.',
+      'Directors and Executive Directors see who has signed, and Alerts warn while a Guide has not.',
+    ],
+  },
+  {
+    id: '2026-11-16-reports-and-pulse-live',
+    date: '2026-11-16',
+    title: 'Reports and the Mission pulse keep up live',
+    items: [
+      'Admin Reports show which reports have new replies and how long one has waited, and say at the top what is waiting.',
+      'The Mission pulse refreshes itself as things change. Its analysis now says when most journeys sit on the same point instead of reporting a strong link that is not there.',
+    ],
+  },
+  {
     id: '2026-11-16-pulse-warnings-automations',
     date: '2026-11-16',
     title: 'Warnings and automations for leaders',
