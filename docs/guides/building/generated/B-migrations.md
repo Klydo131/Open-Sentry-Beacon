@@ -1,6 +1,6 @@
 # Appendix B. Every database migration, in order
 
-169 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
+170 files in `supabase/migrations/`, applied in name order. Each entry is the migration's own opening comment. A migration is never edited once applied; a change is a new file.
 
 #### `0001_core_schema.sql`
 
@@ -1489,3 +1489,13 @@ A Director or an Executive Director can show a plan to the church's Guides.
 Asked for on 13 November 2026.
 
 A Guide could already show a plan to the people they walk with (audience 'all', read through is_paired_with). A leader had no such door: their 'all' reaches the whole church, Explorers included, and 'church' is the noticeboard. This adds one audience, 'guides': read by the approved, unsuspended Guides of the author's own church, and by its leaders, and by nobody else. Only a leader's post opens to it; a Guide who picked it would reach no one new.
+
+#### `20261114120000_a_conversation_can_say_it_your_way.sql`
+
+*2026-11-14*
+
+A conversation can say it your way.
+
+ASKED FOR ON 14 NOVEMBER 2026: the chat read as plain beside the apps young adults already use. Two things here need the database; the rest (an emoji picker, stickers, a look for your own side) is in the app and needs nothing.
+
+1. MORE REACTIONS, STILL FROM A LIST. The six of 1 October stay first; twenty-four more sit behind "More". The column is still not free text: the check and react_to() carry the same list as lib/talk/reactions.ts, and tests/a-conversation-can-reply-react-and-speak.mjs fails if they differ. Everything else about a reaction is unchanged: only the two people in the pairing, one per person per thing, thirty a minute, and taking one back empties the row.

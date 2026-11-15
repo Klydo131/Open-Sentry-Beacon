@@ -1,6 +1,20 @@
 # Appendix D. Every browser walk
 
-93 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+97 walks in `tests/e2e/`. `npm run verify:all` runs every `.js` walk against a production build, four at a time; the Safari workflow runs the same walks on WebKit. `.mjs` walks are run by hand.
+
+#### `a-book-opens-in-the-library.js`
+
+An EPUB opens in My Files, reads like a book, and a hostile one does nothing.
+
+Asked for on 15 November 2026: a book on the device could not be read in the app. This puts a three-chapter EPUB on the device (named .epub with no type, as some browsers report it), opens it with Read and checks the words and the picture are drawn, pages turn by button, key and a tap at the edge, the contents jump to a section and land on its page, a link inside the book follows and an outside one does nothing, Scroll swaps pages for one long chapter, a look and a size change the page, and the place is remembered. At a phone, a pad and a computer's width. Then the books that must NOT work: one full of scripts, handlers, remote pictures, forms and frames (nothing may run or be fetched), a 40 MB zip bomb in a small file, and a file that is no book.
+
+#### `a-chat-says-it-your-way.js`
+
+A chat can say it your way: emoji you pick, stickers, an effect, a look.
+
+Asked for on 14 November 2026 (lib/talk/expression.ts). This walks the sample conversation in a real browser and checks what a person would see:
+
+* the smiling face opens a panel between the thread and the message bar, and the bar's form still holds exactly one text box and one button; * an emoji is ADDED to what is being written and nothing is sent; * a sticker goes at once and is drawn as a sticker, not as its words; * an effect is named above the bar, travels with the next message, plays once and can be played again from the message; * a colour and a ground change only this side, with ink that reads, and are still there after a reload; * a reaction from behind "More" lands on the message; * nothing scrolls sideways at a phone's width.
 
 #### `a-link-lands-even-when-the-page-moves.js`
 
@@ -17,6 +31,14 @@ A new Sabbath program, or a new series of meetings, unfolds downward into view, 
 3 November 2026, the founder. Until then the list was swapped for the page in one frame (lib/motion.ts, unfoldIn).
 
 The founder again, the same day. The choice box under New appeared in one frame and pushed the page down; the list vanished in one frame; and the page was drawn from nothing with a clip. Now the box grows open (growIn), the list fades away first (leaveThen) and the page settles in with a fade.
+
+#### `a-pdf-opens-in-the-library.js`
+
+A PDF kept on the device opens in the app.
+
+A PDF in My files offered only Download, and on an Android phone a download is saved to a folder with nothing shown, so the file seemed not to open. This walk puts a three-page PDF on the device, taps Read, and checks the reader really draws: pages painted with ink, the page count, a larger size, and Escape putting it away. At a phone, a pad and a computer's width.
+
+npm run build && node scripts/run-next.mjs start -p 4392 node tests/e2e/a-pdf-opens-in-the-library.js 4392
 
 #### `a-phone-can-insert-things.js`
 
@@ -69,6 +91,14 @@ It also holds the shelf itself to being useful rather than decorative: a page's 
 Sing the note, sung to. The Tuner's practice (Advanced settings) in a real browser, with a made-up voice as the microphone.
 
 WHY THIS EXISTS. Asked for on 14 October 2026: choose a note, sing it, and be told whether it was hit, with "perfect pitch" as the reward; . Made simple on 15 October 2026. tests/the-tuner-hears-the-note-sung.mjs holds the ear and the grades to their numbers in Node; this proves the whole path a phone takes: a key tapped, the microphone, the audio clock, the tuner's frames, the judge, and what the screen says.
+
+#### `an-empty-library-opens-on-upload.js`
+
+An empty Library starts where things are added.
+
+Asked for on 14 November 2026: with nothing on the device, the first sight was the church's shelf, and adding a file meant hunting for the way in. This walk opens the Library with nothing kept and checks it lands on the device folder, with Upload and the link form showing; then drops two files at once and a link on the card, and checks both files are kept and the link is filled in. A person who has chosen a folder is not moved. Phone and desktop.
+
+npm run build && node scripts/run-next.mjs start -p 4393 node tests/e2e/an-empty-library-opens-on-upload.js 4393
 
 #### `app-back.js`
 

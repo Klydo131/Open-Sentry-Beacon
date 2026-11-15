@@ -10,6 +10,37 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 15 November 2026 (latest): EPUB books can be read in the app
+
+**Nothing to do** for a church running a copy. No new dependency and no
+setting; the Content Security Policy is unchanged.
+
+- A `.epub` in My Files has **Read**. `lib/epub.ts` opens the book (zip, package
+  file, spine, contents from the EPUB 3 nav page or the EPUB 2 .ncx) and
+  `components/EpubReader.tsx` shows it: pages (two from 900px wide, turned by
+  button, key, swipe or a tap at the edge) or one long scroll; contents; size,
+  Paper/Sepia/Night and serif/plain; the place in each book (local only,
+  `hb-epub:<id>`) and the look (`hb-epub-prefs`).
+- A file named `.epub` is recognised when the browser reports no type
+  (`mimeOfFile`), and one already saved as a document opens in the book reader.
+- **A book is a website in a zip written by someone else, so three layers hold,
+  each on its own:** the chapter is rebuilt tag by tag from an allowlist (no
+  script, style, frame, form or svg; no attribute but a handful; pictures read
+  out of the book and inlined; links never leave the book); the chapter carries
+  `default-src 'none'; img-src data:`; and the frame is `sandbox` with no
+  scripts. The zip is untrusted too: entries are inflated through a counter
+  (25 MB each, 5000 entries, 300 MB file), so a 40 KB file that declares 40 MB
+  is stopped by our count, not the zip's word.
+- `tests/a-book-opens-safely.mjs` (in the gate) holds the zip, the paths, the
+  limits and the three layers. `tests/e2e/a-book-opens-in-the-library.js`
+  walks the book at phone, pad and desktop, then a hostile book, a zip bomb and
+  a file that is no book. Both were broken on purpose (sandbox widened) and went
+  red.
+- Not done: DRM-protected books, fixed-layout books, audio or video in a book,
+  and search inside a book.
+
+---
+
 ## 15 November 2026 (later): the PDF reader can be read like a book
 
 **Nothing to do** for a church running a copy.

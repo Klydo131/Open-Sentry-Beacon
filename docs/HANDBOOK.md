@@ -1004,6 +1004,8 @@ On a phone or a pad (6 October 2026), My Files opens with a short title rather t
 
 ![My Files on a phone, On this device: Upload files and Add a link at the top at one width, then the device's own files, then the note that music has its own room.](screenshots/walkthrough/43-my-files-device.png)
 
+**15 November 2026.** With nothing kept on the device, My Files opens on **On this device** with Upload and the link form showing, scrolled into view; files (many at once) or a link can be dropped onto the card. A **PDF** or an **EPUB** has **Read**: a full-screen reader with **Book** (one page, or two side by side from 900px wide, the cover alone, turned by button, key, swipe or a tap at the edge) and **Scroll**. An EPUB adds Contents, text size, Paper/Sepia/Night, and the place remembered per book on the device. The EPUB is treated as untrusted code: its chapters are rebuilt from an allowlist, carry their own policy and sit in a sandboxed frame with no scripts (docs/SECURITY-LAYERS.md).
+
 ![The Menu, for a Guide in the sample church. Every room is written out, with the bar along the bottom that a phone and an iPad use.](screenshots/walkthrough/19-menu.png)
 
 Six of those rooms have **subrooms** inside them, offered as **one drop-down** at the top when you open one. Closed, it names the subroom you are in, says how many there are (*2 of 4*), and shows a count when something is waiting in another one; tap it and every subroom is listed. It is a drop-down on every screen size, because people did not know to swipe the row it replaced. The sections of one person's page (Appointments, Journey, Care and the rest) open the same way. See *Rooms and subrooms* in Part 4.

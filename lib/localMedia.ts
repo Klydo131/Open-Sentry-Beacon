@@ -74,6 +74,17 @@ export function typeFromMime(mime: string): MediaType {
   return 'pdf';
 }
 
+/** An EPUB's type as the browser reports it: some give nothing, so the name is asked too. */
+export function mimeOfFile(file: { type: string; name: string }): string {
+  if ((!file.type || file.type === 'application/octet-stream') && /\.epub$/i.test(file.name)) return 'application/epub+zip';
+  return file.type;
+}
+
+/** A book kept on the device (stored as a document, read in the book reader). */
+export function isEpub(item: { mime?: string; title: string }): boolean {
+  return item.mime === 'application/epub+zip' || /\.epub$/i.test(item.title);
+}
+
 export function newMediaId(): string {
   // Not crypto.randomUUID() directly: that is a secure-context API and is
   // undefined over plain http on a LAN address, so attaching a file threw

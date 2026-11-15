@@ -14,6 +14,7 @@ import {
   getBlob,
   deleteMedia,
   humanSize,
+  isEpub,
   newMediaId,
   resolutionLabel,
   type MediaMeta,
@@ -40,6 +41,7 @@ import { DocGlyph, MusicGlyph, PlayGlyph } from '@/components/Glyph';
 import dynamic from 'next/dynamic';
 
 // The reader and pdf.js arrive only when somebody opens a PDF.
+const EpubReader = dynamic(() => import('@/components/EpubReader').then((m) => m.EpubReader), { ssr: false });
 const PdfReader = dynamic(() => import('@/components/PdfReader').then((m) => m.PdfReader), { ssr: false });
 import Link from 'next/link';
 
@@ -381,14 +383,14 @@ export default function LibraryPage() {
     downloadBlob(blob, item.title);
   };
 
-  const [reading, setReading] = useState<{ blob: Blob; title: string } | null>(null);
+  const [reading, setReading] = useState<{ blob: Blob; title: string; id: string; epub: boolean } | null>(null);
   const read = async (item: MediaMeta) => {
     const blob = await getBlob(item.id);
     if (!blob) {
       flash('This item has no file to read.');
       return;
     }
-    setReading({ blob, title: item.title });
+    setReading({ blob, title: item.title, id: item.id, epub: isEpub(item) });
   };
 
   const share = async (item: MediaMeta) => {
@@ -773,7 +775,9 @@ export default function LibraryPage() {
           My Files and losing Menu and People with it. Whoever is signed in,
           on either half; nobody signed in, no bar. */}
       {barRole && <TabBar role={barRole} />}
-      {reading && <PdfReader blob={reading.blob} title={reading.title} onClose={() => setReading(null)} />}
+      {reading && (reading.epub
+        ? <EpubReader blob={reading.blob} title={reading.title} bookId={reading.id} onClose={() => setReading(null)} />
+        : <PdfReader blob={reading.blob} title={reading.title} onClose={() => setReading(null)} />)}
     </div>
   );
 }

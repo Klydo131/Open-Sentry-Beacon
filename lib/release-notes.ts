@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-15-read-an-epub',
+    date: '2026-11-15',
+    title: 'Read an EPUB book',
+    items: [
+      'A book (.epub) kept in My Files now has a Read button. It opens like a real book: pages side by side on a wide screen, one on a phone. Tap the edge of the page, swipe, or use Next and Previous to turn it.',
+      'Contents jumps to any chapter. Aa changes the text size, colour (Paper, Sepia or Night) and letters. Scroll shows a chapter as one long page. The app remembers where you stopped in each book.',
+      'A book cannot run anything or reach the internet from inside the reader.',
+    ],
+  },
+  {
     id: '2026-11-15-read-a-pdf-like-a-book',
     date: '2026-11-15',
     title: 'Read a PDF like a book',

@@ -107,7 +107,7 @@ const DM_STEPS: QuestStep[] = [
     id: 'message',
     where: 'My Explorers \u203a an Explorer \u203a Message',
     learn:
-      'Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it unless one of you reports a message. It lives in the Talk bubble in the corner, and the number on it counts messages you have not opened yet.',
+      'Talk is a private conversation between the two of you. It is not a group chat, and church leaders cannot read it unless one of you reports a message. It lives in the Talk bubble in the corner, and the number on it counts messages you have not opened yet. The smiling face beside the box has emoji, stickers, effects (confetti, stars, balloons, fireworks or hearts, played once on their screen) and a colour and background for your own side of the chat.',
     title: 'Send a message',
     hint: 'Type in the highlighted box and send. This conversation is private: it stays between the two of you unless one of you reports a message.',
     target: 'chat-send',
@@ -130,7 +130,7 @@ const DM_STEPS: QuestStep[] = [
     id: 'react',
     where: 'My Explorers \u203a an Explorer \u203a Message',
     learn:
-      'Tap any message for its menu: react with 🙏 to say you are praying, Reply to answer that one message, Copy, or change and delete your own. With nothing typed, the round button records a voice message instead, for when speaking is easier than typing.',
+      'Tap any message for its menu: react with 🙏 to say you are praying, Reply to answer that one message, Copy, or change and delete your own. "More reactions" in the same menu has twenty-four more. With nothing typed, the round button records a voice message instead, for when speaking is easier than typing.',
     title: 'React or reply',
     hint: 'Tap 🙏 to tell them you are praying for them. Or choose Reply to answer that message.',
     target: 'chat-react',
@@ -175,7 +175,7 @@ const DM_STEPS: QuestStep[] = [
     id: 'share',
     where: 'My Explorers \u203a an Explorer \u203a Resources',
     learn:
-      'What you share lands in that person\u2019s library and nowhere else. Sharing is one person at a time, so an Explorer only ever sees what you chose for them, when they are ready for it.',
+      'What you share lands in that person\u2019s library and nowhere else. Sharing is one person at a time, so an Explorer only ever sees what you chose for them, when they are ready for it. In My Files, a PDF or an EPUB book kept on your device has a Read button, and Book turns the page like a real book.',
     title: 'Share a resource',
     hint: 'Tap the highlighted Share button to give them a reading or video. An Explorer only ever sees what you personally share.',
     target: 'share',

@@ -349,6 +349,24 @@ anybody who no longer needs it.
 
 ---
 
+## A book that somebody else wrote (EPUB, 15 November 2026)
+
+An EPUB is a website in a zip. Opening one in the app is opening code a stranger
+wrote, so the reader (`lib/epub.ts`, `components/EpubReader.tsx`) holds three
+layers, each sufficient alone:
+
+1. **An allowlist.** A chapter is rebuilt tag by tag from reading tags; no
+   script, style, frame, form or svg survives, only a few attributes do, links
+   never leave the book, and pictures are read out of the book and inlined.
+2. **A policy inside the chapter:** `default-src 'none'; img-src data:`.
+3. **A sandbox on the frame with no scripts**, so a hole in 1 and 2 still cannot
+   run code.
+
+The zip is untrusted as well: every part is inflated through our own byte count
+(25 MB a part, 5000 parts, 300 MB a file), so a small file that declares a huge
+one is stopped. Nothing is fetched; the app's own policy is unchanged. Held by
+`tests/a-book-opens-safely.mjs` and a hostile-book walk.
+
 ## Keeping it current: the routine
 
 | When | What | Who |

@@ -1,6 +1,42 @@
 # What changed, release by release
 
-The app's own release notes (`lib/release-notes.ts`), newest first: 73 releases, as members read them in Settings, What's new.
+The app's own release notes (`lib/release-notes.ts`), newest first: 78 releases, as members read them in Settings, What's new.
+
+### Read an EPUB book
+
+*2026-11-15*
+
+- A book (.epub) kept in My Files now has a Read button. It opens like a real book: pages side by side on a wide screen, one on a phone. Tap the edge of the page, swipe, or use Next and Previous to turn it.
+- Contents jumps to any chapter. Aa changes the text size, colour (Paper, Sepia or Night) and letters. Scroll shows a chapter as one long page. The app remembers where you stopped in each book.
+- A book cannot run anything or reach the internet from inside the reader.
+
+### Read a PDF like a book
+
+*2026-11-15*
+
+- In the PDF reader, tap Book to read one page at a time, or two side by side on a wide screen. Turn with Next and Previous, the arrow keys, or a swipe. Tap Scroll to go back. The reader remembers your choice.
+
+### My Files starts where you add things
+
+*2026-11-15*
+
+- With nothing on your device yet, My Files opens straight on Upload files and the link box. Choose as many files as you like, or drop them (or a link) right onto the card.
+
+### Read a PDF in My Files
+
+*2026-11-14*
+
+- A PDF kept on your device now has a Read button. It opens full screen inside the app, with larger and smaller text and a page count.
+
+### Say it your way in a chat
+
+*2026-11-14*
+
+- Tap the smiling face beside the paperclip for emoji, stickers, effects and your chat's look.
+- Stickers such as "Praying for you" and "Happy Sabbath" send with one tap.
+- Send a message with confetti, hearts, stars, balloons or fireworks. Nothing moves for anybody who has asked their device for less motion.
+- Choose the colour of your messages and what is behind the chat. Only you see it, on your own device.
+- More reactions: hold a message, then tap More reactions.
 
 ### Your plans, in folders
 

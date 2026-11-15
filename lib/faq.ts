@@ -235,6 +235,14 @@ export function faqSections(): FaqSection[] {
           ],
         },
         {
+          id: 'say-it-your-way',
+          q: 'Can I use emoji, stickers and effects in a conversation?',
+          a: [
+            'Yes. The smiling face beside the message box opens Emoji, Stickers, Effects and Look. A sticker is a short phrase with a picture, such as Praying for you or Happy Sabbath. An effect (confetti, stars, balloons, fireworks or hearts) plays once on the other person\u2019s screen when your message arrives. Look lets you choose a bubble colour and a background for your own side only: it is kept on your device and nobody else sees it.',
+            'Nothing is fetched from another company, so what you pick is not sent anywhere but to the person you are talking with. If you do not see Effects, your church\u2019s copy of the app has not been updated yet; everything else works the same.',
+          ],
+        },
+        {
           id: 'different-guide',
           q: 'What if I need a different Guide?',
           a: [
@@ -428,6 +436,23 @@ export function faqSections(): FaqSection[] {
           q: 'What is My Files?',
           a: [
             'All your files in one place. Files under “On this device” stay on your device and go directly to the person you send them to, without passing through a server. Resources are stored by the church: only you can open one until you share it, after which the recipient can open it too.',
+            'If nothing is on your device yet, My Files opens straight on Upload files and Add a link. You can choose as many files as you like at once, or drop files or a link onto the card on a computer.',
+          ],
+        },
+        {
+          id: 'read-books',
+          q: 'Can I read a PDF or a book in the app?',
+          a: [
+            'Yes. A PDF or an EPUB book kept on your device has a Read button that opens it full screen. Nothing is uploaded: the file is read on your device.',
+            'Choose Book to read like a printed book, one page at a time (two side by side on a wide screen). Turn the page with Next and Previous, the arrow keys, a swipe, or a tap at the edge of the page. Choose Scroll to read one long page instead, and the app remembers your choice.',
+            'In an EPUB, Contents jumps to any chapter, and Aa changes the text size, the colour (Paper, Sepia or Night) and the letters. The app remembers where you stopped in each book, on your device only.',
+          ],
+        },
+        {
+          id: 'book-safe',
+          q: 'Is it safe to open a book somebody gave me?',
+          a: [
+            'A book is a small website inside a file, so the reader treats it as untrusted. It cannot run programs, open web addresses, load pictures from the internet or send anything anywhere while you read. If a file is damaged or far too large to open safely, the app says so in plain words and nothing else is affected. If you are unsure where a book came from, you can still read it, but only download or share books you trust.',
           ],
         },
         {

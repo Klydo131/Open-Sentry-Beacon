@@ -400,6 +400,14 @@ THE SAME ROOMS AS THE MENU, FROM THE SAME LIST. railGroupsFor() is what the Menu
 
 THE BAR'S THREE BUTTONS ARE NOT REPEATED HERE, under any look. Menu, People and My Files are how a phone or a pad gets around; on a computer every room is already in this column, My Files and each role's people among them. The Beacon, Study and Focus looks put the three back at the top of it for a day, and the owner (4 October 2026). tests/the-classic-look-stays.mjs holds it.
 
+#### `components/EpubReader.tsx`
+
+Reading an EPUB inside the app, full screen, like a book.
+
+A book kept on the device could only be downloaded. This opens it (lib/epub.ts reads the zip and makes each chapter safe), and shows one chapter at a time in a sandboxed frame: pages side by side (two on a wide screen) turned with a tap, a swipe, a key or a button, or one long scroll. Nothing in the book runs and nothing in it is fetched; see lib/epub.ts for the three layers that hold.
+
+What is remembered, on this device only: the size, colour and style you chose, and where you stopped in each book.
+
 #### `components/EvangelisticMeetings.tsx`
 
 Evangelistic meetings: a series of nights, planned the church's own way.
@@ -871,6 +879,14 @@ WHICH DATE. signup_completed_at is when they chose a password and actually arriv
 #### `components/OnlineStatus.tsx`
 
 *No header comment.*
+
+#### `components/PdfReader.tsx`
+
+Reading a PDF inside the app, full screen.
+
+A PDF kept on the device could only be downloaded, and on an Android phone a download is saved to a folder with nothing shown, so it looked as though the file would not open. This draws each page with pdf.js (lib/pdfjs.ts, loaded only now) as the reader scrolls to it, and lets a page go again once it is far away, so a long book does not fill an old phone's memory.
+
+Nothing in the PDF runs: pages are drawn to a canvas, its scripts and forms are ignored, and eval is off.
 
 #### `components/PlaceSearch.tsx`
 
@@ -1510,7 +1526,7 @@ ASKED FOR ON 1 OCTOBER 2026, the composer ringed in red on a phone: a boxed pape
 
 [paperclip] ( Write a message… ) (●)
 
-* The paperclip is a plain icon, not a box. It is still a full-size target, and still says "Attach a file" to a screen reader. * The field is a pill that grows with what is typed (MessageBox: emoji by :name, Enter to send on a computer, Return for a new line on a phone). * ONE ROUND BUTTON, and it says what it will do. Empty: a microphone, to record a voice message, where the browser can. Something typed: a solid Send. Changing a message: Save. Never a faded circle that looks broken.
+* A smiling face beside the paperclip opens emoji, stickers, effects and the chat's look (components/talk/ExpressionPanel.tsx), since 14 November 2026. Like the paperclip it stays OUTSIDE the form, for the reason at the foot of this comment. * The paperclip is a plain icon, not a box. It is still a full-size target, and still says "Attach a file" to a screen reader. * The field is a pill that grows with what is typed (MessageBox: emoji by :name, Enter to send on a computer, Return for a new line on a phone). * ONE ROUND BUTTON, and it says what it will do. Empty: a microphone, to record a voice message, where the browser can. Something typed: a solid Send. Changing a message: Save. Never a faded circle that looks broken.
 
 #### `components/talk/Dock.tsx`
 
@@ -1521,6 +1537,16 @@ ONE FRAME FOR TWO HALVES. The live bubble (components/live/TalkDock.tsx) and the
 WHY THE CHAT LIVES HERE NOW. Asked for on 30 September 2026, with a screenshot of a Guide's Talk tab: The pages keep the appointments; the bubble keeps the talking, and the way to report travels with it into the header.
 
 ONE HEADER, NOT TWO. The live bubble had a navy strip saying "Talk" with Exit on it, and under that the surface's own strip with the name and "All" -- two bars, two ways out, on a panel that is small on a desktop. It is one bar now: back to the list when there is one, who you are talking to, Report, and close.
+
+#### `components/talk/ExpressionPanel.tsx`
+
+Emoji, stickers, an effect for the next message, and your chat's look.
+
+ASKED FOR ON 14 NOVEMBER 2026 (lib/talk/expression.ts has the reasons and every list). One panel, opened from the smiling face beside the paperclip, with four tabs. It sits between the thread and the message bar, so nothing floats over the conversation and the bar never moves from under a thumb.
+
+Emoji adds to what you are writing. Nothing is sent. Stickers one tap sends it, as a reply if you were replying. Effects chooses what the NEXT message arrives with; a chip above the bar says so, with a way out. It never plays for somebody who has asked their device for less motion. Look your bubble colour and the ground behind the chat, on this device only, seen only by you.
+
+Every target is 44px or more, and the tabs are a real tab list a keyboard can walk with the arrow keys.
 
 #### `components/talk/MessageButton.tsx`
 
@@ -1687,6 +1713,14 @@ WHY THIS FILE STRIPS IT BEFORE IT IS SENT. Every picture that leaves somebody's 
 #### `lib/engagement.ts`
 
 *No header comment.*
+
+#### `lib/epub.ts`
+
+Reading an EPUB on the device: open the book, find its chapters, and make each chapter safe to show.
+
+ADDED ON 15 NOVEMBER 2026: a book kept in My Files could not be read in the app at all, only downloaded.
+
+AN EPUB IS A WEBSITE IN A ZIP, WRITTEN BY SOMEBODY ELSE. Its chapters are XHTML that can carry scripts, event handlers, forms, remote pictures and style sheets that call other servers. Three layers keep that out, and each one holds if the others fail: 1. THE ALLOWLIST (here). A chapter is rebuilt tag by tag from a short list of reading tags; everything else is dropped, and only a few attributes survive. A link never leaves the book; a picture is read out of the book itself and inlined, so nothing is ever fetched from anywhere. 2. A CONTENT SECURITY POLICY INSIDE THE CHAPTER ("default-src 'none'"): nothing loads but pictures that are already in it. 3. THE SANDBOX on the frame that shows it (components/EpubReader.tsx), with no scripts allowed, so even a hole in 1 and 2 cannot run code.
 
 #### `lib/evangelistic-meeting-docx.ts`
 
@@ -2232,6 +2266,10 @@ The rules a new password is held to, the same on every screen that sets one: the
 
 A tiny, dependency-free PDF writer — just enough for the church report: text (Helvetica / Helvetica-Bold) and filled rectangles on one A4 page. PDF is a plain-text format; we build the objects and byte-accurate xref by hand and hand back a Blob. Keeping this in-house avoids adding a PDF library to a project that runs on free tiers.
 
+#### `lib/pdfjs.ts`
+
+pdf.js (Mozilla, Apache-2.0), loaded the first time somebody opens a PDF and never before. The worker is a file on this site (the policy allows workers from 'self'), so nothing is fetched from anywhere else and no part of a PDF leaves the phone. Shared by the Music room and the Library's reader.
+
 #### `lib/plan-sharing.ts`
 
 How an Office plan (a Sabbath program, evangelistic meetings) is posted for Explorers and taken down again, in a church's own app and in the sample church. One place, so the Office and This Sabbath behave the same.
@@ -2592,15 +2630,25 @@ Asked for with a sketch and a screenshot of a messaging app's menu:
 
 Kept pure, with no React and no database, so the two questions that decide what the bar does can be tested in Node: where each tab goes for a given role, and which tab is lit on a given screen. Both shells (the sample one and the live one) and My Files, which runs outside either shell, draw the same bar from these.
 
+#### `lib/talk/expression.ts`
+
+Saying it your own way in a conversation: emoji you can pick, stickers, a message sent with an effect, and a look for your side of the chat.
+
+ASKED FOR ON 14 NOVEMBER 2026: the chat read as plain beside the apps young adults already use, and people wanted to express themselves in it.
+
+EVERYTHING HERE IS OURS AND STAYS ON OUR SIDE. No sticker or GIF service is called: those send what somebody searched for to another company, and what comes back is not chosen with children in mind. The stickers are words and emoji drawn by the app; the emoji are the ones every phone already has.
+
+A STICKER IS A MESSAGE WHOSE WORDS SAY WHAT IT IS. It travels as ordinary text, "[sticker: Praying for you]", so a notification, a report copied for safeguarding, a search and an older copy of the app all show something a person can read. Only a known label is drawn as a sticker.
+
 #### `lib/talk/reactions.ts`
 
-The six reactions, in the order the menu shows them.
+The reactions: six in the row, and more behind "More".
 
-A FIXED SIX, NOT A KEYBOARD. Every messaging app people already use offers a short row of reactions before anything else, and a short row is what makes reacting one tap. A free choice of emoji would also make the database column free text, which is a column nobody can promise anything about.
+A SHORT ROW FIRST. Every messaging app people already use offers a short row of reactions before anything else, and a short row is what makes reacting one tap. The six in REACTIONS are that row, unchanged since 1 October 2026.
 
-🙏 FIRST, ON PURPOSE. This is a church's app, and "I'm praying for you" is the reaction a Guide and an Explorer reach for most. It is the one detail of the row that is ours rather than borrowed.
+🙏 FIRST, ON PURPOSE. This is a church's app, and "I'm praying for you" is the reaction a Guide and an Explorer reach for most.
 
-THE SAME SIX ARE IN THE DATABASE: the check on message_reactions.emoji and the list inside react_to(), in supabase/migrations/20261001120000_a_conversation_can_reply_react_and_speak.sql. tests/a-conversation-can-reply-react-and-speak.mjs fails if the three differ. To change the set, change all three and add a migration; never edit one that has run.
+MORE, BUT STILL A LIST. Asked for on 14 November 2026: people wanted to react in their own way. MORE_REACTIONS widens the choice without making the database column free text, which is a column nobody can promise anything about. Every entry is a plain emoji that every phone draws, with nothing a church would be embarrassed to see on a child's screen.
 
 #### `lib/talk/thread.ts`
 

@@ -2374,14 +2374,14 @@ body:has([data-conversation-screen]) .tab-bar {
   }
 }
 
+/* Turning a page in the PDF reader's book view: a short fade and slide, on
+   opacity and transform only. Nothing moves for people who ask for less. */
+.book-turn { animation: book-turn 0.22s ease-out; }
+@keyframes book-turn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+
 @media (prefers-reduced-motion: reduce) {
   .book-turn { animation: none; }
   .sticker-bounce, .sticker-wiggle, .sticker-pulse, .sticker-float { animation: none; }
   .expression-emoji, .sticker-pick, .look-swatch { transition: none; }
   .expression-emoji:active, .sticker-pick:active:not(:disabled), .sticker-pick:hover:not(:disabled) { transform: none; }
 }
-
-/* Turning a page in the PDF reader's book view: a short fade and slide, on
-   opacity and transform only. Nothing moves for people who ask for less. */
-.book-turn { animation: book-turn 0.22s ease-out; }
-@keyframes book-turn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }

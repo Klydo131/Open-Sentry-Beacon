@@ -15,6 +15,7 @@
 import {
   LocalMediaError,
   inspectPlayableMedia,
+  mimeOfFile,
   newMediaId,
   prepareMediaStorage,
   putMedia,
@@ -58,7 +59,7 @@ export async function saveFilesFromInput(
       info: Pick<MediaMeta, 'width' | 'height' | 'duration'>;
     }> = [];
     for (const file of files) {
-      const type = typeFromMime(file.type);
+      const type = typeFromMime(mimeOfFile(file));
       const info =
         type === 'audio' || type === 'video' ? await inspectPlayableMedia(file, type) : {};
       ready.push({ file, type, info });
@@ -71,7 +72,7 @@ export async function saveFilesFromInput(
           title: file.name,
           type,
           note: note || undefined,
-          mime: file.type,
+          mime: mimeOfFile(file),
           size: file.size,
           created_at: new Date().toISOString(),
           ...info,

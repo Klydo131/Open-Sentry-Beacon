@@ -1,6 +1,6 @@
 # Appendix C. Every check in the gate
 
-`npm run verify` runs these 204 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
+`npm run verify` runs these 206 checks after the typecheck and the production build, in this order. Each entry is the check's label in `scripts/verify.mjs` and the opening comment of its file: what it holds and why it exists.
 
 #### no secrets
 
@@ -307,6 +307,16 @@ The library shelf can be described, searched, and shared without a wall of butto
 THREE THINGS, and the first is a real gap rather than a polish item.
 
 ONE. THE FORM NEVER ASKED WHAT A LINK IS FOR. `addMaterial` has taken a description since the day it was written, `updateMaterial` takes one, and the row draws one -- and no screen ever offered a box to type it in. So every resource added by a real person is a bare title over a grey address, and the only items with a line explaining themselves are seeded ones. A link handed to somebody hesitant, with nothing saying why it is worth their time, is a link nobody taps.
+
+#### a book opens safely
+
+`tests/a-book-opens-safely.mjs`
+
+An EPUB opens in the app, and a hostile one cannot do anything.
+
+An EPUB is a website in a zip, written by someone else. This holds the parts that do not need a browser: the zip reader, the paths inside a book, the limits against a zip that inflates to gigabytes, and the three layers that keep a chapter's code from running (the allowlist, the policy inside the chapter, the sandbox on its frame). The browser half is tests/e2e/a-book-opens-in-the-library.js.
+
+node tests/a-book-opens-safely.mjs
 
 #### a share can say why
 
@@ -1145,6 +1155,16 @@ A conversation can reply, react and speak -- and stays exactly as private.
 ASKED FOR ON 1 OCTOBER 2026: a chat that feels like the ones people already use, with reactions, replies and voice messages. Each of the three opened a way in that did not exist before, and this check holds the doors shut:
 
 * a reaction is read by the two people in the pairing and written only through react_to(), from a fixed six that the screen and the database agree on; * a reply cannot point outside its conversation, and sending a message writes four columns and no others; * the microphone is allowed for this site only, asked for on a tap, let go when recording stops, and a recording is never sent on its own.
+
+#### a conversation can say it your way
+
+`tests/a-conversation-can-say-it-your-way.mjs`
+
+A conversation can say it your way, and stays ours while it does.
+
+Asked for on 14 November 2026: emoji to pick, stickers, a message sent with an effect and a look for your own side of the chat (lib/talk/expression.ts). Each of them could have opened a hole, so this holds the rules that keep them shut, by running the code rather than looking for words in it:
+
+1. a sticker travels as words a person can read, and only a known one is drawn; anything else is an ordinary message; 2. every sticker and every bubble colour carries ink that reads on it; 3. the emoji offered are plain, drawn by every phone, and none twice; 4. a look read from the device is one the app offers, whatever was stored; 5. an effect is one of five, checked by the app, the sample store and the database, and a database without the column still gets the words; 6. nothing here calls another company's service; 7. the new control stays outside the message form, and everything that moves stops for somebody who asked for less motion.
 
 #### a stored path cannot leave its folder
 

@@ -111,6 +111,26 @@ link** at the top, and Delete asks a second time before anything goes.
 
 ![My Files on a phone, On this device: Upload files and Add a link at the top, then your own files.](screenshots/walkthrough/43-my-files-device.png)
 
+With nothing on your device yet, My Files opens on **On this device** with
+**Upload files** and **Add a link** at the top, so you can start at once.
+Choose as many files as you like in one go, or on a computer drop files (or a
+link) onto the card.
+
+### Reading a PDF or a book
+
+A PDF or an **EPUB** book kept on your device has a **Read** button. It opens
+full screen and nothing is uploaded.
+
+- **Book** reads like a printed book: one page at a time, or two side by side on
+  a wide screen. Turn the page with **Next** and **Previous**, the arrow keys, a
+  swipe, or a tap at the left or right edge. **Scroll** puts it back to one long
+  page. The app remembers which you chose.
+- In an EPUB, **Contents** jumps to any chapter. **Aa** changes the text size,
+  the colour (Paper, Sepia or Night) and the letters. The app remembers where you
+  stopped in each book, on your device only.
+- A book cannot run programs or reach the internet while you read it. A file that
+  is damaged or far too large is refused in plain words.
+
 ![The Menu. Every room is written out, with your own profile at the top.](screenshots/walkthrough/19-menu.png)
 
 Some screens hold several **folders**. The button at the top names the one you
@@ -210,6 +230,14 @@ or a file.
 
 ![A reply, with the message it answers quoted above it. The praying hands under the earlier message are a reaction.](screenshots/walkthrough/17-reply-and-reaction.png)
 
+**Say it your way.** The smiling face beside the box opens four tabs. **Emoji**
+adds to your words. **Stickers** are short phrases with a picture, like *Praying
+for you* or *Happy Sabbath*. **Effects** send your message with confetti, stars,
+balloons, fireworks or hearts, played once on their screen. **Look** chooses a
+bubble colour and a background for your own side only; it is kept on your device
+and nobody else sees it. Tap a message and choose **More reactions** for
+twenty-four more. Nothing is fetched from another company.
+
 **Say it instead of typing it.** When the box is empty, the button beside it is
 a microphone. Tap it once and speak; the phone asks for the microphone the first
 time. Tap the arrow to send, or the bin to throw it away. It stops at two
@@ -217,8 +245,9 @@ minutes and never sends on its own.
 
 ![Recording a voice message. The clock counts while you speak; the bin throws it away, the arrow sends it.](screenshots/walkthrough/18-voice-message.png)
 
-> **If you do not see Reply, the reactions or the microphone**, your church has
-> not switched them on yet. Everything else in the conversation works the same.
+> **If you do not see Reply, the reactions, Effects or the microphone**, your
+> church has not switched them on yet. Everything else in the conversation works
+> the same.
 
 ### Study
 
