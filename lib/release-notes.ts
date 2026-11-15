@@ -24,6 +24,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     items: [
       'Analytics now opens on the Mission pulse: what needs a leader first (people waiting for a Guide, unanswered requests, journeys that have stopped), then what happened in the last 7, 30 or 90 days or 12 months against the period before.',
       'Each number has a small chart and its change, the journey shows every stage with how long people have been there, and a section shows the app\u2019s own health. Counts only, never names.',
+      'Analysis asks what goes with progress (waiting for a Guide, meetings, a Guide\u2019s number of people, digital or in person) and says plainly when there are too few journeys to tell. Raw data shows the numbers behind every chart, with a CSV to download.',
     ],
   },
   {

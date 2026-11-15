@@ -344,7 +344,7 @@ export { DAY };
  */
 export async function pulseInput(now = Date.now()): Promise<PulseInput> {
   const none = (): never[] => [];
-  const [members, pairings, moves, meetings, requests, invites, feedback, week, month] = await Promise.all([
+  const [members, pairings, moves, meetings, requests, invites, feedback, week, month, perJourney] = await Promise.all([
     live.listMembers(),
     live.listPairings(),
     live.listJourneyEvents(5000).catch(none),
@@ -354,12 +354,15 @@ export async function pulseInput(now = Date.now()): Promise<PulseInput> {
     live.listFeedback().catch(none),
     live.churchActivity(7).catch(none),
     live.churchActivity(30).catch(none),
+    // Usually private to the Guide and Explorer; null when a leader may not read it.
+    live.listMeetingTimes().catch(() => null),
   ]);
   return {
     now,
     members: members.map((m) => ({ id: m.id, role: m.role, approved: !!m.is_approved, joinedAt: m.signup_completed_at ?? m.created_at ?? null })),
-    pairings: pairings.map((p) => ({ id: p.id, dsId: p.ds_id, stage: p.journey_stage, status: p.status, createdAt: p.created_at })),
+    pairings: pairings.map((p) => ({ id: p.id, dsId: p.ds_id, dmId: p.dm_id, track: p.track, stage: p.journey_stage, status: p.status, createdAt: p.created_at })),
     moves: moves.map((e) => ({ pairingId: e.pairing_id, from: e.from_stage ?? null, to: e.to_stage, at: e.created_at })),
+    journeyMeetings: perJourney && perJourney.length ? perJourney.map((m) => ({ pairingId: m.pairing_id, done: m.status === 'done' || (m.status !== 'cancelled' && new Date(m.starts_at).getTime() < now) })) : null,
     meetings: meetings.map((m) => ({ at: m.starts_at, done: m.status === 'done', cancelled: m.status === 'cancelled' })),
     requests: requests.map((r) => ({ pending: r.status === 'pending', createdAt: r.created_at })),
     invites: invites.map((i) => ({ createdAt: i.created_at, joinedAt: i.joined_at, expiresAt: i.expires_at })),

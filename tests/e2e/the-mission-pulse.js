@@ -31,7 +31,7 @@ async function signInAs(page, name) {
 
 async function walk(browser, viewport, who, label) {
   const tag = `${label} at ${viewport.width}px`;
-  const ctx = await browser.newContext({ viewport, serviceWorkers: 'block' });
+  const ctx = await browser.newContext({ viewport, serviceWorkers: 'block', acceptDownloads: true });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => { if (!isCancelledPrefetch(e.message)) errors.push(e.message); });
@@ -46,9 +46,31 @@ async function walk(browser, viewport, who, label) {
   ok((await page.locator('[data-pulse-attention] li').count()) >= 1, `${tag}: it says what needs attention (${(await page.locator('[data-pulse-attention] li').allInnerTexts()).map((t) => t.split('\n').pop()).join(' | ').slice(0, 160)})`);
   ok((await page.locator('[data-pulse-tile]').count()) === 8, `${tag}: eight outcomes, each with a number`);
   ok((await page.locator('[data-pulse-tile] svg rect').count()) > 20, `${tag}: each outcome has its little chart`);
+  ok((await page.locator('[data-pulse-tab]').count()) === 5, `${tag}: five views: overview, journeys, analysis, raw data, app health`);
+  await page.locator('[data-pulse-tab="journeys"]').click();
+  await page.waitForTimeout(400);
   ok((await page.locator('[data-pulse-pathway] li').count()) === 6, `${tag}: the journey shows all six stages`);
   ok(/Explorers back this week/.test(await page.locator('[data-pulse-people]').innerText()), `${tag}: people and engagement shows who keeps coming back`);
+  await page.locator('[data-pulse-tab="analysis"]').click();
+  await page.waitForTimeout(400);
+  const cards = page.locator('[data-pulse-finding]');
+  ok((await cards.count()) === 5, `${tag}: the analysis asks five questions`);
+  const said = (await cards.allInnerTexts()).join(' ');
+  ok(/Not enough to say|r = /.test(said) && !/NaN|undefined|Infinity/.test(said), `${tag}: each answers with r or says there is not enough, never NaN`);
+  ok(/Spearman/.test(await page.locator('[data-pulse-analysis]').innerText()), `${tag}: it says how the numbers are worked out and that a link is not a cause`);
+  await page.locator('[data-pulse-tab="raw"]').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('[data-count-row]').count()) >= 7, `${tag}: the raw counts are shown, one row per part of the period`);
+  ok((await page.locator('[data-journey-row]').count()) >= 1, `${tag}: one row per journey, numbered`);
+  ok(!/Maria|John|Santos|Ramos|Alonzo/.test(await page.locator('[data-pulse-raw]').innerText()), `${tag}: no name appears in the raw data`);
+  const [download] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }).catch(() => null), page.locator('[data-pulse-csv="journeys"]').click()]);
+  const csvText = download ? require('node:fs').readFileSync(await download.path(), 'utf8') : '';
+  ok(/^\ufeff?Journey,Status,Stage/.test(csvText) && !/Maria|John|Santos/.test(csvText), `${tag}: the journey CSV downloads, with no names (${download ? download.suggestedFilename() : 'no file'})`);
+  await page.locator('[data-pulse-tab="health"]').click();
+  await page.waitForTimeout(400);
   ok(/Feedback not closed/.test(await page.locator('[data-pulse-system]').innerText()), `${tag}: the app's own health is there for IT`);
+  await page.locator('[data-pulse-tab="overview"]').click();
+  await page.waitForTimeout(400);
 
   const before = await page.locator('[data-pulse-tile]').allInnerTexts();
   await page.locator('[data-pulse-period="365"]').click();

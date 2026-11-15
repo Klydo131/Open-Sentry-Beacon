@@ -53,6 +53,37 @@ The period is remembered on the device. Numbers count up and bars grow, both
 skipped for anyone who asks for less motion. Everything is built from records
 the app already keeps; no database change was needed.
 
+## Analysis and raw data
+
+The **Analysis** view asks five questions of one row per journey (numbered,
+never named), using Spearman's rank correlation, which suits small numbers and
+a stage that is an order rather than a measure (`lib/mission-analysis.ts`):
+
+| Question | Compares | Why |
+| --- | --- | --- |
+| Does waiting longer for a Guide slow the journey down? | Days waited for a Guide, steps per month | Follow-up speed is the strongest lead measure churches report. |
+| Do journeys with more meetings move further? | Meetings held, stage reached | Discipleship surveys find frequency of meeting goes with growth (Lifeway; Baylor on small groups). Only where meetings are visible to leaders; otherwise it says why not. |
+| Are Guides carrying too many people? | Journeys the Guide carries, steps per month | Whether load is slowing journeys. |
+| Is digital or in-person moving faster? | Track, steps per month | Which way of walking with people is working here. |
+| Are stages being kept up to date? | Days since the journey began, stage | A sanity check: if older journeys are not further on, stages are not being updated. |
+
+**How it stays honest.** Nothing is worked out under 8 journeys. Each answer
+gives r (−1 to +1), its strength in words (under 0.1 none, under 0.3 weak, under
+0.5 moderate, otherwise strong), the number of journeys, and whether it clears
+the line that chance alone could reach for that many (about 1.96/√(n−1)). With
+small samples a correlation is unstable and its interval wide, so "could be
+chance" is said plainly. A flat column (every journey the same) gives no answer
+rather than a zero. A correlation is never presented as a cause: it is a
+question worth asking a Guide.
+
+**Raw data** shows the counts behind every chart, one row per part of the
+period, and one row per journey, each with a CSV download. The CSV carries no
+name or id, and any cell a spreadsheet would run as a formula is quoted.
+
+Held by `tests/the-mission-analysis-holds.mjs` (statistics checked against
+values worked by hand, and a synthetic church built with a known link, which the
+analysis must find) and the browser walk.
+
 ## What to record next (not built yet)
 
 Each needs a database change, which is applied to the live databases only with
@@ -85,6 +116,12 @@ the owner's approval.
 - Product analytics dashboard (activation, retention): https://www.basedash.com/dashboard-templates/product-analytics-dashboard
 - Adoption metrics in complex SaaS (WAU/MAU over DAU/MAU): https://usetandem.ai/blog/adoption-metrics-complex-saas
 - The four golden signals: https://www.splunk.com/en_us/blog/learn/sre-metrics-four-golden-signals-of-monitoring
+- Lifeway Research on small-group frequency and discipleship: https://www.baptistpress.com/resource-library/news/small-group-participation-linked-to-higher-discipleship-scores-lifeway-research-finds/
+- Baylor research on small groups (frequency over length): https://baptistnews.com/article/small-groups-crucial-but-not-cure-all/
+- Spearman correlation and small samples: https://metricgate.com/blogs/how-to-interpret-spearman-correlation/
+- Robust confidence intervals for correlations (Behavior Research Methods, 2016): https://link.springer.com/10.3758/s13428-016-0702-8
+- Dashboard design principles (summary first, detail on demand): https://www.designrush.com/agency/ui-ux-design/dashboard/trends/dashboard-design-principles
+- Real-time dashboard UX (deltas, sparklines): https://shop.smashingmagazine.com/2025/09/ux-strategies-real-time-dashboards/
 - Small-count suppression in public health: https://dph.illinois.gov/content/dam/soi/en/web/idph/resources/data-statistics/aggregate-data-suppression-policy-09242025.pdf
 
 Two Adventist sites (ted.adventist.org, interamerica.org) could not be opened

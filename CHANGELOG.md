@@ -10,6 +10,26 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 15 November 2026 (night): the Mission pulse gains Analysis and Raw data
+
+**Nothing to do** for a church running a copy. No database change.
+
+- The pulse is five views: Overview, Journeys, Analysis, Raw data, App health,
+  under a header with the three numbers asked first. Period pills fit one row on
+  a phone; tiles are two across from 360px.
+- **Analysis** (`lib/mission-analysis.ts`): one numbered row per journey, and
+  five questions answered with Spearman's rank correlation, a scatter each,
+  strength in words, and whether chance could explain it. Nothing under 8
+  journeys; a flat column gives no answer; meetings per journey are used only
+  where a leader may read them (`listMeetingTimes`), otherwise it says why not.
+- **Raw data**: counts per part of the period and one row per journey, each as
+  CSV with no names and formula-looking cells quoted.
+- `tests/the-mission-analysis-holds.mjs` (in the gate): hand-worked values, a
+  synthetic church with a known link, refusals, and the raw table adding up to
+  the tiles. The walk now opens every view and downloads the CSV.
+
+---
+
 ## 15 November 2026 (evening): the Mission pulse on the leaders' Analytics
 
 **Nothing to do** for a church running a copy. No database change; it reads

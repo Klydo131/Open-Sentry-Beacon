@@ -20,8 +20,11 @@ import { momentum, quietCount, trend } from '@/lib/analytics-trend';
 import { MomentumLine, TrendChart } from '@/components/TrendChart';
 import { STAGES } from '@/lib/brand';
 import type { AnalyticsEvent, DB, Role, Stage } from '@/lib/types';
-import { MissionPulse } from '@/components/MissionPulse';
+import dynamic from 'next/dynamic';
 import { DAY, type PulseInput } from '@/lib/mission-pulse';
+
+// Loaded when Analytics opens, not with the page that holds it: the door stays light.
+const MissionPulse = dynamic(() => import('@/components/MissionPulse').then((m) => m.MissionPulse), { ssr: false });
 
 /** The sample church, in the shape the Mission pulse reads (the live one is lib/live/analytics.ts). */
 export function demoPulseInput(db: DB, now = Date.now()): PulseInput {
@@ -33,7 +36,8 @@ export function demoPulseInput(db: DB, now = Date.now()): PulseInput {
   return {
     now,
     members: db.profiles.map((p) => ({ id: p.id, role: p.role, approved: p.is_approved, joinedAt: p.signup_completed_at ?? p.approved_at ?? p.consent_at ?? null })),
-    pairings: db.pairings.map((p) => ({ id: p.id, dsId: p.ds_id, stage: p.journey_stage, status: p.status, createdAt: p.created_at })),
+    pairings: db.pairings.map((p) => ({ id: p.id, dsId: p.ds_id, dmId: p.dm_id, track: p.track, stage: p.journey_stage, status: p.status, createdAt: p.created_at })),
+    journeyMeetings: db.meetings.map((m) => ({ pairingId: m.pairing_id, done: m.status !== 'cancelled' && new Date(m.when).getTime() < now })),
     moves: db.journey_events.map((e) => ({ pairingId: e.pairing_id, from: e.from_stage ?? null, to: e.to_stage, at: e.created_at })),
     meetings: db.meetings.map((m) => ({ at: m.when, done: m.status !== 'cancelled' && new Date(m.when).getTime() < now, cancelled: m.status === 'cancelled' })),
     requests: [],

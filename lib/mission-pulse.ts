@@ -37,7 +37,6 @@ export const PERIODS = [
   { days: 90, label: '90 days', buckets: 13 },
   { days: 365, label: '12 months', buckets: 12 },
 ] as const;
-export type PeriodDays = (typeof PERIODS)[number]['days'];
 
 /** A journey that has not moved in this many days is called stalled. */
 export const STALLED_AFTER_DAYS = 30;
@@ -49,12 +48,14 @@ export const REQUEST_OVERDUE_DAYS = 3;
 export interface PulseInput {
   now: number;
   members: { role: Role; approved: boolean; joinedAt: string | null; id: string }[];
-  pairings: { id: string; dsId: string; stage: Stage; status: string; createdAt: string }[];
+  pairings: { id: string; dsId: string; dmId?: string; track?: string; stage: Stage; status: string; createdAt: string }[];
   moves: { pairingId: string; from?: Stage | null; to: Stage; at: string }[];
   meetings: { at: string; done: boolean; cancelled: boolean }[];
   requests: { pending: boolean; createdAt: string }[];
   invites: { createdAt: string; joinedAt: string | null; expiresAt: string | null }[];
   feedback: { createdAt: string; open: boolean }[];
+  /** Meetings per journey, only where the app lets a leader see them (null: not visible). */
+  journeyMeetings?: { pairingId: string; done: boolean }[] | null;
   /** People active in the last 7 and 30 days, by role, when the app can say. */
   activity: { days: 7 | 30; role: Role; active: number; approved: number }[];
 }

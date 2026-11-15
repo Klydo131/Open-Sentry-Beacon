@@ -1,25 +1,35 @@
 'use client';
 
-// The Mission pulse at the top of the church's numbers: what to act on first,
-// how the journeys are moving, and whether the app itself is healthy. The
-// arithmetic is lib/mission-pulse.ts; this only draws it, the same for the
-// tutorial's sample church and a live one.
+// The Mission pulse at the top of the church's numbers. Five views over one
+// set of records: what to act on, how journeys move, what goes with progress
+// (correlations), the raw counts behind it all, and the app's own health. The
+// arithmetic is lib/mission-pulse.ts and lib/mission-analysis.ts; this only
+// draws it, the same for the tutorial's sample church and a live one.
 //
-// MOVES, BUT ONLY TO SAY SOMETHING. Numbers count up to their value when the
-// period changes, bars grow to their length, and a little bar chart in each
-// tile shows the shape of the period. All of it is skipped for somebody who
-// asked for less movement, and every number is plain text first.
+// MOVES, BUT ONLY TO SAY SOMETHING. Numbers count up when the period changes,
+// bars grow, a view settles in when chosen. All of it is skipped for somebody
+// who asked for less movement, and every number is plain text first.
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card } from '@/components/ui';
 import { STAGES } from '@/lib/brand';
-import { prefersLessMotion } from '@/lib/motion';
+import { prefersLessMotion, settleIn } from '@/lib/motion';
 import {
   change, missionPulse, PERIODS, STALLED_AFTER_DAYS,
   type Measure, type PulseInput,
 } from '@/lib/mission-pulse';
+import {
+  chanceLine, countTable, findings, journeyRows, MIN_N, toCsv, type Finding,
+} from '@/lib/mission-analysis';
 
 const PERIOD_KEY = 'hb-pulse-period';
+const TABS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'journeys', label: 'Journeys' },
+  { key: 'analysis', label: 'Analysis' },
+  { key: 'raw', label: 'Raw data' },
+  { key: 'health', label: 'App health' },
+] as const;
+type Tab = (typeof TABS)[number]['key'];
 
 function useCountUp(value: number): number {
   const [shown, setShown] = useState(value);
@@ -31,10 +41,8 @@ function useCountUp(value: number): number {
     let raf = 0;
     const step = (t: number) => {
       const k = Math.min(1, (t - start) / 450);
-      const eased = 1 - (1 - k) ** 3;
-      setShown(Math.round(a + (value - a) * eased));
-      if (k < 1) raf = requestAnimationFrame(step);
-      else from.current = value;
+      setShown(Math.round(a + (value - a) * (1 - (1 - k) ** 3)));
+      if (k < 1) raf = requestAnimationFrame(step); else from.current = value;
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
@@ -42,14 +50,22 @@ function useCountUp(value: number): number {
   return shown;
 }
 
+function save(name: string, body: string) {
+  const url = URL.createObjectURL(new Blob([String.fromCharCode(0xfeff), body], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function Spark({ series, colour }: { series: number[]; colour: string }) {
   const peak = Math.max(1, ...series);
   const w = 100 / series.length;
   return (
-    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="mt-2 h-7 w-full" aria-hidden>
+    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="mt-3 h-8 w-full" aria-hidden>
       {series.map((v, i) => {
         const h = v === 0 ? 1.5 : 3 + (v / peak) * 25;
-        return <rect key={i} x={i * w + w * 0.15} width={w * 0.7} y={28 - h} height={h} rx={1} fill={v === 0 ? '#d7dce4' : colour} />;
+        return <rect key={i} x={i * w + w * 0.15} width={w * 0.7} y={28 - h} height={h} rx={1.2} fill={v === 0 ? '#dfe3ea' : colour} />;
       })}
     </svg>
   );
@@ -57,14 +73,14 @@ function Spark({ series, colour }: { series: number[]; colour: string }) {
 
 function Delta({ m, better }: { m: Measure; better: 'up' | 'down' | 'none' }) {
   const { diff, pct } = change(m);
-  if (diff === 0) return <span className="text-xs font-semibold text-gray-500">Same as before</span>;
+  if (diff === 0) return <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">Same as before</span>;
   const up = diff > 0;
   const good = better === 'none' ? null : (better === 'up') === up;
-  const ink = good === null ? 'text-gray-600' : good ? 'text-green-700' : 'text-amber-800';
+  const tone = good === null ? 'bg-slate-100 text-slate-700' : good ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800';
   return (
-    <span className={`text-xs font-bold ${ink}`}>
-      <span aria-hidden>{up ? '▲' : '▼'}</span> {up ? '+' : '−'}{Math.abs(diff)}{pct !== null ? ` (${up ? '+' : '−'}${Math.abs(pct)}%)` : ''}
-      <span className="font-semibold text-gray-500"> vs before</span>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}>
+      <span aria-hidden>{up ? '↑' : '↓'}</span>{up ? '+' : '−'}{Math.abs(diff)}{pct !== null ? ` · ${Math.abs(pct)}%` : ''}
+      <span className="font-semibold opacity-75"> vs before</span>
     </span>
   );
 }
@@ -74,32 +90,85 @@ function Tile({ label, m, hint, better = 'up', colour = '#2F80ED' }: {
 }) {
   const n = useCountUp(m.now);
   return (
-    <div className="flex flex-col rounded-2xl bg-white p-4 ring-1 ring-navy/10" data-pulse-tile>
-      <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-1 text-3xl font-extrabold tabular-nums text-navy" aria-label={`${m.now}`}>{n}</p>
-      <Delta m={m} better={better} />
+    <div className="group flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80 transition duration-200 hover:-translate-y-0.5 hover:shadow-md" data-pulse-tile>
+      <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: colour }} />{label}
+      </p>
+      <p className="mt-2 text-[2rem] font-extrabold leading-none tabular-nums text-navy" aria-label={`${m.now}`}>{n}</p>
+      <div className="mt-2"><Delta m={m} better={better} /></div>
       <Spark series={m.series} colour={colour} />
-      <p className="mt-1 text-xs text-gray-500">{hint}</p>
+      <p className="mt-1 text-xs text-slate-500">{hint}</p>
     </div>
   );
 }
 
 const TONE = {
-  act: { ring: 'ring-amber-300', bg: 'bg-amber-50', ink: 'text-amber-900', badge: 'Act now' },
-  watch: { ring: 'ring-sky-200', bg: 'bg-sky-50', ink: 'text-sky-900', badge: 'Keep an eye' },
-  good: { ring: 'ring-green-200', bg: 'bg-green-50', ink: 'text-green-900', badge: 'All clear' },
+  act: { ring: 'ring-amber-300/80', bg: 'bg-amber-50', ink: 'text-amber-900', dot: 'bg-amber-500', badge: 'Act now' },
+  watch: { ring: 'ring-sky-200', bg: 'bg-sky-50', ink: 'text-sky-900', dot: 'bg-sky-500', badge: 'Keep an eye' },
+  good: { ring: 'ring-emerald-200', bg: 'bg-emerald-50', ink: 'text-emerald-900', dot: 'bg-emerald-500', badge: 'All clear' },
 } as const;
 
 const days = (d: number | null) => (d === null ? 'not known' : d < 1 ? 'under a day' : `${Math.round(d)} day${Math.round(d) === 1 ? '' : 's'}`);
 const pct = (r: number | null) => (r === null ? 'not known' : `${Math.round(r * 100)}%`);
 
+const STRENGTH = {
+  none: 'bg-slate-100 text-slate-700', weak: 'bg-sky-50 text-sky-800', moderate: 'bg-indigo-50 text-indigo-800', strong: 'bg-violet-100 text-violet-900',
+} as const;
+
+/** A scatter of one correlation: each dot is one journey, never named. */
+function Scatter({ f }: { f: Finding }) {
+  const xs = f.points.map((p) => p.x); const ys = f.points.map((p) => p.y);
+  const [x0, x1] = [Math.min(0, ...xs), Math.max(1, ...xs)];
+  const [y0, y1] = [Math.min(0, ...ys), Math.max(1, ...ys)];
+  const sx = (v: number) => 12 + ((v - x0) / (x1 - x0 || 1)) * 176;
+  const sy = (v: number) => 104 - ((v - y0) / (y1 - y0 || 1)) * 84;
+  return (
+    <svg viewBox="0 0 200 120" className="h-36 w-full" role="img" aria-label={`${f.n} journeys: ${f.x} against ${f.y}`}>
+      <line x1="12" y1="108" x2="188" y2="108" stroke="#cbd5e1" />
+      <line x1="12" y1="14" x2="12" y2="108" stroke="#cbd5e1" />
+      {f.points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r="3.6" fill="#4f46e5" fillOpacity="0.55" stroke="#312e81" strokeOpacity="0.4" />)}
+      <text x="188" y="119" textAnchor="end" fontSize="8" fill="#64748b">{f.x} →</text>
+      <text x="14" y="9" fontSize="8" fill="#64748b">↑ {f.y}</text>
+    </svg>
+  );
+}
+
+function FindingCard({ f }: { f: Finding }) {
+  const drawable = f.points.length > 0 && (f.missing === undefined || f.missing === 'few');
+  return (
+    <article className="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80" data-pulse-finding={f.key}>
+      <h4 className="font-bold text-navy">{f.question}</h4>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {f.r !== null && f.strength ? (
+          <>
+            <span className="text-2xl font-extrabold tabular-nums text-navy">r = {f.r > 0 ? '+' : ''}{f.r.toFixed(2)}</span>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STRENGTH[f.strength]}`}>{f.strength === 'none' ? 'no link' : `${f.strength} ${f.r > 0 ? 'positive' : 'negative'}`}</span>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${f.likelyReal ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>{f.likelyReal ? 'unlikely to be chance' : 'could be chance'}</span>
+          </>
+        ) : (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">Not enough to say</span>
+        )}
+        <span className="text-xs text-slate-500">{f.n} journey{f.n === 1 ? '' : 's'}</span>
+      </div>
+      {drawable && <Scatter f={f} />}
+      <p className="mt-1 text-sm text-slate-700">{f.reading}</p>
+    </article>
+  );
+}
+
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (<><dt className="text-slate-600">{label}</dt><dd className="text-right font-bold tabular-nums text-navy">{children}</dd></>);
+}
+
 export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; live: boolean }) {
   const [input, setInput] = useState<PulseInput | null>(null);
   const [error, setError] = useState('');
   const [period, setPeriod] = useState<number>(30);
+  const [tab, setTab] = useState<Tab>('overview');
   const [busy, setBusy] = useState(false);
   const [loadedIn, setLoadedIn] = useState<number | null>(null);
   const [, tick] = useState(0);
+  const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try { const saved = Number(localStorage.getItem(PERIOD_KEY)); if (PERIODS.some((p) => p.days === saved)) setPeriod(saved); } catch { /* private window */ }
@@ -117,133 +186,255 @@ export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; 
     } finally { setBusy(false); }
   }, [load]);
   useEffect(() => { void refresh(); }, [refresh]);
-  // "Updated 3 minutes ago" stays true without anybody touching the screen.
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 30_000); return () => clearInterval(t); }, []);
 
   const pulse = useMemo(() => (input ? missionPulse(input, period) : null), [input, period]);
+  const rows = useMemo(() => (input ? journeyRows(input) : []), [input]);
+  const found = useMemo(() => findings(rows), [rows]);
+  const counts = useMemo(() => (input ? countTable(input, period) : []), [input, period]);
   const choose = (d: number) => { setPeriod(d); try { localStorage.setItem(PERIOD_KEY, String(d)); } catch { /* private window */ } };
+  const open = (k: Tab) => { setTab(k); requestAnimationFrame(() => settleIn(panel.current, 'fade')); };
   const ago = input ? Math.max(0, Math.round((Date.now() - input.now) / 60_000)) : 0;
+  const periodLabel = PERIODS.find((p) => p.days === period)?.label ?? '';
+  const acts = pulse ? pulse.attention.filter((a) => a.tone !== 'good').length : 0;
+  const activeN = rows.filter((r) => r.status === 'active').length;
 
   return (
-    <Card className="p-4 sm:p-5" data-panel="mission-pulse">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-xl font-bold text-navy">💓 Mission pulse</h2>
-          <p className="text-sm text-gray-500">
-            What to act on first, how journeys are moving, and how the app is doing.
-            {input && <> Updated {ago === 0 ? 'just now' : `${ago} min ago`}.</>}
-          </p>
-        </div>
-        <button type="button" onClick={() => void refresh()} disabled={busy}
-          className="tap-sm rounded-full bg-navy/5 px-4 text-sm font-bold text-navy hover:bg-navy/10 disabled:opacity-50" data-pulse-refresh>
-          {busy ? 'Refreshing…' : '↻ Refresh'}
-        </button>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Period">
-        {PERIODS.map((p) => (
-          <button key={p.days} type="button" aria-pressed={period === p.days} onClick={() => choose(p.days)}
-            className="tap-sm rounded-full px-4 text-sm font-bold ring-1 ring-navy/15 aria-pressed:bg-navy aria-pressed:text-white aria-pressed:ring-navy"
-            data-pulse-period={p.days}>
-            {p.label}
+    <section className="overflow-hidden rounded-3xl bg-slate-50 shadow-sm ring-1 ring-slate-200" data-panel="mission-pulse" aria-labelledby="pulse-title">
+      {/* The header: the three numbers anybody asks first. */}
+      <div className="bg-gradient-to-br from-[#1E2A4A] via-[#22406e] to-[#0f766e] px-4 pb-4 pt-5 text-white sm:px-6">
+        <div className="flex flex-wrap items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 id="pulse-title" className="text-xl font-extrabold tracking-tight sm:text-2xl">Mission pulse</h2>
+            <p className="mt-0.5 text-sm text-white/75">
+              What to act on, how journeys move, and what goes with progress.
+              {input && <> Updated {ago === 0 ? 'just now' : `${ago} min ago`}.</>}
+            </p>
+          </div>
+          <button type="button" onClick={() => void refresh()} disabled={busy}
+            className="tap-sm rounded-full bg-white/15 px-4 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/25 disabled:opacity-60" data-pulse-refresh>
+            {busy ? 'Refreshing…' : '↻ Refresh'}
           </button>
-        ))}
+        </div>
+        {pulse && (
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { n: pulse.explorers, label: 'Explorers' },
+              { n: pulse.activeJourneys, label: 'Active journeys' },
+              { n: acts, label: 'Need a leader' },
+            ].map((h) => (
+              <div key={h.label} className="rounded-2xl bg-white/10 px-3 py-2 ring-1 ring-white/15">
+                <p className="text-2xl font-extrabold tabular-nums">{h.n}</p>
+                <p className="text-[11px] font-semibold uppercase leading-tight tracking-wider text-white/75">{h.label}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {error && <p role="alert" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{error}</p>}
-      {!pulse && !error && <p role="status" className="mt-6 text-center text-gray-500">Working out the pulse…</p>}
-
-      {pulse && (
-        <div className="mt-4 space-y-5">
-          {/* 1. LEAD: what a leader can act on this week. */}
-          <section aria-labelledby="pulse-attention">
-            <h3 id="pulse-attention" className="text-base font-bold text-navy">Needs attention</h3>
-            <ul className="mt-2 grid gap-2 md:grid-cols-2" data-pulse-attention>
-              {pulse.attention.map((a) => {
-                const t = TONE[a.tone];
-                return (
-                  <li key={a.key} className={`flex items-start gap-3 rounded-xl p-3 ring-1 ${t.ring} ${t.bg}`} data-attention={a.key}>
-                    <span className={`shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${t.ink}`}>{t.badge}</span>
-                    <span className={`text-sm ${t.ink}`}>{a.text}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-
-          {/* 2. LAG: what happened in the period, against the one before. */}
-          <section aria-labelledby="pulse-outcomes">
-            <h3 id="pulse-outcomes" className="text-base font-bold text-navy">In the last {PERIODS.find((p) => p.days === period)?.label}</h3>
-            <div className="mt-2 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4">
-              <Tile label="New Explorers" m={pulse.newExplorers} hint="Finished signing up." />
-              <Tile label="Journey steps" m={pulse.steps} hint="Explorers moved on to a next stage." colour="#16a34a" />
-              <Tile label="Commissioned" m={pulse.commissioned} hint="Reached the last stage." colour="#A9C24A" />
-              <Tile label="Meetings held" m={pulse.meetingsHeld} hint="Guide and Explorer met, marked done." colour="#7c3aed" />
-              <Tile label="New pairings" m={pulse.newPairings} hint="An Explorer given a Guide." />
-              <Tile label="New Guides" m={pulse.newGuides} hint="Finished signing up." colour="#0f766e" />
-              <Tile label="Invitations sent" m={pulse.invitesSent} hint={`${pulse.invitesWaiting} still waiting to be used.`} better="none" colour="#64748b" />
-              <Tile label="Invitations used" m={pulse.invitesJoined} hint="The person finished signing up." colour="#0f766e" />
-            </div>
-          </section>
-
-          {/* 3. The pathway: where every active journey is, and how long it has been there. */}
-          <section aria-labelledby="pulse-pathway">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 id="pulse-pathway" className="text-base font-bold text-navy">The journey, right now</h3>
-              <p className="text-xs text-gray-500">{pulse.activeJourneys} active · “stalled” = no step in {STALLED_AFTER_DAYS}+ days</p>
-            </div>
-            <ol className="mt-2 space-y-2" data-pulse-pathway>
-              {pulse.pathway.map((row) => {
-                const s = STAGES.find((x) => x.key === row.stage);
-                const peak = Math.max(1, ...pulse.pathway.map((r) => r.count));
-                return (
-                  <li key={row.stage} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-2 text-sm sm:grid-cols-[8rem_1fr_auto]" data-stage={row.stage}>
-                    <span className="truncate font-semibold text-navy">{s?.label ?? row.stage}</span>
-                    <span className="h-6 overflow-hidden rounded-full bg-gray-100">
-                      <span className="block h-full rounded-full transition-[width] duration-500 ease-out" style={{ width: `${row.count ? Math.max(6, (row.count / peak) * 100) : 0}%`, background: s?.color ?? '#2F80ED' }} />
-                    </span>
-                    <span className="whitespace-nowrap text-right tabular-nums text-gray-700">
-                      <strong className="text-navy">{row.count}</strong>
-                      {row.count > 0 && <span className="hidden text-xs text-gray-500 sm:inline"> · {days(row.medianDays)} here</span>}
-                      {row.stalled > 0 && <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs font-bold text-amber-900">{row.stalled} stalled</span>}
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
-
-          {/* 4. People and engagement (lead), and 5. the app's own health (for IT). */}
-          <div className="grid gap-3 md:grid-cols-2">
-            <section aria-labelledby="pulse-people" className="rounded-2xl bg-slate-50 p-4">
-              <h3 id="pulse-people" className="text-base font-bold text-navy">People and engagement</h3>
-              <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm" data-pulse-people>
-                <dt className="text-gray-600">Explorers</dt><dd className="text-right font-bold tabular-nums text-navy">{pulse.explorers}</dd>
-                <dt className="text-gray-600">Guides</dt><dd className="text-right font-bold tabular-nums text-navy">{pulse.guides}</dd>
-                <dt className="text-gray-600">Waiting for a Guide</dt><dd className="text-right font-bold tabular-nums text-navy">{pulse.unpaired}{pulse.unpaired > 0 && <span className="font-normal text-gray-500"> · middle wait {days(pulse.waitMedianDays)}</span>}</dd>
-                <dt className="text-gray-600">New Explorers given a Guide</dt><dd className="text-right font-bold tabular-nums text-navy">{pct(pulse.pairedShare)}</dd>
-                {pulse.stickiness.map((s) => (
-                  <Fragment key={s.role}><dt className="text-gray-600">{s.role === 'ds' ? 'Explorers' : 'Guides'} back this week</dt>
-                    <dd className="text-right font-bold tabular-nums text-navy" title="Active this week out of active this month">{pct(s.ratio)}<span className="font-normal text-gray-500"> · {s.weekly} of {s.monthly}</span></dd></Fragment>
-                ))}
-              </dl>
-              <p className="mt-2 text-xs text-gray-500">“Back this week” is weekly active out of monthly active: the usual measure of whether people keep coming back.</p>
-            </section>
-            <section aria-labelledby="pulse-system" className="rounded-2xl bg-slate-50 p-4">
-              <h3 id="pulse-system" className="text-base font-bold text-navy">The app itself</h3>
-              <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm" data-pulse-system>
-                <dt className="text-gray-600">Feedback not closed</dt><dd className="text-right font-bold tabular-nums text-navy">{pulse.feedbackOpen}</dd>
-                <dt className="text-gray-600">Invitations waiting</dt><dd className="text-right font-bold tabular-nums text-navy">{pulse.invitesWaiting}</dd>
-                <dt className="text-gray-600">Invitations expired</dt><dd className="text-right font-bold tabular-nums text-navy">{pulse.invitesExpired}</dd>
-                <dt className="text-gray-600">Meetings in the next 14 days</dt><dd className="text-right font-bold tabular-nums text-navy">{pulse.meetingsAhead}</dd>
-                <dt className="text-gray-600">These numbers loaded in</dt><dd className="text-right font-bold tabular-nums text-navy">{loadedIn === null ? 'not yet' : loadedIn < 100 ? 'under 0.1 s' : `${(loadedIn / 1000).toFixed(1)} s`}</dd>
-                <dt className="text-gray-600">Data</dt><dd className="text-right font-bold text-navy">{live ? 'Your church' : 'Sample church'}</dd>
-              </dl>
-              <p className="mt-2 text-xs text-gray-500">A load time that keeps rising is the first sign the app needs attention. Errors and speed per screen are in your hosting dashboard.</p>
-            </section>
+      <div className="space-y-4 p-3 sm:p-5">
+        {/* Period, then the five views. */}
+        <div className="grid w-full grid-cols-4 gap-1 rounded-full bg-white p-1 shadow-sm ring-1 ring-slate-200 sm:inline-flex sm:w-auto" role="group" aria-label="Period">
+          {PERIODS.map((p) => (
+            <button key={p.days} type="button" aria-pressed={period === p.days} onClick={() => choose(p.days)}
+              className="tap-sm whitespace-nowrap rounded-full px-1 text-[13px] font-bold text-slate-600 transition aria-pressed:bg-navy sm:px-3.5 sm:text-sm aria-pressed:text-white aria-pressed:shadow"
+              data-pulse-period={p.days}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
+          <div className="flex min-w-max gap-1 border-b border-slate-200" role="tablist" aria-label="Views">
+            {TABS.map((t) => (
+              <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => open(t.key)}
+                className="tap-sm -mb-px border-b-2 border-transparent px-3 text-sm font-bold text-slate-500 transition hover:text-navy aria-selected:border-navy aria-selected:text-navy"
+                data-pulse-tab={t.key}>
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
-      )}
-    </Card>
+
+        {error && <p role="alert" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{error}</p>}
+        {!pulse && !error && <p role="status" className="py-8 text-center text-slate-500">Working out the pulse…</p>}
+
+        {pulse && (
+          <div ref={panel} role="tabpanel" aria-label={TABS.find((t) => t.key === tab)?.label}>
+            {tab === 'overview' && (
+              <div className="space-y-5">
+                <section aria-labelledby="pulse-attention">
+                  <h3 id="pulse-attention" className="text-base font-bold text-navy">Needs attention</h3>
+                  <ul className="mt-2 grid gap-2 md:grid-cols-2" data-pulse-attention>
+                    {pulse.attention.map((a) => {
+                      const t = TONE[a.tone];
+                      return (
+                        <li key={a.key} className={`flex items-start gap-3 rounded-2xl p-3 ring-1 ${t.ring} ${t.bg}`} data-attention={a.key}>
+                          <span aria-hidden className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${t.dot}`} />
+                          <span className={`text-sm ${t.ink}`}><strong className="mr-1">{t.badge}.</strong>{a.text}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+                <section aria-labelledby="pulse-outcomes">
+                  <h3 id="pulse-outcomes" className="text-base font-bold text-navy">In the last {periodLabel}</h3>
+                  <div className="mt-2 grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:gap-3 xl:grid-cols-4">
+                    <Tile label="New Explorers" m={pulse.newExplorers} hint="Finished signing up." />
+                    <Tile label="Journey steps" m={pulse.steps} hint="Moved on to a next stage." colour="#16a34a" />
+                    <Tile label="Commissioned" m={pulse.commissioned} hint="Reached the last stage." colour="#84cc16" />
+                    <Tile label="Meetings held" m={pulse.meetingsHeld} hint="Guide and Explorer met." colour="#7c3aed" />
+                    <Tile label="New pairings" m={pulse.newPairings} hint="An Explorer given a Guide." colour="#0ea5e9" />
+                    <Tile label="New Guides" m={pulse.newGuides} hint="Finished signing up." colour="#0f766e" />
+                    <Tile label="Invitations sent" m={pulse.invitesSent} hint={`${pulse.invitesWaiting} still waiting to be used.`} better="none" colour="#64748b" />
+                    <Tile label="Invitations used" m={pulse.invitesJoined} hint="The person finished signing up." colour="#14b8a6" />
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {tab === 'journeys' && (
+              <div className="space-y-4">
+                <section aria-labelledby="pulse-pathway" className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 id="pulse-pathway" className="text-base font-bold text-navy">The journey, right now</h3>
+                    <p className="text-xs text-slate-500">{pulse.activeJourneys} active · stalled = no step in {STALLED_AFTER_DAYS}+ days</p>
+                  </div>
+                  <ol className="mt-3 space-y-2.5" data-pulse-pathway>
+                    {pulse.pathway.map((row) => {
+                      const s = STAGES.find((x) => x.key === row.stage);
+                      const peak = Math.max(1, ...pulse.pathway.map((r) => r.count));
+                      const c = s?.color ?? '#2F80ED';
+                      return (
+                        <li key={row.stage} className="grid grid-cols-[6rem_1fr_auto] items-center gap-2 text-sm sm:grid-cols-[8rem_1fr_auto]" data-stage={row.stage}>
+                          <span className="truncate font-semibold text-navy">{s?.label ?? row.stage}</span>
+                          <span className="h-7 overflow-hidden rounded-full bg-slate-100">
+                            <span className="block h-full rounded-full transition-[width] duration-700 ease-out" style={{ width: `${row.count ? Math.max(6, (row.count / peak) * 100) : 0}%`, background: `linear-gradient(90deg, ${c}bb, ${c})` }} />
+                          </span>
+                          <span className="whitespace-nowrap text-right tabular-nums text-slate-700">
+                            <strong className="text-navy">{row.count}</strong>
+                            {row.count > 0 && <span className="hidden text-xs text-slate-500 sm:inline"> · {days(row.medianDays)} here</span>}
+                            {row.stalled > 0 && <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs font-bold text-amber-900">{row.stalled} stalled</span>}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </section>
+                <section aria-labelledby="pulse-people" className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+                  <h3 id="pulse-people" className="text-base font-bold text-navy">People and engagement</h3>
+                  <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-sm" data-pulse-people>
+                    <Stat label="Explorers">{pulse.explorers}</Stat>
+                    <Stat label="Guides">{pulse.guides}</Stat>
+                    <Stat label="Waiting for a Guide">{pulse.unpaired}{pulse.unpaired > 0 && <span className="font-normal text-slate-500"> · middle wait {days(pulse.waitMedianDays)}</span>}</Stat>
+                    <Stat label="New Explorers given a Guide">{pct(pulse.pairedShare)}</Stat>
+                    {pulse.stickiness.map((s) => (
+                      <Fragment key={s.role}>
+                        <Stat label={`${s.role === 'ds' ? 'Explorers' : 'Guides'} back this week`}>{pct(s.ratio)}<span className="font-normal text-slate-500"> · {s.weekly} of {s.monthly}</span></Stat>
+                      </Fragment>
+                    ))}
+                  </dl>
+                  <p className="mt-2 text-xs text-slate-500">Back this week is weekly active out of monthly active: the usual measure of whether people keep coming back.</p>
+                </section>
+              </div>
+            )}
+
+            {tab === 'analysis' && (
+              <div className="space-y-3" data-pulse-analysis>
+                <p className="rounded-2xl bg-white p-3 text-sm text-slate-600 shadow-sm ring-1 ring-slate-200/80">
+                  Each dot is one journey, never named. <strong>r</strong> runs from −1 to +1 (Spearman, by rank, suited to small numbers).
+                  Nothing is worked out under {MIN_N} journeys, and a link a sample this size could make by chance says so
+                  {activeN >= MIN_N ? ` (with ${activeN} active journeys, anything inside about ±${chanceLine(activeN).toFixed(2)})` : ''}.
+                  A link is not a cause: it is a question worth asking a Guide.
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {found.map((f) => <FindingCard key={f.key} f={f} />)}
+                </div>
+              </div>
+            )}
+
+            {tab === 'raw' && (
+              <div className="space-y-4" data-pulse-raw>
+                <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-base font-bold text-navy">Counts in the last {periodLabel}</h3>
+                    <button type="button" className="tap-sm rounded-full bg-navy px-4 text-sm font-bold text-white" data-pulse-csv="counts"
+                      onClick={() => save(`mission-pulse-counts-${period}d.csv`, toCsv(['From', 'New Explorers', 'New Guides', 'New pairings', 'Journey steps', 'Meetings held', 'Invitations sent'],
+                        counts.map((c) => [c.label, c.explorers, c.guides, c.pairings, c.steps, c.meetings, c.invitations])))}>
+                      Download CSV
+                    </button>
+                  </div>
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full min-w-[34rem] text-sm tabular-nums">
+                      <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
+                        <tr>{['From', 'Explorers', 'Guides', 'Pairings', 'Steps', 'Meetings', 'Invitations'].map((h) => <th key={h} className="px-2 py-1.5 font-bold">{h}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {counts.map((c, i) => (
+                          <tr key={`${c.label}-${i}`} className="border-t border-slate-100 odd:bg-slate-50/60" data-count-row>
+                            <td className="px-2 py-1.5 font-semibold text-navy">{c.label}</td>
+                            {[c.explorers, c.guides, c.pairings, c.steps, c.meetings, c.invitations].map((v, k) => <td key={k} className="px-2 py-1.5">{v}</td>)}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+                <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-base font-bold text-navy">One row per journey</h3>
+                    <button type="button" className="tap-sm rounded-full bg-navy px-4 text-sm font-bold text-white" data-pulse-csv="journeys"
+                      onClick={() => save('mission-pulse-journeys.csv', toCsv(['Journey', 'Status', 'Stage', 'Track', 'Days since start', 'Days waited for a Guide', 'Steps forward', 'Steps per month', 'Days since last step', 'Guide carries', 'Meetings held'],
+                        rows.map((r) => [r.n, r.status, STAGES.find((s) => s.key === r.stage)?.label ?? r.stage, r.track, r.ageDays, r.waitDays, r.steps, r.pace, r.daysSinceStep, r.guideLoad, r.meetings])))}>
+                      Download CSV
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">Numbered, never named. The same rows the analysis uses.</p>
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full min-w-[46rem] text-sm tabular-nums">
+                      <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
+                        <tr>{['#', 'Status', 'Stage', 'Track', 'Age (d)', 'Waited (d)', 'Steps', 'Per month', 'Since step (d)', 'Guide carries', 'Meetings'].map((h) => <th key={h} className="px-2 py-1.5 font-bold">{h}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((r) => (
+                          <tr key={r.n} className="border-t border-slate-100 odd:bg-slate-50/60" data-journey-row>
+                            <td className="px-2 py-1.5 font-semibold text-navy">{r.n}</td>
+                            <td className="px-2 py-1.5">{r.status}</td>
+                            <td className="px-2 py-1.5">{STAGES.find((s) => s.key === r.stage)?.label ?? r.stage}</td>
+                            <td className="px-2 py-1.5">{r.track === 'digital' ? 'Digital' : 'In person'}</td>
+                            <td className="px-2 py-1.5">{r.ageDays}</td>
+                            <td className="px-2 py-1.5">{r.waitDays ?? 'not known'}</td>
+                            <td className="px-2 py-1.5">{r.steps}</td>
+                            <td className="px-2 py-1.5">{r.pace}</td>
+                            <td className="px-2 py-1.5">{r.daysSinceStep}</td>
+                            <td className="px-2 py-1.5">{r.guideLoad}</td>
+                            <td className="px-2 py-1.5">{r.meetings ?? 'private'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {tab === 'health' && (
+              <section aria-labelledby="pulse-system" className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+                <h3 id="pulse-system" className="text-base font-bold text-navy">The app itself</h3>
+                <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-sm" data-pulse-system>
+                  <Stat label="Feedback not closed">{pulse.feedbackOpen}</Stat>
+                  <Stat label="Invitations waiting">{pulse.invitesWaiting}</Stat>
+                  <Stat label="Invitations expired">{pulse.invitesExpired}</Stat>
+                  <Stat label="Meetings in the next 14 days">{pulse.meetingsAhead}</Stat>
+                  <Stat label="These numbers loaded in">{loadedIn === null ? 'not yet' : loadedIn < 100 ? 'under 0.1 s' : `${(loadedIn / 1000).toFixed(1)} s`}</Stat>
+                  <Stat label="Records read">{input ? input.members.length + input.pairings.length + input.moves.length + input.meetings.length + input.invites.length : 0}</Stat>
+                  <Stat label="Data">{live ? 'Your church' : 'Sample church'}</Stat>
+                </dl>
+                <p className="mt-2 text-xs text-slate-500">A load time that keeps rising as records grow is the first sign the app needs attention. Errors and speed per screen are in your hosting dashboard.</p>
+              </section>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

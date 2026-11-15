@@ -38,7 +38,9 @@ import {
 } from '@/lib/live/report-formats';
 import type { Role } from '@/lib/types';
 import { humanError } from '@/lib/live/errors';
-import { MissionPulse } from '@/components/MissionPulse';
+import dynamic from 'next/dynamic';
+// Loaded when Analytics opens, not with the page that holds it: the door stays light.
+const MissionPulse = dynamic(() => import('@/components/MissionPulse').then((m) => m.MissionPulse), { ssr: false });
 
 /**
  * The five ways out, and what each is actually for.
