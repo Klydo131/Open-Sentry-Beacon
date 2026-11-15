@@ -30,6 +30,7 @@
 // somebody else to read it out.
 
 import { useEffect, useState } from 'react';
+import { SIZES } from '@/lib/text-sizes';
 import { Card } from '@/components/ui';
 import { useLocale, LANGUAGES } from '@/lib/i18n';
 import { UI_FAMILIES, UI_THEMES, looksIn, saveUiTheme, type UiFamily, type UiTheme } from '@/lib/ui-themes';
@@ -38,16 +39,7 @@ import { useChosenLook } from '@/components/UiTheme';
 import { usePhrases } from '@/lib/i18n';
 import { FRAME_WORDS } from '@/lib/words/frame';
 
-// The same four steps the demo has always offered. 0.9 to 1.3 against an 18px
-// base is 16px to 23px -- a real change for somebody who needs it, and still
-// laid out rather than zoomed, because the root font size is what every `rem`
-// in the app is measured against.
-export const SIZES: { key: 'small' | 'normal' | 'large' | 'xlarge'; scale: number }[] = [
-  { key: 'small', scale: 0.9 },
-  { key: 'normal', scale: 1 },
-  { key: 'large', scale: 1.15 },
-  { key: 'xlarge', scale: 1.3 },
-];
+// The same four steps the demo has always offered (lib/text-sizes.ts).
 
 export function LanguageCard() {
   const { t, lang, setLang } = useLocale();

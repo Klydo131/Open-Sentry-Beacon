@@ -10,6 +10,22 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 16 November 2026 (latest): plain Analytics; Theme and Text size in the drawer
+
+**Nothing to run.** No database change.
+
+- **Analytics has Simple and Advanced.** Simple (the default) keeps Overview,
+  Alerts, Automations, Journeys and Analysis, and each Analysis answer is a
+  plain sentence ("A clear link", "Not enough to tell yet"). Advanced, a button
+  in the header remembered on the device, adds the correlation figures, the
+  scatter charts, Raw data and The app itself.
+- **The room drawer holds Theme and Text size.** Theme sits above the room's
+  colours, Text size below them and above the study timer, with a link to
+  Settings for the rest. They are the same settings as Settings, General.
+  The four text sizes moved to `lib/text-sizes.ts` so the drawer does not carry
+  the Settings card onto every page. Held by
+  `tests/e2e/the-drawer-holds-look-and-text.js`.
+
 ## 16 November 2026 (later): activity reaches the other person; Guide commitments
 
 **Run two migrations on each live database**, in order:

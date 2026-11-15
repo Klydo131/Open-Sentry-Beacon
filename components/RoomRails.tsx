@@ -7,6 +7,11 @@ import { roleLabel } from '@/lib/brand';
 import { useRoom, type RoomTheme, type RoomPrefs } from '@/lib/room-theme';
 import { PlayerStrip } from '@/components/PlayerBar';
 import { Pocket } from '@/components/Pocket';
+import Link from 'next/link';
+import { UI_THEMES, saveUiTheme } from '@/lib/ui-themes';
+import { useChosenLook } from '@/components/UiTheme';
+import { useLocale } from '@/lib/i18n';
+import { SIZES } from '@/lib/text-sizes';
 
 // The room rails. railGroupsFor lists each role's rooms, which the Menu draws.
 // RightRail is the personal desk (timer or work desk, pocket, player, a note
@@ -296,6 +301,11 @@ function RoomCard({
         )}
       </div>
 
+      {/* THE LOOK AND THE TEXT, within reach (16 November 2026). The same
+          settings as Settings, General: changing one here changes it there.
+          Anything weightier stays in Settings. */}
+      <QuickLook theme={theme} />
+
       {/* Theme picker. */}
       <p
         className="mb-1.5 mt-4 text-[11px] font-bold uppercase tracking-wider"
@@ -328,6 +338,66 @@ function RoomCard({
       <p className="mt-1.5 text-xs" style={{ color: theme.inkSoft }}>
         {theme.label} · {theme.blurb}
       </p>
+
+      <QuickText theme={theme} />
+      <Link href="/settings" className="mt-3 inline-block text-xs font-semibold underline" style={{ color: theme.inkSoft }}>
+        More in Settings
+      </Link>
+    </div>
+  );
+}
+
+/** The app's look, as a row of named choices. */
+function QuickLook({ theme }: { theme: RoomTheme }) {
+  const look = useChosenLook();
+  return (
+    <div data-quick-look>
+      <p className="mb-1.5 mt-4 text-[11px] font-bold uppercase tracking-wider" style={{ color: theme.inkSoft }}>Theme</p>
+      <div role="radiogroup" aria-label="Theme" className="grid grid-cols-2 gap-1.5">
+        {UI_THEMES.map((t) => {
+          const on = look === t.id;
+          return (
+            <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => saveUiTheme(t.id)}
+              data-quick-look-choice={t.id}
+              className="min-h-9 truncate rounded-lg px-2 text-left text-xs font-semibold"
+              style={{
+                background: on ? theme.accent : 'transparent',
+                color: on ? '#fff' : theme.ink,
+                border: `1px solid ${on ? theme.accent : theme.line}`,
+              }}>
+              {t.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Text size, applied at once (Settings has the preview). */
+function QuickText({ theme }: { theme: RoomTheme }) {
+  const { t, scale, setScale } = useLocale();
+  return (
+    <div data-quick-text>
+      <p className="mb-1.5 mt-4 text-[11px] font-bold uppercase tracking-wider" style={{ color: theme.inkSoft }}>Text size</p>
+      <div role="radiogroup" aria-label="Text size" className="grid grid-cols-4 gap-1.5">
+        {SIZES.map((sz) => {
+          const on = Math.abs(scale - sz.scale) < 0.001;
+          return (
+            <button key={sz.key} type="button" role="radio" aria-checked={on} aria-label={t(sz.key)} title={t(sz.key)}
+              onClick={() => setScale(sz.scale)} data-quick-text-size={sz.key}
+              className="min-h-9 rounded-lg font-bold"
+              style={{
+                fontSize: `${0.75 + (sz.scale - 0.9) * 1.1}rem`,
+                background: on ? theme.accent : 'transparent',
+                color: on ? '#fff' : theme.ink,
+                border: `1px solid ${on ? theme.accent : theme.line}`,
+              }}>
+              A
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -371,6 +441,7 @@ function FocusTimer({ theme }: { theme: RoomTheme }) {
 
   return (
     <div
+      data-focus-timer
       className="rounded-2xl p-4"
       style={{ backgroundColor: theme.panel, border: `1px solid ${theme.line}` }}
     >

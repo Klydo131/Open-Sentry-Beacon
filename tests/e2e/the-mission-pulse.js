@@ -46,7 +46,15 @@ async function walk(browser, viewport, who, label) {
   ok((await page.locator('[data-pulse-attention] li').count()) >= 1, `${tag}: it says what needs attention (${(await page.locator('[data-pulse-attention] li').allInnerTexts()).map((t) => t.split('\n').pop()).join(' | ').slice(0, 160)})`);
   ok((await page.locator('[data-pulse-tile]').count()) === 8, `${tag}: eight outcomes, each with a number`);
   ok((await page.locator('[data-pulse-tile] svg rect').count()) > 20, `${tag}: each outcome has its little chart`);
-  ok((await page.locator('[data-pulse-tab]').count()) === 7, `${tag}: seven views, alerts and automations among them`);
+  ok((await page.locator('[data-pulse-tab]').count()) === 5, `${tag}: Simple shows five views; the statistics wait in Advanced`);
+  await page.locator('[data-pulse-tab="analysis"]').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('[data-plain-answer]').count()) === 5 && (await page.locator('[data-pulse-finding] svg').count()) === 0 && !/r = /.test(await page.locator('[data-pulse-analysis]').innerText()),
+    `${tag}: in Simple each question is answered in words, with no r and no chart`);
+  await page.locator('[data-pulse-advanced]').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('[data-pulse-tab]').count()) === 7, `${tag}: Advanced adds Raw data and App health`);
+  ok(await page.evaluate(() => localStorage.getItem('hb-pulse-advanced')) === '1', `${tag}: and is remembered`);
   await page.locator('[data-pulse-tab="journeys"]').click();
   await page.waitForTimeout(400);
   ok((await page.locator('[data-pulse-pathway] li').count()) === 6, `${tag}: the journey shows all six stages`);
@@ -100,7 +108,7 @@ async function walk(browser, viewport, who, label) {
   ok((await page.locator('[data-automation="guides"] [data-run]').isDisabled()), `${tag}: with nobody waiting, there is nothing to ask the Guides`);
   await page.locator('[data-automation="notify"] [data-mode="auto"]').click();
   ok(await page.evaluate(() => JSON.parse(localStorage.getItem('hb-pulse-auto')).mode.notify) === 'auto', `${tag}: choosing Automatic is kept`);
-  await page.evaluate(() => { localStorage.removeItem('hb-pulse-rules'); localStorage.removeItem('hb-pulse-auto'); });
+  await page.evaluate(() => { localStorage.removeItem('hb-pulse-rules'); localStorage.removeItem('hb-pulse-auto'); localStorage.removeItem('hb-pulse-advanced'); });
 
   await page.locator('[data-pulse-tab="health"]').click();
   await page.waitForTimeout(400);
@@ -124,7 +132,7 @@ async function walk(browser, viewport, who, label) {
 
   await page.locator('[data-pulse-refresh]').click();
   await page.waitForTimeout(800);
-  ok(/Updated just now/.test(await pulse.innerText()), `${tag}: Refresh reads the numbers again`);
+  ok(/updated just now/i.test(await pulse.innerText()), `${tag}: Refresh reads the numbers again`);
   for (const b of await page.locator('[data-pulse-period], [data-pulse-refresh]').all()) {
     const box = await b.boundingBox();
     if (box && box.height < 40) { ok(false, `${tag}: a pulse button is ${Math.round(box.height)}px tall`); break; }

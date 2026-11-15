@@ -29,6 +29,9 @@ import type { PulseActions } from '@/lib/pulse-alerts';
 import { showLocalNotification } from '@/lib/push';
 
 const PERIOD_KEY = 'hb-pulse-period';
+const ADVANCED_KEY = 'hb-pulse-advanced';
+/** Views only Advanced shows: the statistics and the machinery. */
+const ADVANCED_ONLY = new Set(['raw', 'health']);
 const RULES_KEY = 'hb-pulse-rules';
 const AUTO_KEY = 'hb-pulse-auto';
 const TABS = [
@@ -150,13 +153,20 @@ function Scatter({ f }: { f: Finding }) {
   );
 }
 
-function FindingCard({ f }: { f: Finding }) {
+function FindingCard({ f, advanced }: { f: Finding; advanced: boolean }) {
   const drawable = f.points.length > 0 && (f.missing === undefined || f.missing === 'few' || f.missing === 'ties');
   return (
     <article className="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80" data-pulse-finding={f.key}>
       <h4 className="font-bold text-navy">{f.question}</h4>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        {f.r !== null && f.strength ? (
+        {!advanced ? (
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${f.r === null || !f.strength ? 'bg-slate-100 text-slate-600'
+            : !f.likelyReal || f.strength === 'none' ? 'bg-slate-100 text-slate-700' : f.strength === 'weak' ? 'bg-sky-50 text-sky-800' : 'bg-violet-100 text-violet-900'}`} data-plain-answer>
+            {f.r === null || !f.strength ? 'Not enough to tell yet'
+              : !f.likelyReal || f.strength === 'none' ? 'No clear link yet'
+                : f.strength === 'weak' ? 'A slight link' : f.strength === 'moderate' ? 'A clear link' : 'A strong link'}
+          </span>
+        ) : f.r !== null && f.strength ? (
           <>
             <span className="text-2xl font-extrabold tabular-nums text-navy">r = {f.r > 0 ? '+' : ''}{f.r.toFixed(2)}</span>
             <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STRENGTH[f.strength]}`}>{f.strength === 'none' ? 'no link' : `${f.strength} ${f.r > 0 ? 'positive' : 'negative'}`}</span>
@@ -167,7 +177,7 @@ function FindingCard({ f }: { f: Finding }) {
         )}
         <span className="text-xs text-slate-500">{f.n} journey{f.n === 1 ? '' : 's'}</span>
       </div>
-      {drawable && <Scatter f={f} />}
+      {drawable && advanced && <Scatter f={f} />}
       <p className="mt-1 text-sm text-slate-700">{f.reading}</p>
     </article>
   );
@@ -182,6 +192,9 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
   const [error, setError] = useState('');
   const [period, setPeriod] = useState<number>(30);
   const [tab, setTab] = useState<Tab>('overview');
+  // SIMPLE FIRST. A Director reads plain sentences; the numbers behind them
+  // (r, chance, raw tables, load times) are one switch away, for whoever wants them.
+  const [advanced, setAdvanced] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loadedIn, setLoadedIn] = useState<number | null>(null);
   const [, tick] = useState(0);
@@ -195,6 +208,7 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
   useEffect(() => {
     try { const saved = Number(localStorage.getItem(PERIOD_KEY)); if (PERIODS.some((p) => p.days === saved)) setPeriod(saved); } catch { /* private window */ }
     try { setRules(tidySettings(JSON.parse(localStorage.getItem(RULES_KEY) ?? 'null'))); } catch { /* private window or damaged */ }
+    try { setAdvanced(localStorage.getItem(ADVANCED_KEY) === '1'); } catch { /* private window */ }
     try { setAuto(tidyAutomations(JSON.parse(localStorage.getItem(AUTO_KEY) ?? 'null'))); } catch { /* private window or damaged */ }
   }, []);
 
@@ -229,6 +243,12 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
   const found = useMemo(() => findings(rows), [rows]);
   const counts = useMemo(() => (input ? countTable(input, period) : []), [input, period]);
   const choose = (d: number) => { setPeriod(d); try { localStorage.setItem(PERIOD_KEY, String(d)); } catch { /* private window */ } };
+  const toggleAdvanced = () => {
+    const next = !advanced;
+    setAdvanced(next);
+    if (!next && ADVANCED_ONLY.has(tab)) setTab('overview');
+    try { localStorage.setItem(ADVANCED_KEY, next ? '1' : '0'); } catch { /* private window */ }
+  };
   const open = (k: Tab) => { setTab(k); requestAnimationFrame(() => settleIn(panel.current, 'fade')); };
   const ago = input ? Math.max(0, Math.round((Date.now() - input.now) / 60_000)) : 0;
   const periodLabel = PERIODS.find((p) => p.days === period)?.label ?? '';
@@ -293,6 +313,10 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
               {input && <> <span className="inline-flex items-center gap-1 align-middle font-semibold text-white"><span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 motion-reduce:animate-none" />Live</span> · updated {ago === 0 ? 'just now' : `${ago} min ago`}.</>}
             </p>
           </div>
+          <button type="button" onClick={toggleAdvanced} aria-pressed={advanced}
+            className="tap-sm rounded-full bg-white/15 px-4 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/25 aria-pressed:bg-white aria-pressed:text-navy" data-pulse-advanced>
+            {advanced ? 'Advanced' : 'Simple'}
+          </button>
           <button type="button" onClick={() => void refresh()} disabled={busy}
             className="tap-sm rounded-full bg-white/15 px-4 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/25 disabled:opacity-60" data-pulse-refresh>
             {busy ? 'Refreshing…' : '↻ Refresh'}
@@ -327,7 +351,7 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
         </div>
         <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
           <div className="flex min-w-max gap-1 border-b border-slate-200" role="tablist" aria-label="Views">
-            {TABS.map((t) => (
+            {TABS.filter((t) => advanced || !ADVANCED_ONLY.has(t.key)).map((t) => (
               <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => open(t.key)}
                 className="tap-sm -mb-px border-b-2 border-transparent px-3 text-sm font-bold text-slate-500 transition hover:text-navy aria-selected:border-navy aria-selected:text-navy"
                 data-pulse-tab={t.key}>
@@ -436,14 +460,22 @@ export function MissionPulse({ load, live, actions }: { load: () => Promise<Puls
 
             {tab === 'analysis' && (
               <div className="space-y-3" data-pulse-analysis>
+{advanced ? (
                 <p className="rounded-2xl bg-white p-3 text-sm text-slate-600 shadow-sm ring-1 ring-slate-200/80">
                   Each dot is one journey, never named. <strong>r</strong> runs from −1 to +1 (Spearman, by rank, suited to small numbers).
                   Nothing is worked out under {MIN_N} journeys, and a link a sample this size could make by chance says so
                   {activeN >= MIN_N ? ` (with ${activeN} active journeys, anything inside about ±${chanceLine(activeN).toFixed(2)})` : ''}.
                   A link is not a cause: it is a question worth asking a Guide.
                 </p>
+                ) : (
+                  <p className="rounded-2xl bg-white p-3 text-sm text-slate-600 shadow-sm ring-1 ring-slate-200/80" data-analysis-plain>
+                    Five questions about what helps people move forward, answered from your church&rsquo;s own journeys.
+                    When there are not enough journeys to tell, it says so. A link is a question to ask a Guide, not a proof.
+                    Switch to <strong>Advanced</strong> for the numbers behind each answer.
+                  </p>
+                )}
                 <div className="grid gap-3 md:grid-cols-2">
-                  {found.map((f) => <FindingCard key={f.key} f={f} />)}
+                  {found.map((f) => <FindingCard key={f.key} f={f} advanced={advanced} />)}
                 </div>
               </div>
             )}
