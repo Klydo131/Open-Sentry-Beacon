@@ -508,6 +508,25 @@ app**, so anything above zero here is somebody being ignored.
 
 ![Approvals. Who is waiting to be let in, and who is waiting to be paired.](screenshots/walkthrough/14-approvals.png)
 
+### The Mission pulse
+
+**Admin, Analytics** opens on the **Mission pulse**, the numbers to read first.
+Choose **7 days**, **30 days**, **90 days** or **12 months**; the app remembers.
+
+- **Needs attention** lists what a leader can act on this week: Explorers waiting
+  for a Guide, pairing requests nobody has answered, journeys with no step in a
+  month, expired invitations and open feedback. When nothing waits it says so.
+- **In the last …** shows what happened (new Explorers, journey steps,
+  commissioned, meetings held and more), each against the period before and with
+  a small chart of the period.
+- **The journey, right now** shows every active journey by stage, how long they
+  have been there, and how many have stalled.
+- **People and engagement** and **The app itself** show who keeps coming back
+  each week, and the app's health for whoever looks after it.
+
+Only counts, never names. Why these numbers were chosen is in
+[docs/ANALYTICS.md](ANALYTICS.md).
+
 ### The church home
 
 Notices, your **Blog**, **Announcements**, the prayer wall, and the numbers.

@@ -12,14 +12,39 @@
 // Nothing here is altered from what the Admin tab already rendered. It is the
 // same code in a file both callers can import.
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { useLocale } from '@/lib/i18n';
 import { Card } from '@/components/ui';
 import { momentum, quietCount, trend } from '@/lib/analytics-trend';
 import { MomentumLine, TrendChart } from '@/components/TrendChart';
 import { STAGES } from '@/lib/brand';
-import type { AnalyticsEvent, Stage } from '@/lib/types';
+import type { AnalyticsEvent, DB, Role, Stage } from '@/lib/types';
+import { MissionPulse } from '@/components/MissionPulse';
+import { DAY, type PulseInput } from '@/lib/mission-pulse';
+
+/** The sample church, in the shape the Mission pulse reads (the live one is lib/live/analytics.ts). */
+export function demoPulseInput(db: DB, now = Date.now()): PulseInput {
+  const roleOf = new Map(db.profiles.map((p) => [p.id, p.role] as const));
+  const activeIn = (days: 7 | 30, role: Role) => new Set(
+    db.analytics.filter((e) => roleOf.get(e.user_id) === role && now - new Date(e.at).getTime() <= days * DAY).map((e) => e.user_id),
+  ).size;
+  const approved = (role: Role) => db.profiles.filter((p) => p.role === role && p.is_approved).length;
+  return {
+    now,
+    members: db.profiles.map((p) => ({ id: p.id, role: p.role, approved: p.is_approved, joinedAt: p.signup_completed_at ?? p.approved_at ?? p.consent_at ?? null })),
+    pairings: db.pairings.map((p) => ({ id: p.id, dsId: p.ds_id, stage: p.journey_stage, status: p.status, createdAt: p.created_at })),
+    moves: db.journey_events.map((e) => ({ pairingId: e.pairing_id, from: e.from_stage ?? null, to: e.to_stage, at: e.created_at })),
+    meetings: db.meetings.map((m) => ({ at: m.when, done: m.status !== 'cancelled' && new Date(m.when).getTime() < now, cancelled: m.status === 'cancelled' })),
+    requests: [],
+    invites: db.invites.map((i) => ({ createdAt: i.created_at, joinedAt: i.status === 'accepted' ? (i.accepted_at ?? i.created_at) : null, expiresAt: null })),
+    feedback: [],
+    activity: (['dm', 'ds'] as Role[]).flatMap((role) => [
+      { days: 7 as const, role, active: activeIn(7, role), approved: approved(role) },
+      { days: 30 as const, role, active: activeIn(30, role), approved: approved(role) },
+    ]),
+  };
+}
 
 const EVENT_LABEL: Record<AnalyticsEvent['type'], string> = {
   report_raised: 'Raised a safeguarding report',
@@ -55,11 +80,14 @@ export function Analytics() {
   const [scope, setScope] = useState<'local' | 'global'>('local');
 
   const events = [...db.analytics].sort((a, b) => b.at.localeCompare(a.at));
+  // A fresh reader each time the sample church changes, so the pulse keeps up.
+  const loadPulse = useCallback(async () => demoPulseInput(db), [db]);
   const nameOf = (id: string) =>
     db.profiles.find((p) => p.id === id)?.full_name ?? 'Unknown';
 
   return (
     <div className="space-y-5">
+      <MissionPulse load={loadPulse} live={false} />
       {/* Smaller on a phone: at full size "Local (this device)" broke a word
           a line beside its twin. A computer's is as it was. */}
       <div className="flex gap-2">

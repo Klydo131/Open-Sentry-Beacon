@@ -10,6 +10,29 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 15 November 2026 (evening): the Mission pulse on the leaders' Analytics
+
+**Nothing to do** for a church running a copy. No database change; it reads
+records the app already keeps, with the leader's own permissions.
+
+- `components/MissionPulse.tsx` opens Analytics for the Executive Director and
+  the Director (live: `components/LiveAnalytics.tsx` via `pulseInput()` in
+  `lib/live/analytics.ts`; sample church: `demoPulseInput()` in
+  `components/DemoAnalytics.tsx`). The arithmetic is `lib/mission-pulse.ts`.
+- Lead measures first (waiting for a Guide, overdue after 7 days; requests
+  unanswered, overdue after 3; journeys stalled after 30 days; expired
+  invitations; open feedback), then outcomes over 7/30/90 days or 12 months
+  against the period before with a small chart each, the pathway by stage with
+  median days and stalled counts, WAU/MAU for Explorers and Guides, and the app's
+  own health. Each read stands alone, so a part a leader may not see counts as
+  nothing rather than blanking the pulse.
+- Why these: `docs/ANALYTICS.md` (research, sources, and what to record next,
+  which needs database changes and the owner's approval).
+- `tests/the-mission-pulse-adds-up.mjs` (in the gate) and
+  `tests/e2e/the-mission-pulse.js` (both leaders, phone and desktop).
+
+---
+
 ## 15 November 2026 (latest): EPUB books can be read in the app
 
 **Nothing to do** for a church running a copy. No new dependency and no

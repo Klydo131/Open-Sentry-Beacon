@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-15-mission-pulse',
+    date: '2026-11-15',
+    title: 'The Mission pulse for leaders',
+    items: [
+      'Analytics now opens on the Mission pulse: what needs a leader first (people waiting for a Guide, unanswered requests, journeys that have stopped), then what happened in the last 7, 30 or 90 days or 12 months against the period before.',
+      'Each number has a small chart and its change, the journey shows every stage with how long people have been there, and a section shows the app\u2019s own health. Counts only, never names.',
+    ],
+  },
+  {
     id: '2026-11-15-read-an-epub',
     date: '2026-11-15',
     title: 'Read an EPUB book',

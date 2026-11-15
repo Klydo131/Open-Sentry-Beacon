@@ -327,7 +327,7 @@ const EXEC_STEPS: QuestStep[] = [
     id: 'x-analytics',
     where: 'Admin › Analytics',
     learn:
-      'These are counts, not names. You can see how many people are being walked with and how active the church is, without reading anybody’s private conversation. Scroll down and there is a “For the church board” panel: the four numbers to read out at a meeting, what the board is deliberately not shown, and a Print button. The board has no account here. You are the one who will be asked, so it lives in yours.',
+      'These are counts, not names. The Mission pulse at the top says what needs a leader first (people waiting for a Guide, requests nobody answered, journeys that have stopped), then what happened in the last 7, 30 or 90 days or 12 months against the period before, and where every journey stands. Scroll down and there is a “For the church board” panel: the four numbers to read out at a meeting, what the board is deliberately not shown, and a Print button. The board has no account here. You are the one who will be asked, so it lives in yours.',
     title: 'Read the church at a glance',
     hint: 'Tap the highlighted Analytics tab. This is the whole church in numbers.',
     target: 'tab-analytics',

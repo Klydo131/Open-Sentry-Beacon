@@ -38,6 +38,7 @@ import {
 } from '@/lib/live/report-formats';
 import type { Role } from '@/lib/types';
 import { humanError } from '@/lib/live/errors';
+import { MissionPulse } from '@/components/MissionPulse';
 
 /**
  * The five ways out, and what each is actually for.
@@ -384,6 +385,7 @@ export function LiveAnalytics({ churchName }: { churchName?: string }) {
 
   return (
     <div className="space-y-4">
+      <MissionPulse load={an.pulseInput} live />
       <Card className="p-5">
         <h2 className="text-xl font-bold text-navy">📈 How the church is going</h2>
         <p className="mt-1 text-sm text-gray-500">

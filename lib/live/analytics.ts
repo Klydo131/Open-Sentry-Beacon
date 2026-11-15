@@ -22,6 +22,7 @@
 
 import * as live from '@/lib/live/data';
 import type { Role } from '@/lib/types';
+import type { PulseInput } from '@/lib/mission-pulse';
 
 // ---------------------------------------------------------------------------
 // Colour
@@ -330,3 +331,42 @@ export function stepChange(points: number[]): { latest: number; before: number; 
 }
 
 export { DAY };
+
+// ---------------------------------------------------------------------------
+// 5. The mission pulse (lib/mission-pulse.ts), from a live church
+// ---------------------------------------------------------------------------
+
+/**
+ * Everything the pulse counts, read with the leader's own permissions. Each
+ * read stands alone: a part this leader may not see (feedback, for an
+ * Executive Director on some copies) counts as nothing rather than blanking
+ * the whole pulse.
+ */
+export async function pulseInput(now = Date.now()): Promise<PulseInput> {
+  const none = (): never[] => [];
+  const [members, pairings, moves, meetings, requests, invites, feedback, week, month] = await Promise.all([
+    live.listMembers(),
+    live.listPairings(),
+    live.listJourneyEvents(5000).catch(none),
+    live.listChurchMeetings().catch(none),
+    live.listPairingRequests().catch(none),
+    live.listInvites().catch(none),
+    live.listFeedback().catch(none),
+    live.churchActivity(7).catch(none),
+    live.churchActivity(30).catch(none),
+  ]);
+  return {
+    now,
+    members: members.map((m) => ({ id: m.id, role: m.role, approved: !!m.is_approved, joinedAt: m.signup_completed_at ?? m.created_at ?? null })),
+    pairings: pairings.map((p) => ({ id: p.id, dsId: p.ds_id, stage: p.journey_stage, status: p.status, createdAt: p.created_at })),
+    moves: moves.map((e) => ({ pairingId: e.pairing_id, from: e.from_stage ?? null, to: e.to_stage, at: e.created_at })),
+    meetings: meetings.map((m) => ({ at: m.starts_at, done: m.status === 'done', cancelled: m.status === 'cancelled' })),
+    requests: requests.map((r) => ({ pending: r.status === 'pending', createdAt: r.created_at })),
+    invites: invites.map((i) => ({ createdAt: i.created_at, joinedAt: i.joined_at, expiresAt: i.expires_at })),
+    feedback: feedback.map((f) => ({ createdAt: f.created_at, open: f.status !== 'done' && f.status !== 'wont_do' })),
+    activity: [
+      ...week.map((a) => ({ days: 7 as const, role: a.role, active: Number(a.active) || 0, approved: Number(a.approved) || 0 })),
+      ...month.map((a) => ({ days: 30 as const, role: a.role, active: Number(a.active) || 0, approved: Number(a.approved) || 0 })),
+    ],
+  };
+}
