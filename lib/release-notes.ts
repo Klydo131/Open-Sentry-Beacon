@@ -18,13 +18,23 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-16-appointment-record',
+    date: '2026-11-16',
+    title: 'An appointment record for both of you',
+    items: [
+      'Under Appointments, the Appointment record lists every appointment you and your Guide or Explorer have made, and how it ended: took place, called off, moved, declined, did not happen or never answered, with who said so, when, and why.',
+      'Nothing is erased. Deleting an appointment keeps it in the record as called off.',
+      'Once an agreed time has passed, either of you can tap We met or It did not happen.',
+    ],
+  },
+  {
     id: '2026-11-16-study-room-start',
     date: '2026-11-16',
     title: 'A calmer Study Room, and four ways to start',
     items: [
       'The Study Room opens on Start studying: Bible study on screen, Study on paper with your Bible and notebook, Sermon notes, and Today\u2019s journal. Each opens a page already laid out.',
       'Study on paper walks you through copying the key verse, underlining and drawing, then adding a photo of your notebook page.',
-      'Your text size and theme can now be changed from the room drawer on the right, as well as in Settings.',
+      'Your text size and theme can now be changed from the room drawer on the right, as well as in Settings, and the chosen one is always readable.',
     ],
   },
   {

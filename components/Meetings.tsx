@@ -6,6 +6,7 @@ import { useDemo } from '@/lib/demo/store';
 import { Card, Button } from '@/components/ui';
 import type { Meeting } from '@/lib/types';
 import { PlaceSearch } from '@/components/PlaceSearch';
+import { MeetingRecord } from '@/components/MeetingRecord';
 import { searchSamplePlaces } from '@/lib/demo/sample-places';
 import { hasLink, placeLabel, placeUrl, wordsBesideLink } from '@/lib/live/meeting-link';
 
@@ -29,7 +30,7 @@ function mapsUrl(place: string | undefined): string | null {
 }
 
 export function Meetings({ pairingId }: { pairingId: string }) {
-  const { db, scheduleMeeting, cancelMeeting } = useDemo();
+  const { db, scheduleMeeting, cancelMeeting, markMeeting } = useDemo();
   const [title, setTitle] = useState('');
   const [when, setWhen] = useState('');
   const [mode, setMode] = useState<Meeting['mode']>('online');
@@ -75,7 +76,12 @@ export function Meetings({ pairingId }: { pairingId: string }) {
       mode,
       location: mode === 'in_person' ? location : undefined,
     });
-    if (changing) cancelMeeting(changing.id);
+    // A CHANGE IS KEPT AS A MOVE: the old one is called off with a note saying
+    // where it went, as the live app does, so the record shows it moved.
+    if (changing) {
+      const at = new Date(when).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      cancelMeeting(changing.id, `Moved to ${at}.`);
+    }
     setChanging(null);
     setTitle('');
     setWhen('');
@@ -234,6 +240,18 @@ export function Meetings({ pairingId }: { pairingId: string }) {
           })
         )}
       </div>
+
+      {/* THE APPOINTMENT RECORD, the same as the live app's (MeetingRecord.tsx). */}
+      <MeetingRecord
+        meetings={db.meetings
+          .filter((m) => m.pairing_id === pairingId)
+          .map((m) => ({
+            id: m.id, title: m.title, startsAt: m.when, mode: m.mode,
+            status: m.status === 'scheduled' ? 'confirmed' as const : m.status,
+            byName: m.answer_name, at: m.answered_at, note: m.answer_note,
+          }))}
+        onMark={markMeeting}
+      />
     </Card>
   );
 }

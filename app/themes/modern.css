@@ -134,7 +134,7 @@
 :root[data-ui-theme="modern"] [data-desk-drawer] p[style*="color"],
 :root[data-ui-theme="modern"] [data-desk-drawer] a[style*="color"],
 :root[data-ui-theme="modern"] [data-desk-drawer] span[style*="color"],
-:root[data-ui-theme="modern"] [data-desk-drawer] button[style*="color"]:not([style*="background-color"]) {
+:root[data-ui-theme="modern"] [data-desk-drawer] button[style*="color"]:not([style*="background-color"]):not([aria-checked="true"]) {
   color: var(--look-soft) !important;
 }
 :root[data-ui-theme="modern"] [data-desk-drawer] p.font-extrabold,

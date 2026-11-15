@@ -44,6 +44,16 @@ async function walk(browser, viewport, who, path) {
   ok(order.look > -1 && order.look < order.colours, `${tag}: Theme comes before the room colours`);
   ok(order.text > order.colours, `${tag}: Text size comes after the room colours`);
   ok(order.timer > -1 && order.text < order.timer, `${tag}: and before the study time`);
+  // THE CHOSEN ONE CAN BE READ (reported 16 November 2026: Modern greyed the
+  // words on the chosen chip, and white on an amber room read at 3:1). Its
+  // text must stand clear of its fill in every room.
+  const contrast = await rail.locator('[data-quick-look-choice][aria-checked="true"]').evaluate((el) => {
+    const rgb = (c) => (c.match(/\d+(\.\d+)?/g) || []).slice(0, 3).map(Number);
+    const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const cs = getComputedStyle(el); const a = lum(rgb(cs.color)); const b = lum(rgb(cs.backgroundColor));
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  });
+  ok(contrast >= 4.5, `${tag}: the chosen theme's name can be read (contrast ${contrast.toFixed(1)}:1)`);
   // Choosing in the drawer is choosing in Settings.
   await rail.locator('[data-quick-look-choice="focus"]').click();
   await page.waitForTimeout(400);

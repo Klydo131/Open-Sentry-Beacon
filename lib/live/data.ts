@@ -2125,7 +2125,8 @@ export async function avatarUrls(paths: (string | null | undefined)[]): Promise<
 // --- Meetings: visible to the two people in a pairing ---
 
 export type { MeetingMode };
-export type MeetingStatus = 'proposed' | 'confirmed' | 'declined' | 'cancelled' | 'done';
+// `missed` since 20261116140000: an agreed time that did not take place.
+export type MeetingStatus = 'proposed' | 'confirmed' | 'declined' | 'cancelled' | 'done' | 'missed';
 
 export interface Meeting {
   id: string;
@@ -2243,7 +2244,7 @@ export async function myUpcomingMeetings(limit = 5): Promise<Meeting[]> {
  */
 export async function answerMeeting(
   id: string,
-  answer: 'confirmed' | 'declined' | 'cancelled',
+  answer: 'confirmed' | 'declined' | 'cancelled' | 'done' | 'missed',
   note?: string,
 ): Promise<void> {
   const { error } = await db().rpc('answer_meeting', {
@@ -2264,6 +2265,23 @@ export async function declineMeeting(id: string, note?: string): Promise<void> {
   await answerMeeting(id, 'declined', note);
 }
 
+/**
+ * Say how an agreed time went, once it has passed: it took place, or it did
+ * not. Either person may, and it is recorded with their name (the appointment
+ * record, lib/meeting-record.ts). Needs migration 20261116140000.
+ */
+export async function markMeeting(id: string, how: 'done' | 'missed'): Promise<void> {
+  try {
+    await answerMeeting(id, how);
+  } catch (cause) {
+    // A database without the migration says the answer is unknown.
+    if (/not an answer this app has/i.test(cause instanceof Error ? cause.message : '')) {
+      throw new Error('Saying how an appointment went needs the latest database update. Ask your church\u2019s administrator.');
+    }
+    throw cause;
+  }
+}
+
 /** Cancel rather than delete, so the other person sees it was called off. */
 export async function cancelMeeting(id: string, note?: string): Promise<void> {
   await answerMeeting(id, 'cancelled', note);
@@ -2276,7 +2294,7 @@ export async function cancelMeeting(id: string, note?: string): Promise<void> {
 export interface ChurchMeeting {
   starts_at: string;
   mode: 'online' | 'in_person';
-  status: 'proposed' | 'confirmed' | 'cancelled' | 'done';
+  status: MeetingStatus;
 }
 
 export async function listChurchMeetings(): Promise<ChurchMeeting[]> {

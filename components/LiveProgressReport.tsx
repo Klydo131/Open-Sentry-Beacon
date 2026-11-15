@@ -52,7 +52,7 @@ export function LiveProgressReport({ me, role, churchName }: { me: string; role:
             pairing_id: m.pairing_id,
             at: m.starts_at,
             held: m.status === 'confirmed' || m.status === 'done',
-            cancelled: m.status === 'cancelled' || m.status === 'declined',
+            cancelled: m.status === 'cancelled' || m.status === 'declined' || m.status === 'missed',
           })),
           lessons: lessons.map((a) => ({ pairing_id: a.pairing_id, created_at: a.created_at, completed_at: a.completed_at })),
           followUps,

@@ -361,8 +361,8 @@ function QuickLook({ theme }: { theme: RoomTheme }) {
               data-quick-look-choice={t.id}
               className="min-h-9 truncate rounded-lg px-2 text-left text-xs font-semibold"
               style={{
-                background: on ? theme.accent : 'transparent',
-                color: on ? '#fff' : theme.ink,
+                backgroundColor: on ? theme.accent : 'transparent',
+                color: on ? inkOn(theme.accent) : theme.ink,
                 border: `1px solid ${on ? theme.accent : theme.line}`,
               }}>
               {t.name}
@@ -372,6 +372,23 @@ function QuickLook({ theme }: { theme: RoomTheme }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Black or white, whichever reads better on a room's accent. White on every
+ * accent read at 3:1 on the amber rooms (reported 16 November 2026).
+ */
+function inkOn(colour: string): string {
+  const hex = colour.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  const parts = hex
+    ? (hex[1].length === 3 ? hex[1].split('').map((c) => c + c) : hex[1].match(/../g)!).map((h) => parseInt(h, 16))
+    : (colour.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+  if (parts.length < 3) return '#fff';
+  const lin = (v: number) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
+  const l = 0.2126 * lin(parts[0]) + 0.7152 * lin(parts[1]) + 0.0722 * lin(parts[2]);
+  const onWhite = 1.05 / (l + 0.05);
+  const onDark = (l + 0.05) / 0.0617; // #1a2233
+  return onWhite >= onDark ? '#fff' : '#1a2233';
 }
 
 /** Text size, applied at once (Settings has the preview). */
@@ -389,8 +406,8 @@ function QuickText({ theme }: { theme: RoomTheme }) {
               className="min-h-9 rounded-lg font-bold"
               style={{
                 fontSize: `${0.75 + (sz.scale - 0.9) * 1.1}rem`,
-                background: on ? theme.accent : 'transparent',
-                color: on ? '#fff' : theme.ink,
+                backgroundColor: on ? theme.accent : 'transparent',
+                color: on ? inkOn(theme.accent) : theme.ink,
                 border: `1px solid ${on ? theme.accent : theme.line}`,
               }}>
               A

@@ -18,6 +18,7 @@
 // the policies already allowed. Somebody who can only ever be summoned is not
 // walking alongside anyone.
 
+import { MeetingRecord } from '@/components/MeetingRecord';
 import { scrollMotion } from '@/lib/motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as live from '@/lib/live/data';
@@ -193,20 +194,6 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   // deliver on somebody's behalf.
   const missed = all.filter((m) => m.status === 'proposed' && past(m));
 
-  // WHAT ACTUALLY HAPPENED, WHICH WAS BEING THROWN AWAY.
-  //
-  // Thirty-three of this church's thirty-six appointments are in the past, and
-  // not one of them was visible to the two people it happened between. For an
-  // app about walking with somebody over months, "when did we last meet, and
-  // how often" is close to the only question a Guide needs answered, and the
-  // card answered it for exactly one hour and then forgot.
-  //
-  // Confirmed only. A cancelled meeting is not a meeting that happened, and a
-  // list of things that did not happen is not a history -- the same reason the
-  // filter above has always left them out.
-  const met = all
-    .filter((m) => m.status === 'confirmed' && past(m))
-    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
 
   return (
     <Card className="overflow-hidden p-0">
@@ -722,38 +709,22 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
         )}
 
         {/* ---------------------------------------------------------------
-            WHAT ALREADY HAPPENED
+            THE APPOINTMENT RECORD (16 November 2026)
             ---------------------------------------------------------------
-            THE COUNT IS THE POINT, not the list. "You have met four times" is
-            the one number a Guide actually wants, and it is what the hour-long
-            filter was throwing away every time.
-
-            FOLDED SHUT, because a diary is about what is next. It opens when
-            somebody asks the question it answers. */}
-        {met.length > 0 && (
-          <details className="mt-5 rounded-2xl bg-slate-50 p-4 ring-1 ring-navy/5">
-            <summary className="cursor-pointer text-sm font-bold text-navy">
-              {met.length === 1
-                ? 'You have met once before'
-                : `You have met ${met.length} times before`}
-            </summary>
-            <ul className="mt-3 grid gap-2">
-              {met.map((m) => (
-                <li key={m.id} className="border-t border-navy/5 pt-2 first:border-0 first:pt-0">
-                  <p className="text-sm font-semibold text-navy">{m.title || 'A time together'}</p>
-                  <p className="text-sm text-gray-500">
-                    {when(m.starts_at)} · {m.mode === 'online' ? 'Online call' : 'In person'}
-                  </p>
-                  {m.notes && (
-                    <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-gray-600">
-                      {m.notes}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
+            Every appointment this pair ever made and how it ended: took
+            place, called off (what used to be deleting), moved, declined, did
+            not happen, never answered. It replaced "You have met N times",
+            which counted only the agreed ones and threw the rest away. The
+            rules are in lib/meeting-record.ts; the same component draws the
+            sample church's record. */}
+        <MeetingRecord
+          busy={busy}
+          meetings={all.map((m) => ({
+            id: m.id, title: m.title, startsAt: m.starts_at, mode: m.mode, status: m.status,
+            byName: m.answer_name, at: m.answered_at, note: m.answer_note, notes: m.notes,
+          }))}
+          onMark={(id, how) => act(() => live.markMeeting(id, how))}
+        />
       </div>
       </div>
     </Card>

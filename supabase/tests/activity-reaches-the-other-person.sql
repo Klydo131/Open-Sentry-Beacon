@@ -103,8 +103,16 @@ insert into public.meetings (id, pairing_id, church_id, title, starts_at, create
   ('00000000-0000-0000-0000-0000000ac0b5', '00000000-0000-0000-0000-0000000ac0f1', '00000000-0000-0000-0000-0000000ac0c1', 'Coffee and Bible', now() + interval '2 days', '00000000-0000-0000-0000-0000000ac0d1');
 select pg_temp.check(exists (select 1 from public.notifications where user_id = '00000000-0000-0000-0000-0000000ac0e1' and type = 'meeting' and title = 'Grace suggested a time to meet'),
   'a meeting suggested tells the other person');
-update public.meetings set status = 'confirmed' where id = '00000000-0000-0000-0000-0000000ac0b5';
+-- Confirmed as the app confirms, through answer_meeting, which does the telling
+-- (since 20261116140000 the trigger speaks only for a proposal or a moved time,
+-- so an answer is told once, not twice).
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000ac0e1","role":"authenticated"}', true);
+set local role authenticated;
+select public.answer_meeting('00000000-0000-0000-0000-0000000ac0b5', 'confirmed');
+reset role;
 select pg_temp.check(pg_temp.n('00000000-0000-0000-0000-0000000ac0e1', 'meeting') + pg_temp.n('00000000-0000-0000-0000-0000000ac0d1', 'meeting') = 2, 'confirming tells one more person, once');
+update public.meetings set starts_at = starts_at + interval '1 day' where id = '00000000-0000-0000-0000-0000000ac0b5';
+select pg_temp.check(pg_temp.n('00000000-0000-0000-0000-0000000ac0d1', 'meeting') + pg_temp.n('00000000-0000-0000-0000-0000000ac0e1', 'meeting') = 3, 'a moved time is told too');
 
 -- 6. POSTS: a private one tells nobody; publishing it tells the Guide's Explorers.
 insert into public.blog_posts (id, author_id, church_id, title, body, visibility) values

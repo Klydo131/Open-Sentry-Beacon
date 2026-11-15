@@ -253,7 +253,7 @@ export function DemoProgressReport() {
       events: db.journey_events,
       ...(guide ? {
         meetings: db.meetings.filter((m) => mine.has(m.pairing_id))
-          .map((m) => ({ pairing_id: m.pairing_id, at: m.when, held: m.status === 'scheduled', cancelled: m.status === 'cancelled' })),
+          .map((m) => ({ pairing_id: m.pairing_id, at: m.when, held: m.status === 'scheduled' || m.status === 'done', cancelled: m.status === 'cancelled' || m.status === 'missed' })),
         lessons: db.lesson_assignments.filter((a) => mine.has(a.pairing_id))
           .map((a) => ({ pairing_id: a.pairing_id, created_at: a.created_at, completed_at: a.completed_at ?? null })),
         followUps: db.follow_ups.filter((f) => f.owner_id === currentUser.id),

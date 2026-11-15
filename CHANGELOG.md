@@ -10,6 +10,34 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 16 November 2026 (night): the appointment record
+
+**Run one migration on each live database**, after the three before it:
+`20261116140000_an_appointment_keeps_its_record.sql`. Until it runs, the record
+shows everything already kept (called off, moved, declined, never answered,
+agreed), and pressing We met says the database update is needed.
+
+- **The appointment record** (`components/MeetingRecord.tsx`, rules in
+  `lib/meeting-record.ts`) replaces "You have met N times" in both halves of
+  the app. The Guide and the Explorer see the same list, newest first, with a
+  summary and filters (All, Took place, Called off or moved, Declined, Never
+  answered). Nothing is erased: deleting is calling off, recorded with who,
+  when and why; a change is a call-off whose note starts "Moved to".
+- **We met / It did not happen.** `answer_meeting` now takes `done` and the new
+  `missed`, by either person, only for an agreed appointment that has begun,
+  once. `done` existed since 0009 and nothing wrote it, so the leaders'
+  "meetings held" was always 0 on a live database.
+- **One notification per answer.** 20261116120000's meeting trigger also told
+  the other person about a confirm or call-off that `answer_meeting` already
+  told them about; it now speaks only for a new proposal or a moved time, and
+  `answer_meeting`'s own notification carries where to open it.
+- **The drawer's chosen theme was unreadable** in Modern (grey on green) and on
+  amber rooms (white at 3:1). Its text is now black or white, whichever reads
+  better, and Modern no longer greys a chosen chip.
+- Held by `supabase/tests/an-appointment-keeps-its-record.sql` (15),
+  `tests/a-meeting-keeps-its-record.mjs`, `tests/e2e/a-meeting-keeps-its-record.js`
+  and a contrast check in `tests/e2e/the-drawer-holds-look-and-text.js`.
+
 ## 16 November 2026 (evening): the Study Room looks finished
 
 **Nothing to run.** No database change.

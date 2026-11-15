@@ -50,6 +50,11 @@ const ok = (cond, msg) => {
 const src  = read('components/LiveMeetings.tsx');
 const code = strip(src);
 const data = strip(read('lib/live/data.ts'));
+// THE HISTORY MOVED (16 November 2026) into the appointment record: rules in
+// lib/meeting-record.ts, drawn by components/MeetingRecord.tsx for both halves.
+const recSrc = read('components/MeetingRecord.tsx');
+const recCode = strip(recSrc);
+const rules = strip(read('lib/meeting-record.ts'));
 
 // ---------------------------------------------------------------------------
 // 1. THE WHOLE NOTE PATH IS CONNECTED
@@ -78,9 +83,10 @@ const data = strip(read('lib/live/data.ts'));
   // left the other matching and the check stayed green, which is the same
   // "present somewhere" weakness that has now bitten this project six times.
   {
-    const drawn = (code.match(/\{m\.notes && \(/g) ?? []).length;
-    ok(drawn === 2,
-       `the note is drawn on what is ahead AND on what already happened (${drawn} of 2)`);
+    const ahead = (code.match(/\{m\.notes && \(/g) ?? []).length;
+    const past = (recCode.match(/\{r\.notes && \(/g) ?? []).length;
+    ok(ahead === 1 && past === 1 && /notes: m\.notes/.test(code),
+       `the note is drawn on what is ahead AND on what already happened (${ahead} + ${past} of 2)`);
   }
 
   ok(/maxLength=\{2000\}/.test(code),
@@ -113,25 +119,26 @@ const data = strip(read('lib/live/data.ts'));
 // 3. WHAT HAPPENED IS KEPT, AND COUNTED
 // ---------------------------------------------------------------------------
 {
-  ok(/const met = all \.filter\(\(m\) => m\.status === 'confirmed' && past\(m\)\)/.test(code),
-     'meetings that happened are gathered instead of being filtered away');
+  // EVERY APPOINTMENT IS IN THE RECORD, each with how it ended.
+  ok(/<MeetingRecord/.test(code) && /meetings=\{all\.map\(/.test(code),
+     'meetings that happened are gathered instead of being filtered away (all of them reach the record)');
 
-  // CONFIRMED ONLY. A cancelled meeting is not a meeting that happened, and a
-  // list of things that did not happen is not a history.
-  ok(!/met = all \.filter\(\(m\) => past\(m\)\)/.test(code),
+  // A CANCELLED ONE IS NOT A MEETING THAT TOOK PLACE: met counts only what was
+  // marked as met and what was agreed and passed.
+  ok(/met: counts\.held \+ counts\.agreed/.test(rules) && /case 'cancelled': return/.test(rules),
      'and a cancelled one is not counted as a meeting that took place');
 
-  ok(/You have met \$\{met\.length\} times before/.test(src),
+  ok(/`Met \$\{record\.met\} times`/.test(recSrc),
      'the count is said out loud, which is the number a Guide actually wants');
-  ok(/You have met once before/.test(src),
+  ok(/'Met once'/.test(recSrc),
      'and it reads properly when there has only been one');
 
-  // FOLDED SHUT. A diary is about what is next; the history opens when somebody
+  // FOLDED SHUT. A diary is about what is next; the record opens when somebody
   // asks the question it answers.
-  ok(/<details/.test(code) && /<summary/.test(code),
+  ok(/<details/.test(recCode) && /<summary/.test(recCode),
      'the history is folded away rather than pushing the next appointment down');
 
-  ok(/newest first/.test(src) || /b\.starts_at\.localeCompare\(a\.starts_at\)/.test(code),
+  ok(/b\.startsAt\.localeCompare\(a\.startsAt\)/.test(rules),
      'and the most recent meeting is at the top of it');
 }
 

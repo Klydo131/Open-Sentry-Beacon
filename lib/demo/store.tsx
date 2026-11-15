@@ -219,7 +219,9 @@ export interface Ctx {
     pairingId: string,
     m: { title: string; when: string; mode: Meeting['mode']; location?: string },
   ) => void;
-  cancelMeeting: (id: string) => void;
+  cancelMeeting: (id: string, note?: string) => void;
+  /** Say how an agreed, past appointment went (the appointment record). */
+  markMeeting: (id: string, how: 'done' | 'missed') => void;
   importData: (next: DB) => void;
   markMessagesRead: (pairingId: string) => void;
   markEmailOpened: (id: string) => void;
@@ -1019,7 +1021,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   );
 
   const cancelMeeting = useCallback(
-    (id: string) => {
+    (id: string, note?: string) => {
       persistUpdate((prev) => {
         const mtg = prev.meetings.find((x) => x.id === id);
         if (!mtg) return prev;
@@ -1032,7 +1034,16 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         return {
           ...prev,
           meetings: prev.meetings.map((x) =>
-            x.id === id ? { ...x, status: 'cancelled' as const } : x,
+            x.id === id
+              ? {
+                  ...x,
+                  status: 'cancelled' as const,
+                  // KEPT, NOT ERASED: who called it off, when, and why.
+                  answer_name: prev.profiles.find((p) => p.id === userId)?.full_name,
+                  answered_at: nowIso(),
+                  answer_note: note?.trim() || undefined,
+                }
+              : x,
           ),
           notifications: other
             ? [
@@ -1049,6 +1060,21 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
             : prev.notifications,
         };
       });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userId],
+  );
+
+  const markMeeting = useCallback(
+    (id: string, how: 'done' | 'missed') => {
+      persistUpdate((prev) => ({
+        ...prev,
+        meetings: prev.meetings.map((x) =>
+          x.id === id && x.status === 'scheduled' && new Date(x.when).getTime() <= Date.now()
+            ? { ...x, status: how, answer_name: prev.profiles.find((p) => p.id === userId)?.full_name, answered_at: nowIso() }
+            : x,
+        ),
+      }));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [userId],
@@ -2374,6 +2400,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     agreeToCurrentTerms,
     scheduleMeeting,
     cancelMeeting,
+    markMeeting,
     markMessagesRead,
     markEmailOpened,
     sendRecommendation,

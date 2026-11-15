@@ -87,8 +87,14 @@ export interface Meeting {
   mode: 'online' | 'in_person';
   location?: string;
   created_by: string;
-  status: 'scheduled' | 'cancelled';
+  // `done` and `missed`: how an agreed time went, said by either person once
+  // it has passed (the appointment record, lib/meeting-record.ts).
+  status: 'scheduled' | 'cancelled' | 'done' | 'missed';
   created_at: string;
+  /** Who called it off or said how it went, their name then, when, and why. */
+  answer_name?: string;
+  answered_at?: string;
+  answer_note?: string;
 }
 
 // A lesson a Guide assigned to a pairing; the content lives in lib/lessons.ts.
