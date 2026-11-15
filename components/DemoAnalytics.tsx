@@ -12,7 +12,7 @@
 // Nothing here is altered from what the Admin tab already rendered. It is the
 // same code in a file both callers can import.
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useDemo } from '@/lib/demo/store';
 import { useLocale } from '@/lib/i18n';
 import { Card } from '@/components/ui';
@@ -22,6 +22,7 @@ import { STAGES } from '@/lib/brand';
 import type { AnalyticsEvent, DB, Role, Stage } from '@/lib/types';
 import dynamic from 'next/dynamic';
 import { DAY, type PulseInput } from '@/lib/mission-pulse';
+import type { PulseActions } from '@/lib/pulse-alerts';
 
 // Loaded when Analytics opens, not with the page that holds it: the door stays light.
 const MissionPulse = dynamic(() => import('@/components/MissionPulse').then((m) => m.MissionPulse), { ssr: false });
@@ -79,19 +80,26 @@ const EVENT_LABEL: Record<AnalyticsEvent['type'], string> = {
 };
 
 export function Analytics() {
-  const { db } = useDemo();
+  const { db, userId, addFollowUp } = useDemo();
   const { t } = useLocale();
   const [scope, setScope] = useState<'local' | 'global'>('local');
 
   const events = [...db.analytics].sort((a, b) => b.at.localeCompare(a.at));
   // A fresh reader each time the sample church changes, so the pulse keeps up.
   const loadPulse = useCallback(async () => demoPulseInput(db), [db]);
+  // The sample church's automations: follow-ups land on the sample list; nothing is posted or sent.
+  const actions = useMemo<PulseActions>(() => ({
+    sample: true,
+    myFollowUps: async () => db.follow_ups.filter((f) => f.owner_id === userId).map((f) => ({ pairing_id: f.pairing_id, title: f.title, done_at: f.done_at ?? null })),
+    addFollowUp: async (pairingId, title, dueOn) => addFollowUp(pairingId, title, dueOn),
+    postToGuides: async () => undefined,
+  }), [db, userId, addFollowUp]);
   const nameOf = (id: string) =>
     db.profiles.find((p) => p.id === id)?.full_name ?? 'Unknown';
 
   return (
     <div className="space-y-5">
-      <MissionPulse load={loadPulse} live={false} />
+      <MissionPulse load={loadPulse} live={false} actions={actions} />
       {/* Smaller on a phone: at full size "Local (this device)" broke a word
           a line beside its twin. A computer's is as it was. */}
       <div className="flex gap-2">

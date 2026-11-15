@@ -39,6 +39,7 @@ import {
 import type { Role } from '@/lib/types';
 import { humanError } from '@/lib/live/errors';
 import dynamic from 'next/dynamic';
+
 // Loaded when Analytics opens, not with the page that holds it: the door stays light.
 const MissionPulse = dynamic(() => import('@/components/MissionPulse').then((m) => m.MissionPulse), { ssr: false });
 
@@ -387,7 +388,7 @@ export function LiveAnalytics({ churchName }: { churchName?: string }) {
 
   return (
     <div className="space-y-4">
-      <MissionPulse load={an.pulseInput} live />
+      <MissionPulse load={an.pulseInput} live actions={an.pulseActions} />
       <Card className="p-5">
         <h2 className="text-xl font-bold text-navy">📈 How the church is going</h2>
         <p className="mt-1 text-sm text-gray-500">

@@ -46,7 +46,7 @@ async function walk(browser, viewport, who, label) {
   ok((await page.locator('[data-pulse-attention] li').count()) >= 1, `${tag}: it says what needs attention (${(await page.locator('[data-pulse-attention] li').allInnerTexts()).map((t) => t.split('\n').pop()).join(' | ').slice(0, 160)})`);
   ok((await page.locator('[data-pulse-tile]').count()) === 8, `${tag}: eight outcomes, each with a number`);
   ok((await page.locator('[data-pulse-tile] svg rect').count()) > 20, `${tag}: each outcome has its little chart`);
-  ok((await page.locator('[data-pulse-tab]').count()) === 5, `${tag}: five views: overview, journeys, analysis, raw data, app health`);
+  ok((await page.locator('[data-pulse-tab]').count()) === 7, `${tag}: seven views, alerts and automations among them`);
   await page.locator('[data-pulse-tab="journeys"]').click();
   await page.waitForTimeout(400);
   ok((await page.locator('[data-pulse-pathway] li').count()) === 6, `${tag}: the journey shows all six stages`);
@@ -66,6 +66,42 @@ async function walk(browser, viewport, who, label) {
   const [download] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }).catch(() => null), page.locator('[data-pulse-csv="journeys"]').click()]);
   const csvText = download ? require('node:fs').readFileSync(await download.path(), 'utf8') : '';
   ok(/^\ufeff?Journey,Status,Stage/.test(csvText) && !/Maria|John|Santos/.test(csvText), `${tag}: the journey CSV downloads, with no names (${download ? download.suggestedFilename() : 'no file'})`);
+  // THE WARNING SYSTEM. Lower the stalled line to one day: the sample journeys' last
+  // steps are days old, so warnings appear, and the Alerts tab counts them.
+  await page.locator('[data-pulse-tab="alerts"]').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('[data-rule]').count()) >= 10, `${tag}: the warning rules are listed, each with a switch and a line`);
+  const stalledLine = page.locator('[data-rule-threshold="stalled"]');
+  await stalledLine.fill('1');
+  await page.waitForTimeout(500);
+  ok((await page.locator('[data-warning="stalled"]').count()) === 1, `${tag}: lowering a line raises its warning`);
+  ok(Number(await page.locator('[data-alert-count]').innerText()) >= 1, `${tag}: the Alerts tab counts the warnings`);
+  ok(await page.evaluate(() => JSON.parse(localStorage.getItem('hb-pulse-rules')).stalled.threshold) === 1, `${tag}: the line is kept on this device`);
+  await page.locator('[data-rule="stalled"] input[type="checkbox"]').uncheck();
+  await page.waitForTimeout(400);
+  ok((await page.locator('[data-warning="stalled"]').count()) === 0, `${tag}: switching a rule off quiets it`);
+  await page.locator('[data-rule="stalled"] input[type="checkbox"]').check();
+  await page.waitForTimeout(300);
+
+  // AUTOMATIONS. Follow-ups for stalled journeys: previewed, run once, never doubled.
+  await page.locator('[data-pulse-tab="automations"]').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('[data-automation]').count()) === 4, `${tag}: four automations, each with Off, Ask first and Automatic`);
+  const fu = page.locator('[data-automation="followups"]');
+  const promised = await fu.locator('[data-preview]').innerText();
+  ok(/Would add \d+ follow-up/.test(promised), `${tag}: it says what it will do before it does it (${promised})`);
+  await fu.locator('[data-run="followups"]').click();
+  await page.waitForTimeout(900);
+  ok(/Added \d+ follow-up/.test(await page.locator('[data-automation-log]').innerText()), `${tag}: Run now adds the follow-ups and says so`);
+  ok(/Nothing to add/.test(await fu.locator('[data-preview]').innerText()), `${tag}: and will not add them twice`);
+  ok(/Last ran/.test(await fu.innerText()), `${tag}: it remembers when it last ran`);
+  const brief = await page.locator('[data-briefing]').inputValue();
+  ok(/Mission briefing/.test(brief) && /Needs attention/.test(brief) && !/Maria|John|Santos|Ramos|Alonzo/.test(brief), `${tag}: the weekly briefing is ready, with numbers and warnings and no names`);
+  ok((await page.locator('[data-automation="guides"] [data-run]').isDisabled()), `${tag}: with nobody waiting, there is nothing to ask the Guides`);
+  await page.locator('[data-automation="notify"] [data-mode="auto"]').click();
+  ok(await page.evaluate(() => JSON.parse(localStorage.getItem('hb-pulse-auto')).mode.notify) === 'auto', `${tag}: choosing Automatic is kept`);
+  await page.evaluate(() => { localStorage.removeItem('hb-pulse-rules'); localStorage.removeItem('hb-pulse-auto'); });
+
   await page.locator('[data-pulse-tab="health"]').click();
   await page.waitForTimeout(400);
   ok(/Feedback not closed/.test(await page.locator('[data-pulse-system]').innerText()), `${tag}: the app's own health is there for IT`);
@@ -99,8 +135,38 @@ async function walk(browser, viewport, who, label) {
   await ctx.close();
 }
 
+// AUTOMATIC MEANS AUTOMATIC: with follow-ups on Automatic and a line that fires,
+// opening Analytics adds them with nobody pressing anything, and opening it again
+// does not add them twice.
+async function automatic(browser) {
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 }, serviceWorkers: 'block' });
+  const page = await ctx.newPage();
+  ok(await signInAs(page, 'Pastor Ramos'), 'automatic: the Director signs in');
+  await page.evaluate(() => {
+    localStorage.setItem('hb-pulse-rules', JSON.stringify({ stalled: { on: true, threshold: 1 } }));
+    localStorage.setItem('hb-pulse-auto', JSON.stringify({ mode: { followups: 'auto', guides: 'off', notify: 'off', briefing: 'ask' }, lastRun: {} }));
+  });
+  const openPulse = async () => {
+    await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1200);
+    await openByQuest(page, 'tab-analytics');
+    await page.locator('[data-pulse-tile]').first().waitFor({ timeout: 15000 });
+    await page.waitForTimeout(1500);
+    await page.locator('[data-pulse-tab="automations"]').click();
+    await page.waitForTimeout(500);
+  };
+  await openPulse();
+  const log = page.locator('[data-automation-log]');
+  ok((await log.count()) === 1 && /Automatic: Added \d+ follow-up/.test(await log.innerText()), `automatic: opening Analytics added the follow-ups by itself (${(await log.count()) ? (await log.innerText()).trim() : 'nothing'})`);
+  ok(/Nothing to add/.test(await page.locator('[data-automation="followups"] [data-preview]').innerText()), 'automatic: and nothing is left to add');
+  await openPulse();
+  ok((await page.locator('[data-automation-log]').count()) === 0, 'automatic: opening it again does not run it twice');
+  await ctx.close();
+}
+
 (async () => {
   const browser = await chromium.launch(launchOptions);
+  await automatic(browser);
   for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 900 }]) {
     await walk(browser, viewport, 'Bishop Alonzo', 'the Executive Director');
     await walk(browser, viewport, 'Pastor Ramos', 'the Director');

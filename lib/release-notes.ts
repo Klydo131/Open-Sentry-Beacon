@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-16-pulse-warnings-automations',
+    date: '2026-11-16',
+    title: 'Warnings and automations for leaders',
+    items: [
+      'Analytics has Alerts: rules that warn when an Explorer waits too long for a Guide, a request goes unanswered, a journey stops, a Guide carries too many, or the numbers fall. Change any line or switch a rule off.',
+      'Automations can add follow-ups for stalled journeys, ask the Guides for help, tell you on this device, and write a weekly briefing. Each says what it will do first, and runs only when you choose, or by itself if you set it to Automatic.',
+    ],
+  },
+  {
     id: '2026-11-15-mission-pulse',
     date: '2026-11-15',
     title: 'The Mission pulse for leaders',

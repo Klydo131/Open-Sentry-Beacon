@@ -172,6 +172,7 @@ const staticChecks = [
   ['a book opens safely', 'tests/a-book-opens-safely.mjs'],
   ['the mission pulse adds up', 'tests/the-mission-pulse-adds-up.mjs'],
   ['the mission analysis holds', 'tests/the-mission-analysis-holds.mjs'],
+  ['the pulse warns and acts', 'tests/the-pulse-warns-and-acts.mjs'],
   ['a share can say why', 'tests/a-share-can-say-why.mjs'],
   ['a share can be taken back', 'tests/a-share-can-be-taken-back.mjs'],
   ['a Guide sees who already has it', 'tests/a-guide-sees-who-already-has-it.mjs'],

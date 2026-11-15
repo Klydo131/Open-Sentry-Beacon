@@ -84,6 +84,38 @@ Held by `tests/the-mission-analysis-holds.mjs` (statistics checked against
 values worked by hand, and a synthetic church built with a known link, which the
 analysis must find) and the browser walk.
 
+## Warnings and automations
+
+The **Alerts** view is a warning system: eleven rules, each with a line a leader
+can change and a switch, kept on the device (`lib/pulse-alerts.ts`). Urgent:
+an Explorer waiting for a Guide past 7 days; a pairing request unanswered past 3.
+Warning: a journey with no step past 30 days; a Guide carrying more than 5; journey
+steps down 30% or more; Explorers back this week under 40%; Guides under 50%; the
+numbers taking over 3 seconds to load. Watch: new Explorers down 50% or more;
+expired invitations; 5 or more pieces of open feedback. Percentage rules need a
+minimum base before they fire (4 steps or arrivals, 5 active Explorers, 3 Guides),
+so a quiet week in a small church does not cry wolf. The Alerts tab shows a count.
+
+The **Automations** view does only what the app may do with the leader's own
+permissions. Each is Off, Ask first (the default) or Automatic, says what it will
+do before it does it, and remembers when it last ran:
+
+| Automation | Does | Quiet period |
+| --- | --- | --- |
+| Follow-ups for stalled journeys | Adds a follow-up to the leader's own list per stalled journey, due in two days; never twice while one is open. | A day |
+| Ask the Guides for help | Posts one counts-only message to the Guides' room when Explorers are waiting. | A week |
+| Tell me on this device | Shows a notification when something urgent is found (asks permission first). | A day |
+| Weekly briefing | Writes the numbers and warnings as a briefing to copy, share or email. No names. | On demand |
+
+Automatic ones run when Analytics opens, once per quiet period. In the sample
+church follow-ups go on the sample list and nothing is posted. Held by
+`tests/the-pulse-warns-and-acts.mjs` and the browser walk, which proves an
+automatic run happens on its own and does not repeat.
+
+**Not yet possible without a database change:** running automations while
+nobody has the app open (a scheduled job on the server), sharing rule settings
+across a church's leaders, and emailing the briefing directly.
+
 ## What to record next (not built yet)
 
 Each needs a database change, which is applied to the live databases only with

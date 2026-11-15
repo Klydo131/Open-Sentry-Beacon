@@ -23,6 +23,7 @@
 import * as live from '@/lib/live/data';
 import type { Role } from '@/lib/types';
 import type { PulseInput } from '@/lib/mission-pulse';
+import type { PulseActions } from '@/lib/pulse-alerts';
 
 // ---------------------------------------------------------------------------
 // Colour
@@ -373,3 +374,11 @@ export async function pulseInput(now = Date.now()): Promise<PulseInput> {
     ],
   };
 }
+
+/** What the pulse's automations may do in a live church, with the leader's own permissions. */
+export const pulseActions: PulseActions = {
+  sample: false,
+  myFollowUps: () => live.listFollowUps(),
+  addFollowUp: (pairingId, title, dueOn) => live.addFollowUp(pairingId, title, dueOn),
+  postToGuides: (body) => live.postToGuideRoom(body),
+};

@@ -10,6 +10,24 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 16 November 2026: warnings and automations for leaders
+
+**Nothing to do** for a church running a copy. No database change.
+
+- **Alerts** (`lib/pulse-alerts.ts`, `components/PulseAlerts.tsx`): eleven warning
+  rules over the Mission pulse, each with a line and a switch kept on the device;
+  percentage rules need a minimum base. The tab carries a count.
+- **Automations**, each Off / Ask first / Automatic, previewed before running,
+  with a quiet period and a log: follow-ups for stalled journeys (the leader's
+  own list, never doubled), a counts-only message to the Guides' room, a
+  notification on the device, and a weekly briefing to copy, share or email.
+  They use only `addFollowUp`, `postToGuideRoom` and local notifications.
+- `tests/the-pulse-warns-and-acts.mjs` (in the gate); the walk now lowers a
+  line, runs an automation, checks it is not doubled, and proves Automatic runs
+  by itself once.
+
+---
+
 ## 15 November 2026 (night): the Mission pulse gains Analysis and Raw data
 
 **Nothing to do** for a church running a copy. No database change.

@@ -20,10 +20,21 @@ import {
 import {
   chanceLine, countTable, findings, journeyRows, MIN_N, toCsv, type Finding,
 } from '@/lib/mission-analysis';
+import {
+  AUTOMATIONS, briefing, defaultSettings, due, evaluate, guidesMessage, notification, planFollowUps,
+  tidyAutomations, tidySettings, type AutomationKey, type AutomationMode, type AutomationState, type RuleSettings,
+} from '@/lib/pulse-alerts';
+import { AlertsView, AutomationsView } from '@/components/PulseAlerts';
+import type { PulseActions } from '@/lib/pulse-alerts';
+import { showLocalNotification } from '@/lib/push';
 
 const PERIOD_KEY = 'hb-pulse-period';
+const RULES_KEY = 'hb-pulse-rules';
+const AUTO_KEY = 'hb-pulse-auto';
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'alerts', label: 'Alerts' },
+  { key: 'automations', label: 'Automations' },
   { key: 'journeys', label: 'Journeys' },
   { key: 'analysis', label: 'Analysis' },
   { key: 'raw', label: 'Raw data' },
@@ -160,7 +171,7 @@ function Stat({ label, children }: { label: string; children: React.ReactNode })
   return (<><dt className="text-slate-600">{label}</dt><dd className="text-right font-bold tabular-nums text-navy">{children}</dd></>);
 }
 
-export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; live: boolean }) {
+export function MissionPulse({ load, live, actions }: { load: () => Promise<PulseInput>; live: boolean; actions: PulseActions }) {
   const [input, setInput] = useState<PulseInput | null>(null);
   const [error, setError] = useState('');
   const [period, setPeriod] = useState<number>(30);
@@ -169,22 +180,31 @@ export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; 
   const [loadedIn, setLoadedIn] = useState<number | null>(null);
   const [, tick] = useState(0);
   const panel = useRef<HTMLDivElement>(null);
+  const [rules, setRules] = useState<RuleSettings>(defaultSettings);
+  const [auto, setAuto] = useState<AutomationState>(() => tidyAutomations(null));
+  const [mine, setMine] = useState<{ pairing_id: string; title: string; done_at: string | null }[]>([]);
+  const [log, setLog] = useState<string[]>([]);
+  const ranFor = useRef<PulseInput | null>(null);
 
   useEffect(() => {
     try { const saved = Number(localStorage.getItem(PERIOD_KEY)); if (PERIODS.some((p) => p.days === saved)) setPeriod(saved); } catch { /* private window */ }
+    try { setRules(tidySettings(JSON.parse(localStorage.getItem(RULES_KEY) ?? 'null'))); } catch { /* private window or damaged */ }
+    try { setAuto(tidyAutomations(JSON.parse(localStorage.getItem(AUTO_KEY) ?? 'null'))); } catch { /* private window or damaged */ }
   }, []);
 
   const refresh = useCallback(async () => {
     setBusy(true);
     const t0 = performance.now();
     try {
-      setInput(await load());
+      const [fresh, followUps] = await Promise.all([load(), actions.myFollowUps().catch(() => [])]);
+      setInput(fresh);
+      setMine(followUps);
       setLoadedIn(Math.round(performance.now() - t0));
       setError('');
     } catch {
       setError('The pulse could not be worked out just now. Try Refresh in a moment.');
     } finally { setBusy(false); }
-  }, [load]);
+  }, [load, actions]);
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 30_000); return () => clearInterval(t); }, []);
 
@@ -196,7 +216,53 @@ export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; 
   const open = (k: Tab) => { setTab(k); requestAnimationFrame(() => settleIn(panel.current, 'fade')); };
   const ago = input ? Math.max(0, Math.round((Date.now() - input.now) / 60_000)) : 0;
   const periodLabel = PERIODS.find((p) => p.days === period)?.label ?? '';
-  const acts = pulse ? pulse.attention.filter((a) => a.tone !== 'good').length : 0;
+  const warnings = useMemo(() => (pulse && input ? evaluate(pulse, rows, input, rules, loadedIn) : []), [pulse, rows, input, rules, loadedIn]);
+  const acts = warnings.length;
+  const previews = useMemo(() => ({
+    followups: input ? planFollowUps(warnings, mine, input.now) : [],
+    guides: pulse ? guidesMessage(warnings, pulse) : null,
+    notify: notification(warnings),
+    briefing: pulse ? briefing(pulse, warnings, periodLabel, '', (k) => STAGES.find((x) => x.key === k)?.label ?? k) : '',
+  }), [warnings, mine, input, pulse, periodLabel]);
+
+  const saveRules = (next: RuleSettings) => { setRules(next); try { localStorage.setItem(RULES_KEY, JSON.stringify(next)); } catch { /* private window */ } };
+  const saveAuto = (next: AutomationState) => { setAuto(next); try { localStorage.setItem(AUTO_KEY, JSON.stringify(next)); } catch { /* private window */ } };
+  const note = (line: string) => setLog((l) => [`${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}  ${line}`, ...l].slice(0, 8));
+
+  /** Carry out one automation. Returns what it did, in a sentence. */
+  const run = useCallback(async (key: AutomationKey, by: 'you' | 'automatic') => {
+    let said = '';
+    if (key === 'followups') {
+      for (const f of previews.followups) await actions.addFollowUp(f.pairingId, f.title, f.dueOn);
+      said = `Added ${previews.followups.length} follow-up${previews.followups.length === 1 ? '' : 's'} to your list.`;
+      setMine(await actions.myFollowUps().catch(() => mine));
+    } else if (key === 'guides' && previews.guides) {
+      await actions.postToGuides(previews.guides);
+      said = actions.sample ? 'Sample church: the message was not posted anywhere.' : 'Posted to the Guides\u2019 room.';
+    } else if (key === 'notify' && previews.notify) {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default' && by === 'you') await Notification.requestPermission().catch(() => 'denied');
+      const allowed = typeof Notification !== 'undefined' && Notification.permission === 'granted';
+      if (allowed) await showLocalNotification(previews.notify.title, previews.notify.body, '/admin');
+      said = allowed ? 'Notification shown on this device.' : 'Notifications are not allowed on this device; turn them on in Settings.';
+    }
+    if (said) {
+      note(`${by === 'automatic' ? 'Automatic: ' : ''}${said}`);
+      setAuto((a) => { const next = { ...a, lastRun: { ...a.lastRun, [key]: new Date().toISOString() } }; try { localStorage.setItem(AUTO_KEY, JSON.stringify(next)); } catch { /* private window */ } return next; });
+    }
+  }, [previews, actions, mine]);
+
+  // AUTOMATIC ONES RUN ONCE PER LOAD, and each only outside its quiet period.
+  useEffect(() => {
+    if (!input || !pulse || ranFor.current === input) return;
+    ranFor.current = input;
+    void (async () => {
+      for (const def of AUTOMATIONS) {
+        if (def.key === 'briefing') continue;
+        const work = def.key === 'followups' ? previews.followups.length > 0 : def.key === 'guides' ? !!previews.guides : !!previews.notify;
+        if (due(def, auto, work, Date.now())) { try { await run(def.key, 'automatic'); } catch { note(`Automatic ${def.label.toLowerCase()} could not run just now.`); } }
+      }
+    })();
+  }, [input, pulse, previews, auto, run]);
   const activeN = rows.filter((r) => r.status === 'active').length;
 
   return (
@@ -221,7 +287,7 @@ export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; 
             {[
               { n: pulse.explorers, label: 'Explorers' },
               { n: pulse.activeJourneys, label: 'Active journeys' },
-              { n: acts, label: 'Need a leader' },
+              { n: acts, label: 'Warnings' },
             ].map((h) => (
               <div key={h.label} className="rounded-2xl bg-white/10 px-3 py-2 ring-1 ring-white/15">
                 <p className="text-2xl font-extrabold tabular-nums">{h.n}</p>
@@ -250,6 +316,7 @@ export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; 
                 className="tap-sm -mb-px border-b-2 border-transparent px-3 text-sm font-bold text-slate-500 transition hover:text-navy aria-selected:border-navy aria-selected:text-navy"
                 data-pulse-tab={t.key}>
                 {t.label}
+                {t.key === 'alerts' && acts > 0 && <span className="ml-1.5 inline-grid min-w-5 place-items-center rounded-full bg-rose-600 px-1.5 text-[11px] font-extrabold text-white" data-alert-count>{acts}</span>}
               </button>
             ))}
           </div>
@@ -290,6 +357,18 @@ export function MissionPulse({ load, live }: { load: () => Promise<PulseInput>; 
                   </div>
                 </section>
               </div>
+            )}
+
+            {tab === 'alerts' && (
+              <AlertsView warnings={warnings} settings={rules}
+                onChange={(key, patch) => saveRules({ ...rules, [key]: { ...rules[key], ...patch } })}
+                onReset={() => saveRules(defaultSettings())} />
+            )}
+
+            {tab === 'automations' && (
+              <AutomationsView state={auto} previews={previews} sample={actions.sample} log={log}
+                onMode={(key: AutomationKey, mode: AutomationMode) => saveAuto({ ...auto, mode: { ...auto.mode, [key]: mode } })}
+                onRun={async (key) => { try { await run(key, 'you'); } catch { note('That could not be done just now. Try again in a moment.'); } }} />
             )}
 
             {tab === 'journeys' && (
