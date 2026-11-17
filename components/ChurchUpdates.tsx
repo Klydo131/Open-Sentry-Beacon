@@ -14,8 +14,6 @@ import type { Story } from '@/lib/updates/feed';
 import { postedWhen } from '@/components/HomeBoard';
 import { scrollMotion } from '@/lib/motion';
 import { samplePhoto } from '@/lib/updates/sample-photos';
-import { DiscoverRow } from '@/components/DiscoverRow';
-import type { PocketAdd } from '@/lib/pocket';
 
 const FOLLOWING_KEY = 'hb-updates-following';
 const KEPT_KEY = 'hb-updates-kept';
@@ -143,11 +141,7 @@ function readList(key: string): string[] | null {
   }
 }
 
-export function ChurchUpdates({ sample = false, addToPocket }: {
-  sample?: boolean;
-  /** Where a Discover card goes when kept. Left out, the browser's Pocket (the sample). */
-  addToPocket?: (url: string, label: string) => Promise<PocketAdd>;
-}) {
+export function ChurchUpdates({ sample = false }: { sample?: boolean }) {
   const [following, setFollowing] = useState<string[]>(() => featured(process.env.NEXT_PUBLIC_UPDATES_FEATURED));
   const [show, setShow] = useState('all');
   const [choosing, setChoosing] = useState(false);
@@ -264,16 +258,6 @@ export function ChurchUpdates({ sample = false, addToPocket }: {
         return src ? [{ org, story, src }] : [];
       })} />
 
-      {stories && (
-        <DiscoverRow
-          addToPocket={addToPocket}
-          stories={orgs.flatMap((org) => (stories[org.id] ?? []).map((st) => ({
-            title: st.title, link: st.link, summary: st.summary ?? undefined, date: st.date,
-            image: ownPicture(st.image) ?? undefined, colour: org.colour,
-            source: `${org.short}${st.date ? ` · ${postedWhen(st.date)}` : ''}`,
-          }))).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))}
-        />
-      )}
 
       <ul className="grid gap-3 sm:grid-cols-2">
         {cards.map(({ org, story }, at) => (

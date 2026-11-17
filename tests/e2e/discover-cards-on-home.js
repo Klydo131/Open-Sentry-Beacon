@@ -1,8 +1,11 @@
-// Discover cards on Home: skip one with ×, keep one in the Pocket.
+// Discover on Home: apps only, never news, and its own section.
 //
-// Runs against the sample church, where the stories are samples and the Pocket
-// lives in the browser. The live half keeps cards through the database and is
-// held by tests/discover-cards-skip-and-keep.mjs.
+// The founder, 17 November 2026: Discover is for applications; news and
+// church updates belong to Church & Mission Updates alone. In the sample
+// church no apps are configured (NEXT_PUBLIC_DISCOVER_LINKS is the
+// deployment's own list), so Discover is not drawn at all, and no story
+// appears anywhere but in the updates. The skip and keep rules are held by
+// tests/discover-cards-skip-and-keep.mjs.
 //
 //   npm run build && node scripts/run-next.mjs start -p 4397
 //   node tests/e2e/discover-cards-on-home.js 4397
@@ -21,30 +24,18 @@ async function walk(browser, label, options) {
   const caught = pageErrors(page);
   await signInAsExplorer(page, BASE);
   await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
-  await page.waitForSelector('[data-discover-card]', { timeout: 30_000 });
+  await page.waitForSelector('[data-church-updates]', { timeout: 30_000 });
+  await page.waitForSelector('[data-good-news]', { timeout: 30_000 });
 
-  const before = await page.locator('[data-discover-card]').count();
-  ok(before >= 2, `${label}: Discover shows cards (${before})`);
-  const box = await page.locator('[data-discover-skip]').first().boundingBox();
-  ok(box && box.width >= 40 && box.height >= 40, `${label}: the × is a full tap target (${box?.width}×${box?.height})`);
+  ok(await page.locator('[data-church-updates] [data-discover], [data-church-updates] [data-discover-card]').count() === 0,
+     `${label}: Church & Mission Updates holds no Discover cards`);
+  const configured = await page.evaluate(() => Boolean(document.querySelector('[data-discover]')));
+  const news = await page.locator('[data-discover-card]:not([data-discover-card="app"])').count();
+  ok(news === 0, `${label}: no news card in Discover (${configured ? 'apps configured' : 'no apps configured, so no Discover'})`);
+  ok(await page.locator('[data-update-card]').count() > 0, `${label}: the stories are in Church & Mission Updates`);
 
-  const firstTitle = await page.locator('[data-discover-card]').first().innerText();
-  await page.locator('[data-discover-skip]').first().click();
-  ok(await page.locator('[data-discover-card]').count() === before - 1, `${label}: × skips the card`);
-
-  await page.locator('[data-discover-keep]').first().click();
-  await page.waitForSelector('[data-discover-said]');
-  const said = await page.locator('[data-discover-said]').first().innerText();
-  const pocket = await page.evaluate(() => JSON.parse(localStorage.getItem('beacon-pocket') || '[]').map((i) => i.url));
-  ok(/In your Pocket|Already/.test(said) && pocket.length > 0, `${label}: Add to Pocket keeps it ("${said}", ${pocket.length} in the Pocket)`);
-
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(800);
-  const after = await page.locator('[data-discover-card]').allInnerTexts();
-  ok(!after.includes(firstTitle), `${label}: a skipped card stays skipped after a reload`);
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   ok(over <= 0, `${label}: nothing runs off the side (${over}px over)`);
-
   const errors = caught.list();
   ok(errors.length === 0, `${label}: no page errors${errors.length ? `: ${errors.slice(0, 2).join(' | ')}` : ''}`);
   await context.close();

@@ -41,9 +41,9 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     id: '2026-11-17-discover-cards',
     date: '2026-11-17',
-    title: 'Discover on Home',
+    title: 'Discover apps on Home',
     items: [
-      'Above Church & Mission Updates, Discover shows cards for the newest stories and for any study sites your church recommends.',
+      'Discover shows the apps and study sites your church recommends, in its own place on Home. Church news stays in Church & Mission Updates.',
       'Tap Add to Pocket to keep one in your Pocket, or tap × to skip it. A skipped card stays away on this device.',
     ],
   },

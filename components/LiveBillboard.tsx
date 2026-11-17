@@ -30,6 +30,7 @@ import { isPlanPost, planNotices } from '@/lib/home-plans';
 import { HomeBoard, postedWhen, type BoardItem } from '@/components/HomeBoard';
 import { HomeWelcome } from '@/components/HomeWelcome';
 import { ChurchUpdates } from '@/components/ChurchUpdates';
+import { DiscoverRow } from '@/components/DiscoverRow';
 import { POCKET_CHANGED, checkPocketAdd, tidyUrl, type PocketAdd } from '@/lib/pocket';
 
 // A Discover card kept from Home goes in as a row, through the same checks as
@@ -203,7 +204,10 @@ export function LiveBillboard({ churchName, between }: {
       )}
 
       {/* What is new at the wider church, under what is new here. */}
-      <ChurchUpdates addToPocket={addDiscoveredToPocket} />
+      {/* Apps to discover, on their own: never news (lib/discover.ts). */}
+      <DiscoverRow addToPocket={addDiscoveredToPocket} />
+
+      <ChurchUpdates />
 
       {/* For a Director to action. Drawn only when there is something to do:
           a permanent "nothing waiting" panel is furniture. */}

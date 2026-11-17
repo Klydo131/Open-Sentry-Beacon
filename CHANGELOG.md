@@ -10,6 +10,19 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (late night): Discover is for apps only
+
+**Nothing to run.** If you want Discover on Home, set
+`NEXT_PUBLIC_DISCOVER_LINKS` (see `.env.example`); unset, it is not drawn.
+
+- Discover shows only the apps and study sites a deployment names. It no
+  longer shows news, and it is no longer inside Church & Mission Updates: it
+  is its own section on Home, before the updates. News and church stories
+  belong to Church & Mission Updates alone, so the two never repeat each
+  other. `discoverCards(links, skipped)` takes no stories at all, and
+  `tests/discover-cards-skip-and-keep.mjs` holds that. Each card shows the
+  app's own logo through `app/api/app-icon`.
+
 ## 17 November 2026 (night): real photographs, and a slow feed that was dropped
 
 **Nothing to run.**

@@ -38,13 +38,17 @@ ok(links.length === 1 && links[0].title === 'Bible lessons', `only the good entr
 ok(d.discoverLinks(undefined).length === 0 && d.discoverLinks('').length === 0, 'unset, the project recommends nothing');
 ok(d.discoverLinks('A | https://a.example.org\nB | https://b.example.org').length === 2, 'one per line works as well as semicolons');
 
-// THE CARDS: study first, then up to three stories, minus anything skipped.
-const stories = Array.from({ length: 5 }, (_, i) => ({ title: `Story ${i}`, link: `https://news.example.org/${i}`, source: 'GC' }));
-const cards = d.discoverCards(links, [...stories, { title: 'Sneaky', link: 'javascript:x', source: 'GC' }], []);
-ok(cards[0].kind === 'study' && cards.filter((c) => c.kind === 'news').length === 3, 'study first, then three stories');
-ok(!cards.some((c) => c.title === 'Sneaky'), 'a story with an unsafe link is never a card');
-const after = d.discoverCards(links, stories, [cards[0].key]);
-ok(!after.some((c) => c.key === cards[0].key), 'a skipped card does not come back');
+// THE CARDS: the deployment's apps, minus anything skipped. NEVER NEWS: news
+// belongs to Church & Mission Updates alone (the founder, 17 November 2026).
+const cards = d.discoverCards(links, []);
+ok(cards.length === 1 && cards[0].url === links[0].url, 'the cards are the deployment\'s apps');
+ok(d.discoverCards.length === 2, 'and nothing else can be handed in: no stories, no news');
+const after = d.discoverCards(links, [cards[0].key]);
+ok(after.length === 0, 'a skipped card does not come back');
+const lib = fs.readFileSync(path.join(root, 'lib/discover.ts'), 'utf8');
+ok(!/stories|NEWS_SHOWN|kind: 'news'/.test(lib.replace(/^\s*\/\/.*$/gm, '')), 'the Discover code has no news in it');
+const updates = fs.readFileSync(path.join(root, 'components/ChurchUpdates.tsx'), 'utf8');
+ok(!/DiscoverRow/.test(updates), 'Church & Mission Updates does not hold Discover');
 
 // KEEPING A CARD: the Pocket's own checks, in the same order.
 ok(p.checkPocketAdd('https://a.example.org', []) === null, 'a new site may go in');
@@ -54,7 +58,10 @@ ok(typeof p.checkPocketAdd('https://www.facebook.com/x', [])?.refused === 'strin
 
 // WIRED: the row is on Home in both halves, and an open Pocket hears about it.
 const read = (f) => fs.readFileSync(path.join(root, f), 'utf8');
-ok(/<DiscoverRow/.test(read('components/ChurchUpdates.tsx')), 'Church & Mission Updates draws the Discover row');
+for (const half of ['components/LiveBillboard.tsx', 'components/ChurchBillboard.tsx']) {
+  const src = read(half);
+  ok(/<DiscoverRow/.test(src) && src.indexOf('<DiscoverRow') < src.indexOf('<ChurchUpdates'), `${half}: Discover is its own section on Home, before the updates`);
+}
 ok(/addToPocket=\{addDiscoveredToPocket\}/.test(read('components/LiveBillboard.tsx')) && /checkPocketAdd/.test(read('components/LiveBillboard.tsx')), 'the live Home keeps cards through the database, with the same checks');
 ok(/POCKET_CHANGED/.test(read('components/Pocket.tsx')), 'the Pocket reloads when a card is kept');
 ok(/NEXT_PUBLIC_DISCOVER_LINKS=/.test(read('.env.example')), '.env.example documents the setting');

@@ -1,6 +1,9 @@
-// Discover: cards on Home that offer something worth opening, a study site or
-// a fresh story from the wider church. Each can be skipped (×) or kept in the
-// person's Pocket.
+// Discover: cards on Home for apps and study sites worth opening. Each can be
+// skipped (×) or kept in the person's Pocket.
+//
+// APPS ONLY, NEVER NEWS (the founder, 17 November 2026). News and stories
+// from the wider church belong to Church & Mission Updates, and only there,
+// so the two never show the same thing twice.
 //
 // ---------------------------------------------------------------------------
 // WHERE THE LINKS COME FROM. A study site is a recommendation, and who
@@ -10,8 +13,7 @@
 // semicolons, as `Title | https://address | One line about it`. Every address
 // goes through the same gate as anything typed into the Pocket (tidyUrl, then
 // pocketRefusal), so a setting cannot smuggle in what the Pocket refuses.
-// Unset, Discover shows only the newest official stories, which need no
-// recommendation from anybody.
+// Unset, Discover shows nothing at all.
 //
 // WHAT IS REMEMBERED. Which cards this person skipped, on this device only,
 // by address. Nothing about it leaves the browser.
@@ -22,21 +24,13 @@ import { pocketRefusal, tidyUrl } from './pocket.ts';
 export interface DiscoverLink { title: string; url: string; about: string }
 export interface DiscoverCard {
   key: string;
-  kind: 'study' | 'news';
   title: string;
   url: string;
   about: string;
-  /** For news: who published it and when, already in words. */
-  source?: string;
-  /** A picture on this app (the caller has already checked it), or none. */
-  image?: string;
-  /** The publisher's colour, behind a card with no picture. */
-  colour?: string;
 }
 
 export const DISCOVER_SKIPPED_KEY = 'hb-discover-skipped';
 export const DISCOVER_MOST = 8;
-const NEWS_SHOWN = 3;
 
 /** The deployment's own list, every entry checked; anything malformed is left out. */
 export function discoverLinks(setting: string | undefined): DiscoverLink[] {
@@ -54,22 +48,12 @@ export function discoverLinks(setting: string | undefined): DiscoverLink[] {
   return out;
 }
 
-/** The cards to show: study sites first, then the newest stories, minus anything skipped. */
-export function discoverCards(
-  links: DiscoverLink[],
-  stories: { title: string; link: string; summary?: string; source: string; image?: string; colour?: string }[],
-  skipped: string[],
-): DiscoverCard[] {
+/** The cards to show: the deployment's apps, minus anything skipped on this device. */
+export function discoverCards(links: DiscoverLink[], skipped: string[]): DiscoverCard[] {
   const gone = new Set(skipped);
-  const study: DiscoverCard[] = links.map((l) => ({ key: l.url, kind: 'study', title: l.title, url: l.url, about: l.about }));
-  const news: DiscoverCard[] = [];
-  for (const s of stories) {
-    const url = tidyUrl(s.link);
-    if (!url || !url.startsWith('https://') || news.some((n) => n.url === url)) continue;
-    news.push({ key: url, kind: 'news', title: s.title.slice(0, 120), url, about: (s.summary ?? '').slice(0, 140), source: s.source, image: s.image, colour: s.colour });
-    if (news.length >= NEWS_SHOWN) break;
-  }
-  return [...study, ...news].filter((c) => !gone.has(c.key));
+  return links
+    .map((l) => ({ key: l.url, title: l.title, url: l.url, about: l.about }))
+    .filter((c) => !gone.has(c.key));
 }
 
 /** Skipped addresses on this device; a private window that refuses storage skips nothing. */

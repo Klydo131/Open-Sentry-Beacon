@@ -7,6 +7,7 @@ import { isPlanPost, planNotices } from '@/lib/home-plans';
 import { HomeBoard, postedWhen, type BoardItem } from '@/components/HomeBoard';
 import { HomeWelcome } from '@/components/HomeWelcome';
 import { ChurchUpdates } from '@/components/ChurchUpdates';
+import { DiscoverRow } from '@/components/DiscoverRow';
 import { postsVisibleTo } from '@/components/Blog';
 import { NAVY, GOLD } from '@/lib/brand';
 import {
@@ -94,6 +95,8 @@ export function ChurchBillboard() {
       />
 
       {/* Sample stories here: the tutorial never asks the network for anything. */}
+      <DiscoverRow />
+
       <ChurchUpdates sample />
 
       {/* Privileged strip — Admin / Executive. */}
