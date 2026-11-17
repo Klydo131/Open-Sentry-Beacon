@@ -359,7 +359,7 @@ function QuickLook({ theme }: { theme: RoomTheme }) {
           return (
             <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => saveUiTheme(t.id)}
               data-quick-look-choice={t.id}
-              className="min-h-9 truncate rounded-lg px-2 text-left text-xs font-semibold"
+              className="h-9 truncate rounded-lg px-2 text-left text-xs font-semibold"
               style={{
                 backgroundColor: on ? theme.accent : 'transparent',
                 color: on ? inkOn(theme.accent) : theme.ink,
@@ -403,7 +403,7 @@ function QuickText({ theme }: { theme: RoomTheme }) {
           return (
             <button key={sz.key} type="button" role="radio" aria-checked={on} aria-label={t(sz.key)} title={t(sz.key)}
               onClick={() => setScale(sz.scale)} data-quick-text-size={sz.key}
-              className="min-h-9 rounded-lg font-bold"
+              className="h-10 rounded-lg font-bold"
               style={{
                 fontSize: `${0.75 + (sz.scale - 0.9) * 1.1}rem`,
                 backgroundColor: on ? theme.accent : 'transparent',

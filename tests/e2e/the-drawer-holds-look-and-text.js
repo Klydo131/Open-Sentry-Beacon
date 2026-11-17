@@ -54,6 +54,11 @@ async function walk(browser, viewport, who, path) {
     return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
   });
   ok(contrast >= 4.5, `${tag}: the chosen theme's name can be read (contrast ${contrast.toFixed(1)}:1)`);
+  // BIG ENOUGH TO PRESS (17 November 2026): the drawer zeroes min-height for
+  // its dense controls, which left the theme chips 20px tall.
+  const chip = await rail.locator('[data-quick-look-choice]').first().evaluate((el) => el.getBoundingClientRect().height);
+  const size = await rail.locator('[data-quick-text-size]').first().evaluate((el) => el.getBoundingClientRect().height);
+  ok(chip >= 36 && size >= 36, `${tag}: a theme and a text size are big enough to press (${Math.round(chip)}px, ${Math.round(size)}px)`);
   // Choosing in the drawer is choosing in Settings.
   await rail.locator('[data-quick-look-choice="focus"]').click();
   await page.waitForTimeout(400);
