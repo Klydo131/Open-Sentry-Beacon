@@ -155,6 +155,16 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
   const [refusing, setRefusing] = useState('');
   const [why, setWhy] = useState('');
 
+  // WHOEVER CALLS IT OFF SEES IT GO. Reported 17 November 2026: somebody who
+  // called one off still saw it on their list. The person who called it off already knows;
+  // it leaves their list at once. The other person still sees who called it
+  // off and when, with Clear from my list, and both keep it in the
+  // Appointment record.
+  const callOff = async (id: string, note?: string) => {
+    await live.cancelMeeting(id, note);
+    setCleared(clearMeeting(id));
+  };
+
   const act = async (fn: () => Promise<void>) => {
     setBusy(true);
     setError('');
@@ -367,7 +377,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
               });
               // The new one first: if calling the old one off then fails, both
               // are on the list and nothing is lost.
-              if (changing) await live.cancelMeeting(changing.id, `Moved to ${when(at)}.`);
+              if (changing) await callOff(changing.id, `Moved to ${when(at)}.`);
               setChanging(null);
               setTitle(''); setStartsAt(''); setLocation(''); setNotes('');
             })}
@@ -594,7 +604,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => act(() => live.cancelMeeting(m.id))}
+                    onClick={() => act(() => callOff(m.id))}
                     className="text-sm text-gray-500 underline underline-offset-2 disabled:opacity-40"
                   >
                     Call it off
@@ -697,7 +707,7 @@ export function LiveMeetings({ pairingId, withName }: { pairingId: string; withN
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => act(() => live.cancelMeeting(m.id))}
+                    onClick={() => act(() => callOff(m.id))}
                     className="mt-2 text-sm text-gray-500 underline underline-offset-2 disabled:opacity-40"
                   >
                     Tidy this away

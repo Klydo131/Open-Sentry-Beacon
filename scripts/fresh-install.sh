@@ -170,6 +170,12 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/what-is-deleted-leaves-no-file-behind.sql"
 
+# A DELETION REACHES EVERYONE: a study a Guide or Director takes back or
+# deletes is gone for the Explorer too, and a Guide's own copy is what their
+# Explorer is given.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/a-deletion-reaches-everyone.sql"
+
 # A POST CARRIES ITS OWN PHOTOS: a writer's photos and clip reach exactly the
 # people who may read the post, and nobody adds to somebody else's.
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \

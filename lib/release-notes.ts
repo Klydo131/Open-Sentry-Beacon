@@ -18,6 +18,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-17-deleting-reaches-everyone',
+    date: '2026-11-17',
+    title: 'Deleting now really deletes',
+    items: [
+      'When a Guide or the Director deletes a study, a lesson or a resource, it is gone for their Explorer too.',
+      'A Guide who puts away a study or resource someone else wrote also takes it back from their Explorers.',
+      'If something cannot be deleted, the app now says so instead of pretending it was.',
+      'An appointment you call off leaves your list at once. The other person is told who called it off, and both of you keep it in the Appointment record.',
+    ],
+  },
+  {
     id: '2026-11-17-updates-pictures',
     date: '2026-11-17',
     title: 'Church news with pictures',

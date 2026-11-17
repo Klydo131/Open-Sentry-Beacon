@@ -1371,8 +1371,9 @@ export async function setPostPinned(id: string, pinned: boolean): Promise<void> 
 }
 
 export async function deleteBlogPost(id: string): Promise<void> {
-  const { error } = await db().from('blog_posts').delete().eq('id', id);
+  const { data, error } = await db().from('blog_posts').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 /**
@@ -1520,8 +1521,9 @@ export async function markPrayingFor(id: string): Promise<void> {
 
 /** Withdraw a request. Only the author may; nobody can delete the other's confidence. */
 export async function deletePrayerRequest(id: string): Promise<void> {
-  const { error } = await db().from('prayer_requests').delete().eq('id', id);
+  const { data, error } = await db().from('prayer_requests').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 /** Report a prayer request written to you. The words are copied into the report. */
@@ -1890,6 +1892,35 @@ export async function updateMaterial(id: string, m: {
 }
 
 /**
+ * A DELETE THE RULES REFUSE REMOVES NOTHING AND SAYS NOTHING. Row-level
+ * security answers a refused delete with zero rows and no error, so a delete
+ * that does not ask for its rows back reports success either way: that is
+ * how deleted studies stayed on an Explorer's screen (reported 17 November 2026).
+ * Every delete asks for the rows back and comes here.
+ */
+function mustHaveDeleted(rows: unknown[] | null): void {
+  if (!rows || rows.length === 0) {
+    throw new Error('That was not deleted: it is not yours to delete, or it was already gone. Refresh and try again.');
+  }
+}
+
+/** Leaders of the church: they may delete what anybody in it wrote. */
+async function iLeadTheChurch(): Promise<boolean> {
+  const { data } = await db().from('profiles').select('role').eq('id', await uid()).maybeSingle();
+  return ['admin', 'executive'].includes(String((data as { role?: string } | null)?.role ?? ''));
+}
+
+/**
+ * Move this Guide's own Explorers onto their copy of a study, so what they
+ * change or delete there is what their Explorer sees
+ * (20261117150000_a_deletion_reaches_everyone). A database without that
+ * migration simply has nothing to move.
+ */
+async function giveMyCopyToMyExplorers(copyId: string): Promise<void> {
+  try { await db().rpc('give_my_copy_to_my_explorers', { p_copy: copyId }); } catch { /* older database */ }
+}
+
+/**
  * Remove a resource. Your own (or, for leaders, any) is deleted; anyone else's
  * is only hidden from your shelf.
  */
@@ -1910,11 +1941,17 @@ export async function deleteMaterial(id: string): Promise<'deleted' | 'hidden'> 
     if (found?.file_path) {
       await supabase.storage.from('pairing-media').remove([found.file_path]);
     }
-    const { error } = await supabase.from('materials').delete().eq('id', id);
+    const { data: gone, error } = await supabase.from('materials').delete().eq('id', id).select('id');
     if (error) throw new Error(error.message);
+    mustHaveDeleted(gone);
     return 'deleted';
   }
 
+  // Somebody else's: off this person's shelf, AND taken back from every
+  // Explorer this person sent it to, which is what "delete" means to them.
+  const { error: unshareErr } = await supabase
+    .from('material_shares').delete().eq('material_id', id).eq('shared_by', me_id);
+  if (unshareErr) throw new Error(unshareErr.message);
   const { error } = await supabase
     .from('material_hides').upsert({ material_id: id, user_id: me_id });
   if (error) throw new Error(error.message);
@@ -2041,8 +2078,9 @@ export async function pinAnnouncement(id: string, pinned: boolean): Promise<void
 }
 
 export async function deleteAnnouncement(id: string): Promise<void> {
-  const { error } = await db().from('announcements').delete().eq('id', id);
+  const { data, error } = await db().from('announcements').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 // --- Profile pictures ---
@@ -2382,8 +2420,9 @@ export async function addNote(pairingId: string, body: string): Promise<void> {
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  const { error } = await db().from('seeker_notes').delete().eq('id', id);
+  const { data, error } = await db().from('seeker_notes').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 export interface FollowUp {
@@ -2413,8 +2452,9 @@ export async function toggleFollowUp(id: string, done: boolean): Promise<void> {
 }
 
 export async function deleteFollowUp(id: string): Promise<void> {
-  const { error } = await db().from('follow_ups').delete().eq('id', id);
+  const { data, error } = await db().from('follow_ups').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 export interface LessonSeries {
@@ -2454,9 +2494,15 @@ export async function listLessonSeries(): Promise<LessonSeries[]> {
   if (error) throw new Error(error.message);
   const rows = (data ?? []) as LessonSeries[];
   const me_id = await uid();
+  const { data: me } = await db().from('profiles').select('role').eq('id', me_id).maybeSingle();
+  const explorer = (me as { role?: string } | null)?.role === 'ds';
 
+  // A copy replaces its original: your own, and for an Explorer the copy
+  // their Guide gave them (which is the only private copy an Explorer can
+  // read), so a lesson their Guide deleted is gone for them too.
   const replaced = new Set(
-    rows.filter((r) => r.author_id === me_id && r.copied_from).map((r) => r.copied_from as string),
+    rows.filter((r) => r.copied_from && (r.author_id === me_id || (explorer && !r.is_published)))
+      .map((r) => r.copied_from as string),
   );
   return rows.filter((r) => !r.is_hidden && !replaced.has(r.id));
 }
@@ -2480,7 +2526,10 @@ export async function myVersionOf(seriesId: string): Promise<string> {
   const { data: had } = await supabase
     .from('lesson_series').select('id')
     .eq('copied_from', seriesId).eq('author_id', me_id).maybeSingle();
-  if (had) return (had as { id: string }).id;
+  if (had) {
+    await giveMyCopyToMyExplorers((had as { id: string }).id);
+    return (had as { id: string }).id;
+  }
 
   const { data: made, error: makeErr } = await supabase.from('lesson_series').insert({
     church_id: original.church_id,
@@ -2512,10 +2561,11 @@ export async function myVersionOf(seriesId: string): Promise<string> {
     );
     // A copy without its lessons would look finished and is not; undo it.
     if (copyErr) {
-      await supabase.from('lesson_series').delete().eq('id', mineId);
+      await supabase.from('lesson_series').delete().eq('id', mineId).select('id');
       throw new Error(copyErr.message);
     }
   }
+  await giveMyCopyToMyExplorers(mineId);
   return mineId;
 }
 
@@ -2581,11 +2631,20 @@ export async function deleteLessonSeries(id: string): Promise<void> {
   const row = series as { id: string; church_id: string; title: string; topic: string; author_id: string | null } | null;
   if (!row) return;
 
-  if (row.author_id === me_id) {
-    const { error } = await supabase.from('lesson_series').delete().eq('id', id);
+  // The author, or the church's leaders: deleted for everybody, assignments
+  // and all (they cascade).
+  if (row.author_id === me_id || await iLeadTheChurch()) {
+    const { data: gone, error } = await supabase.from('lesson_series').delete().eq('id', id).select('id');
     if (error) throw new Error(error.message);
+    mustHaveDeleted(gone);
     return;
   }
+
+  // Somebody else's: put away for this Guide, and taken back from every
+  // Explorer they had given it to.
+  const { error: backErr } = await supabase.from('lesson_assignments')
+    .delete().eq('series_id', id).eq('assigned_by', me_id);
+  if (backErr) throw new Error(backErr.message);
 
   // If a copy exists, hiding is a flag on it (the unique index allows one copy).
   const { data: had } = await supabase
@@ -2594,6 +2653,8 @@ export async function deleteLessonSeries(id: string): Promise<void> {
     const { error } = await supabase.from('lesson_series')
       .update({ is_hidden: true }).eq('id', (had as { id: string }).id);
     if (error) throw new Error(error.message);
+    await supabase.from('lesson_assignments').delete()
+      .eq('series_id', (had as { id: string }).id).eq('assigned_by', me_id);
     return;
   }
 
@@ -2813,9 +2874,12 @@ export async function updateLesson(
 
 /** Remove a study from a series; on a shared series, from your copy only. */
 export async function deleteLesson(id: string): Promise<void> {
-  const mineId = await myVersionOfLesson(id);
-  const { error } = await db().from('lessons').delete().eq('id', mineId);
+  // The church's leaders delete the study itself, for everybody. Anybody else
+  // deletes it from their own version, which their Explorers are given.
+  const mineId = await iLeadTheChurch() ? id : await myVersionOfLesson(id);
+  const { data, error } = await db().from('lessons').delete().eq('id', mineId).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 /** Every handout on these lessons, keyed by lesson id. */
@@ -2868,8 +2932,9 @@ export async function removeLessonFile(id: string): Promise<void> {
   const { data: row } = await supabase.from('lesson_files').select('path').eq('id', id).maybeSingle();
   const path = (row as { path?: string } | null)?.path;
   if (path) await supabase.storage.from('pairing-media').remove([path]);
-  const { error } = await supabase.from('lesson_files').delete().eq('id', id);
+  const { data, error } = await supabase.from('lesson_files').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 export async function listAssignments(): Promise<LessonAssignment[]> {
@@ -3563,8 +3628,9 @@ export async function addPocketApp(url: string, label: string): Promise<void> {
 }
 
 export async function removePocketApp(id: string): Promise<void> {
-  const { error } = await db().from('pocket_apps').delete().eq('id', id);
+  const { data, error } = await db().from('pocket_apps').delete().eq('id', id).select('id');
   if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
 }
 
 // --- The next thing to read ---

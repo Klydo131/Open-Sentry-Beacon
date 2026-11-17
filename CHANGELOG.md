@@ -10,6 +10,39 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (evening): a deletion reaches everyone
+
+**Run once, on each database:** `supabase/migrations/20261117150000_a_deletion_reaches_everyone.sql`.
+Until it runs, the app works as before; a Guide's copy simply is not moved.
+
+Members reported that a study, lesson, resource or called-off appointment a
+Guide or the Director deleted stayed on the Explorer's screen. It was
+reproduced first, as a failing database test, before anything was changed
+(`supabase/tests/a-deletion-reaches-everyone.sql`, now run by every fresh
+install). Three causes:
+
+- **A refused delete looked like success.** Row-level security answers a
+  delete it refuses with zero rows and no error. The data layer never asked
+  for the rows back, so it said "deleted" when nothing was. Every delete in
+  `lib/live/data.ts` now asks for its rows back and `mustHaveDeleted` turns
+  zero into a message. *Lesson for any Supabase app: a write that does not
+  read back what it wrote cannot tell success from refusal.*
+- **Nobody could take a study back.** `lesson_assignments` was granted DELETE
+  with no delete policy, which refuses every row. The new `la_drop` lets
+  whoever gave it, the pairing's Guide, or the church's leaders remove it.
+  Putting away somebody else's study or resource now also takes it back from
+  the Explorers this person gave it to. The church's leaders now delete a
+  study or lesson for everybody, not only for themselves.
+- **A Guide's copy never reached their Explorer.** A Guide's changes to
+  someone else's study go into their own private copy, which the Explorer
+  could not read. `give_my_copy_to_my_explorers` moves the Guide's own
+  pairings onto the copy, the series rule lets an Explorer read what was given
+  to them, and the Explorer's list shows the copy in place of the original.
+- Whoever calls an appointment off sees it leave their list; the other person
+  still sees who called it off, and both keep it in the Appointment record.
+
+`tests/a-deletion-reaches-everyone.mjs` holds the app half.
+
 ## 17 November 2026 (later): church news with pictures
 
 **Nothing to run.** No migration. If your deployment sets
