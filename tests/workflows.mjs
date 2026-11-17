@@ -214,5 +214,31 @@ for (const file of files) {
     'backup.yml: the upload runs only when a backup was made, so a fork is not red for having nothing to send');
 }
 
+// ---------------------------------------------------------------------------
+// THE SELF-HOST SERVER'S DEPENDENCIES, AND A LOG THAT KEEPS THE DEPLOYMENT
+// PRIVATE (17 November 2026).
+//
+// One check loads selfhost/server, whose `pg` is in that package's own
+// lockfile. A workflow that runs the full suite without installing it fails on
+// every OS while passing on any machine that has ever installed the server.
+// And a heartbeat on a public repository must print only a status and a fixed
+// sentence: its address and its response body are the deployment's.
+// ---------------------------------------------------------------------------
+{
+  for (const f of ['verify.yml', 'safari.yml']) {
+    // Command lines only: a comment that mentions `npm test` is not the suite.
+    const t = fs.readFileSync(path.join(dir, f), 'utf8').split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+    const at = t.indexOf('npm ci --prefix selfhost/server');
+    const first = t.search(/\bnpm test\b|verify\.mjs(?! --walks-only| --quick)/);
+    ok(at > -1, `${f}: installs the self-host server's own dependencies from its lockfile`);
+    ok(at > -1 && (first === -1 || at < first), `${f}: and does it before the full suite runs`);
+  }
+  const ka = fs.readFileSync(path.join(dir, 'keep-awake.yml'), 'utf8');
+  const script = ka.slice(ka.indexOf('curl -sS'));
+  ok(!/\bcat \/tmp\/ping/.test(ka) && /-o \/dev\/null/.test(script), 'keep-awake.yml: never prints the response body');
+  ok(!/echo[^\n]*\$\{?SUPABASE_URL/.test(script), 'keep-awake.yml: never prints the address it called');
+  ok(/curl exit 6/.test(ka) && /\|\| rc=\$\?/.test(ka), 'keep-awake.yml: a DNS failure is named as one, not left to a raw curl code');
+}
+
 console.log(bad === 0 ? '\nRESULT: ALL OK' : `\nRESULT: ${bad} FAILURE(S)`);
 process.exit(bad === 0 ? 0 : 1);

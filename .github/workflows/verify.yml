@@ -106,6 +106,15 @@ jobs:
       - name: Install
         run: npm ci
 
+      # THE SELF-HOST SERVER'S OWN DEPENDENCIES (17 November 2026). One check,
+      # "what a request can learn", loads selfhost/server/src/realtime.mjs,
+      # which imports `pg`, and `pg` lives in that package's own lockfile, not
+      # the root one. Without this step the check died with
+      # ERR_MODULE_NOT_FOUND on every OS while passing on any machine that had
+      # ever installed the server. Same lockfile, nothing new trusted.
+      - name: Install the self-host server's dependencies
+        run: npm ci --prefix selfhost/server
+
       # `npm test` is the same command a contributor runs locally, on purpose.
       # A CI script that drifts from the local one is a CI script that fails on
       # things nobody can reproduce.

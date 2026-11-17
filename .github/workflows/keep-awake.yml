@@ -100,23 +100,37 @@ jobs:
 
           # Ask PostgREST for one row of one table. RLS decides whether anything
           # comes back; either way Postgres ran the query.
-          code=$(curl -sS -o /tmp/ping.out -w '%{http_code}' \
+          #
+          # NOTHING OF THE DEPLOYMENT IS EVER PRINTED (17 November 2026): not
+          # the address, not what curl said about it, not the body that came
+          # back. A log line is public on a public repository. The outcome is
+          # classified here and only a status and a fixed sentence are written.
+          rc=0
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
             --max-time 30 --retry 3 --retry-delay 5 --retry-all-errors \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-            "${SUPABASE_URL}/rest/v1/churches?select=id&limit=1")
+            "${SUPABASE_URL}/rest/v1/churches?select=id&limit=1" 2>/dev/null) || rc=$?
+
+          if [ "${rc}" -ne 0 ]; then
+            case "${rc}" in
+              6)  echo "::error::DNS: the database address did not resolve (curl exit 6). Check the SUPABASE_URL secret against the project's own API address." ;;
+              7)  echo "::error::Connection refused (curl exit 7)." ;;
+              28) echo "::error::Timed out after retries (curl exit 28). The project may be paused." ;;
+              35|60) echo "::error::TLS failed (curl exit ${rc})." ;;
+              *)  echo "::error::No answer (curl exit ${rc})." ;;
+            esac
+            exit 1
+          fi
 
           echo "PostgREST answered HTTP ${code}"
 
-          # 200 is a normal answer. 401/403 mean RLS refused us, which still
-          # proves the request reached the database — that counts as activity
-          # and therefore counts as success here.
-          #
-          # A 5xx, or no answer at all, is the case worth failing on: it means
-          # the project may already be paused or broken, and somebody should
-          # look at it today rather than find out from a member.
+          # 200 is a normal answer. 401/403 mean RLS refused us, which proves the
+          # request reached the database (activity) but leaves the query itself
+          # unverified, so they pass with a different sentence.
           case "${code}" in
-            200|401|403) echo "Project is awake." ;;
-            000) echo "::error::No response from ${SUPABASE_URL} — the project may be paused or unreachable."; exit 1 ;;
-            *)   echo "::error::Unexpected status ${code}. Response:"; cat /tmp/ping.out; exit 1 ;;
+            200)     echo "Project is awake and answered the query." ;;
+            401|403) echo "Project is awake: it answered, and refused the query (the request still reached the database)." ;;
+            5??)     echo "::error::The project answered with a server error (HTTP ${code}); it may be paused or broken."; exit 1 ;;
+            *)       echo "::error::Unexpected status HTTP ${code}."; exit 1 ;;
           esac

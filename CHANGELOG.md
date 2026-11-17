@@ -10,6 +10,21 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (evening): the CI failures and the heartbeat log
+
+**Nothing to run.** One secret to check: `SUPABASE_URL` must be the live
+project's own API address (the scheduled heartbeat could not resolve the
+configured one).
+
+- **Verify and Safari failed on every OS** with `ERR_MODULE_NOT_FOUND: pg`: one
+  check loads the self-host server, whose dependencies are in its own lockfile,
+  and the workflows never installed them. Both now run
+  `npm ci --prefix selfhost/server` first. Reproduced red on a clean checkout
+  and green after.
+- **The heartbeat names a DNS failure as one** and prints only a status and a
+  fixed sentence: never the address it called, never the response body.
+- `tests/workflows.mjs` guards all three.
+
 ## 17 November 2026: nothing of the operator's, in files or in commits
 
 **Do once per clone:** `git config core.hooksPath .githooks`, and list your own

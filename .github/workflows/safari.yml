@@ -73,6 +73,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The self-host server's own dependencies, for the check that loads it
+      # (see the same step in verify.yml).
+      - name: Install the self-host server's dependencies
+        run: npm ci --prefix selfhost/server
+
       # Playwright is deliberately NOT a dependency of this project: it is a
       # ~300 MB install with its own browser downloads and the app does not use
       # it at runtime. tests/e2e/_playwright.js resolves it from a local
