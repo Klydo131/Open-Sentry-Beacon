@@ -57,6 +57,26 @@ no file check can see them. An operator deploys from their own private copy.
 
 ---
 
+### 0.0.1 Open source stays separate from everything private
+
+This repository is the open-source project. Everything the owner runs
+privately (other repositories, testing and production deployments, their
+databases and dashboards, private records) stays outside it, permanently.
+That separation is what keeps this project free of leaks and professional
+for everybody who reads it.
+
+- Only the product lives here: code, generic documentation, examples, and
+  sample data that is invented or openly licensed.
+- A deployment's own choices (featured organisations, recommended apps,
+  domains, keys) live in that deployment's settings or database. The code
+  here reads a setting; it never holds the value.
+- Testing and production details (which deployment, which database, what
+  was applied when) are recorded privately, never in this changelog or a
+  commit message. Public notes describe the change in general terms.
+- Private work comes back here only as a general rewrite of the
+  improvement, with nothing private attached.
+- When unsure whether something is private, treat it as private and ask.
+
 ## 0.1 Working today first, then right: the first-day protocol
 
 A standing rule: when something is broken, make it work quickly and reliably
