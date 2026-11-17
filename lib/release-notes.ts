@@ -18,6 +18,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-17-updates-pictures',
+    date: '2026-11-17',
+    title: 'Church news with pictures',
+    items: [
+      'Church & Mission Updates now opens on Good News: the newest stories with their own photos, one at a time. Tap one to read it on the organisation’s site.',
+      'Every story card shows its photo too, and Discover cards have pictures.',
+      'More of the world church to choose from: the South Pacific, Inter-American and Trans-European Divisions, ADRA and Adventist World Radio. Tap Choose to pick yours.',
+    ],
+  },
+  {
     id: '2026-11-17-discover-cards',
     date: '2026-11-17',
     title: 'Discover on Home',

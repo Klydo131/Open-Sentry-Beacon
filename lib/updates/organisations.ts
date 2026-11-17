@@ -45,13 +45,55 @@ export const ORGANISATIONS: readonly Organisation[] = [
     id: 'slpum',
     short: 'SLPUM',
     name: 'Southern Luzon Philippine Union Mission',
-    // Its own site (the founder, 12 November 2026: the card led to the
-    // Division's news instead). Headlines still come from the Division's feed,
-    // the stories that name the Union; the card and "See more" open the Union.
+    // Its own site and its own feed. Until 17 November 2026 its headlines were
+    // the Division's stories that named it, but the Division's feed answers an
+    // automatic reader with a security checkpoint; the Union's own feed
+    // answered a server on Vercel's network with ten stories and their photos.
     news: 'https://adventisthope.ph/',
-    from: 'ssd',
-    mentions: ['Southern Luzon', 'SLPUM'],
+    feed: 'https://adventisthope.ph/feed/',
     colour: '#8A4B08',
+  },
+  // Added 17 November 2026: each feed answered a server on Vercel's network
+  // with stories on the organisation's own site.
+  {
+    id: 'spd',
+    short: 'SPD',
+    name: 'South Pacific Division (Adventist Record)',
+    news: 'https://record.adventistchurch.com/',
+    feed: 'https://record.adventistchurch.com/feed/',
+    colour: '#1D4E89',
+  },
+  {
+    id: 'iad',
+    short: 'IAD',
+    name: 'Inter-American Division',
+    news: 'https://interamerica.org/',
+    feed: 'https://www.interamerica.org/feed/',
+    colour: '#7A1F3D',
+  },
+  {
+    id: 'ted',
+    short: 'TED',
+    name: 'Trans-European Division',
+    news: 'https://ted.adventist.org/',
+    feed: 'https://ted.adventist.org/feed/',
+    colour: '#2E5E2A',
+  },
+  {
+    id: 'adra',
+    short: 'ADRA',
+    name: 'Adventist Development and Relief Agency',
+    news: 'https://adra.org/news',
+    feed: 'https://adra.org/feed',
+    colour: '#166534',
+  },
+  {
+    id: 'awr',
+    short: 'AWR',
+    name: 'Adventist World Radio',
+    news: 'https://awr.org/',
+    feed: 'https://www.awr.org/feed/',
+    colour: '#9A3412',
   },
   {
     id: 'nad',
@@ -68,9 +110,16 @@ export const WORLD_CHURCH = 'https://adventist.org/church/world-church/';
 export const organisation = (id: string): Organisation | undefined =>
   ORGANISATIONS.find((o) => o.id === id);
 
-/** What a device shows until somebody chooses: the deployment's own list, or the first two. */
+/**
+ * What Home follows when the deployment names nothing: the world church and a
+ * division, beside two whose feeds carry photos, so a fresh copy opens on
+ * pictures rather than only links.
+ */
+const STARTING = ['gc', 'ssd', 'spd', 'iad'];
+
+/** What a device shows until somebody chooses: the deployment's own list, or the starting four. */
 export function featured(setting: string | undefined): string[] {
   const asked = (setting ?? '').split(',').map((s) => s.trim().toLowerCase())
     .filter((id) => organisation(id));
-  return asked.length ? [...new Set(asked)] : ORGANISATIONS.slice(0, 2).map((o) => o.id);
+  return asked.length ? [...new Set(asked)] : STARTING;
 }

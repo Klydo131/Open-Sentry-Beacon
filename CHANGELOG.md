@@ -10,6 +10,42 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (later): church news with pictures
+
+**Nothing to run.** No migration. If your deployment sets
+`NEXT_PUBLIC_UPDATES_FEATURED`, consider adding `spd` or `iad`, whose feeds
+carry photos (see below).
+
+- **Why Home had no stories at all.** The General Conference's and the
+  Southern Asia-Pacific Division's news sites answer an automatic reader with
+  a security checkpoint (HTTP 429), from Vercel's network as well as anywhere
+  else, so their feeds gave nothing and Home showed only "see what is new"
+  links. The app does not try to get past a checkpoint: it is the site's
+  decision. Instead, feeds that answered a server on Vercel's network on this
+  date were added: the South Pacific Division (Adventist Record), the
+  Inter-American and Trans-European Divisions, ADRA and Adventist World Radio.
+  The Southern Luzon Union now reads its own feed instead of the Division's.
+- **Pictures, without widening the content policy.** `parseFeed` now reads a
+  story's photo (`media:content`, an image enclosure, or the first `<img>` in
+  its text), skipping logos, avatars and WordPress thumbnails under 400px.
+  The phone never sees that address: the API gives it
+  `/api/updates/picture?org=..&n=..`, and that route re-reads the feed (cached
+  for an hour), falls back to the story page's `og:image`, and passes the
+  bytes on. It is asked for an organisation and a number, never an address;
+  it fetches only https on the organisation's own host, follows no redirect,
+  passes only JPEG, PNG, WebP, GIF and AVIF (never SVG), caps the size at
+  4 MB, and answers with `nosniff` and a policy that runs nothing. So
+  `img-src` stays `'self'`.
+- **Good News** leads the section: the newest photo stories, one at a time,
+  moving on every six seconds unless the device asked for less motion or the
+  person touched it. Story and Discover cards show their photo, or the
+  organisation's colours when there is none.
+- **The tutorial uses original drawings** (`public/updates/sample-*.svg`),
+  never a church's photos.
+- The feed fetch moved to `lib/updates/read.ts`, shared by both routes;
+  `tests/church-and-mission-updates.mjs` now checks it there.
+  `tests/updates-show-pictures.mjs` holds the picture rules.
+
 ## 17 November 2026 (late): Discover cards on Home
 
 **Optional setting:** `NEXT_PUBLIC_DISCOVER_LINKS`, the study sites your church

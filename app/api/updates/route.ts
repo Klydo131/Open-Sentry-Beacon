@@ -2,36 +2,29 @@
 // server so a member's phone never talks to another site to draw Home.
 //
 // Only the addresses in lib/updates/organisations.ts are ever fetched: the
-// caller names an organisation, never an address. A feed that refuses or is
-// not a feed is "no stories", and Home offers the organisation's news page.
+// caller names an organisation, never an address (lib/updates/read.ts). A feed
+// that refuses or is not a feed is "no stories", and Home offers the
+// organisation's news page.
+//
+// EVERY STORY GETS A PICTURE ADDRESS ON THIS APP, never the other site's: a
+// phone loads /api/updates/picture, which fetches the organisation's own photo.
+// So the content policy stays `img-src 'self'` and the member's phone tells no
+// other site that it opened Home.
 
 import { NextResponse } from 'next/server';
 import { organisation } from '@/lib/updates/organisations';
-import { hostsOf, mentioning, parseFeed, type Story } from '@/lib/updates/feed';
-
-/** Said to the organisation's server: who is asking, and why. Never a browser's name. */
-const CALLER = 'OpenSentryBeacon/1 (church app; official news headlines)';
-const AN_HOUR = 60 * 60;
+import { AN_HOUR, readStories } from '@/lib/updates/read';
 
 export async function GET(request: Request) {
   const org = organisation(new URL(request.url).searchParams.get('org') ?? '');
   if (!org) return NextResponse.json({ error: 'No such organisation.' }, { status: 404 });
 
-  const source = org.from ? organisation(org.from) : org;
-  let stories: Story[] = [];
-  if (source?.feed) {
-    try {
-      const answer = await fetch(source.feed, {
-        headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9', 'User-Agent': CALLER },
-        next: { revalidate: AN_HOUR },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (answer.ok) stories = parseFeed(await answer.text(), hostsOf([source.feed, source.news]));
-    } catch {
-      // Unreachable is the same as no stories: Home says where to read them.
-    }
-  }
-  if (org.mentions) stories = mentioning(stories, org.mentions);
+  const stories = (await readStories(org)).map(({ picture: _src, ...story }, n) => ({
+    ...story,
+    // Every story is offered one: the picture route also looks on the story's
+    // own page when the feed named none, and answers 404 when there is none.
+    image: `/api/updates/picture?org=${org.id}&n=${n}`,
+  }));
 
   return NextResponse.json(
     { org: org.id, stories },

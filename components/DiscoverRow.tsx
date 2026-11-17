@@ -17,8 +17,24 @@ function words(r: PocketAdd): string {
   return r.refused;
 }
 
+/** The card's picture: the story's photo, or colours and a mark when there is none. */
+function Cover({ card }: { card: DiscoverCard }) {
+  const [failed, setFailed] = useState(false);
+  if (card.image && !failed) {
+    return <img src={card.image} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)}
+      className="aspect-[16/9] w-full object-cover" />;
+  }
+  const study = card.kind === 'study';
+  return (
+    <span aria-hidden className="grid aspect-[16/9] w-full place-items-center text-4xl"
+      style={{ background: study ? 'linear-gradient(135deg, #0f766e, #134e4a 60%, #0b1b33)' : `linear-gradient(135deg, ${card.colour ?? '#1E2A4A'}, #0b1b33)` }}>
+      {study ? '📖' : '📰'}
+    </span>
+  );
+}
+
 export function DiscoverRow({ stories, addToPocket = async (u, l) => addToLocalPocket(u, l) }: {
-  stories: { title: string; link: string; summary?: string; source: string }[];
+  stories: { title: string; link: string; summary?: string; source: string; image?: string; colour?: string }[];
   /** Where a kept card goes. The live app passes its database; the sample keeps it in the browser. */
   addToPocket?: (url: string, label: string) => Promise<PocketAdd>;
 }) {
@@ -49,12 +65,14 @@ export function DiscoverRow({ stories, addToPocket = async (u, l) => addToLocalP
           const done = note === 'In your Pocket' || note === 'Already in your Pocket';
           return (
             <li key={c.key} data-discover-card={c.kind}
-              className="relative flex w-64 shrink-0 snap-start flex-col rounded-2xl bg-white p-4 pr-11 shadow-sm ring-1 ring-navy/10">
+              className="relative flex w-64 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-navy/10">
+              <Cover card={c} />
               <button type="button" onClick={() => setSkipped(skip(c.key))} data-discover-skip
                 aria-label={`Skip ${c.title}`}
-                className="absolute right-1 top-1 grid h-10 w-10 place-items-center rounded-full text-xl leading-none text-gray-600">
+                className="absolute right-2 top-2 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-xl leading-none text-gray-700 shadow">
                 {'×'}
               </button>
+              <span className="flex flex-1 flex-col p-4">
               <span className="text-xs font-bold uppercase tracking-wide text-teal-800">
                 {c.kind === 'study' ? 'Study' : c.source ?? 'News'}
               </span>
@@ -71,6 +89,7 @@ export function DiscoverRow({ stories, addToPocket = async (u, l) => addToLocalP
                 </button>
               </span>
               {note && <span role="status" className="mt-2 text-xs font-semibold text-gray-700" data-discover-said>{note}</span>}
+              </span>
             </li>
           );
         })}

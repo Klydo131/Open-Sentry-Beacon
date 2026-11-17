@@ -177,6 +177,7 @@ const staticChecks = [
   ['the pulse warns and acts', 'tests/the-pulse-warns-and-acts.mjs'],
   ['a meeting keeps its record', 'tests/a-meeting-keeps-its-record.mjs'],
   ['discover cards skip and keep', 'tests/discover-cards-skip-and-keep.mjs'],
+  ['updates show pictures', 'tests/updates-show-pictures.mjs'],
   ['a reset link finds its page', 'tests/a-reset-link-finds-its-page.mjs'],
   ['a share can say why', 'tests/a-share-can-say-why.mjs'],
   ['a share can be taken back', 'tests/a-share-can-be-taken-back.mjs'],

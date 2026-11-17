@@ -28,6 +28,10 @@ export interface DiscoverCard {
   about: string;
   /** For news: who published it and when, already in words. */
   source?: string;
+  /** A picture on this app (the caller has already checked it), or none. */
+  image?: string;
+  /** The publisher's colour, behind a card with no picture. */
+  colour?: string;
 }
 
 export const DISCOVER_SKIPPED_KEY = 'hb-discover-skipped';
@@ -53,7 +57,7 @@ export function discoverLinks(setting: string | undefined): DiscoverLink[] {
 /** The cards to show: study sites first, then the newest stories, minus anything skipped. */
 export function discoverCards(
   links: DiscoverLink[],
-  stories: { title: string; link: string; summary?: string; source: string }[],
+  stories: { title: string; link: string; summary?: string; source: string; image?: string; colour?: string }[],
   skipped: string[],
 ): DiscoverCard[] {
   const gone = new Set(skipped);
@@ -62,7 +66,7 @@ export function discoverCards(
   for (const s of stories) {
     const url = tidyUrl(s.link);
     if (!url || !url.startsWith('https://') || news.some((n) => n.url === url)) continue;
-    news.push({ key: url, kind: 'news', title: s.title.slice(0, 120), url, about: (s.summary ?? '').slice(0, 140), source: s.source });
+    news.push({ key: url, kind: 'news', title: s.title.slice(0, 120), url, about: (s.summary ?? '').slice(0, 140), source: s.source, image: s.image, colour: s.colour });
     if (news.length >= NEWS_SHOWN) break;
   }
   return [...study, ...news].filter((c) => !gone.has(c.key));

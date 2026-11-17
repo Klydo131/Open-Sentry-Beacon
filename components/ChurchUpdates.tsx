@@ -8,10 +8,11 @@
 // feed gives nothing is still offered, as a link to its news page. In the
 // tutorial nothing is fetched: the stories are samples and say so.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ORGANISATIONS, WORLD_CHURCH, featured, organisation, type Organisation } from '@/lib/updates/organisations';
 import type { Story } from '@/lib/updates/feed';
 import { postedWhen } from '@/components/HomeBoard';
+import { scrollMotion } from '@/lib/motion';
 import { DiscoverRow } from '@/components/DiscoverRow';
 import type { PocketAdd } from '@/lib/pocket';
 
@@ -21,15 +22,113 @@ const SHOWN = 6;
 
 type ByOrg = Record<string, Story[]>;
 
-/** Invented for the tutorial. Each opens the organisation's real news page. */
+/**
+ * Invented for the tutorial, with original drawings (public/updates) in place
+ * of a church's photos. Each opens the organisation's real news page.
+ */
 const SAMPLE: ByOrg = {
   gc: [
-    { title: 'Preparing for mission together', summary: 'A sample headline. In your church’s app, the General Conference’s latest stories appear here.', link: 'https://adventist.news/', date: null },
+    { title: 'Preparing for mission together', summary: 'A sample headline. In your church’s app, the General Conference’s latest stories and their photos appear here.', link: 'https://adventist.news/', date: null, image: '/updates/sample-sunrise.svg' },
+    { title: 'Bible study groups grow in every region', summary: 'A sample headline. Each story shows the picture from the organisation’s own site.', link: 'https://adventist.news/', date: null, image: '/updates/sample-book.svg' },
   ],
   ssd: [
-    { title: 'New learning resources for church leaders', summary: 'A sample headline. In your church’s app, the Division’s latest stories appear here.', link: 'https://news.adventist.asia/all', date: null },
+    { title: 'New learning resources for church leaders', summary: 'A sample headline. In your church’s app, the Division’s latest stories appear here.', link: 'https://news.adventist.asia/all', date: null, image: '/updates/sample-community.svg' },
+    { title: 'Youth camp meets in the highlands', summary: 'A sample headline. Tap a story to read it on the organisation’s own site.', link: 'https://news.adventist.asia/all', date: null, image: '/updates/sample-mountains.svg' },
   ],
 };
+
+/**
+ * A picture only from this app: the picture route, or the tutorial's own
+ * drawings. Anything else a response carried is ignored, so the content policy
+ * (`img-src 'self'`) is never the only thing standing in the way.
+ */
+export function ownPicture(src: string | undefined): string | null {
+  if (!src) return null;
+  if (/^\/api\/updates\/picture\?org=[a-z]{2,12}&n=\d{1,2}$/.test(src)) return src;
+  if (/^\/updates\/sample-[a-z]+\.svg$/.test(src)) return src;
+  return null;
+}
+
+/** The story's photo, or the organisation's colours when it has none or it fails. */
+function Picture({ src, org, className = '', onMissing }: {
+  src: string | null; org: Organisation; className?: string; onMissing?: () => void;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <span aria-hidden className={`grid place-items-center ${className}`}
+        style={{ background: `linear-gradient(135deg, ${org.colour}, ${org.colour}cc 55%, #0b1b33)` }}>
+        <span className="text-3xl font-extrabold tracking-wider text-white/90">{org.short}</span>
+      </span>
+    );
+  }
+  return (
+    <img src={src} alt="" loading="lazy" decoding="async" className={`object-cover ${className}`}
+      onError={() => { setFailed(true); onMissing?.(); }} />
+  );
+}
+
+/**
+ * GOOD NEWS: the newest stories with photos, big, one at a time. It moves on
+ * by itself every few seconds unless the device asked for less motion or the
+ * person has touched it, and every slide is a link to the story.
+ */
+function GoodNews({ slides }: { slides: { org: Organisation; story: Story; src: string }[] }) {
+  const [gone, setGone] = useState<Set<string>>(new Set());
+  const [at, setAt] = useState(0);
+  const [held, setHeld] = useState(false);
+  const track = useRef<HTMLDivElement>(null);
+  const shown = slides.filter((s) => !gone.has(s.src)).slice(0, 5);
+
+  useEffect(() => {
+    if (held || shown.length < 2) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => setAt((i) => (i + 1) % shown.length), 6000);
+    return () => window.clearInterval(timer);
+  }, [held, shown.length]);
+
+  useEffect(() => {
+    const el = track.current;
+    if (el) el.scrollTo({ left: el.clientWidth * at, behavior: scrollMotion() });
+  }, [at]);
+
+  if (shown.length === 0) return null;
+  return (
+    <div className="mb-4" data-good-news onPointerDown={() => setHeld(true)} onFocus={() => setHeld(true)}>
+      <div ref={track} className="flex snap-x snap-mandatory overflow-x-auto rounded-3xl shadow-md [scrollbar-width:none]"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          if (el.clientWidth) setAt(Math.round(el.scrollLeft / el.clientWidth));
+        }}>
+        {shown.map(({ org, story, src }) => (
+          <a key={src} href={story.link} target="_blank" rel="noopener noreferrer" data-good-news-slide={org.id}
+            className="relative block aspect-[16/10] w-full shrink-0 snap-start overflow-hidden bg-navy sm:aspect-[16/7]">
+            <Picture src={src} org={org} className="absolute inset-0 h-full w-full"
+              onMissing={() => setGone((g) => new Set(g).add(src))} />
+            <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+            <span className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
+              <span className="inline-block rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-bold text-navy">
+                {org.short}{story.date ? ` · ${postedWhen(story.date)}` : ''}
+              </span>
+              <span className="mt-2 line-clamp-2 block text-xl font-bold leading-snug text-white sm:text-2xl">{story.title}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+      {shown.length > 1 && (
+        <div className="mt-2 flex justify-center gap-1" role="group" aria-label="Choose a story">
+          {shown.map((s, i) => (
+            <button key={s.src} type="button" aria-label={`Story ${i + 1} of ${shown.length}`} aria-current={i === at ? true : undefined} data-good-news-dot
+              onClick={() => { setHeld(true); setAt(i); }}
+              className="grid h-8 w-8 place-items-center">
+              <span className={`block h-2 rounded-full transition-all ${i === at ? 'w-6 bg-teal-700' : 'w-2 bg-gray-400'}`} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function readList(key: string): string[] | null {
   try {
@@ -39,18 +138,6 @@ function readList(key: string): string[] | null {
   } catch {
     return null;
   }
-}
-
-function Tile({ org }: { org: Organisation }) {
-  return (
-    <span
-      aria-hidden
-      className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-[11px] font-extrabold tracking-wide"
-      style={{ background: org.colour, color: '#ffffff' }}
-    >
-      {org.short}
-    </span>
-  );
 }
 
 export function ChurchUpdates({ sample = false, addToPocket }: {
@@ -166,31 +253,38 @@ export function ChurchUpdates({ sample = false, addToPocket }: {
         </div>
       )}
 
+
+      {stories === null && <p className="text-sm text-gray-600" role="status">Looking for what is new&hellip;</p>}
+
+      <GoodNews slides={cards.flatMap(({ org, story }) => {
+        const src = ownPicture(story.image);
+        return src ? [{ org, story, src }] : [];
+      })} />
+
       {stories && (
         <DiscoverRow
           addToPocket={addToPocket}
           stories={orgs.flatMap((org) => (stories[org.id] ?? []).map((st) => ({
             title: st.title, link: st.link, summary: st.summary ?? undefined, date: st.date,
+            image: ownPicture(st.image) ?? undefined, colour: org.colour,
             source: `${org.short}${st.date ? ` · ${postedWhen(st.date)}` : ''}`,
           }))).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))}
         />
       )}
 
-      {stories === null && <p className="text-sm text-gray-600" role="status">Looking for what is new&hellip;</p>}
-
-      <ul className="space-y-3">
+      <ul className="grid gap-3 sm:grid-cols-2">
         {cards.map(({ org, story }, at) => (
           <li key={story.link + story.title} className="home-rise" style={{ animationDelay: `${at * 60}ms` }}>
             <a href={story.link} target="_blank" rel="noopener noreferrer" data-update-card={org.id}
-              className="lift-hover flex gap-4 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-navy/10">
-              <Tile org={org} />
-              <span className="min-w-0 flex-1">
+              className="lift-hover flex h-full flex-col overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-navy/10">
+              <Picture src={ownPicture(story.image)} org={org} className="aspect-[16/9] w-full" />
+              <span className="flex min-w-0 flex-1 flex-col p-4">
                 <span className="block text-xs font-bold uppercase tracking-wide text-gray-600">
                   {org.short}{story.date ? ` · ${postedWhen(story.date)}` : ''}
                 </span>
                 <span className="mt-0.5 block text-lg font-bold leading-snug text-navy">{story.title}</span>
                 {story.summary && <span className="mt-1 line-clamp-2 block text-sm text-gray-700">{story.summary}</span>}
-                <span className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2 text-sm">
                   <span className="italic text-gray-600">Source: {org.name}</span>
                   <span className="font-semibold text-navy underline underline-offset-2">Read update &rarr;</span>
                 </span>
@@ -201,13 +295,15 @@ export function ChurchUpdates({ sample = false, addToPocket }: {
         {quiet.map((org) => (
           <li key={org.id}>
             <a href={org.news} target="_blank" rel="noopener noreferrer" data-update-link={org.id}
-              className="lift-hover flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy/10">
-              <Tile org={org} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-bold text-navy">See what is new at the {org.name}</span>
-                <span className="block text-sm text-gray-600">Opens its own news page.</span>
+              className="lift-hover flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-navy/10">
+              <Picture src={null} org={org} className="aspect-[16/6] w-full" />
+              <span className="flex items-center gap-3 p-4">
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-bold text-navy">See what is new at the {org.name}</span>
+                  <span className="block text-sm text-gray-600">Opens its own news page.</span>
+                </span>
+                <span aria-hidden className="text-xl text-navy">&rarr;</span>
               </span>
-              <span aria-hidden className="text-xl text-navy">&rarr;</span>
             </a>
           </li>
         ))}

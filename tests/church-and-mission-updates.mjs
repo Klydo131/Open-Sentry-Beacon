@@ -103,14 +103,16 @@ const rss = (items) => `<?xml version="1.0"?><rss version="2.0"><channel><title>
 
 // ---- 3. The server asks only what the code names, and says who it is ----
 {
+  // The feed is read in lib/updates/read.ts, shared with the picture route.
   const route = read('app/api/updates/route.ts');
+  const reader = read('lib/updates/read.ts');
   ok(/organisation\(new URL\(request\.url\)\.searchParams\.get\('org'\)/.test(route) && !/searchParams\.get\('(url|feed|src)'\)/.test(route),
      'the caller names an organisation, never an address');
-  ok(/fetch\(source\.feed,/.test(route) && (route.match(/fetch\(/g) ?? []).length === 1,
+  ok(/fetch\(source\.feed,/.test(reader) && (reader.match(/fetch\(/g) ?? []).length === 1 && !/fetch\(/.test(route),
      'the one thing fetched is that organisation\'s own feed');
-  ok(/'User-Agent': CALLER/.test(route) && /const CALLER = 'OpenSentryBeacon\//.test(route) && !/Mozilla|Chrome|Safari/.test(route),
+  ok(/'User-Agent': CALLER/.test(reader) && /const CALLER = 'OpenSentryBeacon\//.test(reader) && !/Mozilla|Chrome|Safari/.test(reader),
      'it says who it is, and never calls itself a browser');
-  ok(/AbortSignal\.timeout\(/.test(route) && /revalidate: AN_HOUR/.test(route) && /s-maxage=/.test(route),
+  ok(/AbortSignal\.timeout\(/.test(reader) && /revalidate: AN_HOUR/.test(reader) && /s-maxage=/.test(route),
      'it does not wait for ever, and asks an organisation at most once an hour');
   ok(/status: 404/.test(route), 'an organisation the app does not have is refused');
 }

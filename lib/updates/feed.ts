@@ -10,6 +10,15 @@ export interface Story {
   link: string;
   /** ISO date, or null when the feed gave none this app can read. */
   date: string | null;
+  /**
+   * The story's own picture, as the feed names it (an https address on the
+   * organisation's own host). Server side only: the API swaps it for this
+   * app's own address before a phone sees it, so a phone never fetches from
+   * another site and the content policy needs no widening.
+   */
+  picture?: string;
+  /** What a phone is given instead: this app's own picture address. */
+  image?: string;
 }
 
 export const MAX_STORIES = 8;
@@ -59,6 +68,45 @@ export function ownLink(raw: string, hosts: string[]): string {
   }
 }
 
+// Small pictures a feed carries that are not the story's: logos, avatars,
+// favicons, and the thumbnails WordPress names by their size.
+const NOT_A_PHOTO = /cropped-|logo|avatar|gravatar|favicon|emoji|icon|\.svg(?:$|\?)/i;
+
+/** A logo or a thumbnail by its address: a known mark, or a WordPress size under 400px. */
+function notAPhoto(pathname: string): boolean {
+  if (NOT_A_PHOTO.test(pathname)) return true;
+  const size = /[-_](\d{2,4})x(\d{2,4})\.[a-z]+$/i.exec(pathname);
+  return !!size && Math.min(Number(size[1]), Number(size[2])) < 400;
+}
+
+/** The first picture in a feed item that is a photo on the organisation's own host, or ''. */
+export function pictureOf(block: string, hosts: string[]): string {
+  const found: string[] = [];
+  for (const [, url] of block.matchAll(/<media:(?:content|thumbnail)\b[^>]*\burl=["']([^"']+)["']/gi)) found.push(url);
+  for (const [tag] of block.matchAll(/<enclosure\b[^>]*>/gi)) {
+    const url = /\burl=["']([^"']+)["']/i.exec(tag)?.[1];
+    if (url && /type=["']image\//i.test(tag)) found.push(url);
+  }
+  // Inside the story's own text, which a feed escapes or wraps in CDATA.
+  const body = decode(block.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1'));
+  for (const [, url] of body.matchAll(/<img\b[^>]*?\bsrc=["']([^"']+)["']/gi)) found.push(url);
+  for (const raw of found) {
+    const url = ownLink(raw, hosts);
+    if (url && !notAPhoto(new URL(url).pathname)) return url;
+  }
+  return '';
+}
+
+/** The picture a story's own page names for sharing (og:image), on its own host, or ''. */
+export function sharedPictureOf(html: string, hosts: string[]): string {
+  for (const [tag] of html.slice(0, 300_000).matchAll(/<meta\b[^>]*>/gi)) {
+    if (!/(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image)["']/i.test(tag)) continue;
+    const url = ownLink(/\bcontent=["']([^"']+)["']/i.exec(tag)?.[1] ?? '', hosts);
+    if (url && !notAPhoto(new URL(url).pathname)) return url;
+  }
+  return '';
+}
+
 /** The hosts an organisation's stories may link to: its feed's and its news page's. */
 export function hostsOf(addresses: (string | undefined)[]): string[] {
   const hosts = new Set<string>();
@@ -88,6 +136,7 @@ export function parseFeed(xml: string, hosts: string[]): Story[] {
       summary: plain(field(block, 'description') || field(block, 'summary') || field(block, 'content'), 220),
       link,
       date: Number.isFinite(when) ? new Date(when).toISOString() : null,
+      ...(pictureOf(block, hosts) ? { picture: pictureOf(block, hosts) } : {}),
     });
     if (stories.length === MAX_STORIES) break;
   }

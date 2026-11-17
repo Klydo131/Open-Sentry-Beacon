@@ -204,6 +204,11 @@ const ALLOWED_ROUTES = [
   // browser cannot (the feeds send no cross-origin permission), it takes no
   // input but which listed organisation, stores nothing and knows no member.
   'app/api/updates/route.ts',
+  // A story's photo from that same feed, passed on as this app's own image so
+  // img-src stays 'self' and a member's phone tells no other site it opened
+  // Home. Asked for an organisation and a story number, never an address;
+  // stores nothing and knows no member.
+  'app/api/updates/picture/route.ts',
 ];
 for (const r of routes) {
   ok(
