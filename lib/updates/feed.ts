@@ -56,6 +56,15 @@ function field(block: string, name: string): string {
   return found ? found[1] : '';
 }
 
+/**
+ * WordPress puts "The post <title> appeared first on <site>." in a feed that
+ * carries no excerpt. It says nothing a card does not already show, so a card
+ * shows no summary instead (found on a Union's live feed, 17 November 2026).
+ */
+export function noBoilerplate(summary: string): string {
+  return /^The post [\s\S]* appeared first on [\s\S]*\.?$/.test(summary.trim()) ? '' : summary;
+}
+
 /** An https link on one of the organisation's own hosts, or ''. */
 export function ownLink(raw: string, hosts: string[]): string {
   try {
@@ -133,7 +142,7 @@ export function parseFeed(xml: string, hosts: string[]): Story[] {
     const when = Date.parse(decode(field(block, 'pubDate') || field(block, 'published') || field(block, 'updated')).trim());
     stories.push({
       title,
-      summary: plain(field(block, 'description') || field(block, 'summary') || field(block, 'content'), 220),
+      summary: noBoilerplate(plain(field(block, 'description') || field(block, 'summary') || field(block, 'content'), 220)),
       link,
       date: Number.isFinite(when) ? new Date(when).toISOString() : null,
       ...(pictureOf(block, hosts) ? { picture: pictureOf(block, hosts) } : {}),

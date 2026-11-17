@@ -60,6 +60,11 @@ ok(f.sharedPictureOf('<head><meta property="og:image" content="https://example-c
    && f.sharedPictureOf('<meta property="og:image" content="https://tracker.example/x.jpg">', hosts) === '',
    'a story page\'s sharing picture is read, on the organisation\'s own host only');
 
+ok(f.noBoilerplate('The post A story appeared first on A Church .') === '' && f.noBoilerplate('Leaders met to plan.') === 'Leaders met to plan.',
+   'a feed\'s "The post ... appeared first on" line is not shown as a summary');
+ok(f.parseFeed(rss([item('<description>The post A story appeared first on Example Church.</description>')]), hosts)[0]?.summary === '',
+   'and reading a feed drops it');
+
 // ---- 2. Every organisation listed with a feed, and one that does not depend on another ----
 ok(o.ORGANISATIONS.filter((x) => x.feed).length >= 6, 'at least six organisations with their own feed');
 ok(o.organisation('slpum')?.feed?.startsWith('https://') && !o.organisation('slpum')?.from, 'the Union reads its own feed, not the Division\'s');
