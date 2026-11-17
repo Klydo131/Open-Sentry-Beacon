@@ -50,6 +50,27 @@ ok(!/stories|NEWS_SHOWN|kind: 'news'/.test(lib.replace(/^\s*\/\/.*$/gm, '')), 't
 const updates = fs.readFileSync(path.join(root, 'components/ChurchUpdates.tsx'), 'utf8');
 ok(!/DiscoverRow/.test(updates), 'Church & Mission Updates does not hold Discover');
 
+// A LEADER ADDS AN APP IN THE APP (17 November 2026): checked like the list.
+ok('link' in d.checkNewApp('Hope Study', 'https://hope.study/en/'), 'a leader adds a secure address');
+ok('refused' in d.checkNewApp('', 'https://hope.study/'), 'an app needs a name');
+ok('refused' in d.checkNewApp('Plain', 'http://example.org/'), 'only https');
+ok('refused' in d.checkNewApp('Feed', 'https://www.facebook.com/page'), 'no social feeds');
+ok('refused' in d.checkNewApp('Bad', 'javascript:alert(1)'), 'no javascript: address');
+const both = d.discoverCards([{ title: 'A', url: 'https://a.example.org', about: '' }, { title: 'A again', url: 'https://a.example.org', about: '', id: 'x' }], []);
+ok(both.length === 1, 'an app in the setting and in the church\'s own list shows once');
+{
+  const live = fs.readFileSync(path.join(root, 'components/LiveBillboard.tsx'), 'utf8');
+  const sample = fs.readFileSync(path.join(root, 'components/ChurchBillboard.tsx'), 'utf8');
+  const row = fs.readFileSync(path.join(root, 'components/DiscoverRow.tsx'), 'utf8');
+  ok(/<DiscoverRow[^>]*shelf=\{LIVE_SHELF\}[^>]*canManage=\{leads\}/.test(live) && /const leads = profile\?\.role === 'admin' \|\| profile\?\.role === 'executive'/.test(live),
+     'in the live app, Admins and Executive Directors manage the church\'s apps');
+  ok(/<DiscoverRow shelf=\{SAMPLE_SHELF\} canManage=\{privileged\} \/>/.test(sample), 'and in the tutorial, its sample leaders do');
+  ok(/checkNewApp\(form\.title, form\.url\)/.test(row) && /canManage && c\.id/.test(row), 'what a leader types is checked, and only their own additions can be taken off');
+  const dataTs = fs.readFileSync(path.join(root, 'lib/live/data.ts'), 'utf8');
+  ok(/from\('discover_apps'\)\.delete\(\)\.eq\('id', id\)\.select\('id'\)/.test(dataTs), 'removing one checks that it was removed');
+  ok(/leaders-choose-the-apps\.sql/.test(fs.readFileSync(path.join(root, 'scripts/fresh-install.sh'), 'utf8')), 'and the database proof runs on every fresh install');
+}
+
 // KEEPING A CARD: the Pocket's own checks, in the same order.
 ok(p.checkPocketAdd('https://a.example.org', []) === null, 'a new site may go in');
 ok(p.checkPocketAdd('https://a.example.org', [{ url: 'https://a.example.org/' }, { url: 'https://a.example.org' }]) === 'have', 'one already there is not added twice');

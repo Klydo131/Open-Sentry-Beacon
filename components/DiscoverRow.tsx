@@ -5,8 +5,8 @@
 // news is ever here). Each card opens its app, goes into the Pocket with one
 // tap, or is skipped with × and stays skipped on this device.
 
-import { useEffect, useState } from 'react';
-import { discoverCards, discoverLinks, readSkipped, skip, type DiscoverCard } from '@/lib/discover';
+import { useCallback, useEffect, useState } from 'react';
+import { checkNewApp, discoverCards, discoverLinks, readSkipped, skip, type DiscoverCard, type DiscoverLink } from '@/lib/discover';
 import { addToLocalPocket, type PocketAdd } from '@/lib/pocket';
 
 type Said = Record<string, string>;
@@ -34,17 +34,63 @@ function Cover({ card }: { card: DiscoverCard }) {
   );
 }
 
-export function DiscoverRow({ addToPocket = async (u, l) => addToLocalPocket(u, l) }: {
+/** Where the church's own apps are kept: the database in the live app, this browser in the tutorial. */
+export interface AppShelf {
+  list: () => Promise<DiscoverLink[]>;
+  add: (link: DiscoverLink) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+}
+
+export function DiscoverRow({ addToPocket = async (u, l) => addToLocalPocket(u, l), shelf, canManage = false }: {
   /** Where a kept card goes. The live app passes its database; the sample keeps it in the browser. */
   addToPocket?: (url: string, label: string) => Promise<PocketAdd>;
+  /** The church's own apps. */
+  shelf?: AppShelf;
+  /** Admins and Executive Directors add and remove the church's apps. */
+  canManage?: boolean;
 }) {
   const [skipped, setSkipped] = useState<string[] | null>(null);
   const [said, setSaid] = useState<Said>({});
-  useEffect(() => { setSkipped(readSkipped()); }, []);
+  const [own, setOwn] = useState<DiscoverLink[]>([]);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ title: '', url: '', about: '' });
+  const [problem, setProblem] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!shelf) return;
+    try { setOwn(await shelf.list()); } catch { /* no apps yet */ }
+  }, [shelf]);
+  useEffect(() => { setSkipped(readSkipped()); void load(); }, [load]);
   if (skipped === null) return null;
 
-  const cards = discoverCards(discoverLinks(process.env.NEXT_PUBLIC_DISCOVER_LINKS), skipped);
-  if (cards.length === 0) return null;
+  const cards = discoverCards([...discoverLinks(process.env.NEXT_PUBLIC_DISCOVER_LINKS), ...own], skipped);
+  if (cards.length === 0 && !canManage) return null;
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shelf) return;
+    const checked = checkNewApp(form.title, form.url);
+    if ('refused' in checked) { setProblem(checked.refused); return; }
+    setBusy(true);
+    try {
+      await shelf.add({ ...checked.link, about: form.about.trim().slice(0, 120) });
+      setForm({ title: '', url: '', about: '' });
+      setAdding(false);
+      setProblem('');
+      await load();
+    } catch (cause) {
+      setProblem(cause instanceof Error ? cause.message : 'That could not be added.');
+    } finally { setBusy(false); }
+  };
+
+  const takeOff = async (id: string) => {
+    if (!shelf) return;
+    setBusy(true);
+    try { await shelf.remove(id); await load(); }
+    catch (cause) { setProblem(cause instanceof Error ? cause.message : 'That could not be removed.'); }
+    finally { setBusy(false); }
+  };
 
   const keep = async (c: DiscoverCard) => {
     setSaid((s) => ({ ...s, [c.key]: 'Adding…' }));
@@ -58,7 +104,39 @@ export function DiscoverRow({ addToPocket = async (u, l) => addToLocalPocket(u, 
 
   return (
     <section aria-labelledby="discover-apps" data-discover>
-      <h2 id="discover-apps" className="mb-2 text-xl font-bold text-room">Discover apps</h2>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 id="discover-apps" className="text-xl font-bold text-room">Discover apps</h2>
+        {canManage && shelf && (
+          <button type="button" onClick={() => { setAdding((a) => !a); setProblem(''); }} aria-expanded={adding}
+            data-discover-add className="tap-sm rounded-full bg-navy px-4 text-sm font-semibold text-white">
+            {adding ? 'Close' : '+ Add an app'}
+          </button>
+        )}
+      </div>
+      {canManage && cards.length === 0 && !adding && (
+        <p className="mb-2 text-sm text-gray-600">Add the apps and study sites your church recommends. Everybody in the church sees them here.</p>
+      )}
+      {adding && (
+        <form onSubmit={save} className="mb-3 grid gap-2 rounded-2xl bg-white p-4 ring-1 ring-navy/10" data-discover-form>
+          <label className="grid gap-1 text-sm font-semibold text-navy">Name
+            <input value={form.title} maxLength={60} onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className="rounded-xl px-3 py-2 text-base font-normal ring-1 ring-navy/15" placeholder="For example, Hope Study" />
+          </label>
+          <label className="grid gap-1 text-sm font-semibold text-navy">Web address
+            <input value={form.url} inputMode="url" onChange={(e) => setForm({ ...form, url: e.target.value })}
+              className="rounded-xl px-3 py-2 text-base font-normal ring-1 ring-navy/15" placeholder="https://" />
+          </label>
+          <label className="grid gap-1 text-sm font-semibold text-navy">One line about it (optional)
+            <input value={form.about} maxLength={120} onChange={(e) => setForm({ ...form, about: e.target.value })}
+              className="rounded-xl px-3 py-2 text-base font-normal ring-1 ring-navy/15" />
+          </label>
+          {problem && <p role="alert" className="text-sm font-semibold text-red-700">{problem}</p>}
+          <button type="submit" disabled={busy} className="tap rounded-xl bg-navy py-2 text-sm font-bold text-white disabled:opacity-50">
+            Add to Discover
+          </button>
+        </form>
+      )}
+      {problem && !adding && <p role="alert" className="mb-2 text-sm font-semibold text-red-700">{problem}</p>}
       <ul className="thin-scroll -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
         {cards.map((c) => {
           const note = said[c.key];
@@ -89,6 +167,12 @@ export function DiscoverRow({ addToPocket = async (u, l) => addToLocalPocket(u, 
                 </button>
               </span>
               {note && <span role="status" className="mt-2 text-xs font-semibold text-gray-700" data-discover-said>{note}</span>}
+              {canManage && c.id && (
+                <button type="button" disabled={busy} onClick={() => void takeOff(c.id as string)} data-discover-remove
+                  className="mt-2 self-start text-sm text-gray-600 underline underline-offset-2 disabled:opacity-40">
+                  Take off Discover for everybody
+                </button>
+              )}
               </span>
             </li>
           );

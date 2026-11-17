@@ -45,6 +45,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     items: [
       'Discover shows the apps and study sites your church recommends, in its own place on Home. Church news stays in Church & Mission Updates.',
       'Tap Add to Pocket to keep one in your Pocket, or tap × to skip it. A skipped card stays away on this device.',
+      'Admins and Executive Directors add apps with + Add an app, and can take one off again for everybody.',
     ],
   },
   {

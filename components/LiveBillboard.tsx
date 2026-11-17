@@ -30,11 +30,18 @@ import { isPlanPost, planNotices } from '@/lib/home-plans';
 import { HomeBoard, postedWhen, type BoardItem } from '@/components/HomeBoard';
 import { HomeWelcome } from '@/components/HomeWelcome';
 import { ChurchUpdates } from '@/components/ChurchUpdates';
-import { DiscoverRow } from '@/components/DiscoverRow';
+import { DiscoverRow, type AppShelf } from '@/components/DiscoverRow';
 import { POCKET_CHANGED, checkPocketAdd, tidyUrl, type PocketAdd } from '@/lib/pocket';
 
 // A Discover card kept from Home goes in as a row, through the same checks as
 // the Pocket's own form, and tells an open Pocket to reload.
+// The church's own apps, in the database (20261117170000_leaders_choose_the_apps).
+const LIVE_SHELF: AppShelf = {
+  list: async () => (await live.listDiscoverApps()).map((a) => ({ id: a.id, title: a.title, url: a.url, about: a.about })),
+  add: (l) => live.addDiscoverApp(l),
+  remove: (id) => live.removeDiscoverApp(id),
+};
+
 async function addDiscoveredToPocket(url: string, label: string): Promise<PocketAdd> {
   const have = await live.myPocket();
   const stop = checkPocketAdd(url, have);
@@ -205,7 +212,7 @@ export function LiveBillboard({ churchName, between }: {
 
       {/* What is new at the wider church, under what is new here. */}
       {/* Apps to discover, on their own: never news (lib/discover.ts). */}
-      <DiscoverRow addToPocket={addDiscoveredToPocket} />
+      <DiscoverRow addToPocket={addDiscoveredToPocket} shelf={LIVE_SHELF} canManage={leads} />
 
       <ChurchUpdates />
 

@@ -7,7 +7,20 @@ import { isPlanPost, planNotices } from '@/lib/home-plans';
 import { HomeBoard, postedWhen, type BoardItem } from '@/components/HomeBoard';
 import { HomeWelcome } from '@/components/HomeWelcome';
 import { ChurchUpdates } from '@/components/ChurchUpdates';
-import { DiscoverRow } from '@/components/DiscoverRow';
+import { DiscoverRow, type AppShelf } from '@/components/DiscoverRow';
+import { readSampleApps, writeSampleApps } from '@/lib/discover';
+
+// The tutorial's own apps, added by its sample Admin or Executive Director,
+// kept in this browser like everything else in the tutorial.
+const SAMPLE_SHELF: AppShelf = {
+  list: async () => readSampleApps().map((a) => ({ ...a, id: a.url })),
+  add: async (l) => {
+    const now = readSampleApps();
+    if (now.some((a) => a.url === l.url)) throw new Error('That app is already on Discover.');
+    writeSampleApps([...now, { title: l.title, url: l.url, about: l.about }]);
+  },
+  remove: async (id) => writeSampleApps(readSampleApps().filter((a) => a.url !== id)),
+};
 import { postsVisibleTo } from '@/components/Blog';
 import { NAVY, GOLD } from '@/lib/brand';
 import {
@@ -95,7 +108,7 @@ export function ChurchBillboard() {
       />
 
       {/* Sample stories here: the tutorial never asks the network for anything. */}
-      <DiscoverRow />
+      <DiscoverRow shelf={SAMPLE_SHELF} canManage={privileged} />
 
       <ChurchUpdates sample />
 

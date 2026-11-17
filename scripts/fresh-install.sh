@@ -176,6 +176,11 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/a-deletion-reaches-everyone.sql"
 
+# LEADERS CHOOSE THE APPS: Admins and Executive Directors add Discover apps;
+# everybody in the church reads them; https only and no social feeds.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/leaders-choose-the-apps.sql"
+
 # A POST CARRIES ITS OWN PHOTOS: a writer's photos and clip reach exactly the
 # people who may read the post, and nobody adds to somebody else's.
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \

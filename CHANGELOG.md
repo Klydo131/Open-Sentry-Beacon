@@ -10,6 +10,26 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (after midnight): leaders choose the apps
+
+**Run once, on each database:** `supabase/migrations/20261117170000_leaders_choose_the_apps.sql`.
+Until it runs, Discover shows only the deployment's own list.
+
+- Admins and Executive Directors add the apps and study sites their church
+  recommends from Home itself: **+ Add an app** on Discover, and **Take off
+  Discover for everybody** on an app they added. Everybody in the church sees
+  them; another church never does.
+- **Table `discover_apps`**, one policy per verb: whoever manages the church
+  (`manages_church`) writes, the church reads. https only by a check
+  constraint, and the Pocket's own trigger (`private.the_pocket_is_for_tools`)
+  keeps social feeds out, so the rule lives in one place for both.
+  `supabase/tests/leaders-choose-the-apps.sql` (16 checks, written before the
+  table existed) runs on every fresh install.
+- The screen checks what a leader types with `checkNewApp` before it is sent.
+  The deployment's `NEXT_PUBLIC_DISCOVER_LINKS` still comes first, and an
+  address in both shows once. The tutorial's sample leaders keep theirs in
+  the browser.
+
 ## 17 November 2026 (late night): Discover is for apps only
 
 **Nothing to run.** If you want Discover on Home, set

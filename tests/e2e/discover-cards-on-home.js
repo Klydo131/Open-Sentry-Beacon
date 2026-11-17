@@ -41,9 +41,44 @@ async function walk(browser, label, options) {
   await context.close();
 }
 
+// THE SAMPLE ADMIN ADDS AN APP, the Explorer sees it, the Admin takes it off.
+async function leaderAdds(browser) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await context.addInitScript(() => { try { localStorage.setItem('beacon-install-snoozed-until', String(Date.now() + 864e6)); } catch { /* about:blank */ } });
+  const page = await context.newPage();
+  const caught = pageErrors(page);
+  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(900);
+  await page.getByText(/Pastor Ramos/).first().click();
+  await page.waitForTimeout(1700);
+  const consent = page.getByRole('button', { name: /I understand|Continue|Got it/i });
+  if (await consent.count()) { await consent.first().click().catch(() => {}); await page.waitForTimeout(600); }
+  await page.goto(`${BASE}/church`, { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-discover-add]', { timeout: 30_000 });
+  await page.locator('[data-discover-add]').click();
+  const form = page.locator('[data-discover-form]');
+  await form.getByLabel('Name').fill('Feed');
+  await form.getByLabel('Web address').fill('https://www.facebook.com/page');
+  await form.getByRole('button', { name: 'Add to Discover' }).click();
+  ok(await form.getByRole('alert').count() === 1, 'leader: a social feed is refused with a reason');
+  await form.getByLabel('Name').fill('Hope Study');
+  await form.getByLabel('Web address').fill('https://hope.study/en/');
+  await form.getByLabel(/One line/).fill('Experience the Bible');
+  await form.getByRole('button', { name: 'Add to Discover' }).click();
+  await page.waitForSelector('[data-discover-card="app"]');
+  ok((await page.locator('[data-discover-card="app"]').allInnerTexts()).some((t) => /Hope Study/.test(t)), 'leader: the app is on Discover');
+  ok(await page.locator('[data-discover-remove]').count() === 1, 'leader: and can be taken off');
+  await page.locator('[data-discover-remove]').click();
+  await page.waitForTimeout(400);
+  ok(await page.locator('[data-discover-card="app"]').count() === 0, 'leader: taken off, it is gone');
+  ok(caught.list().length === 0, 'leader: no page errors');
+  await context.close();
+}
+
 (async () => {
   const browser = await engine.launch(launchOptions);
   try {
+    await leaderAdds(browser);
     await walk(browser, 'computer', { viewport: { width: 1280, height: 860 } });
     await walk(browser, 'phone', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   } finally {

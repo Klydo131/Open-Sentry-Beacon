@@ -3633,6 +3633,37 @@ export async function removePocketApp(id: string): Promise<void> {
   mustHaveDeleted(data);
 }
 
+// --- Discover apps ---
+// Apps and study sites the church's leaders recommend, shown on Home
+// (20261117170000_leaders_choose_the_apps). Everybody in the church reads
+// them; whoever manages the church adds, changes and removes them.
+
+export interface DiscoverApp { id: string; title: string; url: string; about: string }
+
+export async function listDiscoverApps(): Promise<DiscoverApp[]> {
+  const { data, error } = await db().from('discover_apps')
+    .select('id, title, url, about').order('created_at', { ascending: true });
+  // A database without the migration has no apps yet, which is not an error to show.
+  if (error) return [];
+  return (data ?? []) as DiscoverApp[];
+}
+
+export async function addDiscoverApp(m: { title: string; url: string; about: string }): Promise<void> {
+  const church = await myChurch();
+  if (!church) throw new Error('Your account is not in a church yet.');
+  const { error } = await db().from('discover_apps').insert({
+    church_id: church.id, title: m.title.trim().slice(0, 60), url: m.url, about: m.about.trim().slice(0, 120),
+  });
+  if (error?.code === '23505') throw new Error('That app is already on Discover.');
+  if (error) throw new Error(error.message);
+}
+
+export async function removeDiscoverApp(id: string): Promise<void> {
+  const { data, error } = await db().from('discover_apps').delete().eq('id', id).select('id');
+  if (error) throw new Error(error.message);
+  mustHaveDeleted(data);
+}
+
 // --- The next thing to read ---
 // What the Explorer has actually done, which is not their journey stage.
 
