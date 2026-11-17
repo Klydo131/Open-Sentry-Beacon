@@ -102,3 +102,7 @@ trends-out/
 # tools/photo-remake: Rust's build folder. What ships is the module it writes
 # into supabase/functions/_shared/, checked by its SHA-256.
 /tools/photo-remake/target/
+
+# The operator's own private words (domains, project names, addresses), one
+# per line, read by tests/nothing-of-the-owners.mjs. Never committed.
+.private-terms

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Nothing of the owner's leaves this machine: tests/nothing-of-the-owners.mjs
+# reads every commit message and identity, and every tracked file against the
+# private words in .private-terms, before a push is allowed.
+# Turn it on once per clone:  git config core.hooksPath .githooks
+exec node tests/nothing-of-the-owners.mjs

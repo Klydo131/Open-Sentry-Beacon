@@ -10,6 +10,23 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026: nothing of the operator's, in files or in commits
+
+**Do once per clone:** `git config core.hooksPath .githooks`, and list your own
+private words (domains, project names, addresses) one per line in
+`.private-terms`, which git ignores. In CI, set them as the secret
+`BEACON_PRIVATE_TERMS`.
+
+- `tests/nothing-of-the-owners.mjs` (in the gate, and run before every push)
+  reads every commit message, author and committer for a database or
+  deployment hostname, a personal e-mail address, a public network address, a
+  dashboard link, a hosting id or an assistant session link, and searches every
+  tracked file, file name, commit and the branch name for the operator's own
+  listed words. The list is never printed.
+- AGENTS.md section 0 now says it outright, and says this repository should
+  not be connected to a hosting account: an operator deploys from a private
+  copy.
+
 ## 15 November 2026 (late): a reset link finds its page
 
 **Nothing to run.** No database change. One setting to check on each church's

@@ -36,6 +36,25 @@ secret by what they are, an e-mail address at any domain somebody can own, a
 phone number and a photo that says where it was taken. It cannot catch a name,
 and it is not trying to. That part is yours.
 
+**Nothing of the operator's, anywhere.** Whoever runs a copy owns their hosting,
+database, mail, domain and accounts. None of it is part of this project: not a
+project name or id, a hostname, a dashboard link, an address, a sender, a team
+or account name. Not in a file, a commit message, an author line, a branch
+name, an issue, a pull request or a workflow log. Say "the live database" or
+"a church's site", never which one.
+
+`tests/nothing-of-the-owners.mjs` reads every commit message and identity for
+those shapes, and searches every tracked file and commit for the words an
+operator lists in `.private-terms` (ignored by git; `BEACON_PRIVATE_TERMS` in
+CI). Turn the push guard on once per clone:
+`git config core.hooksPath .githooks`. If you learn a private word while
+working, add it to `.private-terms`, never to a tracked file.
+
+**This repository is source, not somebody's pipeline.** It should not be
+connected to a hosting account: a connected host publishes its project names
+and addresses on every push (deployments, commit checks, bot comments), where
+no file check can see them. An operator deploys from their own private copy.
+
 ---
 
 ## 0.1 Working today first, then right: the first-day protocol
