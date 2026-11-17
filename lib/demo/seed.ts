@@ -675,7 +675,7 @@ export function makeSeed(): DB {
         visibility: 'published',
         audience: 'all',
         created_at: iso(60 * 26),
-        media: [{ kind: 'image', src: '/home-board/hills.svg', alt: 'A path winding over quiet hills at dawn, with sheep grazing' }],
+        media: [{ kind: 'image', src: '/api/updates/sample-photo?id=sunset', alt: 'A man holding a Bible at sunset' }],
       },
       // TWO POSTS FOR THE WHOLE CHURCH, so Home's billboard has pictures on it
       // the first time anybody opens the sample church. The covers are drawn
@@ -692,7 +692,7 @@ export function makeSeed(): DB {
         visibility: 'published',
         audience: 'church',
         created_at: iso(60 * 4),
-        media: [{ kind: 'image', src: '/home-board/potluck.svg', alt: 'A long table laid for a meal, under a string of lights' }],
+        media: [{ kind: 'image', src: '/api/updates/sample-photo?id=study', alt: 'Friends studying the Bible together around a table' }],
       },
       {
         id: 'blog-park',
@@ -705,7 +705,7 @@ export function makeSeed(): DB {
         visibility: 'published',
         audience: 'church',
         created_at: iso(60 * 50),
-        media: [{ kind: 'image', src: '/home-board/park.svg', alt: 'Green hills and trees under a morning sun' }],
+        media: [{ kind: 'image', src: '/api/updates/sample-photo?id=church', alt: 'A small white church among trees' }],
       },
       {
         id: 'blog-draft',

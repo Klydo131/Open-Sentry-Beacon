@@ -91,7 +91,17 @@ for (const name of ['sunrise', 'community', 'mountains', 'book']) {
   const svg = read(`public/updates/sample-${name}.svg`);
   ok(!/<script|on\w+=|href=/i.test(svg), `the tutorial drawing ${name} is a plain drawing`);
 }
-ok(/\/updates\/sample-/.test(ui) && /SAMPLE: ByOrg/.test(ui), 'the tutorial shows original drawings');
+ok(/samplePhoto\('worship'\)/.test(ui) && /SAMPLE: ByOrg/.test(ui), 'the tutorial shows real photographs');
+const photos = read('lib/updates/sample-photos.ts');
+const sources = [...photos.matchAll(/src: `\$\{COMMONS\}\/([^`]+)`/g)];
+ok(sources.length >= 4 && /COMMONS = 'https:\/\/thumb\.wikimedia\.org\/wikipedia\/commons\/thumb'/.test(photos) && /\(Unsplash\)/.test(photos),
+   'every sample photograph is a CC0 one on Wikimedia Commons, written in the code');
+ok((photos.match(/fallback: '\/(updates|home-board)\/[a-z-]+\.svg'/g) ?? []).length === sources.length,
+   'and each has a drawing to fall back on');
+const sp = read('app/api/updates/sample-photo/route.ts');
+ok(/hasOwnProperty\.call\(SAMPLE_PHOTOS, id\)/.test(sp) && !/searchParams\.get\('(url|src)'\)/.test(sp) && /redirect: 'manual'/.test(sp)
+   && /\^image\\\/\(jpeg\|webp\)\$/.test(sp) && /return instead\(\);/.test(sp),
+   'the sample photo route takes a name from the list, follows no redirect, passes only photos, and otherwise sends the drawing');
 
 console.log(bad ? `\n${bad} check(s) failed` : '\nAll checks passed');
 process.exit(bad ? 1 : 0);

@@ -15,6 +15,9 @@ import { NextResponse } from 'next/server';
 import { organisation } from '@/lib/updates/organisations';
 import { AN_HOUR, readStories } from '@/lib/updates/read';
 
+/** Room for a slow organisation's feed (lib/updates/read.ts waits up to 20 s). */
+export const maxDuration = 30;
+
 export async function GET(request: Request) {
   const org = organisation(new URL(request.url).searchParams.get('org') ?? '');
   if (!org) return NextResponse.json({ error: 'No such organisation.' }, { status: 404 });

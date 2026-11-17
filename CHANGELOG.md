@@ -10,6 +10,24 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (night): real photographs, and a slow feed that was dropped
+
+**Nothing to run.**
+
+- **A Union's stories never arrived.** Measured from Vercel's
+  network, its feed takes 8 to 9 seconds to start answering, and the app gave
+  up at 8. The wait is now 20 seconds (`lib/updates/read.ts`), with
+  `maxDuration = 30` on the two routes; the answer is cached for an hour, so
+  members almost never wait. *Lesson: measure a timeout against the slowest
+  real source from the network the code runs on, not from your desk.*
+- **The sample church shows real photographs.** Six CC0 photographs from
+  Wikimedia Commons (`lib/updates/sample-photos.ts`, photographer and source
+  page recorded for each) replace the drawings on the sample Home and the
+  sample blog. They are not committed: `app/api/updates/sample-photo` fetches
+  one by name from that fixed list and passes it on as this app's own image,
+  and sends the drawing instead whenever it cannot (offline, a private
+  network), so a picture is never broken.
+
 ## 17 November 2026 (evening): a deletion reaches everyone
 
 **Run once, on each database:** `supabase/migrations/20261117150000_a_deletion_reaches_everyone.sql`.

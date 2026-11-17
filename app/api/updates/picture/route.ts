@@ -33,7 +33,7 @@ async function take(url: string, accept: string, cap: number): Promise<{ type: s
       headers: { Accept: accept, 'User-Agent': CALLER },
       redirect: 'manual',
       next: { revalidate: A_DAY },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10_000),
     });
     if (!answer.ok || !answer.body) return null;
     const type = (answer.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
@@ -55,6 +55,9 @@ async function take(url: string, accept: string, cap: number): Promise<{ type: s
     return null;
   }
 }
+
+/** Room for a slow organisation's feed (lib/updates/read.ts waits up to 20 s). */
+export const maxDuration = 30;
 
 export async function GET(request: Request) {
   const asked = new URL(request.url).searchParams;

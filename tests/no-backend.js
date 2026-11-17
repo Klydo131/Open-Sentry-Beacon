@@ -209,6 +209,10 @@ const ALLOWED_ROUTES = [
   // Home. Asked for an organisation and a story number, never an address;
   // stores nothing and knows no member.
   'app/api/updates/picture/route.ts',
+  // The sample church's real CC0 photographs, by name from a fixed list
+  // (lib/updates/sample-photos.ts), so no photo files sit in the repository
+  // and img-src stays 'self'. Falls back to the drawings when offline.
+  'app/api/updates/sample-photo/route.ts',
 ];
 for (const r of routes) {
   ok(

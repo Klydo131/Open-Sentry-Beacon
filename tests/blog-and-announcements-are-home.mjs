@@ -129,12 +129,19 @@ for (const [file, src] of [['components/LiveBillboard.tsx', liveBoard], ['compon
   ok(masthead > 0 && first > masthead && first < action, `${file}: the board comes straight after the church's name, before anything else`);
 }
 
-// The sample posts' covers are drawn for this app, and an SVG is a document
-// that can carry script: each one is plain shapes, with nothing that runs and
-// nothing fetched from elsewhere.
+// The sample posts' covers are real CC0 photographs since 17 November 2026,
+// asked for by name (lib/updates/sample-photos.ts); each falls back to a
+// drawing when the photo cannot be fetched. An SVG is a document that can
+// carry script, so each drawing is checked to be plain shapes, with nothing
+// that runs and nothing fetched from elsewhere.
 const seed = fs.readFileSync(path.join(root, 'lib/demo/seed.ts'), 'utf8');
-const covers = [...seed.matchAll(/src: '(\/home-board\/[a-z-]+\.svg)'/g)].map((m) => m[1]);
-ok(covers.length >= 3, `the sample church has posts with pictures (${covers.length})`);
+const photos = fs.readFileSync(path.join(root, 'lib/updates/sample-photos.ts'), 'utf8');
+const ids = [...seed.matchAll(/src: '\/api\/updates\/sample-photo\?id=([a-z]+)'/g)].map((m) => m[1]);
+ok(ids.length >= 3, `the sample church has posts with pictures (${ids.length})`);
+const covers = ids.map((id) => {
+  const entry = photos.slice(photos.indexOf(`  ${id}: {`));
+  return /fallback: '(\/(?:home-board|updates)\/[a-z-]+\.svg)'/.exec(entry)?.[1] ?? `(no fallback for ${id})`;
+});
 for (const cover of covers) {
   const file = path.join(root, 'public', cover);
   const svg = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';

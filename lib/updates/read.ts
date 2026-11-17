@@ -28,7 +28,11 @@ export async function readStories(org: Organisation): Promise<Story[]> {
       const answer = await fetch(source.feed, {
         headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9', 'User-Agent': CALLER },
         next: { revalidate: AN_HOUR },
-        signal: AbortSignal.timeout(8000),
+        // 20 seconds, not 8: measured from Vercel's network on 17 November
+        // 2026, the Southern Luzon Union's feed takes 8 to 9 seconds to start
+        // answering, and at 8 Home showed nothing for it. The answer is cached
+        // for an hour (and served stale for a day), so the wait is rare.
+        signal: AbortSignal.timeout(20_000),
       });
       if (answer.ok) stories = parseFeed(await answer.text(), hostsFor(org));
     } catch {

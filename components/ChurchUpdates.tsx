@@ -13,6 +13,7 @@ import { ORGANISATIONS, WORLD_CHURCH, featured, organisation, type Organisation 
 import type { Story } from '@/lib/updates/feed';
 import { postedWhen } from '@/components/HomeBoard';
 import { scrollMotion } from '@/lib/motion';
+import { samplePhoto } from '@/lib/updates/sample-photos';
 import { DiscoverRow } from '@/components/DiscoverRow';
 import type { PocketAdd } from '@/lib/pocket';
 
@@ -23,17 +24,18 @@ const SHOWN = 6;
 type ByOrg = Record<string, Story[]>;
 
 /**
- * Invented for the tutorial, with original drawings (public/updates) in place
- * of a church's photos. Each opens the organisation's real news page.
+ * Invented for the tutorial, with real CC0 photographs
+ * (lib/updates/sample-photos.ts) in place of a church's own. Each opens the
+ * organisation's real news page.
  */
 const SAMPLE: ByOrg = {
   gc: [
-    { title: 'Preparing for mission together', summary: 'A sample headline. In your church’s app, the General Conference’s latest stories and their photos appear here.', link: 'https://adventist.news/', date: null, image: '/updates/sample-sunrise.svg' },
-    { title: 'Bible study groups grow in every region', summary: 'A sample headline. Each story shows the picture from the organisation’s own site.', link: 'https://adventist.news/', date: null, image: '/updates/sample-book.svg' },
+    { title: 'Preparing for mission together', summary: 'A sample headline. In your church’s app, the General Conference’s latest stories and their photos appear here.', link: 'https://adventist.news/', date: null, image: samplePhoto('worship') },
+    { title: 'Bible study groups grow in every region', summary: 'A sample headline. Each story shows the picture from the organisation’s own site.', link: 'https://adventist.news/', date: null, image: samplePhoto('bible') },
   ],
   ssd: [
-    { title: 'New learning resources for church leaders', summary: 'A sample headline. In your church’s app, the Division’s latest stories appear here.', link: 'https://news.adventist.asia/all', date: null, image: '/updates/sample-community.svg' },
-    { title: 'Youth camp meets in the highlands', summary: 'A sample headline. Tap a story to read it on the organisation’s own site.', link: 'https://news.adventist.asia/all', date: null, image: '/updates/sample-mountains.svg' },
+    { title: 'New learning resources for church leaders', summary: 'A sample headline. In your church’s app, the Division’s latest stories appear here.', link: 'https://news.adventist.asia/all', date: null, image: samplePhoto('study') },
+    { title: 'Youth camp meets in the highlands', summary: 'A sample headline. Tap a story to read it on the organisation’s own site.', link: 'https://news.adventist.asia/all', date: null, image: samplePhoto('church') },
   ],
 };
 
@@ -46,6 +48,7 @@ export function ownPicture(src: string | undefined): string | null {
   if (!src) return null;
   if (/^\/api\/updates\/picture\?org=[a-z]{2,12}&n=\d{1,2}$/.test(src)) return src;
   if (/^\/updates\/sample-[a-z]+\.svg$/.test(src)) return src;
+  if (/^\/api\/updates\/sample-photo\?id=[a-z]{2,12}$/.test(src)) return src;
   return null;
 }
 
