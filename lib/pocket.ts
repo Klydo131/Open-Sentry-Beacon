@@ -22,7 +22,7 @@
 // has the feature immediately -- Explorers included, which is the point of
 // "ALL users" -- with no table, no policy and no migration to get wrong.
 
-import { safeExternalUrl } from '@/lib/url';
+import { safeExternalUrl } from './url.ts';
 
 export type Pocket = { id: string; url: string; label: string };
 
@@ -241,4 +241,35 @@ export function writePocket(items: Pocket[]): void {
   } catch {
     // Nothing to do and nothing worth saying. The tiles stay for this visit.
   }
+}
+
+/** Said when a tile is added from elsewhere on the page (Discover), so an open Pocket reloads. */
+export const POCKET_CHANGED = 'beacon-pocket-changed';
+
+/** What adding a tile came to, in words the caller can show as they are. */
+export type PocketAdd = 'added' | 'have' | 'full' | { refused: string };
+
+/**
+ * Add one address to the walkthrough's Pocket (browser storage), through the
+ * same gate as the Pocket's own form. The live app adds through the database
+ * and calls `checkPocketAdd` first so both halves refuse the same things.
+ */
+export function checkPocketAdd(url: string, have: { url: string }[]): PocketAdd | null {
+  const tidy = tidyUrl(url);
+  if (!tidy) return { refused: 'That does not look like a web address.' };
+  const refused = pocketRefusal(tidy);
+  if (refused) return { refused };
+  if (have.some((i) => i.url === tidy)) return 'have';
+  if (have.length >= POCKET_LIMIT) return 'full';
+  return null;
+}
+
+export function addToLocalPocket(url: string, label?: string): PocketAdd {
+  const items = readPocket();
+  const stop = checkPocketAdd(url, items);
+  if (stop) return stop;
+  const tidy = tidyUrl(url) as string;
+  writePocket([...items, { id: `${Date.now()}`, url: tidy, label: label?.trim() || labelFor(tidy) }]);
+  try { window.dispatchEvent(new Event(POCKET_CHANGED)); } catch { /* no window */ }
+  return 'added';
 }

@@ -9,7 +9,7 @@ import { useKeepUp, KEEP_UP_POCKET } from '@/lib/live/keep-up';
 import * as live from '@/lib/live/data';
 import {
   type Pocket as Item, POCKET_LIMIT, labelFor, markFor, pocketRefusal, readPocket,
-  pocketWithStarters,
+  pocketWithStarters, POCKET_CHANGED,
   tidyUrl, writePocket,
 } from '@/lib/pocket';
 import { humanError } from '@/lib/live/errors';
@@ -71,6 +71,12 @@ export function Pocket({ theme, className = '' }: { theme: Theme; className?: st
   // A tile saved on a phone lands on the laptop without a reload, which is the
   // whole reason these are rows rather than browser storage.
   useKeepUp(KEEP_UP_POCKET, load);
+  // A card kept from Discover on Home, so the tile shows without a reload.
+  useEffect(() => {
+    const again = () => { void load(); };
+    window.addEventListener(POCKET_CHANGED, again);
+    return () => window.removeEventListener(POCKET_CHANGED, again);
+  }, [load]);
 
   const save = useCallback((e: React.FormEvent) => {
     e.preventDefault();

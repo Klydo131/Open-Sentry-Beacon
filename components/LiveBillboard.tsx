@@ -30,6 +30,18 @@ import { isPlanPost, planNotices } from '@/lib/home-plans';
 import { HomeBoard, postedWhen, type BoardItem } from '@/components/HomeBoard';
 import { HomeWelcome } from '@/components/HomeWelcome';
 import { ChurchUpdates } from '@/components/ChurchUpdates';
+import { POCKET_CHANGED, checkPocketAdd, tidyUrl, type PocketAdd } from '@/lib/pocket';
+
+// A Discover card kept from Home goes in as a row, through the same checks as
+// the Pocket's own form, and tells an open Pocket to reload.
+async function addDiscoveredToPocket(url: string, label: string): Promise<PocketAdd> {
+  const have = await live.myPocket();
+  const stop = checkPocketAdd(url, have);
+  if (stop) return stop;
+  await live.addPocketApp(tidyUrl(url) as string, label);
+  try { window.dispatchEvent(new Event(POCKET_CHANGED)); } catch { /* no window */ }
+  return 'added';
+}
 
 function message(cause: unknown): string {
   return humanError(cause, 'That did not work.');
@@ -191,7 +203,7 @@ export function LiveBillboard({ churchName, between }: {
       )}
 
       {/* What is new at the wider church, under what is new here. */}
-      <ChurchUpdates />
+      <ChurchUpdates addToPocket={addDiscoveredToPocket} />
 
       {/* For a Director to action. Drawn only when there is something to do:
           a permanent "nothing waiting" panel is furniture. */}

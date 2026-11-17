@@ -18,6 +18,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    id: '2026-11-17-discover-cards',
+    date: '2026-11-17',
+    title: 'Discover on Home',
+    items: [
+      'Above Church & Mission Updates, Discover shows cards for the newest stories and for any study sites your church recommends.',
+      'Tap Add to Pocket to keep one in your Pocket, or tap × to skip it. A skipped card stays away on this device.',
+    ],
+  },
+  {
     id: '2026-11-16-appointment-record',
     date: '2026-11-16',
     title: 'An appointment record for both of you',

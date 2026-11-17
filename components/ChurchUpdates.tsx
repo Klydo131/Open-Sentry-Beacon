@@ -12,6 +12,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { ORGANISATIONS, WORLD_CHURCH, featured, organisation, type Organisation } from '@/lib/updates/organisations';
 import type { Story } from '@/lib/updates/feed';
 import { postedWhen } from '@/components/HomeBoard';
+import { DiscoverRow } from '@/components/DiscoverRow';
+import type { PocketAdd } from '@/lib/pocket';
 
 const FOLLOWING_KEY = 'hb-updates-following';
 const KEPT_KEY = 'hb-updates-kept';
@@ -51,7 +53,11 @@ function Tile({ org }: { org: Organisation }) {
   );
 }
 
-export function ChurchUpdates({ sample = false }: { sample?: boolean }) {
+export function ChurchUpdates({ sample = false, addToPocket }: {
+  sample?: boolean;
+  /** Where a Discover card goes when kept. Left out, the browser's Pocket (the sample). */
+  addToPocket?: (url: string, label: string) => Promise<PocketAdd>;
+}) {
   const [following, setFollowing] = useState<string[]>(() => featured(process.env.NEXT_PUBLIC_UPDATES_FEATURED));
   const [show, setShow] = useState('all');
   const [choosing, setChoosing] = useState(false);
@@ -158,6 +164,16 @@ export function ChurchUpdates({ sample = false }: { sample?: boolean }) {
             </a>. More are added here as each one&rsquo;s own news address is confirmed.
           </p>
         </div>
+      )}
+
+      {stories && (
+        <DiscoverRow
+          addToPocket={addToPocket}
+          stories={orgs.flatMap((org) => (stories[org.id] ?? []).map((st) => ({
+            title: st.title, link: st.link, summary: st.summary ?? undefined, date: st.date,
+            source: `${org.short}${st.date ? ` · ${postedWhen(st.date)}` : ''}`,
+          }))).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))}
+        />
       )}
 
       {stories === null && <p className="text-sm text-gray-600" role="status">Looking for what is new&hellip;</p>}

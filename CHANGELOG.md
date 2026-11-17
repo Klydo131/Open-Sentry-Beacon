@@ -10,6 +10,29 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (late): Discover cards on Home
+
+**Optional setting:** `NEXT_PUBLIC_DISCOVER_LINKS`, the study sites your church
+recommends, as `Title | https://address | About` separated by semicolons or new
+lines (see `.env.example`). It is read at build time, so redeploy after setting
+it. No migration.
+
+- Home shows a row of Discover cards above Church & Mission Updates: up to three
+  of the newest official stories, after any study sites the deployment names.
+  Each card has Open, Add to Pocket, and × to skip.
+- **Why the project ships no list.** Which study sites to recommend is each
+  church's decision, so the code holds none and a fresh copy shows stories
+  only. A setting cannot get round the Pocket's rules either: every address
+  goes through `tidyUrl` and `pocketRefusal`, and only https is shown.
+- **One gate for adding a tile.** `checkPocketAdd` in `lib/pocket.ts` is the
+  check the Pocket's form makes (safe address, not a social feed, not already
+  there, not full). The live Home adds through `addPocketApp` and the sample
+  through browser storage, and both dispatch `beacon-pocket-changed` so an open
+  Pocket reloads.
+- A skip is stored on the device only (`hb-discover-skipped`), by address.
+- `lib/pocket.ts` now imports `./url.ts` by relative path so tests can load it
+  in Node. `tests/discover-cards-skip-and-keep.mjs` holds the rules.
+
 ## 17 November 2026 (night): an update teaches
 
 **Do once per clone:** `git config core.hooksPath .githooks` (the same line that
