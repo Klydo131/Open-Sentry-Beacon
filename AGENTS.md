@@ -105,6 +105,22 @@ holds under load, tested, fast, lean). Comments keep only a reason the code
 cannot show; the story goes in the commit message (CONTRIBUTING.md, House
 style).
 
+## 0.1.1 An update teaches
+
+This is an open source project, so every commit message, changelog entry and
+release note is read by developers who were not here. Each one says three
+things, in plain sentences:
+
+1. **What changed**, in the subject line.
+2. **Why**: the problem, its cause, or the reason for the choice. A message that
+   only says what the diff already shows teaches nothing.
+3. **How it was checked**, and what somebody running their own copy has to do
+   (a migration, a setting). Never which host, project, domain or account.
+
+`.githooks/commit-msg` (`scripts/commit-message-teaches.mjs`) refuses a message
+with no body or no reason. Merge, revert and dependency-bump commits are exempt.
+Dependabot, `git revert` and the like are not held to it.
+
 ## 0.2 The founder sees it before it ships
 
 A standing rule: suggest improvements as a plan, test and polish them, and tell

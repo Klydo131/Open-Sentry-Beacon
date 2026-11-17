@@ -10,6 +10,17 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 17 November 2026 (night): an update teaches
+
+**Do once per clone:** `git config core.hooksPath .githooks` (the same line that
+turns on the push guard).
+
+- A commit message must now say what changed, why it was needed, and how it was
+  checked, in sentences a developer who was not here can learn from.
+  `.githooks/commit-msg` refuses a message with no body or no reason; merge,
+  revert and dependency-bump commits are exempt. AGENTS.md section 0.1.1 gives
+  the reasons, and `tests/a-commit-message-teaches.mjs` holds the rule.
+
 ## 17 November 2026 (evening): the CI failures and the heartbeat log
 
 **Nothing to run.** One secret to check: `SUPABASE_URL` must be the live

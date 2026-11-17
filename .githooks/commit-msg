@@ -1,0 +1,7 @@
+#!/bin/sh
+# An update teaches (AGENTS.md section 0.1): a commit message says what changed,
+# why it was wrong or missing, and how it was checked, in words a developer
+# who was not there can learn from. It never names anybody's private hosting,
+# database, domain or address (tests/nothing-of-the-owners.mjs checks that).
+# Turn it on once per clone:  git config core.hooksPath .githooks
+exec node scripts/commit-message-teaches.mjs "$1"

@@ -138,6 +138,7 @@ run('build', 'npm', ['run', 'build']);
 const staticChecks = [
   ['no secrets', 'tests/no-secrets.js'],
   ['nothing of the owner\'s', 'tests/nothing-of-the-owners.mjs'],
+  ['a commit message teaches', 'tests/a-commit-message-teaches.mjs'],
   ['the supply chain holds', 'tests/the-supply-chain-holds.mjs'],
   ['no backend, no pipelines', 'tests/no-backend.js'],
   ['test portability', 'tests/test-portability.mjs'],
