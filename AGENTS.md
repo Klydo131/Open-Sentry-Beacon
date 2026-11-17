@@ -121,6 +121,35 @@ things, in plain sentences:
 with no body or no reason. Merge, revert and dependency-bump commits are exempt.
 Dependabot, `git revert` and the like are not held to it.
 
+## 0.1.2 The Superpowers method: three iron laws
+
+The project adopts the method of Superpowers (`obra/superpowers`, MIT, listed
+in docs/DEVELOPER-TOOLKIT.md). The plugin is optional; the method is not.
+Each law below came with a mistake this project already made.
+
+1. **No fix without the root cause first** (its *systematic-debugging*).
+   Reproduce, find why, and only then change code. On 17 November 2026,
+   "deleted things stay on the Explorer's screen" turned out to be three
+   separate causes: a delete the rules refused reported success, no rule let
+   a study be taken back, and a Guide's copy could not reach their Explorer.
+   Patching the first symptom would have left two of them in place.
+2. **No production code without a failing test first** (its
+   *test-driven-development*). Write the test, watch it fail for the reason
+   you expect, then write the least code that passes. For the database that
+   means a `supabase/tests/*.sql` proof run against a fresh install
+   (`scripts/fresh-install.sh`) before the migration exists. This extends the
+   older house rule, "break each new check on purpose and watch it go red".
+3. **No "done" without fresh evidence** (its
+   *verification-before-completion*). `npm run verify` passing, the walk
+   seen, the live answer read. What was not seen is said to be unseen. On
+   the same day a timeout tuned on a desk dropped a slow feed in production;
+   one request from the network the code runs on would have shown it.
+
+The rest of its workflow maps onto what this file already asks: brainstorm
+before a large change (ask the founder, section 0.2), plan in small steps
+with exact files, review between steps (section 7), and finish with the
+gate, the commit message that teaches (0.1.1), and the report.
+
 ## 0.2 The founder sees it before it ships
 
 A standing rule: suggest improvements as a plan, test and polish them, and tell
