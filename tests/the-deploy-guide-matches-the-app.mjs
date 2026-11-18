@@ -40,7 +40,15 @@ const pkg = JSON.parse(read('package.json'));
   }
   const plain = ['package.json', 'next.config.mjs'];
   // Named because they are NOT needed: the guide says so, and they must stay absent.
-  const absent = ['supabase/config.toml', 'vercel.json', 'netlify.toml'];
+  const absent = ['supabase/config.toml', 'netlify.toml'];
+  // vercel.json exists for one reason only (17 November 2026): the daily
+  // wake-up for a Free-plan database. Anything else in it would be host
+  // configuration the guide promises is not needed.
+  const vercel = JSON.parse(read('vercel.json'));
+  ok(Object.keys(vercel).filter((k) => k !== '$schema').join() === 'crons'
+     && vercel.crons.length === 1 && vercel.crons[0].path === '/api/keep-awake'
+     && exists('app/api/keep-awake/route.ts') && /vercel\.json/.test(guide),
+     'vercel.json holds only the daily wake-up, and the guide says so');
   ok(absent.every((p) => !exists(p)), `${absent.join(', ')} are still absent, as the guide says`);
   const missing = [...named].filter((p) => {
     if (absent.includes(p)) return false;

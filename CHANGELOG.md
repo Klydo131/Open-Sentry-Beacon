@@ -10,6 +10,29 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 18 November 2026: a free database stays awake by itself
+
+**Nothing to run.** On Vercel it works on the next deployment. Optional: set
+`CRON_SECRET` in the Vercel project so only Vercel's scheduler may call it.
+
+- **Why.** Supabase pauses a Free-plan project after about a week without
+  activity, and a paused project takes the whole app down. A church that meets
+  once a week can easily have a quiet week. The GitHub `keep-awake` job needs
+  secrets set by hand, and a copy without them never ran.
+- **What.** `app/api/keep-awake/route.ts` makes one read of one row with the
+  publishable key, against the database this deployment was built for, and
+  answers only whether the database answered. `vercel.json` (its only content)
+  asks Vercel to call it once a day, which Vercel's free Hobby plan allows.
+  Other hosts ignore the file; they can call the same address from their own
+  scheduler, or keep the GitHub job.
+- **Checked.** `tests/a-free-database-stays-awake.mjs` runs the route: no
+  database configured, a non-https address, `CRON_SECRET` refusals, an
+  unreachable database reported rather than hidden, and nothing about the
+  address or key in the answer. Pointed once at a real Free-sized project, it
+  answered awake.
+- `tests/the-deploy-guide-matches-the-app.mjs` now allows a `vercel.json` that
+  holds this one schedule and nothing else.
+
 ## 17 November 2026 (after midnight): leaders choose the apps
 
 **Run once, on each database:** `supabase/migrations/20261117170000_leaders_choose_the_apps.sql`.

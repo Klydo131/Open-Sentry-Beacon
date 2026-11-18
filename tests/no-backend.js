@@ -213,6 +213,10 @@ const ALLOWED_ROUTES = [
   // (lib/updates/sample-photos.ts), so no photo files sit in the repository
   // and img-src stays 'self'. Falls back to the drawings when offline.
   'app/api/updates/sample-photo/route.ts',
+  // The daily wake-up for a Free-plan database (vercel.json calls it once a
+  // day). One read with the publishable key, against this deployment's own
+  // database only; takes no input and returns only whether it answered.
+  'app/api/keep-awake/route.ts',
 ];
 for (const r of routes) {
   ok(

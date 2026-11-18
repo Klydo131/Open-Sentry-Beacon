@@ -44,7 +44,12 @@ Read this once; every section below assumes it.
   needs them as build arguments (see 4b).
 - **The security headers travel with the app.** They are in `next.config.mjs`,
   so any host that runs Next.js serves them. There is nothing to configure per
-  host, and nothing to copy into a `vercel.json` or `netlify.toml`.
+  host, and nothing to copy into a `netlify.toml`.
+- **A free database is woken every day by itself.** `vercel.json` holds one
+  thing only: a daily call to `app/api/keep-awake/route.ts`, so a project on
+  Supabase's Free plan is never paused for a quiet week. Vercel's free Hobby
+  plan runs it; other hosts ignore the file, and can call `/api/keep-awake`
+  from their own scheduler or keep the GitHub job below.
 - **Updates reach open screens on any host.** `/version.json` reports the
   build, and an open app offers a one-tap restart within about thirty seconds
   of a new deployment ([UPDATES.md](UPDATES.md)).
@@ -120,8 +125,8 @@ GitHub account, a free Vercel account and a free Supabase project, and wants
 6. **First Director:** sign up in the app, then run
    `supabase/seed/01_make_me_the_first_director.sql` with that address.
 7. **Optional GitHub secrets** for the scheduled jobs in `.github/workflows/`:
-   `SUPABASE_URL` and `SUPABASE_ANON_KEY` for `keep-awake` (a free project is
-   paused after a week of no visits), `SUPABASE_DB_URL` and
+   `SUPABASE_URL` and `SUPABASE_ANON_KEY` for `keep-awake` (only needed off
+   Vercel: on Vercel the app wakes its own database every day), `SUPABASE_DB_URL` and
    `BACKUP_PASSPHRASE` for `backup`. The URL must be the full
    `https://<ref>.supabase.co`; a value that does not resolve fails every night.
 

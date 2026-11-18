@@ -1511,11 +1511,14 @@ project for the database, sign-in and files, and a Vercel project that serves
 the app. Its data, its bill and its decisions stay its own.
 
 **It can cost nothing.** Supabase's free plan and Vercel's Hobby plan run a
-small church, as long as two of this repository's jobs are switched on to
-answer the free plan's two gaps:
+small church. The free plan has two gaps, and both are answered:
 
-- `keep-awake.yml` stops the project pausing after seven idle days;
-- `backup.yml` makes the weekly encrypted backup the free plan does not.
+- **Pausing.** A free project is paused after about seven quiet days. On
+  Vercel the app wakes its own database every day with nothing to set up
+  (`vercel.json` calls `/api/keep-awake`). On another host, switch on
+  `keep-awake.yml` or call that address from the host's own scheduler.
+- **Backups.** The free plan keeps none. Switch on `backup.yml` for a weekly
+  encrypted copy, and keep the passphrase somewhere safe offline.
 
 Vercel's Hobby plan is for non-commercial use only.
 
