@@ -32,6 +32,7 @@ import { ReadingSettings } from '@/components/ReadingSettings';
 import { LiveAdminReports } from '@/components/LiveAdminReports';
 import { TwoStepCard } from '@/components/live/TwoStep';
 import { LiveGivingRoom, useGivingAccess } from '@/components/live/HubGiving';
+import { ChurchSpaceCard } from '@/components/live/ChurchSpace';
 
 const message = (cause: unknown) =>
   humanError(cause, 'Something went wrong. Please try again.');
@@ -314,6 +315,7 @@ export function LiveSettingsPage() {
 
       {room === 'church' && leads && <ChurchNameCard />}
       {room === 'church' && leads && <ChurchLegalCard />}
+      {room === 'church' && leads && <ChurchSpaceCard />}
 
       {room === 'giving' && giving && givingRoom && <LiveGivingRoom card={giving} />}
 

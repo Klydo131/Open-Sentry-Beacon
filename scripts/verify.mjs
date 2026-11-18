@@ -180,6 +180,7 @@ const staticChecks = [
   ['updates show pictures', 'tests/updates-show-pictures.mjs'],
   ['a deletion reaches everyone', 'tests/a-deletion-reaches-everyone.mjs'],
   ['a free database stays awake', 'tests/a-free-database-stays-awake.mjs'],
+  ['the plan sets the allowance', 'tests/the-plan-sets-the-allowance.mjs'],
   ['a reset link finds its page', 'tests/a-reset-link-finds-its-page.mjs'],
   ['a share can say why', 'tests/a-share-can-say-why.mjs'],
   ['a share can be taken back', 'tests/a-share-can-be-taken-back.mjs'],

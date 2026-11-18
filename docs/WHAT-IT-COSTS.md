@@ -61,6 +61,37 @@ to about **₱1,710 a month** ($25 plus 12%).
    commercial. That is Vercel's rule about what the site is for, and it
    applies however small the church is.
 
+### Free or paid: one switch sets the allowances
+
+The app ships ready for the **free plan**. That is the default, and it needs
+nothing set. A church that pays Supabase for a bigger plan says so once, and
+each person's room grows to match.
+
+| | **Free plan** (default) | **Paid plan** |
+|---|---|---|
+| Resources and study handouts, per person | 300 files, 200 MB | 3,000 files, 2 GB |
+| Photos and clips on posts, per person | 40 files, 200 MB | 400 files, 2 GB |
+| Largest single file | 10 MB (a clip: 50 MB) | the same: it keeps every view cheap |
+| Kept from pausing | Vercel wakes the database daily (`vercel.json`); off Vercel, the `keep-awake` workflow | not needed |
+| Backups | the `backup` workflow (section 3) | Supabase's own daily backups |
+
+**To say the church pays,** run this once in the Supabase SQL editor:
+
+```sql
+insert into public.app_settings (key, value) values ('HOSTING_PLAN', 'paid')
+on conflict (key) do update set value = excluded.value, updated_at = now();
+```
+
+Delete that row to go back to the free allowances. Nothing stored is
+removed either way. Do this only once the bigger plan is actually paid for:
+the allowances assume the room is there.
+
+**Leaders can see how full the church is.** In **Settings → Church**, the
+**Space and plan** card shows the database and the files against the plan's
+limits. It turns amber at 70% and red at 90%, and says what to do. It shows
+totals only, never a file or whose it is, and only Admins and Executive
+Directors see it.
+
 ### The meter to watch is traffic
 
 Text costs almost nothing; files are what move the bill. A private file is

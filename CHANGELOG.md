@@ -10,6 +10,20 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 18 November 2026: the plan a church pays for sets its allowances
+
+- **Free is the default and needs nothing set.** Every allowance already fits
+  Supabase's free plan, and the app wakes the database daily on Vercel.
+- **A paying church flips one switch,** `HOSTING_PLAN = 'paid'` in
+  `app_settings`, and each person's room grows tenfold (2 GB of resources and
+  2 GB of post photos). The size of a single file does not change.
+- **Leaders see how full the church is,** in Settings → Church → Space and
+  plan: the database and the files against the plan's limits, as totals only.
+- Database update: `20261118120000_the_plan_sets_the_allowance.sql`. Until it
+  runs, the card is not shown and the free allowances stay as they were.
+- Proved by `supabase/tests/the-plan-sets-the-allowance.sql` (22 checks) and
+  `tests/the-plan-sets-the-allowance.mjs`.
+
 ## 18 November 2026: a free database stays awake by itself
 
 **Nothing to run.** On Vercel it works on the next deployment. Optional: set

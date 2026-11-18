@@ -279,6 +279,12 @@ psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
 psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
   -f "$here/supabase/tests/an-appointment-keeps-its-record.sql"
 
+# THE PLAN SETS THE ALLOWANCE: the free plan by default; one row says the
+# church pays and each person's room grows; only leaders see how full the
+# church is, as totals. Rolled back.
+psql -U "$su" -d postgres -v ON_ERROR_STOP=1 -q \
+  -f "$here/supabase/tests/the-plan-sets-the-allowance.sql"
+
 echo
 echo "Fingerprint (compare with the same file run against a live project):"
 psql -U postgres -d postgres -tA -F ' ' -f "$here/supabase/tests/fingerprint.sql"
