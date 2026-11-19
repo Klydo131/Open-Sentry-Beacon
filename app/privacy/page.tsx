@@ -24,6 +24,16 @@
 // docs/DATA-PROTECTION.md has the full map and the list of what is still
 // missing.
 //
+// CHECKED ON 19 NOVEMBER 2026 against what the law says a notice must give
+// before anything is collected: RA 10173 section 16(b) and GDPR Article 13.
+// That check found five things missing, now below: why each thing is kept
+// and what allows it; what a person must give and what is optional; that no
+// decision is made by a computer alone; what protects information sent
+// abroad; and, from section 16(f), the right to be paid for harm. Young
+// members have their own notice at /privacy/young, because the NPC's
+// Guidelines on Child-Oriented Transparency (No. 2024-03) say one notice for
+// adults and children is not enough.
+//
 // It is not legal advice. It is a starting draft for a lawyer to correct.
 
 import Link from 'next/link';
@@ -67,6 +77,15 @@ export default function PrivacyPage() {
           </Card>
         )}
 
+        <Card className="p-5" data-young-notice-link>
+          <h2 className="text-xl font-bold text-navy">Under 18?</h2>
+          <p className="mt-2 text-gray-700">
+            There is a shorter version of this page written for you.{' '}
+            <Link href="/privacy/young" className="font-semibold text-navy underline">Read it here</Link>.
+            Your parent or guardian can read this one.
+          </p>
+        </Card>
+
         {/* WHAT THIS APP IS, AND WHO LOOKS AFTER IT: the same words as the
             invitation e-mail and the sign-up (lib/oversight.ts). */}
         <Card className="p-5" data-oversight>
@@ -90,7 +109,7 @@ export default function PrivacyPage() {
           <p className="mt-2 text-gray-700">
             If you are not satisfied with the answer, you can complain to the National
             Privacy Commission at <span className="font-semibold">privacy.gov.ph</span>,
-            or, if you are in Europe, to your own data protection authority.
+            or to the data protection authority in the country where you live.
           </p>
         </Card>
 
@@ -107,11 +126,52 @@ export default function PrivacyPage() {
             <li><strong>What the church records.</strong> When you were approved, and any
               safeguarding report or decision about you.</li>
           </ul>
+          <p className="mt-3 text-gray-700" data-what-is-required>
+            <strong>What you have to give:</strong> your name, and the email address your
+            invitation was sent to. Without them there is no account. Everything else is
+            your choice, your birthday included. Without a birthday the app cannot tell
+            that somebody is under 18, so a church may ask for it before a Guide walks
+            with a young person.
+          </p>
           <p className="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-slate-700 ring-1 ring-sky-100">
             <strong>Some of this is what the law calls sensitive.</strong> Your age and
             your participation in a church both are, under the Philippine Data Privacy
             Act. That is why you are asked to agree clearly rather than by carrying on,
             and why the rules below are stricter than they would be for a mailing list.
+          </p>
+        </Card>
+
+        <Card className="p-5" data-lawful-basis>
+          <h2 className="text-xl font-bold text-navy">Why it is kept, and what allows it</h2>
+          <p className="mt-2 text-gray-700">
+            The law lets your church keep your information only for a reason it
+            recognises. There are three here.
+          </p>
+          <ul className="mt-3 space-y-2 text-gray-700">
+            <li><strong>To run your account and walk with you.</strong> Your details, your
+              conversation and what you post are kept so the app can do what it is for. This
+              rests on your agreement, given when you join. It covers the sensitive parts
+              too, and you can take it back.</li>
+            <li><strong>To protect people.</strong> A safeguarding report, the conversation
+              about it, and the record of what the church decided about an account are kept
+              so the church can protect people and show what it did. This does not need your
+              agreement: the law allows it to protect someone&rsquo;s life or safety, and to
+              make or answer a legal claim (Data Privacy Act, section 13(c) and (f); in
+              Europe, GDPR Articles 9(2)(f) and 17(3)(e)).</li>
+            <li><strong>To keep accounts safe.</strong> A record of changes to an account,
+              and the short technical logs described further down, are kept to find and stop
+              misuse. You agree to this when you join, and the law also allows it to protect
+              your rights and other people&rsquo;s (section 13(f)).</li>
+          </ul>
+          <p className="mt-3 text-gray-700">
+            Nothing is sold. Nothing is used for advertising, and nobody builds a profile of
+            you to sell you anything.
+          </p>
+          <p className="mt-3 text-gray-700" data-no-automated-decisions>
+            <strong>No decision about you is made by a computer on its own.</strong> People
+            decide whether you are approved, who walks with you, and what happens after a
+            report. When the app does something for you, such as pairing you with the Guide
+            named in your invitation, it is carrying out what a person already decided.
           </p>
         </Card>
 
@@ -153,8 +213,27 @@ export default function PrivacyPage() {
             The database and files are hosted by Supabase in <strong>Seoul, South
             Korea</strong>, so information about you leaves the Philippines. That is
             allowed, and you are being told because you should know.
-            The pages are served by Vercel. Email is sent through Brevo. A weekly
-            encrypted backup is being set up and is not running yet.
+            The pages are served by Vercel, a company in the United States. Email is sent
+            through Brevo, a company in France. A weekly encrypted backup is being set up and is not running yet.
+          </p>
+          <p className="mt-2 text-gray-700" data-transfers>
+            <strong>Wherever it is kept, your church stays responsible for it</strong>, as the
+            Data Privacy Act requires (section 21). Each of these companies may use it only to
+            provide its service, under data processing terms the church accepts or signs with it. South
+            Korea is one of the countries the European Union recognises as protecting
+            personal information to its own standard. The Data Protection Officer can tell
+            you which terms apply and give you a copy.
+          </p>
+          <p className="mt-2 text-gray-700" data-technical-logs>
+            <strong>Technical logs.</strong> Like any website, the services that run the
+            app keep short-lived logs of requests: the time, the page, and your
+            device&rsquo;s internet address. They are used to keep the service running and
+            to look into misuse, and they are deleted on each company&rsquo;s own schedule.
+          </p>
+          <p className="mt-2 text-gray-700" data-cookies>
+            <strong>Cookies and storage on your device.</strong> The app keeps only what it
+            needs to keep you signed in and to open without a signal. There are no
+            advertising cookies, no analytics, and nothing that follows you to other websites.
           </p>
           <p className="mt-2 text-gray-700">
             <strong>What you last saw while signed in is also kept on your phone or
@@ -237,7 +316,15 @@ export default function PrivacyPage() {
               safeguarding exception above.</li>
             <li><strong>Object, or withdraw your agreement</strong>, at any time. You do
               not have to give a reason, and nothing bad happens to you for asking.</li>
-            <li><strong>Take it with you.</strong> A copy in a form you can use elsewhere.</li>
+            <li><strong>Pause it.</strong> Ask for your information to be blocked, so it is
+              kept but not used, while a question about it is settled.</li>
+            <li><strong>Take it with you.</strong> A copy in a form you can use elsewhere.
+              You can also download it yourself from your Profile.</li>
+            <li><strong>Be paid for harm.</strong> If you are harmed because information about
+              you was wrong, out of date, or obtained or used unlawfully, the law lets you
+              claim damages (section 16(f)).</li>
+            <li><strong>Complain.</strong> To the National Privacy Commission, or to the data
+              protection authority where you live.</li>
           </ul>
           <p className="mt-3 text-sm text-gray-600">
             Ask, and you will get an answer within <strong>30 days</strong>. If the

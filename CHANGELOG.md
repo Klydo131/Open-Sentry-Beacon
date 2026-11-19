@@ -10,6 +10,24 @@ the part that goes wrong when nobody reads past the headline.
 
 ---
 
+## 19 November 2026: privacy notice for young people, and November's security releases
+
+- **Everybody is asked to agree again,** once, because the Privacy Notice and
+  the Terms of Use changed (version `2026-11-19`). The app shows what changed.
+- **The Privacy Notice gives what the law says it must**, checked against
+  RA 10173 section 16(b) and GDPR Article 13. It now says why each thing is
+  kept and what allows it, what a person must give, that no decision is made
+  by a computer alone, and what protects information kept abroad. It adds
+  blocking and the right to claim damages.
+- **Members under 18 have their own notice,** at `/privacy/young`, as the
+  NPC's Guidelines on Child-Oriented Transparency (No. 2024-03) ask.
+- **The Terms of Use** keep a member abroad within their own country's
+  protections.
+- **The Postgres edition:** Node 22.23.5 and Caddy 2.11.9. Rebuild its images.
+- **The examples:** Jackson 2.22.4, Starlette 1.10.0 with FastAPI 0.162.5,
+  tokio-postgres 0.7.18, and PHP 8.2 or later on its newest release.
+- No database update.
+
 ## 18 November 2026: the plan a church pays for sets its allowances
 
 - **Free is the default and needs nothing set.** Every allowance already fits

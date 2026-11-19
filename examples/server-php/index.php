@@ -1,5 +1,5 @@
 <?php
-// Your own Hope Beacon server in plain PHP 8.1+ (PDO pgsql and curl, both in
+// Your own Hope Beacon server in plain PHP 8.2+ (PDO pgsql and curl, both in
 // PHP), with every rule still in the database. In Laravel, the same steps are
 // a middleware: see examples/server-laravel/.
 //

@@ -499,6 +499,14 @@ const GUARDRAILS = new Set([
   // storage rules are revoked from every browser role by name and granted to
   // the roles that evaluate rules, the same shape as room_to_upload above.
   'supabase/migrations/20261007160000_a_post_can_carry_photos_and_a_clip.sql',
+  // The plan sets the allowance (18 November 2026) restates room_to_upload()
+  // and room_for_post_media() with each plan's numbers, so it carries their
+  // grants as written above. It also names the roles to take its new switch,
+  // private.on_a_paid_plan(), away from every signed-in caller and to keep
+  // church_space() from anybody signed out. Listed on 19 November 2026: the
+  // gate that passed it ran before the file was committed, and this check
+  // reads only committed files.
+  'supabase/migrations/20261118120000_the_plan_sets_the_allowance.sql',
   // Two-step sign-in (13 October 2026). The per-request check now also refuses
   // a password-only session once two-step is set up, and it must still let the
   // server's own role through: PostgREST runs it before every request, the

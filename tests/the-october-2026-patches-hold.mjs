@@ -62,13 +62,15 @@ const edition = JSON.parse(read('selfhost/server/package-lock.json')).packages;
 ok(atLeast(edition['node_modules/nodemailer']?.version, '10.1.4'),
   `the edition's nodemailer is 10.1.4 or later (${edition['node_modules/nodemailer']?.version}): addresses parse as written`);
 
-// Node 22.23.4, 21 October 2026, the official multi-platform image.
-const NODE_22_23_4 = 'node:22-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d';
+// The official multi-platform image. 22.23.4 (21 October) carried October's
+// fixes; on 19 November it moved to 22.23.5, which carries those and
+// November's (tests/the-november-2026-patches-hold.mjs).
+const NODE_22_23_4 = 'node:22.23.5-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee';
 const dockerfiles = ['selfhost/app.Dockerfile', 'selfhost/server/Dockerfile'];
 ok(dockerfiles.every((f) => {
   const froms = [...read(f).matchAll(/^FROM\s+(\S+)/gm)].map((m) => m[1]);
   return froms.length > 0 && froms.every((x) => x === NODE_22_23_4);
-}), 'every self-hosted image is built on Node 22.23.4, pinned by digest');
+}), 'every self-hosted image is built on Node 22.23.4 or later (now 22.23.5), pinned by digest');
 
 const caddy = /caddy:(\d+\.\d+\.\d+)@sha256/.exec(read('selfhost/docker-compose.yml'))?.[1];
 ok(atLeast(caddy, '2.11.4'), `Caddy is 2.11.4 or later (${caddy}): the 2026 admin-API and placeholder fixes`);

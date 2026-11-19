@@ -278,10 +278,29 @@ Ordered by how much it matters, not by how hard it is. "Your church" means whoev
 | 4 | **A rehearsed breach procedure.** RA 10173 and Circular 16-03 require notification to the NPC and to affected people **within 72 hours** of knowing. Section VII of [`PRIVACY-MANUAL.md`](PRIVACY-MANUAL.md) is the procedure; the team's names are the church's to fill in. | Fill in the team; rehearse once. | Your church |
 | 5 | **Processor terms.** The services you choose (for example Supabase, Vercel, Brevo and GitHub) hold or see personal data, and komoot sees the words typed into the meet-up place box. | Confirm each one's data-processing terms, and record your hosting region. | Your church |
 | 6 | **Retention periods.** Destruction now works end to end (deleted rows take their files with them, through the erase list), but nothing is deleted on a timer except the link record. Section V-C of the privacy manual has the table with the blank. | A period for ended pairings' conversations, written down, then enforced. | Your church decides; your developer enforces |
-| 7 | **Erasure and the safeguarding record.** The two conflict, and the conflict must be stated. | Write the lawful basis for the exception into the notice, and make the app say so when an account is deleted. | Your church, then your developer |
+| 7 | **Erasure and the safeguarding record.** The two conflict, and the conflict must be stated. | The lawful basis is in the notice since 19 November 2026 (RA 10173 §13(c) and (f); GDPR Articles 9(2)(f) and 17(3)(e)). Still to do: make the app say so when an account is deleted. | Your developer |
+| 9 | **A Child Privacy Impact Assessment.** The NPC's Guidelines on Child-Oriented Transparency (No. 2024-03) expect one before a service that processes children's data is offered. The child-friendly notice they also ask for is at `/privacy/young`. | Assess what the app does with a minor's data, with a parent or guardian involved, and keep the result. | Your church |
 | 8 | **A record of who read what.** A Director can open a reported conversation and nothing records that they did. | An access log for the one place where a third party reads a private thread. | Open to contributors |
 
 ---
+
+### What the notice gives, item by item (checked 19 November 2026)
+
+| What the law asks a notice to give | RA 10173 | GDPR | Where in `/privacy` |
+|---|---|---|---|
+| What is collected | §16(b)(1) | Art. 13 | What is collected |
+| Why, and the lawful basis | §16(b)(2) | Art. 13(1)(c) | Why it is kept, and what allows it |
+| Scope and method | §16(b)(3) | | Who can see it; Where it is kept |
+| Who receives it | §16(b)(4) | Art. 13(1)(e) | Who can see it; Where it is kept |
+| Automated decisions | IRR §34(a) | Art. 13(2)(f) | Why it is kept (no decision by computer alone) |
+| Who is responsible, and the DPO | §16(b)(6) | Art. 13(1)(a)-(b) | Who holds your information |
+| How long | §16(b)(7) | Art. 13(2)(a) | Where it is kept, and for how long |
+| Rights, and complaint | §16(b)(8), (c)-(f) | Art. 13(2)(b)-(d) | What you can ask for |
+| Whether it must be given | | Art. 13(2)(e) | What is collected (what you have to give) |
+| Transfers abroad and their safeguards | §21 | Art. 13(1)(f) | Where it is kept |
+| A notice a child can follow | NPC 2024-03 | Art. 12(1) | `/privacy/young` |
+
+`tests/the-law-is-written-plainly.mjs` fails if one of these goes missing.
 
 ## 5. The two things to do first
 

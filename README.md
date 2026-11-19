@@ -89,7 +89,7 @@ npm run dev
 Open http://localhost:3000 and pick who you are. There is a guided walk for each
 role that shows you your own job in about ten minutes.
 
-Needs [Node 22](https://nodejs.org), 22.23.4 or newer (the October 2026
+Needs [Node 22](https://nodejs.org), 22.23.5 or newer (the November 2026
 security release), or Node 24. Nothing else.
 
 ## Then make it real, in four steps

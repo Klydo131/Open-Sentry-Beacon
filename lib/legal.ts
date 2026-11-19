@@ -25,17 +25,20 @@
 // ---------------------------------------------------------------------------
 
 /** The Terms of Use now in force. Change it only when the terms change: everybody is asked again. */
-export const TERMS_VERSION = '2026-10-28';
+export const TERMS_VERSION = '2026-11-19';
 /** The Privacy Notice now in force. The same rule. */
-export const PRIVACY_VERSION = '2026-10-28';
+export const PRIVACY_VERSION = '2026-11-19';
 
 /** The date each version took effect, in words. */
-export const LEGAL_EFFECTIVE = '28 October 2026';
+export const LEGAL_EFFECTIVE = '19 November 2026';
 
 /** What changed in the current versions, said to somebody asked to agree again. */
 export const WHAT_CHANGED: string[] = [
-  'There are now Terms of Use: what you and your church can expect of each other in this app.',
-  'The Privacy Notice names your church and its Data Protection Officer, once your church has filled them in.',
+  'The Privacy Notice now says why each thing is kept and what part of the law allows it.',
+  'It says what you have to give, that no decision about you is made by a computer alone, and what protects your information when it is kept abroad.',
+  'It adds two rights: to have your information blocked while a question about it is settled, and to claim damages if you are harmed.',
+  'Members under 18 have a privacy notice written for them.',
+  'The Terms of Use say that if you live outside the Philippines, you keep the protection your own country\'s law gives you.',
 ];
 
 export interface AgreementRecord {

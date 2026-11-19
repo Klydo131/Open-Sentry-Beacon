@@ -1,5 +1,5 @@
 <?php
-// The Hope Beacon walk-through in PHP 8.1+, with the curl extension that ships
+// The Hope Beacon walk-through in PHP 8.2+, with the curl extension that ships
 // with PHP. No Composer packages. In Laravel, the same calls are Http::withHeaders(...).
 //
 //   HB_URL=... HB_KEY=... HB_EMAIL=... HB_PASSWORD=... php walk.php

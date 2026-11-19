@@ -352,6 +352,8 @@ const staticChecks = [
   ['a photo is remade in Rust', 'tests/a-photo-is-remade-in-rust.mjs'],
   ['every table says who may reach it', 'tests/every-table-says-who-may-reach-it.mjs'],
   ['the October 2026 patches hold', 'tests/the-october-2026-patches-hold.mjs'],
+  ['the November 2026 patches hold', 'tests/the-november-2026-patches-hold.mjs'],
+  ['the law is written plainly', 'tests/the-law-is-written-plainly.mjs'],
   ['a new password has its own page', 'tests/a-new-password-has-its-own-page.mjs'],
   ['the security layers hold', 'tests/the-security-layers-hold.mjs'],
   ['dev server', 'tests/dev-server.mjs'],

@@ -99,7 +99,8 @@ export default function TermsPage() {
           <p>
             <strong>If you are under 18</strong>, your church records the written consent of
             your parent or guardian before you are walked with by a Guide, and the people
-            responsible for you are told what that involves.
+            responsible for you are told what that involves. There is a{' '}
+            <Link href="/privacy/young" className="font-semibold text-navy underline">privacy notice written for you</Link>.
           </p>
         </Section>
 
@@ -168,7 +169,8 @@ export default function TermsPage() {
             The app may sometimes be unavailable, and it can make mistakes. As far as the law
             allows, neither your church nor the people who make the software are responsible
             for losses caused by the app being unavailable or by what other members write.
-            Nothing here takes away rights you have under the laws of the Philippines.
+            Nothing here takes away a right the law gives you, in the Philippines or in the
+            country where you live, that an agreement like this one cannot remove.
           </p>
         </Section>
 
@@ -190,8 +192,10 @@ export default function TermsPage() {
 
         <Section title="The law, and questions" id="law">
           <p>
-            These terms are governed by the laws of the Republic of the Philippines.
-            Questions go to your church&rsquo;s Director, or to its Data Protection Officer.
+            These terms are governed by the laws of the Republic of the Philippines. If you
+            live in another country, you keep the protection its law gives you that an
+            agreement cannot take away. Questions go to your church&rsquo;s Director, or to
+            its Data Protection Officer.
           </p>
         </Section>
 

@@ -448,8 +448,10 @@ October 2026; `tests/the-october-2026-patches-hold.mjs` keeps it there.
 | Node.js in CI | the runner's cached 22.x | newest 22.x (`check-latest`) | The same |
 | Table access on Supabase | opened by Supabase's default | opened by name; TRUNCATE, TRIGGER, REFERENCES, MAINTAIN taken from signed-in people | Supabase creates tables closed from 30 October 2026; see below |
 
-**Not affected:** PHP's "PHP2Shell" flaws of 21 October (Hope Beacon has no
-PHP anywhere), and the keyv, cacheable, @subql/common and tensorlake package
+**Not affected:** PHP's "PHP2Shell" flaws of 21 October (the app itself has no
+PHP; the example programs in `examples/` do, and run on whatever PHP a church
+installs, which is why they now say which release to run; see November below),
+and the keyv, cacheable, @subql/common and tensorlake package
 compromises (none is in this project's dependency tree).
 
 **Known and accepted, until the Study Room's editor is updated:**
@@ -553,6 +555,52 @@ supabase_migrations.schema_migrations`). An update that is in the code and not
 in the database is not a hole, because the app is built to cope, but a
 protection or a record the update was written for is not happening until it is
 applied.
+
+### November 2026: the second round of releases
+
+Between 3 and 19 November 2026 Next.js, Node.js, Caddy, PHP and Java all
+published security fixes, and the news was full of attacks on Java and PHP
+applications. On 19 November every part of this project was checked against
+them; `tests/the-november-2026-patches-hold.mjs` keeps it there.
+
+| Component | Where | Was | Now | Why |
+|---|---|---|---|---|
+| Next.js | the app | 15.5.29 | 15.5.29 (already) | Seven fixes of 3 November: cache leaks between users, a cookie exposed on Edge routes, an SVG check bypassed |
+| React | the app | 19.0.9 | 19.0.9 (already) | The critical server-components flaw of 14 October (GHSA-xqc2-xf4c-x3h3) |
+| Node.js | the Postgres edition's images | 22.23.4 | 22.23.5 | Eleven fixes of 11 November in HTTP/2 and TLS, four of them high |
+| Caddy | the Postgres edition's web server | 2.11.7 | 2.11.9 | FastCGI and JOSE fixes of 4 and 5 November |
+| Jackson | `examples/java` | 2.18.2 | 2.22.4 | Thirteen advisories, five high |
+| Starlette, FastAPI | `examples/server-python` | 0.46 under FastAPI 0.115.12 | 1.10.0 under FastAPI 0.162.5 | Seven advisories, three high |
+| tokio-postgres | `examples/server-rust` | 0.7 | 0.7.18 or later | A malformed reply could crash the server |
+| PHP | `examples/php`, `server-php`, `server-laravel` | "8.1+" | 8.2+ on its newest release | 8.1 receives no fixes; a critical release was announced for 19 November |
+
+**Is the app exposed to the Java and PHP attacks?** No. The app is
+TypeScript on Node.js, served by Vercel or by the Postgres edition's Node
+server, with a Postgres database behind it. No Java or PHP runs anywhere in it,
+and the new check fails if any is added outside `examples/`. The example
+programs are small clients and servers a church may copy, and they are only as
+safe as the language that runs them; `examples/README.md` now says which
+releases to run.
+
+**What `npm audit` still reports, and why it is accepted.** The same three
+advisories in the Study Room's editor as before: zod, KaTeX
+and minimatch, each in `security/accepted-advisories.json` with a review date.
+The zod entry's reason was wrong and is corrected: it said the editor checks
+only the reader's own document, but a shared study room carries other members'
+content too. The worst a member of the same church could do with it is make
+another member's browser tab run out of memory. It reads and changes nothing.
+
+**How updates keep arriving without anybody remembering.**
+
+- Dependabot offers new versions every week. Security fixes come at once;
+  other versions wait a week, so a hijacked release has time to be caught.
+- The audit gate runs every Monday and on every change to a lockfile. It
+  fails on any new advisory of moderate severity or worse.
+- CI always installs the newest Node 22.
+- Vercel patches the Node it runs the app on.
+
+What none of this does is update the programs in `examples/` or a church's own
+server. Those are each church's to keep current.
 
 ### 12. Working with AI tools
 
