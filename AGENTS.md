@@ -170,6 +170,31 @@ before a large change (ask the founder, section 0.2), plan in small steps
 with exact files, review between steps (section 7), and finish with the
 gate, the commit message that teaches (0.1.1), and the report.
 
+## 0.1.3 Supabase's own skills, and where this file outranks them
+
+Installed on 20 November 2026 at the founder's request
+(`npx skills add supabase/agent-skills`, MIT): `supabase` and
+`supabase-postgres-best-practices`, copied into `.claude/skills/` for Claude
+and `.agents/skills/` for Codex, and pinned to one commit with a hash of
+each in `skills-lock.json`. Both are Markdown only: no scripts. Use them for
+anything that touches Supabase or Postgres. Most of what they say is already
+the rule here: row-level security on every table, privileged functions kept
+out of exposed schemas, pinned packages.
+
+Where they differ, this file wins:
+
+1. **Nothing runs against a live database without the founder's go**
+   (section 0.2). The skill's advice to change a schema with `execute_sql`
+   and turn it into a migration afterwards is for a local database. Here a
+   change is a file in `supabase/migrations/` with its proof in
+   `supabase/tests/`, run against a fresh install first (section 4).
+2. **Its feedback step files a public GitHub issue** on
+   `supabase/agent-skills`. Do that only when the founder says yes, that
+   time, and put nothing in it about this project's deployments, members or
+   data (section 0).
+3. **Update them on purpose:** `npx skills update`, then read the diff
+   before committing it, like any other dependency.
+
 ## 0.2 The founder sees it before it ships
 
 A standing rule: suggest improvements as a plan, test and polish them, and tell
